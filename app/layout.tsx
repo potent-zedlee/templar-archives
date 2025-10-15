@@ -15,9 +15,6 @@ export const metadata: Metadata = {
   generator: "v0.app",
 }
 
-// Force dynamic rendering for all pages (prevents static generation errors)
-export const dynamic = 'force-dynamic'
-
 export default function RootLayout({
   children,
 }: Readonly<{
