@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { ImportHandsRequest, ImportHandsResponse, HandHistory } from '@/lib/types/hand-history'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
@@ -14,6 +14,8 @@ export async function POST(request: NextRequest) {
   // Apply rate limiting (10 requests per minute)
   const rateLimitResponse = await applyRateLimit(request, rateLimiters.importHands)
   if (rateLimitResponse) return rateLimitResponse
+
+  const supabase = createServerSupabaseClient()
 
   try {
     const body: ImportHandsRequest = await request.json()

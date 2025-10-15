@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowLeft, TrendingUp, ChevronDown, ChevronRight, BarChart3, PieChart, Activity, Upload } from "lucide-react"
-import { supabase } from "@/lib/supabase"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
 import type { Player } from "@/lib/supabase"
 import type { HandHistory } from "@/lib/types/hand-history"
 import { toast } from "sonner"
@@ -111,6 +111,7 @@ export default function PlayerDetailPage() {
 
   useEffect(() => {
     async function getUser() {
+      const supabase = createClientSupabaseClient()
       const { data: { user } } = await supabase.auth.getUser()
       setUserEmail(user?.email || null)
     }
@@ -126,6 +127,8 @@ export default function PlayerDetailPage() {
   async function handlePhotoUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file || !player) return
+
+    const supabase = createClientSupabaseClient()
 
     try {
       setUploadingPhoto(true)
@@ -167,6 +170,7 @@ export default function PlayerDetailPage() {
 
   async function loadPlayerAndHands() {
     setLoading(true)
+    const supabase = createClientSupabaseClient()
     try {
       // Get player info
       const { data: playerData, error: playerError } = await supabase

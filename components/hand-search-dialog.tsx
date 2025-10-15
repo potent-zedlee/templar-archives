@@ -14,7 +14,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Search, ChevronRight } from "lucide-react"
-import { supabase } from "@/lib/supabase"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
 
 type Tournament = {
   id: string
@@ -77,6 +77,7 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
   // 토너먼트 목록 로드
   const loadTournaments = async () => {
     setIsLoading(true)
+    const supabase = createClientSupabaseClient()
     try {
       const { data, error } = await supabase
         .from('tournaments')
@@ -96,6 +97,7 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
   // Sub Event 목록 로드
   const loadSubEvents = async (tournamentId: string) => {
     setIsLoading(true)
+    const supabase = createClientSupabaseClient()
     try {
       const { data, error } = await supabase
         .from('sub_events')
@@ -115,6 +117,7 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
   // Day 목록 로드
   const loadDays = async (subEventId: string) => {
     setIsLoading(true)
+    const supabase = createClientSupabaseClient()
     try {
       const { data, error } = await supabase
         .from('days')
@@ -134,6 +137,7 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
   // Hand 목록 로드
   const loadHands = async (dayId: string) => {
     setIsLoading(true)
+    const supabase = createClientSupabaseClient()
     try {
       const { data, error } = await supabase
         .from('hands')

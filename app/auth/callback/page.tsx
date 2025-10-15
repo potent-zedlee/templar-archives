@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { Loader2 } from "lucide-react"
 
 export default function AuthCallbackPage() {
@@ -12,6 +12,7 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     // URL에서 인증 코드를 추출하여 세션 교환
     const handleCallback = async () => {
+      const supabase = createClientSupabaseClient()
       try {
         // Supabase는 자동으로 URL의 해시에서 토큰을 읽고 세션을 Settings함
         const { data: { session }, error } = await supabase.auth.getSession()

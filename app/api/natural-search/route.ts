@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { supabase } from '@/lib/supabase'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 
@@ -15,6 +15,8 @@ export async function POST(request: NextRequest) {
   // Apply rate limiting (5 requests per minute)
   const rateLimitResponse = await applyRateLimit(request, rateLimiters.naturalSearch)
   if (rateLimitResponse) return rateLimitResponse
+
+  const supabase = createServerSupabaseClient()
 
   try {
     const { query } = await request.json()

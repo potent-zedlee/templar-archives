@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Search, Filter, Star, Play, X, Sparkles, SearchX } from "lucide-react"
-import { supabase } from "@/lib/supabase"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { fetchHandsWithDetails } from "@/lib/queries"
 import type { Hand, Player } from "@/lib/supabase"
 import Link from "next/link"
@@ -72,6 +72,7 @@ export default function SearchPage() {
   }, [])
 
   async function loadFiltersData() {
+    const supabase = createClientSupabaseClient()
     // Load tournaments
     const { data: tournamentsData } = await supabase
       .from('tournaments')
