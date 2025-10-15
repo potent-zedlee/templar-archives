@@ -1,7 +1,9 @@
 "use client"
 
+export const dynamic = 'force-dynamic'
+
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter} from "next/navigation"
 import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"

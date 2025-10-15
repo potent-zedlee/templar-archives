@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
+
+export const dynamic = 'force-dynamic'
 import { HeroSection } from "@/components/hero-section"
 import { MostUsedVideos } from "@/components/most-used-videos"
 import { OnThisDay } from "@/components/on-this-day"
