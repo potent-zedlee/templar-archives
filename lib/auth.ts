@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClientSupabaseClient } from './supabase-client'
 import type { User, Session } from '@supabase/supabase-js'
 
 export type AuthUser = User
@@ -8,6 +8,7 @@ export type AuthSession = Session
  * Google OAuth로 로그인
  */
 export async function signInWithGoogle() {
+  const supabase = createClientSupabaseClient()
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -31,6 +32,7 @@ export async function signInWithGoogle() {
  * 로그아웃
  */
 export async function signOut() {
+  const supabase = createClientSupabaseClient()
   const { error } = await supabase.auth.signOut()
 
   if (error) {
@@ -43,6 +45,7 @@ export async function signOut() {
  * 현재 로그인한 사용자 조회
  */
 export async function getUser(): Promise<AuthUser | null> {
+  const supabase = createClientSupabaseClient()
   const { data: { user }, error } = await supabase.auth.getUser()
 
   if (error) {
@@ -57,6 +60,7 @@ export async function getUser(): Promise<AuthUser | null> {
  * 현재 세션 조회
  */
 export async function getSession(): Promise<AuthSession | null> {
+  const supabase = createClientSupabaseClient()
   const { data: { session }, error } = await supabase.auth.getSession()
 
   if (error) {
@@ -75,6 +79,7 @@ export async function getSession(): Promise<AuthSession | null> {
 export function onAuthStateChange(
   callback: (user: AuthUser | null, session: AuthSession | null) => void
 ) {
+  const supabase = createClientSupabaseClient()
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
     (_event, session) => {
       callback(session?.user ?? null, session)

@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClientSupabaseClient } from './supabase-client'
 
 export type UserProfile = {
   id: string
@@ -23,6 +23,7 @@ export type UserProfile = {
  * 사용자 프로필 조회
  */
 export async function getProfile(userId: string): Promise<UserProfile | null> {
+  const supabase = createClientSupabaseClient()
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -41,6 +42,7 @@ export async function getProfile(userId: string): Promise<UserProfile | null> {
  * 현재 로그인한 사용자의 프로필 조회
  */
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
+  const supabase = createClientSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
@@ -57,6 +59,7 @@ export async function updateProfile(
   userId: string,
   updates: Partial<Pick<UserProfile, 'nickname' | 'avatar_url' | 'bio' | 'poker_experience'>>
 ): Promise<UserProfile | null> {
+  const supabase = createClientSupabaseClient()
   const { data, error } = await supabase
     .from('users')
     .update(updates)
@@ -77,6 +80,7 @@ export async function updateProfile(
  * @returns true = 사용 가능, false = 이미 사용 중
  */
 export async function checkNicknameAvailable(nickname: string, currentUserId?: string): Promise<boolean> {
+  const supabase = createClientSupabaseClient()
   let query = supabase
     .from('users')
     .select('id')
@@ -102,6 +106,7 @@ export async function checkNicknameAvailable(nickname: string, currentUserId?: s
  * 닉네임으로 사용자 조회
  */
 export async function getUserByNickname(nickname: string): Promise<UserProfile | null> {
+  const supabase = createClientSupabaseClient()
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -138,6 +143,7 @@ export async function hasCompletedProfile(userId: string): Promise<boolean> {
  * 사용자의 포스트 목록 조회
  */
 export async function fetchUserPosts(userId: string, limit: number = 10) {
+  const supabase = createClientSupabaseClient()
   const { data, error } = await supabase
     .from('posts')
     .select(`
@@ -162,6 +168,7 @@ export async function fetchUserPosts(userId: string, limit: number = 10) {
  * 사용자의 댓글 목록 조회
  */
 export async function fetchUserComments(userId: string, limit: number = 10) {
+  const supabase = createClientSupabaseClient()
   const { data, error } = await supabase
     .from('comments')
     .select(`
@@ -184,6 +191,7 @@ export async function fetchUserComments(userId: string, limit: number = 10) {
  * 사용자의 북마크 목록 조회
  */
 export async function fetchUserBookmarks(userId: string, limit: number = 20) {
+  const supabase = createClientSupabaseClient()
   const { data, error } = await supabase
     .from('hand_bookmarks')
     .select(`
@@ -229,6 +237,8 @@ export async function fetchUserActivity(userId: string) {
  * 아바타 이미지 업로드
  */
 export async function uploadAvatar(userId: string, file: File): Promise<string> {
+  const supabase = createClientSupabaseClient()
+
   // File size validation (max 5MB)
   const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB in bytes
   if (file.size > MAX_FILE_SIZE) {

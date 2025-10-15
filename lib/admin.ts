@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClientSupabaseClient } from './supabase-client'
 
 export type AdminRole = 'user' | 'moderator' | 'admin'
 
@@ -32,6 +32,8 @@ export type DashboardStats = {
  * Check if current user is admin
  */
 export async function isAdmin(userId?: string): Promise<boolean> {
+  const supabase = createClientSupabaseClient()
+
   if (!userId) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return false
