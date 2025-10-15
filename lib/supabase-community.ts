@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClientSupabaseClient } from './supabase-client'
 
 export type Post = {
   id: string
@@ -64,6 +64,8 @@ export async function fetchPosts(options?: {
   dateFrom?: string
   dateTo?: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   let query = supabase
     .from('posts')
     .select(`
@@ -128,6 +130,8 @@ export async function fetchPosts(options?: {
 
 // Fetch single post
 export async function fetchPost(id: string) {
+  const supabase = createClientSupabaseClient()
+
   const { data, error } = await supabase
     .from('posts')
     .select(`
@@ -153,6 +157,8 @@ export async function fetchComments(options: {
   postId?: string
   handId?: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   let query = supabase
     .from('comments')
     .select(`
@@ -182,6 +188,8 @@ export async function fetchComments(options: {
 
 // Fetch replies to a comment
 export async function fetchReplies(commentId: string) {
+  const supabase = createClientSupabaseClient()
+
   const { data, error } = await supabase
     .from('comments')
     .select(`
@@ -209,6 +217,8 @@ export async function createPost(post: {
   hand_id?: string
   category: Post['category']
 }) {
+  const supabase = createClientSupabaseClient()
+
   // author_id에서 사용자 정보를 가져와서 함께 저장
   const { data: user } = await supabase
     .from('users')
@@ -238,6 +248,8 @@ export async function createComment(comment: {
   author_id: string
   content: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   // author_id에서 사용자 정보를 가져와서 함께 저장
   const { data: user } = await supabase
     .from('users')
@@ -261,6 +273,8 @@ export async function createComment(comment: {
 
 // Toggle like on a post
 export async function togglePostLike(postId: string, userId: string) {
+  const supabase = createClientSupabaseClient()
+
   // Check if already liked
   const { data: existingLike } = await supabase
     .from('likes')
@@ -294,6 +308,8 @@ export async function togglePostLike(postId: string, userId: string) {
 
 // Toggle like on a comment
 export async function toggleCommentLike(commentId: string, userId: string) {
+  const supabase = createClientSupabaseClient()
+
   // Check if already liked
   const { data: existingLike } = await supabase
     .from('likes')
@@ -327,6 +343,8 @@ export async function toggleCommentLike(commentId: string, userId: string) {
 
 // Check if user has liked a post
 export async function hasLikedPost(postId: string, userId: string) {
+  const supabase = createClientSupabaseClient()
+
   const { data } = await supabase
     .from('likes')
     .select('*')
@@ -339,6 +357,8 @@ export async function hasLikedPost(postId: string, userId: string) {
 
 // Check if user has liked a comment
 export async function hasLikedComment(commentId: string, userId: string) {
+  const supabase = createClientSupabaseClient()
+
   const { data } = await supabase
     .from('likes')
     .select('*')
@@ -351,6 +371,7 @@ export async function hasLikedComment(commentId: string, userId: string) {
 
 // Fetch weekly popular posts (last 7 days, sorted by engagement)
 export async function fetchWeeklyPopularPosts(limit: number = 5) {
+  const supabase = createClientSupabaseClient()
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
@@ -383,6 +404,7 @@ export async function fetchWeeklyPopularPosts(limit: number = 5) {
 
 // Fetch best comments of the day (today, sorted by likes)
 export async function fetchBestComments(limit: number = 3) {
+  const supabase = createClientSupabaseClient()
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -415,6 +437,8 @@ export async function fetchBestComments(limit: number = 3) {
 
 // Fetch popular categories with post counts
 export async function fetchPopularCategories() {
+  const supabase = createClientSupabaseClient()
+
   const { data, error } = await supabase
     .from('posts')
     .select('category')

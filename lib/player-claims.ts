@@ -1,4 +1,4 @@
-import { supabase } from "./supabase"
+import { createClientSupabaseClient } from "./supabase-client"
 
 export type ClaimStatus = "pending" | "approved" | "rejected"
 export type VerificationMethod = "social_media" | "email" | "admin" | "other"
@@ -48,6 +48,8 @@ export async function requestPlayerClaim({
   verificationMethod: VerificationMethod
   verificationData?: any
 }): Promise<{ data: PlayerClaim | null; error: any }> {
+  const supabase = createClientSupabaseClient()
+
   try {
     // 이미 클레임 요청이 있는지 확인
     const { data: existingClaim, error: checkError } = await supabase
@@ -97,6 +99,8 @@ export async function getPlayerClaimInfo(
   claimed: boolean
   claim?: PlayerClaimWithDetails
 }> {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from("player_claims")
@@ -131,6 +135,8 @@ export async function getUserClaimedPlayer(userId: string): Promise<{
   data: PlayerClaimWithDetails | null
   error: any
 }> {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from("player_claims")
@@ -158,6 +164,8 @@ export async function getUserClaims(userId: string): Promise<{
   data: PlayerClaimWithDetails[]
   error: any
 }> {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from("player_claims")
@@ -184,6 +192,8 @@ export async function getPendingClaims(): Promise<{
   data: PlayerClaimWithDetails[]
   error: any
 }> {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from("player_claims")
@@ -210,6 +220,8 @@ export async function getAllClaims(): Promise<{
   data: PlayerClaimWithDetails[]
   error: any
 }> {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from("player_claims")
@@ -241,6 +253,8 @@ export async function approvePlayerClaim({
   adminId: string
   adminNotes?: string
 }): Promise<{ data: PlayerClaim | null; error: any }> {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from("player_claims")
@@ -274,6 +288,8 @@ export async function rejectPlayerClaim({
   rejectedReason: string
   adminNotes?: string
 }): Promise<{ data: PlayerClaim | null; error: any }> {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from("player_claims")
@@ -301,6 +317,8 @@ export async function cancelPlayerClaim(
   claimId: string,
   userId: string
 ): Promise<{ error: any }> {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { error } = await supabase
       .from("player_claims")
@@ -325,6 +343,8 @@ export async function checkUserPlayerClaim(
   hasClaim: boolean
   claim?: PlayerClaim
 }> {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from("player_claims")

@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClientSupabaseClient } from './supabase-client'
 
 export type ReportReason = 'spam' | 'harassment' | 'inappropriate' | 'misinformation' | 'other'
 export type ReportStatus = 'pending' | 'approved' | 'rejected'
@@ -36,6 +36,8 @@ export async function createReport({
   reason: ReportReason
   description?: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   const { data, error } = await supabase
     .from('reports')
     .insert({
@@ -64,6 +66,8 @@ export async function fetchReports({
   status?: ReportStatus
   limit?: number
 } = {}) {
+  const supabase = createClientSupabaseClient()
+
   let query = supabase
     .from('reports')
     .select(`
@@ -115,6 +119,8 @@ export async function approveReport({
   adminId: string
   adminComment?: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   // 1. Get report details
   const { data: report, error: fetchError } = await supabase
     .from('reports')
@@ -170,6 +176,8 @@ export async function rejectReport({
   adminId: string
   adminComment?: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   const { data, error } = await supabase
     .from('reports')
     .update({
@@ -196,6 +204,8 @@ export async function hideContent({
   postId?: string
   commentId?: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   if (postId) {
     const { error } = await supabase
       .from('posts')
@@ -223,6 +233,8 @@ export async function unhideContent({
   postId?: string
   commentId?: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   if (postId) {
     const { error } = await supabase
       .from('posts')
@@ -250,6 +262,8 @@ export async function deleteContent({
   postId?: string
   commentId?: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   if (postId) {
     const { error } = await supabase
       .from('posts')
@@ -277,6 +291,8 @@ export async function fetchAllPosts({
   includeHidden?: boolean
   limit?: number
 } = {}) {
+  const supabase = createClientSupabaseClient()
+
   let query = supabase
     .from('posts')
     .select(`
@@ -313,6 +329,8 @@ export async function fetchAllComments({
   includeHidden?: boolean
   limit?: number
 } = {}) {
+  const supabase = createClientSupabaseClient()
+
   let query = supabase
     .from('comments')
     .select(`

@@ -1,4 +1,4 @@
-import { supabase } from "./supabase"
+import { createClientSupabaseClient } from "./supabase-client"
 import type { Hand } from "./supabase"
 import type { HandHistory } from "./types/hand-history"
 
@@ -13,6 +13,7 @@ export async function fetchHandsWithDetails(options: {
   dayId?: string
   playerId?: string
 }) {
+  const supabase = createClientSupabaseClient()
   const { limit = 20, offset = 0, favoriteOnly, dayId, playerId } = options
 
   try {
@@ -84,6 +85,8 @@ export async function fetchHandsWithDetails(options: {
  * Fetch single hand with all details
  */
 export async function fetchHandDetails(handId: string) {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data: hand, error } = await supabase
       .from('hands')
@@ -122,6 +125,8 @@ export async function fetchHandDetails(handId: string) {
  * Fetch tournaments with sub_events and days (optimized)
  */
 export async function fetchTournamentsTree() {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from('tournaments')
@@ -147,6 +152,8 @@ export async function fetchTournamentsTree() {
  * Fetch players with hand counts (optimized)
  */
 export async function fetchPlayersWithHandCount() {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from('players')
@@ -178,6 +185,8 @@ export async function fetchPlayerHands(playerId: string): Promise<{
   hands: HandHistory[]
   handIds: string[]
 }> {
+  const supabase = createClientSupabaseClient()
+
   try {
     // Get all hands for this player with full details
     const { data: handPlayersData, error: handPlayersError } = await supabase
@@ -255,6 +264,8 @@ export async function fetchPlayerHands(playerId: string): Promise<{
  * Fetch player prize history (from event_payouts)
  */
 export async function fetchPlayerPrizeHistory(playerId: string) {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from('event_payouts')
@@ -293,6 +304,8 @@ export async function fetchPlayerPrizeHistory(playerId: string) {
  * Fetch player hands grouped by tournament/event hierarchy
  */
 export async function fetchPlayerHandsGrouped(playerId: string) {
+  const supabase = createClientSupabaseClient()
+
   try {
     // Get all hand IDs for this player
     const { data: handPlayersData, error: handPlayersError } = await supabase

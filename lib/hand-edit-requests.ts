@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClientSupabaseClient } from './supabase-client'
 
 export type EditType = 'basic_info' | 'players' | 'actions' | 'board'
 export type EditRequestStatus = 'pending' | 'approved' | 'rejected'
@@ -39,6 +39,8 @@ export async function createEditRequest({
   proposedData: any
   reason: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   const { data, error } = await supabase
     .from('hand_edit_requests')
     .insert({
@@ -68,6 +70,8 @@ export async function fetchEditRequests({
   status?: EditRequestStatus
   limit?: number
 } = {}) {
+  const supabase = createClientSupabaseClient()
+
   let query = supabase
     .from('hand_edit_requests')
     .select(`
@@ -124,6 +128,8 @@ export async function fetchUserEditRequests({
   status?: EditRequestStatus
   limit?: number
 }) {
+  const supabase = createClientSupabaseClient()
+
   let query = supabase
     .from('hand_edit_requests')
     .select(`
@@ -178,6 +184,8 @@ export async function approveEditRequest({
   adminId: string
   adminComment?: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   // 1. Get request details
   const { data: request, error: fetchError } = await supabase
     .from('hand_edit_requests')
@@ -219,6 +227,8 @@ export async function rejectEditRequest({
   adminId: string
   adminComment?: string
 }) {
+  const supabase = createClientSupabaseClient()
+
   const { data, error } = await supabase
     .from('hand_edit_requests')
     .update({
@@ -243,6 +253,8 @@ async function applyEditToHand(
   editType: EditType,
   proposedData: any
 ) {
+  const supabase = createClientSupabaseClient()
+
   switch (editType) {
     case 'basic_info':
       // Update hand basic info (description, timestamp, etc.)
@@ -309,6 +321,8 @@ async function applyEditToHand(
  * 핸드 데이터 가져오기 (수정 요청용)
  */
 export async function getHandDataForEdit(handId: string) {
+  const supabase = createClientSupabaseClient()
+
   const { data: hand, error: handError } = await supabase
     .from('hands')
     .select(`

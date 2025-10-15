@@ -1,4 +1,4 @@
-import { supabase } from "./supabase"
+import { createClientSupabaseClient } from "./supabase-client"
 
 /**
  * 플레이어 통계 타입
@@ -19,6 +19,8 @@ export type PlayerStatistics = {
  * 플레이어의 모든 액션 가져오기
  */
 export async function fetchPlayerActions(playerId: string) {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from('hand_actions')
@@ -38,6 +40,8 @@ export async function fetchPlayerActions(playerId: string) {
  * 플레이어가 참여한 모든 핸드 정보 가져오기
  */
 export async function fetchPlayerHandsInfo(playerId: string) {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { data, error } = await supabase
       .from('hand_players')

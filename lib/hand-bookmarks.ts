@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClientSupabaseClient } from './supabase-client'
 
 export type HandBookmark = {
   id: string
@@ -40,6 +40,8 @@ export async function addHandBookmark(
   folderName?: string,
   notes?: string
 ): Promise<void> {
+  const supabase = createClientSupabaseClient()
+
   const { error } = await supabase.from('hand_bookmarks').insert({
     hand_id: handId,
     user_id: userId,
@@ -57,6 +59,8 @@ export async function addHandBookmark(
  * 핸드 북마크 삭제
  */
 export async function removeHandBookmark(handId: string, userId: string): Promise<void> {
+  const supabase = createClientSupabaseClient()
+
   const { error } = await supabase
     .from('hand_bookmarks')
     .delete()
@@ -78,6 +82,8 @@ export async function toggleHandBookmark(
   folderName?: string,
   notes?: string
 ): Promise<boolean> {
+  const supabase = createClientSupabaseClient()
+
   // 기존 북마크 확인
   const { data: existingBookmark, error: checkError } = await supabase
     .from('hand_bookmarks')
@@ -108,6 +114,8 @@ export async function toggleHandBookmark(
 export async function isHandBookmarked(handId: string, userId?: string): Promise<boolean> {
   if (!userId) return false
 
+  const supabase = createClientSupabaseClient()
+
   const { data, error } = await supabase
     .from('hand_bookmarks')
     .select('id')
@@ -127,6 +135,8 @@ export async function isHandBookmarked(handId: string, userId?: string): Promise
  * 사용자의 모든 북마크 조회
  */
 export async function getUserBookmarks(userId: string): Promise<HandBookmarkWithDetails[]> {
+  const supabase = createClientSupabaseClient()
+
   const { data, error } = await supabase
     .from('hand_bookmarks')
     .select(
@@ -188,6 +198,8 @@ export async function getUserBookmarksByFolder(
  * 사용자의 북마크 폴더 목록 조회
  */
 export async function getUserBookmarkFolders(userId: string): Promise<string[]> {
+  const supabase = createClientSupabaseClient()
+
   const { data, error } = await supabase
     .from('hand_bookmarks')
     .select('folder_name')
@@ -212,6 +224,8 @@ export async function updateBookmarkNotes(
   userId: string,
   notes: string
 ): Promise<void> {
+  const supabase = createClientSupabaseClient()
+
   const { error } = await supabase
     .from('hand_bookmarks')
     .update({ notes })
@@ -232,6 +246,8 @@ export async function updateBookmarkFolder(
   userId: string,
   folderName: string | null
 ): Promise<void> {
+  const supabase = createClientSupabaseClient()
+
   const { error } = await supabase
     .from('hand_bookmarks')
     .update({ folder_name: folderName })
@@ -252,6 +268,8 @@ export async function getBatchHandBookmarkStatus(
   userId?: string
 ): Promise<Set<string>> {
   if (!userId) return new Set()
+
+  const supabase = createClientSupabaseClient()
 
   const { data, error } = await supabase
     .from('hand_bookmarks')

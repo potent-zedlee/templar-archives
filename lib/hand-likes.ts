@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClientSupabaseClient } from './supabase-client'
 
 export type HandLike = {
   id: string
@@ -19,6 +19,8 @@ export type HandLikeStatus = {
  * 핸드의 좋아요/싫어요 상태 조회
  */
 export async function getHandLikeStatus(handId: string, userId?: string): Promise<HandLikeStatus> {
+  const supabase = createClientSupabaseClient()
+
   // 핸드 정보 조회 (카운트)
   const { data: hand, error: handError } = await supabase
     .from('hands')
@@ -62,6 +64,8 @@ export async function toggleHandLike(
   userId: string,
   voteType: 'like' | 'dislike'
 ): Promise<'like' | 'dislike' | null> {
+  const supabase = createClientSupabaseClient()
+
   // 기존 투표 확인
   const { data: existingVote, error: checkError } = await supabase
     .from('hand_likes')
@@ -130,6 +134,8 @@ export async function getHandLikeCounts(handId: string): Promise<{
   likesCount: number
   dislikesCount: number
 }> {
+  const supabase = createClientSupabaseClient()
+
   const { data, error } = await supabase
     .from('hands')
     .select('likes_count, dislikes_count')
@@ -154,6 +160,7 @@ export async function getBatchHandLikeStatus(
   handIds: string[],
   userId?: string
 ): Promise<Map<string, HandLikeStatus>> {
+  const supabase = createClientSupabaseClient()
   const result = new Map<string, HandLikeStatus>()
 
   // 핸드 카운트 조회

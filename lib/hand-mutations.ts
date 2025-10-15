@@ -1,4 +1,4 @@
-import { supabase } from "./supabase"
+import { createClientSupabaseClient } from "./supabase-client"
 
 /**
  * 핸드 기본 정보 업데이트
@@ -13,6 +13,8 @@ export async function updateHandBasicInfo(
     board_cards?: string
   }
 ) {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { error } = await supabase
       .from('hands')
@@ -39,6 +41,8 @@ export async function updateHandPlayer(
     ending_stack?: number
   }
 ) {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { error } = await supabase
       .from('hand_players')
@@ -90,6 +94,8 @@ export async function addHandAction(data: {
   amount?: number
   sequence: number
 }) {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { error } = await supabase
       .from('hand_actions')
@@ -107,6 +113,8 @@ export async function addHandAction(data: {
  * 핸드 액션 삭제
  */
 export async function deleteHandActions(handId: string) {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { error } = await supabase
       .from('hand_actions')
@@ -134,6 +142,8 @@ export async function updateHandActions(
     sequence: number
   }>
 ) {
+  const supabase = createClientSupabaseClient()
+
   try {
     // 1. 기존 액션 삭제
     await deleteHandActions(handId)
@@ -215,6 +225,8 @@ export async function updateHandComplete(
  * 핸드 삭제
  */
 export async function deleteHand(handId: string) {
+  const supabase = createClientSupabaseClient()
+
   try {
     const { error } = await supabase
       .from('hands')
