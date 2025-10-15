@@ -16,7 +16,7 @@ export default function loginClient() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // 이미 Login된 사용자는 홈으로 리디렉션
+  // Redirect logged-in users to home
   useEffect(() => {
     if (!authLoading && user) {
       router.push("/")
@@ -28,15 +28,15 @@ export default function loginClient() {
       setLoading(true)
       setError(null)
       await signInWithGoogle()
-      // OAuth 리디렉션이 발생하므로 여기서 로딩 상태를 해제할 필요 없음
+      // OAuth redirect will occur, no need to stop loading here
     } catch (err) {
-      console.error("Login 실패:", err)
-      setError("Login에 실패했습니다. 다시 시도해주세요.")
+      console.error("Login failed:", err)
+      setError("Login failed. Please try again.")
       setLoading(false)
     }
   }
 
-  // 로딩 중이거나 이미 Login된 경우
+  // Loading or already logged in
   if (authLoading || user) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -54,9 +54,9 @@ export default function loginClient() {
               <span className="font-mono text-2xl font-bold text-primary-foreground">GG</span>
             </div>
           </div>
-          <CardTitle className="text-title-lg">Templar Archives에 오신 것을 환영합니다</CardTitle>
+          <CardTitle className="text-title-lg">Welcome to Templar Archives</CardTitle>
           <CardDescription>
-            포커 핸드 Archive와 Community 플랫폼
+            Poker Hand Archive and Community Platform
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -69,7 +69,7 @@ export default function loginClient() {
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Login 중...
+                Signing in...
               </>
             ) : (
               <>
@@ -91,7 +91,7 @@ export default function loginClient() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Google로 Login
+                Sign in with Google
               </>
             )}
           </Button>
@@ -101,15 +101,15 @@ export default function loginClient() {
           )}
 
           <div className="text-xs text-muted-foreground text-center">
-            Login하면 Templar Archives의{" "}
+            By signing in, you agree to Templar Archives'{" "}
             <a href="#" className="underline hover:text-foreground">
-              이용약관
+              Terms of Service
             </a>
-            과{" "}
+            {" "}and{" "}
             <a href="#" className="underline hover:text-foreground">
-              개인정보처리방침
+              Privacy Policy
             </a>
-            에 동의하는 것으로 간주됩니다.
+            .
           </div>
         </CardContent>
       </Card>

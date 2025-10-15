@@ -50,7 +50,7 @@ export function Header() {
       await signOut()
       router.push("/")
     } catch (error) {
-      console.error("Logout 실패:", error)
+      console.error("Logout failed:", error)
     }
   }
 
@@ -65,7 +65,7 @@ export function Header() {
 
   const getDisplayName = () => {
     if (profile?.nickname) return profile.nickname
-    return user?.user_metadata?.full_name || "사용자"
+    return user?.user_metadata?.full_name || "User"
   }
 
   const getAvatarUrl = () => {
@@ -165,27 +165,27 @@ export function Header() {
                       <>
                         <DropdownMenuSeparator />
                         <DropdownMenuLabel className="text-xs text-muted-foreground">
-                          관리자 메뉴
+                          ADMIN MENU
                         </DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => router.push("/admin/dashboard")}>
                           <LayoutDashboard className="mr-2 h-4 w-4" />
-                          대시보드
+                          Dashboard
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push("/admin/users")}>
                           <Users className="mr-2 h-4 w-4" />
-                          사용자 관리
+                          Users
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push("/admin/claims")}>
                           <Shield className="mr-2 h-4 w-4" />
-                          클레임 관리
+                          Claims
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push("/admin/content")}>
                           <FileText className="mr-2 h-4 w-4" />
-                          콘텐츠 관리
+                          Content
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => router.push("/admin/edit-requests")}>
                           <Edit className="mr-2 h-4 w-4" />
-                          수정 요청
+                          Edit Requests
                         </DropdownMenuItem>
                       </>
                     )}
@@ -245,7 +245,7 @@ export function Header() {
               )
             })}
 
-            {/* 모바일 Login/Profile UI */}
+            {/* Mobile Login/Profile UI */}
             {!authLoading && (
               <>
                 {user ? (
@@ -293,7 +293,7 @@ export function Header() {
                     {isUserAdmin && (
                       <>
                         <div className="px-4 py-2 text-xs text-muted-foreground font-semibold">
-                          관리자 메뉴
+                          ADMIN MENU
                         </div>
                         <Button
                           variant="ghost"
@@ -305,7 +305,7 @@ export function Header() {
                           }}
                         >
                           <LayoutDashboard className="mr-2 h-4 w-4" />
-                          대시보드
+                          Dashboard
                         </Button>
                         <Button
                           variant="ghost"
@@ -317,7 +317,7 @@ export function Header() {
                           }}
                         >
                           <Users className="mr-2 h-4 w-4" />
-                          사용자 관리
+                          Users
                         </Button>
                         <Button
                           variant="ghost"
@@ -329,7 +329,7 @@ export function Header() {
                           }}
                         >
                           <Shield className="mr-2 h-4 w-4" />
-                          클레임 관리
+                          Claims
                         </Button>
                         <Button
                           variant="ghost"
@@ -341,7 +341,7 @@ export function Header() {
                           }}
                         >
                           <FileText className="mr-2 h-4 w-4" />
-                          콘텐츠 관리
+                          Content
                         </Button>
                         <Button
                           variant="ghost"
@@ -353,7 +353,7 @@ export function Header() {
                           }}
                         >
                           <Edit className="mr-2 h-4 w-4" />
-                          수정 요청
+                          Edit Requests
                         </Button>
                       </>
                     )}

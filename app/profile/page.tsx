@@ -78,7 +78,7 @@ export default function profileClient() {
       const available = await checkNicknameAvailable(value, user?.id)
       setIsNicknameAvailable(available)
     } catch (error) {
-      console.error('닉네임 Duplicate check 실패:', error)
+      console.error('Nickname duplicate check failed:', error)
       setIsNicknameAvailable(null)
     } finally {
       setChecking(false)

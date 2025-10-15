@@ -67,15 +67,20 @@ CREATE POLICY "high_templars_can_manage_hands"
     )
   );
 
--- Video Sources: Allow high_templars to manage video sources
-DROP POLICY IF EXISTS "high_templars_can_manage_video_sources" ON public.video_sources;
-CREATE POLICY "high_templars_can_manage_video_sources"
-  ON public.video_sources
-  FOR ALL
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users
-      WHERE users.id = auth.uid()
-      AND users.role IN ('admin', 'high_templar')
-    )
-  );
+-- Video Sources: Allow high_templars to manage video sources (if table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'video_sources') THEN
+    EXECUTE 'DROP POLICY IF EXISTS "high_templars_can_manage_video_sources" ON public.video_sources';
+    EXECUTE 'CREATE POLICY "high_templars_can_manage_video_sources"
+      ON public.video_sources
+      FOR ALL
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.users
+          WHERE users.id = auth.uid()
+          AND users.role IN (''admin'', ''high_templar'')
+        )
+      )';
+  END IF;
+END $$;
