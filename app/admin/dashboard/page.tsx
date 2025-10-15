@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Header } from "@/components/header"
-import { Button, buttonVariants } from "@/components/ui/button"
 import { StatsCard } from "@/components/admin/stats-card"
 import { ActivityFeed } from "@/components/admin/activity-feed"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
+import { LinkButton } from "@/components/ui/link-button"
 import {
   Users,
   FileText,
@@ -20,7 +20,6 @@ import {
 import { useAuth } from "@/components/auth-provider"
 import { isAdmin, getDashboardStats, getRecentActivity, type DashboardStats, type AdminLog } from "@/lib/admin"
 import { toast } from "sonner"
-import Link from "next/link"
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -99,12 +98,12 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Link href="/admin/users" className={buttonVariants({ variant: "outline" })}>
+            <LinkButton href="/admin/users" variant="outline">
               사용자 관리
-            </Link>
-            <Link href="/admin/claims" className={buttonVariants({ variant: "outline" })}>
+            </LinkButton>
+            <LinkButton href="/admin/claims" variant="outline">
               클레임 관리
-            </Link>
+            </LinkButton>
           </div>
         </div>
 
@@ -165,9 +164,10 @@ export default function AdminDashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Link
+          <LinkButton
             href="/admin/users"
-            className={buttonVariants({ variant: "outline", className: "h-20 justify-start" })}
+            variant="outline"
+            className="h-20 justify-start"
           >
             <Users className="h-5 w-5 mr-3" />
             <div className="text-left">
@@ -176,11 +176,12 @@ export default function AdminDashboard() {
                 사용자 목록, 차단, 역할 변경
               </div>
             </div>
-          </Link>
+          </LinkButton>
 
-          <Link
+          <LinkButton
             href="/admin/claims"
-            className={buttonVariants({ variant: "outline", className: "h-20 justify-start" })}
+            variant="outline"
+            className="h-20 justify-start"
           >
             <AlertCircle className="h-5 w-5 mr-3" />
             <div className="text-left">
@@ -189,11 +190,12 @@ export default function AdminDashboard() {
                 플레이어 프로필 클레임 승인
               </div>
             </div>
-          </Link>
+          </LinkButton>
 
-          <Link
+          <LinkButton
             href="/community"
-            className={buttonVariants({ variant: "outline", className: "h-20 justify-start" })}
+            variant="outline"
+            className="h-20 justify-start"
           >
             <FileText className="h-5 w-5 mr-3" />
             <div className="text-left">
@@ -202,7 +204,7 @@ export default function AdminDashboard() {
                 게시글 및 댓글 모더레이션
               </div>
             </div>
-          </Link>
+          </LinkButton>
         </div>
       </div>
     </div>
