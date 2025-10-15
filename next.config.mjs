@@ -63,7 +63,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://diopilmkehygiqpizvga.supabase.co https://diopilmkehygiqpizvga.supabase.com https://api.anthropic.com https://vercel.live wss://diopilmkehygiqpizvga.supabase.co wss://diopilmkehygiqpizvga.supabase.com",
+              "connect-src 'self' https://diopilmkehygiqpizvga.supabase.co https://api.anthropic.com https://vercel.live wss://diopilmkehygiqpizvga.supabase.co",
               "media-src 'self' https: blob:",
               "worker-src 'self' blob:",
               "frame-src 'self' https://www.youtube.com",
