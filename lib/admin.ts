@@ -53,6 +53,7 @@ export async function isAdmin(userId?: string): Promise<boolean> {
  * Get dashboard statistics
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
+  const supabase = createClientSupabaseClient()
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -95,6 +96,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
  * Get recent admin activity
  */
 export async function getRecentActivity(limit: number = 20) {
+  const supabase = createClientSupabaseClient()
   const { data, error } = await supabase
     .from('admin_logs')
     .select(`
@@ -118,6 +120,7 @@ export async function getUsers(options?: {
   banned?: boolean
   search?: string
 }) {
+  const supabase = createClientSupabaseClient()
   const page = options?.page || 1
   const limit = options?.limit || 20
   const from = (page - 1) * limit
@@ -158,6 +161,7 @@ export async function getUsers(options?: {
  * Ban user
  */
 export async function banUser(userId: string, reason: string, adminId: string) {
+  const supabase = createClientSupabaseClient()
   const { error } = await supabase
     .from('users')
     .update({
@@ -178,6 +182,7 @@ export async function banUser(userId: string, reason: string, adminId: string) {
  * Unban user
  */
 export async function unbanUser(userId: string, adminId: string) {
+  const supabase = createClientSupabaseClient()
   const { error } = await supabase
     .from('users')
     .update({
@@ -198,6 +203,7 @@ export async function unbanUser(userId: string, adminId: string) {
  * Change user role
  */
 export async function changeUserRole(userId: string, role: AdminRole, adminId: string) {
+  const supabase = createClientSupabaseClient()
   const { error } = await supabase
     .from('users')
     .update({ role })
@@ -213,6 +219,7 @@ export async function changeUserRole(userId: string, role: AdminRole, adminId: s
  * Delete post (admin)
  */
 export async function deletePost(postId: string, reason: string, adminId: string) {
+  const supabase = createClientSupabaseClient()
   const { error } = await supabase
     .from('posts')
     .delete()
@@ -228,6 +235,7 @@ export async function deletePost(postId: string, reason: string, adminId: string
  * Delete comment (admin)
  */
 export async function deleteComment(commentId: string, reason: string, adminId: string) {
+  const supabase = createClientSupabaseClient()
   const { error } = await supabase
     .from('comments')
     .delete()
@@ -249,6 +257,7 @@ export async function logAdminAction(
   targetId?: string,
   details?: Record<string, any>
 ) {
+  const supabase = createClientSupabaseClient()
   const { error } = await supabase
     .from('admin_logs')
     .insert({
@@ -266,6 +275,7 @@ export async function logAdminAction(
  * Get recent posts (for moderation)
  */
 export async function getRecentPosts(limit: number = 50) {
+  const supabase = createClientSupabaseClient()
   const { data, error } = await supabase
     .from('posts')
     .select(`
@@ -283,6 +293,7 @@ export async function getRecentPosts(limit: number = 50) {
  * Get recent comments (for moderation)
  */
 export async function getRecentComments(limit: number = 50) {
+  const supabase = createClientSupabaseClient()
   const { data, error } = await supabase
     .from('comments')
     .select(`
