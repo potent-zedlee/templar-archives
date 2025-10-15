@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable static optimization for all pages
-  output: 'standalone',
   eslint: {
     ignoreDuringBuilds: true,
   },
