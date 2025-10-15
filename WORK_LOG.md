@@ -1,6 +1,58 @@
-# GGVault 작업 로그
+# Templar Archives 작업 로그
 
 > 세션별 작업 기록 및 다음 세션을 위한 컨텍스트
+
+---
+
+## 2025-10-16 (세션 9) - 브랜딩 변경 및 카테고리 필터 추가
+
+### 작업 내용
+1. **아카이브 카테고리 필터 추가** ✅
+   - Archive 페이지 네비게이터 하단에 카테고리 필터 버튼 추가
+   - 카테고리: All, WSOP, Triton, EPT, Hustler, APT, APL, GGPOKER
+   - 수평 스크롤 가능한 버튼 레이아웃 (ScrollArea 컴포넌트)
+   - 선택된 카테고리에 따라 Tournament 필터링
+
+2. **브랜딩 변경: GGVault → Templar Archives** ✅
+   - 프로젝트 이름: "GGVault" → "Templar Archives"
+   - 로고: "GG" → "TA" (그라데이션 배지)
+   - 파비콘: icon.webp (Protoss Carrier) 추가
+   - 메타데이터: 사이트 제목 및 설명 업데이트
+   - package.json: name 필드 "templar-archives"로 변경
+
+3. **기술 스택 업그레이드** ✅
+   - Next.js 15.1.6 (App Router, Edge Runtime)
+   - React 19.0
+   - Tailwind CSS 4.1.9
+
+4. **전체 문서 업데이트** ✅
+   - package.json name 필드
+   - README.md (v3.0 전면 재작성)
+   - CLAUDE.md (ggvault/CLAUDE.md v3.0)
+   - 상위 폴더 CLAUDE.md (v6.0)
+   - WORK_LOG.md (이 파일)
+
+### 핵심 파일 수정
+- `lib/supabase.ts` - Tournament 타입에 'APT' 추가
+- `app/archive/page.tsx` - 카테고리 필터 UI 및 로직 추가 (67줄)
+- `app/icon.webp` - 파비콘 추가 (Protoss Carrier)
+- `app/layout.tsx` - document.title, meta description 업데이트
+- `components/header.tsx` - 로고 "TA", 사이트명 "Templar Archives"
+- `package.json` - name "templar-archives"
+- `README.md` - 전체 리라이트 (v3.0, 277줄)
+- `CLAUDE.md` - 기술 스택, 최근 업데이트 반영 (v3.0)
+- `../CLAUDE.md` - 프로젝트 개요 업데이트 (v6.0)
+
+### 완료 기준 달성
+- ✅ 카테고리별 Tournament 필터링 기능
+- ✅ 브랜딩 전체 변경 (로고, 이름, 파비콘)
+- ✅ 모든 문서 최신 상태 반영
+- ✅ 프로덕션 URL 명시: https://templar-archives.vercel.app
+
+### 다음 작업
+- [ ] 빌드 및 커밋
+- [ ] 핸드 수정 제안 UI 진입점 추가 (2-3시간)
+- [ ] 영상 분석 테스트 및 개선
 
 ---
 

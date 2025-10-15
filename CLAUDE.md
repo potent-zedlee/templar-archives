@@ -1,11 +1,12 @@
-# GGVault - Claude Project Context
+# Templar Archives - Claude Project Context
 
 ## 프로젝트 개요
-GGVault는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 추출하고, 체계적으로 보관하며, 지능적으로 검색할 수 있는 **웹 기반 통합 플랫폼**입니다.
+Templar Archives (구 GGVault)는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 추출하고, 체계적으로 보관하며, 지능적으로 검색할 수 있는 **웹 기반 통합 플랫폼**입니다.
 
-**기술**: Next.js 14, Supabase, Claude Vision API
+**기술**: Next.js 15.1.6, React 19, Supabase, Claude Vision API
 **배포**: Vercel + Supabase
 **개발 서버**: http://localhost:3000
+**프로덕션**: https://templar-archives.vercel.app
 
 ---
 
@@ -47,7 +48,7 @@ GGVault는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 추출하�
 
 ---
 
-## 현재 개발 상태 (2025-10-14)
+## 현재 개발 상태 (2025-10-16)
 
 ### ✅ 완료된 Phase
 
@@ -247,6 +248,21 @@ GGVault는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 추출하�
   - 제목/내용 가중치 검색 (제목 우선)
   - 작성자/날짜/카테고리 인덱스
 
+#### 추가 기능 (2025-10-16 완료) ✅
+
+**아카이브 카테고리 필터**
+- Archive 페이지 네비게이터 하단에 카테고리 필터 버튼 추가
+- 카테고리: All, WSOP, Triton, EPT, Hustler, APT, APL, GGPOKER
+- 선택된 카테고리에 따라 Tournament 필터링
+- 수평 스크롤 가능한 버튼 레이아웃
+
+**브랜딩 변경: GGVault → Templar Archives**
+- 프로젝트 이름 변경: "Templar Archives"
+- 로고 변경: "GG" → "TA"
+- 파비콘 추가: Protoss Carrier (icon.webp)
+- 메타데이터 업데이트: 제목 및 설명
+- package.json name 필드 업데이트
+
 #### Supabase CLI 설정 (2025-10-15 완료)
 - **설정 파일**: `supabase/config.toml`
 - **마이그레이션 히스토리**: `000_init_migration_history.sql`
@@ -306,9 +322,10 @@ GGVault는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 추출하�
 ## 기술 스택
 
 ### 프론트엔드
-- **프레임워크**: Next.js 14 (App Router)
+- **프레임워크**: Next.js 15.1.6 (App Router, Edge Runtime)
 - **UI 라이브러리**: shadcn/ui (50+ 컴포넌트)
-- **스타일링**: Tailwind CSS
+- **스타일링**: Tailwind CSS 4.1.9
+- **React**: 19.0.0
 - **상태 관리**: Zustand (`filter-store.ts`)
 - **영상 처리**: FFmpeg.wasm (브라우저 내 프레임 추출)
 - **차트**: Recharts
@@ -425,18 +442,27 @@ ggvault/
 
 ---
 
-**마지막 업데이트**: 2025-10-15
-**문서 버전**: 2.0
+**마지막 업데이트**: 2025-10-16
+**문서 버전**: 3.0
 **프로젝트 상태**: Phase 0-7 완료, 모든 핵심 기능 완성 🎉
 
-**최근 완료 작업 (2025-10-15 세션 8)**:
+**최근 완료 작업 (2025-10-16 세션 9)**:
+- ✅ 아카이브 카테고리 필터 추가 (All, WSOP, Triton, EPT, Hustler, APT, APL, GGPOKER)
+- ✅ 브랜딩 변경: GGVault → Templar Archives
+- ✅ 파비콘 추가 (Protoss Carrier icon.webp)
+- ✅ 로고 및 메타데이터 업데이트
+- ✅ Next.js 15.1.6 + React 19.0 (Edge Runtime)
+- ✅ Tailwind CSS 4.1.9
+- ✅ 전체 문서 업데이트 (package.json, README.md, CLAUDE.md)
+
+**이전 세션 완료 작업 (2025-10-15)**:
 - ✅ Phase 3: 핸드 수정 요청 시스템 (백엔드 완성)
 - ✅ Phase 4: 관리자 시스템 (역할, 밴, 활동 로그)
 - ✅ Phase 5: 콘텐츠 신고 시스템 (포스트/댓글 신고)
 - ✅ Phase 6: 유저 프로필 고도화 (소셜 링크, 통계 캐싱)
 - ✅ Phase 7: 커뮤니티 검색 강화 (Full-Text Search)
-- ✅ 관리자 페이지 5개 추가 (dashboard, users, claims, content, edit-requests)
-- ✅ 유저 페이지 3개 추가 (profile, profile/[id], my-edit-requests)
+- ✅ 관리자 페이지 5개 추가
+- ✅ 유저 페이지 3개 추가
 - ✅ 마이그레이션 5개 추가 (013-017)
 
 **이전 세션 완료 작업**:
