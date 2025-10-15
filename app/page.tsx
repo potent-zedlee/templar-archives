@@ -1,8 +1,12 @@
+"use client"
+
 import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { MostUsedVideos } from "@/components/most-used-videos"
 import { OnThisDay } from "@/components/on-this-day"
 import { RecentAnalyses } from "@/components/recent-analyses"
+
+export const dynamic = 'force-dynamic'
 import { StatsCounter } from "@/components/main/stats-counter"
 import { WeeklyHighlights } from "@/components/main/weekly-highlights"
 import { LatestPosts } from "@/components/main/latest-posts"
