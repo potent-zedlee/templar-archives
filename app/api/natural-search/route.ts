@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
@@ -113,7 +114,7 @@ Important:
       .replace(/```\n?/g, '')
       .trim()
 
-    console.log('Generated SQL query:', cleanedQuery)
+    logger.debug('Generated SQL query:', cleanedQuery)
 
     // Execute the query
     const { data, error } = await supabase.rpc('execute_search_query', {
@@ -123,7 +124,7 @@ Important:
     // If RPC doesn't work, try direct query (with caution)
     // NOTE: In production, you should use RPC or prepared statements to prevent SQL injection
     if (error) {
-      console.warn('RPC failed, attempting direct query:', error)
+      logger.warn('RPC failed, attempting direct query:', error)
 
       // For MVP, we'll use a simple text search as fallback
       // Sanitize query for ILIKE to prevent pattern injection

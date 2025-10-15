@@ -1,6 +1,7 @@
 'use client'
 
 export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -40,7 +41,6 @@ export default function MigrationClient() {
   const [copied, setCopied] = useState(false)
   const [step, setStep] = useState(1)
 
-  const supabaseUrl = 'https://diopilmkehygiqpizvga.supabase.co'
   const projectId = 'diopilmkehygiqpizvga'
   const sqlEditorUrl = `https://supabase.com/dashboard/project/${projectId}/sql/new`
 

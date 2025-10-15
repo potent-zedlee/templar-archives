@@ -1,6 +1,7 @@
 "use client"
 
 export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"

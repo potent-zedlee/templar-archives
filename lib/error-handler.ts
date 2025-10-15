@@ -3,6 +3,8 @@
  * Sanitizes error messages in production to avoid leaking sensitive information
  */
 
+import { logger } from './logger'
+
 const isProduction = process.env.NODE_ENV === 'production'
 
 /**
@@ -30,7 +32,7 @@ export function sanitizeErrorMessage(error: unknown, fallbackMessage: string): s
  * In production, also sends to error tracking service (if configured)
  */
 export function logError(context: string, error: unknown): void {
-  console.error(`[${context}]`, error)
+  logger.error(`[${context}]`, error)
 
   // TODO: In production, send to error tracking service (e.g., Sentry)
   if (isProduction) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 // Convert country name to 3-letter ISO code
 function countryNameToCode(name: string): string {
@@ -331,7 +332,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(`Found payout table. Total tables analyzed: ${tables.length}`)
+    logger.debug(`Found payout table. Total tables analyzed: ${tables.length}`)
 
     // Parse table rows (skip header)
     resultsTable.find('tr').slice(1).each((_, row) => {
