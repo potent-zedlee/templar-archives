@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Disable static page generation - force all pages to be dynamic
+  output: process.env.VERCEL ? undefined : 'standalone',
   eslint: {
     ignoreDuringBuilds: true,
   },

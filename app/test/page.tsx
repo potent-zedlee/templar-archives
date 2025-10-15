@@ -1,4 +1,7 @@
 "use client"
+
+export const runtime = 'edge'
+
 export default function testClient() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
