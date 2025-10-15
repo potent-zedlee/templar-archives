@@ -32,7 +32,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { supabase } from "@/lib/supabase"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
 import type { Tournament as TournamentType, SubEvent as SubEventType, Day as DayType, Hand as HandType } from "@/lib/supabase"
 import { fetchTournamentsTree } from "@/lib/queries"
 import { toast } from "sonner"
