@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Calendar, Eye, Video } from "lucide-react"
-import { supabase } from "@/lib/supabase"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
 import type { Tournament } from "@/lib/supabase"
 import Link from "next/link"
 
@@ -25,6 +25,7 @@ export function OnThisDay() {
   async function loadHistoricalTournaments() {
     setLoading(true)
     try {
+      const supabase = createClientSupabaseClient()
       const currentMonth = today.getMonth() + 1
       const currentDay = today.getDate()
 

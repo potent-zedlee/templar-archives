@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Clock, Video } from "lucide-react"
-import { supabase } from "@/lib/supabase"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
 import Link from "next/link"
 
 type DayWithData = {
@@ -27,6 +27,7 @@ export function RecentAnalyses() {
   async function loadRecentAnalyses() {
     setLoading(true)
     try {
+      const supabase = createClientSupabaseClient()
       // Get recent days that have hands (analyzed videos)
       const { data: daysData, error: daysError } = await supabase
         .from('days')

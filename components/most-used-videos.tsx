@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Play, Eye, Video } from "lucide-react"
-import { supabase } from "@/lib/supabase"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
 import type { Tournament, SubEvent, Day } from "@/lib/supabase"
 import Link from "next/link"
 
@@ -28,6 +28,7 @@ export function MostUsedVideos() {
   async function loadMostUsedVideos() {
     setLoading(true)
     try {
+      const supabase = createClientSupabaseClient()
       // Calculate date range based on active tab
       const now = new Date()
       let startDate = new Date()
