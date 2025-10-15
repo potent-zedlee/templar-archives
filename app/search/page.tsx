@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from "react"
-import dynamic from "next/dynamic"
+import nextDynamic from "next/dynamic"
 import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -38,7 +38,7 @@ import { TableSkeleton } from "@/components/skeletons/table-skeleton"
 import { EmptyState } from "@/components/empty-state"
 
 // Dynamic import for heavy components
-const FilterPanel = dynamic(() => import("@/components/filter-panel").then(mod => ({ default: mod.FilterPanel })), {
+const FilterPanel = nextDynamic(() => import("@/components/filter-panel").then(mod => ({ default: mod.FilterPanel })), {
   ssr: false,
 })
 

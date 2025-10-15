@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from "react"
-import dynamic from "next/dynamic"
+import nextDynamic from "next/dynamic"
 import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -44,11 +44,11 @@ import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { EmptyState } from "@/components/empty-state"
 
 // Dynamic imports for heavy components
-const VideoPlayerDialog = dynamic(() => import("@/components/video-player-dialog").then(mod => ({ default: mod.VideoPlayerDialog })), {
+const VideoPlayerDialog = nextDynamic(() => import("@/components/video-player-dialog").then(mod => ({ default: mod.VideoPlayerDialog })), {
   ssr: false
 })
 
-const HandListAccordion = dynamic(() => import("@/components/hand-list-accordion").then(mod => ({ default: mod.HandListAccordion })), {
+const HandListAccordion = nextDynamic(() => import("@/components/hand-list-accordion").then(mod => ({ default: mod.HandListAccordion })), {
   ssr: false,
   loading: () => <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-muted animate-pulse rounded-md" />)}</div>
 })

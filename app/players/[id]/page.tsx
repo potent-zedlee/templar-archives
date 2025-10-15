@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect, useRef } from "react"
-import dynamic from "next/dynamic"
+import nextDynamic from "next/dynamic"
 import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"
@@ -24,17 +24,17 @@ import { ClaimPlayerDialog } from "@/components/claim-player-dialog"
 import { useAuth } from "@/components/auth-provider"
 
 // Dynamic imports for heavy components
-const HandListAccordion = dynamic(() => import("@/components/hand-list-accordion").then(mod => ({ default: mod.HandListAccordion })), {
+const HandListAccordion = nextDynamic(() => import("@/components/hand-list-accordion").then(mod => ({ default: mod.HandListAccordion })), {
   ssr: false,
   loading: () => <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-muted animate-pulse rounded-md" />)}</div>
 })
 
-const PrizeHistoryChart = dynamic(() => import("@/components/player-charts").then(mod => ({ default: mod.PrizeHistoryChart })), {
+const PrizeHistoryChart = nextDynamic(() => import("@/components/player-charts").then(mod => ({ default: mod.PrizeHistoryChart })), {
   ssr: false,
   loading: () => <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
 })
 
-const TournamentCategoryChart = dynamic(() => import("@/components/player-charts").then(mod => ({ default: mod.TournamentCategoryChart })), {
+const TournamentCategoryChart = nextDynamic(() => import("@/components/player-charts").then(mod => ({ default: mod.TournamentCategoryChart })), {
   ssr: false,
   loading: () => <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
 })
