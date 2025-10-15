@@ -1,25 +1,34 @@
+"use client"
+
 import type React from "react"
-import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
-import { Suspense } from "react"
+import { Suspense, useEffect } from "react"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/components/auth-provider"
 import { Toaster } from "@/components/ui/sonner"
-
-export const metadata: Metadata = {
-  title: "GGVault - Poker Video Analysis Platform",
-  description: "AI-powered poker video analysis to level up your game",
-  generator: "v0.app",
-}
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Set metadata via useEffect for client component
+  useEffect(() => {
+    document.title = "GGVault - Poker Video Analysis Platform"
+    const metaDescription = document.querySelector('meta[name="description"]')
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'AI-powered poker video analysis to level up your game')
+    } else {
+      const meta = document.createElement('meta')
+      meta.name = 'description'
+      meta.content = 'AI-powered poker video analysis to level up your game'
+      document.head.appendChild(meta)
+    }
+  }, [])
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
