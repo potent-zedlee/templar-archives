@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { buttonVariants } from "@/components/ui/button"
+import { LinkButton } from "@/components/ui/link-button"
 import { ThumbsUp, Play } from "lucide-react"
 import type { WeeklyHighlight } from "@/lib/main-page"
 
@@ -80,12 +80,14 @@ export function WeeklyHighlights({ highlights }: WeeklyHighlightsProps) {
                 </div>
               </div>
 
-              <Link
+              <LinkButton
                 href={`/archive?hand=${hand.id}`}
-                className={buttonVariants({ variant: "outline", size: "sm", className: "w-full" })}
+                variant="outline"
+                size="sm"
+                className="w-full"
               >
                 View Hand
-              </Link>
+              </LinkButton>
             </div>
           </Card>
         ))}

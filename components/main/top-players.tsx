@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { buttonVariants } from "@/components/ui/button"
+import { LinkButton } from "@/components/ui/link-button"
 import { Trophy, TrendingUp, ArrowRight } from "lucide-react"
 import type { TopPlayer } from "@/lib/main-page"
 
@@ -26,13 +26,13 @@ export function TopPlayers({ players }: TopPlayersProps) {
             총 상금 기준 상위 플레이어
           </p>
         </div>
-        <Link
+        <LinkButton
           href="/players"
-          className={buttonVariants({ variant: "outline" })}
+          variant="outline"
         >
           View All Players
           <ArrowRight className="ml-2 h-4 w-4" />
-        </Link>
+        </LinkButton>
       </div>
 
       <Card className="p-6">

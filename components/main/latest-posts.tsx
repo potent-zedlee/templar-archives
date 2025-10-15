@@ -4,7 +4,7 @@ import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { buttonVariants } from "@/components/ui/button"
+import { LinkButton } from "@/components/ui/link-button"
 import { MessageSquare, ThumbsUp, ArrowRight } from "lucide-react"
 
 interface LatestPostsProps {
@@ -32,13 +32,13 @@ export function LatestPosts({ posts }: LatestPostsProps) {
             커뮤니티에서 활발하게 논의되고 있는 주제들
           </p>
         </div>
-        <Link
+        <LinkButton
           href="/community"
-          className={buttonVariants({ variant: "outline" })}
+          variant="outline"
         >
           View All Posts
           <ArrowRight className="ml-2 h-4 w-4" />
-        </Link>
+        </LinkButton>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
