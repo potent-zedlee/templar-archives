@@ -9,7 +9,7 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
 export type Tournament = {
   id: string
   name: string
-  category: 'WSOP' | 'Triton' | 'EPT' | 'APL' | 'Hustler Casino Live' | 'WSOP Classic' | 'GGPOKER'
+  category: 'WSOP' | 'Triton' | 'EPT' | 'APT' | 'APL' | 'Hustler Casino Live' | 'WSOP Classic' | 'GGPOKER'
   category_logo?: string
   location: string
   start_date: string

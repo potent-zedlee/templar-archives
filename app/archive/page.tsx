@@ -78,6 +78,7 @@ export default function ArchiveClient() {
   const [selectedDay, setSelectedDay] = useState<string>("")
   const [loading, setLoading] = useState(true)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string>("All")
 
   // Tournament dialog states
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -201,6 +202,11 @@ export default function ArchiveClient() {
       setLoadingViewingPayouts(false)
     }
   }
+
+  // Filter tournaments by selected category
+  const filteredTournaments = selectedCategory === "All"
+    ? tournaments
+    : tournaments.filter(t => t.category === selectedCategory)
 
   async function loadTournaments() {
     setLoading(true)
@@ -1158,6 +1164,7 @@ export default function ArchiveClient() {
                             <SelectItem value="WSOP">WSOP</SelectItem>
                             <SelectItem value="Triton">Triton</SelectItem>
                             <SelectItem value="EPT">EPT</SelectItem>
+                            <SelectItem value="APT">APT</SelectItem>
                             <SelectItem value="APL">APL</SelectItem>
                             <SelectItem value="Hustler Casino Live">Hustler Casino Live</SelectItem>
                             <SelectItem value="WSOP Classic">WSOP Classic</SelectItem>
@@ -1223,9 +1230,82 @@ export default function ArchiveClient() {
                 </Dialog>
                 )}
               </div>
-              <ScrollArea className="h-[calc(100vh-240px)]">
+
+              {/* Category Filter */}
+              <div className="mb-4 pb-4 border-b">
+                <ScrollArea className="w-full whitespace-nowrap">
+                  <div className="flex gap-2 pb-2">
+                    <Button
+                      variant={selectedCategory === "All" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory("All")}
+                      className="h-7"
+                    >
+                      All
+                    </Button>
+                    <Button
+                      variant={selectedCategory === "WSOP" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory("WSOP")}
+                      className="h-7"
+                    >
+                      WSOP
+                    </Button>
+                    <Button
+                      variant={selectedCategory === "Triton" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory("Triton")}
+                      className="h-7"
+                    >
+                      Triton
+                    </Button>
+                    <Button
+                      variant={selectedCategory === "EPT" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory("EPT")}
+                      className="h-7"
+                    >
+                      EPT
+                    </Button>
+                    <Button
+                      variant={selectedCategory === "Hustler Casino Live" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory("Hustler Casino Live")}
+                      className="h-7"
+                    >
+                      Hustler
+                    </Button>
+                    <Button
+                      variant={selectedCategory === "APT" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory("APT")}
+                      className="h-7"
+                    >
+                      APT
+                    </Button>
+                    <Button
+                      variant={selectedCategory === "APL" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory("APL")}
+                      className="h-7"
+                    >
+                      APL
+                    </Button>
+                    <Button
+                      variant={selectedCategory === "GGPOKER" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedCategory("GGPOKER")}
+                      className="h-7"
+                    >
+                      GGPOKER
+                    </Button>
+                  </div>
+                </ScrollArea>
+              </div>
+
+              <ScrollArea className="h-[calc(100vh-340px)]">
                 <div className="space-y-1">
-                  {tournaments.map((tournament) => (
+                  {filteredTournaments.map((tournament) => (
                     <div key={tournament.id}>
                       {/* Tournament Level */}
                       <div className="flex items-center justify-between gap-2 py-2 px-3 rounded-md hover:bg-muted/50 transition-colors group">
