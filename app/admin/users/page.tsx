@@ -270,10 +270,10 @@ export default function usersClient() {
                 <SelectValue placeholder="역할 필터" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">모든 역할</SelectItem>
-                <SelectItem value="user">일반 사용자</SelectItem>
-                <SelectItem value="moderator">모더레이터</SelectItem>
-                <SelectItem value="admin">관리자</SelectItem>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="high_templar">High Templar</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
             </Select>
 
@@ -325,12 +325,12 @@ export default function usersClient() {
                         </h3>
                         <Badge variant={
                           targetUser.role === "admin" ? "default" :
-                          targetUser.role === "moderator" ? "secondary" :
+                          targetUser.role === "high_templar" ? "secondary" :
                           "outline"
                         }>
-                          {targetUser.role === "admin" ? "관리자" :
-                           targetUser.role === "moderator" ? "모더레이터" :
-                           "일반"}
+                          {targetUser.role === "admin" ? "Admin" :
+                           targetUser.role === "high_templar" ? "High Templar" :
+                           "User"}
                         </Badge>
                         {targetUser.is_banned && (
                           <Badge variant="destructive">차단됨</Badge>
@@ -472,9 +472,9 @@ export default function usersClient() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">일반 사용자</SelectItem>
-                  <SelectItem value="moderator">모더레이터</SelectItem>
-                  <SelectItem value="admin">관리자</SelectItem>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="high_templar">High Templar</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>

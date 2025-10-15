@@ -32,26 +32,26 @@ export function NicknameSetupModal({ open, currentNickname, onComplete }: Nickna
   const handleNicknameChange = async (value: string) => {
     setNickname(value)
 
-    // 빈 값이거나 기존 닉네임과 같으면 체크 안 함
+    // Skip check if empty or same as current nickname
     if (!value || value === currentNickname) {
       setIsAvailable(null)
       return
     }
 
-    // 닉네임 형식 검증 (3-20자, 영문 + 숫자 + 언더스코어)
+    // Validate nickname format (3-20 chars, alphanumeric + Korean + underscore)
     const nicknameRegex = /^[a-zA-Z0-9가-힣_]{3,20}$/
     if (!nicknameRegex.test(value)) {
       setIsAvailable(false)
       return
     }
 
-    // 중복 체크
+    // Check availability
     setChecking(true)
     try {
       const available = await checkNicknameAvailable(value, user?.id)
       setIsAvailable(available)
     } catch (error) {
-      console.error('닉네임 중복 체크 실패:', error)
+      console.error('Nickname availability check failed:', error)
       setIsAvailable(null)
     } finally {
       setChecking(false)
@@ -65,11 +65,11 @@ export function NicknameSetupModal({ open, currentNickname, onComplete }: Nickna
     setSaving(true)
     try {
       await updateProfile(user.id, { nickname })
-      toast.success('닉네임이 Settings되었습니다!')
+      toast.success('Nickname has been set!')
       onComplete()
     } catch (error) {
-      console.error('닉네임 저장 실패:', error)
-      toast.error('닉네임 저장에 실패했습니다. 다시 시도해주세요.')
+      console.error('Failed to save nickname:', error)
+      toast.error('Failed to save nickname. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -85,14 +85,14 @@ export function NicknameSetupModal({ open, currentNickname, onComplete }: Nickna
         onPointerDownOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>닉네임 Settings</DialogTitle>
+          <DialogTitle>Set Nickname</DialogTitle>
           <DialogDescription>
-            Templar Archives에서 사용할 닉네임을 Settings해주세요. 나중에 Profile 페이지에서 변경할 수 있습니다.
+            Choose a nickname for Templar Archives. You can change it later on your Profile page.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="nickname">닉네임</Label>
+            <Label htmlFor="nickname">Nickname</Label>
             <div className="relative">
               <Input
                 id="nickname"
@@ -119,16 +119,16 @@ export function NicknameSetupModal({ open, currentNickname, onComplete }: Nickna
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              3-20자, 영문/한글/숫자/언더스코어(_)만 사용 가능
+              3-20 characters, alphanumeric/Korean/underscore(_) only
             </p>
             {isAvailable === false && (
               <p className="text-xs text-destructive">
-                이미 사용 중인 닉네임이거나 형식이 올바르지 않습니다.
+                Nickname already taken or invalid format.
               </p>
             )}
             {isAvailable === true && (
               <p className="text-xs text-green-600">
-                사용 가능한 닉네임입니다!
+                Nickname is available!
               </p>
             )}
           </div>
@@ -141,10 +141,10 @@ export function NicknameSetupModal({ open, currentNickname, onComplete }: Nickna
             {saving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                저장 중...
+                Saving...
               </>
             ) : (
-              '저장'
+              'Save'
             )}
           </Button>
         </div>

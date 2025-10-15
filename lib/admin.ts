@@ -1,6 +1,6 @@
 import { createClientSupabaseClient } from './supabase-client'
 
-export type AdminRole = 'user' | 'moderator' | 'admin'
+export type AdminRole = 'user' | 'high_templar' | 'admin'
 
 export type AdminLog = {
   id: string
@@ -46,7 +46,7 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     .eq('id', userId)
     .single()
 
-  return data?.role === 'admin' || data?.role === 'moderator'
+  return data?.role === 'admin' || data?.role === 'high_templar'
 }
 
 /**
