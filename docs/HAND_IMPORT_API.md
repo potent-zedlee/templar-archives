@@ -1,6 +1,6 @@
 # Hand History Import API
 
-외부 시스템에서 분석한 핸드 히스토리를 GGVault에 import하는 API 가이드입니다.
+외부 시스템에서 분석한 핸드 히스토리를 Templar Archives에 import하는 API 가이드입니다.
 
 ## API Endpoint
 
@@ -296,7 +296,7 @@ import type { HandHistory, ImportHandsRequest, ImportHandsResponse } from '@/lib
 
 1. 외부 분석 시스템을 개발합니다
 2. 분석 결과를 이 API 형식에 맞게 변환합니다
-3. API를 호출하여 GGVault에 핸드를 import합니다
+3. API를 호출하여 Templar Archives에 핸드를 import합니다
 4. Archive 페이지에서 결과를 확인합니다
 
 ## 지원

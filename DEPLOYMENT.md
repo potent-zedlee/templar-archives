@@ -18,7 +18,7 @@
 
 1. https://github.com 접속 후 로그인
 2. 우측 상단 `+` 버튼 클릭 → `New repository` 선택
-3. Repository 이름 입력: `ggvault` (또는 원하는 이름)
+3. Repository 이름 입력: `templar-archives` (또는 원하는 이름)
 4. **Public** 또는 **Private** 선택 (무료 계정은 둘 다 가능)
 5. **❌ "Initialize this repository with:"는 모두 체크 해제** (로컬에 이미 코드가 있음)
 6. `Create repository` 버튼 클릭
@@ -29,7 +29,7 @@
 
 ```bash
 # 1. Git 초기화 (처음 한 번만)
-cd /Users/zed/Desktop/Archive/ggvault
+cd /Users/zed/Desktop/Archive/templar-archives
 git init
 
 # 2. 모든 파일 추가
@@ -42,7 +42,7 @@ git commit -m "Initial commit: GGVault v1.0"
 git branch -M main
 
 # 5. GitHub repository 연결 (YOUR-USERNAME을 본인 GitHub 아이디로 변경)
-git remote add origin https://github.com/YOUR-USERNAME/ggvault.git
+git remote add origin https://github.com/YOUR-USERNAME/templar-archives.git
 
 # 6. GitHub에 업로드
 git push -u origin main
@@ -53,7 +53,7 @@ git push -u origin main
 **예시**:
 ```bash
 # GitHub 아이디가 "johndoe"인 경우
-git remote add origin https://github.com/johndoe/ggvault.git
+git remote add origin https://github.com/johndoe/templar-archives.git
 ```
 
 ---
@@ -72,7 +72,7 @@ git remote add origin https://github.com/johndoe/ggvault.git
 
 1. 대시보드에서 `Create Database` 클릭
 2. 설정:
-   - **Name**: `ggvault-rate-limit`
+   - **Name**: `templar-archives-rate-limit`
    - **Type**: `Regional`
    - **Region**: `ap-northeast-2 (Seoul)` (가장 가까운 지역 선택)
    - **Eviction**: `LRU`
@@ -100,7 +100,7 @@ git remote add origin https://github.com/johndoe/ggvault.git
 ### 3.2 프로젝트 Import
 
 1. Vercel 대시보드에서 `Add New...` → `Project` 클릭
-2. **Import Git Repository** 섹션에서 `ggvault` repository 선택
+2. **Import Git Repository** 섹션에서 `templar-archives` repository 선택
 3. `Import` 버튼 클릭
 
 ### 3.3 환경 변수 설정 (중요!)
@@ -134,7 +134,7 @@ git remote add origin https://github.com/johndoe/ggvault.git
 
 ### 3.5 배포된 웹사이트 확인
 
-- Vercel이 자동으로 생성한 URL: `https://ggvault.vercel.app` (또는 비슷한 URL)
+- Vercel이 자동으로 생성한 URL: `https://templar-archives.vercel.app` (또는 비슷한 URL)
 - `Visit` 버튼 클릭해서 웹사이트 접속 확인
 
 ---
@@ -159,14 +159,14 @@ git push origin main
 ### 배포 상태 확인
 
 1. Vercel 대시보드: https://vercel.com/dashboard
-2. `ggvault` 프로젝트 클릭
+2. `templar-archives` 프로젝트 클릭
 3. **Deployments** 탭에서 모든 배포 기록 확인
 
 ---
 
 ## 5단계: 커스텀 도메인 연결 (선택사항)
 
-자신의 도메인 (예: `ggvault.com`)을 연결하려면:
+자신의 도메인 (예: `templar-archives.com`)을 연결하려면:
 
 1. Vercel 대시보드에서 프로젝트 선택
 2. **Settings** → **Domains** 탭
@@ -180,7 +180,7 @@ git push origin main
 ## 🎉 배포 완료!
 
 이제 다음 URL에서 GGVault를 사용할 수 있습니다:
-- **Production**: `https://ggvault.vercel.app`
+- **Production**: `https://templar-archives.vercel.app`
 - **대시보드**: https://vercel.com/dashboard
 
 ---

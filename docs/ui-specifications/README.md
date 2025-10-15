@@ -1,6 +1,6 @@
-# GGVault UI Specifications
+# Templar Archives UI Specifications
 
-이 폴더는 GGVault 웹 애플리케이션의 모든 페이지에 대한 UI 명세서를 포함합니다.
+이 폴더는 Templar Archives 웹 애플리케이션의 모든 페이지에 대한 UI 명세서를 포함합니다.
 
 ## 📚 문서 구조
 
@@ -47,7 +47,7 @@
 
 ## 🎨 디자인 시스템
 
-GGVault는 다음 디자인 시스템을 사용합니다:
+Templar Archives는 다음 디자인 시스템을 사용합니다:
 
 - **UI 라이브러리**: shadcn/ui
 - **스타일링**: Tailwind CSS
@@ -97,4 +97,4 @@ UI 명세서에 기여하고 싶으시다면:
 ---
 
 **마지막 업데이트**: 2025-10-05
-**관리자**: GGVault Development Team
+**관리자**: Templar Archives Development Team

@@ -54,7 +54,7 @@ npm run dev
 ## 📁 디렉토리 구조
 
 ```
-ggvault/
+templar-archives/
 ├── app/                      # Next.js 페이지 및 API
 │   ├── icon.webp            # 파비콘 (Protoss Carrier)
 │   ├── page.tsx             # 홈페이지

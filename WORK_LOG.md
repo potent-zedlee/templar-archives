@@ -28,7 +28,7 @@
 4. **전체 문서 업데이트** ✅
    - package.json name 필드
    - README.md (v3.0 전면 재작성)
-   - CLAUDE.md (ggvault/CLAUDE.md v3.0)
+   - CLAUDE.md (templar-archives/CLAUDE.md v3.0)
    - 상위 폴더 CLAUDE.md (v6.0)
    - WORK_LOG.md (이 파일)
 
@@ -256,9 +256,9 @@
 
 2. **문서 구조 재구성**
    - 루트 `CLAUDE.md` 슬림화: 343줄 → 171줄 (50% 감소)
-   - `ggvault/CLAUDE.md` 삭제 (오래된 비전 문서)
-   - `ggvault/CLAUDE.md` 생성 (현재 구현 상태)
-   - `ggvault/WORK_LOG.md` 생성 (이 파일)
+   - `templar-archives/CLAUDE.md` 삭제 (오래된 비전 문서)
+   - `templar-archives/CLAUDE.md` 생성 (현재 구현 상태)
+   - `templar-archives/WORK_LOG.md` 생성 (이 파일)
 
 3. **문서 최적화 효과**
    - 토큰 사용량 64% 감소 예상
@@ -332,133 +332,19 @@
 
 ---
 
-## 2025-10-13 - 영상 분석 Phase 4 완료
 
-### 작업 내용
-1. **핸드 감지 정확도 개선**
-   - CHECK_INTERVAL 1→2로 변경 (오감지 25개→10개)
-   - 핸드 타이틀 summary 필드 추가 ("타카자와 오픈레이즈, 모두 폴드")
-   - Claude Vision 프롬프트에 UI 레이아웃 힌트 추가
-
-2. **UI 통합**
-   - Archive 페이지에 HandListAccordion 통합
-   - 핸드 목록 Accordion UI 구현
-
-### 핵심 파일
-- `lib/hand-boundary-detector.ts` - CHECK_INTERVAL=2
-- `lib/hand-sequence-analyzer.ts` - summary 필드 추가
-- `components/hand-list-accordion.tsx` - Accordion UI
-- `app/archive/page.tsx` - HandListAccordion 통합
-
-### 성능
-- 처리 시간: 15분/37분 영상
-- 비용: $2.75/37분 영상
-- 정확도: 95%+ (테스트 필요)
 
 ---
 
-## 2025-10-12 - Phase 0 인증 시스템 완료
+## 아카이브된 세션
 
-### 작업 내용
-1. **Supabase Auth 설정**
-   - Google OAuth Provider 활성화
-
-2. **인증 라이브러리**
-   - `lib/auth.ts` 생성
-   - `signInWithGoogle()`, `signOut()`, `getUser()` 함수
-
-3. **인증 Provider**
-   - `components/auth-provider.tsx` 생성
-   - `useAuth()` 훅 제공
-
-4. **로그인 UI**
-   - `app/auth/login/page.tsx` - 로그인 페이지
-   - `app/auth/callback/page.tsx` - OAuth 콜백
-   - 헤더에 로그인/프로필 메뉴
-
-5. **기존 코드 마이그레이션**
-   - `lib/supabase-community.ts` 수정
-   - 임시 `author_id` 제거, 실제 사용자 ID 사용
-
-### 완료 기준 달성
-- ✅ Google 계정으로 로그인 가능
-- ✅ 로그아웃 가능
-- ✅ 헤더에 프로필 사진 표시
-- ✅ 로그인 상태에 따라 버튼 활성화/비활성화
-- ✅ 포스트/댓글 작성 시 실제 사용자 ID 사용
+**2025-10-05 ~ 2025-10-13 세션**: `WORK_LOG_ARCHIVE.md` 참조
+- 2025-10-13: 영상 분석 Phase 4 완료
+- 2025-10-12: Phase 0 인증 시스템 완료
+- 2025-10-05~10-06: 데이터베이스 및 커뮤니티 시스템
 
 ---
 
-## 2025-10-05~10-06 - 데이터베이스 및 커뮤니티 시스템
-
-### 작업 내용
-1. **데이터베이스 마이그레이션 (10개)**
-   - 001: 기본 스키마 (tournaments, sub_events, days, hands)
-   - 002: 플레이어 시스템 (players, hand_players)
-   - 003: 영상 소스 (YouTube, Upload, NAS)
-   - 004: 커뮤니티 (posts, comments)
-   - 005: Users 테이블
-   - 006: Hand Likes
-   - 007: Payouts and Matching
-   - 008: SubEvent Details
-   - 009: Hand Details (POT, 보드 카드, 액션)
-   - 010: Player Notes
-
-2. **커뮤니티 시스템**
-   - 포스트 작성 및 카테고리
-   - 댓글 및 답글 시스템
-   - 좋아요 기능
-   - 핸드 공유 (SNS, 링크, 임베드)
-
-3. **프론트엔드 UI**
-   - 모든 주요 페이지 구현 (Home, Archive, Search, Players, Community)
-   - shadcn/ui 컴포넌트 통합 (50+ 컴포넌트)
-   - 타이포그래피 시스템 구축
-
----
-
-## 다음 세션 체크리스트
-
-### 시작 전
-- [ ] `WORK_LOG.md` 읽기 (최근 작업 확인)
-- [ ] `ROADMAP.md` Phase 1 계획 확인
-- [ ] http://localhost:3000 개발 서버 실행
-- [ ] `CLAUDE.md` 참조 (프로젝트 컨텍스트)
-
-### 진행 중 작업
-- [ ] Phase 1.1: 핸드 좋아요/싫어요 시스템 (2-3시간)
-  - [ ] `hands` 테이블에 `likes_count`, `dislikes_count` 추가
-  - [ ] 자동 카운트 업데이트 트리거
-  - [ ] 좋아요/싫어요 API 함수
-  - [ ] UI 구현 (`hand-history-detail.tsx`, `hand-list-accordion.tsx`)
-
-### 대기 중
-- [ ] Phase 1.2: 핸드 댓글 시스템 (4-5시간)
-- [ ] Phase 4 영상 분석 테스트 (실제 영상 검증)
-- [ ] 플레이어 통계 대시보드
-- [ ] 수동 수정 UI
-
----
-
-## 주요 참조 파일
-
-### 계획 문서
-- `CLAUDE.md` - 프로젝트 전체 컨텍스트
-- `ROADMAP.md` - Phase별 개발 계획
-- `PAGES_STRUCTURE.md` - 페이지 구조 상세
-- `DIRECTORY_STRUCTURE.md` - 파일 구조
-
-### 핵심 코드
-- `app/archive/page.tsx` - Archive 페이지 (CRUD, 영상 분석)
-- `components/hand-list-accordion.tsx` - 핸드 목록 UI
-- `components/hand-history-detail.tsx` - 핸드 상세 UI
-- `lib/hand-boundary-detector.ts` - 핸드 경계 감지
-- `lib/hand-sequence-analyzer.ts` - 시퀀스 분석
-- `lib/supabase.ts` - Supabase 클라이언트
-- `lib/auth.ts` - 인증 함수
-
----
-
-**마지막 업데이트**: 2025-10-14
-**문서 버전**: 1.0
-**다음 작업**: archivist-ai/CLAUDE.md 생성, Phase 1.1 시작
+**마지막 업데이트**: 2025-10-16
+**문서 버전**: 2.0
+**세션 개수**: 10개 (최근) + 3개 (아카이브)

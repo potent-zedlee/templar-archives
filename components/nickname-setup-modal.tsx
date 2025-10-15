@@ -87,7 +87,7 @@ export function NicknameSetupModal({ open, currentNickname, onComplete }: Nickna
         <DialogHeader>
           <DialogTitle>닉네임 Settings</DialogTitle>
           <DialogDescription>
-            GGVault에서 사용할 닉네임을 Settings해주세요. 나중에 Profile 페이지에서 변경할 수 있습니다.
+            Templar Archives에서 사용할 닉네임을 Settings해주세요. 나중에 Profile 페이지에서 변경할 수 있습니다.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">

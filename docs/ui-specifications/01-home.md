@@ -246,7 +246,7 @@ const { data } = await supabase
 ```tsx
 // metadata (app/page.tsx)
 export const metadata = {
-  title: "GGVault - AI 기반 포커 영상 분석",
+  title: "Templar Archives - AI 기반 포커 영상 분석",
   description: "YouTube 포커 영상을 핸드 히스토리로 자동 변환. GPT-4 Vision 기반 분석.",
   keywords: ["포커", "핸드 히스토리", "영상 분석", "GGPoker", "PokerStars"]
 }

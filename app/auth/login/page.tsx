@@ -54,7 +54,7 @@ export default function loginClient() {
               <span className="font-mono text-2xl font-bold text-primary-foreground">GG</span>
             </div>
           </div>
-          <CardTitle className="text-title-lg">GGVault에 오신 것을 환영합니다</CardTitle>
+          <CardTitle className="text-title-lg">Templar Archives에 오신 것을 환영합니다</CardTitle>
           <CardDescription>
             포커 핸드 Archive와 Community 플랫폼
           </CardDescription>
@@ -101,7 +101,7 @@ export default function loginClient() {
           )}
 
           <div className="text-xs text-muted-foreground text-center">
-            Login하면 GGVault의{" "}
+            Login하면 Templar Archives의{" "}
             <a href="#" className="underline hover:text-foreground">
               이용약관
             </a>

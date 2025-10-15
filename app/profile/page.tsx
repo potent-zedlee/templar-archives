@@ -150,7 +150,7 @@ export default function profileClient() {
           <CardHeader>
             <CardTitle>Profile Settings</CardTitle>
             <CardDescription>
-              Manage your profile information for GGVault.
+              Manage your profile information for Templar Archives.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
