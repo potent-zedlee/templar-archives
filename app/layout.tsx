@@ -19,14 +19,14 @@ export default function RootLayout({
 }>) {
   // Set metadata via useEffect for client component
   useEffect(() => {
-    document.title = "GGVault - Poker Video Analysis Platform"
+    document.title = "Templar Archives - Poker Hand History Archive"
     const metaDescription = document.querySelector('meta[name="description"]')
     if (metaDescription) {
-      metaDescription.setAttribute('content', 'AI-powered poker video analysis to level up your game')
+      metaDescription.setAttribute('content', 'Comprehensive poker hand history archive and analysis platform')
     } else {
       const meta = document.createElement('meta')
       meta.name = 'description'
-      meta.content = 'AI-powered poker video analysis to level up your game'
+      meta.content = 'Comprehensive poker hand history archive and analysis platform'
       document.head.appendChild(meta)
     }
   }, [])
