@@ -1,17 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Skip static page generation during build
-  output: 'export' in process.env.VERCEL ? undefined : 'standalone',
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
-  },
-  // Disable static optimization
-  experimental: {
-    workerThreads: false,
-    cpus: 1,
   },
   images: {
     remotePatterns: [
