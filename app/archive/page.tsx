@@ -1366,7 +1366,7 @@ export default function ArchiveClient() {
                                       setIsSubEventDialogOpen(true)
                                       setOpenMenuId("")
                                     }}
-                                    title="이벤트 Add"
+                                    title="Add Event"
                                   >
                                     <Plus className="h-3.5 w-3.5" />
                                   </Button>
@@ -1423,7 +1423,7 @@ export default function ArchiveClient() {
                                       setViewingSubEvent(subEvent)
                                       setIsSubEventInfoDialogOpen(true)
                                     }}
-                                    title="정보 보기"
+                                    title="View Info"
                                   >
                                     <Info className="h-4 w-4" />
                                   </Button>
@@ -1578,16 +1578,16 @@ export default function ArchiveClient() {
             <Dialog open={isSubEventDialogOpen} onOpenChange={setIsSubEventDialogOpen}>
               <DialogContent className="max-w-5xl max-h-[90vh]">
                 <DialogHeader>
-                  <DialogTitle>{editingSubEventId ? "이벤트 Edit" : "이벤트 Add"}</DialogTitle>
+                  <DialogTitle>{editingSubEventId ? "Edit Event" : "Add Event"}</DialogTitle>
                 </DialogHeader>
                 <Tabs defaultValue="basic" className="w-full">
                   <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="basic">기본 정보</TabsTrigger>
-                    <TabsTrigger value="payout">페이아웃</TabsTrigger>
-                    <TabsTrigger value="structure">블라인드 구조</TabsTrigger>
+                    <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                    <TabsTrigger value="payout">Payout</TabsTrigger>
+                    <TabsTrigger value="structure">Blind Structure</TabsTrigger>
                   </TabsList>
 
-                  {/* 기본 정보 탭 */}
+                  {/* Basic Info Tab */}
                   <TabsContent value="basic" className="space-y-4 mt-4">
                     <ScrollArea className="h-[500px] pr-4">
                       <div className="space-y-4">
@@ -1677,7 +1677,7 @@ export default function ArchiveClient() {
                     </ScrollArea>
                   </TabsContent>
 
-                  {/* 페이아웃 탭 */}
+                  {/* Payout Tab */}
                   <TabsContent value="payout" className="space-y-4 mt-4">
                     <ScrollArea className="h-[500px] pr-4">
                       <div className="space-y-3">
@@ -1810,7 +1810,7 @@ export default function ArchiveClient() {
                     </ScrollArea>
                   </TabsContent>
 
-                  {/* 블라인드 구조 탭 */}
+                  {/* Blind Structure Tab */}
                   <TabsContent value="structure" className="space-y-4 mt-4">
                     <ScrollArea className="h-[500px] pr-4">
                       <div className="space-y-4">
@@ -1876,24 +1876,24 @@ export default function ArchiveClient() {
             <Dialog open={isSubEventInfoDialogOpen} onOpenChange={(open) => {
               setIsSubEventInfoDialogOpen(open)
               if (!open) {
-                // 다이얼로그 닫힐 때 편집 모드 초기화
+                // Reset edit mode when dialog closes
                 setIsEditingViewingPayouts(false)
                 setEditingViewingPayouts([])
               }
             }}>
               <DialogContent className="max-w-3xl max-h-[90vh]">
                 <DialogHeader>
-                  <DialogTitle>이벤트 정보</DialogTitle>
+                  <DialogTitle>Event Information</DialogTitle>
                 </DialogHeader>
                 {viewingSubEvent && (
                   <Tabs defaultValue="basic" className="w-full">
                     <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="basic">기본 정보</TabsTrigger>
-                      <TabsTrigger value="payout">페이아웃</TabsTrigger>
-                      <TabsTrigger value="structure">블라인드 구조</TabsTrigger>
+                      <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                      <TabsTrigger value="payout">Payout</TabsTrigger>
+                      <TabsTrigger value="structure">Blind Structure</TabsTrigger>
                     </TabsList>
 
-                    {/* 기본 정보 탭 */}
+                    {/* Basic Info Tab */}
                     <TabsContent value="basic" className="space-y-4 mt-4">
                       <ScrollArea className="h-[400px] pr-4">
                         <div className="space-y-4">
@@ -1954,18 +1954,18 @@ export default function ArchiveClient() {
                       </ScrollArea>
                     </TabsContent>
 
-                    {/* 페이아웃 탭 */}
+                    {/* Payout Tab */}
                     <TabsContent value="payout" className="space-y-4 mt-4">
                       <ScrollArea className="h-[400px] pr-4">
                         {loadingViewingPayouts ? (
                           <div className="flex items-center justify-center h-40">
-                            <p className="text-body text-muted-foreground">로딩 중...</p>
+                            <p className="text-body text-muted-foreground">Loading...</p>
                           </div>
                         ) : isEditingViewingPayouts ? (
                           <div className="space-y-3">
-                            {/* 편집 모드 */}
+                            {/* Edit Mode */}
                             <div className="flex items-center justify-between mb-3">
-                              <Label className="text-sm font-medium">페이아웃 Edit</Label>
+                              <Label className="text-sm font-medium">Edit Payout</Label>
                               <Button
                                 type="button"
                                 variant="outline"
@@ -1973,7 +1973,7 @@ export default function ArchiveClient() {
                                 onClick={addEditingPayoutRow}
                               >
                                 <Plus className="mr-2 h-3 w-3" />
-                                순위 Add
+                                Add Rank
                               </Button>
                             </div>
                             <div className="space-y-2">
@@ -1989,7 +1989,7 @@ export default function ArchiveClient() {
                                   </div>
                                   <div className="flex-1">
                                     <Input
-                                      placeholder="Player 이름"
+                                      placeholder="Player Name"
                                       value={payout.playerName}
                                       onChange={(e) => updateEditingPayoutRow(index, 'playerName', e.target.value)}
                                     />
@@ -2026,13 +2026,13 @@ export default function ArchiveClient() {
                                 onClick={saveEditingPayouts}
                                 disabled={savingPayouts}
                               >
-                                {savingPayouts ? "저장 중..." : "저장"}
+                                {savingPayouts ? "Saving..." : "Save"}
                               </Button>
                             </div>
                           </div>
                         ) : viewingPayouts.length > 0 ? (
                           <div className="space-y-2">
-                            {/* 보기 모드 */}
+                            {/* View Mode */}
                             {isUserAdmin && (
                               <div className="flex justify-end mb-2">
                                 <Button
@@ -2046,10 +2046,10 @@ export default function ArchiveClient() {
                               </div>
                             )}
                             <div className="grid grid-cols-[50px_50px_1fr_auto] gap-3 p-3 bg-muted/30 rounded-md font-medium text-caption">
-                              <div>순위</div>
-                              <div>국가</div>
+                              <div>Rank</div>
+                              <div>Country</div>
                               <div>Player</div>
-                              <div className="text-right">상금</div>
+                              <div className="text-right">Prize</div>
                             </div>
                             {viewingPayouts.map((payout) => {
                               const { flag, iso2, cleanName } = getCountryInfo(payout.player_name)
@@ -2074,8 +2074,8 @@ export default function ArchiveClient() {
                           </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center h-40 gap-3">
-                            {/* 데이터 없음 */}
-                            <p className="text-body text-muted-foreground">페이아웃 정보가 없습니다</p>
+                            {/* No Data */}
+                            <p className="text-body text-muted-foreground">No payout information available</p>
                             {isUserAdmin && (
                               <Button
                                 variant="outline"
@@ -2083,7 +2083,7 @@ export default function ArchiveClient() {
                                 onClick={enterEditMode}
                               >
                                 <Plus className="mr-2 h-3 w-3" />
-                                페이아웃 Add
+                                Add Payout
                               </Button>
                             )}
                           </div>
@@ -2091,7 +2091,7 @@ export default function ArchiveClient() {
                       </ScrollArea>
                     </TabsContent>
 
-                    {/* 블라인드 구조 탭 */}
+                    {/* Blind Structure Tab */}
                     <TabsContent value="structure" className="space-y-4 mt-4">
                       <ScrollArea className="h-[400px] pr-4">
                         {viewingSubEvent.blind_structure ? (
@@ -2101,7 +2101,7 @@ export default function ArchiveClient() {
                           </div>
                         ) : (
                           <div className="flex items-center justify-center h-40">
-                            <p className="text-body text-muted-foreground">블라인드 구조 정보가 없습니다</p>
+                            <p className="text-body text-muted-foreground">No blind structure information available</p>
                           </div>
                         )}
                       </ScrollArea>
@@ -2109,7 +2109,7 @@ export default function ArchiveClient() {
 
                     <div className="flex justify-end pt-4 border-t">
                       <Button onClick={() => setIsSubEventInfoDialogOpen(false)}>
-                        닫기
+                        Close
                       </Button>
                     </div>
                   </Tabs>
@@ -2242,7 +2242,7 @@ export default function ArchiveClient() {
                       Cancel
                     </Button>
                     <Button onClick={addDay} disabled={uploading}>
-                      {uploading ? '업로드 중...' : (editingDayId ? 'Edit' : 'Add')}
+                      {uploading ? 'Uploading...' : (editingDayId ? 'Edit' : 'Add')}
                     </Button>
                   </div>
                 </div>
@@ -2252,7 +2252,7 @@ export default function ArchiveClient() {
 
           <ResizableHandle withHandle />
 
-          {/* 오른쪽: 영상 + 핸드 목록 */}
+          {/* Right: Video + Hand List */}
           <ResizablePanel defaultSize={75} minSize={60}>
             <div className="space-y-6">
             {/* Video Header */}
@@ -2287,7 +2287,7 @@ export default function ArchiveClient() {
                   {selectedDay && hands.length > 0 && (
                     <div className="flex items-center gap-2 text-caption text-muted-foreground">
                       <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span>{hands.length}개의 핸드</span>
+                      <span>{hands.length} hands</span>
                     </div>
                   )}
                 </div>
@@ -2311,13 +2311,13 @@ export default function ArchiveClient() {
               </div>
             </Card>
 
-            {/* 핸드 목록 */}
+            {/* Hand List */}
             <Card className="p-6">
               <h2 className="text-title mb-4">Hand History</h2>
               <div>
                 {hands.length > 0 ? (
                   (() => {
-                    // 선택된 day, subEvent, tournament 찾기
+                    // Find selected day, subEvent, tournament
                     const selectedDayObj = tournaments
                       .flatMap(t => t.sub_events || [])
                       .flatMap(se => se.days || [])
@@ -2335,7 +2335,7 @@ export default function ArchiveClient() {
                       <HandListAccordion
                         handIds={hands.map((hand: any) => hand.id)}
                         hands={hands.map((hand: any) => {
-                          // timestamp 파싱: "MM:SS-MM:SS" 또는 "MM:SS" 형식 지원
+                          // Parse timestamp: Supports "MM:SS-MM:SS" or "MM:SS" format
                           const timestamp = hand.timestamp || ""
                           const parts = timestamp.split('-')
                           const startTime = parts[0] || "00:00"
@@ -2343,7 +2343,7 @@ export default function ArchiveClient() {
 
                           return {
                             handNumber: hand.number || "???",
-                            summary: hand.description || "핸드 정보",
+                            summary: hand.description || "Hand Info",
                             timestamp: 0,
                             startTime,
                             endTime,
@@ -2390,8 +2390,8 @@ export default function ArchiveClient() {
                 ) : (
                   <EmptyState
                     icon={Folder}
-                    title="핸드가 없습니다"
-                    description="외부 시스템에서 핸드를 import하세요. API: POST /api/import-hands"
+                    title="No Hands Available"
+                    description="Import hands from external systems. API: POST /api/import-hands"
                     variant="inline"
                   />
                 )}
@@ -2399,7 +2399,7 @@ export default function ArchiveClient() {
                 {false && (
                   <div className="flex items-center justify-center h-40">
                     <p className="text-body text-muted-foreground">
-                      핸드가 없습니다. 외부 시스템에서 핸드를 import하세요.
+                      No hands available. Import hands from external systems.
                       <br />
                       <span className="text-caption">API: POST /api/import-hands</span>
                     </p>
@@ -2423,7 +2423,7 @@ export default function ArchiveClient() {
         initialTime={videoStartTime}
       />
 
-      {/* Hand History import는 외부 시스템에서 수행됩니다 */}
+      {/* Hand History import is performed by external systems */}
       {/* API: POST /api/import-hands */}
     </div>
   )

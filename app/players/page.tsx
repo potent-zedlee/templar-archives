@@ -314,11 +314,11 @@ export default function playersClient() {
           {paginatedPlayers.length === 0 && (
             <EmptyState
               icon={Users}
-              title={searchQuery || hasActiveFilters ? "검색 결과가 없습니다" : "플레이어가 없습니다"}
-              description={searchQuery || hasActiveFilters ? "검색 조건을 조정해보세요" : "아직 등록된 플레이어가 없습니다"}
+              title={searchQuery || hasActiveFilters ? "No Search Results" : "No Players"}
+              description={searchQuery || hasActiveFilters ? "Try adjusting search criteria" : "No registered players yet"}
               variant="inline"
               action={searchQuery || hasActiveFilters ? {
-                label: "필터 초기화",
+                label: "Reset Filters",
                 onClick: clearFilters
               } : undefined}
             />

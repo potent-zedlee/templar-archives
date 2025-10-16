@@ -66,7 +66,7 @@ export default function claimsClient() {
   useEffect(() => {
     if (userEmail && !isAdmin(userEmail)) {
       router.push("/")
-      toast.error("관리자만 접근할 수 있습니다")
+      toast.error("Admin access only")
     } else if (userEmail) {
       loadClaims()
     }
@@ -87,7 +87,7 @@ export default function claimsClient() {
       setAllClaims(allResult.data)
     } catch (error) {
       console.error("Error loading claims:", error)
-      toast.error("클레임 목록을 불러오는데 실패했습니다")
+      toast.error("Failed to load claims")
     } finally {
       setLoading(false)
     }
@@ -105,7 +105,7 @@ export default function claimsClient() {
     if (!selectedClaim || !user) return
 
     if (actionType === "reject" && !rejectedReason) {
-      toast.error("거절 사유를 입력해주세요")
+      toast.error("Please enter rejection reason")
       return
     }
 
@@ -121,7 +121,7 @@ export default function claimsClient() {
 
         if (error) throw error
 
-        toast.success("클레임이 승인되었습니다")
+        toast.success("Claim approved")
       } else {
         const { error } = await rejectPlayerClaim({
           claimId: selectedClaim.id,
@@ -132,14 +132,14 @@ export default function claimsClient() {
 
         if (error) throw error
 
-        toast.success("클레임이 거절되었습니다")
+        toast.success("Claim rejected")
       }
 
       setActionDialogOpen(false)
       loadClaims()
     } catch (error) {
       console.error("Error processing claim:", error)
-      toast.error("클레임 처리에 실패했습니다")
+      toast.error("Failed to process claim")
     } finally {
       setProcessing(false)
     }
@@ -151,21 +151,21 @@ export default function claimsClient() {
         return (
           <Badge variant="secondary" className="gap-1">
             <Clock className="h-3 w-3" />
-            대기 중
+            Pending
           </Badge>
         )
       case "approved":
         return (
           <Badge variant="default" className="gap-1 bg-green-600">
             <CheckCircle2 className="h-3 w-3" />
-            승인됨
+            Approved
           </Badge>
         )
       case "rejected":
         return (
           <Badge variant="destructive" className="gap-1">
             <XCircle className="h-3 w-3" />
-            거절됨
+            Rejected
           </Badge>
         )
       default:
@@ -176,13 +176,13 @@ export default function claimsClient() {
   const getVerificationMethodLabel = (method: string) => {
     switch (method) {
       case "social_media":
-        return "소셜 미디어"
+        return "Social Media"
       case "email":
-        return "이메일"
+        return "Email"
       case "admin":
-        return "관리자"
+        return "Admin"
       case "other":
-        return "기타"
+        return "Other"
       default:
         return method
     }
@@ -205,25 +205,25 @@ export default function claimsClient() {
 
       <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="mb-8">
-          <h1 className="text-title-lg mb-2">플레이어 클레임 관리</h1>
+          <h1 className="text-title-lg mb-2">Player Claim Management</h1>
           <p className="text-body text-muted-foreground">
-            플레이어 프로필 클레임 요청을 승인 또는 거절합니다
+            Approve or reject player profile claim requests
           </p>
         </div>
 
         <Tabs defaultValue="pending">
           <TabsList>
             <TabsTrigger value="pending">
-              대기 중 ({pendingClaims.length})
+              Pending ({pendingClaims.length})
             </TabsTrigger>
-            <TabsTrigger value="all">전체 ({allClaims.length})</TabsTrigger>
+            <TabsTrigger value="all">All ({allClaims.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="pending" className="mt-6">
             {pendingClaims.length === 0 ? (
               <Card className="p-12 text-center">
                 <p className="text-body text-muted-foreground">
-                  대기 중인 클레임 요청이 없습니다
+                  No pending claim requests
                 </p>
               </Card>
             ) : (
@@ -231,12 +231,12 @@ export default function claimsClient() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>플레이어</TableHead>
-                      <TableHead>요청자</TableHead>
-                      <TableHead>인증 방법</TableHead>
-                      <TableHead>증빙 자료</TableHead>
-                      <TableHead>요청 일시</TableHead>
-                      <TableHead className="text-right">액션</TableHead>
+                      <TableHead>Player</TableHead>
+                      <TableHead>Requester</TableHead>
+                      <TableHead>Verification Method</TableHead>
+                      <TableHead>Evidence</TableHead>
+                      <TableHead>Requested At</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -280,7 +280,7 @@ export default function claimsClient() {
                               rel="noopener noreferrer"
                               className="flex items-center gap-1 text-primary hover:underline"
                             >
-                              링크 보기
+                              View Link
                               <ExternalLink className="h-3 w-3" />
                             </a>
                           )}
@@ -304,7 +304,7 @@ export default function claimsClient() {
                               onClick={() => handleActionClick(claim, "approve")}
                             >
                               <Check className="h-4 w-4 mr-1" />
-                              승인
+                              Approve
                             </Button>
                             <Button
                               size="sm"
@@ -312,7 +312,7 @@ export default function claimsClient() {
                               onClick={() => handleActionClick(claim, "reject")}
                             >
                               <X className="h-4 w-4 mr-1" />
-                              거절
+                              Reject
                             </Button>
                           </div>
                         </TableCell>
@@ -329,12 +329,12 @@ export default function claimsClient() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>플레이어</TableHead>
-                    <TableHead>요청자</TableHead>
-                    <TableHead>상태</TableHead>
-                    <TableHead>인증 방법</TableHead>
-                    <TableHead>처리 일시</TableHead>
-                    <TableHead>처리자</TableHead>
+                    <TableHead>Player</TableHead>
+                    <TableHead>Requester</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Verification Method</TableHead>
+                    <TableHead>Processed At</TableHead>
+                    <TableHead>Processed By</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -393,12 +393,12 @@ export default function claimsClient() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {actionType === "approve" ? "클레임 승인" : "클레임 거절"}
+              {actionType === "approve" ? "Approve Claim" : "Reject Claim"}
             </DialogTitle>
             <DialogDescription>
               {actionType === "approve"
-                ? "이 클레임을 승인하시겠습니까?"
-                : "이 클레임을 거절하시겠습니까?"}
+                ? "Are you sure you want to approve this claim?"
+                : "Are you sure you want to reject this claim?"}
             </DialogDescription>
           </DialogHeader>
 
@@ -407,20 +407,20 @@ export default function claimsClient() {
               {/* Claim Info */}
               <div className="p-3 bg-muted rounded-lg space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-caption text-muted-foreground">플레이어</span>
+                  <span className="text-caption text-muted-foreground">Player</span>
                   <span className="font-medium">{selectedClaim.player.name}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-caption text-muted-foreground">요청자</span>
+                  <span className="text-caption text-muted-foreground">Requester</span>
                   <span className="font-medium">{selectedClaim.user.nickname}</span>
                 </div>
               </div>
 
               {actionType === "reject" && (
                 <div className="space-y-2">
-                  <Label>거절 사유 *</Label>
+                  <Label>Rejection Reason *</Label>
                   <Textarea
-                    placeholder="클레임을 거절하는 사유를 입력해주세요"
+                    placeholder="Please enter the reason for rejecting this claim"
                     value={rejectedReason}
                     onChange={(e) => setRejectedReason(e.target.value)}
                     rows={3}
@@ -429,9 +429,9 @@ export default function claimsClient() {
               )}
 
               <div className="space-y-2">
-                <Label>관리자 메모 (선택사항)</Label>
+                <Label>Admin Notes (Optional)</Label>
                 <Textarea
-                  placeholder="내부용 메모를 입력해주세요"
+                  placeholder="Enter internal notes"
                   value={adminNotes}
                   onChange={(e) => setAdminNotes(e.target.value)}
                   rows={2}
@@ -445,7 +445,7 @@ export default function claimsClient() {
               variant="outline"
               onClick={() => setActionDialogOpen(false)}
             >
-              취소
+              Cancel
             </Button>
             <Button
               variant={actionType === "approve" ? "default" : "destructive"}
@@ -453,10 +453,10 @@ export default function claimsClient() {
               disabled={processing}
             >
               {processing
-                ? "처리 중..."
+                ? "Processing..."
                 : actionType === "approve"
-                ? "승인"
-                : "거절"}
+                ? "Approve"
+                : "Reject"}
             </Button>
           </DialogFooter>
         </DialogContent>

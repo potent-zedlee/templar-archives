@@ -103,7 +103,7 @@ export default function communityClient() {
 
   async function handleLike(postId: string) {
     if (!user) {
-      toast.error('로그인이 필요합니다')
+      toast.error('Login required')
       return
     }
 
@@ -123,7 +123,7 @@ export default function communityClient() {
 
   async function handleCreatePost() {
     if (!user) {
-      toast.error('Login이 필요합니다')
+      toast.error('Login required')
       return
     }
 
@@ -198,7 +198,7 @@ export default function communityClient() {
             <Card className="p-4">
               <Dialog open={isDialogOpen} onOpenChange={(open) => {
                 if (!user && open) {
-                  toast.error('Login이 필요합니다')
+                  toast.error('Login required')
                   return
                 }
                 setIsDialogOpen(open)
@@ -339,12 +339,12 @@ export default function communityClient() {
                         <MessageSquare className="h-8 w-8 text-muted-foreground" />
                       </div>
                     </div>
-                    <h3 className="text-title mb-2">아직 포스트가 없습니다</h3>
+                    <h3 className="text-title mb-2">No Posts Yet</h3>
                     <p className="text-body text-muted-foreground mb-6">
-                      Community의 첫 번째 포스트를 작성해보세요!
+                      Be the first to create a post in the community!
                     </p>
                     <Button onClick={() => setIsDialogOpen(true)}>
-                      첫 포스트 작성하기
+                      Create First Post
                     </Button>
                   </div>
                 ) : (

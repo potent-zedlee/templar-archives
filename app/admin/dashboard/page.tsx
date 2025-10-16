@@ -44,7 +44,7 @@ export default function dashboardClient() {
     try {
       const adminStatus = await isAdmin(user.id)
       if (!adminStatus) {
-        toast.error("관리자 권한이 필요합니다")
+        toast.error("Admin privileges required")
         router.push("/")
         return
       }
@@ -53,7 +53,7 @@ export default function dashboardClient() {
       loadDashboardData()
     } catch (error) {
       console.error("Error checking admin access:", error)
-      toast.error("권한 확인 중 오류가 발생했습니다")
+      toast.error("Error checking permissions")
       router.push("/")
     }
   }
@@ -69,7 +69,7 @@ export default function dashboardClient() {
       setActivities(activityData)
     } catch (error) {
       console.error("Error loading dashboard data:", error)
-      toast.error("대시보드 데이터를 불러오는데 실패했습니다")
+      toast.error("Failed to load dashboard data")
     } finally {
       setLoading(false)
     }
@@ -94,17 +94,17 @@ export default function dashboardClient() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-title-lg mb-2">관리자 대시보드</h1>
+            <h1 className="text-title-lg mb-2">Admin Dashboard</h1>
             <p className="text-body text-muted-foreground">
-              플랫폼 전체 통계 및 최근 활동을 확인하세요
+              View platform statistics and recent activity
             </p>
           </div>
           <div className="flex gap-2">
             <LinkButton href="/admin/users" variant="outline">
-              사용자 관리
+              User Management
             </LinkButton>
             <LinkButton href="/admin/claims" variant="outline">
-              클레임 관리
+              Claim Management
             </LinkButton>
           </div>
         </div>
@@ -113,24 +113,24 @@ export default function dashboardClient() {
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <StatsCard
-              title="전체 사용자"
+              title="Total Users"
               value={stats.totalUsers}
               icon={Users}
-              description={`오늘 ${stats.newUsersToday}명 가입`}
+              description={`${stats.newUsersToday} joined today`}
             />
             <StatsCard
-              title="전체 게시글"
+              title="Total Posts"
               value={stats.totalPosts}
               icon={FileText}
-              description={`오늘 ${stats.newPostsToday}개 작성`}
+              description={`${stats.newPostsToday} created today`}
             />
             <StatsCard
-              title="전체 댓글"
+              title="Total Comments"
               value={stats.totalComments}
               icon={MessageSquare}
             />
             <StatsCard
-              title="전체 핸드"
+              title="Total Hands"
               value={stats.totalHands}
               icon={PlaySquare}
             />
@@ -141,17 +141,17 @@ export default function dashboardClient() {
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <StatsCard
-              title="전체 플레이어"
+              title="Total Players"
               value={stats.totalPlayers}
               icon={TrendingUp}
             />
             <StatsCard
-              title="차단된 사용자"
+              title="Banned Users"
               value={stats.bannedUsers}
               icon={Ban}
             />
             <StatsCard
-              title="대기 중인 클레임"
+              title="Pending Claims"
               value={stats.pendingClaims}
               icon={AlertCircle}
             />
@@ -160,7 +160,7 @@ export default function dashboardClient() {
 
         {/* Recent Activity */}
         <div className="mb-8">
-          <h2 className="text-title mb-4">최근 관리자 활동</h2>
+          <h2 className="text-title mb-4">Recent Admin Activity</h2>
           <ActivityFeed activities={activities} />
         </div>
 
@@ -173,9 +173,9 @@ export default function dashboardClient() {
           >
             <Users className="h-5 w-5 mr-3" />
             <div className="text-left">
-              <div className="text-body font-semibold">사용자 관리</div>
+              <div className="text-body font-semibold">User Management</div>
               <div className="text-caption text-muted-foreground">
-                사용자 목록, 차단, 역할 변경
+                View users, ban, change roles
               </div>
             </div>
           </LinkButton>
@@ -187,9 +187,9 @@ export default function dashboardClient() {
           >
             <AlertCircle className="h-5 w-5 mr-3" />
             <div className="text-left">
-              <div className="text-body font-semibold">클레임 관리</div>
+              <div className="text-body font-semibold">Claim Management</div>
               <div className="text-caption text-muted-foreground">
-                플레이어 프로필 클레임 승인
+                Approve player profile claims
               </div>
             </div>
           </LinkButton>
@@ -201,9 +201,9 @@ export default function dashboardClient() {
           >
             <FileText className="h-5 w-5 mr-3" />
             <div className="text-left">
-              <div className="text-body font-semibold">커뮤니티 관리</div>
+              <div className="text-body font-semibold">Community Management</div>
               <div className="text-caption text-muted-foreground">
-                게시글 및 댓글 모더레이션
+                Moderate posts and comments
               </div>
             </div>
           </LinkButton>

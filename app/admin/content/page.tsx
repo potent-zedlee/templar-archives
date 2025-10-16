@@ -174,24 +174,24 @@ export default function contentClient() {
       <Header />
       <div className="container max-w-7xl mx-auto py-8 px-4">
       <div className="mb-6">
-        <h1 className="text-title-lg mb-2">콘텐츠 관리</h1>
+        <h1 className="text-title-lg mb-2">Content Management</h1>
         <p className="text-body text-muted-foreground">
-          포스트, 댓글 및 신고 관리
+          Manage posts, comments and reports
         </p>
       </div>
 
       <Tabs defaultValue="reports" className="space-y-6">
         <TabsList>
           <TabsTrigger value="reports">
-            신고 관리
+            Report Management
             {reports.filter(r => r.status === "pending").length > 0 && (
               <Badge variant="destructive" className="ml-2">
                 {reports.filter(r => r.status === "pending").length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="posts">포스트</TabsTrigger>
-          <TabsTrigger value="comments">댓글</TabsTrigger>
+          <TabsTrigger value="posts">Posts</TabsTrigger>
+          <TabsTrigger value="comments">Comment</TabsTrigger>
         </TabsList>
 
         {/* Reports Tab */}
@@ -200,13 +200,13 @@ export default function contentClient() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>타입</TableHead>
-                  <TableHead>콘텐츠</TableHead>
-                  <TableHead>신고 사유</TableHead>
-                  <TableHead>신고자</TableHead>
-                  <TableHead>상태</TableHead>
-                  <TableHead>날짜</TableHead>
-                  <TableHead>액션</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Content</TableHead>
+                  <TableHead>Report Reason</TableHead>
+                  <TableHead>Reporter</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -214,7 +214,7 @@ export default function contentClient() {
                   <TableRow key={report.id}>
                     <TableCell>
                       <Badge variant="outline">
-                        {report.post_id ? "포스트" : "댓글"}
+                        {report.post_id ? "Posts" : "Comment"}
                       </Badge>
                     </TableCell>
                     <TableCell className="max-w-xs truncate">
@@ -228,13 +228,13 @@ export default function contentClient() {
                     <TableCell>{report.reporter_name}</TableCell>
                     <TableCell>
                       {report.status === "pending" && (
-                        <Badge variant="outline">대기 중</Badge>
+                        <Badge variant="outline">Pending</Badge>
                       )}
                       {report.status === "approved" && (
-                        <Badge variant="destructive">승인됨</Badge>
+                        <Badge variant="destructive">Approved</Badge>
                       )}
                       {report.status === "rejected" && (
-                        <Badge variant="secondary">거부됨</Badge>
+                        <Badge variant="secondary">Rejected</Badge>
                       )}
                     </TableCell>
                     <TableCell>
@@ -247,7 +247,7 @@ export default function contentClient() {
                           variant="outline"
                           onClick={() => setSelectedReport(report)}
                         >
-                          검토
+                          Review
                         </Button>
                       )}
                     </TableCell>
@@ -264,12 +264,12 @@ export default function contentClient() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>제목</TableHead>
-                  <TableHead>작성자</TableHead>
-                  <TableHead>카테고리</TableHead>
-                  <TableHead>상태</TableHead>
-                  <TableHead>날짜</TableHead>
-                  <TableHead>액션</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Author</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -282,9 +282,9 @@ export default function contentClient() {
                     </TableCell>
                     <TableCell>
                       {post.is_hidden ? (
-                        <Badge variant="destructive">숨김</Badge>
+                        <Badge variant="destructive">Hidden</Badge>
                       ) : (
-                        <Badge variant="default">공개</Badge>
+                        <Badge variant="default">Public</Badge>
                       )}
                     </TableCell>
                     <TableCell>
@@ -352,12 +352,12 @@ export default function contentClient() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>댓글</TableHead>
-                  <TableHead>작성자</TableHead>
-                  <TableHead>포스트</TableHead>
-                  <TableHead>상태</TableHead>
-                  <TableHead>날짜</TableHead>
-                  <TableHead>액션</TableHead>
+                  <TableHead>Comment</TableHead>
+                  <TableHead>Author</TableHead>
+                  <TableHead>Posts</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -370,9 +370,9 @@ export default function contentClient() {
                     </TableCell>
                     <TableCell>
                       {comment.is_hidden ? (
-                        <Badge variant="destructive">숨김</Badge>
+                        <Badge variant="destructive">Hidden</Badge>
                       ) : (
-                        <Badge variant="default">공개</Badge>
+                        <Badge variant="default">Public</Badge>
                       )}
                     </TableCell>
                     <TableCell>
@@ -440,22 +440,22 @@ export default function contentClient() {
         <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>신고 검토</DialogTitle>
+              <DialogTitle>Review Report</DialogTitle>
               <DialogDescription>
-                신고 내용을 검토하고 승인 또는 거부하세요
+                Review the report and approve or reject it
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4">
               <div>
-                <Label>타입</Label>
+                <Label>Type</Label>
                 <Badge variant="outline" className="mt-1">
-                  {selectedReport.post_id ? "포스트" : "댓글"}
+                  {selectedReport.post_id ? "Posts" : "Comment"}
                 </Badge>
               </div>
 
               <div>
-                <Label>콘텐츠</Label>
+                <Label>Content</Label>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {selectedReport.post_id
                     ? (selectedReport as any).post?.title
@@ -464,7 +464,7 @@ export default function contentClient() {
               </div>
 
               <div>
-                <Label>신고 사유</Label>
+                <Label>Report Reason</Label>
                 <Badge variant="secondary" className="mt-1">
                   {selectedReport.reason}
                 </Badge>
@@ -472,7 +472,7 @@ export default function contentClient() {
 
               {selectedReport.description && (
                 <div>
-                  <Label>상세 설명</Label>
+                  <Label>Description</Label>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {selectedReport.description}
                   </p>
@@ -480,17 +480,17 @@ export default function contentClient() {
               )}
 
               <div>
-                <Label>신고자</Label>
+                <Label>Reporter</Label>
                 <p className="mt-1 text-sm">{selectedReport.reporter_name}</p>
               </div>
 
               <div>
-                <Label htmlFor="admin-comment">관리자 코멘트 (선택)</Label>
+                <Label htmlFor="admin-comment">Admin Comment (Optional)</Label>
                 <Textarea
                   id="admin-comment"
                   value={adminComment}
                   onChange={(e) => setAdminComment(e.target.value)}
-                  placeholder="검토 결과에 대한 설명..."
+                  placeholder="Comments on the review..."
                   rows={3}
                 />
               </div>
@@ -504,21 +504,21 @@ export default function contentClient() {
                   setAdminComment("")
                 }}
               >
-                취소
+                Cancel
               </Button>
               <Button
                 variant="destructive"
                 onClick={handleApproveReport}
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
-                승인 (콘텐츠 숨김)
+                Approve (Content Hidden)
               </Button>
               <Button
                 variant="secondary"
                 onClick={handleRejectReport}
               >
                 <XCircle className="mr-2 h-4 w-4" />
-                거부
+                Reject
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -531,26 +531,26 @@ export default function contentClient() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {actionDialog.type === "delete" ? "삭제 확인" : "작업 확인"}
+                {actionDialog.type === "delete" ? "Delete Confirmation" : "Action Confirmation"}
               </DialogTitle>
               <DialogDescription>
                 {actionDialog.type === "delete"
-                  ? "이 작업은 되돌릴 수 없습니다."
-                  : "선택한 콘텐츠의 상태를 변경합니다."}
+                  ? "This action cannot be undone."
+                  : "Change the status of selected content."}
               </DialogDescription>
             </DialogHeader>
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setActionDialog(null)}>
-                취소
+                Cancel
               </Button>
               <Button
                 variant={actionDialog.type === "delete" ? "destructive" : "default"}
                 onClick={handleContentAction}
               >
-                {actionDialog.type === "hide" && "숨기기"}
-                {actionDialog.type === "unhide" && "표시"}
-                {actionDialog.type === "delete" && "삭제"}
+                {actionDialog.type === "hide" && "Hide"}
+                {actionDialog.type === "unhide" && "Show"}
+                {actionDialog.type === "delete" && "Delete"}
               </Button>
             </DialogFooter>
           </DialogContent>

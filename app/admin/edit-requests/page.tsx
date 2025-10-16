@@ -41,10 +41,10 @@ import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
 
 const EDIT_TYPE_LABELS: Record<string, string> = {
-  "basic_info": "기본 정보",
-  "board": "보드 & 팟",
-  "players": "플레이어",
-  "actions": "액션"
+  "basic_info": "Basic Info",
+  "board": "Board & Pot",
+  "players": "Players",
+  "actions": "Actions"
 }
 
 export default function editrequestsClient() {
@@ -117,7 +117,7 @@ export default function editrequestsClient() {
       await loadRequests()
     } catch (error) {
       console.error("Error submitting review:", error)
-      alert("검토 처리 중 오류가 발생했습니다.")
+      alert("Failed to process review.")
     } finally {
       setSubmitting(false)
     }
@@ -139,7 +139,7 @@ export default function editrequestsClient() {
                 <Label className="text-sm font-semibold">{key}</Label>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-xs text-muted-foreground mb-2">원본</div>
+                    <div className="text-xs text-muted-foreground mb-2">Original</div>
                     <div className="space-y-2">
                       {originalValue?.map((item: any, i: number) => (
                         <Card key={i} className="p-2 bg-red-50 dark:bg-red-950/20 text-xs">
@@ -149,7 +149,7 @@ export default function editrequestsClient() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-xs text-muted-foreground mb-2">수정</div>
+                    <div className="text-xs text-muted-foreground mb-2">Modified</div>
                     <div className="space-y-2">
                       {proposedValue.map((item: any, i: number) => (
                         <Card key={i} className="p-2 bg-green-50 dark:bg-green-950/20 text-xs">
@@ -168,13 +168,13 @@ export default function editrequestsClient() {
             return (
               <div key={key} className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-xs text-muted-foreground">{key} (원본)</Label>
+                  <Label className="text-xs text-muted-foreground">{key} (Original)</Label>
                   <div className="mt-1 p-2 bg-red-50 dark:bg-red-950/20 rounded text-sm line-through">
                     {String(originalValue || "-")}
                   </div>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">{key} (수정)</Label>
+                  <Label className="text-xs text-muted-foreground">{key} (Modified)</Label>
                   <div className="mt-1 p-2 bg-green-50 dark:bg-green-950/20 rounded text-sm font-semibold">
                     {String(proposedValue || "-")}
                   </div>
@@ -208,23 +208,23 @@ export default function editrequestsClient() {
       <Header />
       <div className="container max-w-7xl mx-auto py-8 px-4">
       <div className="mb-6">
-        <h1 className="text-title-lg mb-2">핸드 수정 요청 관리</h1>
+        <h1 className="text-title-lg mb-2">Hand Edit Request Management</h1>
         <p className="text-body text-muted-foreground">
-          유저가 제출한 핸드 수정 요청을 검토하고 승인/거부하세요
+          Review and approve or reject hand edit requests submitted by users
         </p>
       </div>
 
       <Tabs defaultValue="pending" className="space-y-6">
         <TabsList>
           <TabsTrigger value="pending">
-            대기 중
+            Pending
             {pendingRequests.length > 0 && (
               <Badge variant="destructive" className="ml-2">
                 {pendingRequests.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="reviewed">검토 완료</TabsTrigger>
+          <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
         </TabsList>
 
         {/* Pending Requests */}
@@ -232,17 +232,17 @@ export default function editrequestsClient() {
           <Card className="p-6">
             {pendingRequests.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                대기 중인 수정 요청이 없습니다
+                No pending edit requests
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>핸드</TableHead>
-                    <TableHead>수정 유형</TableHead>
-                    <TableHead>제출자</TableHead>
-                    <TableHead>제출 날짜</TableHead>
-                    <TableHead>액션</TableHead>
+                    <TableHead>Hand</TableHead>
+                    <TableHead>Edit Type</TableHead>
+                    <TableHead>Submitter</TableHead>
+                    <TableHead>Submitted</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -275,7 +275,7 @@ export default function editrequestsClient() {
                             onClick={() => handleReviewClick(request, "approve")}
                           >
                             <CheckCircle className="mr-2 h-4 w-4" />
-                            승인
+                            Approve
                           </Button>
                           <Button
                             size="sm"
@@ -283,7 +283,7 @@ export default function editrequestsClient() {
                             onClick={() => handleReviewClick(request, "reject")}
                           >
                             <XCircle className="mr-2 h-4 w-4" />
-                            거부
+                            Reject
                           </Button>
                         </div>
                       </TableCell>
@@ -300,17 +300,17 @@ export default function editrequestsClient() {
           <Card className="p-6">
             {reviewedRequests.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
-                검토 완료된 요청이 없습니다
+                No reviewed requests
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>핸드</TableHead>
-                    <TableHead>수정 유형</TableHead>
-                    <TableHead>제출자</TableHead>
-                    <TableHead>상태</TableHead>
-                    <TableHead>검토 날짜</TableHead>
+                    <TableHead>Hand</TableHead>
+                    <TableHead>Edit Type</TableHead>
+                    <TableHead>Submitter</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Reviewed At</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -332,9 +332,9 @@ export default function editrequestsClient() {
                       <TableCell>{request.requester_name}</TableCell>
                       <TableCell>
                         {request.status === "approved" ? (
-                          <Badge variant="default" className="bg-green-600">승인됨</Badge>
+                          <Badge variant="default" className="bg-green-600">Approved</Badge>
                         ) : (
-                          <Badge variant="destructive">거부됨</Badge>
+                          <Badge variant="destructive">Rejected</Badge>
                         )}
                       </TableCell>
                       <TableCell>
@@ -357,7 +357,7 @@ export default function editrequestsClient() {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                수정 요청 {actionType === "approve" ? "승인" : "거부"}
+                Edit Request {actionType === "approve" ? "Approve" : "Reject"}
               </DialogTitle>
               <DialogDescription>
                 #{(selectedRequest as any).hand?.number} - {EDIT_TYPE_LABELS[selectedRequest.edit_type]}
@@ -368,18 +368,18 @@ export default function editrequestsClient() {
               {/* Request Info */}
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <Label className="text-muted-foreground">제출자</Label>
+                  <Label className="text-muted-foreground">Submitter</Label>
                   <p>{selectedRequest.requester_name}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">제출 날짜</Label>
+                  <Label className="text-muted-foreground">Submitted</Label>
                   <p>{new Date(selectedRequest.created_at).toLocaleString("ko-KR")}</p>
                 </div>
               </div>
 
               {/* Reason */}
               <div>
-                <Label>수정 이유</Label>
+                <Label>Edit Reason</Label>
                 <Card className="mt-1 p-3 bg-muted/30">
                   <p className="text-sm">{selectedRequest.reason}</p>
                 </Card>
@@ -387,7 +387,7 @@ export default function editrequestsClient() {
 
               {/* Diff View */}
               <div>
-                <Label className="text-lg font-semibold">변경 사항</Label>
+                <Label className="text-lg font-semibold">Changes</Label>
                 <div className="mt-3">
                   {getDiffView(selectedRequest)}
                 </div>
@@ -395,12 +395,12 @@ export default function editrequestsClient() {
 
               {/* Admin Comment */}
               <div>
-                <Label htmlFor="admin-comment">관리자 코멘트 (선택)</Label>
+                <Label htmlFor="admin-comment">Admin Comment (Optional)</Label>
                 <Textarea
                   id="admin-comment"
                   value={adminComment}
                   onChange={(e) => setAdminComment(e.target.value)}
-                  placeholder="검토 결과에 대한 설명..."
+                  placeholder="Comments on review result..."
                   rows={3}
                   className="mt-1"
                 />
@@ -417,7 +417,7 @@ export default function editrequestsClient() {
                 }}
                 disabled={submitting}
               >
-                취소
+                Cancel
               </Button>
               <Button
                 variant={actionType === "approve" ? "default" : "destructive"}
@@ -425,10 +425,10 @@ export default function editrequestsClient() {
                 disabled={submitting}
               >
                 {submitting
-                  ? "처리 중..."
+                  ? "Processing..."
                   : actionType === "approve"
-                  ? "승인 및 적용"
-                  : "거부"}
+                  ? "Approve & Apply"
+                  : "Reject"}
               </Button>
             </DialogFooter>
           </DialogContent>

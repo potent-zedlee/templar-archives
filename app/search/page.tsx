@@ -178,7 +178,7 @@ export default function SearchClient() {
     setDateTo("")
     // Clear filter store
     filterState.resetFilters()
-    toast.success("필터가 초기화되었습니다")
+    toast.success("Filters have been reset")
   }
 
   return (
@@ -327,11 +327,11 @@ export default function SearchClient() {
           ) : hands.length === 0 ? (
             <EmptyState
               icon={SearchX}
-              title="검색 결과가 없습니다"
-              description="검색 조건을 조정하거나 필터를 초기화해보세요."
+              title="No Search Results"
+              description="Try adjusting search criteria or reset filters."
               variant="inline"
               action={{
-                label: "필터 초기화",
+                label: "Reset Filters",
                 onClick: clearFilters
               }}
             />
