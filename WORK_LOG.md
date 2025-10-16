@@ -4,6 +4,110 @@
 
 ---
 
+## 2025-10-16 (세션 12) - 문서 업데이트 및 정리
+
+### 작업 내용
+1. **Phase 3 완전 완료 상태 반영** ✅
+   - 핸드 수정 요청 시스템 프론트엔드 완성 확인
+   - 3단계 수정 제안 다이얼로그 (EditRequestDialog)
+   - 핸드 상세 페이지 "수정 제안" 버튼 통합
+   - 내 수정 제안 페이지 (/my-edit-requests)
+   - 관리자 승인 페이지 (/admin/edit-requests)
+
+2. **마이그레이션 개수 수정** ✅
+   - 문서 전체: 18개 → 22개로 업데이트
+   - 실제 마이그레이션 파일: 22개 확인
+   - 추가된 마이그레이션 4개:
+     - 019: Public Read RLS
+     - 020: Unsorted Videos
+     - 021: Unsorted Videos RLS
+     - 022: Published At
+
+3. **불필요한 작업 항목 제거** ✅
+   - ❌ 로컬 파일 업로드 구현 (제외)
+   - ❌ 영상 분석 테스트 및 개선 (제외)
+   - quick-upload-dialog.tsx TODO 주석 제거
+
+4. **다음 작업 우선순위 재정리** ✅
+   - 1순위: 플레이어 통계 고도화 (VPIP, PFR, 포지션별 분석)
+   - 2순위: 알림 시스템 (댓글, 좋아요, 수정 제안 응답)
+   - 3순위: 추가 고급 기능 (핸드 태그, 핸드 비교, Sentry 연동)
+
+### 업데이트된 문서
+- `templar-archives/CLAUDE.md` (v3.2 → v3.3)
+- `templar-archives/ROADMAP.md` (Phase 3 완료 반영)
+- `CLAUDE.md` (상위 폴더, v6.1 → v6.2)
+- `WORK_LOG.md` (이 파일)
+- `components/quick-upload-dialog.tsx` (TODO 주석 제거)
+
+### 완료 기준 달성
+- ✅ Phase 3 완전 완료 상태 문서화
+- ✅ 마이그레이션 개수 정확히 반영 (22개)
+- ✅ 불필요한 작업 항목 제거 (로컬 업로드, 영상 분석)
+- ✅ 다음 작업 우선순위 명확화
+- ✅ 모든 프로젝트 문서 일관성 유지
+
+### 다음 작업
+- [ ] 플레이어 통계 고도화 (3-5시간)
+- [ ] 알림 시스템 구현 (5-6시간)
+- [ ] 핸드 태그/비교 기능
+
+---
+
+## 2025-10-16 (세션 11) - Google Drive 스타일 폴더 네비게이션 구현
+
+### 작업 내용
+1. **Phase 1: 폴더 네비게이션 시스템** ✅
+   - ArchiveBreadcrumb 컴포넌트 생성 (계층적 경로 표시)
+   - ArchiveFolderList 컴포넌트 생성 (통합 폴더/파일 리스트)
+   - 4단계 네비게이션 구현: root → tournament → subevent → unorganized
+   - Unsorted Videos를 "Unorganized" 폴더로 전환
+   - 네비게이션 상태 추가 (navigationLevel, currentTournamentId, currentSubEventId)
+
+2. **Phase 2: 컴포넌트 리팩토링** ✅
+   - TournamentDialog 컴포넌트 분리 (80+ 줄)
+   - 기존 트리 구조 코드 제거 (~200줄)
+   - 코드 구조 개선: -357줄, +361줄
+
+3. **코드 최적화 및 테스트** ✅
+   - TypeScript 타입 체크 (PayoutRow import 추가)
+   - 프로덕션 빌드 테스트 성공 (8.7초)
+   - 개발 서버 정상 작동 확인
+
+4. **커밋 및 배포** ✅
+   - Commit: eaa03c2
+   - Message: "refactor(archive): Implement Google Drive-style folder navigation"
+   - Push to GitHub 성공
+
+### 핵심 파일
+- `components/archive-breadcrumb.tsx` (신규, 48줄)
+- `components/archive-folder-list.tsx` (신규, 118줄)
+- `components/tournament-dialog.tsx` (신규, 147줄)
+- `app/archive/page.tsx` (수정, -357줄 +361줄)
+- `hooks/useArchiveState.ts` (수정, +28줄)
+
+### 개선 사항
+- ✅ Google Drive 스타일의 직관적인 네비게이션
+- ✅ Breadcrumb으로 현재 위치 및 경로 표시
+- ✅ 폴더/파일 통합 리스트 UI
+- ✅ Unorganized 폴더로 정리되지 않은 영상 관리
+- ✅ 코드 구조 개선 (더 유지보수하기 쉬움)
+
+### 완료 기준 달성
+- ✅ 4단계 폴더 네비게이션 시스템
+- ✅ Breadcrumb 컴포넌트 (Home → Tournament → SubEvent)
+- ✅ 통합 폴더 리스트 UI (아이콘, 카운트, 날짜)
+- ✅ Tournament Dialog 컴포넌트 분리
+- ✅ 프로덕션 빌드 성공
+- ✅ 커밋 및 배포 완료
+
+### 다음 작업
+- [ ] 핸드 수정 제안 UI 진입점 추가 (2-3시간)
+- [ ] 영상 분석 테스트 및 개선
+- [ ] 플레이어 통계 고도화
+
+---
+
 ## 2025-10-16 (세션 9) - 브랜딩 변경 및 카테고리 필터 추가
 
 ### 작업 내용
@@ -394,5 +498,5 @@
 ---
 
 **마지막 업데이트**: 2025-10-16
-**문서 버전**: 2.1
-**세션 개수**: 10개 (최근) + 3개 (아카이브)
+**문서 버전**: 2.2
+**세션 개수**: 12개 (최근) + 3개 (아카이브)

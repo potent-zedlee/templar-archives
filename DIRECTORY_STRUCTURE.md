@@ -78,6 +78,10 @@ components/
 ├── analyze-dialog.tsx                 # 영상 분석 다이얼로그
 ├── hand-search-dialog.tsx             # 커뮤니티 핸드 첨부 (4단계 선택)
 │
+├── archive-breadcrumb.tsx             # 아카이브 Breadcrumb 네비게이션
+├── archive-folder-list.tsx            # 아카이브 폴더/파일 리스트 (Google Drive 스타일)
+├── tournament-dialog.tsx              # Tournament 생성/수정 다이얼로그
+│
 ├── hero-section.tsx                   # 홈 히어로 섹션
 ├── recent-analyses.tsx                # 최근 분석 섹션
 ├── most-used-videos.tsx               # 인기 영상 섹션
@@ -136,7 +140,8 @@ lib/
 ```
 hooks/
 ├── use-mobile.ts                      # 모바일 화면 감지
-└── use-toast.ts                       # Toast 알림 훅
+├── use-toast.ts                       # Toast 알림 훅
+└── useArchiveState.ts                 # Archive 페이지 상태 관리 (네비게이션 포함)
 ```
 
 ---
@@ -200,7 +205,8 @@ supabase/
     ├── 20251015000014_add_user_profile_fields.sql # 유저 프로필 확장
     ├── 20251015000015_add_admin_system.sql # 관리자 시스템
     ├── 20251015000016_add_content_moderation.sql # 콘텐츠 신고
-    └── 20251015000017_add_hand_edit_requests.sql # 핸드 수정 요청
+    ├── 20251015000017_add_hand_edit_requests.sql # 핸드 수정 요청
+    └── 20251016000018_fix_admin_permissions.sql # Admin RLS 정책
 ```
 
 ---
@@ -274,5 +280,5 @@ templar-archives/
 ---
 
 **마지막 업데이트**: 2025-10-16
-**버전**: 3.0
-**상태**: Phase 0-7 완료
+**버전**: 3.1
+**상태**: Phase 0-8 완료 (Google Drive 스타일 폴더 네비게이션)

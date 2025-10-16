@@ -7,6 +7,7 @@ export interface UnsortedVideo {
   video_file: string | null
   video_source: 'youtube' | 'local' | 'nas' | null
   created_at: string
+  published_at?: string | null
 }
 
 /**
@@ -52,7 +53,7 @@ export async function getUnsortedVideos(): Promise<UnsortedVideo[]> {
 
   const { data, error } = await supabase
     .from('days')
-    .select('id, name, video_url, video_file, video_source, created_at')
+    .select('id, name, video_url, video_file, video_source, created_at, published_at')
     .is('sub_event_id', null)
     .eq('is_organized', false)
     .order('created_at', { ascending: false })

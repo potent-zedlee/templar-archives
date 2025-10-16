@@ -90,8 +90,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
 
     setLoading(true)
     try {
-      // TODO: Implement local file upload to Supabase Storage
-      // For now, just create a record with filename
+      // Create a record with filename
       const result = await createUnsortedVideo({
         name: localName,
         video_file: localFile.name,

@@ -20,13 +20,22 @@ interface ArchiveFolderListProps {
   onNavigate: (item: FolderItem) => void
   onSelectDay?: (dayId: string) => void
   loading?: boolean
+  // Multi-select props (for unorganized videos)
+  isUnorganized?: boolean
+  selectedIds?: Set<string>
+  onToggleSelect?: (id: string) => void
+  onSelectAll?: () => void
 }
 
 export function ArchiveFolderList({
   items,
   onNavigate,
   onSelectDay,
-  loading = false
+  loading = false,
+  isUnorganized = false,
+  selectedIds = new Set(),
+  onToggleSelect,
+  onSelectAll,
 }: ArchiveFolderListProps) {
   if (loading) {
     return (
@@ -62,55 +71,88 @@ export function ArchiveFolderList({
     }
   }
 
-  const handleItemClick = (item: FolderItem) => {
-    if (item.type === 'day' && onSelectDay) {
+  const handleItemClick = (item: FolderItem, e?: React.MouseEvent) => {
+    // Don't navigate if clicking checkbox
+    if (e && (e.target as HTMLElement).closest('[data-checkbox]')) {
+      return
+    }
+
+    if (item.type === 'day' && onSelectDay && !isUnorganized) {
       onSelectDay(item.id)
-    } else {
+    } else if (!isUnorganized) {
       onNavigate(item)
     }
   }
 
+  // Always use List View (Compact)
   return (
     <ScrollArea className="h-full">
-      <div className="space-y-1 p-2">
-        {items.map((item) => (
-          <Button
-            key={item.id}
-            variant="ghost"
-            className="w-full justify-start h-12 px-3 hover:bg-muted/50 transition-colors"
-            onClick={() => handleItemClick(item)}
-          >
-            <div className="flex items-center gap-3 w-full">
-              {/* Icon */}
-              <div className="shrink-0">
-                {getIcon(item.type)}
-              </div>
+      <div className="p-2">
+        {/* Select All Header (only for unorganized) */}
+        {isUnorganized && onSelectAll && items.length > 0 && (
+          <div className="flex items-center gap-2 px-2 py-2 mb-1 bg-muted/30 rounded-md">
+            <Checkbox
+              checked={selectedIds.size === items.length && items.length > 0}
+              onCheckedChange={onSelectAll}
+              data-checkbox
+            />
+            <span className="text-caption text-muted-foreground">
+              Select All ({selectedIds.size} / {items.length})
+            </span>
+          </div>
+        )}
 
-              {/* Name */}
-              <div className="flex-1 text-left min-w-0">
-                <p className="text-body font-medium truncate">{item.name}</p>
+        <div className="space-y-0.5">
+          {items.map((item) => (
+            <Button
+              key={item.id}
+              variant="ghost"
+              className="w-full justify-start h-8 px-2 hover:bg-muted/50 transition-colors"
+              onClick={(e) => handleItemClick(item, e)}
+            >
+              <div className="flex items-center gap-2 w-full">
+                {/* Checkbox (only for unorganized videos) */}
+                {isUnorganized && onToggleSelect && (
+                  <Checkbox
+                    checked={selectedIds.has(item.id)}
+                    onCheckedChange={() => onToggleSelect(item.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    data-checkbox
+                  />
+                )}
+
+                {/* Icon */}
+                <div className="shrink-0">
+                  {getIcon(item.type)}
+                </div>
+
+                {/* Name */}
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-caption font-medium truncate">{item.name}</p>
+                </div>
+
+                {/* Date (for unorganized videos with published_at) */}
                 {item.date && (
-                  <p className="text-caption text-muted-foreground">
-                    <Calendar className="h-3 w-3 inline mr-1" />
+                  <div className="shrink-0 text-xs text-muted-foreground">
                     {new Date(item.date).toLocaleDateString()}
-                  </p>
+                  </div>
+                )}
+
+                {/* Item count */}
+                {item.itemCount !== undefined && item.itemCount > 0 && (
+                  <div className="shrink-0 text-xs text-muted-foreground">
+                    {item.itemCount}
+                  </div>
+                )}
+
+                {/* Navigate arrow (for folders only) */}
+                {(item.type === 'tournament' || item.type === 'subevent' || item.type === 'unorganized') && (
+                  <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
                 )}
               </div>
-
-              {/* Item count */}
-              {item.itemCount !== undefined && item.itemCount > 0 && (
-                <div className="shrink-0 text-caption text-muted-foreground">
-                  {item.itemCount} {item.itemCount === 1 ? 'item' : 'items'}
-                </div>
-              )}
-
-              {/* Navigate arrow (for folders only) */}
-              {(item.type === 'tournament' || item.type === 'subevent' || item.type === 'unorganized') && (
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-              )}
-            </div>
-          </Button>
-        ))}
+            </Button>
+          ))}
+        </div>
       </div>
     </ScrollArea>
   )

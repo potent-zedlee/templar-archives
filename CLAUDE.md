@@ -59,9 +59,9 @@ Templar Archives는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 �
 - 메인, Archive, Search, Players, Community 페이지
 - Tournament 트리, 영상 플레이어, 핸드 목록 (Accordion)
 
-#### 데이터베이스 (18개 마이그레이션)
+#### 데이터베이스 (22개 마이그레이션)
 - 001-012: 기본 스키마 (tournaments, sub_events, days, hands, players, video_sources, community, hand_likes, bookmarks, player_claims)
-- 013-018: 고급 기능 (Full-Text Search, 유저 프로필, 관리자 시스템, 콘텐츠 신고, 핸드 수정 요청, Admin RLS)
+- 013-022: 고급 기능 (Full-Text Search, 유저 프로필, 관리자 시스템, 콘텐츠 신고, 핸드 수정 요청, Admin RLS, 커뮤니티 RLS, Unsorted Videos)
 
 #### 영상 분석 (Claude Vision)
 - **Phase 1-4**: 핸드 경계 감지, Accordion UI, 정확도 개선 (CHECK_INTERVAL=2, summary 필드)
@@ -76,10 +76,12 @@ Templar Archives는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 �
 - 핸드 첨부 (Tournament → SubEvent → Day → Hand 4단계 선택)
 - 북마크 시스템 (폴더, 노트, `bookmark-dialog.tsx`)
 
-#### Phase 3: 핸드 수정 요청
+#### Phase 3: 핸드 수정 요청 ✅
 - 수정 제안 시스템 (4가지 유형: basic_info, board, players, actions)
+- 3단계 수정 제안 다이얼로그 (EditRequestDialog)
+- 핸드 상세 페이지 "수정 제안" 버튼 통합 완료
 - 관리자 승인 페이지 (Before/After 비교)
-- **Note**: 핸드 상세 페이지 진입점 미구현
+- 내 수정 제안 페이지 (`/my-edit-requests`)
 
 #### Phase 4: 관리자 시스템
 - 역할 관리 (user/high_templar/admin), 밴 시스템, 활동 로그
@@ -97,6 +99,13 @@ Templar Archives는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 �
 #### Phase 7: 커뮤니티 검색
 - Full-Text Search (tsvector, GIN 인덱스, 제목/내용 가중치 검색)
 
+#### Phase 8: Archive 폴더 네비게이션 (2025-10-16)
+- Google Drive 스타일 폴더 네비게이션 (4단계 계층)
+- ArchiveBreadcrumb 컴포넌트 (계층적 경로 표시)
+- ArchiveFolderList 컴포넌트 (통합 폴더/파일 리스트)
+- Unsorted Videos → Unorganized 폴더로 전환
+- TournamentDialog 컴포넌트 분리 (코드 구조 개선)
+
 #### 추가 기능 (2025-10-16)
 - Archive 카테고리 필터 (WSOP, Triton, EPT, Hustler, APT, APL, GGPOKER)
 - 브랜딩: GGVault → Templar Archives (로고 "TA", 파비콘 Protoss Carrier)
@@ -106,26 +115,23 @@ Templar Archives는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 �
 ### ⏳ 다음 작업
 
 #### 다음 우선순위
-1. **핸드 수정 제안 UI 진입점 추가** (우선순위: 높음, 2-3시간)
-   - 핸드 상세 페이지에 "수정 제안" 버튼 추가
-   - 수정 제안 다이얼로그 구현 (4단계 폼)
-   - Before/After 비교 미리보기
-   - **Note**: 백엔드는 완성, 프론트엔드 진입점만 추가 필요
+1. **플레이어 통계 고도화** (우선순위: 높음, 3-5시간)
+   - 더 많은 통계 지표 추가 (VPIP, PFR, 3-Bet %, C-Bet %)
+   - 포지션별 성과 분석
+   - 시간대별 성과 차트 (월별, 연도별)
+   - 토너먼트 카테고리별 통계
 
-2. **영상 분석 테스트 및 개선** (우선순위: 중, 4-6시간)
-   - 실제 포커 영상으로 분석 테스트
-   - 감지 정확도 측정 및 개선
-   - 오류 케이스 수집 및 프롬프트 개선
+2. **알림 시스템** (우선순위: 중, 5-6시간)
+   - 댓글/답글 알림
+   - 좋아요 알림
+   - 핸드 수정 제안 응답 알림
+   - 플레이어 클레임 승인/거부 알림
+   - 헤더 알림 벨 아이콘
 
-3. **플레이어 통계 고도화** (우선순위: 중, 3-5시간)
-   - 더 많은 통계 지표 추가
-   - 시간대별 성과 분석
-   - 고급 차트 및 시각화
-
-4. **추가 고급 기능** (우선순위: 낮)
-   - 알림 시스템 (댓글, 수정 제안 응답)
+3. **추가 고급 기능** (우선순위: 낮)
    - 핸드 태그 시스템
    - 핸드 비교 기능 (Side-by-Side)
+   - 에러 추적 시스템 (Sentry 연동)
 
 ---
 
@@ -169,7 +175,7 @@ templar-archives/
 ├── docs/                     # 프로젝트 문서
 ├── scripts/                  # 유틸리티 스크립트
 ├── public/                   # 정적 파일
-└── supabase/migrations/      # 데이터베이스 마이그레이션 (18개)
+└── supabase/migrations/      # 데이터베이스 마이그레이션 (22개)
 ```
 
 ---
@@ -209,10 +215,19 @@ templar-archives/
 ---
 
 **마지막 업데이트**: 2025-10-16
-**문서 버전**: 3.1
-**프로젝트 상태**: Phase 0-7 완료, 모든 핵심 기능 완성 🎉
+**문서 버전**: 3.2
+**프로젝트 상태**: Phase 0-8 완료, 모든 핵심 기능 완성 🎉
 
-**최근 완료 작업 (2025-10-16 세션 10)**:
+**최근 완료 작업 (2025-10-16 세션 11)**:
+- ✅ Phase 8: Google Drive 스타일 폴더 네비게이션 구현
+- ✅ ArchiveBreadcrumb 컴포넌트 (계층적 경로 표시)
+- ✅ ArchiveFolderList 컴포넌트 (통합 리스트 UI)
+- ✅ Unsorted Videos → Unorganized 폴더로 전환
+- ✅ TournamentDialog 컴포넌트 분리 (리팩토링)
+- ✅ 코드 구조 개선 (-357줄, +361줄)
+- ✅ 커밋 및 배포 (eaa03c2)
+
+**이전 완료 작업 (2025-10-16 세션 10)**:
 - ✅ Next.js 15.1.6 → 15.5.5 업그레이드 (6개 보안 취약점 해결)
 - ✅ not-found.tsx 페이지 수정 ("use client" 추가, 한글 → 영어)
 - ✅ 관리자 사용자 관리 페이지 완전 영어 변환
@@ -247,6 +262,6 @@ templar-archives/
 - ✅ Supabase CLI 설정 및 마이그레이션 동기화
 
 **다음 작업**:
-- ⏳ 핸드 수정 제안 UI 진입점 추가 (2-3시간)
-- ⏳ 영상 분석 테스트 및 개선
-- ⏳ 플레이어 통계 고도화
+- ⏳ 플레이어 통계 고도화 (VPIP, PFR, 포지션별 분석)
+- ⏳ 알림 시스템 구현
+- ⏳ 핸드 태그 및 비교 기능

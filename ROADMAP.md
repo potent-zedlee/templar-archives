@@ -3,7 +3,7 @@
 > 단계별 기능 구현 계획 및 우선순위
 
 **마지막 업데이트**: 2025-10-16
-**현재 Phase**: Phase 0-7 완료 🎉
+**현재 Phase**: Phase 0-8 완료 🎉
 
 ---
 
@@ -66,20 +66,22 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 
 ---
 
-### Phase 3: 핸드 수정 요청 시스템 (2025-10-15)
-**소요 시간**: 백엔드 완성
+### Phase 3: 핸드 수정 요청 시스템 (2025-10-15) ✅
+**소요 시간**: 완성
 
-#### Phase 3.1: 백엔드 ✅
-- `hand_edit_requests` 테이블 (4가지 수정 유형)
+#### 완료 기능
+- `hand_edit_requests` 테이블 (4가지 수정 유형: basic_info, board, players, actions)
 - `lib/hand-edit-requests.ts` (8개 함수)
 - 상태 관리 (pending, approved, rejected)
+- 3단계 수정 제안 다이얼로그 (`EditRequestDialog`)
+- 핸드 상세 페이지 "수정 제안" 버튼 통합
+- 내 제안 목록 페이지 (`/my-edit-requests`)
+- 관리자 승인 페이지 (`/admin/edit-requests`, Before/After 비교)
 
-#### Phase 3.2: 프론트엔드 (부분 완성)
-- [x] 내 제안 목록 페이지 (`/my-edit-requests`)
-- [x] 관리자 승인 페이지 (`/admin/edit-requests`)
-- [ ] 핸드 상세 "수정 제안" 버튼 (미완)
-
-**Note**: 백엔드 완성, 진입점 UI 미완
+**핵심 파일**:
+- `components/edit-request-dialog.tsx`
+- `lib/hand-edit-requests.ts`
+- `supabase/migrations/017_add_hand_edit_requests.sql`
 
 ---
 
@@ -175,7 +177,7 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | Phase 0 | 인증 시스템 | ⭐⭐⭐⭐⭐ | ✅ | 2025-10-12 |
 | Phase 1 | 핸드 상호작용 | ⭐⭐⭐⭐⭐ | ✅ | 2025-10-15 |
 | Phase 2 | 커뮤니티 강화 | ⭐⭐⭐⭐ | ✅ | 2025-10-15 |
-| Phase 3 | 핸드 수정 요청 | ⭐⭐⭐⭐ | ✅ (백엔드) | 2025-10-15 |
+| Phase 3 | 핸드 수정 요청 | ⭐⭐⭐⭐ | ✅ | 2025-10-15 |
 | Phase 4 | 관리자 시스템 | ⭐⭐⭐⭐ | ✅ | 2025-10-15 |
 | Phase 5 | 콘텐츠 신고 | ⭐⭐⭐⭐ | ✅ | 2025-10-15 |
 | Phase 6 | 유저 프로필 | ⭐⭐⭐⭐ | ✅ | 2025-10-15 |
@@ -208,13 +210,14 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 |------|-----------|
 | 2025-10-12 | 로드맵 최초 작성, Phase 0 완료 |
 | 2025-10-15 | Phase 1-7 완료, 문서 업데이트 |
-| 2025-10-16 | 로드맵 최적화 (상세 내용 축약) |
+| 2025-10-16 (세션 11) | 로드맵 최적화 (상세 내용 축약), Phase 8 완료 |
+| 2025-10-16 (세션 12) | Phase 3 완전 완료 반영, 문서 정리 |
 
 ---
 
 **다음 작업**:
-- 핸드 수정 제안 UI 진입점 추가 (2-3시간)
-- 영상 분석 테스트 및 개선
+- 플레이어 통계 고도화 (VPIP, PFR, 포지션별 분석)
+- 알림 시스템 구현
 - Phase 8 추가 기능 선택적 구현
 
 **상세 정보**: `CLAUDE.md` 참조

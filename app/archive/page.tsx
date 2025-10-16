@@ -44,7 +44,7 @@ import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { EmptyState } from "@/components/empty-state"
 import { DndContext, useDroppable, DragEndEvent } from '@dnd-kit/core'
 import { UnsortedVideosSection } from "@/components/unsorted-videos-section"
-import { organizeVideo, getUnsortedVideos } from "@/lib/unsorted-videos"
+import { organizeVideo, organizeVideos, getUnsortedVideos } from "@/lib/unsorted-videos"
 import type { UnsortedVideo } from "@/lib/unsorted-videos"
 import { useArchiveState, type PayoutRow } from "@/hooks/useArchiveState"
 import {
@@ -124,6 +124,16 @@ function DroppableSubEvent({
 }
 
 export default function ArchiveClient() {
+  // Multi-select state for unsorted videos
+  const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set())
+
+  // Move to New Event dialog state
+  const [isMoveToNewEventDialogOpen, setIsMoveToNewEventDialogOpen] = useState(false)
+  const [moveToTournamentId, setMoveToTournamentId] = useState('')
+  const [moveToEventName, setMoveToEventName] = useState('')
+  const [moveToEventDate, setMoveToEventDate] = useState('')
+  const [movingVideos, setMovingVideos] = useState(false)
+
   // Use archive state hook
   const state = useArchiveState()
 
@@ -328,7 +338,87 @@ export default function ArchiveClient() {
     ? tournaments
     : tournaments.filter(t => t.category === selectedCategory)
 
-  // Drag and drop handler
+  // Multi-select handlers
+  const toggleVideoSelection = (videoId: string) => {
+    setSelectedVideoIds(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(videoId)) {
+        newSet.delete(videoId)
+      } else {
+        newSet.add(videoId)
+      }
+      return newSet
+    })
+  }
+
+  const selectAllVideos = () => {
+    if (selectedVideoIds.size === unsortedVideos.length) {
+      setSelectedVideoIds(new Set())
+    } else {
+      setSelectedVideoIds(new Set(unsortedVideos.map(v => v.id)))
+    }
+  }
+
+  const clearSelection = () => {
+    setSelectedVideoIds(new Set())
+  }
+
+  // Move selected videos to a new event
+  const handleMoveToNewEvent = async () => {
+    if (!moveToTournamentId || !moveToEventName.trim() || !moveToEventDate) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    if (selectedVideoIds.size === 0) {
+      toast.error('No videos selected')
+      return
+    }
+
+    setMovingVideos(true)
+    try {
+      // 1. Create new SubEvent
+      const { data: subEventData, error: subEventError } = await supabase
+        .from('sub_events')
+        .insert({
+          tournament_id: moveToTournamentId,
+          name: moveToEventName.trim(),
+          date: moveToEventDate,
+        })
+        .select()
+        .single()
+
+      if (subEventError) throw subEventError
+
+      // 2. Move all selected videos to the new SubEvent
+      const videoIds = Array.from(selectedVideoIds)
+      const result = await organizeVideos(videoIds, subEventData.id)
+
+      if (result.success) {
+        toast.success(`${videoIds.length} video(s) moved to new event "${moveToEventName}"`)
+
+        // 3. Reset and refresh
+        await loadTournaments()
+        await loadUnsortedVideos()
+        clearSelection()
+
+        // Close dialog and reset form
+        setIsMoveToNewEventDialogOpen(false)
+        setMoveToTournamentId('')
+        setMoveToEventName('')
+        setMoveToEventDate('')
+      } else {
+        toast.error(result.error || 'Failed to move videos')
+      }
+    } catch (error) {
+      console.error('Error creating new event:', error)
+      toast.error('Failed to create new event')
+    } finally {
+      setMovingVideos(false)
+    }
+  }
+
+  // Drag and drop handler (supports multi-select)
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
 
@@ -340,24 +430,62 @@ export default function ArchiveClient() {
     if (draggedVideo?.type !== 'unsorted-video') return
     if (!dropTarget) return
 
+    // Determine which videos to move
+    let videoIdsToMove: string[] = []
+    if (selectedVideoIds.has(draggedVideo.video.id) && selectedVideoIds.size > 0) {
+      // Move all selected videos
+      videoIdsToMove = Array.from(selectedVideoIds)
+    } else {
+      // Move only the dragged video
+      videoIdsToMove = [draggedVideo.video.id]
+    }
+
     // Handle drop on SubEvent
     if (dropTarget.type === 'subevent') {
-      const result = await organizeVideo(draggedVideo.video.id, dropTarget.id)
-      if (result.success) {
-        toast.success(`Video "${draggedVideo.video.name}" organized successfully`)
-        await loadTournaments() // Reload to show updated structure
+      if (videoIdsToMove.length > 1) {
+        const result = await organizeVideos(videoIdsToMove, dropTarget.id)
+        if (result.success) {
+          toast.success(`${videoIdsToMove.length} videos organized successfully`)
+          await loadTournaments()
+          await loadUnsortedVideos()
+          clearSelection()
+        } else {
+          toast.error(result.error || 'Failed to organize videos')
+        }
       } else {
-        toast.error(result.error || 'Failed to organize video')
+        const result = await organizeVideo(videoIdsToMove[0], dropTarget.id)
+        if (result.success) {
+          toast.success('Video organized successfully')
+          await loadTournaments()
+          await loadUnsortedVideos()
+          clearSelection()
+        } else {
+          toast.error(result.error || 'Failed to organize video')
+        }
       }
     }
-    // Handle drop on Day (move video to existing day)
+    // Handle drop on Day
     else if (dropTarget.type === 'day') {
-      const result = await organizeVideo(draggedVideo.video.id, dropTarget.id)
-      if (result.success) {
-        toast.success(`Video "${draggedVideo.video.name}" moved to day`)
-        await loadTournaments()
+      if (videoIdsToMove.length > 1) {
+        const result = await organizeVideos(videoIdsToMove, dropTarget.id)
+        if (result.success) {
+          toast.success(`${videoIdsToMove.length} videos moved successfully`)
+          await loadTournaments()
+          await loadUnsortedVideos()
+          clearSelection()
+        } else {
+          toast.error(result.error || 'Failed to move videos')
+        }
       } else {
-        toast.error(result.error || 'Failed to move video')
+        const result = await organizeVideo(videoIdsToMove[0], dropTarget.id)
+        if (result.success) {
+          toast.success('Video moved successfully')
+          await loadTournaments()
+          await loadUnsortedVideos()
+          clearSelection()
+        } else {
+          toast.error(result.error || 'Failed to move video')
+        }
       }
     }
   }
@@ -429,7 +557,7 @@ export default function ArchiveClient() {
     }
   }
 
-  // Folder navigation logic
+  // Folder navigation logic with date sorting
   const buildFolderItems = (): FolderItem[] => {
     if (navigationLevel === 'root') {
       // Show all tournaments + Unorganized folder
@@ -451,24 +579,38 @@ export default function ArchiveClient() {
 
       return [unorganizedItem, ...tournamentItems]
     } else if (navigationLevel === 'unorganized') {
-      // Show unsorted videos
-      return unsortedVideos.map(video => ({
+      // Show unsorted videos sorted by date (newest first)
+      const sortedVideos = [...unsortedVideos].sort((a, b) => {
+        const dateA = a.published_at || a.created_at
+        const dateB = b.published_at || b.created_at
+        return new Date(dateB).getTime() - new Date(dateA).getTime()
+      })
+
+      return sortedVideos.map(video => ({
         id: video.id,
         name: video.name,
-        type: 'day' as const, // Use 'day' type for consistency (videos are playable like days)
+        type: 'day' as const,
+        date: video.published_at || video.created_at, // Show date in UI
         data: video
       }))
     } else if (navigationLevel === 'tournament') {
-      // Show sub-events of current tournament
+      // Show sub-events of current tournament sorted by date (newest first)
       const tournament = tournaments.find(t => t.id === currentTournamentId)
-      return tournament?.sub_events?.map(subEvent => ({
+      const subEvents = tournament?.sub_events || []
+
+      const sortedSubEvents = [...subEvents].sort((a, b) => {
+        if (!a.date || !b.date) return 0
+        return new Date(b.date).getTime() - new Date(a.date).getTime()
+      })
+
+      return sortedSubEvents.map(subEvent => ({
         id: subEvent.id,
         name: subEvent.name,
         type: 'subevent' as const,
         itemCount: subEvent.days?.length || 0,
         date: subEvent.date,
         data: subEvent
-      })) || []
+      }))
     } else if (navigationLevel === 'subevent') {
       // Show days of current sub-event
       const tournament = tournaments.find(t => t.id === currentTournamentId)
@@ -1360,7 +1502,7 @@ export default function ArchiveClient() {
       <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <ResizablePanelGroup direction="horizontal" className="gap-6">
           {/* Left: Hierarchical tree structure */}
-          <ResizablePanel defaultSize={25} minSize={15} maxSize={40}>
+          <ResizablePanel defaultSize={50} minSize={15} maxSize={60}>
             <Card className="p-4 bg-card h-full">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-title">Events</h2>
@@ -1393,6 +1535,32 @@ export default function ArchiveClient() {
                 </div>
               </div>
 
+              {/* Selection Actions (only show in unorganized view) */}
+              {navigationLevel === 'unorganized' && selectedVideoIds.size > 0 && (
+                <div className="mb-3 p-2 bg-primary/10 rounded-md flex items-center justify-between">
+                  <span className="text-caption font-medium">
+                    {selectedVideoIds.size} video{selectedVideoIds.size > 1 ? 's' : ''} selected
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => setIsMoveToNewEventDialogOpen(true)}
+                    >
+                      <Plus className="mr-2 h-3 w-3" />
+                      Move to New Event
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearSelection}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               {/* Breadcrumb Navigation */}
               <ArchiveBreadcrumb
                 items={buildBreadcrumbItems()}
@@ -1405,6 +1573,10 @@ export default function ArchiveClient() {
                 onNavigate={handleFolderNavigate}
                 onSelectDay={selectDay}
                 loading={loading}
+                isUnorganized={navigationLevel === 'unorganized'}
+                selectedIds={selectedVideoIds}
+                onToggleSelect={toggleVideoSelection}
+                onSelectAll={selectAllVideos}
               />
             </Card>
 
@@ -2082,12 +2254,80 @@ export default function ArchiveClient() {
                 </div>
               </DialogContent>
             </Dialog>
+
+            {/* Move to New Event Dialog */}
+            <Dialog open={isMoveToNewEventDialogOpen} onOpenChange={setIsMoveToNewEventDialogOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Move to New Event</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="move-tournament">Tournament *</Label>
+                    <Select value={moveToTournamentId} onValueChange={setMoveToTournamentId}>
+                      <SelectTrigger id="move-tournament">
+                        <SelectValue placeholder="Select a tournament" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredTournaments.map((tournament) => (
+                          <SelectItem key={tournament.id} value={tournament.id}>
+                            {tournament.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="move-event-name">Event Name *</Label>
+                    <Input
+                      id="move-event-name"
+                      placeholder="e.g., Main Event, High Roller"
+                      value={moveToEventName}
+                      onChange={(e) => setMoveToEventName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="move-event-date">Date *</Label>
+                    <Input
+                      id="move-event-date"
+                      type="date"
+                      value={moveToEventDate}
+                      onChange={(e) => setMoveToEventDate(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="text-caption text-muted-foreground bg-muted/30 p-3 rounded-md">
+                    {selectedVideoIds.size} video{selectedVideoIds.size > 1 ? 's' : ''} will be moved to this new event
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsMoveToNewEventDialogOpen(false)
+                        setMoveToTournamentId('')
+                        setMoveToEventName('')
+                        setMoveToEventDate('')
+                      }}
+                      disabled={movingVideos}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleMoveToNewEvent} disabled={movingVideos}>
+                      {movingVideos ? 'Creating...' : 'Create & Move'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </ResizablePanel>
 
           <ResizableHandle withHandle />
 
           {/* Right: Video + Hand List */}
-          <ResizablePanel defaultSize={75} minSize={60}>
+          <ResizablePanel defaultSize={50} minSize={40}>
             <div className="space-y-6">
             {/* Video Header */}
             <Card className="p-4">
