@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Server, Youtube, Upload } from "lucide-react"
+import { Youtube, Upload } from "lucide-react"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
 
@@ -30,9 +30,8 @@ export function DayDialog({
   onSuccess,
 }: DayDialogProps) {
   const [newDayName, setNewDayName] = useState("")
-  const [videoSourceTab, setVideoSourceTab] = useState<'nas' | 'youtube' | 'upload'>('nas')
+  const [videoSourceTab, setVideoSourceTab] = useState<'youtube' | 'upload'>('youtube')
   const [newDayVideoUrl, setNewDayVideoUrl] = useState("")
-  const [newDayNasPath, setNewDayNasPath] = useState("")
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
 
@@ -43,9 +42,8 @@ export function DayDialog({
     if (!isOpen) {
       setNewDayName("")
       setNewDayVideoUrl("")
-      setNewDayNasPath("")
       setUploadFile(null)
-      setVideoSourceTab('nas')
+      setVideoSourceTab('youtube')
       setUploading(false)
     }
   }, [isOpen])
@@ -70,9 +68,8 @@ export function DayDialog({
       if (error) throw error
 
       setNewDayName(data.name || "")
-      setVideoSourceTab(data.video_source || 'nas')
+      setVideoSourceTab(data.video_source || 'youtube')
       setNewDayVideoUrl(data.video_url || "")
-      setNewDayNasPath(data.video_nas_path || "")
     } catch (error) {
       console.error('Error loading day:', error)
       toast.error('Failed to load day data')
@@ -87,18 +84,11 @@ export function DayDialog({
         name: newDayName.trim() || `Day ${new Date().toISOString()}`,
         video_source: videoSourceTab,
         video_url: null,
-        video_nas_path: null,
         video_file: null,
       }
 
       // Set appropriate video source field
-      if (videoSourceTab === 'nas') {
-        if (!newDayNasPath.trim()) {
-          toast.error('Please enter NAS file path')
-          return
-        }
-        updateData.video_nas_path = newDayNasPath.trim()
-      } else if (videoSourceTab === 'youtube') {
+      if (videoSourceTab === 'youtube') {
         if (!newDayVideoUrl.trim()) {
           toast.error('Please enter YouTube URL')
           return
@@ -138,15 +128,6 @@ export function DayDialog({
         sub_event_id: selectedSubEventId,
         name: newDayName.trim() || `Day ${new Date().toISOString()}`,
         video_source: videoSourceTab,
-      }
-
-      // NAS source
-      if (videoSourceTab === 'nas') {
-        if (!newDayNasPath.trim()) {
-          toast.error('Please enter NAS file path')
-          return
-        }
-        videoData.video_nas_path = newDayNasPath.trim()
       }
 
       // YouTube source
@@ -234,15 +215,6 @@ export function DayDialog({
             <div className="flex gap-2">
               <Button
                 type="button"
-                variant={videoSourceTab === 'nas' ? 'default' : 'outline'}
-                onClick={() => setVideoSourceTab('nas')}
-                className="flex-1"
-              >
-                <Server className="mr-2 h-4 w-4" />
-                NAS File
-              </Button>
-              <Button
-                type="button"
                 variant={videoSourceTab === 'youtube' ? 'default' : 'outline'}
                 onClick={() => setVideoSourceTab('youtube')}
                 className="flex-1"
@@ -261,22 +233,6 @@ export function DayDialog({
               </Button>
             </div>
           </div>
-
-          {/* NAS Tab */}
-          {videoSourceTab === 'nas' && (
-            <div className="space-y-2">
-              <Label htmlFor="nas-path">NAS File Path *</Label>
-              <Input
-                id="nas-path"
-                placeholder="e.g., videos/2024/wsop_main_event.mp4"
-                value={newDayNasPath}
-                onChange={(e) => setNewDayNasPath(e.target.value)}
-              />
-              <p className="text-caption text-muted-foreground">
-                Enter the path relative to NAS videos directory
-              </p>
-            </div>
-          )}
 
           {/* YouTube Tab */}
           {videoSourceTab === 'youtube' && (

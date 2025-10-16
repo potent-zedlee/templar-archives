@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 // Types
 type TournamentCategory = "WSOP" | "Triton" | "EPT" | "Hustler" | "APT" | "APL" | "GGPOKER"
-type VideoSourceTab = 'nas' | 'youtube' | 'upload'
+type VideoSourceTab = 'youtube' | 'upload'
 
 export type PayoutRow = {
   rank: number
@@ -114,8 +114,6 @@ export interface ArchiveState {
   setVideoSourceTab: (tab: VideoSourceTab) => void
   newDayVideoUrl: string
   setNewDayVideoUrl: (url: string) => void
-  newDayNasPath: string
-  setNewDayNasPath: (path: string) => void
   uploadFile: File | null
   setUploadFile: (file: File | null) => void
   uploading: boolean
@@ -204,9 +202,8 @@ export function useArchiveState(): ArchiveState {
   const [selectedSubEventId, setSelectedSubEventId] = useState<string>("")
   const [editingDayId, setEditingDayId] = useState<string>("")
   const [newDayName, setNewDayName] = useState("")
-  const [videoSourceTab, setVideoSourceTab] = useState<VideoSourceTab>('nas')
+  const [videoSourceTab, setVideoSourceTab] = useState<VideoSourceTab>('youtube')
   const [newDayVideoUrl, setNewDayVideoUrl] = useState("")
-  const [newDayNasPath, setNewDayNasPath] = useState("")
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -319,8 +316,6 @@ export function useArchiveState(): ArchiveState {
     setVideoSourceTab,
     newDayVideoUrl,
     setNewDayVideoUrl,
-    newDayNasPath,
-    setNewDayNasPath,
     uploadFile,
     setUploadFile,
     uploading,

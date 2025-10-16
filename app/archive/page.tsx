@@ -62,6 +62,12 @@ import {
 import { ArchiveBreadcrumb } from "@/components/archive-breadcrumb"
 import { ArchiveFolderList } from "@/components/archive-folder-list"
 import type { FolderItem } from "@/components/archive-folder-list"
+import { ArchiveViewSwitcher, type ViewMode } from "@/components/archive-view-switcher"
+import { ArchiveGridView } from "@/components/archive-grid-view"
+import { ArchiveTimelineView } from "@/components/archive-timeline-view"
+import { ArchiveSearchSort, type SortOption } from "@/components/archive-search-sort"
+import { ArchiveStatsWidget } from "@/components/archive-stats-widget"
+import { ArchiveAdvancedFilters, type AdvancedFilters } from "@/components/archive-advanced-filters"
 import { QuickUploadDialog } from "@/components/quick-upload-dialog"
 import { TournamentDialog } from "@/components/tournament-dialog"
 import { EditEventDialog } from "@/components/edit-event-dialog"
@@ -73,6 +79,8 @@ import { DayDialog } from "@/components/archive-dialogs/day-dialog"
 import { SubEventInfoDialog } from "@/components/archive-dialogs/sub-event-info-dialog"
 import { SubEventDialog } from "@/components/archive-dialogs/sub-event-dialog"
 import type { FolderItem as DialogFolderItem } from "@/components/archive-dialogs/rename-dialog"
+import { useArchiveKeyboard } from "@/hooks/useArchiveKeyboard"
+import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog"
 
 // Dynamic imports for heavy components
 const VideoPlayerDialog = nextDynamic(() => import("@/components/video-player-dialog").then(mod => ({ default: mod.VideoPlayerDialog })), {
@@ -133,6 +141,21 @@ function DroppableSubEvent({
 }
 
 export default function ArchiveClient() {
+  // View mode state (list, grid, timeline)
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
+
+  // Search and sort state
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [sortBy, setSortBy] = useState<SortOption>('date-desc')
+
+  // Advanced filters state
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters>({
+    dateRange: { start: undefined, end: undefined },
+    handCountRange: [0, 1000],
+    videoSources: { youtube: true, upload: true },
+    hasHandsOnly: false
+  })
+
   // Multi-select state for unsorted videos
   const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set())
 
@@ -147,6 +170,9 @@ export default function ArchiveClient() {
   const [deleteItem, setDeleteItem] = useState<DialogFolderItem | null>(null)
   const [editEventDialogOpen, setEditEventDialogOpen] = useState(false)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
+
+  // Keyboard shortcuts dialog
+  const [keyboardShortcutsOpen, setKeyboardShortcutsOpen] = useState(false)
 
   // Use archive state hook
   const state = useArchiveState()
@@ -245,8 +271,6 @@ export default function ArchiveClient() {
     setVideoSourceTab,
     newDayVideoUrl,
     setNewDayVideoUrl,
-    newDayNasPath,
-    setNewDayNasPath,
     uploadFile,
     setUploadFile,
     uploading,
@@ -268,6 +292,19 @@ export default function ArchiveClient() {
     unsortedVideos,
     setUnsortedVideos,
   } = state
+
+  // Load view mode from localStorage
+  useEffect(() => {
+    const savedViewMode = localStorage.getItem('archive-view-mode')
+    if (savedViewMode && (savedViewMode === 'list' || savedViewMode === 'grid' || savedViewMode === 'timeline')) {
+      setViewMode(savedViewMode as ViewMode)
+    }
+  }, [])
+
+  // Save view mode to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('archive-view-mode', viewMode)
+  }, [viewMode])
 
   // Load user session
   useEffect(() => {
@@ -545,8 +582,10 @@ export default function ArchiveClient() {
     }
   }
 
-  // Folder navigation logic with date sorting
+  // Folder navigation logic with search/sort
   const buildFolderItems = (): FolderItem[] => {
+    let items: FolderItem[] = []
+
     if (navigationLevel === 'root') {
       // Show all tournaments + Unorganized folder
       const tournamentItems = filteredTournaments.map(tournament => ({
@@ -565,33 +604,22 @@ export default function ArchiveClient() {
         itemCount: unsortedVideos.length
       }
 
-      return [unorganizedItem, ...tournamentItems]
+      items = [unorganizedItem, ...tournamentItems]
     } else if (navigationLevel === 'unorganized') {
-      // Show unsorted videos sorted by date (newest first)
-      const sortedVideos = [...unsortedVideos].sort((a, b) => {
-        const dateA = a.published_at || a.created_at
-        const dateB = b.published_at || b.created_at
-        return new Date(dateB).getTime() - new Date(dateA).getTime()
-      })
-
-      return sortedVideos.map(video => ({
+      // Show unsorted videos
+      items = unsortedVideos.map(video => ({
         id: video.id,
         name: video.name,
         type: 'day' as const,
-        date: video.published_at || video.created_at, // Show date in UI
+        date: video.published_at || video.created_at,
         data: video
       }))
     } else if (navigationLevel === 'tournament') {
-      // Show sub-events of current tournament sorted by date (newest first)
+      // Show sub-events of current tournament
       const tournament = tournaments.find(t => t.id === currentTournamentId)
       const subEvents = tournament?.sub_events || []
 
-      const sortedSubEvents = [...subEvents].sort((a, b) => {
-        if (!a.date || !b.date) return 0
-        return new Date(b.date).getTime() - new Date(a.date).getTime()
-      })
-
-      return sortedSubEvents.map(subEvent => ({
+      items = subEvents.map(subEvent => ({
         id: subEvent.id,
         name: subEvent.name,
         type: 'subevent' as const,
@@ -603,14 +631,76 @@ export default function ArchiveClient() {
       // Show days of current sub-event
       const tournament = tournaments.find(t => t.id === currentTournamentId)
       const subEvent = tournament?.sub_events?.find(se => se.id === currentSubEventId)
-      return subEvent?.days?.map(day => ({
+      items = subEvent?.days?.map(day => ({
         id: day.id,
         name: day.name,
         type: 'day' as const,
         data: day
       })) || []
     }
-    return []
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      items = items.filter(item =>
+        item.name.toLowerCase().includes(query)
+      )
+    }
+
+    // Apply advanced filters
+    // Date Range filter
+    if (advancedFilters.dateRange.start || advancedFilters.dateRange.end) {
+      items = items.filter(item => {
+        if (!item.date) return true // Keep items without dates
+        const itemDate = new Date(item.date)
+
+        if (advancedFilters.dateRange.start && itemDate < advancedFilters.dateRange.start) {
+          return false
+        }
+        if (advancedFilters.dateRange.end && itemDate > advancedFilters.dateRange.end) {
+          return false
+        }
+        return true
+      })
+    }
+
+    // Video Source filter (only for unorganized videos)
+    if (navigationLevel === 'unorganized') {
+      const selectedSources = Object.entries(advancedFilters.videoSources)
+        .filter(([_, enabled]) => enabled)
+        .map(([source]) => source)
+
+      if (selectedSources.length > 0 && selectedSources.length < 2) {
+        items = items.filter(item => {
+          const video = item.data as any
+          return selectedSources.includes(video?.video_source || 'youtube')
+        })
+      }
+    }
+
+    // Apply sorting
+    items.sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':
+          return a.name.localeCompare(b.name)
+        case 'name-desc':
+          return b.name.localeCompare(a.name)
+        case 'date-asc':
+          if (!a.date || !b.date) return 0
+          return new Date(a.date).getTime() - new Date(b.date).getTime()
+        case 'date-desc':
+          if (!a.date || !b.date) return 0
+          return new Date(b.date).getTime() - new Date(a.date).getTime()
+        case 'count-asc':
+          return (a.itemCount || 0) - (b.itemCount || 0)
+        case 'count-desc':
+          return (b.itemCount || 0) - (a.itemCount || 0)
+        default:
+          return 0
+      }
+    })
+
+    return items
   }
 
   const handleFolderNavigate = (item: FolderItem) => {
@@ -628,6 +718,54 @@ export default function ArchiveClient() {
     }
     // Day clicks are handled by onSelectDay
   }
+
+  // Keyboard shortcuts handlers
+  useArchiveKeyboard({
+    onBackspace: () => {
+      // Navigate to parent folder
+      if (navigationLevel === 'subevent') {
+        setNavigationLevel('tournament')
+        setCurrentSubEventId('')
+      } else if (navigationLevel === 'tournament' || navigationLevel === 'unorganized') {
+        setNavigationLevel('root')
+        setCurrentTournamentId('')
+        setCurrentSubEventId('')
+      }
+    },
+    onSpace: () => {
+      // Play video if day is selected
+      if (selectedDay) {
+        setVideoStartTime("")
+        setIsVideoDialogOpen(true)
+      }
+    },
+    onSelectAll: () => {
+      // Select all videos in unorganized view
+      if (navigationLevel === 'unorganized') {
+        selectAllVideos()
+      }
+    },
+    onEscape: () => {
+      // Clear selection or close dialogs
+      if (selectedVideoIds.size > 0) {
+        clearSelection()
+      }
+    },
+    onFocusSearch: () => {
+      // Focus search input
+      const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement
+      if (searchInput) {
+        searchInput.focus()
+      }
+    },
+    onViewModeChange: (mode) => {
+      setViewMode(mode)
+    },
+    onShowHelp: () => {
+      setKeyboardShortcutsOpen(true)
+    },
+    enabled: !isDialogOpen && !isSubEventDialogOpen && !isDayDialogOpen && !isVideoDialogOpen,
+  })
 
   const addNewTournament = async () => {
     if (!newTournamentName.trim() || !newLocation.trim() || !newStartDate || !newEndDate) return
@@ -719,15 +857,6 @@ export default function ArchiveClient() {
         video_source: videoSourceTab,
       }
 
-      // NAS source
-      if (videoSourceTab === 'nas') {
-        if (!newDayNasPath.trim()) {
-          alert('Please enter NAS file path')
-          return
-        }
-        videoData.video_nas_path = newDayNasPath.trim()
-      }
-
       // YouTube source
       if (videoSourceTab === 'youtube') {
         if (!newDayVideoUrl.trim()) {
@@ -785,9 +914,8 @@ export default function ArchiveClient() {
       // Reset states
       setNewDayName("")
       setNewDayVideoUrl("")
-      setNewDayNasPath("")
       setUploadFile(null)
-      setVideoSourceTab('nas')
+      setVideoSourceTab('youtube')
       setEditingDayId("")
       setIsDayDialogOpen(false)
     } catch (error) {
@@ -838,13 +966,8 @@ export default function ArchiveClient() {
         video_source: videoSourceTab,
       }
 
-      if (videoSourceTab === 'nas') {
-        videoData.video_nas_path = newDayNasPath.trim()
-        videoData.video_url = null
-        videoData.video_file = null
-      } else if (videoSourceTab === 'youtube') {
+      if (videoSourceTab === 'youtube') {
         videoData.video_url = newDayVideoUrl.trim()
-        videoData.video_nas_path = null
         videoData.video_file = null
       }
 
@@ -859,7 +982,6 @@ export default function ArchiveClient() {
       setEditingDayId("")
       setNewDayName("")
       setNewDayVideoUrl("")
-      setNewDayNasPath("")
       setIsDayDialogOpen(false)
       toast.success('Day updated successfully')
     } catch (error) {
@@ -1041,35 +1163,67 @@ export default function ArchiveClient() {
           {/* Left: Hierarchical tree structure */}
           <ResizablePanel defaultSize={50} minSize={15} maxSize={60}>
             <Card className="p-4 bg-card h-full">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-title">Events</h2>
-                <div className="flex items-center gap-2">
-                  {/* Quick Upload Button */}
-                  <QuickUploadDialog onSuccess={loadUnsortedVideos} />
+              {/* Statistics Widget */}
+              <ArchiveStatsWidget
+                tournaments={filteredTournaments}
+                filteredItemsCount={buildFolderItems().length}
+                unsortedVideosCount={unsortedVideos.length}
+                totalHandsCount={hands.length}
+                navigationLevel={navigationLevel}
+              />
 
-                  {/* Add Tournament Button (Admin Only) */}
-                  <TournamentDialog
-                    isOpen={isDialogOpen}
-                    onOpenChange={setIsDialogOpen}
-                    editingTournamentId={editingTournamentId}
-                    onSave={addNewTournament}
-                    onCancel={() => {
-                      setIsDialogOpen(false)
-                      setEditingTournamentId("")
-                    }}
-                    newTournamentName={newTournamentName}
-                    setNewTournamentName={setNewTournamentName}
-                    newCategory={newCategory}
-                    setNewCategory={setNewCategory}
-                    newLocation={newLocation}
-                    setNewLocation={setNewLocation}
-                    newStartDate={newStartDate}
-                    setNewStartDate={setNewStartDate}
-                    newEndDate={newEndDate}
-                    setNewEndDate={setNewEndDate}
-                    isUserAdmin={isUserAdmin}
-                  />
+              {/* Advanced Filters */}
+              <ArchiveAdvancedFilters
+                filters={advancedFilters}
+                onFiltersChange={setAdvancedFilters}
+              />
+
+              <div className="space-y-4 mb-4">
+                {/* Header Row */}
+                <div className="flex items-center justify-between">
+                  <h2 className="text-title">Events</h2>
+                  <div className="flex items-center gap-2">
+                    {/* View Mode Switcher */}
+                    <ArchiveViewSwitcher
+                      currentView={viewMode}
+                      onViewChange={setViewMode}
+                    />
+
+                    {/* Quick Upload Button */}
+                    <QuickUploadDialog onSuccess={loadUnsortedVideos} />
+
+                    {/* Add Tournament Button (Admin Only) */}
+                    <TournamentDialog
+                      isOpen={isDialogOpen}
+                      onOpenChange={setIsDialogOpen}
+                      editingTournamentId={editingTournamentId}
+                      onSave={addNewTournament}
+                      onCancel={() => {
+                        setIsDialogOpen(false)
+                        setEditingTournamentId("")
+                      }}
+                      newTournamentName={newTournamentName}
+                      setNewTournamentName={setNewTournamentName}
+                      newCategory={newCategory}
+                      setNewCategory={setNewCategory}
+                      newLocation={newLocation}
+                      setNewLocation={setNewLocation}
+                      newStartDate={newStartDate}
+                      setNewStartDate={setNewStartDate}
+                      newEndDate={newEndDate}
+                      setNewEndDate={setNewEndDate}
+                      isUserAdmin={isUserAdmin}
+                    />
+                  </div>
                 </div>
+
+                {/* Search and Sort Row */}
+                <ArchiveSearchSort
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  sortBy={sortBy}
+                  onSortChange={setSortBy}
+                />
               </div>
 
               {/* Selection Actions (only show in unorganized view) */}
@@ -1104,24 +1258,64 @@ export default function ArchiveClient() {
                 onNavigate={handleBreadcrumbNavigate}
               />
 
-              {/* Folder List */}
-              <ArchiveFolderList
-                items={buildFolderItems()}
-                onNavigate={handleFolderNavigate}
-                onSelectDay={selectDay}
-                loading={loading}
-                isUnorganized={navigationLevel === 'unorganized'}
-                selectedIds={selectedVideoIds}
-                onToggleSelect={toggleVideoSelection}
-                onSelectAll={selectAllVideos}
-                onRename={handleRename}
-                onDelete={handleDelete}
-                onMoveToEvent={handleMoveToEvent}
-                onMoveToNewEvent={handleMoveToNewEventSingle}
-                onAddSubItem={handleAddSubItem}
-                onEditEvent={handleEditEvent}
-                isAdmin={isUserAdmin}
-              />
+              {/* Folder List/Grid/Timeline - Conditional Rendering based on viewMode */}
+              {viewMode === 'list' && (
+                <ArchiveFolderList
+                  items={buildFolderItems()}
+                  onNavigate={handleFolderNavigate}
+                  onSelectDay={selectDay}
+                  loading={loading}
+                  isUnorganized={navigationLevel === 'unorganized'}
+                  selectedIds={selectedVideoIds}
+                  onToggleSelect={toggleVideoSelection}
+                  onSelectAll={selectAllVideos}
+                  onRename={handleRename}
+                  onDelete={handleDelete}
+                  onMoveToEvent={handleMoveToEvent}
+                  onMoveToNewEvent={handleMoveToNewEventSingle}
+                  onAddSubItem={handleAddSubItem}
+                  onEditEvent={handleEditEvent}
+                  isAdmin={isUserAdmin}
+                />
+              )}
+
+              {viewMode === 'grid' && (
+                <ArchiveGridView
+                  items={buildFolderItems()}
+                  onNavigate={handleFolderNavigate}
+                  onSelectDay={selectDay}
+                  loading={loading}
+                  isUnorganized={navigationLevel === 'unorganized'}
+                  selectedIds={selectedVideoIds}
+                  onToggleSelect={toggleVideoSelection}
+                  onRename={handleRename}
+                  onDelete={handleDelete}
+                  onMoveToEvent={handleMoveToEvent}
+                  onMoveToNewEvent={handleMoveToNewEventSingle}
+                  onAddSubItem={handleAddSubItem}
+                  onEditEvent={handleEditEvent}
+                  isAdmin={isUserAdmin}
+                />
+              )}
+
+              {viewMode === 'timeline' && (
+                <ArchiveTimelineView
+                  items={buildFolderItems()}
+                  onNavigate={handleFolderNavigate}
+                  onSelectDay={selectDay}
+                  loading={loading}
+                  isUnorganized={navigationLevel === 'unorganized'}
+                  selectedIds={selectedVideoIds}
+                  onToggleSelect={toggleVideoSelection}
+                  onRename={handleRename}
+                  onDelete={handleDelete}
+                  onMoveToEvent={handleMoveToEvent}
+                  onMoveToNewEvent={handleMoveToNewEventSingle}
+                  onAddSubItem={handleAddSubItem}
+                  onEditEvent={handleEditEvent}
+                  isAdmin={isUserAdmin}
+                />
+              )}
             </Card>
 
             {/* SubEvent Dialog */}
@@ -1373,6 +1567,12 @@ export default function ArchiveClient() {
         isOpen={isVideoDialogOpen}
         onOpenChange={setIsVideoDialogOpen}
         initialTime={videoStartTime}
+      />
+
+      {/* Keyboard Shortcuts Dialog */}
+      <KeyboardShortcutsDialog
+        isOpen={keyboardShortcutsOpen}
+        onOpenChange={setKeyboardShortcutsOpen}
       />
 
       {/* Hand History import is performed by external systems */}

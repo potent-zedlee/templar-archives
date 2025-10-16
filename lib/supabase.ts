@@ -39,8 +39,7 @@ export type Day = {
   name: string
   video_url?: string
   video_file?: string
-  video_source?: 'youtube' | 'upload' | 'nas'
-  video_nas_path?: string
+  video_source?: 'youtube' | 'upload'
   created_at?: string
 }
 
