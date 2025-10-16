@@ -66,7 +66,8 @@ import { ArchiveViewSwitcher, type ViewMode } from "@/components/archive-view-sw
 import { ArchiveGridView } from "@/components/archive-grid-view"
 import { ArchiveTimelineView } from "@/components/archive-timeline-view"
 import { ArchiveSearchSort, type SortOption } from "@/components/archive-search-sort"
-import { ArchiveAdvancedFilters, type AdvancedFilters } from "@/components/archive-advanced-filters"
+import type { AdvancedFilters } from "@/components/archive-advanced-filters"
+import { ArchiveUnifiedFilters } from "@/components/archive-unified-filters"
 import { QuickUploadDialog } from "@/components/quick-upload-dialog"
 import { TournamentDialog } from "@/components/tournament-dialog"
 import { EditEventDialog } from "@/components/edit-event-dialog"
@@ -1083,91 +1084,19 @@ export default function ArchiveClient() {
         </div>
         )}
 
-      {/* Category Filter - Top Bar */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container max-w-7xl mx-auto px-4 md:px-6">
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex gap-2 py-3">
-              <Button
-                variant={selectedCategory === "All" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory("All")}
-                className="h-8"
-              >
-                All
-              </Button>
-              <Button
-                variant={selectedCategory === "WSOP" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory("WSOP")}
-                className="h-8"
-              >
-                WSOP
-              </Button>
-              <Button
-                variant={selectedCategory === "Triton" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory("Triton")}
-                className="h-8"
-              >
-                Triton
-              </Button>
-              <Button
-                variant={selectedCategory === "EPT" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory("EPT")}
-                className="h-8"
-              >
-                EPT
-              </Button>
-              <Button
-                variant={selectedCategory === "Hustler Casino Live" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory("Hustler Casino Live")}
-                className="h-8"
-              >
-                Hustler
-              </Button>
-              <Button
-                variant={selectedCategory === "APT" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory("APT")}
-                className="h-8"
-              >
-                APT
-              </Button>
-              <Button
-                variant={selectedCategory === "APL" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory("APL")}
-                className="h-8"
-              >
-                APL
-              </Button>
-              <Button
-                variant={selectedCategory === "GGPOKER" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedCategory("GGPOKER")}
-                className="h-8"
-              >
-                GGPOKER
-              </Button>
-            </div>
-          </ScrollArea>
-        </div>
-      </div>
+      {/* Unified Filters - Top Bar */}
+      <ArchiveUnifiedFilters
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        advancedFilters={advancedFilters}
+        onAdvancedFiltersChange={setAdvancedFilters}
+      />
 
       <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <ResizablePanelGroup direction="horizontal" className="gap-6">
           {/* Left: Hierarchical tree structure */}
           <ResizablePanel defaultSize={50} minSize={15} maxSize={60}>
             <Card className="p-4 bg-card h-full">
-              {/* Advanced Filters */}
-              <ArchiveAdvancedFilters
-                filters={advancedFilters}
-                onFiltersChange={setAdvancedFilters}
-              />
-
               <div className="space-y-4 mb-4">
                 {/* Header Row */}
                 <div className="flex items-center justify-between">
