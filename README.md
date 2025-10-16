@@ -2,7 +2,7 @@
 
 > 포커 핸드 히스토리 아카이브 플랫폼 - Next.js 웹 애플리케이션
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.1.6-black)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5.5-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Backend-green)](https://supabase.com/)
 [![React](https://img.shields.io/badge/React-19.0-blue)](https://react.dev/)
@@ -45,7 +45,7 @@ npm run dev
 
 ## 🏗️ 기술 스택
 
-- **Framework**: Next.js 15.1.6 (App Router, Edge Runtime)
+- **Framework**: Next.js 15.5.5 (App Router, Edge Runtime)
 - **UI**: shadcn/ui, Tailwind CSS 4
 - **State**: Zustand
 - **Backend**: Supabase (PostgreSQL, Storage, Realtime, Auth)

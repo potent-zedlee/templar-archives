@@ -336,6 +336,54 @@
 
 ---
 
+## 2025-10-16 (세션 10) - 보안 업그레이드 및 관리자 시스템 개선
+
+### 작업 내용
+1. **Next.js 보안 업그레이드**
+   - Next.js 15.1.6 → 15.5.5 업그레이드
+   - 6개 critical 보안 취약점 해결
+   - `npm audit`: 0 vulnerabilities
+
+2. **not-found 페이지 수정**
+   - "use client" 지시어 추가 (Next.js 15.5.5 호환)
+   - onClick 핸들러 에러 해결
+   - 한글 → 영어 전체 변환
+
+3. **관리자 사용자 관리 페이지**
+   - `app/admin/users/page.tsx` 전체 영어 변환
+   - 모든 다이얼로그, 토스트 메시지, UI 텍스트 영어화
+   - 향상된 에러 로깅 추가
+
+4. **역할 변경 기능 버그 수정**
+   - RLS 정책 누락 문제 해결
+   - "Admins can update any user" 정책 추가
+   - `lib/admin.ts` 에러 로깅 개선
+
+5. **역할 시스템 업데이트**
+   - 'moderator' → 'high_templar' 이름 변경
+   - 데이터베이스 constraint 업데이트
+   - `is_admin()` 함수 업데이트
+   - Admin logs RLS 정책 업데이트
+
+6. **새로운 마이그레이션**
+   - `20251016000018_fix_admin_permissions.sql` 생성
+   - Supabase CLI로 자동 적용 완료
+
+### 주요 파일 수정
+- `package.json`: Next.js 버전 업데이트
+- `app/not-found.tsx`: 클라이언트 컴포넌트화 + 영어 변환
+- `app/admin/users/page.tsx`: 전체 영어 변환 + 에러 처리 개선
+- `lib/admin.ts`: 에러 로깅 강화
+- `supabase/migrations/20251016000018_fix_admin_permissions.sql`: 신규
+
+### 기술적 개선사항
+- 빌드 성공 (0 에러)
+- 보안 취약점 완전 해결
+- RLS 정책 완성으로 역할 변경 기능 정상 작동
+- 더 나은 디버깅을 위한 콘솔 로깅
+
+---
+
 ## 아카이브된 세션
 
 **2025-10-05 ~ 2025-10-13 세션**: `WORK_LOG_ARCHIVE.md` 참조
@@ -346,5 +394,5 @@
 ---
 
 **마지막 업데이트**: 2025-10-16
-**문서 버전**: 2.0
+**문서 버전**: 2.1
 **세션 개수**: 10개 (최근) + 3개 (아카이브)
