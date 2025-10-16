@@ -111,24 +111,47 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 ---
 
 ## 💬 5. 커뮤니티 페이지 (FORUM)
+
+### 5.1 커뮤니티 목록
 **URL**: `/community`
 **파일**: `app/community/page.tsx`
 
-### 탭
+#### 탭
 - Trending / Recent / Popular
 
-### 포스트 카테고리
+#### 포스트 카테고리
 - **Analysis** (분석) - 파란색
 - **Strategy** (전략) - 녹색
 - **Hand Review** (핸드 리뷰) - 보라색
 - **General** (일반) - 회색
 
-### 주요 기능
+#### 주요 기능
 - 포스트 작성 (제목, 내용, 카테고리)
 - 핸드 첨부 (Tournament → SubEvent → Day → Hand 4단계 선택)
 - 포스트 카드 (작성자, 카테고리, 좋아요/댓글/조회수, 작성 시간)
 - 좋아요 토글
-- 댓글 및 답글 시스템
+- 검색 기능 (Full-Text Search)
+
+### 5.2 포스트 상세
+**URL**: `/community/[id]`
+**파일**: `app/community/[id]/page.tsx`
+
+#### 주요 기능
+- 전체 포스트 내용 표시
+- 작성자 프로필 (아바타, 이름)
+- 카테고리 배지, 작성 시간
+- 첨부된 핸드 프리뷰 카드 (있는 경우)
+- 좋아요, 공유 버튼
+- 신고 버튼
+- **Reddit 스타일 댓글/답글 시스템**:
+  - 무한 중첩 지원 (재귀 렌더링)
+  - 시각적 계층 (ml-8 들여쓰기, border-l-2 왼쪽 테두리)
+  - Reply 토글 버튼 (답글 폼 show/hide)
+  - 답글 lazy loading (클릭 시 로드)
+  - 댓글/답글 좋아요 지원
+
+#### 컴포넌트
+- `components/post-comments.tsx` (373줄, Reddit 스타일 구현)
 
 ---
 
@@ -358,6 +381,7 @@ users
 | 플레이어 목록 | `/players` | `app/players/page.tsx` |
 | 플레이어 상세 | `/players/[id]` | `app/players/[id]/page.tsx` |
 | 커뮤니티 | `/community` | `app/community/page.tsx` |
+| 포스트 상세 | `/community/[id]` | `app/community/[id]/page.tsx` |
 | 북마크 | `/bookmarks` | `app/bookmarks/page.tsx` |
 | 내 프로필 | `/profile` | `app/profile/page.tsx` |
 | 다른 유저 프로필 | `/profile/[id]` | `app/profile/[id]/page.tsx` |
@@ -373,5 +397,9 @@ users
 ---
 
 **마지막 업데이트**: 2025-10-16
-**버전**: 3.0
-**상태**: Phase 0-7 완료 (모든 핵심 기능)
+**버전**: 3.1
+**상태**: Phase 0-8 완료 (모든 핵심 기능)
+**총 페이지**: 22개 (유저 17개, 관리자 5개)
+
+**최근 추가 (세션 12)**:
+- `/community/[id]` - 포스트 상세 페이지 (Reddit 스타일 댓글 시스템)

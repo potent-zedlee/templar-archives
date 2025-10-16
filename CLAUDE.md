@@ -31,10 +31,12 @@ Templar Archives는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 �
 - 통계 대시보드
 
 ### 4. 커뮤니티 ✅
-- 포스트 작성 및 카테고리
-- 댓글 및 답글 시스템
-- 좋아요 기능
+- 포스트 작성 및 카테고리 (Analysis, Strategy, Hand Review, General)
+- **Reddit 스타일 댓글/답글 시스템** (무한 중첩, 시각적 계층)
+- 좋아요 기능 (포스트, 댓글)
 - 핸드 공유 (SNS, 링크, 임베드)
+- 북마크 시스템
+- 포스트 상세 페이지 (`/community/[id]`)
 
 ### 5. 인증 ✅ (Phase 0 완료)
 - Google OAuth 로그인
@@ -59,9 +61,10 @@ Templar Archives는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 �
 - 메인, Archive, Search, Players, Community 페이지
 - Tournament 트리, 영상 플레이어, 핸드 목록 (Accordion)
 
-#### 데이터베이스 (22개 마이그레이션)
+#### 데이터베이스 (24개 마이그레이션)
 - 001-012: 기본 스키마 (tournaments, sub_events, days, hands, players, video_sources, community, hand_likes, bookmarks, player_claims)
 - 013-022: 고급 기능 (Full-Text Search, 유저 프로필, 관리자 시스템, 콘텐츠 신고, 핸드 수정 요청, Admin RLS, 커뮤니티 RLS, Unsorted Videos)
+- 023-024: 데이터베이스 최적화 (미사용 테이블/컬럼 정리, 커뮤니티 Foreign Key 수정)
 
 #### 영상 분석 (Claude Vision)
 - **Phase 1-4**: 핸드 경계 감지, Accordion UI, 정확도 개선 (CHECK_INTERVAL=2, summary 필드)
@@ -175,7 +178,7 @@ templar-archives/
 ├── docs/                     # 프로젝트 문서
 ├── scripts/                  # 유틸리티 스크립트
 ├── public/                   # 정적 파일
-└── supabase/migrations/      # 데이터베이스 마이그레이션 (22개)
+└── supabase/migrations/      # 데이터베이스 마이그레이션 (24개)
 ```
 
 ---
@@ -215,10 +218,27 @@ templar-archives/
 ---
 
 **마지막 업데이트**: 2025-10-16
-**문서 버전**: 3.2
+**문서 버전**: 3.3
 **프로젝트 상태**: Phase 0-8 완료, 모든 핵심 기능 완성 🎉
 
-**최근 완료 작업 (2025-10-16 세션 11)**:
+**최근 완료 작업 (2025-10-16 세션 12)**:
+- ✅ 데이터베이스 최적화: 미사용 테이블/컬럼 정리 (migration 023)
+  - player_notes, player_tags 테이블 삭제
+  - players 테이블의 미사용 통계 컬럼 7개 삭제 (VPIP, PFR 등)
+- ✅ YouTube 라이브 방송 우선순위 시스템 구현
+  - 주요 채널 우선 표시 (WSOP, Triton, WPT, EPT, APT 등)
+  - 2단계 검색 전략 (우선 채널 → 일반 포커 방송)
+- ✅ 커뮤니티 Foreign Key 수정 (migration 024)
+  - posts/comments/likes 테이블 FK를 auth.users → public.users로 수정
+  - 커뮤니티 포스팅 기능 복구
+- ✅ Reddit 스타일 댓글/답글 시스템 구현
+  - 무한 중첩 지원 (재귀 렌더링)
+  - 시각적 계층 표시 (ml-8 indent, border-l-2)
+  - 답글 lazy loading, 좋아요 지원
+  - 포스트 상세 페이지 추가 (`/community/[id]/page.tsx`)
+  - PostComments 컴포넌트 추가 (373줄)
+
+**이전 완료 작업 (2025-10-16 세션 11)**:
 - ✅ Phase 8: Google Drive 스타일 폴더 네비게이션 구현
 - ✅ ArchiveBreadcrumb 컴포넌트 (계층적 경로 표시)
 - ✅ ArchiveFolderList 컴포넌트 (통합 리스트 UI)

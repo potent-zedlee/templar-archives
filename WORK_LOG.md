@@ -4,50 +4,82 @@
 
 ---
 
-## 2025-10-16 (세션 12) - 문서 업데이트 및 정리
+## 2025-10-16 (세션 12) - 데이터베이스 최적화 & 커뮤니티 개선
 
 ### 작업 내용
-1. **Phase 3 완전 완료 상태 반영** ✅
-   - 핸드 수정 요청 시스템 프론트엔드 완성 확인
-   - 3단계 수정 제안 다이얼로그 (EditRequestDialog)
-   - 핸드 상세 페이지 "수정 제안" 버튼 통합
-   - 내 수정 제안 페이지 (/my-edit-requests)
-   - 관리자 승인 페이지 (/admin/edit-requests)
+1. **데이터베이스 스키마 최적화** ✅
+   - Migration 023: `cleanup_unused_tables.sql`
+   - 미사용 테이블 삭제: `player_notes`, `player_tags`
+   - 미사용 컬럼 삭제: `players` 테이블의 통계 컬럼 7개 (vpip, pfr, three_bet, ats, wtsd, play_style, stats_updated_at)
+   - RLS 정책 의존성 확인: `is_hidden` 컬럼 및 `reports` 테이블은 실사용 중이므로 유지
+   - 관련 인덱스 3개 자동 삭제
 
-2. **마이그레이션 개수 수정** ✅
-   - 문서 전체: 18개 → 22개로 업데이트
-   - 실제 마이그레이션 파일: 22개 확인
-   - 추가된 마이그레이션 4개:
-     - 019: Public Read RLS
-     - 020: Unsorted Videos
-     - 021: Unsorted Videos RLS
-     - 022: Published At
+2. **YouTube 라이브 방송 우선순위 시스템** ✅
+   - `app/api/youtube/live-streams/route.ts` 전면 개편
+   - 주요 포커 채널 6개 우선 표시 시스템 구현
+     - WSOP (priority 1)
+     - PokerGO, WPT, Hustler Casino Live (priority 2)
+     - PokerStars/EPT (priority 3)
+     - APT Poker (priority 4)
+   - 2단계 검색 전략:
+     - Phase 1: 우선 채널 검색
+     - Phase 2: 일반 포커 방송으로 나머지 슬롯 채우기
+   - 우선순위 기반 정렬 (priority → viewerCount)
 
-3. **불필요한 작업 항목 제거** ✅
-   - ❌ 로컬 파일 업로드 구현 (제외)
-   - ❌ 영상 분석 테스트 및 개선 (제외)
-   - quick-upload-dialog.tsx TODO 주석 제거
+3. **커뮤니티 Foreign Key 수정** ✅
+   - Migration 024: `fix_community_foreign_keys.sql`
+   - 근본 원인: Migration 004에서 `auth.users` 참조, 실제 사용자 테이블은 `public.users`
+   - 해결: posts/comments/likes 테이블의 FK를 `public.users`로 수정
+   - 커뮤니티 포스팅 기능 복구
+   - Supabase 관계 조인 에러 해결 (PGRST200)
 
-4. **다음 작업 우선순위 재정리** ✅
-   - 1순위: 플레이어 통계 고도화 (VPIP, PFR, 포지션별 분석)
-   - 2순위: 알림 시스템 (댓글, 좋아요, 수정 제안 응답)
-   - 3순위: 추가 고급 기능 (핸드 태그, 핸드 비교, Sentry 연동)
+4. **Reddit 스타일 댓글/답글 시스템 구현** ✅
+   - **PostComments 컴포넌트** 생성 (`components/post-comments.tsx`, 373줄)
+     - 재귀 렌더링으로 무한 중첩 지원
+     - 시각적 계층: `ml-8` 들여쓰기 + `border-l-2` 왼쪽 테두리
+     - Reply 토글 버튼 (답글 폼 show/hide)
+     - 답글 lazy loading (클릭 시 로드)
+     - 댓글/답글 좋아요 지원
+     - Optimistic UI 업데이트
+   - **포스트 상세 페이지** 생성 (`app/community/[id]/page.tsx`, 237줄)
+     - 전체 포스트 내용 표시
+     - 작성자 정보, 카테고리, 타임스탬프
+     - 첨부된 핸드 프리뷰 카드 (있는 경우)
+     - 공유 기능 (클립보드 복사)
+     - 신고 버튼 통합
+     - PostComments 컴포넌트 통합
+   - 기존 `hand-comments.tsx` 구조 재사용
 
-### 업데이트된 문서
-- `templar-archives/CLAUDE.md` (v3.2 → v3.3)
-- `templar-archives/ROADMAP.md` (Phase 3 완료 반영)
-- `CLAUDE.md` (상위 폴더, v6.1 → v6.2)
-- `WORK_LOG.md` (이 파일)
-- `components/quick-upload-dialog.tsx` (TODO 주석 제거)
+### 핵심 파일
+- `supabase/migrations/20251016000023_cleanup_unused_tables.sql` (신규)
+- `supabase/migrations/20251016000024_fix_community_foreign_keys.sql` (신규)
+- `app/api/youtube/live-streams/route.ts` (+143줄, -31줄)
+- `components/post-comments.tsx` (신규, 373줄)
+- `app/community/[id]/page.tsx` (신규, 237줄)
 
 ### 완료 기준 달성
-- ✅ Phase 3 완전 완료 상태 문서화
-- ✅ 마이그레이션 개수 정확히 반영 (22개)
-- ✅ 불필요한 작업 항목 제거 (로컬 업로드, 영상 분석)
-- ✅ 다음 작업 우선순위 명확화
-- ✅ 모든 프로젝트 문서 일관성 유지
+- ✅ 데이터베이스 스키마 정리 (불필요한 요소 제거)
+- ✅ YouTube 주요 채널 우선 표시 (WSOP, Triton, WPT, EPT, APT)
+- ✅ 커뮤니티 포스팅 기능 정상화
+- ✅ Reddit 스타일 중첩 댓글 시스템 완성
+- ✅ 포스트 상세 페이지 추가
+- ✅ 2개 마이그레이션 추가 (총 24개)
+- ✅ 빌드 테스트 성공
+
+### 기술적 개선사항
+- 데이터베이스 복잡도 감소 (미사용 테이블/컬럼 정리)
+- YouTube API 호출 효율성 증가 (2단계 검색)
+- Foreign Key 정합성 확보 (public.users 통일)
+- 컴포넌트 재사용성 향상 (hand-comments → post-comments)
+
+### 커밋 정보
+- Commit 1: cf66503 - "chore(db): Clean up unused tables and columns"
+- Commit 2: c481489 - "feat(youtube): Add priority system for major poker channels"
+- Commit 3: 0bd270f - "fix(community): Fix foreign key relationships to public.users"
+- Commit 4: c777b92 - "feat(community): Add Reddit-style nested comments for posts"
 
 ### 다음 작업
+- [ ] 문서 업데이트 (CLAUDE.md, WORK_LOG.md) ✅ 진행 중
 - [ ] 플레이어 통계 고도화 (3-5시간)
 - [ ] 알림 시스템 구현 (5-6시간)
 - [ ] 핸드 태그/비교 기능
