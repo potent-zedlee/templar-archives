@@ -22,9 +22,11 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Plus, Youtube, Upload, Radio, Loader2, CheckCircle2 } from 'lucide-react'
+import { Plus, Youtube, Upload, Radio, Loader2, CheckCircle2, FolderTree } from 'lucide-react'
 import { createUnsortedVideo, createUnsortedVideosBatch } from '@/lib/unsorted-videos'
 import type { YouTubeVideo } from '@/lib/youtube-api'
+import { createAutoOrganizedStructure, previewOrganizedStructure, type GroupingStrategy, type OrganizedStructure } from '@/lib/auto-organizer'
+import { createClientSupabaseClient } from '@/lib/supabase-client'
 import { toast } from 'sonner'
 
 interface QuickUploadDialogProps {
@@ -50,6 +52,14 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set())
   const [fetchingVideos, setFetchingVideos] = useState(false)
   const [importing, setImporting] = useState(false)
+
+  // Auto-organize options
+  const [autoOrganize, setAutoOrganize] = useState(false)
+  const [groupingStrategy, setGroupingStrategy] = useState<GroupingStrategy>('week')
+  const [channelName, setChannelName] = useState('')
+  const [category, setCategory] = useState('Other')
+  const [locationInput, setLocationInput] = useState('Online')
+  const [organizationPreview, setOrganizationPreview] = useState<OrganizedStructure | null>(null)
 
   const handleYoutubeUpload = async () => {
     if (!youtubeUrl || !youtubeName) {
@@ -184,45 +194,160 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
     }
   }
 
+  const handleGeneratePreview = () => {
+    if (selectedVideos.size === 0) {
+      toast.error('Please select at least one video')
+      return
+    }
+
+    const selectedVideosList = fetchedVideos.filter((v) => selectedVideos.has(v.id))
+
+    const structure = createAutoOrganizedStructure(selectedVideosList, {
+      channelName: channelName || 'YouTube Channel',
+      groupBy: groupingStrategy,
+      category: category,
+      location: locationInput,
+    })
+
+    setOrganizationPreview(structure)
+    toast.success('Preview generated! Scroll down to see the structure.')
+  }
+
   const handleImportSelected = async () => {
     if (selectedVideos.size === 0) {
       toast.error('Please select at least one video')
       return
     }
 
-    const videosToImport = fetchedVideos
-      .filter((v) => selectedVideos.has(v.id))
-      .map((v) => ({
-        name: v.title,
-        video_url: v.url,
-        video_source: 'youtube' as const,
-        published_at: v.publishedAt,
-      }))
+    if (autoOrganize) {
+      // Auto-organize flow
+      await handleImportAndOrganize()
+    } else {
+      // Simple import to Unsorted
+      const videosToImport = fetchedVideos
+        .filter((v) => selectedVideos.has(v.id))
+        .map((v) => ({
+          name: v.title,
+          video_url: v.url,
+          video_source: 'youtube' as const,
+          published_at: v.publishedAt,
+        }))
+
+      setImporting(true)
+      try {
+        const result = await createUnsortedVideosBatch(videosToImport, (current, total) => {
+          // Could show progress here if needed
+        })
+
+        if (result.success) {
+          toast.success(`Successfully imported ${result.imported} video(s)`)
+          if (result.failed > 0) {
+            toast.error(`Failed to import ${result.failed} video(s)`)
+          }
+
+          // Reset state
+          setChannelUrl('')
+          setFetchedVideos([])
+          setSelectedVideos(new Set())
+          setOpen(false)
+          onSuccess?.()
+        } else {
+          toast.error('Failed to import videos')
+        }
+      } catch (error) {
+        console.error('Error importing videos:', error)
+        toast.error('Failed to import videos')
+      } finally {
+        setImporting(false)
+      }
+    }
+  }
+
+  const handleImportAndOrganize = async () => {
+    const supabase = createClientSupabaseClient()
+
+    if (!organizationPreview) {
+      handleGeneratePreview()
+      toast.error('Please generate preview first')
+      return
+    }
 
     setImporting(true)
     try {
-      const result = await createUnsortedVideosBatch(videosToImport, (current, total) => {
-        // Could show progress here if needed
-      })
+      let totalImported = 0
 
-      if (result.success) {
-        toast.success(`Successfully imported ${result.imported} video(s)`)
-        if (result.failed > 0) {
-          toast.error(`Failed to import ${result.failed} video(s)`)
+      // Create tournaments and sub-events
+      for (const tournament of organizationPreview.tournaments) {
+        // Create tournament
+        const { data: tournamentData, error: tournamentError } = await supabase
+          .from('tournaments')
+          .insert({
+            name: tournament.name,
+            category: tournament.category,
+            location: tournament.location,
+            start_date: tournament.startDate,
+            end_date: tournament.endDate,
+          })
+          .select()
+          .single()
+
+        if (tournamentError) {
+          console.error('Error creating tournament:', tournamentError)
+          continue
         }
 
-        // Reset state
-        setChannelUrl('')
-        setFetchedVideos([])
-        setSelectedVideos(new Set())
-        setOpen(false)
-        onSuccess?.()
-      } else {
-        toast.error('Failed to import videos')
+        // Create sub-events and assign videos
+        for (const subEvent of tournament.subEvents) {
+          const { data: subEventData, error: subEventError } = await supabase
+            .from('sub_events')
+            .insert({
+              tournament_id: tournamentData.id,
+              name: subEvent.name,
+              date: subEvent.date,
+            })
+            .select()
+            .single()
+
+          if (subEventError) {
+            console.error('Error creating sub-event:', subEventError)
+            continue
+          }
+
+          // Insert videos (days)
+          for (const video of subEvent.videos) {
+            const { error: dayError } = await supabase
+              .from('days')
+              .insert({
+                sub_event_id: subEventData.id,
+                name: video.title,
+                video_url: video.url,
+                is_organized: true,
+                organized_at: new Date().toISOString(),
+                published_at: video.publishedAt,
+              })
+
+            if (dayError) {
+              console.error('Error creating day:', dayError)
+            } else {
+              totalImported++
+            }
+          }
+        }
       }
+
+      toast.success(`Successfully organized ${totalImported} video(s) into tournaments!`)
+
+      // Reset state
+      setChannelUrl('')
+      setFetchedVideos([])
+      setSelectedVideos(new Set())
+      setAutoOrganize(false)
+      setOrganizationPreview(null)
+      setOpen(false)
+      onSuccess?.()
     } catch (error) {
-      console.error('Error importing videos:', error)
-      toast.error('Failed to import videos')
+      console.error('Error auto-organizing:', error)
+      toast.error('Failed to auto-organize videos')
     } finally {
       setImporting(false)
     }
@@ -386,6 +511,102 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
 
             {fetchedVideos.length > 0 && (
               <>
+                {/* Auto-organize Options */}
+                <div className="pt-4 border-t space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="auto-organize"
+                      checked={autoOrganize}
+                      onCheckedChange={(checked) => setAutoOrganize(checked as boolean)}
+                    />
+                    <Label htmlFor="auto-organize" className="cursor-pointer flex items-center gap-2">
+                      <FolderTree className="h-4 w-4" />
+                      Auto-organize by date
+                    </Label>
+                  </div>
+
+                  {autoOrganize && (
+                    <div className="space-y-3 pl-6 border-l-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="channel-name-input">Channel Name</Label>
+                        <Input
+                          id="channel-name-input"
+                          placeholder="e.g., Triton Poker"
+                          value={channelName}
+                          onChange={(e) => setChannelName(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="category-select">Category</Label>
+                          <Select value={category} onValueChange={setCategory}>
+                            <SelectTrigger id="category-select">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="WSOP">WSOP</SelectItem>
+                              <SelectItem value="Triton">Triton</SelectItem>
+                              <SelectItem value="EPT">EPT</SelectItem>
+                              <SelectItem value="Hustler Casino Live">Hustler</SelectItem>
+                              <SelectItem value="APT">APT</SelectItem>
+                              <SelectItem value="APL">APL</SelectItem>
+                              <SelectItem value="GGPOKER">GGPOKER</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="grouping-strategy">Group By</Label>
+                          <Select value={groupingStrategy} onValueChange={(v) => setGroupingStrategy(v as GroupingStrategy)}>
+                            <SelectTrigger id="grouping-strategy">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="day">Day</SelectItem>
+                              <SelectItem value="week">Week</SelectItem>
+                              <SelectItem value="month">Month</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="location-input">Location</Label>
+                        <Input
+                          id="location-input"
+                          placeholder="e.g., Las Vegas, Online"
+                          value={locationInput}
+                          onChange={(e) => setLocationInput(e.target.value)}
+                        />
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={handleGeneratePreview}
+                        disabled={selectedVideos.size === 0}
+                      >
+                        <FolderTree className="mr-2 h-4 w-4" />
+                        Generate Preview
+                      </Button>
+
+                      {organizationPreview && (
+                        <ScrollArea className="h-[200px] border rounded-md p-3 bg-muted/30">
+                          <pre className="text-xs whitespace-pre-wrap font-mono">
+                            {previewOrganizedStructure(organizationPreview)}
+                          </pre>
+                        </ScrollArea>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {fetchedVideos.length > 0 && (
+              <>
                 <div className="flex items-center justify-between pt-2 border-t">
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -431,17 +652,22 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
                 <Button
                   className="w-full"
                   onClick={handleImportSelected}
-                  disabled={importing || selectedVideos.size === 0}
+                  disabled={importing || selectedVideos.size === 0 || (autoOrganize && !organizationPreview)}
                 >
                   {importing ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Importing...
+                      {autoOrganize ? 'Organizing...' : 'Importing...'}
+                    </>
+                  ) : autoOrganize ? (
+                    <>
+                      <FolderTree className="mr-2 h-4 w-4" />
+                      Import & Auto-Organize ({selectedVideos.size})
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Import Selected ({selectedVideos.size})
+                      Import to Unsorted ({selectedVideos.size})
                     </>
                   )}
                 </Button>
