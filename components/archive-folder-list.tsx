@@ -3,6 +3,7 @@
 import { Folder, FileVideo, ChevronRight, Calendar, Video } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Checkbox } from "@/components/ui/checkbox"
 import type { Tournament as TournamentType, SubEvent as SubEventType, Day as DayType } from "@/lib/supabase"
 import type { UnsortedVideo } from "@/lib/unsorted-videos"
 
