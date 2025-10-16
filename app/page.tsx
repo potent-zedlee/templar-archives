@@ -5,14 +5,12 @@ export const runtime = 'edge'
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 
-import { HeroSection } from "@/components/hero-section"
-import { MostUsedVideos } from "@/components/most-used-videos"
 import { OnThisDay } from "@/components/on-this-day"
-import { RecentAnalyses } from "@/components/recent-analyses"
 import { StatsCounter } from "@/components/main/stats-counter"
 import { WeeklyHighlights } from "@/components/main/weekly-highlights"
 import { LatestPosts } from "@/components/main/latest-posts"
 import { TopPlayers } from "@/components/main/top-players"
+import { LivePokerStreams } from "@/components/main/live-poker-streams"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
 import type { PlatformStats, WeeklyHighlight, TopPlayer } from "@/lib/main-page"
@@ -176,7 +174,12 @@ export default function homeClient() {
     <div className="min-h-screen">
       <Header />
       <main>
-        <HeroSection />
+        {/* Live Poker Streams */}
+        <section className="py-12 md:py-16">
+          <div className="container max-w-7xl mx-auto px-4 md:px-6">
+            <LivePokerStreams />
+          </div>
+        </section>
 
         {/* Platform Statistics */}
         {data.stats && (
@@ -214,8 +217,6 @@ export default function homeClient() {
           </section>
         )}
 
-        <RecentAnalyses />
-        <MostUsedVideos />
         <OnThisDay />
       </main>
     </div>
