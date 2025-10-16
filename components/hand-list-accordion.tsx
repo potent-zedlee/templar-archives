@@ -8,7 +8,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { HandHistoryDetail } from "@/components/hand-history-detail"
 import { Play, ThumbsUp, ThumbsDown, MessageCircle } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
@@ -85,10 +84,8 @@ export function HandListAccordion({
               <div className="flex items-center justify-between w-full pr-4">
                 <div className="flex items-center gap-3">
                   {onPlayHand && hand.startTime && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0"
+                    <div
+                      className="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation()
                         onPlayHand(hand.startTime)
@@ -96,7 +93,7 @@ export function HandListAccordion({
                       title="이 핸드 재생"
                     >
                       <Play className="h-4 w-4" />
-                    </Button>
+                    </div>
                   )}
                   <span className="text-body font-semibold">
                     Hand #{hand.handNumber}
@@ -142,10 +139,8 @@ export function HandListAccordion({
                   )}
 
                   {onReanalyzeHand && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 px-2"
+                    <div
+                      className="inline-flex items-center justify-center h-7 px-2 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer text-sm"
                       onClick={(e) => {
                         e.stopPropagation()
                         onReanalyzeHand(hand, idx)
@@ -153,7 +148,7 @@ export function HandListAccordion({
                     >
                       <Play className="h-3 w-3 mr-1" />
                       재분석
-                    </Button>
+                    </div>
                   )}
                 </div>
               </div>

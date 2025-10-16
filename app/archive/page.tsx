@@ -42,6 +42,23 @@ import type { HandHistory } from "@/lib/types/hand-history"
 import { isAdmin } from "@/lib/auth-utils"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { EmptyState } from "@/components/empty-state"
+import { DndContext, useDroppable, DragEndEvent } from '@dnd-kit/core'
+import { UnsortedVideosSection } from "@/components/unsorted-videos-section"
+import { organizeVideo } from "@/lib/unsorted-videos"
+import type { UnsortedVideo } from "@/lib/unsorted-videos"
+import { useArchiveState } from "@/hooks/useArchiveState"
+import {
+  loadTournamentsHelper,
+  loadHandsHelper,
+  toggleTournamentHelper,
+  toggleSubEventHelper,
+  selectDayHelper,
+  toggleFavoriteHelper,
+  deleteTournamentHelper,
+  deleteSubEventHelper,
+  deleteDayHelper,
+  checkIsUserAdmin,
+} from "@/lib/archive-helpers"
 
 // Dynamic imports for heavy components
 const VideoPlayerDialog = nextDynamic(() => import("@/components/video-player-dialog").then(mod => ({ default: mod.VideoPlayerDialog })), {
@@ -52,6 +69,9 @@ const HandListAccordion = nextDynamic(() => import("@/components/hand-list-accor
   ssr: false,
   loading: () => <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-muted animate-pulse rounded-md" />)}</div>
 })
+
+// Create Supabase client
+const supabase = createClientSupabaseClient()
 
 // Extended types with UI state
 type Tournament = TournamentType & {
@@ -72,93 +92,169 @@ type Hand = HandType & {
   checked: boolean
 }
 
+// Droppable wrapper for SubEvent nodes
+function DroppableSubEvent({
+  subEventId,
+  children
+}: {
+  subEventId: string
+  children: React.ReactNode
+}) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: `subevent-${subEventId}`,
+    data: {
+      type: 'subevent',
+      id: subEventId,
+    },
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`transition-all ${isOver ? 'bg-primary/10 ring-2 ring-primary rounded-md' : ''}`}
+    >
+      {children}
+    </div>
+  )
+}
+
 export default function ArchiveClient() {
-  const [tournaments, setTournaments] = useState<Tournament[]>([])
-  const [hands, setHands] = useState<Hand[]>([])
-  const [selectedDay, setSelectedDay] = useState<string>("")
-  const [loading, setLoading] = useState(true)
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-  const [selectedCategory, setSelectedCategory] = useState<string>("All")
+  // Use archive state hook
+  const state = useArchiveState()
 
-  // Tournament dialog states
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingTournamentId, setEditingTournamentId] = useState<string>("")
-  const [newTournamentName, setNewTournamentName] = useState("")
-  const [newCategory, setNewCategory] = useState<TournamentType["category"]>("WSOP")
-  const [newLocation, setNewLocation] = useState("")
-  const [newStartDate, setNewStartDate] = useState("")
-  const [newEndDate, setNewEndDate] = useState("")
-
-  // SubEvent dialog states
-  const [isSubEventDialogOpen, setIsSubEventDialogOpen] = useState(false)
-  const [selectedTournamentId, setSelectedTournamentId] = useState<string>("")
-  const [editingSubEventId, setEditingSubEventId] = useState<string>("")
-  const [newSubEventName, setNewSubEventName] = useState("")
-  const [newSubEventDate, setNewSubEventDate] = useState("")
-  const [newSubEventPrize, setNewSubEventPrize] = useState("")
-  const [newSubEventWinner, setNewSubEventWinner] = useState("")
-  const [newSubEventBuyIn, setNewSubEventBuyIn] = useState("")
-  const [newSubEventEntryCount, setNewSubEventEntryCount] = useState("")
-  const [newSubEventBlindStructure, setNewSubEventBlindStructure] = useState("")
-  const [newSubEventLevelDuration, setNewSubEventLevelDuration] = useState("")
-  const [newSubEventStartingStack, setNewSubEventStartingStack] = useState("")
-  const [newSubEventNotes, setNewSubEventNotes] = useState("")
-
-  // SubEvent Info dialog
-  const [isSubEventInfoDialogOpen, setIsSubEventInfoDialogOpen] = useState(false)
-  const [viewingSubEventId, setViewingSubEventId] = useState<string>("")
-  const [viewingSubEvent, setViewingSubEvent] = useState<SubEvent | null>(null)
-  const [viewingPayouts, setViewingPayouts] = useState<any[]>([])
-  const [loadingViewingPayouts, setLoadingViewingPayouts] = useState(false)
-  const [isEditingViewingPayouts, setIsEditingViewingPayouts] = useState(false)
-  const [editingViewingPayouts, setEditingViewingPayouts] = useState<PayoutRow[]>([])
-  const [savingPayouts, setSavingPayouts] = useState(false)
-
-  // Payout dialog states
-  type PayoutRow = { rank: number; playerName: string; prizeAmount: string }
-  const [payouts, setPayouts] = useState<PayoutRow[]>([
-    { rank: 1, playerName: "", prizeAmount: "" }
-  ])
-  const [payoutSectionOpen, setPayoutSectionOpen] = useState(false)
-  const [hendonMobUrl, setHendonMobUrl] = useState("")
-  const [hendonMobHtml, setHendonMobHtml] = useState("")
-  const [csvText, setCsvText] = useState("")
-  const [loadingPayouts, setLoadingPayouts] = useState(false)
-
-  // Day dialog states
-  const [isDayDialogOpen, setIsDayDialogOpen] = useState(false)
-  const [selectedSubEventId, setSelectedSubEventId] = useState<string>("")
-  const [editingDayId, setEditingDayId] = useState<string>("")
-  const [newDayName, setNewDayName] = useState("")
-  const [videoSourceTab, setVideoSourceTab] = useState<'nas' | 'youtube' | 'upload'>('nas')
-  const [newDayVideoUrl, setNewDayVideoUrl] = useState("")
-  const [newDayNasPath, setNewDayNasPath] = useState("")
-  const [uploadFile, setUploadFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-
-  // Video player dialog states
-  const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false)
-  const [videoStartTime, setVideoStartTime] = useState<string>("")
-
-  // Dropdown menu state
-  const [openMenuId, setOpenMenuId] = useState<string>("")
+  // Destructure all state from hook
+  const {
+    tournaments,
+    setTournaments,
+    hands,
+    setHands,
+    selectedDay,
+    setSelectedDay,
+    loading,
+    setLoading,
+    userEmail,
+    setUserEmail,
+    selectedCategory,
+    setSelectedCategory,
+    isDialogOpen,
+    setIsDialogOpen,
+    editingTournamentId,
+    setEditingTournamentId,
+    newTournamentName,
+    setNewTournamentName,
+    newCategory,
+    setNewCategory,
+    newLocation,
+    setNewLocation,
+    newStartDate,
+    setNewStartDate,
+    newEndDate,
+    setNewEndDate,
+    isSubEventDialogOpen,
+    setIsSubEventDialogOpen,
+    selectedTournamentId,
+    setSelectedTournamentId,
+    editingSubEventId,
+    setEditingSubEventId,
+    newSubEventName,
+    setNewSubEventName,
+    newSubEventDate,
+    setNewSubEventDate,
+    newSubEventPrize,
+    setNewSubEventPrize,
+    newSubEventWinner,
+    setNewSubEventWinner,
+    newSubEventBuyIn,
+    setNewSubEventBuyIn,
+    newSubEventEntryCount,
+    setNewSubEventEntryCount,
+    newSubEventBlindStructure,
+    setNewSubEventBlindStructure,
+    newSubEventLevelDuration,
+    setNewSubEventLevelDuration,
+    newSubEventStartingStack,
+    setNewSubEventStartingStack,
+    newSubEventNotes,
+    setNewSubEventNotes,
+    isSubEventInfoDialogOpen,
+    setIsSubEventInfoDialogOpen,
+    viewingSubEventId,
+    setViewingSubEventId,
+    viewingSubEvent,
+    setViewingSubEvent,
+    viewingPayouts,
+    setViewingPayouts,
+    loadingViewingPayouts,
+    setLoadingViewingPayouts,
+    isEditingViewingPayouts,
+    setIsEditingViewingPayouts,
+    editingViewingPayouts,
+    setEditingViewingPayouts,
+    savingPayouts,
+    setSavingPayouts,
+    payouts,
+    setPayouts,
+    payoutSectionOpen,
+    setPayoutSectionOpen,
+    hendonMobUrl,
+    setHendonMobUrl,
+    hendonMobHtml,
+    setHendonMobHtml,
+    csvText,
+    setCsvText,
+    loadingPayouts,
+    setLoadingPayouts,
+    isDayDialogOpen,
+    setIsDayDialogOpen,
+    selectedSubEventId,
+    setSelectedSubEventId,
+    editingDayId,
+    setEditingDayId,
+    newDayName,
+    setNewDayName,
+    videoSourceTab,
+    setVideoSourceTab,
+    newDayVideoUrl,
+    setNewDayVideoUrl,
+    newDayNasPath,
+    setNewDayNasPath,
+    uploadFile,
+    setUploadFile,
+    uploading,
+    setUploading,
+    uploadProgress,
+    setUploadProgress,
+    isVideoDialogOpen,
+    setIsVideoDialogOpen,
+    videoStartTime,
+    setVideoStartTime,
+    openMenuId,
+    setOpenMenuId,
+  } = state
 
   // Load user session
   useEffect(() => {
-    const loadUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
+    // Listen to auth state changes to avoid session missing errors
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserEmail(session?.user?.email || null)
+    })
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe()
     }
-    loadUser()
   }, [])
 
   // Load tournaments with sub_events and days
+  const loadTournaments = () => loadTournamentsHelper(setTournaments, setSelectedDay, setLoading)
+
   useEffect(() => {
     loadTournaments()
   }, [])
 
   // Load hands when day is selected
+  const loadHands = (dayId: string) => loadHandsHelper(dayId, setHands)
+
   useEffect(() => {
     if (selectedDay) {
       loadHands(selectedDay)
@@ -208,131 +304,52 @@ export default function ArchiveClient() {
     ? tournaments
     : tournaments.filter(t => t.category === selectedCategory)
 
-  async function loadTournaments() {
-    setLoading(true)
-    try {
-      const tournamentsData = await fetchTournamentsTree()
+  // Drag and drop handler
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
 
-      const tournamentsWithUIState = tournamentsData.map((tournament: any) => ({
-        ...tournament,
-        sub_events: tournament.sub_events?.map((subEvent: any) => ({
-          ...subEvent,
-          days: subEvent.days?.map((day: any) => ({ ...day, selected: false })),
-          expanded: false,
-        })),
-        expanded: true,
-      }))
+    if (!over) return
 
-      setTournaments(tournamentsWithUIState)
+    const draggedVideo = active.data.current as { type: string; video: UnsortedVideo }
+    const dropTarget = over.data.current as { type: string; id: string }
 
-      // Auto-select first day if available
-      if (tournamentsWithUIState.length > 0 &&
-          tournamentsWithUIState[0].sub_events?.length &&
-          tournamentsWithUIState[0].sub_events[0].days?.length) {
-        const firstDay = tournamentsWithUIState[0].sub_events[0].days[0]
-        setSelectedDay(firstDay.id)
-        setTournaments(prev =>
-          prev.map((t, ti) => ({
-            ...t,
-            sub_events: t.sub_events?.map((se, sei) => ({
-              ...se,
-              days: se.days?.map((d, di) => ({
-                ...d,
-                selected: ti === 0 && sei === 0 && di === 0
-              }))
-            }))
-          }))
-        )
+    if (draggedVideo?.type !== 'unsorted-video') return
+    if (!dropTarget) return
+
+    // Handle drop on SubEvent
+    if (dropTarget.type === 'subevent') {
+      const result = await organizeVideo(draggedVideo.video.id, dropTarget.id)
+      if (result.success) {
+        toast.success(`Video "${draggedVideo.video.name}" organized successfully`)
+        await loadTournaments() // Reload to show updated structure
+      } else {
+        toast.error(result.error || 'Failed to organize video')
       }
-    } catch (error) {
-      console.error('Error loading tournaments:', error)
-      toast.error('Failed to load tournaments')
-    } finally {
-      setLoading(false)
+    }
+    // Handle drop on Day (move video to existing day)
+    else if (dropTarget.type === 'day') {
+      const result = await organizeVideo(draggedVideo.video.id, dropTarget.id)
+      if (result.success) {
+        toast.success(`Video "${draggedVideo.video.name}" moved to day`)
+        await loadTournaments()
+      } else {
+        toast.error(result.error || 'Failed to move video')
+      }
     }
   }
 
-  async function loadHands(dayId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('hands')
-        .select(`
-          *,
-          hand_players(
-            position,
-            cards,
-            player:players(name)
-          )
-        `)
-        .eq('day_id', dayId)
-        .order('created_at', { ascending: true })
+  // Helper function wrappers
+  const toggleTournament = (tournamentId: string) =>
+    toggleTournamentHelper(tournamentId, setTournaments)
 
-      if (error) throw error
+  const toggleSubEvent = (tournamentId: string, subEventId: string) =>
+    toggleSubEventHelper(tournamentId, subEventId, setTournaments)
 
-      setHands((data || []).map(hand => ({ ...hand, checked: false })))
-    } catch (error) {
-      console.error('Error loading hands:', error)
-    }
-  }
+  const selectDay = (dayId: string) =>
+    selectDayHelper(dayId, setSelectedDay, setTournaments)
 
-  const toggleTournament = (tournamentId: string) => {
-    setTournaments((prev) =>
-      prev.map((t) =>
-        t.id === tournamentId ? { ...t, expanded: !t.expanded } : t
-      )
-    )
-  }
-
-  const toggleSubEvent = (tournamentId: string, subEventId: string) => {
-    setTournaments((prev) =>
-      prev.map((t) =>
-        t.id === tournamentId
-          ? {
-              ...t,
-              sub_events: t.sub_events?.map((se) =>
-                se.id === subEventId ? { ...se, expanded: !se.expanded } : se
-              ),
-            }
-          : t
-      )
-    )
-  }
-
-  const selectDay = (dayId: string) => {
-    setSelectedDay(dayId)
-    setTournaments((prev) =>
-      prev.map((t) => ({
-        ...t,
-        sub_events: t.sub_events?.map((se) => ({
-          ...se,
-          days: se.days?.map((d) => ({
-            ...d,
-            selected: d.id === dayId,
-          })),
-        })),
-      }))
-    )
-  }
-
-  const toggleFavorite = async (handId: string) => {
-    const hand = hands.find(h => h.id === handId)
-    if (!hand) return
-
-    try {
-      const { error } = await supabase
-        .from('hands')
-        .update({ favorite: !hand.favorite })
-        .eq('id', handId)
-
-      if (error) throw error
-
-      setHands((prev) =>
-        prev.map((h) => (h.id === handId ? { ...h, favorite: !h.favorite } : h))
-      )
-    } catch (error) {
-      console.error('Error toggling favorite:', error)
-    }
-  }
+  const toggleFavorite = (handId: string) =>
+    toggleFavoriteHelper(handId, hands, setHands)
 
   const toggleChecked = (handId: string) => {
     setHands((prev) =>
@@ -850,62 +867,20 @@ export default function ArchiveClient() {
   // Delete functions
   const deleteTournament = async (tournamentId: string) => {
     if (!confirm('Are you sure you want to delete this tournament and all its data?')) return
-
-    try {
-      const { error } = await supabase
-        .from('tournaments')
-        .delete()
-        .eq('id', tournamentId)
-
-      if (error) throw error
-
-      await loadTournaments()
-      toast.success('Tournament deleted successfully')
-    } catch (error) {
-      console.error('Error deleting tournament:', error)
-      toast.error('Failed to delete tournament')
-    }
+    await deleteTournamentHelper(tournamentId, setTournaments)
   }
 
   const deleteSubEvent = async (subEventId: string) => {
     if (!confirm('Are you sure you want to delete this event and all its data?')) return
-
-    try {
-      const { error } = await supabase
-        .from('sub_events')
-        .delete()
-        .eq('id', subEventId)
-
-      if (error) throw error
-
-      await loadTournaments()
-      toast.success('Event deleted successfully')
-    } catch (error) {
-      console.error('Error deleting sub event:', error)
-      toast.error('Failed to delete event')
-    }
+    await deleteSubEventHelper(subEventId, setTournaments)
   }
 
   const deleteDay = async (dayId: string) => {
     if (!confirm('Are you sure you want to delete this day and all hand data?')) return
-
-    try {
-      const { error } = await supabase
-        .from('days')
-        .delete()
-        .eq('id', dayId)
-
-      if (error) throw error
-
-      await loadTournaments()
-      if (selectedDay === dayId) {
-        setSelectedDay("")
-        setHands([])
-      }
-      toast.success('Day deleted successfully')
-    } catch (error) {
-      console.error('Error deleting day:', error)
-      toast.error('Failed to delete day')
+    await deleteDayHelper(dayId, setTournaments)
+    if (selectedDay === dayId) {
+      setSelectedDay("")
+      setHands([])
     }
   }
 
@@ -1132,8 +1107,37 @@ export default function ArchiveClient() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <Header />
+    <DndContext onDragEnd={handleDragEnd}>
+      <div className="min-h-screen bg-muted/30">
+        <Header />
+
+        {/* Unsorted Videos Section */}
+        <div className="container max-w-7xl mx-auto px-4 md:px-6 py-6">
+          <UnsortedVideosSection onVideoPlay={(video) => {
+            // Debug: Log video data
+            console.log('Video object:', video)
+            console.log('Video URL:', video.video_url)
+
+            // Open video in new tab (YouTube) or show message for local files
+            if (video.video_url) {
+              console.log('Opening URL:', video.video_url)
+
+              // Use anchor tag method to bypass popup blockers
+              const link = document.createElement('a')
+              link.href = video.video_url
+              link.target = '_blank'
+              link.rel = 'noopener noreferrer'
+              document.body.appendChild(link)
+              link.click()
+              document.body.removeChild(link)
+
+              toast.success('Opening video...')
+            } else {
+              console.log('No video_url found')
+              toast.error('Video URL is missing')
+            }
+          }} />
+        </div>
 
       {/* Category Filter - Top Bar */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -1394,7 +1398,7 @@ export default function ArchiveClient() {
                       {tournament.expanded && (
                         <div className="ml-4">
                           {tournament.sub_events?.map((subEvent) => (
-                            <div key={subEvent.id}>
+                            <DroppableSubEvent key={subEvent.id} subEventId={subEvent.id}>
                               <div className="flex items-center justify-between gap-2 py-2 px-3 rounded-md hover:bg-muted/50 transition-colors group">
                                 <div
                                   className="flex items-center gap-2 flex-1 cursor-pointer"
@@ -1564,7 +1568,7 @@ export default function ArchiveClient() {
                                   ))}
                                 </div>
                               )}
-                            </div>
+                            </DroppableSubEvent>
                           ))}
                         </div>
                       )}
@@ -2426,5 +2430,6 @@ export default function ArchiveClient() {
       {/* Hand History import is performed by external systems */}
       {/* API: POST /api/import-hands */}
     </div>
+    </DndContext>
   )
 }
