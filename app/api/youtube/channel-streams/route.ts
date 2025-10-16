@@ -1,0 +1,80 @@
+import { NextRequest, NextResponse } from 'next/server'
+import {
+  parseChannelIdentifier,
+  getChannelIdFromIdentifier,
+  getChannelLiveStreams,
+  type YouTubeVideo,
+} from '@/lib/youtube-api'
+
+export const runtime = 'edge'
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { channelUrl, maxResults = 25 } = body
+
+    if (!channelUrl) {
+      return NextResponse.json(
+        { error: 'Channel URL is required' },
+        { status: 400 }
+      )
+    }
+
+    // Get API key from environment
+    const apiKey = process.env.YOUTUBE_API_KEY
+    if (!apiKey) {
+      console.error('YOUTUBE_API_KEY is not set')
+      return NextResponse.json(
+        { error: 'YouTube API is not configured' },
+        { status: 500 }
+      )
+    }
+
+    // Parse channel identifier
+    const identifier = parseChannelIdentifier(channelUrl)
+    if (!identifier) {
+      return NextResponse.json(
+        { error: 'Invalid channel URL format' },
+        { status: 400 }
+      )
+    }
+
+    // Get channel ID
+    const channelId = await getChannelIdFromIdentifier(identifier, apiKey)
+    if (!channelId) {
+      return NextResponse.json(
+        { error: 'Channel not found' },
+        { status: 404 }
+      )
+    }
+
+    // Fetch live streams
+    const videos: YouTubeVideo[] = await getChannelLiveStreams(
+      channelId,
+      apiKey,
+      Math.min(maxResults, 500) // Cap at 500
+    )
+
+    return NextResponse.json({
+      success: true,
+      channelId,
+      videos,
+      count: videos.length,
+    })
+  } catch (error: any) {
+    console.error('Error fetching channel streams:', error)
+
+    // Check for YouTube API specific errors
+    if (error.message?.includes('quota')) {
+      return NextResponse.json(
+        { error: 'YouTube API quota exceeded. Please try again later.' },
+        { status: 429 }
+      )
+    }
+
+    return NextResponse.json(
+      { error: error.message || 'Failed to fetch channel streams' },
+      { status: 500 }
+    )
+  }
+}

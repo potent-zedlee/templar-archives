@@ -73,6 +73,7 @@ export async function createUnsortedVideo(params: {
   video_url?: string
   video_file?: string
   video_source?: 'youtube' | 'local' | 'nas'
+  published_at?: string
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   const supabase = createClientSupabaseClient()
 
@@ -92,6 +93,7 @@ export async function createUnsortedVideo(params: {
       video_source: params.video_source || 'youtube',
       sub_event_id: null,
       is_organized: false,
+      published_at: params.published_at || null,
     })
     .select('id')
     .single()
@@ -175,4 +177,81 @@ export async function organizeVideos(
   }
 
   return { success: true }
+}
+
+/**
+ * Create multiple unsorted videos at once (batch import)
+ */
+export async function createUnsortedVideosBatch(
+  videos: Array<{
+    name: string
+    video_url: string
+    video_source?: 'youtube' | 'local' | 'nas'
+    published_at?: string
+  }>,
+  onProgress?: (current: number, total: number) => void
+): Promise<{
+  success: boolean
+  imported: number
+  failed: number
+  errors?: Array<{ video: string; error: string }>
+}> {
+  const supabase = createClientSupabaseClient()
+
+  let imported = 0
+  let failed = 0
+  const errors: Array<{ video: string; error: string }> = []
+
+  // Process in batches to avoid overwhelming the database
+  const BATCH_SIZE = 10
+
+  for (let i = 0; i < videos.length; i += BATCH_SIZE) {
+    const batch = videos.slice(i, Math.min(i + BATCH_SIZE, videos.length))
+
+    // Prepare batch insert data
+    const insertData = batch.map((video) => {
+      const normalizedUrl = video.video_source === 'youtube'
+        ? normalizeYoutubeUrl(video.video_url)
+        : video.video_url
+
+      return {
+        name: video.name,
+        video_url: normalizedUrl,
+        video_file: null,
+        video_source: video.video_source || 'youtube',
+        sub_event_id: null,
+        is_organized: false,
+        published_at: video.published_at || null,
+      }
+    })
+
+    // Insert batch
+    const { data, error } = await supabase
+      .from('days')
+      .insert(insertData)
+      .select('id')
+
+    if (error) {
+      console.error('Error in batch insert:', error)
+      // Mark all videos in this batch as failed
+      batch.forEach((video) => {
+        errors.push({ video: video.name, error: error.message })
+        failed++
+      })
+    } else {
+      imported += batch.length
+    }
+
+    // Call progress callback
+    if (onProgress) {
+      onProgress(Math.min(i + BATCH_SIZE, videos.length), videos.length)
+    }
+  }
+
+  return {
+    success: imported > 0,
+    imported,
+    failed,
+    errors: errors.length > 0 ? errors : undefined,
+  }
 }

@@ -13,8 +13,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Youtube, Upload, Loader2 } from 'lucide-react'
-import { createUnsortedVideo } from '@/lib/unsorted-videos'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Plus, Youtube, Upload, Radio, Loader2, CheckCircle2 } from 'lucide-react'
+import { createUnsortedVideo, createUnsortedVideosBatch } from '@/lib/unsorted-videos'
+import type { YouTubeVideo } from '@/lib/youtube-api'
 import { toast } from 'sonner'
 
 interface QuickUploadDialogProps {
@@ -32,6 +42,14 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
   // Local file tab state
   const [localFile, setLocalFile] = useState<File | null>(null)
   const [localName, setLocalName] = useState('')
+
+  // Channel Import tab state
+  const [channelUrl, setChannelUrl] = useState('')
+  const [maxResults, setMaxResults] = useState('25')
+  const [fetchedVideos, setFetchedVideos] = useState<YouTubeVideo[]>([])
+  const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set())
+  const [fetchingVideos, setFetchingVideos] = useState(false)
+  const [importing, setImporting] = useState(false)
 
   const handleYoutubeUpload = async () => {
     if (!youtubeUrl || !youtubeName) {
@@ -108,6 +126,109 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
     }
   }
 
+  const handleFetchChannelStreams = async () => {
+    if (!channelUrl) {
+      toast.error('Please enter a channel URL')
+      return
+    }
+
+    setFetchingVideos(true)
+    try {
+      const response = await fetch('/api/youtube/channel-streams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelUrl,
+          maxResults: parseInt(maxResults),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch videos')
+      }
+
+      if (data.videos.length === 0) {
+        toast.info('No completed live streams found in this channel')
+      } else {
+        toast.success(`Found ${data.videos.length} completed live stream(s)`)
+      }
+
+      setFetchedVideos(data.videos)
+      setSelectedVideos(new Set()) // Reset selection
+    } catch (error: any) {
+      console.error('Error fetching channel streams:', error)
+      toast.error(error.message || 'Failed to fetch channel streams')
+    } finally {
+      setFetchingVideos(false)
+    }
+  }
+
+  const handleToggleVideo = (videoId: string) => {
+    setSelectedVideos((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(videoId)) {
+        newSet.delete(videoId)
+      } else {
+        newSet.add(videoId)
+      }
+      return newSet
+    })
+  }
+
+  const handleSelectAll = () => {
+    if (selectedVideos.size === fetchedVideos.length) {
+      setSelectedVideos(new Set())
+    } else {
+      setSelectedVideos(new Set(fetchedVideos.map((v) => v.id)))
+    }
+  }
+
+  const handleImportSelected = async () => {
+    if (selectedVideos.size === 0) {
+      toast.error('Please select at least one video')
+      return
+    }
+
+    const videosToImport = fetchedVideos
+      .filter((v) => selectedVideos.has(v.id))
+      .map((v) => ({
+        name: v.title,
+        video_url: v.url,
+        video_source: 'youtube' as const,
+        published_at: v.publishedAt,
+      }))
+
+    setImporting(true)
+    try {
+      const result = await createUnsortedVideosBatch(videosToImport, (current, total) => {
+        // Could show progress here if needed
+      })
+
+      if (result.success) {
+        toast.success(`Successfully imported ${result.imported} video(s)`)
+        if (result.failed > 0) {
+          toast.error(`Failed to import ${result.failed} video(s)`)
+        }
+
+        // Reset state
+        setChannelUrl('')
+        setFetchedVideos([])
+        setSelectedVideos(new Set())
+        setOpen(false)
+        onSuccess?.()
+      } else {
+        toast.error('Failed to import videos')
+      }
+    } catch (error) {
+      console.error('Error importing videos:', error)
+      toast.error('Failed to import videos')
+    } finally {
+      setImporting(false)
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -116,7 +237,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
           Quick Upload
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Quick Upload Video</DialogTitle>
           <DialogDescription>
@@ -125,7 +246,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
         </DialogHeader>
 
         <Tabs defaultValue="youtube" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="youtube" className="gap-2">
               <Youtube className="h-4 w-4" />
               YouTube
@@ -133,6 +254,10 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
             <TabsTrigger value="local" className="gap-2">
               <Upload className="h-4 w-4" />
               Local File
+            </TabsTrigger>
+            <TabsTrigger value="channel" className="gap-2">
+              <Radio className="h-4 w-4" />
+              Channel
             </TabsTrigger>
           </TabsList>
 
@@ -213,6 +338,116 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
                 'Add to Unsorted'
               )}
             </Button>
+          </TabsContent>
+
+          <TabsContent value="channel" className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="channel-url">YouTube Channel URL</Label>
+              <Input
+                id="channel-url"
+                placeholder="https://www.youtube.com/@channelname"
+                value={channelUrl}
+                onChange={(e) => setChannelUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter a channel URL to fetch completed live streams
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="max-results">Max Videos</Label>
+              <Select value={maxResults} onValueChange={setMaxResults}>
+                <SelectTrigger id="max-results">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10 videos</SelectItem>
+                  <SelectItem value="25">25 videos</SelectItem>
+                  <SelectItem value="50">50 videos</SelectItem>
+                  <SelectItem value="100">100 videos</SelectItem>
+                  <SelectItem value="500">500 videos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={handleFetchChannelStreams}
+              disabled={fetchingVideos || !channelUrl}
+            >
+              {fetchingVideos ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Fetching...
+                </>
+              ) : (
+                'Fetch Live Streams'
+              )}
+            </Button>
+
+            {fetchedVideos.length > 0 && (
+              <>
+                <div className="flex items-center justify-between pt-2 border-t">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedVideos.size === fetchedVideos.length}
+                      onCheckedChange={handleSelectAll}
+                    />
+                    <Label className="text-sm cursor-pointer" onClick={handleSelectAll}>
+                      Select All ({fetchedVideos.length})
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedVideos.size} selected
+                  </p>
+                </div>
+
+                <ScrollArea className="h-[300px] border rounded-md p-2">
+                  <div className="space-y-2">
+                    {fetchedVideos.map((video) => (
+                      <div
+                        key={video.id}
+                        className="flex items-start gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors"
+                      >
+                        <Checkbox
+                          checked={selectedVideos.has(video.id)}
+                          onCheckedChange={() => handleToggleVideo(video.id)}
+                        />
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="w-24 h-18 object-cover rounded flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium line-clamp-2">{video.title}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(video.publishedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+
+                <Button
+                  className="w-full"
+                  onClick={handleImportSelected}
+                  disabled={importing || selectedVideos.size === 0}
+                >
+                  {importing ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Import Selected ({selectedVideos.size})
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
           </TabsContent>
         </Tabs>
       </DialogContent>
