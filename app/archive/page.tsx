@@ -1381,7 +1381,7 @@ export default function ArchiveClient() {
 
             {/* Hand List */}
             <Card className="p-6 bg-gradient-to-br from-card/95 to-card/80 backdrop-blur-md border-2 shadow-lg hover:shadow-xl transition-all duration-300">
-              <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Hand History</h2>
+              <h2 className="text-xl font-bold mb-6">Hand History</h2>
               <div>
                 {hands.length > 0 ? (
                   (() => {

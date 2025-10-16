@@ -120,34 +120,34 @@ export function ArchiveUnifiedFilters({
   const isFiltered = activeFilterCount() > 0
 
   return (
-    <div className={cn("border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60", className)}>
+    <div className={cn("border-b bg-gradient-to-b from-background/98 to-background/95 backdrop-blur-lg shadow-lg supports-[backdrop-filter]:bg-background/60", className)}>
       <div className="container max-w-7xl mx-auto px-4 md:px-6">
         {/* Filter Toggle Button */}
-        <div className="flex items-center justify-between py-3">
+        <div className="flex items-center justify-between py-5">
           <Button
             variant="outline"
-            size="sm"
+            size="default"
             onClick={toggleOpen}
-            className="gap-2"
+            className="gap-2 hover:bg-gradient-to-r hover:from-primary/10 hover:to-purple-500/5 hover:scale-105 hover:shadow-md transition-all duration-200"
           >
-            <Filter className="h-4 w-4" />
-            <span>Filters</span>
+            <Filter className="h-5 w-5" />
+            <span className="font-semibold">Filters</span>
             {isFiltered && (
-              <span className="ml-1 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+              <span className="ml-1 text-xs bg-gradient-to-r from-primary to-purple-600 text-white px-2.5 py-1 rounded-full font-bold shadow-sm">
                 {activeFilterCount()}
               </span>
             )}
-            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </Button>
 
           {isFiltered && (
             <Button
-              variant="ghost"
+              variant="destructive"
               size="sm"
               onClick={handleReset}
-              className="h-8 px-3 text-xs"
+              className="h-9 px-4 text-sm font-medium hover:scale-105 hover:shadow-md transition-all duration-200"
             >
-              <X className="h-3 w-3 mr-1" />
+              <X className="h-4 w-4 mr-1.5" />
               Clear All
             </Button>
           )}
@@ -155,19 +155,24 @@ export function ArchiveUnifiedFilters({
 
         {/* Expanded Filters */}
         {isOpen && (
-          <div className="pb-4 space-y-4">
+          <div className="pb-6 pt-4 space-y-6 bg-muted/30 border-t border-primary/10 -mx-4 md:-mx-6 px-4 md:px-6 rounded-b-lg">
             {/* Category Filter */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Category</Label>
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold text-foreground">Category</Label>
               <ScrollArea className="w-full whitespace-nowrap">
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   {CATEGORIES.map((category) => (
                     <Button
                       key={category}
                       variant={selectedCategory === category ? "default" : "outline"}
                       size="sm"
                       onClick={() => onCategoryChange(category)}
-                      className="h-8"
+                      className={cn(
+                        "h-10 px-4 font-medium transition-all duration-200",
+                        selectedCategory === category
+                          ? "bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-md"
+                          : "hover:bg-gradient-to-r hover:from-primary/10 hover:to-purple-500/5 hover:scale-105 hover:shadow-sm"
+                      )}
                     >
                       {category === "Hustler Casino Live" ? "Hustler" : category}
                     </Button>
@@ -177,10 +182,10 @@ export function ArchiveUnifiedFilters({
             </div>
 
             {/* Advanced Filters Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Date Range */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Date Range</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Date Range</Label>
                 <div className="space-y-2">
                   {/* Start Date */}
                   <Popover>
@@ -188,12 +193,12 @@ export function ArchiveUnifiedFilters({
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal text-xs",
+                          "w-full justify-start text-left font-medium text-sm h-10 hover:bg-gradient-to-r hover:from-primary/5 hover:to-purple-500/5 transition-all",
                           !advancedFilters.dateRange.start && "text-muted-foreground"
                         )}
-                        size="sm"
+                        size="default"
                       >
-                        <CalendarIcon className="mr-2 h-3 w-3" />
+                        <CalendarIcon className="mr-2 h-4 w-4" />
                         {advancedFilters.dateRange.start ? (
                           format(advancedFilters.dateRange.start, "MMM dd, yyyy")
                         ) : (
@@ -217,12 +222,12 @@ export function ArchiveUnifiedFilters({
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal text-xs",
+                          "w-full justify-start text-left font-medium text-sm h-10 hover:bg-gradient-to-r hover:from-primary/5 hover:to-purple-500/5 transition-all",
                           !advancedFilters.dateRange.end && "text-muted-foreground"
                         )}
-                        size="sm"
+                        size="default"
                       >
-                        <CalendarIcon className="mr-2 h-3 w-3" />
+                        <CalendarIcon className="mr-2 h-4 w-4" />
                         {advancedFilters.dateRange.end ? (
                           format(advancedFilters.dateRange.end, "MMM dd, yyyy")
                         ) : (
@@ -243,8 +248,8 @@ export function ArchiveUnifiedFilters({
               </div>
 
               {/* Hand Count Range */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Hand Count</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Hand Count</Label>
                 <div className="space-y-2 pt-2">
                   <Slider
                     value={advancedFilters.handCountRange}
@@ -262,8 +267,8 @@ export function ArchiveUnifiedFilters({
               </div>
 
               {/* Video Sources */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Video Sources</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Video Sources</Label>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox
@@ -299,8 +304,8 @@ export function ArchiveUnifiedFilters({
               </div>
 
               {/* Has Hands Only */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Show videos with hands only</Label>
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold text-foreground">Show videos with hands only</Label>
                 <div className="flex items-center space-x-2 pt-2">
                   <Switch
                     checked={advancedFilters.hasHandsOnly}
