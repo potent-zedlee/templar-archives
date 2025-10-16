@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -37,7 +37,15 @@ export function ArchiveAdvancedFilters({
   onFiltersChange,
   className
 }: ArchiveAdvancedFiltersProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(true)
+
+  // Load collapsed state from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('archive-filters-collapsed')
+    if (saved !== null) {
+      setIsCollapsed(saved === 'true')
+    }
+  }, [])
 
   const handleStartDateSelect = (date: Date | undefined) => {
     onFiltersChange({
@@ -123,7 +131,11 @@ export function ArchiveAdvancedFilters({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsCollapsed(!isCollapsed)}
+            onClick={() => {
+              const newState = !isCollapsed
+              setIsCollapsed(newState)
+              localStorage.setItem('archive-filters-collapsed', String(newState))
+            }}
             className="h-6 w-6 p-0"
           >
             {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}

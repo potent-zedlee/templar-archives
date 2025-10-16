@@ -66,7 +66,6 @@ import { ArchiveViewSwitcher, type ViewMode } from "@/components/archive-view-sw
 import { ArchiveGridView } from "@/components/archive-grid-view"
 import { ArchiveTimelineView } from "@/components/archive-timeline-view"
 import { ArchiveSearchSort, type SortOption } from "@/components/archive-search-sort"
-import { ArchiveStatsWidget } from "@/components/archive-stats-widget"
 import { ArchiveAdvancedFilters, type AdvancedFilters } from "@/components/archive-advanced-filters"
 import { QuickUploadDialog } from "@/components/quick-upload-dialog"
 import { TournamentDialog } from "@/components/tournament-dialog"
@@ -1163,15 +1162,6 @@ export default function ArchiveClient() {
           {/* Left: Hierarchical tree structure */}
           <ResizablePanel defaultSize={50} minSize={15} maxSize={60}>
             <Card className="p-4 bg-card h-full">
-              {/* Statistics Widget */}
-              <ArchiveStatsWidget
-                tournaments={filteredTournaments}
-                filteredItemsCount={buildFolderItems().length}
-                unsortedVideosCount={unsortedVideos.length}
-                totalHandsCount={hands.length}
-                navigationLevel={navigationLevel}
-              />
-
               {/* Advanced Filters */}
               <ArchiveAdvancedFilters
                 filters={advancedFilters}
