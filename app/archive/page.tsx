@@ -1095,8 +1095,8 @@ export default function ArchiveClient() {
       <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <ResizablePanelGroup direction="horizontal" className="gap-6">
           {/* Left: Hierarchical tree structure */}
-          <ResizablePanel defaultSize={50} minSize={15} maxSize={60}>
-            <Card className="p-4 bg-card h-full">
+          <ResizablePanel defaultSize={35} minSize={20} maxSize={50}>
+            <Card className="p-4 bg-card/95 backdrop-blur-md h-full border-2 shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="space-y-4 mb-4">
                 {/* Header Row */}
                 <div className="flex items-center justify-between">
@@ -1315,16 +1315,19 @@ export default function ArchiveClient() {
             />
           </ResizablePanel>
 
-          <ResizableHandle withHandle />
+          {/* Only show right panel when a day is selected */}
+          {selectedDay && (
+            <>
+              <ResizableHandle withHandle />
 
-          {/* Right: Video + Hand List */}
-          <ResizablePanel defaultSize={50} minSize={40}>
+              {/* Right: Video + Hand List */}
+              <ResizablePanel defaultSize={65} minSize={50}>
             <div className="space-y-6">
             {/* Video Header */}
-            <Card className="p-4">
+            <Card className="p-5 bg-gradient-to-br from-card/95 to-card/80 backdrop-blur-md border-2 shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-title">
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                     {(() => {
                       const selectedDayObj = tournaments
                         .flatMap(t => t.sub_events || [])
@@ -1377,8 +1380,8 @@ export default function ArchiveClient() {
             </Card>
 
             {/* Hand List */}
-            <Card className="p-6">
-              <h2 className="text-title mb-4">Hand History</h2>
+            <Card className="p-6 bg-gradient-to-br from-card/95 to-card/80 backdrop-blur-md border-2 shadow-lg hover:shadow-xl transition-all duration-300">
+              <h2 className="text-xl font-bold mb-6 bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Hand History</h2>
               <div>
                 {hands.length > 0 ? (
                   (() => {
@@ -1474,6 +1477,8 @@ export default function ArchiveClient() {
             </Card>
             </div>
           </ResizablePanel>
+            </>
+          )}
         </ResizablePanelGroup>
       </div>
 

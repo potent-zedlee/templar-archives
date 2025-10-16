@@ -89,13 +89,29 @@ export function ArchiveFolderList({
   const getIcon = (type: FolderItem['type']) => {
     switch (type) {
       case 'tournament':
-        return <Folder className="h-5 w-5 text-blue-500" />
+        return (
+          <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
+            <Folder className="h-4 w-4 text-white" />
+          </div>
+        )
       case 'subevent':
-        return <Folder className="h-5 w-5 text-green-500" />
+        return (
+          <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 shadow-md">
+            <Folder className="h-4 w-4 text-white" />
+          </div>
+        )
       case 'day':
-        return <FileVideo className="h-5 w-5 text-purple-500" />
+        return (
+          <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 shadow-md">
+            <FileVideo className="h-4 w-4 text-white" />
+          </div>
+        )
       case 'unorganized':
-        return <Video className="h-5 w-5 text-orange-500" />
+        return (
+          <div className="p-1.5 rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 shadow-md">
+            <Video className="h-4 w-4 text-white" />
+          </div>
+        )
       default:
         return <Folder className="h-5 w-5" />
     }
@@ -432,26 +448,26 @@ export function ArchiveFolderList({
       <div className="p-2">
         {/* Select All Header (only for unorganized) */}
         {isUnorganized && onSelectAll && items.length > 0 && (
-          <div className="flex items-center gap-2 px-2 py-2 mb-1 bg-muted/30 rounded-md">
+          <div className="flex items-center gap-3 px-3 py-3 mb-3 bg-gradient-to-r from-primary/5 to-purple-500/5 rounded-xl border border-primary/10 shadow-sm">
             <Checkbox
               checked={selectedIds.size === items.length && items.length > 0}
               onCheckedChange={onSelectAll}
               data-checkbox
             />
-            <span className="text-caption text-muted-foreground">
+            <span className="text-sm font-medium text-foreground">
               Select All ({selectedIds.size} / {items.length})
             </span>
           </div>
         )}
 
-        <div className="space-y-0.5">
+        <div className="space-y-2">
           {items.map((item) => (
             <ContextMenu key={item.id}>
               <ContextMenuTrigger asChild>
                 <div className="relative group">
                   <Button
                     variant="ghost"
-                    className="w-full justify-start h-8 px-2 hover:bg-muted/50 transition-colors"
+                    className="w-full justify-start h-12 px-3 hover:bg-gradient-to-r hover:from-primary/10 hover:to-purple-500/5 hover:scale-[1.02] hover:shadow-md transition-all duration-200 rounded-xl"
                     onClick={(e) => handleItemClick(item, e)}
                   >
                     <div className="flex items-center gap-2 w-full">
@@ -472,7 +488,7 @@ export function ArchiveFolderList({
 
                       {/* Name */}
                       <div className="flex-1 text-left min-w-0">
-                        <p className="text-caption font-medium truncate">{item.name}</p>
+                        <p className="text-sm font-semibold truncate text-foreground group-hover:text-primary transition-colors">{item.name}</p>
                       </div>
 
                       {/* Date (for unorganized videos with published_at) */}
