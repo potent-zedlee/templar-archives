@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { FileQuestion, Home, ArrowLeft } from 'lucide-react'
@@ -14,11 +16,11 @@ export default function NotFound() {
         </div>
 
         <h1 className="text-title-lg mb-4">
-          페이지를 찾을 수 없습니다
+          Page Not Found
         </h1>
 
         <p className="text-body text-muted-foreground mb-8">
-          요청하신 페이지가 존재하지 않거나 이동되었습니다.
+          The page you requested does not exist or has been moved.
         </p>
 
         <div className="flex gap-3">
@@ -28,13 +30,13 @@ export default function NotFound() {
             className="flex-1"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            이전 페이지
+            Go Back
           </Button>
 
           <Link href="/" className="flex-1">
             <Button variant="default" className="w-full">
               <Home className="mr-2 h-4 w-4" />
-              홈으로
+              Home
             </Button>
           </Link>
         </div>
