@@ -111,7 +111,7 @@ export default function usersClient() {
     try {
       const adminStatus = await isAdmin(user.id)
       if (!adminStatus) {
-        toast.error("관리자 권한이 필요합니다")
+        toast.error("Admin privileges required")
         router.push("/")
         return
       }
@@ -119,7 +119,7 @@ export default function usersClient() {
       setHasAccess(true)
     } catch (error) {
       console.error("Error checking admin access:", error)
-      toast.error("권한 확인 중 오류가 발생했습니다")
+      toast.error("Error checking permissions")
       router.push("/")
     }
   }
@@ -139,7 +139,7 @@ export default function usersClient() {
       setTotalPages(result.totalPages)
     } catch (error) {
       console.error("Error loading users:", error)
-      toast.error("사용자 목록을 불러오는데 실패했습니다")
+      toast.error("Failed to load users")
     } finally {
       setLoading(false)
     }
@@ -149,21 +149,21 @@ export default function usersClient() {
     if (!selectedUser || !user) return
 
     if (!banReason.trim()) {
-      toast.error("차단 사유를 입력해주세요")
+      toast.error("Please enter ban reason")
       return
     }
 
     setBanning(true)
     try {
       await banUser(selectedUser.id, banReason, user.id)
-      toast.success(`${selectedUser.nickname} 사용자를 차단했습니다`)
+      toast.success(`${selectedUser.nickname} has been banned`)
       setBanDialogOpen(false)
       setBanReason("")
       setSelectedUser(null)
       loadUsers()
     } catch (error) {
       console.error("Error banning user:", error)
-      toast.error("사용자 차단에 실패했습니다")
+      toast.error("Failed to ban user")
     } finally {
       setBanning(false)
     }
@@ -174,11 +174,11 @@ export default function usersClient() {
 
     try {
       await unbanUser(targetUser.id, user.id)
-      toast.success(`${targetUser.nickname} 사용자의 차단을 해제했습니다`)
+      toast.success(`${targetUser.nickname} has been unbanned`)
       loadUsers()
     } catch (error) {
       console.error("Error unbanning user:", error)
-      toast.error("차단 해제에 실패했습니다")
+      toast.error("Failed to unban user")
     }
   }
 
@@ -187,14 +187,20 @@ export default function usersClient() {
 
     setChangingRole(true)
     try {
+      console.log('Changing role:', {
+        userId: selectedUser.id,
+        newRole,
+        adminId: user.id
+      })
       await changeUserRole(selectedUser.id, newRole, user.id)
-      toast.success(`${selectedUser.nickname} 사용자의 역할을 ${newRole}(으)로 변경했습니다`)
+      toast.success(`User role changed to ${newRole}`)
       setRoleDialogOpen(false)
       setSelectedUser(null)
-      loadUsers()
-    } catch (error) {
+      await loadUsers()
+    } catch (error: any) {
       console.error("Error changing user role:", error)
-      toast.error("역할 변경에 실패했습니다")
+      console.error("Error details:", error.message, error.code)
+      toast.error(`Failed to change role: ${error.message || 'Unknown error'}`)
     } finally {
       setChangingRole(false)
     }
@@ -231,13 +237,13 @@ export default function usersClient() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-title-lg mb-2">사용자 관리</h1>
+            <h1 className="text-title-lg mb-2">User Management</h1>
             <p className="text-body text-muted-foreground">
-              사용자 목록 조회 및 관리
+              View and manage all users
             </p>
           </div>
           <Link href="/admin/dashboard" className={buttonVariants({ variant: "outline" })}>
-            대시보드로 돌아가기
+            Back to Dashboard
           </Link>
         </div>
 
@@ -248,7 +254,7 @@ export default function usersClient() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="닉네임 또는 이메일로 검색..."
+                  placeholder="Search by nickname or email..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value)
@@ -267,7 +273,7 @@ export default function usersClient() {
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="역할 필터" />
+                <SelectValue placeholder="Role Filter" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
@@ -285,12 +291,12 @@ export default function usersClient() {
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="상태 필터" />
+                <SelectValue placeholder="Status Filter" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">모든 상태</SelectItem>
-                <SelectItem value="active">활성</SelectItem>
-                <SelectItem value="banned">차단됨</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="banned">Banned</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -302,7 +308,7 @@ export default function usersClient() {
         ) : users.length === 0 ? (
           <Card className="p-8 text-center">
             <p className="text-body text-muted-foreground">
-              조건에 맞는 사용자가 없습니다
+              No users match the criteria
             </p>
           </Card>
         ) : (
@@ -333,20 +339,20 @@ export default function usersClient() {
                            "User"}
                         </Badge>
                         {targetUser.is_banned && (
-                          <Badge variant="destructive">차단됨</Badge>
+                          <Badge variant="destructive">Banned</Badge>
                         )}
                       </div>
                       <p className="text-caption text-muted-foreground mb-1">
                         {targetUser.email}
                       </p>
                       <div className="flex gap-4 text-caption text-muted-foreground">
-                        <span>게시글 {targetUser.posts_count}</span>
-                        <span>댓글 {targetUser.comments_count}</span>
-                        <span>가입일: {new Date(targetUser.created_at).toLocaleDateString("ko-KR")}</span>
+                        <span>Posts {targetUser.posts_count}</span>
+                        <span>Comments {targetUser.comments_count}</span>
+                        <span>Joined: {new Date(targetUser.created_at).toLocaleDateString("ko-KR")}</span>
                       </div>
                       {targetUser.is_banned && targetUser.ban_reason && (
                         <p className="text-caption text-destructive mt-1">
-                          차단 사유: {targetUser.ban_reason}
+                          Ban reason: {targetUser.ban_reason}
                         </p>
                       )}
                     </div>
@@ -361,17 +367,17 @@ export default function usersClient() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
                         <Link href={`/profile/${targetUser.id}`}>
-                          프로필 보기
+                          View Profile
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => openRoleDialog(targetUser)}>
                         <Shield className="h-4 w-4 mr-2" />
-                        역할 변경
+                        Change Role
                       </DropdownMenuItem>
                       {targetUser.is_banned ? (
                         <DropdownMenuItem onClick={() => handleUnbanUser(targetUser)}>
                           <UserCheck className="h-4 w-4 mr-2" />
-                          차단 해제
+                          Unban
                         </DropdownMenuItem>
                       ) : (
                         <DropdownMenuItem
@@ -379,7 +385,7 @@ export default function usersClient() {
                           className="text-destructive"
                         >
                           <UserX className="h-4 w-4 mr-2" />
-                          사용자 차단
+                          Ban User
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>
@@ -420,20 +426,20 @@ export default function usersClient() {
       <Dialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>사용자 차단</DialogTitle>
+            <DialogTitle>Ban User</DialogTitle>
             <DialogDescription>
-              {selectedUser?.nickname} 사용자를 차단하시겠습니까?
+              Are you sure you want to ban {selectedUser?.nickname}?
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="ban-reason">차단 사유 *</Label>
+              <Label htmlFor="ban-reason">Ban Reason *</Label>
               <Textarea
                 id="ban-reason"
                 value={banReason}
                 onChange={(e) => setBanReason(e.target.value)}
-                placeholder="차단 사유를 입력하세요..."
+                placeholder="Enter the reason for banning..."
                 rows={4}
               />
             </div>
@@ -441,14 +447,14 @@ export default function usersClient() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setBanDialogOpen(false)}>
-              취소
+              Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleBanUser}
               disabled={banning || !banReason.trim()}
             >
-              {banning ? "처리 중..." : "차단"}
+              {banning ? "Processing..." : "Ban"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -458,15 +464,15 @@ export default function usersClient() {
       <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>역할 변경</DialogTitle>
+            <DialogTitle>Change Role</DialogTitle>
             <DialogDescription>
-              {selectedUser?.nickname} 사용자의 역할을 변경하시겠습니까?
+              Change role for {selectedUser?.nickname}?
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="new-role">새로운 역할</Label>
+              <Label htmlFor="new-role">New Role</Label>
               <Select value={newRole} onValueChange={(value) => setNewRole(value as AdminRole)}>
                 <SelectTrigger id="new-role">
                   <SelectValue />
@@ -482,10 +488,10 @@ export default function usersClient() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setRoleDialogOpen(false)}>
-              취소
+              Cancel
             </Button>
             <Button onClick={handleChangeRole} disabled={changingRole}>
-              {changingRole ? "처리 중..." : "변경"}
+              {changingRole ? "Processing..." : "Change"}
             </Button>
           </DialogFooter>
         </DialogContent>

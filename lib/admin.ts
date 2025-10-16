@@ -204,12 +204,21 @@ export async function unbanUser(userId: string, adminId: string) {
  */
 export async function changeUserRole(userId: string, role: AdminRole, adminId: string) {
   const supabase = createClientSupabaseClient()
-  const { error } = await supabase
+
+  console.log('changeUserRole called:', { userId, role, adminId })
+
+  const { data, error } = await supabase
     .from('users')
     .update({ role })
     .eq('id', userId)
+    .select()
 
-  if (error) throw error
+  if (error) {
+    console.error('Supabase error in changeUserRole:', error)
+    throw error
+  }
+
+  console.log('Role change result:', data)
 
   // Log action
   await logAdminAction(adminId, 'change_role', 'user', userId, { role })
