@@ -1,9 +1,16 @@
 "use client"
 
-import { Folder, FileVideo, ChevronRight, Calendar, Video } from "lucide-react"
+import { Folder, FileVideo, ChevronRight, Video, Play, Edit, Trash, FolderPlus, FolderInput, CheckSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 import type { Tournament as TournamentType, SubEvent as SubEventType, Day as DayType } from "@/lib/supabase"
 import type { UnsortedVideo } from "@/lib/unsorted-videos"
 
@@ -26,6 +33,13 @@ interface ArchiveFolderListProps {
   selectedIds?: Set<string>
   onToggleSelect?: (id: string) => void
   onSelectAll?: () => void
+  // Context menu actions
+  onRename?: (item: FolderItem) => void
+  onDelete?: (item: FolderItem) => void
+  onMoveToEvent?: (item: FolderItem) => void
+  onMoveToNewEvent?: (item: FolderItem) => void
+  onAddSubItem?: (item: FolderItem) => void
+  isAdmin?: boolean
 }
 
 export function ArchiveFolderList({
@@ -37,6 +51,12 @@ export function ArchiveFolderList({
   selectedIds = new Set(),
   onToggleSelect,
   onSelectAll,
+  onRename,
+  onDelete,
+  onMoveToEvent,
+  onMoveToNewEvent,
+  onAddSubItem,
+  isAdmin = false,
 }: ArchiveFolderListProps) {
   if (loading) {
     return (
@@ -85,6 +105,137 @@ export function ArchiveFolderList({
     }
   }
 
+  const renderContextMenu = (item: FolderItem) => {
+    // Tournament folder menu
+    if (item.type === 'tournament') {
+      return (
+        <>
+          <ContextMenuItem onClick={() => onNavigate(item)}>
+            <Folder className="mr-2 h-4 w-4" />
+            Open
+          </ContextMenuItem>
+          {isAdmin && onAddSubItem && (
+            <ContextMenuItem onClick={() => onAddSubItem(item)}>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              Add SubEvent
+            </ContextMenuItem>
+          )}
+          {isAdmin && onRename && (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem onClick={() => onRename(item)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Rename
+              </ContextMenuItem>
+            </>
+          )}
+          {isAdmin && onDelete && (
+            <ContextMenuItem onClick={() => onDelete(item)} variant="destructive">
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </ContextMenuItem>
+          )}
+        </>
+      )
+    }
+
+    // SubEvent folder menu
+    if (item.type === 'subevent') {
+      return (
+        <>
+          <ContextMenuItem onClick={() => onNavigate(item)}>
+            <Folder className="mr-2 h-4 w-4" />
+            Open
+          </ContextMenuItem>
+          {isAdmin && onRename && (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem onClick={() => onRename(item)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Rename
+              </ContextMenuItem>
+            </>
+          )}
+          {isAdmin && onDelete && (
+            <ContextMenuItem onClick={() => onDelete(item)} variant="destructive">
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </ContextMenuItem>
+          )}
+        </>
+      )
+    }
+
+    // Day (video) menu - for organized videos
+    if (item.type === 'day' && !isUnorganized) {
+      return (
+        <>
+          <ContextMenuItem onClick={() => onSelectDay && onSelectDay(item.id)}>
+            <Play className="mr-2 h-4 w-4" />
+            View Hands
+          </ContextMenuItem>
+          {isAdmin && onRename && (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem onClick={() => onRename(item)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Rename
+              </ContextMenuItem>
+            </>
+          )}
+          {isAdmin && onDelete && (
+            <ContextMenuItem onClick={() => onDelete(item)} variant="destructive">
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </ContextMenuItem>
+          )}
+        </>
+      )
+    }
+
+    // Unorganized video menu
+    if (item.type === 'day' && isUnorganized) {
+      return (
+        <>
+          {onToggleSelect && (
+            <ContextMenuItem onClick={() => onToggleSelect(item.id)}>
+              <CheckSquare className="mr-2 h-4 w-4" />
+              {selectedIds.has(item.id) ? 'Deselect' : 'Select'}
+            </ContextMenuItem>
+          )}
+          {(onMoveToEvent || onMoveToNewEvent) && <ContextMenuSeparator />}
+          {onMoveToEvent && (
+            <ContextMenuItem onClick={() => onMoveToEvent(item)}>
+              <FolderInput className="mr-2 h-4 w-4" />
+              Move to Event
+            </ContextMenuItem>
+          )}
+          {onMoveToNewEvent && (
+            <ContextMenuItem onClick={() => onMoveToNewEvent(item)}>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              Move to New Event
+            </ContextMenuItem>
+          )}
+          {isAdmin && (onRename || onDelete) && <ContextMenuSeparator />}
+          {isAdmin && onRename && (
+            <ContextMenuItem onClick={() => onRename(item)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Rename
+            </ContextMenuItem>
+          )}
+          {isAdmin && onDelete && (
+            <ContextMenuItem onClick={() => onDelete(item)} variant="destructive">
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </ContextMenuItem>
+          )}
+        </>
+      )
+    }
+
+    return null
+  }
+
   // Always use List View (Compact)
   return (
     <ScrollArea className="h-full">
@@ -105,53 +256,59 @@ export function ArchiveFolderList({
 
         <div className="space-y-0.5">
           {items.map((item) => (
-            <Button
-              key={item.id}
-              variant="ghost"
-              className="w-full justify-start h-8 px-2 hover:bg-muted/50 transition-colors"
-              onClick={(e) => handleItemClick(item, e)}
-            >
-              <div className="flex items-center gap-2 w-full">
-                {/* Checkbox (only for unorganized videos) */}
-                {isUnorganized && onToggleSelect && (
-                  <Checkbox
-                    checked={selectedIds.has(item.id)}
-                    onCheckedChange={() => onToggleSelect(item.id)}
-                    onClick={(e) => e.stopPropagation()}
-                    data-checkbox
-                  />
-                )}
+            <ContextMenu key={item.id}>
+              <ContextMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start h-8 px-2 hover:bg-muted/50 transition-colors"
+                  onClick={(e) => handleItemClick(item, e)}
+                >
+                  <div className="flex items-center gap-2 w-full">
+                    {/* Checkbox (only for unorganized videos) */}
+                    {isUnorganized && onToggleSelect && (
+                      <Checkbox
+                        checked={selectedIds.has(item.id)}
+                        onCheckedChange={() => onToggleSelect(item.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        data-checkbox
+                      />
+                    )}
 
-                {/* Icon */}
-                <div className="shrink-0">
-                  {getIcon(item.type)}
-                </div>
+                    {/* Icon */}
+                    <div className="shrink-0">
+                      {getIcon(item.type)}
+                    </div>
 
-                {/* Name */}
-                <div className="flex-1 text-left min-w-0">
-                  <p className="text-caption font-medium truncate">{item.name}</p>
-                </div>
+                    {/* Name */}
+                    <div className="flex-1 text-left min-w-0">
+                      <p className="text-caption font-medium truncate">{item.name}</p>
+                    </div>
 
-                {/* Date (for unorganized videos with published_at) */}
-                {item.date && (
-                  <div className="shrink-0 text-xs text-muted-foreground">
-                    {new Date(item.date).toLocaleDateString()}
+                    {/* Date (for unorganized videos with published_at) */}
+                    {item.date && (
+                      <div className="shrink-0 text-xs text-muted-foreground">
+                        {new Date(item.date).toLocaleDateString()}
+                      </div>
+                    )}
+
+                    {/* Item count */}
+                    {item.itemCount !== undefined && item.itemCount > 0 && (
+                      <div className="shrink-0 text-xs text-muted-foreground">
+                        {item.itemCount}
+                      </div>
+                    )}
+
+                    {/* Navigate arrow (for folders only) */}
+                    {(item.type === 'tournament' || item.type === 'subevent' || item.type === 'unorganized') && (
+                      <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                    )}
                   </div>
-                )}
-
-                {/* Item count */}
-                {item.itemCount !== undefined && item.itemCount > 0 && (
-                  <div className="shrink-0 text-xs text-muted-foreground">
-                    {item.itemCount}
-                  </div>
-                )}
-
-                {/* Navigate arrow (for folders only) */}
-                {(item.type === 'tournament' || item.type === 'subevent' || item.type === 'unorganized') && (
-                  <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                )}
-              </div>
-            </Button>
+                </Button>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                {renderContextMenu(item)}
+              </ContextMenuContent>
+            </ContextMenu>
           ))}
         </div>
       </div>

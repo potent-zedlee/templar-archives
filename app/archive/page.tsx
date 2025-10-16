@@ -134,6 +134,13 @@ export default function ArchiveClient() {
   const [moveToEventDate, setMoveToEventDate] = useState('')
   const [movingVideos, setMovingVideos] = useState(false)
 
+  // Context menu dialogs state
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false)
+  const [renameItem, setRenameItem] = useState<FolderItem | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteItem, setDeleteItem] = useState<FolderItem | null>(null)
+
   // Use archive state hook
   const state = useArchiveState()
 
@@ -415,6 +422,94 @@ export default function ArchiveClient() {
       toast.error('Failed to create new event')
     } finally {
       setMovingVideos(false)
+    }
+  }
+
+  // Context menu handlers
+  const handleRename = (item: FolderItem) => {
+    setRenameItem(item)
+    setRenameValue(item.name)
+    setRenameDialogOpen(true)
+  }
+
+  const handleRenameSubmit = async () => {
+    if (!renameItem || !renameValue.trim()) {
+      toast.error('Please enter a valid name')
+      return
+    }
+
+    try {
+      const table = renameItem.type === 'tournament' ? 'tournaments'
+        : renameItem.type === 'subevent' ? 'sub_events'
+        : 'days'
+
+      const { error } = await supabase
+        .from(table)
+        .update({ name: renameValue.trim() })
+        .eq('id', renameItem.id)
+
+      if (error) throw error
+
+      toast.success('Renamed successfully')
+      setRenameDialogOpen(false)
+      setRenameItem(null)
+      setRenameValue('')
+      await loadTournaments()
+      await loadUnsortedVideos()
+    } catch (error) {
+      console.error('Error renaming:', error)
+      toast.error('Failed to rename')
+    }
+  }
+
+  const handleDelete = (item: FolderItem) => {
+    setDeleteItem(item)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteItem) return
+
+    try {
+      const table = deleteItem.type === 'tournament' ? 'tournaments'
+        : deleteItem.type === 'subevent' ? 'sub_events'
+        : 'days'
+
+      const { error } = await supabase
+        .from(table)
+        .delete()
+        .eq('id', deleteItem.id)
+
+      if (error) throw error
+
+      toast.success('Deleted successfully')
+      setDeleteDialogOpen(false)
+      setDeleteItem(null)
+      await loadTournaments()
+      await loadUnsortedVideos()
+    } catch (error) {
+      console.error('Error deleting:', error)
+      toast.error('Failed to delete')
+    }
+  }
+
+  const handleMoveToEvent = (item: FolderItem) => {
+    // Select this video and open the "Move to New Event" dialog
+    setSelectedVideoIds(new Set([item.id]))
+    setIsMoveToNewEventDialogOpen(true)
+  }
+
+  const handleMoveToNewEventSingle = (item: FolderItem) => {
+    // Same as handleMoveToEvent but more explicit naming
+    setSelectedVideoIds(new Set([item.id]))
+    setIsMoveToNewEventDialogOpen(true)
+  }
+
+  const handleAddSubItem = (item: FolderItem) => {
+    if (item.type === 'tournament') {
+      // Open SubEvent dialog
+      setSelectedTournamentId(item.id)
+      setIsSubEventDialogOpen(true)
     }
   }
 
@@ -1577,6 +1672,12 @@ export default function ArchiveClient() {
                 selectedIds={selectedVideoIds}
                 onToggleSelect={toggleVideoSelection}
                 onSelectAll={selectAllVideos}
+                onRename={handleRename}
+                onDelete={handleDelete}
+                onMoveToEvent={handleMoveToEvent}
+                onMoveToNewEvent={handleMoveToNewEventSingle}
+                onAddSubItem={handleAddSubItem}
+                isAdmin={isUserAdmin}
               />
             </Card>
 
@@ -2317,6 +2418,74 @@ export default function ArchiveClient() {
                     </Button>
                     <Button onClick={handleMoveToNewEvent} disabled={movingVideos}>
                       {movingVideos ? 'Creating...' : 'Create & Move'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Rename Dialog */}
+            <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Rename {renameItem?.type}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="rename-input">New Name</Label>
+                    <Input
+                      id="rename-input"
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      placeholder="Enter new name"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleRenameSubmit()
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setRenameDialogOpen(false)
+                        setRenameItem(null)
+                        setRenameValue('')
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleRenameSubmit}>
+                      Rename
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Delete {deleteItem?.type}?</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <p className="text-body text-muted-foreground">
+                    Are you sure you want to delete "{deleteItem?.name}"? This action cannot be undone.
+                  </p>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setDeleteDialogOpen(false)
+                        setDeleteItem(null)
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button variant="destructive" onClick={handleDeleteConfirm}>
+                      Delete
                     </Button>
                   </div>
                 </div>
