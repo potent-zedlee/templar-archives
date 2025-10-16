@@ -65,6 +65,14 @@ import type { FolderItem } from "@/components/archive-folder-list"
 import { QuickUploadDialog } from "@/components/quick-upload-dialog"
 import { TournamentDialog } from "@/components/tournament-dialog"
 import { EditEventDialog } from "@/components/edit-event-dialog"
+import { RenameDialog } from "@/components/archive-dialogs/rename-dialog"
+import { DeleteDialog } from "@/components/archive-dialogs/delete-dialog"
+import { MoveToExistingEventDialog } from "@/components/archive-dialogs/move-to-existing-event-dialog"
+import { MoveToNewEventDialog } from "@/components/archive-dialogs/move-to-new-event-dialog"
+import { DayDialog } from "@/components/archive-dialogs/day-dialog"
+import { SubEventInfoDialog } from "@/components/archive-dialogs/sub-event-info-dialog"
+import { SubEventDialog } from "@/components/archive-dialogs/sub-event-dialog"
+import type { FolderItem as DialogFolderItem } from "@/components/archive-dialogs/rename-dialog"
 
 // Dynamic imports for heavy components
 const VideoPlayerDialog = nextDynamic(() => import("@/components/video-player-dialog").then(mod => ({ default: mod.VideoPlayerDialog })), {
@@ -128,24 +136,15 @@ export default function ArchiveClient() {
   // Multi-select state for unsorted videos
   const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set())
 
-  // Move to New Event dialog state
+  // Move dialogs state
   const [isMoveToNewEventDialogOpen, setIsMoveToNewEventDialogOpen] = useState(false)
-  const [moveToTournamentId, setMoveToTournamentId] = useState('')
-  const [moveToEventName, setMoveToEventName] = useState('')
-  const [moveToEventDate, setMoveToEventDate] = useState('')
-  const [movingVideos, setMovingVideos] = useState(false)
-
-  // Move to Existing Event dialog state
   const [isMoveToEventDialogOpen, setIsMoveToEventDialogOpen] = useState(false)
-  const [moveToExistingTournamentId, setMoveToExistingTournamentId] = useState('')
-  const [moveToSubEventId, setMoveToSubEventId] = useState('')
 
   // Context menu dialogs state
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
-  const [renameItem, setRenameItem] = useState<FolderItem | null>(null)
-  const [renameValue, setRenameValue] = useState('')
+  const [renameItem, setRenameItem] = useState<DialogFolderItem | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deleteItem, setDeleteItem] = useState<FolderItem | null>(null)
+  const [deleteItem, setDeleteItem] = useState<DialogFolderItem | null>(null)
   const [editEventDialogOpen, setEditEventDialogOpen] = useState(false)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
 
@@ -321,33 +320,6 @@ export default function ArchiveClient() {
     return () => document.removeEventListener("click", handleClickOutside)
   }, [openMenuId])
 
-  // Load payouts when viewing sub event info
-  useEffect(() => {
-    if (isSubEventInfoDialogOpen && viewingSubEventId) {
-      loadViewingPayouts(viewingSubEventId)
-    }
-  }, [isSubEventInfoDialogOpen, viewingSubEventId])
-
-  async function loadViewingPayouts(subEventId: string) {
-    setLoadingViewingPayouts(true)
-    try {
-      const { data, error } = await supabase
-        .from('event_payouts')
-        .select('*')
-        .eq('sub_event_id', subEventId)
-        .order('rank', { ascending: true })
-
-      if (error) throw error
-
-      setViewingPayouts(data || [])
-    } catch (error) {
-      console.error('Error loading payouts:', error)
-      setViewingPayouts([])
-    } finally {
-      setLoadingViewingPayouts(false)
-    }
-  }
-
   // Filter tournaments by selected category
   const filteredTournaments = selectedCategory === "All"
     ? tournaments
@@ -378,127 +350,34 @@ export default function ArchiveClient() {
     setSelectedVideoIds(new Set())
   }
 
-  // Move selected videos to a new event
-  const handleMoveToNewEvent = async () => {
-    if (!moveToTournamentId || !moveToEventName.trim() || !moveToEventDate) {
-      toast.error('Please fill in all required fields')
-      return
-    }
-
-    if (selectedVideoIds.size === 0) {
-      toast.error('No videos selected')
-      return
-    }
-
-    setMovingVideos(true)
-    try {
-      // 1. Create new SubEvent
-      const { data: subEventData, error: subEventError } = await supabase
-        .from('sub_events')
-        .insert({
-          tournament_id: moveToTournamentId,
-          name: moveToEventName.trim(),
-          date: moveToEventDate,
-        })
-        .select()
-        .single()
-
-      if (subEventError) throw subEventError
-
-      // 2. Move all selected videos to the new SubEvent
-      const videoIds = Array.from(selectedVideoIds)
-      const result = await organizeVideos(videoIds, subEventData.id)
-
-      if (result.success) {
-        toast.success(`${videoIds.length} video(s) moved to new event "${moveToEventName}"`)
-
-        // 3. Reset and refresh
-        await loadTournaments()
-        await loadUnsortedVideos()
-        clearSelection()
-
-        // Close dialog and reset form
-        setIsMoveToNewEventDialogOpen(false)
-        setMoveToTournamentId('')
-        setMoveToEventName('')
-        setMoveToEventDate('')
-      } else {
-        toast.error(result.error || 'Failed to move videos')
-      }
-    } catch (error) {
-      console.error('Error creating new event:', error)
-      toast.error('Failed to create new event')
-    } finally {
-      setMovingVideos(false)
-    }
+  // Handle successful move operations
+  const handleMoveSuccess = async () => {
+    await loadTournaments()
+    await loadUnsortedVideos()
+    clearSelection()
   }
 
   // Context menu handlers
   const handleRename = (item: FolderItem) => {
-    setRenameItem(item)
-    setRenameValue(item.name)
+    setRenameItem(item as DialogFolderItem)
     setRenameDialogOpen(true)
   }
 
-  const handleRenameSubmit = async () => {
-    if (!renameItem || !renameValue.trim()) {
-      toast.error('Please enter a valid name')
-      return
-    }
-
-    try {
-      const table = renameItem.type === 'tournament' ? 'tournaments'
-        : renameItem.type === 'subevent' ? 'sub_events'
-        : 'days'
-
-      const { error } = await supabase
-        .from(table)
-        .update({ name: renameValue.trim() })
-        .eq('id', renameItem.id)
-
-      if (error) throw error
-
-      toast.success('Renamed successfully')
-      setRenameDialogOpen(false)
-      setRenameItem(null)
-      setRenameValue('')
-      await loadTournaments()
-      await loadUnsortedVideos()
-    } catch (error) {
-      console.error('Error renaming:', error)
-      toast.error('Failed to rename')
-    }
-  }
-
   const handleDelete = (item: FolderItem) => {
-    setDeleteItem(item)
+    setDeleteItem(item as DialogFolderItem)
     setDeleteDialogOpen(true)
   }
 
-  const handleDeleteConfirm = async () => {
-    if (!deleteItem) return
+  const handleRenameSuccess = async () => {
+    await loadTournaments()
+    await loadUnsortedVideos()
+    setRenameItem(null)
+  }
 
-    try {
-      const table = deleteItem.type === 'tournament' ? 'tournaments'
-        : deleteItem.type === 'subevent' ? 'sub_events'
-        : 'days'
-
-      const { error } = await supabase
-        .from(table)
-        .delete()
-        .eq('id', deleteItem.id)
-
-      if (error) throw error
-
-      toast.success('Deleted successfully')
-      setDeleteDialogOpen(false)
-      setDeleteItem(null)
-      await loadTournaments()
-      await loadUnsortedVideos()
-    } catch (error) {
-      console.error('Error deleting:', error)
-      toast.error('Failed to delete')
-    }
+  const handleDeleteSuccess = async () => {
+    await loadTournaments()
+    await loadUnsortedVideos()
+    setDeleteItem(null)
   }
 
   const handleEditEvent = (item: FolderItem) => {
@@ -514,47 +393,7 @@ export default function ArchiveClient() {
     setIsMoveToEventDialogOpen(true)
   }
 
-  const handleMoveToExistingEvent = async () => {
-    if (!moveToSubEventId) {
-      toast.error('Please select an event')
-      return
-    }
-
-    if (selectedVideoIds.size === 0) {
-      toast.error('No videos selected')
-      return
-    }
-
-    setMovingVideos(true)
-    try {
-      const videoIds = Array.from(selectedVideoIds)
-      const result = await organizeVideos(videoIds, moveToSubEventId)
-
-      if (result.success) {
-        toast.success(`${videoIds.length} video(s) moved successfully`)
-
-        // Reset and refresh
-        await loadTournaments()
-        await loadUnsortedVideos()
-        clearSelection()
-
-        // Close dialog and reset form
-        setIsMoveToEventDialogOpen(false)
-        setMoveToExistingTournamentId('')
-        setMoveToSubEventId('')
-      } else {
-        toast.error(result.error || 'Failed to move videos')
-      }
-    } catch (error) {
-      console.error('Error moving videos:', error)
-      toast.error('Failed to move videos')
-    } finally {
-      setMovingVideos(false)
-    }
-  }
-
   const handleMoveToNewEventSingle = (item: FolderItem) => {
-    // Same as handleMoveToEvent but more explicit naming
     setSelectedVideoIds(new Set([item.id]))
     setIsMoveToNewEventDialogOpen(true)
   }
@@ -829,45 +668,6 @@ export default function ArchiveClient() {
     }
   }
 
-  // Payout helper functions
-  const addPayoutRow = () => {
-    setPayouts([...payouts, { rank: payouts.length + 1, playerName: "", prizeAmount: "" }])
-  }
-
-  const removePayoutRow = (index: number) => {
-    if (payouts.length === 1) return // Keep at least 1
-    const newPayouts = payouts.filter((_, i) => i !== index)
-    // Re-sort ranks
-    setPayouts(newPayouts.map((p, i) => ({ ...p, rank: i + 1 })))
-  }
-
-  const updatePayoutRow = (index: number, field: keyof PayoutRow, value: string | number) => {
-    const newPayouts = [...payouts]
-    newPayouts[index] = { ...newPayouts[index], [field]: value }
-    setPayouts(newPayouts)
-  }
-
-  // Prize amount parser: "$10M" → 1000000000 (cents), "$10,000,000" → 1000000000
-  const parsePrizeAmount = (amountStr: string): number => {
-    if (!amountStr) return 0
-
-    // Remove $ and spaces
-    let cleaned = amountStr.replace(/[$\s]/g, '')
-
-    // Handle M (million) and K (thousand)
-    if (cleaned.includes('M')) {
-      const num = parseFloat(cleaned.replace('M', ''))
-      return Math.round(num * 1000000 * 100) // Convert to cents
-    } else if (cleaned.includes('K')) {
-      const num = parseFloat(cleaned.replace('K', ''))
-      return Math.round(num * 1000 * 100)
-    } else {
-      // Remove commas and parse
-      const num = parseFloat(cleaned.replace(/,/g, ''))
-      return Math.round(num * 100) // Convert to cents
-    }
-  }
-
   // Load payouts from Hendon Mob URL
   const loadPayoutsFromUrl = async () => {
     if (!hendonMobUrl.trim()) return
@@ -903,158 +703,6 @@ export default function ArchiveClient() {
       toast.error(error.message || 'Failed to load payouts')
     } finally {
       setLoadingPayouts(false)
-    }
-  }
-
-  // Load payouts from HTML
-  const loadPayoutsFromHtml = async () => {
-    if (!hendonMobHtml.trim()) return
-
-    setLoadingPayouts(true)
-    try {
-      const response = await fetch('/api/parse-hendon-mob-html', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html: hendonMobHtml.trim() }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to parse HTML')
-      }
-
-      if (data.payouts && data.payouts.length > 0) {
-        const loadedPayouts = data.payouts.map((p: any) => ({
-          rank: p.rank,
-          playerName: p.playerName,
-          prizeAmount: p.prizeAmount,
-        }))
-        setPayouts(loadedPayouts)
-        setHendonMobHtml("") // Clear HTML after successful load
-        toast.success(`${loadedPayouts.length} payouts loaded successfully`)
-      } else {
-        toast.error('Payout information not found')
-      }
-    } catch (error: any) {
-      console.error('Error loading payouts from HTML:', error)
-      toast.error(error.message || 'Failed to load payouts')
-    } finally {
-      setLoadingPayouts(false)
-    }
-  }
-
-  // Load payouts from CSV
-  const loadPayoutsFromCsv = async () => {
-    if (!csvText.trim()) return
-
-    setLoadingPayouts(true)
-    try {
-      const response = await fetch('/api/parse-payout-csv', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ csvText: csvText.trim() }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to parse CSV')
-      }
-
-      if (data.payouts && data.payouts.length > 0) {
-        const loadedPayouts = data.payouts.map((p: any) => ({
-          rank: p.rank,
-          playerName: p.playerName,
-          prizeAmount: p.prizeAmount,
-        }))
-        setPayouts(loadedPayouts)
-        setCsvText("") // Clear CSV after successful load
-        toast.success(`${loadedPayouts.length} payouts loaded successfully`)
-      } else {
-        toast.error('Payout information not found')
-      }
-    } catch (error: any) {
-      console.error('Error loading payouts from CSV:', error)
-      toast.error(error.message || 'Failed to load payouts')
-    } finally {
-      setLoadingPayouts(false)
-    }
-  }
-
-  const addSubEvent = async () => {
-    if (!newSubEventName.trim() || !newSubEventDate) return
-
-    // Call updateSubEvent if in edit mode
-    if (editingSubEventId) {
-      return updateSubEvent()
-    }
-
-    try {
-      // 1. Create SubEvent
-      const { data: subEventData, error: subEventError} = await supabase
-        .from('sub_events')
-        .insert({
-          tournament_id: selectedTournamentId,
-          name: newSubEventName,
-          date: newSubEventDate,
-          total_prize: newSubEventPrize || null,
-          winner: newSubEventWinner || null,
-          buy_in: newSubEventBuyIn || null,
-          entry_count: newSubEventEntryCount ? parseInt(newSubEventEntryCount) : null,
-          blind_structure: newSubEventBlindStructure || null,
-          level_duration: newSubEventLevelDuration ? parseInt(newSubEventLevelDuration) : null,
-          starting_stack: newSubEventStartingStack ? parseInt(newSubEventStartingStack) : null,
-          notes: newSubEventNotes || null,
-        })
-        .select()
-        .single()
-
-      if (subEventError) throw subEventError
-
-      // 2. Save Payouts (only if values exist)
-      const validPayouts = payouts.filter(p => p.playerName.trim() && p.prizeAmount.trim())
-      if (validPayouts.length > 0) {
-        const payoutInserts = validPayouts.map(p => ({
-          sub_event_id: subEventData.id,
-          rank: p.rank,
-          player_name: p.playerName.trim(),
-          prize_amount: parsePrizeAmount(p.prizeAmount),
-          matched_status: 'unmatched' as const,
-        }))
-
-        const { error: payoutError } = await supabase
-          .from('event_payouts')
-          .insert(payoutInserts)
-
-        if (payoutError) {
-          console.error('Payout insert error:', payoutError)
-          toast.error('Failed to save payouts')
-          // SubEvent created, so no rollback
-        }
-      }
-
-      await loadTournaments()
-
-      // Reset states
-      setNewSubEventName("")
-      setNewSubEventDate("")
-      setNewSubEventPrize("")
-      setNewSubEventWinner("")
-      setNewSubEventBuyIn("")
-      setNewSubEventEntryCount("")
-      setNewSubEventBlindStructure("")
-      setNewSubEventLevelDuration("")
-      setNewSubEventStartingStack("")
-      setNewSubEventNotes("")
-      setPayouts([{ rank: 1, playerName: "", prizeAmount: "" }])
-      setPayoutSectionOpen(false)
-      setEditingSubEventId("")
-      setIsSubEventDialogOpen(false)
-      toast.success('Event added successfully')
-    } catch (error) {
-      console.error('Error adding sub event:', error)
-      toast.error('Failed to add event')
     }
   }
 
@@ -1181,83 +829,6 @@ export default function ArchiveClient() {
     }
   }
 
-  const updateSubEvent = async () => {
-    if (!editingSubEventId || !newSubEventName.trim()) return
-
-    try {
-      // 1. Update SubEvent
-      const { error: subEventError } = await supabase
-        .from('sub_events')
-        .update({
-          name: newSubEventName,
-          date: newSubEventDate,
-          total_prize: newSubEventPrize || null,
-          winner: newSubEventWinner || null,
-          buy_in: newSubEventBuyIn || null,
-          entry_count: newSubEventEntryCount ? parseInt(newSubEventEntryCount) : null,
-          blind_structure: newSubEventBlindStructure || null,
-          level_duration: newSubEventLevelDuration ? parseInt(newSubEventLevelDuration) : null,
-          starting_stack: newSubEventStartingStack ? parseInt(newSubEventStartingStack) : null,
-          notes: newSubEventNotes || null,
-        })
-        .eq('id', editingSubEventId)
-
-      if (subEventError) throw subEventError
-
-      // 2. Update Payouts (delete existing and recreate)
-      // Delete existing payouts
-      const { error: deleteError } = await supabase
-        .from('event_payouts')
-        .delete()
-        .eq('sub_event_id', editingSubEventId)
-
-      if (deleteError) {
-        console.error('Error deleting old payouts:', deleteError)
-      }
-
-      // Insert new payouts (only if values exist)
-      const validPayouts = payouts.filter(p => p.playerName.trim() && p.prizeAmount.trim())
-      if (validPayouts.length > 0) {
-        const payoutInserts = validPayouts.map(p => ({
-          sub_event_id: editingSubEventId,
-          rank: p.rank,
-          player_name: p.playerName.trim(),
-          prize_amount: parsePrizeAmount(p.prizeAmount),
-          matched_status: 'unmatched' as const,
-        }))
-
-        const { error: payoutError } = await supabase
-          .from('event_payouts')
-          .insert(payoutInserts)
-
-        if (payoutError) {
-          console.error('Payout insert error:', payoutError)
-          toast.error('Failed to save payouts')
-        }
-      }
-
-      await loadTournaments()
-      setEditingSubEventId("")
-      setNewSubEventName("")
-      setNewSubEventDate("")
-      setNewSubEventPrize("")
-      setNewSubEventWinner("")
-      setNewSubEventBuyIn("")
-      setNewSubEventEntryCount("")
-      setNewSubEventBlindStructure("")
-      setNewSubEventLevelDuration("")
-      setNewSubEventStartingStack("")
-      setNewSubEventNotes("")
-      setPayouts([{ rank: 1, playerName: "", prizeAmount: "" }])
-      setPayoutSectionOpen(false)
-      setIsSubEventDialogOpen(false)
-      toast.success('Event updated successfully')
-    } catch (error) {
-      console.error('Error updating sub event:', error)
-      toast.error('Failed to update event')
-    }
-  }
-
   const updateDay = async () => {
     if (!editingDayId || !newDayName.trim()) return
 
@@ -1328,193 +899,10 @@ export default function ArchiveClient() {
     setIsDialogOpen(true)
   }
 
-  const openEditSubEvent = async (subEvent: SubEvent, tournamentId: string) => {
-    setEditingSubEventId(subEvent.id)
-    setSelectedTournamentId(tournamentId)
-    setNewSubEventName(subEvent.name)
-    setNewSubEventDate(subEvent.date || "")
-    setNewSubEventPrize(subEvent.total_prize || "")
-    setNewSubEventWinner(subEvent.winner || "")
-    setNewSubEventBuyIn(subEvent.buy_in || "")
-    setNewSubEventEntryCount(subEvent.entry_count?.toString() || "")
-    setNewSubEventBlindStructure(subEvent.blind_structure || "")
-    setNewSubEventLevelDuration(subEvent.level_duration?.toString() || "")
-    setNewSubEventStartingStack(subEvent.starting_stack?.toString() || "")
-    setNewSubEventNotes(subEvent.notes || "")
-
-    // Load existing payouts
-    try {
-      const { data: existingPayouts, error } = await supabase
-        .from('event_payouts')
-        .select('*')
-        .eq('sub_event_id', subEvent.id)
-        .order('rank', { ascending: true })
-
-      if (error) throw error
-
-      if (existingPayouts && existingPayouts.length > 0) {
-        const loadedPayouts = existingPayouts.map(p => ({
-          rank: p.rank,
-          playerName: p.player_name,
-          prizeAmount: formatPrizeAmount(p.prize_amount), // cents -> display format
-        }))
-        setPayouts(loadedPayouts)
-        setPayoutSectionOpen(true) // Auto-open if existing payouts
-      } else {
-        setPayouts([{ rank: 1, playerName: "", prizeAmount: "" }])
-        setPayoutSectionOpen(false)
-      }
-    } catch (error) {
-      console.error('Error loading payouts:', error)
-      setPayouts([{ rank: 1, playerName: "", prizeAmount: "" }])
-      setPayoutSectionOpen(false)
-    }
-
-    setIsSubEventDialogOpen(true)
-  }
-
-  // Format cents to display format: 1000000000 -> "$10,000,000"
-  const formatPrizeAmount = (cents: number): string => {
-    const dollars = cents / 100
-    return `$${dollars.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-  }
-
-  // Extract country info from player name
-  const getCountryInfo = (playerName: string): { flag: string; iso2: string; cleanName: string } => {
-    const match = playerName.match(/\(([A-Z]{2,3})\)$/)
-    if (!match) {
-      return { flag: '', iso2: '', cleanName: playerName }
-    }
-
-    let countryCode = match[1]
-
-    // Convert 3-letter to 2-letter ISO code
-    const country3to2: Record<string, string> = {
-      'USA': 'US', 'GBR': 'GB', 'KOR': 'KR', 'JPN': 'JP', 'CHN': 'CN',
-      'FRA': 'FR', 'DEU': 'DE', 'ITA': 'IT', 'ESP': 'ES', 'CAN': 'CA',
-      'AUS': 'AU', 'BRA': 'BR', 'MEX': 'MX', 'RUS': 'RU', 'IND': 'IN',
-      'NLD': 'NL', 'BEL': 'BE', 'SWE': 'SE', 'NOR': 'NO', 'DNK': 'DK',
-      'FIN': 'FI', 'POL': 'PL', 'CZE': 'CZ', 'AUT': 'AT', 'CHE': 'CH',
-      'PRT': 'PT', 'GRC': 'GR', 'TUR': 'TR', 'ISR': 'IL', 'ARE': 'AE',
-      'SAU': 'SA', 'EGY': 'EG', 'ZAF': 'ZA', 'ARG': 'AR', 'CHL': 'CL',
-      'COL': 'CO', 'PER': 'PE', 'VEN': 'VE', 'THA': 'TH', 'VNM': 'VN',
-      'MYS': 'MY', 'SGP': 'SG', 'IDN': 'ID', 'PHL': 'PH', 'HKG': 'HK',
-      'TWN': 'TW', 'MAC': 'MO', 'NZL': 'NZ', 'IRL': 'IE', 'LUX': 'LU',
-    }
-
-    const iso2 = country3to2[countryCode] || (countryCode.length === 2 ? countryCode : countryCode.substring(0, 2))
-
-    // Try to convert 2-letter ISO code to flag emoji
-    let flag = ''
-    try {
-      flag = iso2
-        .toUpperCase()
-        .split('')
-        .map(char => String.fromCodePoint(0x1F1E6 + char.charCodeAt(0) - 65))
-        .join('')
-
-      // Test if emoji is valid (some browsers don't support all flags)
-      // If not, we'll fall back to ISO code
-    } catch (e) {
-      flag = ''
-    }
-
-    const cleanName = playerName.replace(/\s*\([A-Z]{2,3}\)$/, '')
-
-    return { flag, iso2, cleanName }
-  }
-
   const openEditDay = (day: Day, subEventId: string) => {
     setEditingDayId(day.id)
     setSelectedSubEventId(subEventId)
-    setNewDayName(day.name)
-    setVideoSourceTab(day.video_source || 'nas')
-    setNewDayVideoUrl(day.video_url || "")
-    setNewDayNasPath(day.video_nas_path || "")
     setIsDayDialogOpen(true)
-  }
-
-  // Editing payout helper functions for viewing dialog
-  const addEditingPayoutRow = () => {
-    setEditingViewingPayouts([...editingViewingPayouts, {
-      rank: editingViewingPayouts.length + 1,
-      playerName: "",
-      prizeAmount: ""
-    }])
-  }
-
-  const removeEditingPayoutRow = (index: number) => {
-    if (editingViewingPayouts.length === 1) return
-    const newPayouts = editingViewingPayouts.filter((_, i) => i !== index)
-    setEditingViewingPayouts(newPayouts.map((p, i) => ({ ...p, rank: i + 1 })))
-  }
-
-  const updateEditingPayoutRow = (index: number, field: keyof PayoutRow, value: string | number) => {
-    const newPayouts = [...editingViewingPayouts]
-    newPayouts[index] = { ...newPayouts[index], [field]: value }
-    setEditingViewingPayouts(newPayouts)
-  }
-
-  // Enter edit mode for viewing payouts
-  const enterEditMode = () => {
-    const payoutsToEdit = viewingPayouts.map(p => ({
-      rank: p.rank,
-      playerName: p.player_name,
-      prizeAmount: formatPrizeAmount(p.prize_amount),
-    }))
-    setEditingViewingPayouts(payoutsToEdit.length > 0 ? payoutsToEdit : [{ rank: 1, playerName: "", prizeAmount: "" }])
-    setIsEditingViewingPayouts(true)
-  }
-
-  // Cancel editing
-  const cancelEditingPayouts = () => {
-    setIsEditingViewingPayouts(false)
-    setEditingViewingPayouts([])
-  }
-
-  // Save edited payouts
-  const saveEditingPayouts = async () => {
-    if (!viewingSubEventId) return
-
-    setSavingPayouts(true)
-    try {
-      // 1. Delete old payouts
-      const { error: deleteError } = await supabase
-        .from('event_payouts')
-        .delete()
-        .eq('sub_event_id', viewingSubEventId)
-
-      if (deleteError) throw deleteError
-
-      // 2. Insert new payouts (only valid ones)
-      const validPayouts = editingViewingPayouts.filter(p => p.playerName.trim() && p.prizeAmount.trim())
-      if (validPayouts.length > 0) {
-        const payoutInserts = validPayouts.map(p => ({
-          sub_event_id: viewingSubEventId,
-          rank: p.rank,
-          player_name: p.playerName.trim(),
-          prize_amount: parsePrizeAmount(p.prizeAmount),
-          matched_status: 'unmatched' as const,
-        }))
-
-        const { error: insertError } = await supabase
-          .from('event_payouts')
-          .insert(payoutInserts)
-
-        if (insertError) throw insertError
-      }
-
-      // 3. Reload payouts and exit edit mode
-      await loadViewingPayouts(viewingSubEventId)
-      setIsEditingViewingPayouts(false)
-      setEditingViewingPayouts([])
-      toast.success('Payouts saved successfully')
-    } catch (error) {
-      console.error('Error saving payouts:', error)
-      toast.error('Failed to save payouts')
-    } finally {
-      setSavingPayouts(false)
-    }
   }
 
   // Check if user is admin
@@ -1737,885 +1125,70 @@ export default function ArchiveClient() {
             </Card>
 
             {/* SubEvent Dialog */}
-            <Dialog open={isSubEventDialogOpen} onOpenChange={setIsSubEventDialogOpen}>
-              <DialogContent className="max-w-5xl max-h-[90vh]">
-                <DialogHeader>
-                  <DialogTitle>{editingSubEventId ? "Edit Event" : "Add Event"}</DialogTitle>
-                </DialogHeader>
-                <Tabs defaultValue="basic" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                    <TabsTrigger value="payout">Payout</TabsTrigger>
-                    <TabsTrigger value="structure">Blind Structure</TabsTrigger>
-                  </TabsList>
-
-                  {/* Basic Info Tab */}
-                  <TabsContent value="basic" className="space-y-4 mt-4">
-                    <ScrollArea className="h-[500px] pr-4">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="subevent-name">Event Name *</Label>
-                          <Input
-                            id="subevent-name"
-                            placeholder="e.g., Main Event, High Roller"
-                            value={newSubEventName}
-                            onChange={(e) => setNewSubEventName(e.target.value)}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="subevent-date">Date *</Label>
-                          <Input
-                            id="subevent-date"
-                            type="date"
-                            value={newSubEventDate}
-                            onChange={(e) => setNewSubEventDate(e.target.value)}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="subevent-prize">Total Prize</Label>
-                          <Input
-                            id="subevent-prize"
-                            placeholder="e.g., $10,000,000"
-                            value={newSubEventPrize}
-                            onChange={(e) => setNewSubEventPrize(e.target.value)}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="subevent-winner">Winner</Label>
-                          <Input
-                            id="subevent-winner"
-                            placeholder="e.g., Daniel Negreanu"
-                            value={newSubEventWinner}
-                            onChange={(e) => setNewSubEventWinner(e.target.value)}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="subevent-buyin">Buy-in</Label>
-                          <Input
-                            id="subevent-buyin"
-                            placeholder="e.g., $10,000 + $400"
-                            value={newSubEventBuyIn}
-                            onChange={(e) => setNewSubEventBuyIn(e.target.value)}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="subevent-entries">Entry Count</Label>
-                          <Input
-                            id="subevent-entries"
-                            type="number"
-                            placeholder="e.g., 8569"
-                            value={newSubEventEntryCount}
-                            onChange={(e) => setNewSubEventEntryCount(e.target.value)}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="subevent-level-duration">Level Duration (min)</Label>
-                          <Input
-                            id="subevent-level-duration"
-                            type="number"
-                            placeholder="e.g., 60"
-                            value={newSubEventLevelDuration}
-                            onChange={(e) => setNewSubEventLevelDuration(e.target.value)}
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="subevent-starting-stack">Starting Stack</Label>
-                          <Input
-                            id="subevent-starting-stack"
-                            type="number"
-                            placeholder="e.g., 60000"
-                            value={newSubEventStartingStack}
-                            onChange={(e) => setNewSubEventStartingStack(e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </ScrollArea>
-                  </TabsContent>
-
-                  {/* Payout Tab */}
-                  <TabsContent value="payout" className="space-y-4 mt-4">
-                    <ScrollArea className="h-[500px] pr-4">
-                      <div className="space-y-3">
-                        {/* Load Payouts Tabs */}
-                        <Tabs defaultValue="html" className="w-full">
-                          <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="html">HTML</TabsTrigger>
-                            <TabsTrigger value="csv">CSV</TabsTrigger>
-                            <TabsTrigger value="manual">Manual</TabsTrigger>
-                          </TabsList>
-
-                          {/* HTML Tab */}
-                          <TabsContent value="html" className="space-y-2 mt-3">
-                            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border overflow-hidden">
-                              <Label className="text-sm font-medium">Paste HTML Source Code</Label>
-                              <Textarea
-                                placeholder="1. Open Hendon Mob page in browser&#10;2. Right-click → 'View Page Source' (or Ctrl+U)&#10;3. Copy all HTML (Ctrl+A, Ctrl+C)&#10;4. Paste here"
-                                value={hendonMobHtml}
-                                onChange={(e) => setHendonMobHtml(e.target.value)}
-                                disabled={loadingPayouts}
-                                className="h-[150px] max-h-[150px] w-full overflow-x-auto overflow-y-auto font-mono text-xs resize-none break-all"
-                              />
-                              <div className="flex gap-2">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  onClick={loadPayoutsFromHtml}
-                                  disabled={!hendonMobHtml.trim() || loadingPayouts}
-                                  className="flex-1"
-                                >
-                                  {loadingPayouts ? "Loading..." : "Parse HTML"}
-                                </Button>
-                              </div>
-                              <p className="text-caption text-muted-foreground">
-                                Recommended method. Bypasses bot protection.
-                              </p>
-                            </div>
-                          </TabsContent>
-
-                          {/* CSV Tab */}
-                          <TabsContent value="csv" className="space-y-2 mt-3">
-                            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border overflow-hidden">
-                              <Label className="text-sm font-medium">Paste CSV Data</Label>
-                              <Textarea
-                                placeholder="Format:&#10;Rank, Player Name, Prize Amount&#10;1, John Doe, $10,000,000&#10;2, Jane Smith, $5,500,000&#10;3, Bob Johnson, $3,000,000&#10;...&#10;&#10;Or without header:&#10;1, John Doe, $10M&#10;2, Jane Smith, $5.5M"
-                                value={csvText}
-                                onChange={(e) => setCsvText(e.target.value)}
-                                disabled={loadingPayouts}
-                                className="h-[150px] max-h-[150px] w-full overflow-x-auto overflow-y-auto font-mono text-xs resize-none break-all"
-                              />
-                              <div className="flex gap-2">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  onClick={loadPayoutsFromCsv}
-                                  disabled={!csvText.trim() || loadingPayouts}
-                                  className="flex-1"
-                                >
-                                  {loadingPayouts ? "Loading..." : "Parse CSV"}
-                                </Button>
-                              </div>
-                              <p className="text-caption text-muted-foreground">
-                                Works with any tournament. Supports $10M or $10,000,000 format.
-                              </p>
-                            </div>
-                          </TabsContent>
-
-                          {/* Manual Tab */}
-                          <TabsContent value="manual" className="space-y-2 mt-3">
-                            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border">
-                              <div className="flex items-center justify-between">
-                                <Label className="text-sm font-medium">Enter Payout Information</Label>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={addPayoutRow}
-                                >
-                                  <Plus className="mr-2 h-3 w-3" />
-                                  Add Place
-                                </Button>
-                              </div>
-                              <p className="text-caption text-muted-foreground mb-2">
-                                Format: $10M, $10,000,000, or 10000000
-                              </p>
-                              <ScrollArea className="h-[200px] max-h-[200px]">
-                                <div className="space-y-2 pr-3">
-                                  {payouts.map((payout, index) => (
-                                    <div key={index} className="flex items-center gap-2">
-                                      <div className="w-16">
-                                        <Input
-                                          placeholder="#"
-                                          value={payout.rank}
-                                          disabled
-                                          className="text-center"
-                                        />
-                                      </div>
-                                      <div className="flex-1">
-                                        <Input
-                                          placeholder="Player Name"
-                                          value={payout.playerName}
-                                          onChange={(e) => updatePayoutRow(index, 'playerName', e.target.value)}
-                                        />
-                                      </div>
-                                      <div className="w-40">
-                                        <Input
-                                          placeholder="Prize (e.g. $10M)"
-                                          value={payout.prizeAmount}
-                                          onChange={(e) => updatePayoutRow(index, 'prizeAmount', e.target.value)}
-                                        />
-                                      </div>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => removePayoutRow(index)}
-                                        disabled={payouts.length === 1}
-                                        className="h-9 w-9 p-0"
-                                      >
-                                        <X className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              </ScrollArea>
-                            </div>
-                          </TabsContent>
-                        </Tabs>
-                      </div>
-                    </ScrollArea>
-                  </TabsContent>
-
-                  {/* Blind Structure Tab */}
-                  <TabsContent value="structure" className="space-y-4 mt-4">
-                    <ScrollArea className="h-[500px] pr-4">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="subevent-blind-structure">Blind Structure</Label>
-                          <Textarea
-                            id="subevent-blind-structure"
-                            placeholder="Level 1: 100/200/200&#10;Level 2: 200/400/400&#10;Level 3: 300/600/600&#10;..."
-                            value={newSubEventBlindStructure}
-                            onChange={(e) => setNewSubEventBlindStructure(e.target.value)}
-                            className="min-h-[300px] resize-none font-mono text-xs"
-                          />
-                          <p className="text-caption text-muted-foreground">
-                            Enter blind levels in any format
-                          </p>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="subevent-notes">Notes</Label>
-                          <Textarea
-                            id="subevent-notes"
-                            placeholder="Additional notes or information about the event"
-                            value={newSubEventNotes}
-                            onChange={(e) => setNewSubEventNotes(e.target.value)}
-                            className="min-h-[150px] resize-none"
-                          />
-                          <p className="text-caption text-muted-foreground">
-                            Any extra information (e.g., special rules, format, etc.)
-                          </p>
-                        </div>
-                      </div>
-                    </ScrollArea>
-                  </TabsContent>
-                </Tabs>
-
-                <div className="flex justify-end gap-2 pt-4 border-t">
-                    <Button variant="outline" onClick={() => {
-                      setIsSubEventDialogOpen(false)
-                      setEditingSubEventId("")
-                      setNewSubEventName("")
-                      setNewSubEventDate("")
-                      setNewSubEventPrize("")
-                      setNewSubEventWinner("")
-                      setNewSubEventBuyIn("")
-                      setNewSubEventEntryCount("")
-                      setNewSubEventBlindStructure("")
-                      setNewSubEventLevelDuration("")
-                      setNewSubEventStartingStack("")
-                      setNewSubEventNotes("")
-                      setPayouts([{ rank: 1, playerName: "", prizeAmount: "" }])
-                      setPayoutSectionOpen(false)
-                    }}>
-                      Cancel
-                    </Button>
-                    <Button onClick={addSubEvent}>
-                      {editingSubEventId ? "Edit" : "Add"}
-                    </Button>
-                  </div>
-              </DialogContent>
-            </Dialog>
+            <SubEventDialog
+              isOpen={isSubEventDialogOpen}
+              onOpenChange={setIsSubEventDialogOpen}
+              selectedTournamentId={selectedTournamentId}
+              editingSubEventId={editingSubEventId}
+              onSuccess={loadTournaments}
+            />
 
             {/* SubEvent Info Dialog */}
-            <Dialog open={isSubEventInfoDialogOpen} onOpenChange={(open) => {
-              setIsSubEventInfoDialogOpen(open)
-              if (!open) {
-                // Reset edit mode when dialog closes
-                setIsEditingViewingPayouts(false)
-                setEditingViewingPayouts([])
-              }
-            }}>
-              <DialogContent className="max-w-3xl max-h-[90vh]">
-                <DialogHeader>
-                  <DialogTitle>Event Information</DialogTitle>
-                </DialogHeader>
-                {viewingSubEvent && (
-                  <Tabs defaultValue="basic" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                      <TabsTrigger value="payout">Payout</TabsTrigger>
-                      <TabsTrigger value="structure">Blind Structure</TabsTrigger>
-                    </TabsList>
-
-                    {/* Basic Info Tab */}
-                    <TabsContent value="basic" className="space-y-4 mt-4">
-                      <ScrollArea className="h-[400px] pr-4">
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label className="text-caption text-muted-foreground">Event Name</Label>
-                              <p className="text-body font-medium">{viewingSubEvent.name}</p>
-                            </div>
-                            <div>
-                              <Label className="text-caption text-muted-foreground">Date</Label>
-                              <p className="text-body font-medium">{viewingSubEvent.date || "-"}</p>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label className="text-caption text-muted-foreground">Total Prize</Label>
-                              <p className="text-body font-medium">{viewingSubEvent.total_prize || "-"}</p>
-                            </div>
-                            <div>
-                              <Label className="text-caption text-muted-foreground">Winner</Label>
-                              <p className="text-body font-medium">{viewingSubEvent.winner || "-"}</p>
-                            </div>
-                          </div>
-
-                          <div className="border-t pt-4">
-                            <h3 className="text-body font-semibold mb-3">Event Details</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label className="text-caption text-muted-foreground">Buy-in</Label>
-                                <p className="text-body">{viewingSubEvent.buy_in || "-"}</p>
-                              </div>
-                              <div>
-                                <Label className="text-caption text-muted-foreground">Entry Count</Label>
-                                <p className="text-body">{viewingSubEvent.entry_count?.toLocaleString() || "-"}</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label className="text-caption text-muted-foreground">Level Duration</Label>
-                              <p className="text-body">{viewingSubEvent.level_duration ? `${viewingSubEvent.level_duration} minutes` : "-"}</p>
-                            </div>
-                            <div>
-                              <Label className="text-caption text-muted-foreground">Starting Stack</Label>
-                              <p className="text-body">{viewingSubEvent.starting_stack?.toLocaleString() || "-"}</p>
-                            </div>
-                          </div>
-
-                          {viewingSubEvent.notes && (
-                            <div className="border-t pt-4">
-                              <Label className="text-caption text-muted-foreground">Notes</Label>
-                              <p className="text-body mt-1 p-3 rounded-md border bg-muted/30 whitespace-pre-wrap">{viewingSubEvent.notes}</p>
-                            </div>
-                          )}
-                        </div>
-                      </ScrollArea>
-                    </TabsContent>
-
-                    {/* Payout Tab */}
-                    <TabsContent value="payout" className="space-y-4 mt-4">
-                      <ScrollArea className="h-[400px] pr-4">
-                        {loadingViewingPayouts ? (
-                          <div className="flex items-center justify-center h-40">
-                            <p className="text-body text-muted-foreground">Loading...</p>
-                          </div>
-                        ) : isEditingViewingPayouts ? (
-                          <div className="space-y-3">
-                            {/* Edit Mode */}
-                            <div className="flex items-center justify-between mb-3">
-                              <Label className="text-sm font-medium">Edit Payout</Label>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={addEditingPayoutRow}
-                              >
-                                <Plus className="mr-2 h-3 w-3" />
-                                Add Rank
-                              </Button>
-                            </div>
-                            <div className="space-y-2">
-                              {editingViewingPayouts.map((payout, index) => (
-                                <div key={index} className="flex items-center gap-2">
-                                  <div className="w-16">
-                                    <Input
-                                      placeholder="#"
-                                      value={payout.rank}
-                                      disabled
-                                      className="text-center"
-                                    />
-                                  </div>
-                                  <div className="flex-1">
-                                    <Input
-                                      placeholder="Player Name"
-                                      value={payout.playerName}
-                                      onChange={(e) => updateEditingPayoutRow(index, 'playerName', e.target.value)}
-                                    />
-                                  </div>
-                                  <div className="w-40">
-                                    <Input
-                                      placeholder="$10M"
-                                      value={payout.prizeAmount}
-                                      onChange={(e) => updateEditingPayoutRow(index, 'prizeAmount', e.target.value)}
-                                    />
-                                  </div>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeEditingPayoutRow(index)}
-                                    disabled={editingViewingPayouts.length === 1}
-                                    className="h-9 w-9 p-0"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              ))}
-                            </div>
-                            <div className="flex justify-end gap-2 pt-3">
-                              <Button
-                                variant="outline"
-                                onClick={cancelEditingPayouts}
-                                disabled={savingPayouts}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                onClick={saveEditingPayouts}
-                                disabled={savingPayouts}
-                              >
-                                {savingPayouts ? "Saving..." : "Save"}
-                              </Button>
-                            </div>
-                          </div>
-                        ) : viewingPayouts.length > 0 ? (
-                          <div className="space-y-2">
-                            {/* View Mode */}
-                            {isUserAdmin && (
-                              <div className="flex justify-end mb-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={enterEditMode}
-                                >
-                                  <Edit className="mr-2 h-3 w-3" />
-                                  Edit
-                                </Button>
-                              </div>
-                            )}
-                            <div className="grid grid-cols-[50px_50px_1fr_auto] gap-3 p-3 bg-muted/30 rounded-md font-medium text-caption">
-                              <div>Rank</div>
-                              <div>Country</div>
-                              <div>Player</div>
-                              <div className="text-right">Prize</div>
-                            </div>
-                            {viewingPayouts.map((payout) => {
-                              const { flag, iso2, cleanName } = getCountryInfo(payout.player_name)
-
-                              return (
-                                <div key={payout.id} className="grid grid-cols-[50px_50px_1fr_auto] gap-3 p-3 border rounded-md hover:bg-muted/50 transition-colors">
-                                  <div className="text-body font-medium">{payout.rank}</div>
-                                  <div className="text-body">
-                                    {flag ? (
-                                      <span className="text-lg" title={iso2}>{flag}</span>
-                                    ) : iso2 ? (
-                                      <span className="text-xs font-medium text-muted-foreground">{iso2}</span>
-                                    ) : (
-                                      <span className="text-xs text-muted-foreground">-</span>
-                                    )}
-                                  </div>
-                                  <div className="text-body">{cleanName}</div>
-                                  <div className="text-body text-right font-medium whitespace-nowrap">{formatPrizeAmount(payout.prize_amount)}</div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center h-40 gap-3">
-                            {/* No Data */}
-                            <p className="text-body text-muted-foreground">No payout information available</p>
-                            {isUserAdmin && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={enterEditMode}
-                              >
-                                <Plus className="mr-2 h-3 w-3" />
-                                Add Payout
-                              </Button>
-                            )}
-                          </div>
-                        )}
-                      </ScrollArea>
-                    </TabsContent>
-
-                    {/* Blind Structure Tab */}
-                    <TabsContent value="structure" className="space-y-4 mt-4">
-                      <ScrollArea className="h-[400px] pr-4">
-                        {viewingSubEvent.blind_structure ? (
-                          <div className="space-y-2">
-                            <Label className="text-caption text-muted-foreground">Blind Structure</Label>
-                            <pre className="text-xs whitespace-pre-wrap font-mono p-4 rounded-md border bg-muted/30">{viewingSubEvent.blind_structure}</pre>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center h-40">
-                            <p className="text-body text-muted-foreground">No blind structure information available</p>
-                          </div>
-                        )}
-                      </ScrollArea>
-                    </TabsContent>
-
-                    <div className="flex justify-end pt-4 border-t">
-                      <Button onClick={() => setIsSubEventInfoDialogOpen(false)}>
-                        Close
-                      </Button>
-                    </div>
-                  </Tabs>
-                )}
-              </DialogContent>
-            </Dialog>
+            <SubEventInfoDialog
+              isOpen={isSubEventInfoDialogOpen}
+              onOpenChange={setIsSubEventInfoDialogOpen}
+              subEventId={viewingSubEventId}
+              subEvent={viewingSubEvent}
+              isUserAdmin={isUserAdmin}
+              onSuccess={loadTournaments}
+            />
 
             {/* Day/Video Dialog */}
-            <Dialog open={isDayDialogOpen} onOpenChange={setIsDayDialogOpen}>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>{editingDayId ? "Day Edit" : "Day Add"}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="day-name">Day Name (Optional)</Label>
-                    <Input
-                      id="day-name"
-                      placeholder="e.g., Day 1, Day 2 (auto-generated if empty)"
-                      value={newDayName}
-                      onChange={(e) => setNewDayName(e.target.value)}
-                    />
-                  </div>
-
-                  {/* Video Source Tabs */}
-                  <div className="space-y-4">
-                    <Label>Video Source</Label>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant={videoSourceTab === 'nas' ? 'default' : 'outline'}
-                        onClick={() => setVideoSourceTab('nas')}
-                        className="flex-1"
-                      >
-                        <Server className="mr-2 h-4 w-4" />
-                        NAS File
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={videoSourceTab === 'youtube' ? 'default' : 'outline'}
-                        onClick={() => setVideoSourceTab('youtube')}
-                        className="flex-1"
-                      >
-                        <Youtube className="mr-2 h-4 w-4" />
-                        YouTube
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={videoSourceTab === 'upload' ? 'default' : 'outline'}
-                        onClick={() => setVideoSourceTab('upload')}
-                        className="flex-1"
-                      >
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* NAS Tab */}
-                  {videoSourceTab === 'nas' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="nas-path">NAS File Path *</Label>
-                      <Input
-                        id="nas-path"
-                        placeholder="e.g., videos/2024/wsop_main_event.mp4"
-                        value={newDayNasPath}
-                        onChange={(e) => setNewDayNasPath(e.target.value)}
-                      />
-                      <p className="text-caption text-muted-foreground">
-                        Enter the path relative to NAS videos directory
-                      </p>
-                    </div>
-                  )}
-
-                  {/* YouTube Tab */}
-                  {videoSourceTab === 'youtube' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="youtube-url">YouTube URL *</Label>
-                      <Input
-                        id="youtube-url"
-                        placeholder="https://youtube.com/watch?v=..."
-                        value={newDayVideoUrl}
-                        onChange={(e) => setNewDayVideoUrl(e.target.value)}
-                      />
-                    </div>
-                  )}
-
-                  {/* Upload Tab */}
-                  {videoSourceTab === 'upload' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="file-upload">Upload Video File *</Label>
-                      <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                        <input
-                          id="file-upload"
-                          type="file"
-                          accept="video/mp4,video/mov,video/avi,video/mkv,video/webm"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) {
-                              if (file.size > 500 * 1024 * 1024) {
-                                alert('File size must be less than 500MB')
-                                return
-                              }
-                              setUploadFile(file)
-                            }
-                          }}
-                          className="hidden"
-                        />
-                        <label htmlFor="file-upload" className="cursor-pointer">
-                          <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
-                          <p className="text-body font-medium">
-                            {uploadFile ? uploadFile.name : 'Click to select video file'}
-                          </p>
-                          <p className="text-caption text-muted-foreground mt-1">
-                            {uploadFile
-                              ? `${(uploadFile.size / (1024 * 1024)).toFixed(2)} MB`
-                              : 'MP4, MOV, AVI, MKV, WebM (max 500MB)'
-                            }
-                          </p>
-                        </label>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => {
-                      setIsDayDialogOpen(false)
-                      setEditingDayId("")
-                    }} disabled={uploading}>
-                      Cancel
-                    </Button>
-                    <Button onClick={addDay} disabled={uploading}>
-                      {uploading ? 'Uploading...' : (editingDayId ? 'Edit' : 'Add')}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <DayDialog
+              isOpen={isDayDialogOpen}
+              onOpenChange={setIsDayDialogOpen}
+              selectedSubEventId={selectedSubEventId}
+              editingDayId={editingDayId}
+              onSuccess={async () => {
+                await loadTournaments()
+                setEditingDayId("")
+                setSelectedSubEventId("")
+              }}
+            />
 
             {/* Move to Existing Event Dialog */}
-            <Dialog open={isMoveToEventDialogOpen} onOpenChange={setIsMoveToEventDialogOpen}>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Move to Event</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="move-existing-tournament">Tournament *</Label>
-                    <Select value={moveToExistingTournamentId} onValueChange={setMoveToExistingTournamentId}>
-                      <SelectTrigger id="move-existing-tournament">
-                        <SelectValue placeholder="Select a tournament" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {filteredTournaments.map((tournament) => (
-                          <SelectItem key={tournament.id} value={tournament.id}>
-                            {tournament.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="move-existing-subevent">Event *</Label>
-                    <Select
-                      value={moveToSubEventId}
-                      onValueChange={setMoveToSubEventId}
-                      disabled={!moveToExistingTournamentId}
-                    >
-                      <SelectTrigger id="move-existing-subevent">
-                        <SelectValue placeholder="Select an event" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {moveToExistingTournamentId &&
-                          filteredTournaments
-                            .find(t => t.id === moveToExistingTournamentId)
-                            ?.sub_events?.map((subEvent) => (
-                              <SelectItem key={subEvent.id} value={subEvent.id}>
-                                {subEvent.name}
-                              </SelectItem>
-                            ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="text-caption text-muted-foreground bg-muted/30 p-3 rounded-md">
-                    {selectedVideoIds.size} video{selectedVideoIds.size > 1 ? 's' : ''} will be moved to this event
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIsMoveToEventDialogOpen(false)
-                        setMoveToExistingTournamentId('')
-                        setMoveToSubEventId('')
-                      }}
-                      disabled={movingVideos}
-                    >
-                      Cancel
-                    </Button>
-                    <Button onClick={handleMoveToExistingEvent} disabled={movingVideos}>
-                      {movingVideos ? 'Moving...' : 'Move'}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <MoveToExistingEventDialog
+              isOpen={isMoveToEventDialogOpen}
+              onOpenChange={setIsMoveToEventDialogOpen}
+              tournaments={filteredTournaments}
+              selectedVideoIds={selectedVideoIds}
+              onSuccess={handleMoveSuccess}
+            />
 
             {/* Move to New Event Dialog */}
-            <Dialog open={isMoveToNewEventDialogOpen} onOpenChange={setIsMoveToNewEventDialogOpen}>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Move to New Event</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="move-tournament">Tournament *</Label>
-                    <Select value={moveToTournamentId} onValueChange={setMoveToTournamentId}>
-                      <SelectTrigger id="move-tournament">
-                        <SelectValue placeholder="Select a tournament" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {filteredTournaments.map((tournament) => (
-                          <SelectItem key={tournament.id} value={tournament.id}>
-                            {tournament.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="move-event-name">Event Name *</Label>
-                    <Input
-                      id="move-event-name"
-                      placeholder="e.g., Main Event, High Roller"
-                      value={moveToEventName}
-                      onChange={(e) => setMoveToEventName(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="move-event-date">Date *</Label>
-                    <Input
-                      id="move-event-date"
-                      type="date"
-                      value={moveToEventDate}
-                      onChange={(e) => setMoveToEventDate(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="text-caption text-muted-foreground bg-muted/30 p-3 rounded-md">
-                    {selectedVideoIds.size} video{selectedVideoIds.size > 1 ? 's' : ''} will be moved to this new event
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setIsMoveToNewEventDialogOpen(false)
-                        setMoveToTournamentId('')
-                        setMoveToEventName('')
-                        setMoveToEventDate('')
-                      }}
-                      disabled={movingVideos}
-                    >
-                      Cancel
-                    </Button>
-                    <Button onClick={handleMoveToNewEvent} disabled={movingVideos}>
-                      {movingVideos ? 'Creating...' : 'Create & Move'}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <MoveToNewEventDialog
+              isOpen={isMoveToNewEventDialogOpen}
+              onOpenChange={setIsMoveToNewEventDialogOpen}
+              tournaments={filteredTournaments}
+              selectedVideoIds={selectedVideoIds}
+              onSuccess={handleMoveSuccess}
+            />
 
             {/* Rename Dialog */}
-            <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Rename {renameItem?.type}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="rename-input">New Name</Label>
-                    <Input
-                      id="rename-input"
-                      value={renameValue}
-                      onChange={(e) => setRenameValue(e.target.value)}
-                      placeholder="Enter new name"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleRenameSubmit()
-                        }
-                      }}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setRenameDialogOpen(false)
-                        setRenameItem(null)
-                        setRenameValue('')
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button onClick={handleRenameSubmit}>
-                      Rename
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <RenameDialog
+              isOpen={renameDialogOpen}
+              onOpenChange={setRenameDialogOpen}
+              item={renameItem}
+              onSuccess={handleRenameSuccess}
+            />
 
             {/* Delete Confirmation Dialog */}
-            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Delete {deleteItem?.type}?</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <p className="text-body text-muted-foreground">
-                    Are you sure you want to delete "{deleteItem?.name}"? This action cannot be undone.
-                  </p>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setDeleteDialogOpen(false)
-                        setDeleteItem(null)
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button variant="destructive" onClick={handleDeleteConfirm}>
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <DeleteDialog
+              isOpen={deleteDialogOpen}
+              onOpenChange={setDeleteDialogOpen}
+              item={deleteItem}
+              onSuccess={handleDeleteSuccess}
+            />
 
             {/* Edit Event Dialog */}
             <EditEventDialog
