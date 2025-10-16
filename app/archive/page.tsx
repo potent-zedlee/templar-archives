@@ -64,6 +64,7 @@ import { ArchiveFolderList } from "@/components/archive-folder-list"
 import type { FolderItem } from "@/components/archive-folder-list"
 import { QuickUploadDialog } from "@/components/quick-upload-dialog"
 import { TournamentDialog } from "@/components/tournament-dialog"
+import { EditEventDialog } from "@/components/edit-event-dialog"
 
 // Dynamic imports for heavy components
 const VideoPlayerDialog = nextDynamic(() => import("@/components/video-player-dialog").then(mod => ({ default: mod.VideoPlayerDialog })), {
@@ -134,12 +135,19 @@ export default function ArchiveClient() {
   const [moveToEventDate, setMoveToEventDate] = useState('')
   const [movingVideos, setMovingVideos] = useState(false)
 
+  // Move to Existing Event dialog state
+  const [isMoveToEventDialogOpen, setIsMoveToEventDialogOpen] = useState(false)
+  const [moveToExistingTournamentId, setMoveToExistingTournamentId] = useState('')
+  const [moveToSubEventId, setMoveToSubEventId] = useState('')
+
   // Context menu dialogs state
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
   const [renameItem, setRenameItem] = useState<FolderItem | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteItem, setDeleteItem] = useState<FolderItem | null>(null)
+  const [editEventDialogOpen, setEditEventDialogOpen] = useState(false)
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
 
   // Use archive state hook
   const state = useArchiveState()
@@ -493,10 +501,56 @@ export default function ArchiveClient() {
     }
   }
 
+  const handleEditEvent = (item: FolderItem) => {
+    if (item.type === 'subevent') {
+      setSelectedEventId(item.id)
+      setEditEventDialogOpen(true)
+    }
+  }
+
   const handleMoveToEvent = (item: FolderItem) => {
-    // Select this video and open the "Move to New Event" dialog
+    // Select this video and open the "Move to Existing Event" dialog
     setSelectedVideoIds(new Set([item.id]))
-    setIsMoveToNewEventDialogOpen(true)
+    setIsMoveToEventDialogOpen(true)
+  }
+
+  const handleMoveToExistingEvent = async () => {
+    if (!moveToSubEventId) {
+      toast.error('Please select an event')
+      return
+    }
+
+    if (selectedVideoIds.size === 0) {
+      toast.error('No videos selected')
+      return
+    }
+
+    setMovingVideos(true)
+    try {
+      const videoIds = Array.from(selectedVideoIds)
+      const result = await organizeVideos(videoIds, moveToSubEventId)
+
+      if (result.success) {
+        toast.success(`${videoIds.length} video(s) moved successfully`)
+
+        // Reset and refresh
+        await loadTournaments()
+        await loadUnsortedVideos()
+        clearSelection()
+
+        // Close dialog and reset form
+        setIsMoveToEventDialogOpen(false)
+        setMoveToExistingTournamentId('')
+        setMoveToSubEventId('')
+      } else {
+        toast.error(result.error || 'Failed to move videos')
+      }
+    } catch (error) {
+      console.error('Error moving videos:', error)
+      toast.error('Failed to move videos')
+    } finally {
+      setMovingVideos(false)
+    }
   }
 
   const handleMoveToNewEventSingle = (item: FolderItem) => {
@@ -1677,6 +1731,7 @@ export default function ArchiveClient() {
                 onMoveToEvent={handleMoveToEvent}
                 onMoveToNewEvent={handleMoveToNewEventSingle}
                 onAddSubItem={handleAddSubItem}
+                onEditEvent={handleEditEvent}
                 isAdmin={isUserAdmin}
               />
             </Card>
@@ -2356,6 +2411,76 @@ export default function ArchiveClient() {
               </DialogContent>
             </Dialog>
 
+            {/* Move to Existing Event Dialog */}
+            <Dialog open={isMoveToEventDialogOpen} onOpenChange={setIsMoveToEventDialogOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Move to Event</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="move-existing-tournament">Tournament *</Label>
+                    <Select value={moveToExistingTournamentId} onValueChange={setMoveToExistingTournamentId}>
+                      <SelectTrigger id="move-existing-tournament">
+                        <SelectValue placeholder="Select a tournament" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredTournaments.map((tournament) => (
+                          <SelectItem key={tournament.id} value={tournament.id}>
+                            {tournament.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="move-existing-subevent">Event *</Label>
+                    <Select
+                      value={moveToSubEventId}
+                      onValueChange={setMoveToSubEventId}
+                      disabled={!moveToExistingTournamentId}
+                    >
+                      <SelectTrigger id="move-existing-subevent">
+                        <SelectValue placeholder="Select an event" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {moveToExistingTournamentId &&
+                          filteredTournaments
+                            .find(t => t.id === moveToExistingTournamentId)
+                            ?.sub_events?.map((subEvent) => (
+                              <SelectItem key={subEvent.id} value={subEvent.id}>
+                                {subEvent.name}
+                              </SelectItem>
+                            ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="text-caption text-muted-foreground bg-muted/30 p-3 rounded-md">
+                    {selectedVideoIds.size} video{selectedVideoIds.size > 1 ? 's' : ''} will be moved to this event
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsMoveToEventDialogOpen(false)
+                        setMoveToExistingTournamentId('')
+                        setMoveToSubEventId('')
+                      }}
+                      disabled={movingVideos}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleMoveToExistingEvent} disabled={movingVideos}>
+                      {movingVideos ? 'Moving...' : 'Move'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
             {/* Move to New Event Dialog */}
             <Dialog open={isMoveToNewEventDialogOpen} onOpenChange={setIsMoveToNewEventDialogOpen}>
               <DialogContent className="max-w-md">
@@ -2491,6 +2616,17 @@ export default function ArchiveClient() {
                 </div>
               </DialogContent>
             </Dialog>
+
+            {/* Edit Event Dialog */}
+            <EditEventDialog
+              isOpen={editEventDialogOpen}
+              onOpenChange={setEditEventDialogOpen}
+              subEventId={selectedEventId}
+              onSuccess={async () => {
+                await loadTournaments()
+                setSelectedEventId(null)
+              }}
+            />
           </ResizablePanel>
 
           <ResizableHandle withHandle />

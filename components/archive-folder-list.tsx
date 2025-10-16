@@ -1,6 +1,6 @@
 "use client"
 
-import { Folder, FileVideo, ChevronRight, Video, Play, Edit, Trash, FolderPlus, FolderInput, CheckSquare } from "lucide-react"
+import { Folder, FileVideo, ChevronRight, Video, Play, Edit, Trash, FolderPlus, FolderInput, CheckSquare, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -11,6 +11,13 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { Tournament as TournamentType, SubEvent as SubEventType, Day as DayType } from "@/lib/supabase"
 import type { UnsortedVideo } from "@/lib/unsorted-videos"
 
@@ -39,6 +46,7 @@ interface ArchiveFolderListProps {
   onMoveToEvent?: (item: FolderItem) => void
   onMoveToNewEvent?: (item: FolderItem) => void
   onAddSubItem?: (item: FolderItem) => void
+  onEditEvent?: (item: FolderItem) => void
   isAdmin?: boolean
 }
 
@@ -56,6 +64,7 @@ export function ArchiveFolderList({
   onMoveToEvent,
   onMoveToNewEvent,
   onAddSubItem,
+  onEditEvent,
   isAdmin = false,
 }: ArchiveFolderListProps) {
   if (loading) {
@@ -105,6 +114,168 @@ export function ArchiveFolderList({
     }
   }
 
+  const renderDropdownMenu = (item: FolderItem) => {
+    // Tournament folder menu
+    if (item.type === 'tournament') {
+      return (
+        <>
+          <DropdownMenuItem onClick={() => onNavigate(item)}>
+            <Folder className="mr-2 h-4 w-4" />
+            Open
+          </DropdownMenuItem>
+          {isAdmin && onAddSubItem && (
+            <DropdownMenuItem onClick={() => onAddSubItem(item)}>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              Add SubEvent
+            </DropdownMenuItem>
+          )}
+          {isAdmin && onRename && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onRename(item)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Rename
+              </DropdownMenuItem>
+            </>
+          )}
+          {isAdmin && onDelete && (
+            <DropdownMenuItem
+              onClick={() => onDelete(item)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          )}
+        </>
+      )
+    }
+
+    // SubEvent folder menu
+    if (item.type === 'subevent') {
+      return (
+        <>
+          <DropdownMenuItem onClick={() => onNavigate(item)}>
+            <Folder className="mr-2 h-4 w-4" />
+            Open
+          </DropdownMenuItem>
+          {isAdmin && onEditEvent && (
+            <DropdownMenuItem onClick={() => onEditEvent(item)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Event Info
+            </DropdownMenuItem>
+          )}
+          {isAdmin && onRename && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onRename(item)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Rename
+              </DropdownMenuItem>
+            </>
+          )}
+          {isAdmin && onDelete && (
+            <DropdownMenuItem
+              onClick={() => onDelete(item)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          )}
+        </>
+      )
+    }
+
+    // Day (video) menu - for organized videos
+    if (item.type === 'day' && !isUnorganized) {
+      return (
+        <>
+          <DropdownMenuItem onClick={() => onSelectDay && onSelectDay(item.id)}>
+            <Play className="mr-2 h-4 w-4" />
+            View Hands
+          </DropdownMenuItem>
+          {isAdmin && (onMoveToEvent || onMoveToNewEvent) && <DropdownMenuSeparator />}
+          {isAdmin && onMoveToEvent && (
+            <DropdownMenuItem onClick={() => onMoveToEvent(item)}>
+              <FolderInput className="mr-2 h-4 w-4" />
+              Move to Event
+            </DropdownMenuItem>
+          )}
+          {isAdmin && onMoveToNewEvent && (
+            <DropdownMenuItem onClick={() => onMoveToNewEvent(item)}>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              Move to New Event
+            </DropdownMenuItem>
+          )}
+          {isAdmin && onRename && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onRename(item)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Rename
+              </DropdownMenuItem>
+            </>
+          )}
+          {isAdmin && onDelete && (
+            <DropdownMenuItem
+              onClick={() => onDelete(item)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          )}
+        </>
+      )
+    }
+
+    // Unorganized video menu
+    if (item.type === 'day' && isUnorganized) {
+      return (
+        <>
+          {onToggleSelect && (
+            <DropdownMenuItem onClick={() => onToggleSelect(item.id)}>
+              <CheckSquare className="mr-2 h-4 w-4" />
+              {selectedIds.has(item.id) ? 'Deselect' : 'Select'}
+            </DropdownMenuItem>
+          )}
+          {(onMoveToEvent || onMoveToNewEvent) && <DropdownMenuSeparator />}
+          {onMoveToEvent && (
+            <DropdownMenuItem onClick={() => onMoveToEvent(item)}>
+              <FolderInput className="mr-2 h-4 w-4" />
+              Move to Event
+            </DropdownMenuItem>
+          )}
+          {onMoveToNewEvent && (
+            <DropdownMenuItem onClick={() => onMoveToNewEvent(item)}>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              Move to New Event
+            </DropdownMenuItem>
+          )}
+          {isAdmin && (onRename || onDelete) && <DropdownMenuSeparator />}
+          {isAdmin && onRename && (
+            <DropdownMenuItem onClick={() => onRename(item)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Rename
+            </DropdownMenuItem>
+          )}
+          {isAdmin && onDelete && (
+            <DropdownMenuItem
+              onClick={() => onDelete(item)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          )}
+        </>
+      )
+    }
+
+    return null
+  }
+
   const renderContextMenu = (item: FolderItem) => {
     // Tournament folder menu
     if (item.type === 'tournament') {
@@ -147,6 +318,12 @@ export function ArchiveFolderList({
             <Folder className="mr-2 h-4 w-4" />
             Open
           </ContextMenuItem>
+          {isAdmin && onEditEvent && (
+            <ContextMenuItem onClick={() => onEditEvent(item)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Event Info
+            </ContextMenuItem>
+          )}
           {isAdmin && onRename && (
             <>
               <ContextMenuSeparator />
@@ -174,6 +351,19 @@ export function ArchiveFolderList({
             <Play className="mr-2 h-4 w-4" />
             View Hands
           </ContextMenuItem>
+          {isAdmin && (onMoveToEvent || onMoveToNewEvent) && <ContextMenuSeparator />}
+          {isAdmin && onMoveToEvent && (
+            <ContextMenuItem onClick={() => onMoveToEvent(item)}>
+              <FolderInput className="mr-2 h-4 w-4" />
+              Move to Event
+            </ContextMenuItem>
+          )}
+          {isAdmin && onMoveToNewEvent && (
+            <ContextMenuItem onClick={() => onMoveToNewEvent(item)}>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              Move to New Event
+            </ContextMenuItem>
+          )}
           {isAdmin && onRename && (
             <>
               <ContextMenuSeparator />
@@ -258,52 +448,73 @@ export function ArchiveFolderList({
           {items.map((item) => (
             <ContextMenu key={item.id}>
               <ContextMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start h-8 px-2 hover:bg-muted/50 transition-colors"
-                  onClick={(e) => handleItemClick(item, e)}
-                >
-                  <div className="flex items-center gap-2 w-full">
-                    {/* Checkbox (only for unorganized videos) */}
-                    {isUnorganized && onToggleSelect && (
-                      <Checkbox
-                        checked={selectedIds.has(item.id)}
-                        onCheckedChange={() => onToggleSelect(item.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        data-checkbox
-                      />
-                    )}
+                <div className="relative group">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start h-8 px-2 hover:bg-muted/50 transition-colors"
+                    onClick={(e) => handleItemClick(item, e)}
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      {/* Checkbox (only for unorganized videos) */}
+                      {isUnorganized && onToggleSelect && (
+                        <Checkbox
+                          checked={selectedIds.has(item.id)}
+                          onCheckedChange={() => onToggleSelect(item.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          data-checkbox
+                        />
+                      )}
 
-                    {/* Icon */}
-                    <div className="shrink-0">
-                      {getIcon(item.type)}
-                    </div>
-
-                    {/* Name */}
-                    <div className="flex-1 text-left min-w-0">
-                      <p className="text-caption font-medium truncate">{item.name}</p>
-                    </div>
-
-                    {/* Date (for unorganized videos with published_at) */}
-                    {item.date && (
-                      <div className="shrink-0 text-xs text-muted-foreground">
-                        {new Date(item.date).toLocaleDateString()}
+                      {/* Icon */}
+                      <div className="shrink-0">
+                        {getIcon(item.type)}
                       </div>
-                    )}
 
-                    {/* Item count */}
-                    {item.itemCount !== undefined && item.itemCount > 0 && (
-                      <div className="shrink-0 text-xs text-muted-foreground">
-                        {item.itemCount}
+                      {/* Name */}
+                      <div className="flex-1 text-left min-w-0">
+                        <p className="text-caption font-medium truncate">{item.name}</p>
                       </div>
-                    )}
 
-                    {/* Navigate arrow (for folders only) */}
-                    {(item.type === 'tournament' || item.type === 'subevent' || item.type === 'unorganized') && (
-                      <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                    )}
+                      {/* Date (for unorganized videos with published_at) */}
+                      {item.date && (
+                        <div className="shrink-0 text-xs text-muted-foreground">
+                          {new Date(item.date).toLocaleDateString()}
+                        </div>
+                      )}
+
+                      {/* Item count */}
+                      {item.itemCount !== undefined && item.itemCount > 0 && (
+                        <div className="shrink-0 text-xs text-muted-foreground">
+                          {item.itemCount}
+                        </div>
+                      )}
+
+                      {/* Navigate arrow (for folders only) */}
+                      {(item.type === 'tournament' || item.type === 'subevent' || item.type === 'unorganized') && (
+                        <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                      )}
+                    </div>
+                  </Button>
+
+                  {/* Dropdown Menu Button (visible on hover) */}
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="h-3.5 w-3.5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {renderDropdownMenu(item)}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                </Button>
+                </div>
               </ContextMenuTrigger>
               <ContextMenuContent>
                 {renderContextMenu(item)}
