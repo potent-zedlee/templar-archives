@@ -44,9 +44,9 @@ import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { EmptyState } from "@/components/empty-state"
 import { DndContext, useDroppable, DragEndEvent } from '@dnd-kit/core'
 import { UnsortedVideosSection } from "@/components/unsorted-videos-section"
-import { organizeVideo } from "@/lib/unsorted-videos"
+import { organizeVideo, getUnsortedVideos } from "@/lib/unsorted-videos"
 import type { UnsortedVideo } from "@/lib/unsorted-videos"
-import { useArchiveState } from "@/hooks/useArchiveState"
+import { useArchiveState, type PayoutRow } from "@/hooks/useArchiveState"
 import {
   loadTournamentsHelper,
   loadHandsHelper,
@@ -59,6 +59,11 @@ import {
   deleteDayHelper,
   checkIsUserAdmin,
 } from "@/lib/archive-helpers"
+import { ArchiveBreadcrumb } from "@/components/archive-breadcrumb"
+import { ArchiveFolderList } from "@/components/archive-folder-list"
+import type { FolderItem } from "@/components/archive-folder-list"
+import { QuickUploadDialog } from "@/components/quick-upload-dialog"
+import { TournamentDialog } from "@/components/tournament-dialog"
 
 // Dynamic imports for heavy components
 const VideoPlayerDialog = nextDynamic(() => import("@/components/video-player-dialog").then(mod => ({ default: mod.VideoPlayerDialog })), {
@@ -230,6 +235,14 @@ export default function ArchiveClient() {
     setVideoStartTime,
     openMenuId,
     setOpenMenuId,
+    navigationLevel,
+    setNavigationLevel,
+    currentTournamentId,
+    setCurrentTournamentId,
+    currentSubEventId,
+    setCurrentSubEventId,
+    unsortedVideos,
+    setUnsortedVideos,
   } = state
 
   // Load user session
@@ -250,7 +263,18 @@ export default function ArchiveClient() {
 
   useEffect(() => {
     loadTournaments()
+    loadUnsortedVideos()
   }, [])
+
+  // Load unsorted videos
+  const loadUnsortedVideos = async () => {
+    try {
+      const videos = await getUnsortedVideos()
+      setUnsortedVideos(videos)
+    } catch (error) {
+      console.error('Error loading unsorted videos:', error)
+    }
+  }
 
   // Load hands when day is selected
   const loadHands = (dayId: string) => loadHandsHelper(dayId, setHands)
@@ -355,6 +379,124 @@ export default function ArchiveClient() {
     setHands((prev) =>
       prev.map((h) => (h.id === handId ? { ...h, checked: !h.checked } : h))
     )
+  }
+
+  // Breadcrumb navigation logic
+  const buildBreadcrumbItems = () => {
+    const items: Array<{ id: string; name: string; type: 'home' | 'tournament' | 'subevent' }> = []
+
+    if (navigationLevel === 'tournament' || navigationLevel === 'subevent') {
+      const tournament = tournaments.find(t => t.id === currentTournamentId)
+      if (tournament) {
+        items.push({
+          id: tournament.id,
+          name: tournament.name,
+          type: 'tournament'
+        })
+      }
+    }
+
+    if (navigationLevel === 'subevent') {
+      const tournament = tournaments.find(t => t.id === currentTournamentId)
+      const subEvent = tournament?.sub_events?.find(se => se.id === currentSubEventId)
+      if (subEvent) {
+        items.push({
+          id: subEvent.id,
+          name: subEvent.name,
+          type: 'subevent'
+        })
+      }
+    }
+
+    return items
+  }
+
+  const handleBreadcrumbNavigate = (item: { id: string; name: string; type: 'home' | 'tournament' | 'subevent' } | null) => {
+    if (!item) {
+      // Navigate to root
+      setNavigationLevel('root')
+      setCurrentTournamentId('')
+      setCurrentSubEventId('')
+    } else if (item.type === 'tournament') {
+      // Navigate to tournament level
+      setNavigationLevel('tournament')
+      setCurrentTournamentId(item.id)
+      setCurrentSubEventId('')
+    } else if (item.type === 'subevent') {
+      // Navigate to subevent level (stay at current level)
+      setNavigationLevel('subevent')
+      setCurrentSubEventId(item.id)
+    }
+  }
+
+  // Folder navigation logic
+  const buildFolderItems = (): FolderItem[] => {
+    if (navigationLevel === 'root') {
+      // Show all tournaments + Unorganized folder
+      const tournamentItems = filteredTournaments.map(tournament => ({
+        id: tournament.id,
+        name: tournament.name,
+        type: 'tournament' as const,
+        itemCount: tournament.sub_events?.length || 0,
+        data: tournament
+      }))
+
+      // Add Unorganized folder
+      const unorganizedItem: FolderItem = {
+        id: 'unorganized',
+        name: 'Unorganized',
+        type: 'unorganized' as const,
+        itemCount: unsortedVideos.length
+      }
+
+      return [unorganizedItem, ...tournamentItems]
+    } else if (navigationLevel === 'unorganized') {
+      // Show unsorted videos
+      return unsortedVideos.map(video => ({
+        id: video.id,
+        name: video.name,
+        type: 'day' as const, // Use 'day' type for consistency (videos are playable like days)
+        data: video
+      }))
+    } else if (navigationLevel === 'tournament') {
+      // Show sub-events of current tournament
+      const tournament = tournaments.find(t => t.id === currentTournamentId)
+      return tournament?.sub_events?.map(subEvent => ({
+        id: subEvent.id,
+        name: subEvent.name,
+        type: 'subevent' as const,
+        itemCount: subEvent.days?.length || 0,
+        date: subEvent.date,
+        data: subEvent
+      })) || []
+    } else if (navigationLevel === 'subevent') {
+      // Show days of current sub-event
+      const tournament = tournaments.find(t => t.id === currentTournamentId)
+      const subEvent = tournament?.sub_events?.find(se => se.id === currentSubEventId)
+      return subEvent?.days?.map(day => ({
+        id: day.id,
+        name: day.name,
+        type: 'day' as const,
+        data: day
+      })) || []
+    }
+    return []
+  }
+
+  const handleFolderNavigate = (item: FolderItem) => {
+    if (item.type === 'tournament') {
+      setNavigationLevel('tournament')
+      setCurrentTournamentId(item.id)
+      setCurrentSubEventId('')
+    } else if (item.type === 'subevent') {
+      setNavigationLevel('subevent')
+      setCurrentSubEventId(item.id)
+    } else if (item.type === 'unorganized') {
+      setNavigationLevel('unorganized')
+      setCurrentTournamentId('')
+      setCurrentSubEventId('')
+    }
+    // Day clicks are handled by onSelectDay
   }
 
   const addNewTournament = async () => {
@@ -1111,7 +1253,8 @@ export default function ArchiveClient() {
       <div className="min-h-screen bg-muted/30">
         <Header />
 
-        {/* Unsorted Videos Section */}
+        {/* Unsorted Videos Section - NOW INTEGRATED INTO FOLDER NAVIGATION */}
+        {false && (
         <div className="container max-w-7xl mx-auto px-4 md:px-6 py-6">
           <UnsortedVideosSection onVideoPlay={(video) => {
             // Debug: Log video data
@@ -1138,6 +1281,7 @@ export default function ArchiveClient() {
             }
           }} />
         </div>
+        )}
 
       {/* Category Filter - Top Bar */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -1220,362 +1364,48 @@ export default function ArchiveClient() {
             <Card className="p-4 bg-card h-full">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-title">Events</h2>
-                {isUserAdmin && (
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>{editingTournamentId ? "Edit Tournament" : "Add Tournament"}</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="category">Category</Label>
-                        <Select value={newCategory} onValueChange={(value) => setNewCategory(value as TournamentType["category"])}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="WSOP">WSOP</SelectItem>
-                            <SelectItem value="Triton">Triton</SelectItem>
-                            <SelectItem value="EPT">EPT</SelectItem>
-                            <SelectItem value="APT">APT</SelectItem>
-                            <SelectItem value="APL">APL</SelectItem>
-                            <SelectItem value="Hustler Casino Live">Hustler Casino Live</SelectItem>
-                            <SelectItem value="WSOP Classic">WSOP Classic</SelectItem>
-                            <SelectItem value="GGPOKER">GGPOKER</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                <div className="flex items-center gap-2">
+                  {/* Quick Upload Button */}
+                  <QuickUploadDialog onSuccess={loadUnsortedVideos} />
 
-                      <div className="space-y-2">
-                        <Label htmlFor="tournament-name">Tournament Name</Label>
-                        <Input
-                          id="tournament-name"
-                          placeholder="e.g., 2025 WSOP Main Event"
-                          value={newTournamentName}
-                          onChange={(e) => setNewTournamentName(e.target.value)}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
-                        <Input
-                          id="location"
-                          placeholder="e.g., Las Vegas, Seoul, Online"
-                          value={newLocation}
-                          onChange={(e) => setNewLocation(e.target.value)}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="start-date">Start Date</Label>
-                          <Input
-                            id="start-date"
-                            type="date"
-                            value={newStartDate}
-                            onChange={(e) => setNewStartDate(e.target.value)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="end-date">End Date</Label>
-                          <Input
-                            id="end-date"
-                            type="date"
-                            value={newEndDate}
-                            onChange={(e) => setNewEndDate(e.target.value)}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => {
-                          setIsDialogOpen(false)
-                          setEditingTournamentId("")
-                        }}>
-                          Cancel
-                        </Button>
-                        <Button onClick={addNewTournament}>
-                          {editingTournamentId ? "Edit" : "Add"}
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-                )}
+                  {/* Add Tournament Button (Admin Only) */}
+                  <TournamentDialog
+                    isOpen={isDialogOpen}
+                    onOpenChange={setIsDialogOpen}
+                    editingTournamentId={editingTournamentId}
+                    onSave={addNewTournament}
+                    onCancel={() => {
+                      setIsDialogOpen(false)
+                      setEditingTournamentId("")
+                    }}
+                    newTournamentName={newTournamentName}
+                    setNewTournamentName={setNewTournamentName}
+                    newCategory={newCategory}
+                    setNewCategory={setNewCategory}
+                    newLocation={newLocation}
+                    setNewLocation={setNewLocation}
+                    newStartDate={newStartDate}
+                    setNewStartDate={setNewStartDate}
+                    newEndDate={newEndDate}
+                    setNewEndDate={setNewEndDate}
+                    isUserAdmin={isUserAdmin}
+                  />
+                </div>
               </div>
 
-              <ScrollArea className="h-[calc(100vh-240px)]">
-                <div className="space-y-1">
-                  {filteredTournaments.map((tournament) => (
-                    <div key={tournament.id}>
-                      {/* Tournament Level */}
-                      <div className="flex items-center justify-between gap-2 py-2 px-3 rounded-md hover:bg-muted/50 transition-colors group">
-                        <div
-                          className="flex items-center gap-2 flex-1 cursor-pointer"
-                          onClick={() => toggleTournament(tournament.id)}
-                        >
-                          {tournament.expanded ? (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                          )}
-                          <div className="flex h-5 w-5 items-center justify-center rounded-sm bg-primary/10 text-xs font-bold text-primary flex-shrink-0">
-                            {tournament.category.charAt(0)}
-                          </div>
-                          <span className="text-body font-normal text-foreground">
-                            {tournament.name}
-                          </span>
-                        </div>
-                        {isUserAdmin && (
-                          <div className="relative">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setOpenMenuId(openMenuId === `tournament-${tournament.id}` ? "" : `tournament-${tournament.id}`)
-                              }}
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                            {openMenuId === `tournament-${tournament.id}` && (
-                              <div className="absolute right-0 top-8 z-50 w-auto rounded-md border bg-popover p-1 shadow-md">
-                                <div className="flex flex-col gap-0.5">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      openEditTournament(tournament)
-                                      setOpenMenuId("")
-                                    }}
-                                    title="Edit"
-                                  >
-                                    <Edit className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      setSelectedTournamentId(tournament.id)
-                                      setIsSubEventDialogOpen(true)
-                                      setOpenMenuId("")
-                                    }}
-                                    title="Add Event"
-                                  >
-                                    <Plus className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      deleteTournament(tournament.id)
-                                      setOpenMenuId("")
-                                    }}
-                                    title="Delete"
-                                  >
-                                    <Trash className="h-3.5 w-3.5" />
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
+              {/* Breadcrumb Navigation */}
+              <ArchiveBreadcrumb
+                items={buildBreadcrumbItems()}
+                onNavigate={handleBreadcrumbNavigate}
+              />
 
-                      {/* SubEvent Level */}
-                      {tournament.expanded && (
-                        <div className="ml-4">
-                          {tournament.sub_events?.map((subEvent) => (
-                            <DroppableSubEvent key={subEvent.id} subEventId={subEvent.id}>
-                              <div className="flex items-center justify-between gap-2 py-2 px-3 rounded-md hover:bg-muted/50 transition-colors group">
-                                <div
-                                  className="flex items-center gap-2 flex-1 cursor-pointer"
-                                  onClick={() =>
-                                    toggleSubEvent(tournament.id, subEvent.id)
-                                  }
-                                >
-                                  {subEvent.expanded ? (
-                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                  )}
-                                  <span className="text-body font-normal text-foreground">
-                                    {subEvent.name}
-                                  </span>
-                                </div>
-                                <div className="relative flex items-center gap-1">
-                                  {/* Info button - visible to all users */}
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      setViewingSubEventId(subEvent.id)
-                                      setViewingSubEvent(subEvent)
-                                      setIsSubEventInfoDialogOpen(true)
-                                    }}
-                                    title="View Info"
-                                  >
-                                    <Info className="h-4 w-4" />
-                                  </Button>
-
-                                  {/* Management menu - admin only */}
-                                  {isUserAdmin && (
-                                    <>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          setOpenMenuId(openMenuId === `subevent-${subEvent.id}` ? "" : `subevent-${subEvent.id}`)
-                                        }}
-                                      >
-                                        <MoreVertical className="h-4 w-4" />
-                                      </Button>
-                                      {openMenuId === `subevent-${subEvent.id}` && (
-                                        <div className="absolute right-0 top-8 z-50 w-auto rounded-md border bg-popover p-1 shadow-md">
-                                          <div className="flex flex-col gap-0.5">
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-7 w-7 p-0"
-                                              onClick={(e) => {
-                                                e.stopPropagation()
-                                                openEditSubEvent(subEvent, tournament.id)
-                                                setOpenMenuId("")
-                                              }}
-                                              title="Edit"
-                                            >
-                                              <Edit className="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-7 w-7 p-0"
-                                              onClick={(e) => {
-                                                e.stopPropagation()
-                                                setSelectedTournamentId(tournament.id)
-                                                setSelectedSubEventId(subEvent.id)
-                                                setIsDayDialogOpen(true)
-                                                setOpenMenuId("")
-                                              }}
-                                              title="Day Add"
-                                            >
-                                              <Plus className="h-3.5 w-3.5" />
-                                            </Button>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                              onClick={(e) => {
-                                                e.stopPropagation()
-                                                deleteSubEvent(subEvent.id)
-                                                setOpenMenuId("")
-                                              }}
-                                              title="Delete"
-                                            >
-                                              <Trash className="h-3.5 w-3.5" />
-                                            </Button>
-                                          </div>
-                                        </div>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Day Level */}
-                              {subEvent.expanded && (
-                                <div className="ml-8">
-                                  {subEvent.days?.map((day) => (
-                                    <div
-                                      key={day.id}
-                                      className={`flex items-center justify-between gap-2 py-2 px-3 rounded-md transition-colors group ${
-                                        day.selected
-                                          ? "bg-primary/10 text-primary font-medium"
-                                          : "hover:bg-muted/50 text-foreground"
-                                      }`}
-                                    >
-                                      <span
-                                        className="text-body flex-1 cursor-pointer"
-                                        onClick={() => selectDay(day.id)}
-                                      >
-                                        {day.name}
-                                      </span>
-                                      {/* Day management menu - admin only */}
-                                      {isUserAdmin && (
-                                        <div className="relative">
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={(e) => {
-                                              e.stopPropagation()
-                                              setOpenMenuId(openMenuId === `day-${day.id}` ? "" : `day-${day.id}`)
-                                            }}
-                                          >
-                                            <MoreVertical className="h-4 w-4" />
-                                          </Button>
-                                          {openMenuId === `day-${day.id}` && (
-                                            <div className="absolute right-0 top-8 z-50 w-auto rounded-md border bg-popover p-1 shadow-md">
-                                              <div className="flex flex-col gap-0.5">
-                                                <Button
-                                                  variant="ghost"
-                                                  size="sm"
-                                                  className="h-7 w-7 p-0"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    openEditDay(day, subEvent.id)
-                                                    setOpenMenuId("")
-                                                  }}
-                                                  title="Edit"
-                                                >
-                                                  <Edit className="h-3.5 w-3.5" />
-                                                </Button>
-                                                <Button
-                                                  variant="ghost"
-                                                  size="sm"
-                                                  className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                  onClick={(e) => {
-                                                    e.stopPropagation()
-                                                    deleteDay(day.id)
-                                                    setOpenMenuId("")
-                                                  }}
-                                                  title="Delete"
-                                                >
-                                                  <Trash className="h-3.5 w-3.5" />
-                                                </Button>
-                                              </div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </DroppableSubEvent>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
+              {/* Folder List */}
+              <ArchiveFolderList
+                items={buildFolderItems()}
+                onNavigate={handleFolderNavigate}
+                onSelectDay={selectDay}
+                loading={loading}
+              />
             </Card>
 
             {/* SubEvent Dialog */}

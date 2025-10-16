@@ -132,6 +132,18 @@ export interface ArchiveState {
   // UI states
   openMenuId: string
   setOpenMenuId: (id: string) => void
+
+  // Folder navigation states
+  navigationLevel: 'root' | 'tournament' | 'subevent' | 'unorganized'
+  setNavigationLevel: (level: 'root' | 'tournament' | 'subevent' | 'unorganized') => void
+  currentTournamentId: string
+  setCurrentTournamentId: (id: string) => void
+  currentSubEventId: string
+  setCurrentSubEventId: (id: string) => void
+
+  // Unsorted videos state
+  unsortedVideos: any[]
+  setUnsortedVideos: (videos: any[]) => void
 }
 
 export function useArchiveState(): ArchiveState {
@@ -205,6 +217,14 @@ export function useArchiveState(): ArchiveState {
 
   // UI states
   const [openMenuId, setOpenMenuId] = useState<string>("")
+
+  // Folder navigation states
+  const [navigationLevel, setNavigationLevel] = useState<'root' | 'tournament' | 'subevent' | 'unorganized'>('root')
+  const [currentTournamentId, setCurrentTournamentId] = useState<string>("")
+  const [currentSubEventId, setCurrentSubEventId] = useState<string>("")
+
+  // Unsorted videos state
+  const [unsortedVideos, setUnsortedVideos] = useState<any[]>([])
 
   return {
     tournaments,
@@ -313,5 +333,13 @@ export function useArchiveState(): ArchiveState {
     setVideoStartTime,
     openMenuId,
     setOpenMenuId,
+    navigationLevel,
+    setNavigationLevel,
+    currentTournamentId,
+    setCurrentTournamentId,
+    currentSubEventId,
+    setCurrentSubEventId,
+    unsortedVideos,
+    setUnsortedVideos,
   }
 }
