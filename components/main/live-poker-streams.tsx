@@ -174,8 +174,8 @@ export function LivePokerStreams() {
 
     fetchStreams()
 
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchStreams, 5 * 60 * 1000)
+    // Refresh every 1 hour (aligned with API cache)
+    const interval = setInterval(fetchStreams, 60 * 60 * 1000)
     return () => clearInterval(interval)
   }, [])
 

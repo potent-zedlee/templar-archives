@@ -1,19 +1,15 @@
 import { NextResponse } from 'next/server'
 
-export const revalidate = 300 // Cache for 5 minutes
+export const revalidate = 3600 // Cache for 1 hour (12 hours daily coverage with API quota)
 
-// Priority poker channels with correct handles (case-sensitive!)
-// This reduces API calls by not having to look up channel IDs every time
+// Priority poker channels with hardcoded channel IDs
+// This eliminates the need for channel lookup API calls (5 calls saved per request!)
 const PRIORITY_CHANNELS = [
-  { name: 'WSOP', handle: '@wsop', channelId: null, priority: 1 },
-  { name: 'Triton Poker', handle: '@tritonpoker', channelId: null, priority: 1 },
-  { name: 'PokerStars', handle: '@pokerstars', channelId: null, priority: 1 }, // EPT
-  { name: 'Hustler Casino Live', handle: '@HustlerCasinoLive', channelId: null, priority: 1 },
-  { name: 'PokerGO', handle: '@PokerGO', channelId: null, priority: 2 },
+  { name: 'WSOP', handle: '@wsop', channelId: 'UCJPnb9ricOOYLFSlotSfOng', priority: 1 },
+  { name: 'Triton Poker', handle: '@tritonpoker', channelId: 'UC2H8zWjiEEwkR8C3sBAF91w', priority: 1 },
+  { name: 'PokerStars', handle: '@pokerstars', channelId: 'UCs-CetFjsbmnX5vna43DO9Q', priority: 1 }, // EPT
+  { name: 'Hustler Casino Live', handle: '@HustlerCasinoLive', channelId: 'UCOYjui_6iH-ab2MDG6uooiQ', priority: 1 },
 ] as const
-
-// Cache for channel IDs to avoid repeated API calls
-const channelIdCache = new Map<string, string>()
 
 interface YouTubeVideo {
   id: {
@@ -52,48 +48,6 @@ interface LiveStream {
   publishedAt?: string
 }
 
-/**
- * Get channel ID from handle with caching
- */
-async function getChannelIdFromHandle(handle: string, apiKey: string): Promise<string | null> {
-  // Check cache first
-  if (channelIdCache.has(handle)) {
-    return channelIdCache.get(handle)!
-  }
-
-  try {
-    // Remove @ if present
-    const cleanHandle = handle.replace(/^@/, '')
-
-    // Try forHandle parameter (most accurate for @username format)
-    const handleUrl = new URL('https://www.googleapis.com/youtube/v3/channels')
-    handleUrl.searchParams.append('part', 'id')
-    handleUrl.searchParams.append('forHandle', cleanHandle)
-    handleUrl.searchParams.append('key', apiKey)
-
-    const response = await fetch(handleUrl.toString())
-
-    if (response.ok) {
-      const data = await response.json()
-      if (data.items && data.items.length > 0) {
-        const channelId = data.items[0].id
-        console.log(`✓ Found channel ID for ${handle}:`, channelId)
-        // Cache it
-        channelIdCache.set(handle, channelId)
-        return channelId
-      }
-    } else {
-      const errorData = await response.json().catch(() => ({}))
-      console.error(`Failed to get channel ID for ${handle} (status: ${response.status})`, errorData)
-    }
-
-    return null
-  } catch (error) {
-    console.error(`Error getting channel ID for ${handle}:`, error)
-    return null
-  }
-}
-
 
 export async function GET() {
   const apiKey = process.env.YOUTUBE_API_KEY
@@ -114,21 +68,9 @@ export async function GET() {
   try {
     console.log('[YouTube API] Fetching live streams from priority channels:', PRIORITY_CHANNELS.map(c => c.name).join(', '))
 
-    // Get channel IDs first (will be cached after first call)
-    const channelIds: string[] = []
-    for (const channel of PRIORITY_CHANNELS) {
-      const channelId = await getChannelIdFromHandle(channel.handle, apiKey)
-      if (channelId) {
-        channelIds.push(channelId)
-      }
-    }
-
-    console.log('[YouTube API] Found', channelIds.length, 'channel IDs')
-
-    if (channelIds.length === 0) {
-      console.warn('[YouTube API] No channel IDs found')
-      return NextResponse.json({ streams: [] }, { status: 200 })
-    }
+    // Use hardcoded channel IDs - no API calls needed!
+    const channelIds = PRIORITY_CHANNELS.map(c => c.channelId)
+    console.log('[YouTube API] Using', channelIds.length, 'hardcoded channel IDs')
 
     // Search for live and recent streams from these channels
     const allVideos: Array<YouTubeVideo & { streamType: 'live' | 'completed' | 'recent' }> = []
@@ -355,7 +297,7 @@ export async function GET() {
     return NextResponse.json({ streams }, {
       status: 200,
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
       },
     })
 
