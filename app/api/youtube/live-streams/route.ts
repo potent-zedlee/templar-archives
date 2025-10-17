@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server'
 
 export const revalidate = 300 // Cache for 5 minutes
 
-// Priority poker channels with pre-fetched channel IDs
+// Priority poker channels with correct handles (case-sensitive!)
 // This reduces API calls by not having to look up channel IDs every time
 const PRIORITY_CHANNELS = [
-  { name: 'WSOP', handle: '@WSOP', channelId: null, priority: 1 },
-  { name: 'Triton Poker', handle: '@TritonPoker', channelId: null, priority: 1 },
-  { name: 'PokerGO', handle: '@PokerGO', channelId: null, priority: 1 }, // EPT
-  { name: 'World Poker Tour', handle: '@WorldPokerTour', channelId: null, priority: 1 },
+  { name: 'WSOP', handle: '@wsop', channelId: null, priority: 1 },
+  { name: 'Triton Poker', handle: '@tritonpoker', channelId: null, priority: 1 },
+  { name: 'PokerStars', handle: '@pokerstars', channelId: null, priority: 1 }, // EPT
   { name: 'Hustler Casino Live', handle: '@HustlerCasinoLive', channelId: null, priority: 1 },
+  { name: 'PokerGO', handle: '@PokerGO', channelId: null, priority: 2 },
 ] as const
 
 // Cache for channel IDs to avoid repeated API calls
