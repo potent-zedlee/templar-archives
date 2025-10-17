@@ -85,23 +85,65 @@ export async function getChannelIdFromIdentifier(
   }
 
   try {
-    // Search for channel by username or custom name
-    const searchQuery = identifier.type === 'username' ? `@${identifier.value}` : identifier.value
+    // Try forHandle parameter for @username format (most accurate)
+    if (identifier.type === 'username') {
+      // Remove @ if present
+      const handle = identifier.value.replace(/^@/, '')
+      const handleResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?` +
+        `part=id&forHandle=${encodeURIComponent(handle)}&key=${apiKey}`
+      )
+
+      if (handleResponse.ok) {
+        const handleData = await handleResponse.json()
+        if (handleData.items && handleData.items.length > 0) {
+          console.log('Found channel via forHandle:', handleData.items[0].id)
+          return handleData.items[0].id
+        }
+      }
+
+      // Also try forUsername parameter
+      const usernameResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?` +
+        `part=id&forUsername=${encodeURIComponent(identifier.value)}&key=${apiKey}`
+      )
+
+      if (usernameResponse.ok) {
+        const usernameData = await usernameResponse.json()
+        if (usernameData.items && usernameData.items.length > 0) {
+          console.log('Found channel via forUsername:', usernameData.items[0].id)
+          return usernameData.items[0].id
+        }
+      }
+    }
+
+    // Fallback: Search for channel by name (less accurate)
+    const searchQuery = identifier.type === 'username' ? identifier.value : identifier.value
     const response = await fetch(
       `https://www.googleapis.com/youtube/v3/search?` +
-      `part=snippet&q=${encodeURIComponent(searchQuery)}&type=channel&maxResults=1&key=${apiKey}`
+      `part=snippet&q=${encodeURIComponent(searchQuery)}&type=channel&maxResults=5&key=${apiKey}`
     )
 
     if (!response.ok) {
+      const errorData = await response.json()
+      console.error('YouTube API error:', errorData)
       throw new Error(`YouTube API error: ${response.status}`)
     }
 
     const data = await response.json()
 
     if (data.items && data.items.length > 0) {
-      return data.items[0].snippet.channelId
+      // Log all found channels for debugging
+      console.log('Search results:', data.items.map((item: any) => ({
+        title: item.snippet.title,
+        channelId: item.snippet.channelId
+      })))
+
+      // Return the first result
+      return data.items[0].snippet.channelId || data.items[0].id?.channelId
     }
 
+    console.log('No channel found for identifier:', identifier)
     return null
   } catch (error) {
     console.error('Error getting channel ID:', error)

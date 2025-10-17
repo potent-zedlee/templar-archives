@@ -48,6 +48,40 @@ interface LiveStream {
 }
 
 /**
+ * Get channel ID from handle using the improved method
+ */
+async function getChannelIdFromHandle(handle: string, apiKey: string): Promise<string | null> {
+  try {
+    // Remove @ if present
+    const cleanHandle = handle.replace(/^@/, '')
+
+    // Try forHandle parameter (most accurate for @username format)
+    const handleUrl = new URL('https://www.googleapis.com/youtube/v3/channels')
+    handleUrl.searchParams.append('part', 'id')
+    handleUrl.searchParams.append('forHandle', cleanHandle)
+    handleUrl.searchParams.append('key', apiKey)
+
+    const response = await fetch(handleUrl.toString())
+
+    if (response.ok) {
+      const data = await response.json()
+      if (data.items && data.items.length > 0) {
+        console.log(`✓ Found channel ID for ${handle}:`, data.items[0].id)
+        return data.items[0].id
+      }
+    } else {
+      const errorData = await response.json().catch(() => ({}))
+      console.error(`Failed to get channel ID for ${handle} (status: ${response.status})`, errorData)
+    }
+
+    return null
+  } catch (error) {
+    console.error(`Error getting channel ID for ${handle}:`, error)
+    return null
+  }
+}
+
+/**
  * Search for live streams from a specific channel
  */
 async function searchChannelLiveStreams(
@@ -56,12 +90,22 @@ async function searchChannelLiveStreams(
   apiKey: string
 ): Promise<YouTubeVideo[]> {
   try {
+    // First, get the channel ID
+    const channelId = await getChannelIdFromHandle(channelHandle, apiKey)
+
+    if (!channelId) {
+      console.log(`Channel ID not found for ${channelHandle}`)
+      return []
+    }
+
+    // Search for live streams from this specific channel
     const searchUrl = new URL('https://www.googleapis.com/youtube/v3/search')
     searchUrl.searchParams.append('part', 'snippet')
-    searchUrl.searchParams.append('q', channelHandle)
+    searchUrl.searchParams.append('channelId', channelId)
     searchUrl.searchParams.append('type', 'video')
     searchUrl.searchParams.append('eventType', 'live')
     searchUrl.searchParams.append('maxResults', '5')
+    searchUrl.searchParams.append('order', 'date')
     searchUrl.searchParams.append('key', apiKey)
 
     const response = await fetch(searchUrl.toString(), {
@@ -69,19 +113,17 @@ async function searchChannelLiveStreams(
     })
 
     if (!response.ok) {
-      console.error(`Failed to fetch ${channelHandle} live streams`)
+      const errorData = await response.json().catch(() => ({}))
+      console.error(`Failed to fetch ${channelHandle} live streams (status: ${response.status})`, errorData)
       return []
     }
 
     const data: YouTubeSearchResponse = await response.json()
-
-    // Filter to only include streams from the exact channel
-    const channelStreams = (data.items || []).filter(item =>
-      item.snippet.channelTitle.toLowerCase().includes(channelHandle.replace('@', '').toLowerCase()) ||
-      item.snippet.title.toLowerCase().includes('poker')
-    )
-
-    return channelStreams
+    const itemCount = data.items?.length || 0
+    if (itemCount > 0) {
+      console.log(`✓ Found ${itemCount} live stream(s) for ${channelHandle}`)
+    }
+    return data.items || []
   } catch (error) {
     console.error(`Error fetching ${channelHandle} live streams:`, error)
     return []
@@ -109,11 +151,16 @@ async function searchGeneralPokerStreams(apiKey: string, maxResults: number = 8)
     })
 
     if (!response.ok) {
-      console.error('YouTube API search error')
+      const errorData = await response.json().catch(() => ({}))
+      console.error('YouTube API general search error (status:', response.status, ')', errorData)
       return []
     }
 
     const data: YouTubeSearchResponse = await response.json()
+    const itemCount = data.items?.length || 0
+    if (itemCount > 0) {
+      console.log(`✓ Found ${itemCount} general poker stream(s)`)
+    }
     return data.items || []
   } catch (error) {
     console.error('Error fetching general poker streams:', error)
