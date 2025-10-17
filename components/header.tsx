@@ -19,6 +19,7 @@ import { useTheme } from "next-themes"
 import { useAuth } from "@/components/auth-provider"
 import { signOut } from "@/lib/auth"
 import { isAdmin } from "@/lib/admin"
+import { NotificationBell } from "@/components/notification-bell"
 
 export function Header() {
   const pathname = usePathname()
@@ -129,6 +130,9 @@ export function Header() {
               <span className="sr-only">Toggle theme</span>
             </Button>
           )}
+
+          {/* Notification Bell */}
+          <NotificationBell />
 
           {/* Login/Profile UI */}
           {!authLoading && (

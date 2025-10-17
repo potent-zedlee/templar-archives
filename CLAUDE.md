@@ -211,106 +211,20 @@ templar-archives/
 ---
 
 **마지막 업데이트**: 2025-10-17
-**문서 버전**: 3.5
+**문서 버전**: 3.6
 **프로젝트 상태**: Phase 0-8 완료, 모든 핵심 기능 완성 🎉
 
-**최근 완료 작업 (2025-10-17 세션 14)**:
-- ✅ Archive 페이지 리팩토링
-  - `hooks/useArchiveData.ts` 생성 (데이터 로딩 로직 분리)
-  - `hooks/useArchiveNavigation.ts` 생성 (네비게이션 및 필터링 로직)
-  - `hooks/useVideoManagement.ts` 생성 (비디오 선택 및 드래그앤드롭)
-  - 동적 임포트 6.5배 증가 (2개 → 13개 컴포넌트)
-- ✅ Providers 컴포넌트 분리
-  - `components/providers.tsx` 생성
-  - ThemeProvider, AuthProvider, Analytics, Toaster 통합
-  - `app/layout.tsx` Server Component로 전환
-  - Edge Runtime 선언 제거
-- ✅ 데이터베이스 성능 최적화
-  - Migration 025: `performance_optimization_indexes.sql`
-  - pg_trgm extension 활성화
-  - 20+ 인덱스 추가 (hands, players, posts, comments 등)
-  - 예상 쿼리 성능 향상 30-50%
-- ✅ JSX 구조 수정 (Dialog 컴포넌트 위치 조정)
-- ✅ 빌드 테스트 성공
-- ✅ 문서 업데이트 (WORK_LOG.md, CLAUDE.md)
+**최근 완료 (2025-10-17)**:
+- Archive 성능 최적화 (커스텀 훅 3개, 동적 임포트 13개, DB 인덱스 20+개)
+- Archive UI 현대화 (글래스모피즘, 필터 섹션 개선)
 
-**이전 완료 작업 (2025-10-17 세션 13)**:
-- ✅ Archive 페이지 UI/UX 현대화
-  - 조건부 렌더링: Day 선택 시에만 Hand History 섹션 표시
-  - 레이아웃 최적화: 왼쪽 패널 50%→35%, 오른쪽 패널 50%→65%
-  - 글래스모피즘 효과: backdrop-blur, 반투명 배경, 그라데이션
-  - 폴더 리스트 디자인 개선: 그라데이션 아이콘, 크기 증가, hover 효과
-  - Card 스타일 강화: shadow-lg, border-2, 부드러운 전환 애니메이션
-- ✅ 필터 섹션 완전 현대화
-  - 전체 컨테이너: 글래스모피즘 배경, 그라데이션, shadow-lg
-  - 필터 토글 버튼: 크기 증가, 그라데이션 hover, 활성 필터 배지
-  - 카테고리 버튼: h-8→h-10, 그라데이션 배경(선택 상태), hover 효과
-  - Date Range 버튼: 크기 증가, 아이콘 개선
-  - Clear All 버튼: destructive variant, hover 효과
-  - 간격 증가: py-3→py-5, gap-2→gap-3, space-y-4→space-y-6
-  - 모든 Label: font-semibold, 강조된 색상
-- ✅ 커밋 2개 완료 (e523a30, cd9ceda)
-- ✅ 문서 업데이트: CLAUDE.md 타이포그래피 섹션 제거
-
-**이전 완료 작업 (2025-10-16 세션 12)**:
-- ✅ 데이터베이스 최적화: 미사용 테이블/컬럼 정리 (migration 023)
-  - player_notes, player_tags 테이블 삭제
-  - players 테이블의 미사용 통계 컬럼 7개 삭제 (VPIP, PFR 등)
-- ✅ YouTube 라이브 방송 우선순위 시스템 구현
-  - 주요 채널 우선 표시 (WSOP, Triton, WPT, EPT, APT 등)
-  - 2단계 검색 전략 (우선 채널 → 일반 포커 방송)
-- ✅ 커뮤니티 Foreign Key 수정 (migration 024)
-  - posts/comments/likes 테이블 FK를 auth.users → public.users로 수정
-  - 커뮤니티 포스팅 기능 복구
-- ✅ Reddit 스타일 댓글/답글 시스템 구현
-  - 무한 중첩 지원 (재귀 렌더링)
-  - 시각적 계층 표시 (ml-8 indent, border-l-2)
-  - 답글 lazy loading, 좋아요 지원
-  - 포스트 상세 페이지 추가 (`/community/[id]/page.tsx`)
-  - PostComments 컴포넌트 추가 (373줄)
-
-**이전 완료 작업 (2025-10-16 세션 11)**:
-- ✅ Phase 8: Google Drive 스타일 폴더 네비게이션 구현
-- ✅ ArchiveBreadcrumb 컴포넌트 (계층적 경로 표시)
-- ✅ ArchiveFolderList 컴포넌트 (통합 리스트 UI)
-- ✅ Unsorted Videos → Unorganized 폴더로 전환
-- ✅ TournamentDialog 컴포넌트 분리 (리팩토링)
-- ✅ 코드 구조 개선 (-357줄, +361줄)
-- ✅ 커밋 및 배포 (eaa03c2)
-
-**이전 완료 작업 (2025-10-16 세션 10)**:
-- ✅ Next.js 15.1.6 → 15.5.5 업그레이드 (6개 보안 취약점 해결)
-- ✅ not-found.tsx 페이지 수정 ("use client" 추가, 한글 → 영어)
-- ✅ 관리자 사용자 관리 페이지 완전 영어 변환
-- ✅ 역할 변경 기능 버그 수정 (RLS 정책 추가)
-- ✅ moderator → high_templar 역할 이름 변경
-- ✅ 마이그레이션 018 추가: Admin RLS 정책
-
-**이전 완료 작업 (2025-10-16 세션 9)**:
-- ✅ 아카이브 카테고리 필터 추가 (All, WSOP, Triton, EPT, Hustler, APT, APL, GGPOKER)
-- ✅ 브랜딩 변경: GGVault → Templar Archives
-- ✅ 파비콘 추가 (Protoss Carrier icon.webp)
-- ✅ 로고 및 메타데이터 업데이트
-- ✅ Next.js 15.1.6 + React 19.0 (Edge Runtime)
-- ✅ Tailwind CSS 4.1.9
-- ✅ 전체 문서 업데이트 (package.json, README.md, CLAUDE.md)
-
-**이전 세션 완료 작업 (2025-10-15)**:
-- ✅ Phase 3: 핸드 수정 요청 시스템 (백엔드 완성)
-- ✅ Phase 4: 관리자 시스템 (역할, 밴, 활동 로그)
-- ✅ Phase 5: 콘텐츠 신고 시스템 (포스트/댓글 신고)
-- ✅ Phase 6: 유저 프로필 고도화 (소셜 링크, 통계 캐싱)
-- ✅ Phase 7: 커뮤니티 검색 강화 (Full-Text Search)
-- ✅ 관리자 페이지 5개 추가
-- ✅ 유저 페이지 3개 추가
-- ✅ 마이그레이션 5개 추가 (013-017)
-
-**이전 세션 완료 작업**:
-- ✅ Phase 0: 인증 시스템 (Google OAuth)
-- ✅ Phase 1: 핸드 좋아요/싫어요 + 댓글 시스템
-- ✅ Phase 2: 커뮤니티 핸드 첨부 + 북마크 시스템
-- ✅ 영상 분석 (Claude Vision 2단계 파이프라인)
-- ✅ Supabase CLI 설정 및 마이그레이션 동기화
+**이전 완료 (2025-10-16)**:
+- Google Drive 스타일 폴더 네비게이션 (Phase 8)
+- Reddit 스타일 댓글/답글 시스템
+- DB 최적화 (미사용 테이블/컬럼 정리)
+- YouTube 라이브 우선순위 시스템
+- 브랜딩 변경 (GGVault → Templar Archives)
+- Phase 3-7 완료 (핸드 수정, 관리자, 신고, 프로필, 검색)
 
 **다음 작업**:
 - ⏳ 플레이어 통계 고도화 (VPIP, PFR, 포지션별 분석)

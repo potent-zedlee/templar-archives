@@ -132,13 +132,16 @@ export default function communityClient() {
 
     setCreating(true)
     try {
-      await createPost({
+      const newPost = await createPost({
         title: newTitle,
         content: newContent,
         category: newCategory,
         author_id: user.id,
         hand_id: selectedHand?.id
       })
+
+      // Optimistic UI: Add new post to the top of the list
+      setPosts((prev) => [newPost, ...prev])
 
       toast.success('Post created successfully!')
       setIsDialogOpen(false)
@@ -147,10 +150,11 @@ export default function communityClient() {
       setNewAuthorName("")
       setNewCategory("general")
       setSelectedHand(null)
-      loadPosts()
     } catch (error) {
       console.error('Error creating post:', error)
       toast.error('Failed to create post')
+      // Reload on error
+      loadPosts()
     } finally {
       setCreating(false)
     }
@@ -363,7 +367,7 @@ export default function communityClient() {
                               <div className="flex items-center gap-2 text-caption text-muted-foreground">
                                 <span>{post.author_name}</span>
                                 <span>•</span>
-                                <span>{new Date(post.created_at).toLocaleDateString('ko-KR')}</span>
+                                <span>{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                               </div>
                             </div>
                             <Badge className={categoryColors[post.category]}>
