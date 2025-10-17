@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { Tournament as TournamentType, SubEvent as SubEventType, Day as DayType } from "@/lib/supabase"
 import type { UnsortedVideo } from "@/lib/unsorted-videos"
+import { ArchiveEventCard } from "@/components/archive-event-card"
 
 export interface FolderItem {
   id: string
@@ -442,7 +443,7 @@ export function ArchiveFolderList({
     return null
   }
 
-  // Always use List View (Compact)
+  // Enhanced List View with ArchiveEventCard
   return (
     <ScrollArea className="h-full">
       <div className="p-2">
@@ -461,82 +462,107 @@ export function ArchiveFolderList({
         )}
 
         <div className="space-y-2">
-          {items.map((item) => (
-            <ContextMenu key={item.id}>
-              <ContextMenuTrigger asChild>
-                <div className="relative group">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start h-12 px-3 hover:bg-gradient-to-r hover:from-primary/10 hover:to-purple-500/5 hover:scale-[1.02] hover:shadow-md transition-all duration-200 rounded-xl"
-                    onClick={(e) => handleItemClick(item, e)}
-                  >
-                    <div className="flex items-center gap-2 w-full">
-                      {/* Checkbox (only for unorganized videos) */}
-                      {isUnorganized && onToggleSelect && (
-                        <Checkbox
-                          checked={selectedIds.has(item.id)}
-                          onCheckedChange={() => onToggleSelect(item.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          data-checkbox
-                        />
-                      )}
-
-                      {/* Icon */}
-                      <div className="shrink-0">
-                        {getIcon(item.type)}
-                      </div>
-
-                      {/* Name */}
-                      <div className="flex-1 text-left min-w-0">
-                        <p className="text-sm font-semibold truncate text-foreground group-hover:text-primary transition-colors">{item.name}</p>
-                      </div>
-
-                      {/* Date (for unorganized videos with published_at) */}
-                      {item.date && (
-                        <div className="shrink-0 text-xs text-muted-foreground">
-                          {new Date(item.date).toLocaleDateString()}
-                        </div>
-                      )}
-
-                      {/* Item count */}
-                      {item.itemCount !== undefined && item.itemCount > 0 && (
-                        <div className="shrink-0 text-xs text-muted-foreground">
-                          {item.itemCount}
-                        </div>
-                      )}
-
-                      {/* Navigate arrow (for folders only) */}
-                      {(item.type === 'tournament' || item.type === 'subevent' || item.type === 'unorganized') && (
-                        <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                      )}
+          {items.map((item) => {
+            // Use ArchiveEventCard for folders (tournament/subevent)
+            if (item.type === 'tournament' || item.type === 'subevent') {
+              return (
+                <ContextMenu key={item.id}>
+                  <ContextMenuTrigger asChild>
+                    <div>
+                      <ArchiveEventCard
+                        item={item}
+                        onClick={() => handleItemClick(item)}
+                        menuItems={renderDropdownMenu(item)}
+                        isAdmin={isAdmin}
+                        variant="list"
+                      />
                     </div>
-                  </Button>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    {renderContextMenu(item)}
+                  </ContextMenuContent>
+                </ContextMenu>
+              )
+            }
 
-                  {/* Dropdown Menu Button (visible on hover) */}
-                  <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical className="h-3.5 w-3.5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {renderDropdownMenu(item)}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            // Use simplified version for day/video items
+            return (
+              <ContextMenu key={item.id}>
+                <ContextMenuTrigger asChild>
+                  <div className="relative group">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start h-12 px-3 hover:bg-gradient-to-r hover:from-primary/10 hover:to-purple-500/5 hover:scale-[1.01] hover:shadow-md transition-all duration-200 rounded-xl"
+                      onClick={(e) => handleItemClick(item, e)}
+                    >
+                      <div className="flex items-center gap-2 w-full">
+                        {/* Checkbox (only for unorganized videos) */}
+                        {isUnorganized && onToggleSelect && (
+                          <Checkbox
+                            checked={selectedIds.has(item.id)}
+                            onCheckedChange={() => onToggleSelect(item.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            data-checkbox
+                          />
+                        )}
+
+                        {/* Icon */}
+                        <div className="shrink-0">
+                          {getIcon(item.type)}
+                        </div>
+
+                        {/* Name */}
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="text-sm font-semibold truncate text-foreground group-hover:text-primary transition-colors">{item.name}</p>
+                        </div>
+
+                        {/* Date (for unorganized videos with published_at) */}
+                        {item.date && (
+                          <div className="shrink-0 text-xs text-muted-foreground">
+                            {new Date(item.date).toLocaleDateString()}
+                          </div>
+                        )}
+
+                        {/* Item count */}
+                        {item.itemCount !== undefined && item.itemCount > 0 && (
+                          <div className="shrink-0 text-xs text-muted-foreground">
+                            {item.itemCount}
+                          </div>
+                        )}
+
+                        {/* Navigate arrow (for folders only) */}
+                        {item.type === 'unorganized' && (
+                          <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                        )}
+                      </div>
+                    </Button>
+
+                    {/* Dropdown Menu Button (visible on hover) */}
+                    <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {renderDropdownMenu(item)}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
-                </div>
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                {renderContextMenu(item)}
-              </ContextMenuContent>
-            </ContextMenu>
-          ))}
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  {renderContextMenu(item)}
+                </ContextMenuContent>
+              </ContextMenu>
+            )
+          })}
         </div>
       </div>
     </ScrollArea>

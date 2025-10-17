@@ -16,6 +16,7 @@ import { MoreVertical, Edit, Trash, FolderPlus, FolderInput, CheckSquare } from 
 import { motion } from "framer-motion"
 import type { FolderItem } from "@/components/archive-folder-list"
 import Image from "next/image"
+import { ArchiveEventCard } from "@/components/archive-event-card"
 
 interface ArchiveGridViewProps {
   items: FolderItem[]
@@ -274,8 +275,31 @@ export function ArchiveGridView({
       className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4"
     >
       {items.map((item, index) => {
+        // Use ArchiveEventCard for tournaments and subevents
+        if (item.type === 'tournament' || item.type === 'subevent') {
+          return (
+            <motion.div
+              key={item.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <ArchiveEventCard
+                item={item}
+                onClick={() => handleItemClick(item)}
+                menuItems={renderDropdownMenu(item)}
+                isAdmin={isAdmin}
+                variant="grid"
+              />
+            </motion.div>
+          )
+        }
+
+        // Use existing card for day/video/unorganized items
         const thumbnail = getYouTubeThumbnail(item)
-        const isFolder = item.type === 'tournament' || item.type === 'subevent' || item.type === 'unorganized'
+        const isFolder = item.type === 'unorganized'
         const isSelected = selectedIds.has(item.id)
 
         return (
@@ -386,16 +410,6 @@ export function ArchiveGridView({
 
                 {/* Type Badge */}
                 <div>
-                  {item.type === 'tournament' && (
-                    <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-600 dark:text-blue-400">
-                      Tournament
-                    </Badge>
-                  )}
-                  {item.type === 'subevent' && (
-                    <Badge variant="outline" className="text-xs border-green-500/50 text-green-600 dark:text-green-400">
-                      Event
-                    </Badge>
-                  )}
                   {item.type === 'day' && !isUnorganized && (
                     <Badge variant="outline" className="text-xs border-purple-500/50 text-purple-600 dark:text-purple-400">
                       Video
