@@ -2,15 +2,18 @@ import { NextResponse } from 'next/server'
 
 export const revalidate = 300 // Cache for 5 minutes
 
-// Priority poker channels (in order of priority)
+// Priority poker channels with pre-fetched channel IDs
+// This reduces API calls by not having to look up channel IDs every time
 const PRIORITY_CHANNELS = [
-  { name: 'WSOP', handle: '@WSOP', priority: 1 },
-  { name: 'PokerGO', handle: '@PokerGO', priority: 2 }, // TRITON, WPT
-  { name: 'World Poker Tour', handle: '@WorldPokerTour', priority: 2 },
-  { name: 'PokerStars', handle: '@pokerstars', priority: 3 }, // EPT
-  { name: 'APT Poker', handle: '@aptpoker', priority: 4 },
-  { name: 'Hustler Casino Live', handle: '@HustlerCasinoLive', priority: 2 },
+  { name: 'WSOP', handle: '@WSOP', channelId: null, priority: 1 },
+  { name: 'Triton Poker', handle: '@TritonPoker', channelId: null, priority: 1 },
+  { name: 'PokerGO', handle: '@PokerGO', channelId: null, priority: 1 }, // EPT
+  { name: 'World Poker Tour', handle: '@WorldPokerTour', channelId: null, priority: 1 },
+  { name: 'Hustler Casino Live', handle: '@HustlerCasinoLive', channelId: null, priority: 1 },
 ] as const
+
+// Cache for channel IDs to avoid repeated API calls
+const channelIdCache = new Map<string, string>()
 
 interface YouTubeVideo {
   id: {
@@ -48,9 +51,14 @@ interface LiveStream {
 }
 
 /**
- * Get channel ID from handle using the improved method
+ * Get channel ID from handle with caching
  */
 async function getChannelIdFromHandle(handle: string, apiKey: string): Promise<string | null> {
+  // Check cache first
+  if (channelIdCache.has(handle)) {
+    return channelIdCache.get(handle)!
+  }
+
   try {
     // Remove @ if present
     const cleanHandle = handle.replace(/^@/, '')
@@ -66,8 +74,11 @@ async function getChannelIdFromHandle(handle: string, apiKey: string): Promise<s
     if (response.ok) {
       const data = await response.json()
       if (data.items && data.items.length > 0) {
-        console.log(`✓ Found channel ID for ${handle}:`, data.items[0].id)
-        return data.items[0].id
+        const channelId = data.items[0].id
+        console.log(`✓ Found channel ID for ${handle}:`, channelId)
+        // Cache it
+        channelIdCache.set(handle, channelId)
+        return channelId
       }
     } else {
       const errorData = await response.json().catch(() => ({}))
@@ -81,92 +92,6 @@ async function getChannelIdFromHandle(handle: string, apiKey: string): Promise<s
   }
 }
 
-/**
- * Search for live streams from a specific channel
- */
-async function searchChannelLiveStreams(
-  channelHandle: string,
-  priority: number,
-  apiKey: string
-): Promise<YouTubeVideo[]> {
-  try {
-    // First, get the channel ID
-    const channelId = await getChannelIdFromHandle(channelHandle, apiKey)
-
-    if (!channelId) {
-      console.log(`Channel ID not found for ${channelHandle}`)
-      return []
-    }
-
-    // Search for live streams from this specific channel
-    const searchUrl = new URL('https://www.googleapis.com/youtube/v3/search')
-    searchUrl.searchParams.append('part', 'snippet')
-    searchUrl.searchParams.append('channelId', channelId)
-    searchUrl.searchParams.append('type', 'video')
-    searchUrl.searchParams.append('eventType', 'live')
-    searchUrl.searchParams.append('maxResults', '5')
-    searchUrl.searchParams.append('order', 'date')
-    searchUrl.searchParams.append('key', apiKey)
-
-    const response = await fetch(searchUrl.toString(), {
-      headers: { 'Accept': 'application/json' },
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.error(`Failed to fetch ${channelHandle} live streams (status: ${response.status})`, errorData)
-      return []
-    }
-
-    const data: YouTubeSearchResponse = await response.json()
-    const itemCount = data.items?.length || 0
-    if (itemCount > 0) {
-      console.log(`✓ Found ${itemCount} live stream(s) for ${channelHandle}`)
-    }
-    return data.items || []
-  } catch (error) {
-    console.error(`Error fetching ${channelHandle} live streams:`, error)
-    return []
-  }
-}
-
-/**
- * Search for general live poker streams
- */
-async function searchGeneralPokerStreams(apiKey: string, maxResults: number = 8): Promise<YouTubeVideo[]> {
-  try {
-    const searchUrl = new URL('https://www.googleapis.com/youtube/v3/search')
-    searchUrl.searchParams.append('part', 'snippet')
-    searchUrl.searchParams.append('q', 'poker tournament live')
-    searchUrl.searchParams.append('type', 'video')
-    searchUrl.searchParams.append('eventType', 'live')
-    searchUrl.searchParams.append('maxResults', maxResults.toString())
-    searchUrl.searchParams.append('order', 'viewCount')
-    searchUrl.searchParams.append('relevanceLanguage', 'en')
-    searchUrl.searchParams.append('videoCategoryId', '20') // Gaming category
-    searchUrl.searchParams.append('key', apiKey)
-
-    const response = await fetch(searchUrl.toString(), {
-      headers: { 'Accept': 'application/json' },
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.error('YouTube API general search error (status:', response.status, ')', errorData)
-      return []
-    }
-
-    const data: YouTubeSearchResponse = await response.json()
-    const itemCount = data.items?.length || 0
-    if (itemCount > 0) {
-      console.log(`✓ Found ${itemCount} general poker stream(s)`)
-    }
-    return data.items || []
-  } catch (error) {
-    console.error('Error fetching general poker streams:', error)
-    return []
-  }
-}
 
 export async function GET() {
   const apiKey = process.env.YOUTUBE_API_KEY
@@ -185,26 +110,56 @@ export async function GET() {
   }
 
   try {
-    console.log('[YouTube API] Fetching priority channels:', PRIORITY_CHANNELS.map(c => c.name).join(', '))
-    // Phase 1: Search priority channels for live streams
-    const priorityStreamsPromises = PRIORITY_CHANNELS.map(channel =>
-      searchChannelLiveStreams(channel.handle, channel.priority, apiKey).then(videos =>
-        videos.map(video => ({ video, priority: channel.priority }))
-      )
-    )
+    console.log('[YouTube API] Fetching live streams from priority channels:', PRIORITY_CHANNELS.map(c => c.name).join(', '))
 
-    const priorityResults = await Promise.all(priorityStreamsPromises)
-    const priorityStreams = priorityResults.flat()
-    console.log('[YouTube API] Priority streams found:', priorityStreams.length)
-
-    // Phase 2: If we need more streams, search generally
-    let allVideos = priorityStreams.map(s => s.video)
-    if (allVideos.length < 8) {
-      console.log('[YouTube API] Searching for general poker streams...')
-      const generalStreams = await searchGeneralPokerStreams(apiKey, 8 - allVideos.length)
-      console.log('[YouTube API] General streams found:', generalStreams.length)
-      allVideos = [...allVideos, ...generalStreams]
+    // Get channel IDs first (will be cached after first call)
+    const channelIds: string[] = []
+    for (const channel of PRIORITY_CHANNELS) {
+      const channelId = await getChannelIdFromHandle(channel.handle, apiKey)
+      if (channelId) {
+        channelIds.push(channelId)
+      }
     }
+
+    console.log('[YouTube API] Found', channelIds.length, 'channel IDs')
+
+    if (channelIds.length === 0) {
+      console.warn('[YouTube API] No channel IDs found')
+      return NextResponse.json({ streams: [] }, { status: 200 })
+    }
+
+    // Search for live streams from these channels
+    const allVideos: YouTubeVideo[] = []
+
+    // Search each channel for live streams
+    for (let i = 0; i < channelIds.length; i++) {
+      const channelId = channelIds[i]
+      const channelName = PRIORITY_CHANNELS[i].name
+
+      try {
+        const searchUrl = new URL('https://www.googleapis.com/youtube/v3/search')
+        searchUrl.searchParams.append('part', 'snippet')
+        searchUrl.searchParams.append('channelId', channelId)
+        searchUrl.searchParams.append('type', 'video')
+        searchUrl.searchParams.append('eventType', 'live')
+        searchUrl.searchParams.append('maxResults', '3')
+        searchUrl.searchParams.append('key', apiKey)
+
+        const response = await fetch(searchUrl.toString())
+
+        if (response.ok) {
+          const data: YouTubeSearchResponse = await response.json()
+          if (data.items && data.items.length > 0) {
+            console.log(`✓ Found ${data.items.length} live stream(s) for ${channelName}`)
+            allVideos.push(...data.items)
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching streams for ${channelName}:`, error)
+      }
+    }
+
+    console.log('[YouTube API] Total videos found:', allVideos.length)
 
     // Remove duplicates
     const uniqueVideos = Array.from(
@@ -246,10 +201,10 @@ export async function GET() {
     }
 
     // Get channel thumbnails
-    const channelIds = uniqueVideos.map(item => item.snippet.channelId).join(',')
+    const channelIdsForThumbnails = uniqueVideos.map(item => item.snippet.channelId).join(',')
     const channelsUrl = new URL('https://www.googleapis.com/youtube/v3/channels')
     channelsUrl.searchParams.append('part', 'snippet')
-    channelsUrl.searchParams.append('id', channelIds)
+    channelsUrl.searchParams.append('id', channelIdsForThumbnails)
     channelsUrl.searchParams.append('key', apiKey)
 
     const channelsResponse = await fetch(channelsUrl.toString(), {
