@@ -28,27 +28,7 @@ export async function loadTournamentsHelper(
 
     setTournaments(tournamentsWithUIState)
 
-    // Auto-select first day if available
-    if (
-      tournamentsWithUIState.length > 0 &&
-      tournamentsWithUIState[0].sub_events?.length &&
-      tournamentsWithUIState[0].sub_events[0].days?.length
-    ) {
-      const firstDay = tournamentsWithUIState[0].sub_events[0].days[0]
-      setSelectedDay(firstDay.id)
-      setTournaments((prev) =>
-        prev.map((t, ti) => ({
-          ...t,
-          sub_events: t.sub_events?.map((se, sei) => ({
-            ...se,
-            days: se.days?.map((d, di) => ({
-              ...d,
-              selected: ti === 0 && sei === 0 && di === 0,
-            })),
-          })),
-        }))
-      )
-    }
+    // Don't auto-select any day - user must manually select
   } catch (error) {
     console.error('Error loading tournaments:', error)
     toast.error('Failed to load tournaments')
