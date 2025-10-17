@@ -563,8 +563,28 @@ export default function ArchiveClient() {
   const toggleSubEvent = (tournamentId: string, subEventId: string) =>
     toggleSubEventHelper(tournamentId, subEventId, setTournaments)
 
-  const selectDay = (dayId: string) =>
-    selectDayHelper(dayId, setSelectedDay, setTournaments)
+  const selectDay = (dayId: string) => {
+    // Toggle: if clicking the same day, deselect it
+    if (selectedDay === dayId) {
+      setSelectedDay("")
+      setHands([])
+      // Deselect in tournaments state
+      setTournaments((prev) =>
+        prev.map((t) => ({
+          ...t,
+          sub_events: t.sub_events?.map((se) => ({
+            ...se,
+            days: se.days?.map((d) => ({
+              ...d,
+              selected: false,
+            })),
+          })),
+        }))
+      )
+    } else {
+      selectDayHelper(dayId, setSelectedDay, setTournaments)
+    }
+  }
 
   const toggleFavorite = (handId: string) =>
     toggleFavoriteHelper(handId, hands, setHands)
@@ -606,6 +626,10 @@ export default function ArchiveClient() {
   }
 
   const handleBreadcrumbNavigate = (item: { id: string; name: string; type: 'home' | 'tournament' | 'subevent' } | null) => {
+    // Clear selected day when navigating
+    setSelectedDay("")
+    setHands([])
+
     if (!item) {
       // Navigate to root
       setNavigationLevel('root')
@@ -745,6 +769,10 @@ export default function ArchiveClient() {
   }
 
   const handleFolderNavigate = (item: FolderItem) => {
+    // Clear selected day when navigating to a different folder
+    setSelectedDay("")
+    setHands([])
+
     if (item.type === 'tournament') {
       setNavigationLevel('tournament')
       setCurrentTournamentId(item.id)
@@ -763,6 +791,10 @@ export default function ArchiveClient() {
   // Keyboard shortcuts handlers
   useArchiveKeyboard({
     onBackspace: () => {
+      // Clear selected day when navigating back
+      setSelectedDay("")
+      setHands([])
+
       // Navigate to parent folder
       if (navigationLevel === 'subevent') {
         setNavigationLevel('tournament')
@@ -1473,12 +1505,25 @@ export default function ArchiveClient() {
                         setVideoStartTime("")
                         setIsVideoDialogOpen(true)
                       }}
+                      title="Play Video"
                     >
                       <Play className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" title="Download">
                     <Download className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedDay("")
+                      setHands([])
+                    }}
+                    title="Close Hand History"
+                    className="hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <X className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
