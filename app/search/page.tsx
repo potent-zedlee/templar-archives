@@ -1,7 +1,5 @@
 "use client"
 
-export const runtime = 'edge'
-
 import { useState, useEffect } from "react"
 import nextDynamic from "next/dynamic"
 import { Header } from "@/components/header"

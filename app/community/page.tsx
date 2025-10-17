@@ -1,7 +1,5 @@
 "use client"
 
-export const runtime = 'edge'
-
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"

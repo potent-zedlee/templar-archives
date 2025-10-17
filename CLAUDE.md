@@ -61,10 +61,11 @@ Templar Archives는 YouTube/Twitch 영상에서 포커 핸드를 자동으로 �
 - 메인, Archive, Search, Players, Community 페이지
 - Tournament 트리, 영상 플레이어, 핸드 목록 (Accordion)
 
-#### 데이터베이스 (24개 마이그레이션)
+#### 데이터베이스 (25개 마이그레이션)
 - 001-012: 기본 스키마 (tournaments, sub_events, days, hands, players, video_sources, community, hand_likes, bookmarks, player_claims)
 - 013-022: 고급 기능 (Full-Text Search, 유저 프로필, 관리자 시스템, 콘텐츠 신고, 핸드 수정 요청, Admin RLS, 커뮤니티 RLS, Unsorted Videos)
 - 023-024: 데이터베이스 최적화 (미사용 테이블/컬럼 정리, 커뮤니티 Foreign Key 수정)
+- 025: 성능 최적화 인덱스 (pg_trgm, 20+ 인덱스)
 
 #### 영상 분석 (Claude Vision)
 - **Phase 1-4**: 핸드 경계 감지, Accordion UI, 정확도 개선 (CHECK_INTERVAL=2, summary 필드)
@@ -178,7 +179,7 @@ templar-archives/
 ├── docs/                     # 프로젝트 문서
 ├── scripts/                  # 유틸리티 스크립트
 ├── public/                   # 정적 파일
-└── supabase/migrations/      # 데이터베이스 마이그레이션 (24개)
+└── supabase/migrations/      # 데이터베이스 마이그레이션 (25개)
 ```
 
 ---
@@ -200,14 +201,6 @@ templar-archives/
 
 ---
 
-## 타이포그래피 시스템
-
-- `.text-title-lg` (24px, Bold), `.text-title` (18px, Semibold)
-- `.text-body-lg` (16px), `.text-body` (14px)
-- `.text-caption-lg` (14px), `.text-caption` (12px)
-
----
-
 ## 다음 세션 시작 시
 
 1. `WORK_LOG.md` 확인 (최근 작업 내용)
@@ -217,11 +210,49 @@ templar-archives/
 
 ---
 
-**마지막 업데이트**: 2025-10-16
-**문서 버전**: 3.3
+**마지막 업데이트**: 2025-10-17
+**문서 버전**: 3.5
 **프로젝트 상태**: Phase 0-8 완료, 모든 핵심 기능 완성 🎉
 
-**최근 완료 작업 (2025-10-16 세션 12)**:
+**최근 완료 작업 (2025-10-17 세션 14)**:
+- ✅ Archive 페이지 리팩토링
+  - `hooks/useArchiveData.ts` 생성 (데이터 로딩 로직 분리)
+  - `hooks/useArchiveNavigation.ts` 생성 (네비게이션 및 필터링 로직)
+  - `hooks/useVideoManagement.ts` 생성 (비디오 선택 및 드래그앤드롭)
+  - 동적 임포트 6.5배 증가 (2개 → 13개 컴포넌트)
+- ✅ Providers 컴포넌트 분리
+  - `components/providers.tsx` 생성
+  - ThemeProvider, AuthProvider, Analytics, Toaster 통합
+  - `app/layout.tsx` Server Component로 전환
+  - Edge Runtime 선언 제거
+- ✅ 데이터베이스 성능 최적화
+  - Migration 025: `performance_optimization_indexes.sql`
+  - pg_trgm extension 활성화
+  - 20+ 인덱스 추가 (hands, players, posts, comments 등)
+  - 예상 쿼리 성능 향상 30-50%
+- ✅ JSX 구조 수정 (Dialog 컴포넌트 위치 조정)
+- ✅ 빌드 테스트 성공
+- ✅ 문서 업데이트 (WORK_LOG.md, CLAUDE.md)
+
+**이전 완료 작업 (2025-10-17 세션 13)**:
+- ✅ Archive 페이지 UI/UX 현대화
+  - 조건부 렌더링: Day 선택 시에만 Hand History 섹션 표시
+  - 레이아웃 최적화: 왼쪽 패널 50%→35%, 오른쪽 패널 50%→65%
+  - 글래스모피즘 효과: backdrop-blur, 반투명 배경, 그라데이션
+  - 폴더 리스트 디자인 개선: 그라데이션 아이콘, 크기 증가, hover 효과
+  - Card 스타일 강화: shadow-lg, border-2, 부드러운 전환 애니메이션
+- ✅ 필터 섹션 완전 현대화
+  - 전체 컨테이너: 글래스모피즘 배경, 그라데이션, shadow-lg
+  - 필터 토글 버튼: 크기 증가, 그라데이션 hover, 활성 필터 배지
+  - 카테고리 버튼: h-8→h-10, 그라데이션 배경(선택 상태), hover 효과
+  - Date Range 버튼: 크기 증가, 아이콘 개선
+  - Clear All 버튼: destructive variant, hover 효과
+  - 간격 증가: py-3→py-5, gap-2→gap-3, space-y-4→space-y-6
+  - 모든 Label: font-semibold, 강조된 색상
+- ✅ 커밋 2개 완료 (e523a30, cd9ceda)
+- ✅ 문서 업데이트: CLAUDE.md 타이포그래피 섹션 제거
+
+**이전 완료 작업 (2025-10-16 세션 12)**:
 - ✅ 데이터베이스 최적화: 미사용 테이블/컬럼 정리 (migration 023)
   - player_notes, player_tags 테이블 삭제
   - players 테이블의 미사용 통계 컬럼 7개 삭제 (VPIP, PFR 등)

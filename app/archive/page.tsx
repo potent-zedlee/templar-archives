@@ -1,7 +1,5 @@
 "use client"
 
-export const runtime = 'edge'
-
 import { useState, useEffect } from "react"
 import nextDynamic from "next/dynamic"
 import { Header } from "@/components/header"
@@ -63,26 +61,13 @@ import { ArchiveBreadcrumb } from "@/components/archive-breadcrumb"
 import { ArchiveFolderList } from "@/components/archive-folder-list"
 import type { FolderItem } from "@/components/archive-folder-list"
 import { ArchiveViewSwitcher, type ViewMode } from "@/components/archive-view-switcher"
-import { ArchiveGridView } from "@/components/archive-grid-view"
-import { ArchiveTimelineView } from "@/components/archive-timeline-view"
 import { ArchiveSearchSort, type SortOption } from "@/components/archive-search-sort"
 import type { AdvancedFilters } from "@/components/archive-advanced-filters"
 import { ArchiveUnifiedFilters } from "@/components/archive-unified-filters"
-import { QuickUploadDialog } from "@/components/quick-upload-dialog"
-import { TournamentDialog } from "@/components/tournament-dialog"
-import { EditEventDialog } from "@/components/edit-event-dialog"
-import { RenameDialog } from "@/components/archive-dialogs/rename-dialog"
-import { DeleteDialog } from "@/components/archive-dialogs/delete-dialog"
-import { MoveToExistingEventDialog } from "@/components/archive-dialogs/move-to-existing-event-dialog"
-import { MoveToNewEventDialog } from "@/components/archive-dialogs/move-to-new-event-dialog"
-import { DayDialog } from "@/components/archive-dialogs/day-dialog"
-import { SubEventInfoDialog } from "@/components/archive-dialogs/sub-event-info-dialog"
-import { SubEventDialog } from "@/components/archive-dialogs/sub-event-dialog"
 import type { FolderItem as DialogFolderItem } from "@/components/archive-dialogs/rename-dialog"
 import { useArchiveKeyboard } from "@/hooks/useArchiveKeyboard"
-import { KeyboardShortcutsDialog } from "@/components/keyboard-shortcuts-dialog"
 
-// Dynamic imports for heavy components
+// Dynamic imports for heavy components (초기 번들 사이즈 감소)
 const VideoPlayerDialog = nextDynamic(() => import("@/components/video-player-dialog").then(mod => ({ default: mod.VideoPlayerDialog })), {
   ssr: false
 })
@@ -90,6 +75,62 @@ const VideoPlayerDialog = nextDynamic(() => import("@/components/video-player-di
 const HandListAccordion = nextDynamic(() => import("@/components/hand-list-accordion").then(mod => ({ default: mod.HandListAccordion })), {
   ssr: false,
   loading: () => <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-muted animate-pulse rounded-md" />)}</div>
+})
+
+// 조건부 렌더링 컴포넌트들 (뷰 모드에 따라 로드)
+const ArchiveGridView = nextDynamic(() => import("@/components/archive-grid-view").then(mod => ({ default: mod.ArchiveGridView })), {
+  ssr: false,
+  loading: () => <div className="h-40 bg-muted animate-pulse rounded-md" />
+})
+
+const ArchiveTimelineView = nextDynamic(() => import("@/components/archive-timeline-view").then(mod => ({ default: mod.ArchiveTimelineView })), {
+  ssr: false,
+  loading: () => <div className="h-40 bg-muted animate-pulse rounded-md" />
+})
+
+// 다이얼로그 컴포넌트들 (클릭 시에만 로드)
+const QuickUploadDialog = nextDynamic(() => import("@/components/quick-upload-dialog").then(mod => ({ default: mod.QuickUploadDialog })), {
+  ssr: false
+})
+
+const TournamentDialog = nextDynamic(() => import("@/components/tournament-dialog").then(mod => ({ default: mod.TournamentDialog })), {
+  ssr: false
+})
+
+const SubEventDialog = nextDynamic(() => import("@/components/archive-dialogs/sub-event-dialog").then(mod => ({ default: mod.SubEventDialog })), {
+  ssr: false
+})
+
+const SubEventInfoDialog = nextDynamic(() => import("@/components/archive-dialogs/sub-event-info-dialog").then(mod => ({ default: mod.SubEventInfoDialog })), {
+  ssr: false
+})
+
+const DayDialog = nextDynamic(() => import("@/components/archive-dialogs/day-dialog").then(mod => ({ default: mod.DayDialog })), {
+  ssr: false
+})
+
+const EditEventDialog = nextDynamic(() => import("@/components/edit-event-dialog").then(mod => ({ default: mod.EditEventDialog })), {
+  ssr: false
+})
+
+const RenameDialog = nextDynamic(() => import("@/components/archive-dialogs/rename-dialog").then(mod => ({ default: mod.RenameDialog })), {
+  ssr: false
+})
+
+const DeleteDialog = nextDynamic(() => import("@/components/archive-dialogs/delete-dialog").then(mod => ({ default: mod.DeleteDialog })), {
+  ssr: false
+})
+
+const MoveToExistingEventDialog = nextDynamic(() => import("@/components/archive-dialogs/move-to-existing-event-dialog").then(mod => ({ default: mod.MoveToExistingEventDialog })), {
+  ssr: false
+})
+
+const MoveToNewEventDialog = nextDynamic(() => import("@/components/archive-dialogs/move-to-new-event-dialog").then(mod => ({ default: mod.MoveToNewEventDialog })), {
+  ssr: false
+})
+
+const KeyboardShortcutsDialog = nextDynamic(() => import("@/components/keyboard-shortcuts-dialog").then(mod => ({ default: mod.KeyboardShortcutsDialog })), {
+  ssr: false
 })
 
 // Create Supabase client
@@ -1093,10 +1134,9 @@ export default function ArchiveClient() {
       />
 
       <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
-        <ResizablePanelGroup direction="horizontal" className="gap-6">
-          {/* Left: Hierarchical tree structure */}
-          <ResizablePanel defaultSize={35} minSize={20} maxSize={50}>
-            <Card className="p-4 bg-card/95 backdrop-blur-md h-full border-2 shadow-lg hover:shadow-xl transition-all duration-300">
+        {!selectedDay ? (
+          // Events list only (100% width when no event selected)
+          <Card className="p-4 bg-card/95 backdrop-blur-md h-full border-2 shadow-lg hover:shadow-xl transition-all duration-300">
               <div className="space-y-4 mb-4">
                 {/* Header Row */}
                 <div className="flex items-center justify-between">
@@ -1236,91 +1276,156 @@ export default function ArchiveClient() {
                 />
               )}
             </Card>
+        ) : (
+          // Events list + Hand History (split view when event selected)
+          <ResizablePanelGroup direction="horizontal" className="gap-6">
+            {/* Left: Events list (35% width) */}
+            <ResizablePanel defaultSize={35} minSize={20} maxSize={50}>
+              <Card className="p-4 bg-card/95 backdrop-blur-md h-full border-2 shadow-lg hover:shadow-xl transition-all duration-300">
+              <div className="space-y-4 mb-4">
+                {/* Header Row */}
+                <div className="flex items-center justify-between">
+                  <h2 className="text-title">Events</h2>
+                  <div className="flex items-center gap-2">
+                    {/* View Mode Switcher */}
+                    <ArchiveViewSwitcher
+                      currentView={viewMode}
+                      onViewChange={setViewMode}
+                    />
 
-            {/* SubEvent Dialog */}
-            <SubEventDialog
-              isOpen={isSubEventDialogOpen}
-              onOpenChange={setIsSubEventDialogOpen}
-              selectedTournamentId={selectedTournamentId}
-              editingSubEventId={editingSubEventId}
-              onSuccess={loadTournaments}
-            />
+                    {/* Quick Upload Button */}
+                    <QuickUploadDialog onSuccess={loadUnsortedVideos} />
 
-            {/* SubEvent Info Dialog */}
-            <SubEventInfoDialog
-              isOpen={isSubEventInfoDialogOpen}
-              onOpenChange={setIsSubEventInfoDialogOpen}
-              subEventId={viewingSubEventId}
-              subEvent={viewingSubEvent}
-              isUserAdmin={isUserAdmin}
-              onSuccess={loadTournaments}
-            />
+                    {/* Add Tournament Button (Admin Only) */}
+                    <TournamentDialog
+                      isOpen={isDialogOpen}
+                      onOpenChange={setIsDialogOpen}
+                      editingTournamentId={editingTournamentId}
+                      onSave={addNewTournament}
+                      onCancel={() => {
+                        setIsDialogOpen(false)
+                        setEditingTournamentId("")
+                      }}
+                      newTournamentName={newTournamentName}
+                      setNewTournamentName={setNewTournamentName}
+                      newCategory={newCategory}
+                      setNewCategory={setNewCategory}
+                      newLocation={newLocation}
+                      setNewLocation={setNewLocation}
+                      newStartDate={newStartDate}
+                      setNewStartDate={setNewStartDate}
+                      newEndDate={newEndDate}
+                      setNewEndDate={setNewEndDate}
+                      isUserAdmin={isUserAdmin}
+                    />
+                  </div>
+                </div>
 
-            {/* Day/Video Dialog */}
-            <DayDialog
-              isOpen={isDayDialogOpen}
-              onOpenChange={setIsDayDialogOpen}
-              selectedSubEventId={selectedSubEventId}
-              editingDayId={editingDayId}
-              onSuccess={async () => {
-                await loadTournaments()
-                setEditingDayId("")
-                setSelectedSubEventId("")
-              }}
-            />
+                {/* Search and Sort Row */}
+                <ArchiveSearchSort
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  sortBy={sortBy}
+                  onSortChange={setSortBy}
+                />
+              </div>
 
-            {/* Move to Existing Event Dialog */}
-            <MoveToExistingEventDialog
-              isOpen={isMoveToEventDialogOpen}
-              onOpenChange={setIsMoveToEventDialogOpen}
-              tournaments={filteredTournaments}
-              selectedVideoIds={selectedVideoIds}
-              onSuccess={handleMoveSuccess}
-            />
+              {/* Selection Actions (only show in unorganized view) */}
+              {navigationLevel === 'unorganized' && selectedVideoIds.size > 0 && (
+                <div className="mb-3 p-2 bg-primary/10 rounded-md flex items-center justify-between">
+                  <span className="text-caption font-medium">
+                    {selectedVideoIds.size} video{selectedVideoIds.size > 1 ? 's' : ''} selected
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => setIsMoveToNewEventDialogOpen(true)}
+                    >
+                      <Plus className="mr-2 h-3 w-3" />
+                      Move to New Event
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={clearSelection}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              )}
 
-            {/* Move to New Event Dialog */}
-            <MoveToNewEventDialog
-              isOpen={isMoveToNewEventDialogOpen}
-              onOpenChange={setIsMoveToNewEventDialogOpen}
-              tournaments={filteredTournaments}
-              selectedVideoIds={selectedVideoIds}
-              onSuccess={handleMoveSuccess}
-            />
+              {/* Breadcrumb Navigation */}
+              <ArchiveBreadcrumb
+                items={buildBreadcrumbItems()}
+                onNavigate={handleBreadcrumbNavigate}
+              />
 
-            {/* Rename Dialog */}
-            <RenameDialog
-              isOpen={renameDialogOpen}
-              onOpenChange={setRenameDialogOpen}
-              item={renameItem}
-              onSuccess={handleRenameSuccess}
-            />
+              {/* Folder List/Grid/Timeline - Conditional Rendering based on viewMode */}
+              {viewMode === 'list' && (
+                <ArchiveFolderList
+                  items={buildFolderItems()}
+                  onNavigate={handleFolderNavigate}
+                  onSelectDay={selectDay}
+                  loading={loading}
+                  isUnorganized={navigationLevel === 'unorganized'}
+                  selectedIds={selectedVideoIds}
+                  onToggleSelect={toggleVideoSelection}
+                  onSelectAll={selectAllVideos}
+                  onRename={handleRename}
+                  onDelete={handleDelete}
+                  onMoveToEvent={handleMoveToEvent}
+                  onMoveToNewEvent={handleMoveToNewEventSingle}
+                  onAddSubItem={handleAddSubItem}
+                  onEditEvent={handleEditEvent}
+                  isAdmin={isUserAdmin}
+                />
+              )}
 
-            {/* Delete Confirmation Dialog */}
-            <DeleteDialog
-              isOpen={deleteDialogOpen}
-              onOpenChange={setDeleteDialogOpen}
-              item={deleteItem}
-              onSuccess={handleDeleteSuccess}
-            />
+              {viewMode === 'grid' && (
+                <ArchiveGridView
+                  items={buildFolderItems()}
+                  onNavigate={handleFolderNavigate}
+                  onSelectDay={selectDay}
+                  loading={loading}
+                  isUnorganized={navigationLevel === 'unorganized'}
+                  selectedIds={selectedVideoIds}
+                  onToggleSelect={toggleVideoSelection}
+                  onRename={handleRename}
+                  onDelete={handleDelete}
+                  onMoveToEvent={handleMoveToEvent}
+                  onMoveToNewEvent={handleMoveToNewEventSingle}
+                  onAddSubItem={handleAddSubItem}
+                  onEditEvent={handleEditEvent}
+                  isAdmin={isUserAdmin}
+                />
+              )}
 
-            {/* Edit Event Dialog */}
-            <EditEventDialog
-              isOpen={editEventDialogOpen}
-              onOpenChange={setEditEventDialogOpen}
-              subEventId={selectedEventId}
-              onSuccess={async () => {
-                await loadTournaments()
-                setSelectedEventId(null)
-              }}
-            />
-          </ResizablePanel>
+              {viewMode === 'timeline' && (
+                <ArchiveTimelineView
+                  items={buildFolderItems()}
+                  onNavigate={handleFolderNavigate}
+                  onSelectDay={selectDay}
+                  loading={loading}
+                  isUnorganized={navigationLevel === 'unorganized'}
+                  selectedIds={selectedVideoIds}
+                  onToggleSelect={toggleVideoSelection}
+                  onRename={handleRename}
+                  onDelete={handleDelete}
+                  onMoveToEvent={handleMoveToEvent}
+                  onMoveToNewEvent={handleMoveToNewEventSingle}
+                  onAddSubItem={handleAddSubItem}
+                  onEditEvent={handleEditEvent}
+                  isAdmin={isUserAdmin}
+                />
+              )}
+            </Card>
+            </ResizablePanel>
 
-          {/* Only show right panel when a day is selected */}
-          {selectedDay && (
-            <>
               <ResizableHandle withHandle />
 
-              {/* Right: Video + Hand List */}
+              {/* Right: Video + Hand List (65% width) */}
               <ResizablePanel defaultSize={65} minSize={50}>
             <div className="space-y-6">
             {/* Video Header */}
@@ -1477,9 +1582,85 @@ export default function ArchiveClient() {
             </Card>
             </div>
           </ResizablePanel>
-            </>
-          )}
-        </ResizablePanelGroup>
+          </ResizablePanelGroup>
+        )}
+
+        {/* SubEvent Dialog */}
+        <SubEventDialog
+          isOpen={isSubEventDialogOpen}
+          onOpenChange={setIsSubEventDialogOpen}
+          selectedTournamentId={selectedTournamentId}
+          editingSubEventId={editingSubEventId}
+          onSuccess={loadTournaments}
+        />
+
+        {/* SubEvent Info Dialog */}
+        <SubEventInfoDialog
+          isOpen={isSubEventInfoDialogOpen}
+          onOpenChange={setIsSubEventInfoDialogOpen}
+          subEventId={viewingSubEventId}
+          subEvent={viewingSubEvent}
+          isUserAdmin={isUserAdmin}
+          onSuccess={loadTournaments}
+        />
+
+        {/* Day/Video Dialog */}
+        <DayDialog
+          isOpen={isDayDialogOpen}
+          onOpenChange={setIsDayDialogOpen}
+          selectedSubEventId={selectedSubEventId}
+          editingDayId={editingDayId}
+          onSuccess={async () => {
+            await loadTournaments()
+            setEditingDayId("")
+            setSelectedSubEventId("")
+          }}
+        />
+
+        {/* Move to Existing Event Dialog */}
+        <MoveToExistingEventDialog
+          isOpen={isMoveToEventDialogOpen}
+          onOpenChange={setIsMoveToEventDialogOpen}
+          tournaments={filteredTournaments}
+          selectedVideoIds={selectedVideoIds}
+          onSuccess={handleMoveSuccess}
+        />
+
+        {/* Move to New Event Dialog */}
+        <MoveToNewEventDialog
+          isOpen={isMoveToNewEventDialogOpen}
+          onOpenChange={setIsMoveToNewEventDialogOpen}
+          tournaments={filteredTournaments}
+          selectedVideoIds={selectedVideoIds}
+          onSuccess={handleMoveSuccess}
+        />
+
+        {/* Rename Dialog */}
+        <RenameDialog
+          isOpen={renameDialogOpen}
+          onOpenChange={setRenameDialogOpen}
+          item={renameItem}
+          onSuccess={handleRenameSuccess}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteDialog
+          isOpen={deleteDialogOpen}
+          onOpenChange={setDeleteDialogOpen}
+          item={deleteItem}
+          onSuccess={handleDeleteSuccess}
+        />
+
+        {/* Edit Event Dialog */}
+        <EditEventDialog
+          isOpen={editEventDialogOpen}
+          onOpenChange={setEditEventDialogOpen}
+          subEventId={selectedEventId}
+          onSuccess={async () => {
+            await loadTournaments()
+            setSelectedEventId(null)
+          }}
+        />
       </div>
 
       {/* Video Player Dialog */}

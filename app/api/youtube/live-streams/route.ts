@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 
-export const runtime = 'edge'
 export const revalidate = 300 // Cache for 5 minutes
 
 // Priority poker channels (in order of priority)
@@ -125,12 +124,21 @@ async function searchGeneralPokerStreams(apiKey: string, maxResults: number = 8)
 export async function GET() {
   const apiKey = process.env.YOUTUBE_API_KEY
 
+  console.log('[YouTube API] Starting request...')
+  console.log('[YouTube API] API Key present:', !!apiKey)
+  console.log('[YouTube API] API Key length:', apiKey?.length || 0)
+
   if (!apiKey) {
-    console.warn('YouTube API key not configured')
-    return NextResponse.json({ streams: [] }, { status: 200 })
+    console.error('[YouTube API] YouTube API key not configured in environment variables')
+    console.error('[YouTube API] Please set YOUTUBE_API_KEY in .env.local')
+    return NextResponse.json({
+      streams: [],
+      error: 'YouTube API key not configured'
+    }, { status: 200 })
   }
 
   try {
+    console.log('[YouTube API] Fetching priority channels:', PRIORITY_CHANNELS.map(c => c.name).join(', '))
     // Phase 1: Search priority channels for live streams
     const priorityStreamsPromises = PRIORITY_CHANNELS.map(channel =>
       searchChannelLiveStreams(channel.handle, channel.priority, apiKey).then(videos =>
@@ -140,11 +148,14 @@ export async function GET() {
 
     const priorityResults = await Promise.all(priorityStreamsPromises)
     const priorityStreams = priorityResults.flat()
+    console.log('[YouTube API] Priority streams found:', priorityStreams.length)
 
     // Phase 2: If we need more streams, search generally
     let allVideos = priorityStreams.map(s => s.video)
     if (allVideos.length < 8) {
+      console.log('[YouTube API] Searching for general poker streams...')
       const generalStreams = await searchGeneralPokerStreams(apiKey, 8 - allVideos.length)
+      console.log('[YouTube API] General streams found:', generalStreams.length)
       allVideos = [...allVideos, ...generalStreams]
     }
 
@@ -152,8 +163,10 @@ export async function GET() {
     const uniqueVideos = Array.from(
       new Map(allVideos.map(v => [v.id.videoId, v])).values()
     )
+    console.log('[YouTube API] Unique videos after deduplication:', uniqueVideos.length)
 
     if (uniqueVideos.length === 0) {
+      console.warn('[YouTube API] No live streams found')
       return NextResponse.json({ streams: [] }, { status: 200 })
     }
 
@@ -257,6 +270,10 @@ export async function GET() {
       // Take top 8
       .slice(0, 8)
 
+    console.log('[YouTube API] Final streams count:', streams.length)
+    console.log('[YouTube API] Channels:', streams.map(s => s.channelName).join(', '))
+    console.log('[YouTube API] Request completed successfully')
+
     return NextResponse.json({ streams }, {
       status: 200,
       headers: {
@@ -265,7 +282,8 @@ export async function GET() {
     })
 
   } catch (error) {
-    console.error('Failed to fetch YouTube live streams:', error)
-    return NextResponse.json({ streams: [] }, { status: 200 })
+    console.error('[YouTube API] Failed to fetch YouTube live streams:', error)
+    console.error('[YouTube API] Error details:', error instanceof Error ? error.message : 'Unknown error')
+    return NextResponse.json({ streams: [], error: 'Failed to fetch streams' }, { status: 200 })
   }
 }
