@@ -15,6 +15,8 @@ interface LiveStream {
   thumbnailUrl: string
   videoUrl: string
   viewerCount?: string
+  streamType: 'live' | 'completed' | 'recent'
+  publishedAt?: string
 }
 
 function formatViewerCount(count: string): string {
@@ -26,6 +28,17 @@ function formatViewerCount(count: string): string {
     return `${(num / 1000).toFixed(1)}K`
   }
   return num.toString()
+}
+
+function formatTimeAgo(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 function LiveStreamCard({ stream }: { stream: LiveStream }) {
@@ -45,23 +58,37 @@ function LiveStreamCard({ stream }: { stream: LiveStream }) {
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
           />
 
-          {/* LIVE Badge */}
+          {/* Stream Type Badge */}
           <div className="absolute top-2 left-2">
-            <Badge variant="destructive" className="flex items-center gap-1 font-semibold text-xs">
-              <Radio className="h-2.5 w-2.5 fill-white animate-pulse" />
-              LIVE
-            </Badge>
+            {stream.streamType === 'live' ? (
+              <Badge variant="destructive" className="flex items-center gap-1 font-semibold text-xs">
+                <Radio className="h-2.5 w-2.5 fill-white animate-pulse" />
+                LIVE
+              </Badge>
+            ) : stream.streamType === 'completed' ? (
+              <Badge variant="secondary" className="flex items-center gap-1 font-semibold text-xs bg-gray-700 text-white border-0">
+                ENDED
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="flex items-center gap-1 font-semibold text-xs">
+                RECENT
+              </Badge>
+            )}
           </div>
 
-          {/* Viewer Count */}
-          {stream.viewerCount && (
-            <div className="absolute bottom-2 right-2">
+          {/* Viewer Count or Time */}
+          <div className="absolute bottom-2 right-2">
+            {stream.streamType === 'live' && stream.viewerCount ? (
               <Badge variant="secondary" className="flex items-center gap-1 bg-black/70 text-white border-0 text-xs">
                 <Users className="h-2.5 w-2.5" />
                 {formatViewerCount(stream.viewerCount)}
               </Badge>
-            </div>
-          )}
+            ) : stream.publishedAt ? (
+              <Badge variant="secondary" className="flex items-center gap-1 bg-black/70 text-white border-0 text-xs">
+                {formatTimeAgo(stream.publishedAt)}
+              </Badge>
+            ) : null}
+          </div>
 
           {/* Hover Overlay */}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
@@ -176,14 +203,18 @@ export function LivePokerStreams() {
     )
   }
 
+  const liveCount = streams.filter(s => s.streamType === 'live').length
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-6">
-        <Radio className="h-6 w-6 text-destructive animate-pulse" />
-        <h2 className="text-2xl md:text-3xl font-bold">Live Poker Streams</h2>
-        <Badge variant="destructive" className="ml-2">
-          {streams.length} Live
-        </Badge>
+        <Radio className={`h-6 w-6 ${liveCount > 0 ? 'text-destructive animate-pulse' : 'text-muted-foreground'}`} />
+        <h2 className="text-2xl md:text-3xl font-bold">Live & Recent Poker Streams</h2>
+        {liveCount > 0 && (
+          <Badge variant="destructive" className="ml-2">
+            {liveCount} Live
+          </Badge>
+        )}
       </div>
 
       <ScrollArea className="w-full whitespace-nowrap">

@@ -48,6 +48,8 @@ interface LiveStream {
   videoUrl: string
   viewerCount?: string
   priority?: number
+  streamType: 'live' | 'completed' | 'recent'
+  publishedAt?: string
 }
 
 /**
@@ -128,10 +130,10 @@ export async function GET() {
       return NextResponse.json({ streams: [] }, { status: 200 })
     }
 
-    // Search for live streams from these channels
-    const allVideos: YouTubeVideo[] = []
+    // Search for live and recent streams from these channels
+    const allVideos: Array<YouTubeVideo & { streamType: 'live' | 'completed' | 'recent' }> = []
 
-    // Search each channel for live streams
+    // Step 1: Search for currently live streams
     for (let i = 0; i < channelIds.length; i++) {
       const channelId = channelIds[i]
       const channelName = PRIORITY_CHANNELS[i].name
@@ -151,15 +153,53 @@ export async function GET() {
           const data: YouTubeSearchResponse = await response.json()
           if (data.items && data.items.length > 0) {
             console.log(`✓ Found ${data.items.length} live stream(s) for ${channelName}`)
-            allVideos.push(...data.items)
+            allVideos.push(...data.items.map(item => ({ ...item, streamType: 'live' as const })))
           }
         }
       } catch (error) {
-        console.error(`Error fetching streams for ${channelName}:`, error)
+        console.error(`Error fetching live streams for ${channelName}:`, error)
       }
     }
 
-    console.log('[YouTube API] Total videos found:', allVideos.length)
+    console.log('[YouTube API] Live streams found:', allVideos.filter(v => v.streamType === 'live').length)
+
+    // Step 2: If we need more content, get recent videos (max 5 per channel)
+    if (allVideos.length < 8) {
+      for (let i = 0; i < channelIds.length; i++) {
+        const channelId = channelIds[i]
+        const channelName = PRIORITY_CHANNELS[i].name
+
+        try {
+          const searchUrl = new URL('https://www.googleapis.com/youtube/v3/search')
+          searchUrl.searchParams.append('part', 'snippet')
+          searchUrl.searchParams.append('channelId', channelId)
+          searchUrl.searchParams.append('type', 'video')
+          searchUrl.searchParams.append('maxResults', '5')
+          searchUrl.searchParams.append('order', 'date')
+          searchUrl.searchParams.append('key', apiKey)
+
+          const response = await fetch(searchUrl.toString())
+
+          if (response.ok) {
+            const data: YouTubeSearchResponse = await response.json()
+            if (data.items && data.items.length > 0) {
+              console.log(`✓ Found ${data.items.length} recent video(s) for ${channelName}`)
+              // Mark as 'recent' for now, will determine actual type later
+              allVideos.push(...data.items.map(item => ({ ...item, streamType: 'recent' as const })))
+            } else {
+              console.log(`No videos found for ${channelName}`)
+            }
+          } else {
+            const errorData = await response.json().catch(() => ({}))
+            console.error(`Failed to fetch videos for ${channelName} (status: ${response.status})`, errorData)
+          }
+        } catch (error) {
+          console.error(`Error fetching recent videos for ${channelName}:`, error)
+        }
+      }
+    }
+
+    console.log('[YouTube API] Total videos found (all types):', allVideos.length)
 
     // Remove duplicates
     const uniqueVideos = Array.from(
@@ -172,10 +212,10 @@ export async function GET() {
       return NextResponse.json({ streams: [] }, { status: 200 })
     }
 
-    // Get video details for viewer count
+    // Get video details for viewer count and actual live status
     const videoIds = uniqueVideos.map(item => item.id.videoId).join(',')
     const videosUrl = new URL('https://www.googleapis.com/youtube/v3/videos')
-    videosUrl.searchParams.append('part', 'liveStreamingDetails,statistics')
+    videosUrl.searchParams.append('part', 'liveStreamingDetails,statistics,snippet')
     videosUrl.searchParams.append('id', videoIds)
     videosUrl.searchParams.append('key', apiKey)
 
@@ -186,19 +226,36 @@ export async function GET() {
     })
 
     let viewerCounts: Record<string, string> = {}
+    let videoTypes: Record<string, 'live' | 'completed' | 'recent'> = {}
 
     if (videosResponse.ok) {
       const videosData = await videosResponse.json()
 
       if (videosData.items) {
-        viewerCounts = videosData.items.reduce((acc: Record<string, string>, item: any) => {
-          if (item.liveStreamingDetails?.concurrentViewers) {
-            acc[item.id] = item.liveStreamingDetails.concurrentViewers
+        videosData.items.forEach((item: any) => {
+          // Determine actual stream type based on liveBroadcastContent
+          const liveBroadcastContent = item.snippet?.liveBroadcastContent
+          if (liveBroadcastContent === 'live') {
+            videoTypes[item.id] = 'live'
+            if (item.liveStreamingDetails?.concurrentViewers) {
+              viewerCounts[item.id] = item.liveStreamingDetails.concurrentViewers
+            }
+          } else if (liveBroadcastContent === 'none' && item.liveStreamingDetails) {
+            // Was a live stream, now ended
+            videoTypes[item.id] = 'completed'
+          } else {
+            videoTypes[item.id] = 'recent'
           }
-          return acc
-        }, {})
+        })
       }
     }
+
+    // Update stream types based on actual video data
+    uniqueVideos.forEach((video: any) => {
+      if (videoTypes[video.id.videoId]) {
+        video.streamType = videoTypes[video.id.videoId]
+      }
+    })
 
     // Get channel thumbnails
     const channelIdsForThumbnails = uniqueVideos.map(item => item.snippet.channelId).join(',')
@@ -233,9 +290,8 @@ export async function GET() {
       PRIORITY_CHANNELS.map(ch => [ch.name.toLowerCase(), ch.priority])
     )
 
-    // Transform to our format with priority
+    // Transform to our format with priority and stream type
     const streams: LiveStream[] = uniqueVideos
-      .filter(item => item.snippet.liveBroadcastContent === 'live')
       .map(item => {
         // Check if this channel is in priority list
         const channelName = item.snippet.channelTitle.toLowerCase()
@@ -258,21 +314,41 @@ export async function GET() {
           videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
           viewerCount: viewerCounts[item.id.videoId] || undefined,
           priority,
+          streamType: item.streamType,
+          publishedAt: item.snippet.publishedAt,
         }
       })
-      // Sort by priority first, then by viewer count
+      // Sort by stream type first (live > completed > recent), then by priority, then by time/viewers
       .sort((a, b) => {
+        // 1. Live streams always first
+        const typeOrder = { live: 0, completed: 1, recent: 2 }
+        if (typeOrder[a.streamType] !== typeOrder[b.streamType]) {
+          return typeOrder[a.streamType] - typeOrder[b.streamType]
+        }
+
+        // 2. Then by priority
         if (a.priority !== b.priority) {
           return a.priority - b.priority
         }
-        const aViewers = parseInt(a.viewerCount || '0')
-        const bViewers = parseInt(b.viewerCount || '0')
-        return bViewers - aViewers
+
+        // 3. Live: sort by viewer count, Others: sort by publish date
+        if (a.streamType === 'live') {
+          const aViewers = parseInt(a.viewerCount || '0')
+          const bViewers = parseInt(b.viewerCount || '0')
+          return bViewers - aViewers
+        } else {
+          // More recent first
+          return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime()
+        }
       })
       // Take top 8
       .slice(0, 8)
 
     console.log('[YouTube API] Final streams count:', streams.length)
+    console.log('[YouTube API] Stream types:', streams.reduce((acc, s) => {
+      acc[s.streamType] = (acc[s.streamType] || 0) + 1
+      return acc
+    }, {} as Record<string, number>))
     console.log('[YouTube API] Channels:', streams.map(s => s.channelName).join(', '))
     console.log('[YouTube API] Request completed successfully')
 
