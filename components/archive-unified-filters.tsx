@@ -30,6 +30,7 @@ interface ArchiveUnifiedFiltersProps {
   advancedFilters: AdvancedFilters
   onAdvancedFiltersChange: (filters: AdvancedFilters) => void
   showCategoryFilter?: boolean
+  showToggleButton?: boolean
   className?: string
 }
 
@@ -39,6 +40,7 @@ export function ArchiveUnifiedFilters({
   advancedFilters,
   onAdvancedFiltersChange,
   showCategoryFilter = true,
+  showToggleButton = true,
   className
 }: ArchiveUnifiedFiltersProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -155,38 +157,40 @@ export function ArchiveUnifiedFilters({
     <div className={cn("border-b bg-gradient-to-b from-background/98 to-background/95 backdrop-blur-lg shadow-lg supports-[backdrop-filter]:bg-background/60", className)}>
       <div className="container max-w-7xl mx-auto px-4 md:px-6">
         {/* Filter Toggle Button */}
-        <div className="flex items-center justify-between py-5">
-          <Button
-            variant="outline"
-            size="default"
-            onClick={toggleOpen}
-            className="gap-2 hover:bg-gradient-to-r hover:from-primary/10 hover:to-purple-500/5 hover:scale-105 hover:shadow-md transition-all duration-200"
-          >
-            <Filter className="h-5 w-5" />
-            <span className="font-semibold">Filters</span>
-            {isFiltered && (
-              <span className="ml-1 text-xs bg-gradient-to-r from-primary to-purple-600 text-white px-2.5 py-1 rounded-full font-bold shadow-sm">
-                {activeFilterCount()}
-              </span>
-            )}
-            {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-          </Button>
-
-          {isFiltered && (
+        {showToggleButton && (
+          <div className="flex items-center justify-between py-5">
             <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleReset}
-              className="h-9 px-4 text-sm font-medium hover:scale-105 hover:shadow-md transition-all duration-200"
+              variant="outline"
+              size="default"
+              onClick={toggleOpen}
+              className="gap-2 hover:bg-gradient-to-r hover:from-primary/10 hover:to-purple-500/5 hover:scale-105 hover:shadow-md transition-all duration-200"
             >
-              <X className="h-4 w-4 mr-1.5" />
-              Clear All
+              <Filter className="h-5 w-5" />
+              <span className="font-semibold">Filters</span>
+              {isFiltered && (
+                <span className="ml-1 text-xs bg-gradient-to-r from-primary to-purple-600 text-white px-2.5 py-1 rounded-full font-bold shadow-sm">
+                  {activeFilterCount()}
+                </span>
+              )}
+              {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </Button>
-          )}
-        </div>
+
+            {isFiltered && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleReset}
+                className="h-9 px-4 text-sm font-medium hover:scale-105 hover:shadow-md transition-all duration-200"
+              >
+                <X className="h-4 w-4 mr-1.5" />
+                Clear All
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Expanded Filters */}
-        {isOpen && (
+        {(showToggleButton ? isOpen : true) && (
           <div className="pb-6 pt-4 space-y-6 bg-muted/30 border-t border-primary/10 -mx-4 md:-mx-6 px-4 md:px-6 rounded-b-lg">
             {/* Category Filter */}
             {showCategoryFilter && (

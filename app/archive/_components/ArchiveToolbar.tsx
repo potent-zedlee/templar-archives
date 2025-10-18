@@ -140,6 +140,7 @@ export function ArchiveToolbar() {
                 advancedFilters={advancedFilters}
                 onAdvancedFiltersChange={setAdvancedFilters}
                 showCategoryFilter={false}
+                showToggleButton={false}
               />
             </div>
           </div>
