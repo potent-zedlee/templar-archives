@@ -4,6 +4,8 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
+import { naturalSearchSchema, validateInput, formatValidationErrors } from '@/lib/validation/api-schemas'
+import { escapeLikePattern, detectSQLInjection, logSecurityEvent } from '@/lib/security'
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
@@ -20,29 +22,27 @@ export async function POST(request: NextRequest) {
   const supabase = createServerSupabaseClient()
 
   try {
-    const { query } = await request.json()
+    const body = await request.json()
 
-    if (!query || typeof query !== 'string') {
+    // Zod 스키마 검증
+    const validation = validateInput(naturalSearchSchema, body)
+    if (!validation.success) {
+      const errors = formatValidationErrors(validation.errors!)
+      logSecurityEvent('xss_attempt', { errors, body })
       return NextResponse.json(
-        { error: 'Query is required' },
+        { error: errors[0] || '입력값이 유효하지 않습니다' },
         { status: 400 }
       )
     }
 
-    // Input validation and sanitization
+    const { query } = validation.data
     const trimmedQuery = query.trim()
 
-    // Length validation (prevent overly long queries)
-    if (trimmedQuery.length === 0) {
+    // SQL Injection 시도 감지
+    if (detectSQLInjection(trimmedQuery)) {
+      logSecurityEvent('sql_injection', { query: trimmedQuery })
       return NextResponse.json(
-        { error: 'Query cannot be empty' },
-        { status: 400 }
-      )
-    }
-
-    if (trimmedQuery.length > 200) {
-      return NextResponse.json(
-        { error: 'Query is too long (max 200 characters)' },
+        { error: '허용되지 않는 문자가 포함되어 있습니다' },
         { status: 400 }
       )
     }
@@ -128,7 +128,7 @@ Important:
 
       // For MVP, we'll use a simple text search as fallback
       // Sanitize query for ILIKE to prevent pattern injection
-      const sanitizedQuery = trimmedQuery.replace(/[%_\\]/g, '\\$&')
+      const sanitizedQuery = escapeLikePattern(trimmedQuery)
 
       const { data: fallbackData, error: fallbackError } = await supabase
         .from('hands')

@@ -3,6 +3,8 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { ImportHandsRequest, ImportHandsResponse, HandHistory } from '@/lib/types/hand-history'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
+import { importHandsSchema, validateInput, formatValidationErrors } from '@/lib/validation/api-schemas'
+import { isValidUUID, sanitizeText, logSecurityEvent } from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,20 +20,25 @@ export async function POST(request: NextRequest) {
   const supabase = createServerSupabaseClient()
 
   try {
-    const body: ImportHandsRequest = await request.json()
-    const { dayId, hands, source = 'external' } = body
+    const body = await request.json()
 
-    if (!dayId || !hands || !Array.isArray(hands)) {
+    // Zod 스키마 검증
+    const validation = validateInput(importHandsSchema, body)
+    if (!validation.success) {
+      const errors = formatValidationErrors(validation.errors!)
+      logSecurityEvent('xss_attempt', { errors, body })
       return NextResponse.json(
         {
           success: false,
-          error: 'dayId와 hands 배열이 필요합니다',
+          error: errors[0] || '입력값이 유효하지 않습니다',
           imported: 0,
           failed: 0
         } as ImportHandsResponse,
         { status: 400 }
       )
     }
+
+    const { dayId, hands } = validation.data
 
     // Day가 존재하는지 확인
     const { data: day, error: dayError } = await supabase
@@ -81,11 +88,14 @@ export async function POST(request: NextRequest) {
 
         // 2. 플레이어 정보 저장
         for (const player of hand.players) {
+          // 플레이어 이름 sanitize (XSS 방지)
+          const sanitizedPlayerName = sanitizeText(player.name, 100)
+
           // 플레이어가 DB에 있는지 확인
           let { data: existingPlayer } = await supabase
             .from('players')
             .select('id')
-            .eq('name', player.name)
+            .eq('name', sanitizedPlayerName)
             .single()
 
           let playerId: string
@@ -95,7 +105,7 @@ export async function POST(request: NextRequest) {
             const { data: newPlayer, error: playerError } = await supabase
               .from('players')
               .insert({
-                name: player.name,
+                name: sanitizedPlayerName,
                 country: 'Unknown'
               })
               .select()

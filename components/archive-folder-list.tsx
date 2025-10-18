@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { Folder, FileVideo, ChevronRight, Video, Play, Edit, Trash, FolderPlus, FolderInput, CheckSquare, MoreVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -51,7 +52,7 @@ interface ArchiveFolderListProps {
   isAdmin?: boolean
 }
 
-export function ArchiveFolderList({
+export const ArchiveFolderList = memo(function ArchiveFolderList({
   items,
   onNavigate,
   onSelectDay,
@@ -567,4 +568,4 @@ export function ArchiveFolderList({
       </div>
     </ScrollArea>
   )
-}
+})

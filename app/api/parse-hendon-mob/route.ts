@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
+import { isSafeUrl, sanitizeText, logSecurityEvent } from '@/lib/security'
 
 export async function POST(request: NextRequest) {
   // Apply rate limiting (10 requests per minute)
@@ -12,7 +13,25 @@ export async function POST(request: NextRequest) {
   try {
     const { url } = await request.json()
 
-    if (!url || !url.includes('thehendonmob.com')) {
+    // URL 검증
+    if (!url || typeof url !== 'string') {
+      return NextResponse.json(
+        { error: 'URL is required' },
+        { status: 400 }
+      )
+    }
+
+    // 안전한 URL인지 확인
+    if (!isSafeUrl(url)) {
+      logSecurityEvent('xss_attempt', { url })
+      return NextResponse.json(
+        { error: 'Invalid URL format' },
+        { status: 400 }
+      )
+    }
+
+    // Hendon Mob URL인지 확인
+    if (!url.includes('thehendonmob.com')) {
       return NextResponse.json(
         { error: 'Invalid Hendon Mob URL' },
         { status: 400 }
@@ -111,8 +130,8 @@ export async function POST(request: NextRequest) {
         if (rank > 0 && playerName && prizeText && prizeText !== '-') {
           payouts.push({
             rank,
-            playerName,
-            prizeAmount: prizeText, // Keep original format for now
+            playerName: sanitizeText(playerName, 100), // XSS 방지
+            prizeAmount: sanitizeText(prizeText, 50), // XSS 방지
           })
         }
       }

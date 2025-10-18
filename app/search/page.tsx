@@ -30,6 +30,7 @@ import { fetchHandsWithDetails } from "@/lib/queries"
 import type { Hand, Player } from "@/lib/supabase"
 import Link from "next/link"
 import { toast } from "sonner"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { useFilterStore } from "@/lib/filter-store"
 import { applyClientSideFilters, matchesHandRange, analyzeBoardTexture } from "@/lib/filter-utils"
 import { TableSkeleton } from "@/components/skeletons/table-skeleton"
@@ -180,8 +181,9 @@ export default function SearchClient() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <Header />
+    <ErrorBoundary>
+      <div className="min-h-screen bg-muted/30">
+        <Header />
 
       {/* Filter Panel */}
       <FilterPanel
@@ -397,5 +399,6 @@ export default function SearchClient() {
         </Card>
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

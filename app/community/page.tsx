@@ -13,6 +13,7 @@ import { fetchPosts, togglePostLike, type Post } from "@/lib/supabase-community"
 import { toast } from "sonner"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { EmptyState } from "@/components/empty-state"
+import { ErrorBoundary } from "@/components/error-boundary"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -161,8 +162,9 @@ export default function communityClient() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <Header />
+    <ErrorBoundary>
+      <div className="min-h-screen bg-muted/30">
+        <Header />
 
       <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="mb-8">
@@ -433,5 +435,6 @@ export default function communityClient() {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   )
 }

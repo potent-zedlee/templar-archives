@@ -25,7 +25,16 @@ app/
 ├── layout.tsx                         # 루트 레이아웃
 ├── globals.css                        # 전역 CSS
 │
-├── archive/page.tsx                   # 아카이브 (/archive)
+├── archive/
+│   ├── page.tsx                       # 아카이브 메인 (88줄, Phase 9 리팩토링) ⭐
+│   ├── page.tsx.backup                # 이전 버전 백업 (1,733줄)
+│   └── _components/                   # Archive 전용 컴포넌트
+│       ├── ArchiveProviders.tsx       # DnD + 키보드 단축키 Provider
+│       ├── ArchiveToolbar.tsx         # 검색/필터/뷰모드 툴바
+│       ├── ArchiveEventsList.tsx      # 이벤트 리스트 (list/grid/timeline)
+│       ├── ArchiveHandHistory.tsx     # 핸드 히스토리 섹션
+│       └── ArchiveDialogs.tsx         # 모든 다이얼로그 통합
+│
 ├── search/page.tsx                    # 검색 (/search)
 ├── community/page.tsx                 # 커뮤니티 (/community)
 ├── bookmarks/page.tsx                 # 북마크 (/bookmarks) 🔐
@@ -129,24 +138,40 @@ lib/
 ├── hand-boundary-detector.ts          # 핸드 경계 감지 (Claude Vision)
 ├── hand-sequence-analyzer.ts          # 핸드 시퀀스 분석 (Claude Vision)
 │
-└── types/
-    └── hand-history.ts                # HandHistory 타입 정의
+└── types/                             # 타입 정의 (Phase 9 신규) ⭐
+    ├── hand-history.ts                # HandHistory 타입
+    └── archive.ts                     # Archive 전용 타입 (350줄, 20+ 타입)
 ```
 
 ---
 
-## 🪝 4. hooks/ - Custom React Hooks
+## 🗄️ 4. stores/ - Zustand 상태 관리 (Phase 9 신규) ⭐
+
+```
+stores/
+├── archive-data-store.ts              # 데이터 관리 (tournaments, hands, 230줄)
+├── archive-ui-store.ts                # UI 상태 (dialogs, navigation, 350줄)
+└── archive-form-store.ts              # 폼 데이터 (tournament, subevent, day, 200줄)
+```
+
+**총 780줄의 체계적인 상태 관리 시스템**
+
+---
+
+## 🪝 5. hooks/ - Custom React Hooks
 
 ```
 hooks/
 ├── use-mobile.ts                      # 모바일 화면 감지
 ├── use-toast.ts                       # Toast 알림 훅
-└── useArchiveState.ts                 # Archive 페이지 상태 관리 (네비게이션 포함)
+├── useArchiveState.ts                 # Archive 페이지 상태 (⚠️ Deprecated, stores로 이동)
+├── useArchiveData.ts                  # Archive 데이터 로딩 훅
+└── useArchiveKeyboard.ts              # Archive 키보드 단축키 훅
 ```
 
 ---
 
-## 📖 5. docs/ - 프로젝트 문서
+## 📖 6. docs/ - 프로젝트 문서
 
 ```
 docs/
@@ -168,7 +193,7 @@ docs/
 
 ---
 
-## 🛠️ 6. scripts/ - 유틸리티 스크립트
+## 🛠️ 7. scripts/ - 유틸리티 스크립트
 
 ```
 scripts/
@@ -182,7 +207,7 @@ NEXT_PUBLIC_SUPABASE_URL=... NEXT_PUBLIC_SUPABASE_ANON_KEY=... npx tsx scripts/d
 
 ---
 
-## 🗄️ 7. supabase/ - 데이터베이스 마이그레이션
+## 🗄️ 8. supabase/ - 데이터베이스 마이그레이션
 
 ```
 supabase/
@@ -211,7 +236,7 @@ supabase/
 
 ---
 
-## 🌐 8. public/ - 정적 파일
+## 🌐 9. public/ - 정적 파일
 
 ```
 public/
@@ -222,7 +247,7 @@ public/
 
 ---
 
-## ⚙️ 9. 설정 파일
+## ⚙️ 10. 설정 파일
 
 ### 9.1 Next.js 설정
 - `package.json` - 프로젝트 메타데이터, 의존성, 스크립트
@@ -245,7 +270,7 @@ public/
 
 ---
 
-## 📄 10. 프로젝트 문서 (루트)
+## 📄 11. 프로젝트 문서 (루트)
 
 ```
 templar-archives/
@@ -264,7 +289,10 @@ templar-archives/
 
 | 기능 | 파일 경로 |
 |------|-----------|
-| 아카이브 페이지 | `app/archive/page.tsx` |
+| 아카이브 페이지 | `app/archive/page.tsx` (88줄) ⭐ |
+| Archive 데이터 Store | `stores/archive-data-store.ts` ⭐ |
+| Archive UI Store | `stores/archive-ui-store.ts` ⭐ |
+| Archive 타입 정의 | `lib/types/archive.ts` ⭐ |
 | 검색 페이지 | `app/search/page.tsx` |
 | 자연어 검색 API | `app/api/natural-search/route.ts` |
 | 핸드 Import API | `app/api/import-hands/route.ts` |
@@ -279,6 +307,7 @@ templar-archives/
 
 ---
 
-**마지막 업데이트**: 2025-10-16
-**버전**: 3.1
-**상태**: Phase 0-8 완료 (Google Drive 스타일 폴더 네비게이션)
+**마지막 업데이트**: 2025-10-18
+**버전**: 4.0
+**상태**: Phase 0-9 완료 (코드 품질 및 아키텍처 대규모 개선)
+**주요 변경 (Phase 9)**: page.tsx 1,733줄 → 88줄 (-95%), Zustand stores 도입, 타입 시스템 구축

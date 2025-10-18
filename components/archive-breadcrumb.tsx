@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { Home, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -14,7 +15,7 @@ interface ArchiveBreadcrumbProps {
   onNavigate: (item: BreadcrumbItem | null) => void
 }
 
-export function ArchiveBreadcrumb({ items, onNavigate }: ArchiveBreadcrumbProps) {
+export const ArchiveBreadcrumb = memo(function ArchiveBreadcrumb({ items, onNavigate }: ArchiveBreadcrumbProps) {
   return (
     <div className="flex items-center gap-2 overflow-x-auto pb-2">
       {/* Home button */}
@@ -44,4 +45,4 @@ export function ArchiveBreadcrumb({ items, onNavigate }: ArchiveBreadcrumbProps)
       ))}
     </div>
   )
-}
+})

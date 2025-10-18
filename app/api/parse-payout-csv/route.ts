@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Papa from 'papaparse'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
+import { sanitizeText } from '@/lib/security'
 
 export async function POST(request: NextRequest) {
   // Apply rate limiting (10 requests per minute)
@@ -90,8 +91,8 @@ export async function POST(request: NextRequest) {
 
       payouts.push({
         rank,
-        playerName,
-        prizeAmount,
+        playerName: sanitizeText(playerName, 100), // XSS 방지
+        prizeAmount: sanitizeText(prizeAmount, 50), // XSS 방지
       })
     }
 
