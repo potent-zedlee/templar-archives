@@ -55,8 +55,28 @@ export function CategoryLogo({
   }
 
   const displayName = categoryData?.name || category
+  const isPng = logoPath.endsWith('.png')
 
-  // CSS mask를 사용하여 SVG를 currentColor로 렌더링
+  // PNG 파일은 일반 img 태그 사용 (다크모드 대응 안됨)
+  if (isPng) {
+    return (
+      <div
+        className={cn(
+          'flex items-center justify-center',
+          SIZE_CLASSES[size],
+          className
+        )}
+      >
+        <img
+          src={logoPath}
+          alt={`${displayName} logo`}
+          className="w-full h-full object-contain"
+        />
+      </div>
+    )
+  }
+
+  // SVG는 CSS mask를 사용하여 currentColor로 렌더링 (다크모드 대응)
   return (
     <div
       className={cn(
