@@ -247,7 +247,7 @@ export const TOURNAMENT_CATEGORIES: TournamentCategory[] = [
     displayName: 'GGPoker UK',
     shortName: 'GGP UK',
     aliases: ['GGPoker UK', 'GGPoker UK Poker Championships'],
-    logoUrl: '/logos/ggpoker-uk.svg',
+    logoUrl: '/logos/ggpoker-uk.png',
     region: 'regional',
     priority: 22,
     isActive: true,
