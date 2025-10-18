@@ -29,6 +29,7 @@ interface ArchiveUnifiedFiltersProps {
   onCategoryChange: (category: string) => void
   advancedFilters: AdvancedFilters
   onAdvancedFiltersChange: (filters: AdvancedFilters) => void
+  showCategoryFilter?: boolean
   className?: string
 }
 
@@ -37,6 +38,7 @@ export function ArchiveUnifiedFilters({
   onCategoryChange,
   advancedFilters,
   onAdvancedFiltersChange,
+  showCategoryFilter = true,
   className
 }: ArchiveUnifiedFiltersProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -187,7 +189,8 @@ export function ArchiveUnifiedFilters({
         {isOpen && (
           <div className="pb-6 pt-4 space-y-6 bg-muted/30 border-t border-primary/10 -mx-4 md:-mx-6 px-4 md:px-6 rounded-b-lg">
             {/* Category Filter */}
-            <div className="space-y-4">
+            {showCategoryFilter && (
+              <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold text-foreground">Tournament Category ({filteredCategories.length})</Label>
                 <Button
@@ -297,7 +300,8 @@ export function ArchiveUnifiedFilters({
                   )}
                 </div>
               </ScrollArea>
-            </div>
+              </div>
+            )}
 
             {/* Advanced Filters Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
