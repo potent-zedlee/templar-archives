@@ -26,6 +26,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { CategoryLogo } from "@/components/category-logo"
 
 interface ArchiveEventCardProps {
   item: FolderItem
@@ -119,7 +120,13 @@ export function ArchiveEventCard({
     return Math.min(100, Math.max(0, progress))
   }
 
-  const getIcon = () => {
+  const getIcon = (category?: string) => {
+    // If category exists, show logo instead
+    if (category && (item.type === 'tournament' || item.type === 'subevent')) {
+      return <CategoryLogo category={category} size="md" fallback="icon" />
+    }
+
+    // Default icons for other types
     switch (item.type) {
       case 'tournament':
         return <Folder className="h-5 w-5" />
@@ -174,7 +181,7 @@ export function ArchiveEventCard({
         <div className="p-6 pb-0">
           <div className="flex items-start justify-between mb-4">
             <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10">
-              {getIcon()}
+              {getIcon(data?.category)}
             </div>
             {status && (
               <Badge variant={status.variant === 'success' ? 'default' : status.variant}>
@@ -273,7 +280,7 @@ export function ArchiveEventCard({
       <div className="flex items-center gap-3">
         {/* Icon */}
         <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 shrink-0">
-          {getIcon()}
+          {getIcon(data?.category)}
         </div>
 
         {/* Content */}

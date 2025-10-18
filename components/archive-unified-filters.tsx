@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { AdvancedFilters } from "@/components/archive-advanced-filters"
+import { CategoryLogo } from "@/components/category-logo"
 
 interface ArchiveUnifiedFiltersProps {
   selectedCategory: string
@@ -168,12 +169,13 @@ export function ArchiveUnifiedFilters({
                       size="sm"
                       onClick={() => onCategoryChange(category)}
                       className={cn(
-                        "h-10 px-4 font-medium transition-all duration-200",
+                        "h-10 px-4 font-medium transition-all duration-200 gap-2",
                         selectedCategory === category
                           ? "bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-md"
                           : "hover:bg-gradient-to-r hover:from-primary/10 hover:to-purple-500/5 hover:scale-105 hover:shadow-sm"
                       )}
                     >
+                      {category !== "All" && <CategoryLogo category={category} size="sm" />}
                       {category === "Hustler Casino Live" ? "Hustler" : category}
                     </Button>
                   ))}
