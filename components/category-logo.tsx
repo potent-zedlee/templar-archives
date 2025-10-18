@@ -2,20 +2,7 @@
 
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
-
-/**
- * Category to logo filename mapping
- * SVG files should be placed in /public/logos/
- */
-const CATEGORY_LOGOS: Record<string, string> = {
-  'WSOP': '/logos/wsop.svg',
-  'Triton': '/logos/triton.svg',
-  'EPT': '/logos/ept.svg',
-  'Hustler Casino Live': '/logos/hustler.svg',
-  'APT': '/logos/apt.svg',
-  'APL': '/logos/apl.svg',
-  'GGPOKER': '/logos/ggpoker.svg',
-}
+import { getCategoryById, getCategoryByAlias, normalizeCategoryName } from '@/lib/tournament-categories'
 
 interface CategoryLogoProps {
   category: string
@@ -37,15 +24,18 @@ export function CategoryLogo({
   className,
   fallback = 'text',
 }: CategoryLogoProps) {
-  const logoPath = CATEGORY_LOGOS[category]
+  // 카테고리 정보 가져오기 (ID 또는 별칭으로)
+  const categoryData = getCategoryById(category) || getCategoryByAlias(category)
+  const logoPath = categoryData?.logoUrl
 
   // If no logo exists for this category
   if (!logoPath) {
     if (fallback === 'none') return null
     if (fallback === 'text') {
+      const displayName = categoryData?.displayName || category
       return (
         <span className={cn('font-semibold', className)}>
-          {category === 'Hustler Casino Live' ? 'Hustler' : category}
+          {displayName}
         </span>
       )
     }
@@ -59,11 +49,13 @@ export function CategoryLogo({
         )}
       >
         <span className="text-xs font-bold text-muted-foreground">
-          {category.charAt(0)}
+          {category.charAt(0).toUpperCase()}
         </span>
       </div>
     )
   }
+
+  const displayName = categoryData?.name || category
 
   return (
     <div
@@ -75,7 +67,7 @@ export function CategoryLogo({
     >
       <Image
         src={logoPath}
-        alt={`${category} logo`}
+        alt={`${displayName} logo`}
         fill
         className="object-contain dark:brightness-110 dark:contrast-90"
         sizes={
@@ -96,12 +88,6 @@ export function CategoryLogo({
  * Check if a category has a logo available
  */
 export function hasLogo(category: string): boolean {
-  return category in CATEGORY_LOGOS
-}
-
-/**
- * Get all categories that have logos
- */
-export function getCategoriesWithLogos(): string[] {
-  return Object.keys(CATEGORY_LOGOS)
+  const categoryData = getCategoryById(category) || getCategoryByAlias(category)
+  return !!categoryData?.logoUrl
 }
