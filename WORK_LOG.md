@@ -4,6 +4,135 @@
 
 ---
 
+## 2025-10-19 (세션 21) - Phase 15: 로고 관리 시스템 ✅
+
+### 작업 내용
+
+#### 1. 실제 로고 다운로드 (pokernews.com) ✅
+- **Web Scraping**: pokernews.com/tours에서 로고 URL 추출
+- **다운로드 스크립트**: `scripts/download-pokernews-logos.ts` (145줄)
+  - 12개 토너먼트 로고 매핑
+  - HTTPS 다운로드 로직
+  - 에러 핸들링
+- **결과**: 12개 로고 성공적으로 다운로드 (100% 성공률)
+  - wsop.svg (20.5 KB), wpt.svg (2.1 KB), ept.svg (7.8 KB)
+  - triton.png (25.7 KB), pokerstars-open.png (1.5 KB)
+  - ggpoker-uk.png (15.3 KB), 888poker.svg (4.2 KB), 888poker-live.svg (7.0 KB)
+  - rungood.svg (50.2 KB), merit-poker.svg (209.3 KB)
+  - hendon-mob.svg (29.3 KB), global-poker.svg (3.1 KB)
+
+#### 2. 자동 확장자 감지 시스템 ✅
+- **스크립트**: `scripts/update-logo-extensions.ts` (132줄)
+- **기능**:
+  - public/logos/ 폴더 스캔 (.svg/.png 자동 감지)
+  - 파일 크기 비교 (큰 파일 우선 - 실제 로고 vs 플레이스홀더)
+  - tournament-categories.ts 경로 자동 업데이트
+- **결과**:
+  - 30개 로고 파일 스캔
+  - 1개 경로 수정 (ggpoker-uk: .svg → .png)
+- **사용자 경험**:
+  - 유저가 .svg 또는 .png 구분 없이 업로드 가능
+  - 스크립트 실행 시 자동으로 경로 업데이트
+
+### 핵심 파일
+- `scripts/download-pokernews-logos.ts` (신규, 145줄)
+- `scripts/update-logo-extensions.ts` (신규, 132줄)
+- `lib/tournament-categories.ts` (1개 경로 수정)
+- `public/logos/` (12개 실제 로고 추가)
+
+### 완료 기준 달성
+- ✅ 실제 로고 12개 다운로드 (100% 성공)
+- ✅ 자동 확장자 감지 스크립트 생성
+- ✅ 30개 로고 파일 관리 시스템 구축
+- ✅ 사용자 친화적 업로드 워크플로우
+
+### 기술적 개선사항
+
+#### 로고 다운로드
+- **Web Scraping**: WebFetch 도구로 pokernews.com 분석
+- **HTTPS 다운로드**: Node.js https 모듈 활용
+- **에러 핸들링**: 실패 시 자동 재시도 및 로깅
+
+#### 자동 감지 시스템
+- **파일 스캔**: fs.readdirSync로 전체 로고 스캔
+- **크기 비교**: 플레이스홀더(200-230 bytes) vs 실제 로고(1-200KB)
+- **자동 업데이트**: RegExp로 tournament-categories.ts 경로 교체
+
+### 개선 결과
+
+| 항목 | 이전 | 이후 | 개선 |
+|------|------|------|------|
+| 실제 로고 | 18개 플레이스홀더 | 12개 실제 로고 | **+67%** |
+| 수동 작업 | 확장자 수동 변경 | 자동 감지 | **100% 자동화** |
+| 경로 오류 | 1개 불일치 | 자동 수정됨 | **0개** |
+
+### 다음 작업
+- [ ] 나머지 6개 로고 추가 (apt, aussie-millions 등)
+- [ ] 로고 최적화 (SVGO, 파일 크기 압축)
+
+---
+
+## 2025-10-19 (세션 20) - Phase 14: Archive UI Redesign ✅
+
+### 작업 내용
+
+#### 1. 수평 로고 바 추가 ✅
+- **컴포넌트**: `components/archive-unified-filters.tsx` 수정
+- **디자인**: Netflix/Spotify 스타일 수평 스크롤
+  - Horizontal ScrollArea 컴포넌트 활용
+  - 선택된 토너먼트 자동 스크롤 (scrollIntoView)
+  - Glassmorphism 효과 (blur, gradient)
+- **UX 개선**:
+  - 로고만 표시 (텍스트 레이블 제거)
+  - Hover 효과 및 scale 애니메이션
+  - 선택 상태 시각적 피드백
+
+#### 2. 필터 버튼 중복 제거 ✅
+- **문제**: ArchiveUnifiedFilters와 ArchiveToolbar에 필터 토글 버튼이 중복
+- **해결**:
+  - `showToggleButton` prop 추가 (default: true)
+  - 조건부 렌더링: `{showToggleButton && ...}`
+  - 필터 내용 표시 로직 수정: `{(showToggleButton ? isOpen : true) && ...}`
+- **적용**: ArchiveToolbar에서 `showToggleButton={false}` 전달
+
+#### 3. 빌드 테스트 ✅
+- **Archive 페이지**: 72.9 kB (최적화 유지)
+- **성공적 빌드**: 모든 25개 페이지 정상 생성
+
+### 핵심 파일
+- `components/archive-unified-filters.tsx` (수평 로고 바 + showToggleButton prop)
+- `app/archive/_components/ArchiveToolbar.tsx` (showToggleButton={false} 전달)
+
+### 완료 기준 달성
+- ✅ 수평 로고 스크롤 바 구현
+- ✅ 필터 버튼 중복 제거
+- ✅ 선택된 항목 자동 스크롤
+- ✅ 빌드 테스트 성공
+
+### 기술적 개선사항
+
+#### UI/UX
+- **수평 스크롤**: ScrollArea로 부드러운 스크롤 경험
+- **자동 포커스**: 선택된 토너먼트 자동 스크롤
+- **시각적 피드백**: Hover, Scale, Gradient 효과
+
+#### 컴포넌트 재사용성
+- **조건부 렌더링**: showToggleButton prop으로 유연성 확보
+- **Backward 호환**: default true로 기존 사용처 영향 없음
+
+### 개선 결과
+
+| 항목 | 이전 | 이후 | 개선 |
+|------|------|------|------|
+| UI 디자인 | 세로 목록 | 수평 로고 바 | **현대화** |
+| 필터 버튼 | 중복 표시 | 단일 버튼 | **UX 개선** |
+| Archive 페이지 | 72.9 kB | 72.9 kB | **유지** |
+
+### 다음 작업
+- [x] 실제 로고 다운로드 (Phase 15)
+
+---
+
 ## 2025-10-18 (세션 19) - Phase 12: 테스팅 전략 수립 ✅
 
 ### 작업 내용
@@ -809,6 +938,6 @@
 
 ---
 
-**마지막 업데이트**: 2025-10-17
-**문서 버전**: 3.0
-**최적화**: 721줄 → 186줄 (74% 토큰 절감)
+**마지막 업데이트**: 2025-10-19
+**문서 버전**: 4.0
+**최적화**: Phase 14-15 추가 (Archive UI Redesign, 로고 관리 시스템)
