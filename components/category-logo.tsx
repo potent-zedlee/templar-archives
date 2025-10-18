@@ -1,8 +1,7 @@
 'use client'
 
-import Image from 'next/image'
 import { cn } from '@/lib/utils'
-import { getCategoryById, getCategoryByAlias, normalizeCategoryName } from '@/lib/tournament-categories'
+import { getCategoryById, getCategoryByAlias } from '@/lib/tournament-categories'
 
 interface CategoryLogoProps {
   category: string
@@ -57,30 +56,28 @@ export function CategoryLogo({
 
   const displayName = categoryData?.name || category
 
+  // CSS mask를 사용하여 SVG를 currentColor로 렌더링
   return (
     <div
       className={cn(
-        'relative flex items-center justify-center',
+        'flex items-center justify-center',
         SIZE_CLASSES[size],
         className
       )}
-    >
-      <Image
-        src={logoPath}
-        alt={`${displayName} logo`}
-        fill
-        className="object-contain dark:brightness-110 dark:contrast-90"
-        sizes={
-          size === 'sm'
-            ? '16px'
-            : size === 'md'
-              ? '24px'
-              : size === 'lg'
-                ? '32px'
-                : '48px'
-        }
-      />
-    </div>
+      style={{
+        maskImage: `url(${logoPath})`,
+        WebkitMaskImage: `url(${logoPath})`,
+        maskSize: 'contain',
+        WebkitMaskSize: 'contain',
+        maskRepeat: 'no-repeat',
+        WebkitMaskRepeat: 'no-repeat',
+        maskPosition: 'center',
+        WebkitMaskPosition: 'center',
+        backgroundColor: 'currentColor',
+      }}
+      role="img"
+      aria-label={`${displayName} logo`}
+    />
   )
 }
 
