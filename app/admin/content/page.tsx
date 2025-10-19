@@ -28,26 +28,22 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/components/auth-provider"
 import { isAdmin } from "@/lib/admin"
+import { type Report } from "@/lib/content-moderation"
 import {
-  fetchAllPosts,
-  fetchAllComments,
-  fetchReports,
-  approveReport,
-  rejectReport,
-  hideContent,
-  unhideContent,
-  deleteContent,
-  type Report
-} from "@/lib/content-moderation"
+  useAllPostsQuery,
+  useAllCommentsQuery,
+  useReportsQuery,
+  useApproveReportMutation,
+  useRejectReportMutation,
+  useHideContentMutation,
+  useUnhideContentMutation,
+  useDeleteContentMutation,
+} from "@/lib/queries/admin-queries"
 import { Eye, EyeOff, Trash2, CheckCircle, XCircle, AlertTriangle } from "lucide-react"
 
 export default function contentClient() {
   const router = useRouter()
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [posts, setPosts] = useState<any[]>([])
-  const [comments, setComments] = useState<any[]>([])
-  const [reports, setReports] = useState<Report[]>([])
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [adminComment, setAdminComment] = useState("")
   const [actionDialog, setActionDialog] = useState<{
@@ -57,8 +53,21 @@ export default function contentClient() {
     targetType: "post" | "comment" | "report"
   } | null>(null)
 
+  // React Query hooks
+  const { data: posts = [], isLoading: postsLoading } = useAllPostsQuery(true)
+  const { data: comments = [], isLoading: commentsLoading } = useAllCommentsQuery(true)
+  const { data: reports = [], isLoading: reportsLoading } = useReportsQuery()
+
+  const approveReportMutation = useApproveReportMutation()
+  const rejectReportMutation = useRejectReportMutation()
+  const hideContentMutation = useHideContentMutation()
+  const unhideContentMutation = useUnhideContentMutation()
+  const deleteContentMutation = useDeleteContentMutation()
+
+  const loading = postsLoading || commentsLoading || reportsLoading
+
   useEffect(() => {
-    async function checkAdminAndLoadData() {
+    async function checkAdminAccess() {
       if (!user) {
         router.push("/auth/login")
         return
@@ -69,90 +78,86 @@ export default function contentClient() {
         router.push("/")
         return
       }
-
-      await loadData()
-      setLoading(false)
     }
 
-    checkAdminAndLoadData()
+    checkAdminAccess()
   }, [user, router])
 
-  async function loadData() {
-    try {
-      const [postsData, commentsData, reportsData] = await Promise.all([
-        fetchAllPosts({ includeHidden: true }),
-        fetchAllComments({ includeHidden: true }),
-        fetchReports()
-      ])
-
-      setPosts(postsData)
-      setComments(commentsData)
-      setReports(reportsData)
-    } catch (error) {
-      console.error("Error loading data:", error)
-    }
-  }
-
-  async function handleApproveReport() {
+  function handleApproveReport() {
     if (!selectedReport || !user) return
 
-    try {
-      await approveReport({
+    approveReportMutation.mutate(
+      {
         reportId: selectedReport.id,
         adminId: user.id,
-        adminComment
-      })
-
-      setSelectedReport(null)
-      setAdminComment("")
-      await loadData()
-    } catch (error) {
-      console.error("Error approving report:", error)
-    }
+        adminComment,
+      },
+      {
+        onSuccess: () => {
+          setSelectedReport(null)
+          setAdminComment("")
+        },
+        onError: (error) => {
+          console.error("Error approving report:", error)
+        },
+      }
+    )
   }
 
-  async function handleRejectReport() {
+  function handleRejectReport() {
     if (!selectedReport || !user) return
 
-    try {
-      await rejectReport({
+    rejectReportMutation.mutate(
+      {
         reportId: selectedReport.id,
         adminId: user.id,
-        adminComment
-      })
-
-      setSelectedReport(null)
-      setAdminComment("")
-      await loadData()
-    } catch (error) {
-      console.error("Error rejecting report:", error)
-    }
+        adminComment,
+      },
+      {
+        onSuccess: () => {
+          setSelectedReport(null)
+          setAdminComment("")
+        },
+        onError: (error) => {
+          console.error("Error rejecting report:", error)
+        },
+      }
+    )
   }
 
-  async function handleContentAction() {
+  function handleContentAction() {
     if (!actionDialog) return
 
-    try {
-      const { type, targetId, targetType } = actionDialog
+    const { type, targetId, targetType } = actionDialog
+    const params = targetType === "post" ? { postId: targetId } : { commentId: targetId }
 
-      if (type === "hide") {
-        await hideContent(
-          targetType === "post" ? { postId: targetId } : { commentId: targetId }
-        )
-      } else if (type === "unhide") {
-        await unhideContent(
-          targetType === "post" ? { postId: targetId } : { commentId: targetId }
-        )
-      } else if (type === "delete") {
-        await deleteContent(
-          targetType === "post" ? { postId: targetId } : { commentId: targetId }
-        )
-      }
-
-      setActionDialog(null)
-      await loadData()
-    } catch (error) {
-      console.error("Error performing action:", error)
+    if (type === "hide") {
+      hideContentMutation.mutate(params, {
+        onSuccess: () => {
+          setActionDialog(null)
+        },
+        onError: (error) => {
+          console.error("Error hiding content:", error)
+        },
+      })
+    } else if (type === "unhide") {
+      unhideContentMutation.mutate(params, {
+        onSuccess: () => {
+          setActionDialog(null)
+        },
+        onError: (error) => {
+          console.error("Error unhiding content:", error)
+        },
+      })
+    } else if (type === "delete") {
+      deleteContentMutation.mutate(params, {
+        onSuccess: () => {
+          setActionDialog(null)
+        },
+        onError: (error) => {
+          console.error("Error deleting content:", error)
+        },
+      })
     }
   }
 

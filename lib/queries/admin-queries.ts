@@ -21,6 +21,18 @@ import {
   type AdminLog,
 } from '@/lib/admin'
 import {
+  fetchAllPosts,
+  fetchAllComments,
+  fetchReports,
+  approveReport,
+  rejectReport,
+  hideContent,
+  unhideContent,
+  deleteContent,
+  type Report,
+  type ReportStatus,
+} from '@/lib/content-moderation'
+import {
   getPendingClaims,
   getAllClaims,
   approvePlayerClaim,
@@ -48,6 +60,9 @@ export const adminKeys = {
   posts: (limit?: number) => [...adminKeys.all, 'posts', limit] as const,
   comments: (limit?: number) => [...adminKeys.all, 'comments', limit] as const,
   editRequests: (status?: EditRequestStatus) => [...adminKeys.all, 'edit-requests', status] as const,
+  reports: (status?: ReportStatus) => [...adminKeys.all, 'reports', status] as const,
+  allPosts: (includeHidden?: boolean) => [...adminKeys.all, 'all-posts', includeHidden] as const,
+  allComments: (includeHidden?: boolean) => [...adminKeys.all, 'all-comments', includeHidden] as const,
 }
 
 // ==================== Dashboard Queries ====================
@@ -362,6 +377,170 @@ export function useRejectEditRequestMutation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.editRequests() })
+    },
+  })
+}
+
+// ==================== Content Moderation Queries & Mutations ====================
+
+/**
+ * Get all posts (including hidden)
+ */
+export function useAllPostsQuery(includeHidden: boolean = true) {
+  return useQuery({
+    queryKey: adminKeys.allPosts(includeHidden),
+    queryFn: async () => {
+      return await fetchAllPosts({ includeHidden })
+    },
+    staleTime: 2 * 60 * 1000, // 2분
+    gcTime: 5 * 60 * 1000, // 5분
+  })
+}
+
+/**
+ * Get all comments (including hidden)
+ */
+export function useAllCommentsQuery(includeHidden: boolean = true) {
+  return useQuery({
+    queryKey: adminKeys.allComments(includeHidden),
+    queryFn: async () => {
+      return await fetchAllComments({ includeHidden })
+    },
+    staleTime: 2 * 60 * 1000, // 2분
+    gcTime: 5 * 60 * 1000, // 5분
+  })
+}
+
+/**
+ * Get reports
+ */
+export function useReportsQuery(status?: ReportStatus) {
+  return useQuery({
+    queryKey: adminKeys.reports(status),
+    queryFn: async () => {
+      return await fetchReports({ status })
+    },
+    staleTime: 2 * 60 * 1000, // 2분
+    gcTime: 5 * 60 * 1000, // 5분
+  })
+}
+
+/**
+ * Approve report (and hide content)
+ */
+export function useApproveReportMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      reportId,
+      adminId,
+      adminComment,
+    }: {
+      reportId: string
+      adminId: string
+      adminComment?: string
+    }) => {
+      await approveReport({ reportId, adminId, adminComment })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.reports() })
+      queryClient.invalidateQueries({ queryKey: adminKeys.allPosts() })
+      queryClient.invalidateQueries({ queryKey: adminKeys.allComments() })
+    },
+  })
+}
+
+/**
+ * Reject report
+ */
+export function useRejectReportMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      reportId,
+      adminId,
+      adminComment,
+    }: {
+      reportId: string
+      adminId: string
+      adminComment?: string
+    }) => {
+      await rejectReport({ reportId, adminId, adminComment })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.reports() })
+    },
+  })
+}
+
+/**
+ * Hide content (post or comment)
+ */
+export function useHideContentMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      postId,
+      commentId,
+    }: {
+      postId?: string
+      commentId?: string
+    }) => {
+      await hideContent(postId ? { postId } : { commentId: commentId! })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.allPosts() })
+      queryClient.invalidateQueries({ queryKey: adminKeys.allComments() })
+    },
+  })
+}
+
+/**
+ * Unhide content (post or comment)
+ */
+export function useUnhideContentMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      postId,
+      commentId,
+    }: {
+      postId?: string
+      commentId?: string
+    }) => {
+      await unhideContent(postId ? { postId } : { commentId: commentId! })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.allPosts() })
+      queryClient.invalidateQueries({ queryKey: adminKeys.allComments() })
+    },
+  })
+}
+
+/**
+ * Delete content (post or comment)
+ */
+export function useDeleteContentMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      postId,
+      commentId,
+    }: {
+      postId?: string
+      commentId?: string
+    }) => {
+      await deleteContent(postId ? { postId } : { commentId: commentId! })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.allPosts() })
+      queryClient.invalidateQueries({ queryKey: adminKeys.allComments() })
+      queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
     },
   })
 }
