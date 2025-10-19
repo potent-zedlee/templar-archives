@@ -60,6 +60,7 @@
     "@upstash/ratelimit": "^2.0.6",
     "@upstash/redis": "^1.35.6",
     "@vercel/analytics": "latest",
+    "@vercel/speed-insights": "^1.2.0",
     "autoprefixer": "^10.4.20",
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
@@ -87,6 +88,7 @@
     "tailwindcss-animate": "^1.0.7",
     "tesseract.js": "^6.0.1",
     "vaul": "^1.1.2",
+    "web-vitals": "^5.1.0",
     "zod": "3.25.67",
     "zustand": "^5.0.2"
   },

@@ -15,7 +15,8 @@ import {
   UserPlus,
   Ban,
   AlertCircle,
-  TrendingUp
+  TrendingUp,
+  Activity
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { isAdmin, getDashboardStats, getRecentActivity, type DashboardStats, type AdminLog } from "@/lib/admin"
@@ -163,7 +164,7 @@ export default function dashboardClient() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <LinkButton
             href="/admin/users"
             variant="outline"
@@ -193,13 +194,27 @@ export default function dashboardClient() {
           </LinkButton>
 
           <LinkButton
+            href="/admin/performance"
+            variant="outline"
+            className="h-20 justify-start"
+          >
+            <Activity className="h-5 w-5 mr-3" />
+            <div className="text-left">
+              <div className="text-body font-semibold">Performance</div>
+              <div className="text-caption text-muted-foreground">
+                View Web Vitals & metrics
+              </div>
+            </div>
+          </LinkButton>
+
+          <LinkButton
             href="/community"
             variant="outline"
             className="h-20 justify-start"
           >
             <FileText className="h-5 w-5 mr-3" />
             <div className="text-left">
-              <div className="text-body font-semibold">Community Management</div>
+              <div className="text-body font-semibold">Community</div>
               <div className="text-caption text-muted-foreground">
                 Moderate posts and comments
               </div>
