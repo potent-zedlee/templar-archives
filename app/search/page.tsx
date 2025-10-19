@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import nextDynamic from "next/dynamic"
+import { useState, useCallback, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { PageTransition } from "@/components/page-transition"
 import { useIsMobile } from "@/hooks/use-media-query"
+import { FilterPanel } from "@/components/filter-panel"
+import { fetchHandsWithDetails } from "@/lib/queries"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,11 +38,6 @@ import { useFilterStore } from "@/lib/filter-store"
 import { applyClientSideFilters, matchesHandRange, analyzeBoardTexture } from "@/lib/filter-utils"
 import { TableSkeleton } from "@/components/skeletons/table-skeleton"
 import { EmptyState } from "@/components/empty-state"
-
-// Dynamic import for heavy components
-const FilterPanel = nextDynamic(() => import("@/components/filter-panel").then(mod => ({ default: mod.FilterPanel })), {
-  ssr: false,
-})
 
 type HandWithDetails = Hand & {
   tournament_name?: string
