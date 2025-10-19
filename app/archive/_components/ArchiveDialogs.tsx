@@ -9,9 +9,13 @@
  * - 키보드 단축키 다이얼로그
  */
 
+import { useMemo } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { useArchiveFormStore } from '@/stores/archive-form-store'
+import { useArchiveData } from './ArchiveDataContext'
+import { archiveKeys } from '@/lib/queries/archive-queries'
 import { TournamentDialog } from '@/components/tournament-dialog'
 import { SubEventDialog } from '@/components/archive-dialogs/sub-event-dialog'
 import { SubEventInfoDialog } from '@/components/archive-dialogs/sub-event-info-dialog'
@@ -25,13 +29,9 @@ import { MoveToNewEventDialog } from '@/components/archive-dialogs/move-to-new-e
 import { KeyboardShortcutsDialog } from '@/components/keyboard-shortcuts-dialog'
 
 export function ArchiveDialogs() {
-  const {
-    tournaments,
-    loadTournaments,
-    loadUnsortedVideos,
-    userEmail,
-    getSelectedDayData,
-  } = useArchiveDataStore()
+  const queryClient = useQueryClient()
+  const { tournaments } = useArchiveData()
+  const { userEmail, selectedDay } = useArchiveDataStore()
 
   const {
     selectedCategory,
@@ -80,49 +80,59 @@ export function ArchiveDialogs() {
       ? tournaments
       : tournaments.filter((t) => t.category === selectedCategory)
 
-  // Handle success callbacks
-  const handleTournamentSuccess = async () => {
-    await loadTournaments()
+  // Handle success callbacks (React Query invalidation)
+  const handleTournamentSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
     closeTournamentDialog()
   }
 
-  const handleSubEventSuccess = async () => {
-    await loadTournaments()
+  const handleSubEventSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
     closeSubEventDialog()
   }
 
-  const handleDaySuccess = async () => {
-    await loadTournaments()
+  const handleDaySuccess = () => {
+    queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
     closeDayDialog()
   }
 
-  const handleRenameSuccess = async () => {
-    await loadTournaments()
-    await loadUnsortedVideos()
+  const handleRenameSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
+    queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
     closeRenameDialog()
   }
 
-  const handleDeleteSuccess = async () => {
-    await loadTournaments()
-    await loadUnsortedVideos()
+  const handleDeleteSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
+    queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
     closeDeleteDialog()
   }
 
-  const handleEditEventSuccess = async () => {
-    await loadTournaments()
+  const handleEditEventSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
     closeEditEventDialog()
   }
 
-  const handleMoveSuccess = async () => {
-    await loadTournaments()
-    await loadUnsortedVideos()
+  const handleMoveSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
+    queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
     clearSelection()
     closeMoveToEventDialog()
     closeMoveToNewEventDialog()
   }
 
-  // Get selected day for video player
-  const selectedDay = getSelectedDayData()
+  // Get selected day data for video player
+  const selectedDayData = useMemo(() => {
+    if (!selectedDay) return null
+
+    for (const tournament of tournaments) {
+      for (const subEvent of tournament.sub_events || []) {
+        const day = subEvent.days?.find((d) => d.id === selectedDay)
+        if (day) return day
+      }
+    }
+    return null
+  }, [selectedDay, tournaments])
 
   return (
     <>
@@ -176,7 +186,7 @@ export function ArchiveDialogs() {
 
       {/* Video Player Dialog */}
       <VideoPlayerDialog
-        day={selectedDay}
+        day={selectedDayData}
         isOpen={videoDialog.isOpen}
         onOpenChange={closeVideoDialog}
         initialTime={videoDialog.startTime}

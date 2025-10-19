@@ -9,9 +9,11 @@
  */
 
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
+import { useQueryClient } from '@tanstack/react-query'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { useArchiveKeyboard } from '@/hooks/useArchiveKeyboard'
+import { archiveKeys } from '@/lib/queries/archive-queries'
 import { organizeVideo, organizeVideos } from '@/lib/unsorted-videos'
 import { toast } from 'sonner'
 import type { UnsortedVideo } from '@/lib/types/archive'
@@ -21,8 +23,8 @@ interface ArchiveProvidersProps {
 }
 
 export function ArchiveProviders({ children }: ArchiveProvidersProps) {
-  // Zustand stores
-  const { loadTournaments, loadUnsortedVideos, selectDay, setHands } = useArchiveDataStore()
+  const queryClient = useQueryClient()
+  const { setSelectedDay } = useArchiveDataStore()
   const {
     selectedVideoIds,
     clearSelection,
@@ -65,8 +67,8 @@ export function ArchiveProviders({ children }: ArchiveProvidersProps) {
         const result = await organizeVideos(videoIdsToMove, dropTarget.id)
         if (result.success) {
           toast.success(`${videoIdsToMove.length} videos organized successfully`)
-          await loadTournaments()
-          await loadUnsortedVideos()
+          queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
+          queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
           clearSelection()
         } else {
           toast.error(result.error || 'Failed to organize videos')
@@ -75,8 +77,8 @@ export function ArchiveProviders({ children }: ArchiveProvidersProps) {
         const result = await organizeVideo(videoIdsToMove[0], dropTarget.id)
         if (result.success) {
           toast.success('Video organized successfully')
-          await loadTournaments()
-          await loadUnsortedVideos()
+          queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
+          queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
           clearSelection()
         } else {
           toast.error(result.error || 'Failed to organize video')
@@ -94,8 +96,7 @@ export function ArchiveProviders({ children }: ArchiveProvidersProps) {
 
   useArchiveKeyboard({
     onBackspace: () => {
-      selectDay(null)
-      setHands([])
+      setSelectedDay(null)
       navigateBack()
     },
     onSpace: () => {
@@ -106,7 +107,8 @@ export function ArchiveProviders({ children }: ArchiveProvidersProps) {
     },
     onSelectAll: () => {
       if (navigationLevel === 'unorganized') {
-        const unsortedVideos = useArchiveDataStore.getState().unsortedVideos
+        // Get unsortedVideos from React Query cache
+        const unsortedVideos = queryClient.getQueryData(archiveKeys.unsortedVideos()) as any[] || []
         const videoIds = unsortedVideos.map((v) => v.id)
         useArchiveUIStore.getState().selectAllVideos(videoIds)
       }
