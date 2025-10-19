@@ -12,11 +12,13 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
-  fetchNotifications,
-  markAsRead,
-  markAllAsRead,
-  deleteNotification,
-  deleteAllRead,
+  useNotificationsQuery,
+  useMarkAsReadMutation,
+  useMarkAllAsReadMutation,
+  useDeleteNotificationMutation,
+  useDeleteAllReadMutation,
+} from "@/lib/queries/notification-queries"
+import {
   formatNotificationTime,
   type Notification,
   type NotificationType,
@@ -52,86 +54,64 @@ export default function NotificationsPage() {
   const { user } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<"all" | "unread">("all")
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [loading, setLoading] = useState(true)
-  const [actionLoading, setActionLoading] = useState(false)
+
+  // React Query hooks
+  const { data: notifications = [], isLoading: loading } = useNotificationsQuery({
+    unreadOnly: activeTab === "unread",
+  })
+  const markAsReadMutation = useMarkAsReadMutation()
+  const markAllAsReadMutation = useMarkAllAsReadMutation()
+  const deleteNotificationMutation = useDeleteNotificationMutation()
+  const deleteAllReadMutation = useDeleteAllReadMutation()
 
   useEffect(() => {
     if (!user) {
       router.push("/auth/login")
-      return
     }
+  }, [user, router])
 
-    loadNotifications()
-  }, [user, activeTab, router])
-
-  async function loadNotifications() {
-    setLoading(true)
-    try {
-      const data = await fetchNotifications({
-        unreadOnly: activeTab === "unread",
-      })
-      setNotifications(data)
-    } catch (error) {
-      console.error("Error loading notifications:", error)
-      toast.error("Failed to load notifications")
-    } finally {
-      setLoading(false)
-    }
+  function handleMarkAsRead(notificationId: string) {
+    markAsReadMutation.mutate(notificationId, {
+      onSuccess: () => {
+        toast.success("Marked as read")
+      },
+      onError: () => {
+        toast.error("Failed to mark as read")
+      },
+    })
   }
 
-  async function handleMarkAsRead(notificationId: string) {
-    try {
-      await markAsRead(notificationId)
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true } : n
-        )
-      )
-      toast.success("Marked as read")
-    } catch (error) {
-      console.error("Error marking as read:", error)
-      toast.error("Failed to mark as read")
-    }
+  function handleMarkAllAsRead() {
+    markAllAsReadMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.success("All notifications marked as read")
+      },
+      onError: () => {
+        toast.error("Failed to mark all as read")
+      },
+    })
   }
 
-  async function handleMarkAllAsRead() {
-    setActionLoading(true)
-    try {
-      await markAllAsRead()
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
-      toast.success("All notifications marked as read")
-    } catch (error) {
-      console.error("Error marking all as read:", error)
-      toast.error("Failed to mark all as read")
-    } finally {
-      setActionLoading(false)
-    }
+  function handleDelete(notificationId: string) {
+    deleteNotificationMutation.mutate(notificationId, {
+      onSuccess: () => {
+        toast.success("Notification deleted")
+      },
+      onError: () => {
+        toast.error("Failed to delete notification")
+      },
+    })
   }
 
-  async function handleDelete(notificationId: string) {
-    try {
-      await deleteNotification(notificationId)
-      setNotifications((prev) => prev.filter((n) => n.id !== notificationId))
-      toast.success("Notification deleted")
-    } catch (error) {
-      console.error("Error deleting notification:", error)
-      toast.error("Failed to delete notification")
-    }
-  }
-
-  async function handleDeleteAllRead() {
-    setActionLoading(true)
-    try {
-      await deleteAllRead()
-      setNotifications((prev) => prev.filter((n) => !n.is_read))
-      toast.success("All read notifications deleted")
-    } catch (error) {
-      console.error("Error deleting read notifications:", error)
-      toast.error("Failed to delete read notifications")
-    } finally {
-      setActionLoading(false)
-    }
+  function handleDeleteAllRead() {
+    deleteAllReadMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.success("All read notifications deleted")
+      },
+      onError: () => {
+        toast.error("Failed to delete read notifications")
+      },
+    })
   }
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
@@ -167,7 +147,7 @@ export default function NotificationsPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleMarkAllAsRead}
-                disabled={actionLoading}
+                disabled={markAllAsReadMutation.isPending}
               >
                 <CheckCheck className="h-4 w-4 mr-2" />
                 Mark all read
@@ -178,7 +158,7 @@ export default function NotificationsPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleDeleteAllRead}
-                disabled={actionLoading}
+                disabled={deleteAllReadMutation.isPending}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete read

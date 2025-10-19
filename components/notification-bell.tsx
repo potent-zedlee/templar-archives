@@ -15,12 +15,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
 import {
-  fetchNotifications,
-  getUnreadCount,
-  markAsRead,
-  markAllAsRead,
-  deleteNotification,
+  useNotificationsQuery,
+  useUnreadCountQuery,
+  useMarkAsReadMutation,
+  useMarkAllAsReadMutation,
+  useDeleteNotificationMutation,
+  notificationKeys,
+} from "@/lib/queries/notification-queries"
+import {
   subscribeToNotifications,
   formatNotificationTime,
   type Notification,
@@ -29,22 +33,24 @@ import { useAuth } from "./auth-provider"
 
 export function NotificationBell() {
   const { user } = useAuth()
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [loading, setLoading] = useState(false)
+  const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
 
-  // Load initial notifications
+  // React Query hooks
+  const { data: notifications = [] } = useNotificationsQuery({ limit: 10 })
+  const { data: unreadCount = 0 } = useUnreadCountQuery()
+  const markAsReadMutation = useMarkAsReadMutation()
+  const markAllAsReadMutation = useMarkAllAsReadMutation()
+  const deleteNotificationMutation = useDeleteNotificationMutation()
+
+  // Subscribe to real-time updates
   useEffect(() => {
     if (!user) return
 
-    loadNotifications()
-    loadUnreadCount()
-
-    // Subscribe to real-time updates
     const subscription = subscribeToNotifications(user.id, (notification) => {
-      setNotifications((prev) => [notification, ...prev].slice(0, 10))
-      setUnreadCount((prev) => prev + 1)
+      // Invalidate queries to refetch
+      queryClient.invalidateQueries({ queryKey: notificationKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount() })
 
       // Show toast notification
       toast(notification.title, {
@@ -63,72 +69,33 @@ export function NotificationBell() {
     return () => {
       subscription.unsubscribe()
     }
-  }, [user])
+  }, [user, queryClient])
 
-  async function loadNotifications() {
-    if (!user) return
-
-    try {
-      const data = await fetchNotifications({ limit: 10 })
-      setNotifications(data)
-    } catch (error) {
-      console.error("Error loading notifications:", error)
-    }
+  function handleMarkAsRead(notificationId: string) {
+    markAsReadMutation.mutate(notificationId, {
+      onError: () => {
+        toast.error("Failed to mark as read")
+      },
+    })
   }
 
-  async function loadUnreadCount() {
-    if (!user) return
-
-    try {
-      const count = await getUnreadCount()
-      setUnreadCount(count)
-    } catch (error) {
-      console.error("Error loading unread count:", error)
-    }
+  function handleMarkAllAsRead() {
+    markAllAsReadMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.success("All notifications marked as read")
+      },
+      onError: () => {
+        toast.error("Failed to mark all as read")
+      },
+    })
   }
 
-  async function handleMarkAsRead(notificationId: string) {
-    try {
-      await markAsRead(notificationId)
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true } : n
-        )
-      )
-      setUnreadCount((prev) => Math.max(0, prev - 1))
-    } catch (error) {
-      console.error("Error marking as read:", error)
-      toast.error("Failed to mark as read")
-    }
-  }
-
-  async function handleMarkAllAsRead() {
-    setLoading(true)
-    try {
-      await markAllAsRead()
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
-      setUnreadCount(0)
-      toast.success("All notifications marked as read")
-    } catch (error) {
-      console.error("Error marking all as read:", error)
-      toast.error("Failed to mark all as read")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleDelete(notificationId: string) {
-    try {
-      await deleteNotification(notificationId)
-      setNotifications((prev) => prev.filter((n) => n.id !== notificationId))
-      const notification = notifications.find((n) => n.id === notificationId)
-      if (notification && !notification.is_read) {
-        setUnreadCount((prev) => Math.max(0, prev - 1))
-      }
-    } catch (error) {
-      console.error("Error deleting notification:", error)
-      toast.error("Failed to delete notification")
-    }
+  function handleDelete(notificationId: string) {
+    deleteNotificationMutation.mutate(notificationId, {
+      onError: () => {
+        toast.error("Failed to delete notification")
+      },
+    })
   }
 
   function handleNotificationClick(notification: Notification) {
@@ -166,7 +133,7 @@ export function NotificationBell() {
                 variant="ghost"
                 size="sm"
                 onClick={handleMarkAllAsRead}
-                disabled={loading}
+                disabled={markAllAsReadMutation.isPending}
                 className="h-8 text-xs"
               >
                 <Check className="h-3 w-3 mr-1" />
