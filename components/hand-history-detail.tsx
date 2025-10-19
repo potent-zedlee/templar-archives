@@ -18,7 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ThumbsUp, ThumbsDown, Pencil, ChevronDown, ChevronRight, Bookmark, Edit } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Pencil, ChevronDown, ChevronRight, Bookmark, Edit, List } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -232,14 +232,24 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
             <div className="flex items-center gap-2">
               {/* 수정 버튼 (관리자만) */}
               {isAdmin(userEmail) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditDialogOpen(true)}
-                >
-                  <Pencil className="h-4 w-4 mr-1" />
-                  수정
-                </Button>
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditDialogOpen(true)}
+                  >
+                    <Pencil className="h-4 w-4 mr-1" />
+                    수정
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/admin/hands/${handId}/edit-actions`)}
+                  >
+                    <List className="h-4 w-4 mr-1" />
+                    Edit Actions
+                  </Button>
+                </>
               )}
 
               {/* 수정 제안 버튼 (일반 사용자) */}
