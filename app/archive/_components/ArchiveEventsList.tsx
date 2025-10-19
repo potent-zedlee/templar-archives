@@ -10,34 +10,19 @@
  * - Context 메뉴 액션
  */
 
-import dynamic from 'next/dynamic'
 import { Plus } from 'lucide-react'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { ArchiveBreadcrumb } from '@/components/archive-breadcrumb'
 import { ArchiveFolderList } from '@/components/archive-folder-list'
+import { ArchiveGridView } from '@/components/archive-grid-view'
+import { ArchiveTimelineView } from '@/components/archive-timeline-view'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { isAdmin } from '@/lib/auth-utils'
 import type { FolderItem, BreadcrumbItem } from '@/lib/types/archive'
 import { useMemo, useCallback } from 'react'
-
-const ArchiveGridView = dynamic(
-  () => import('@/components/archive-grid-view').then((mod) => ({ default: mod.ArchiveGridView })),
-  {
-    ssr: false,
-    loading: () => <div className="h-40 bg-muted animate-pulse rounded-md" />,
-  }
-)
-
-const ArchiveTimelineView = dynamic(
-  () => import('@/components/archive-timeline-view').then((mod) => ({ default: mod.ArchiveTimelineView })),
-  {
-    ssr: false,
-    loading: () => <div className="h-40 bg-muted animate-pulse rounded-md" />,
-  }
-)
 
 export function ArchiveEventsList() {
   const { tournaments, unsortedVideos, tournamentsLoading } = useArchiveData()
