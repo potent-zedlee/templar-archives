@@ -70,6 +70,11 @@ export function ArchiveEventsList() {
 
   const isUserAdmin = isAdmin(userEmail)
 
+  // Wrapper function to match expected type signature
+  const handleSelectDay = useCallback((dayId: string) => {
+    setSelectedDay(dayId)
+  }, [setSelectedDay])
+
   // Build breadcrumb items
   const breadcrumbItems = useMemo((): BreadcrumbItem[] => {
     const items: BreadcrumbItem[] = []
@@ -351,7 +356,7 @@ export function ArchiveEventsList() {
         <ArchiveFolderList
           items={folderItems}
           onNavigate={handleFolderNavigate}
-          onSelectDay={setSelectedDay}
+          onSelectDay={handleSelectDay}
           loading={tournamentsLoading}
           isUnorganized={navigationLevel === 'unorganized'}
           selectedIds={selectedVideoIds}
@@ -371,7 +376,7 @@ export function ArchiveEventsList() {
         <ArchiveGridView
           items={folderItems}
           onNavigate={handleFolderNavigate}
-          onSelectDay={setSelectedDay}
+          onSelectDay={handleSelectDay}
           loading={tournamentsLoading}
           isUnorganized={navigationLevel === 'unorganized'}
           selectedIds={selectedVideoIds}
@@ -390,7 +395,7 @@ export function ArchiveEventsList() {
         <ArchiveTimelineView
           items={folderItems}
           onNavigate={handleFolderNavigate}
-          onSelectDay={setSelectedDay}
+          onSelectDay={handleSelectDay}
           loading={tournamentsLoading}
           isUnorganized={navigationLevel === 'unorganized'}
           selectedIds={selectedVideoIds}
