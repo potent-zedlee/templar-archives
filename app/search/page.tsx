@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import nextDynamic from "next/dynamic"
 import { Header } from "@/components/header"
 import { PageTransition } from "@/components/page-transition"
+import { useIsMobile } from "@/hooks/use-media-query"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -49,6 +50,7 @@ type HandWithDetails = Hand & {
 }
 
 export default function SearchClient() {
+  const isMobile = useIsMobile()
   const [hands, setHands] = useState<HandWithDetails[]>([])
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -337,7 +339,61 @@ export default function SearchClient() {
                 onClick: clearFilters
               }}
             />
+          ) : isMobile ? (
+            // Mobile Card Layout
+            <ScrollArea className="h-[600px]">
+              <div className="space-y-3">
+                {hands.map((hand) => (
+                  <Card key={hand.id} className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          {hand.favorite && (
+                            <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          )}
+                          <span className="font-semibold text-body">#{hand.number}</span>
+                        </div>
+                        <Badge variant="secondary" className="text-caption">
+                          {hand.timestamp}
+                        </Badge>
+                      </div>
+
+                      <p className="text-body">{hand.description}</p>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-caption text-muted-foreground">
+                          <span className="font-medium">Tournament:</span>
+                          <span>{hand.tournament_name || 'Unknown'}</span>
+                        </div>
+
+                        {hand.day_name && (
+                          <div className="text-caption text-muted-foreground">
+                            {hand.day_name}
+                          </div>
+                        )}
+
+                        {hand.player_names && hand.player_names.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {hand.player_names.slice(0, 2).map((name, i) => (
+                              <Badge key={i} variant="secondary" className="text-caption">
+                                {name}
+                              </Badge>
+                            ))}
+                            {hand.player_names.length > 2 && (
+                              <Badge variant="secondary" className="text-caption">
+                                +{hand.player_names.length - 2}
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </ScrollArea>
           ) : (
+            // Desktop Table Layout
             <ScrollArea className="h-[600px]">
               <Table>
                 <TableHeader>

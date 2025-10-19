@@ -176,7 +176,7 @@ export default function communityClient() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
             {/* Search Bar */}
@@ -358,7 +358,7 @@ export default function communityClient() {
                     {posts.map((post) => (
                       <StaggerItem key={post.id}>
                         <AnimatedCard>
-                          <Card className="p-6">
+                          <Card className="p-4 md:p-6">
                             <div className="flex gap-4">
                         <Avatar className="h-12 w-12">
                           <AvatarImage src={post.author_avatar} alt={post.author_name} />
@@ -438,8 +438,10 @@ export default function communityClient() {
             </Tabs>
           </div>
 
-          {/* Sidebar */}
-          <PopularPostsSidebar onCategoryClick={handleCategoryClick} />
+          {/* Sidebar - Hidden on mobile */}
+          <div className="hidden lg:block">
+            <PopularPostsSidebar onCategoryClick={handleCategoryClick} />
+          </div>
         </div>
       </div>
     </div>

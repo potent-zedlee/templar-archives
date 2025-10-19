@@ -169,7 +169,7 @@ export default function playersClient() {
         </div>
 
         {/* Search and Filter Bar */}
-        <Card className="p-4 mb-6 space-y-4">
+        <Card className="p-3 md:p-4 mb-6 space-y-4">
           {/* Search and Sort Row */}
           <div className="flex gap-4">
             <div className="relative flex-1">
@@ -278,7 +278,7 @@ export default function playersClient() {
               <StaggerItem key={player.id}>
                 <Link href={`/players/${player.id}`}>
                   <AnimatedCard>
-                    <Card className="p-6">
+                    <Card className="p-4 md:p-6">
                   <div className="flex items-start gap-4">
                     <Avatar className="h-16 w-16">
                       <AvatarImage src={player.photo_url} alt={player.name} />
