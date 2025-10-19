@@ -9,66 +9,20 @@
  * - 키보드 단축키 다이얼로그
  */
 
-import dynamic from 'next/dynamic'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { useArchiveFormStore } from '@/stores/archive-form-store'
-
-// Dynamic imports for all dialogs
-const TournamentDialog = dynamic(
-  () => import('@/components/tournament-dialog').then((mod) => ({ default: mod.TournamentDialog })),
-  { ssr: false }
-)
-
-const SubEventDialog = dynamic(
-  () => import('@/components/archive-dialogs/sub-event-dialog').then((mod) => ({ default: mod.SubEventDialog })),
-  { ssr: false }
-)
-
-const SubEventInfoDialog = dynamic(
-  () => import('@/components/archive-dialogs/sub-event-info-dialog').then((mod) => ({ default: mod.SubEventInfoDialog })),
-  { ssr: false }
-)
-
-const DayDialog = dynamic(
-  () => import('@/components/archive-dialogs/day-dialog').then((mod) => ({ default: mod.DayDialog })),
-  { ssr: false }
-)
-
-const VideoPlayerDialog = dynamic(
-  () => import('@/components/video-player-dialog').then((mod) => ({ default: mod.VideoPlayerDialog })),
-  { ssr: false }
-)
-
-const RenameDialog = dynamic(
-  () => import('@/components/archive-dialogs/rename-dialog').then((mod) => ({ default: mod.RenameDialog })),
-  { ssr: false }
-)
-
-const DeleteDialog = dynamic(
-  () => import('@/components/archive-dialogs/delete-dialog').then((mod) => ({ default: mod.DeleteDialog })),
-  { ssr: false }
-)
-
-const EditEventDialog = dynamic(
-  () => import('@/components/edit-event-dialog').then((mod) => ({ default: mod.EditEventDialog })),
-  { ssr: false }
-)
-
-const MoveToExistingEventDialog = dynamic(
-  () => import('@/components/archive-dialogs/move-to-existing-event-dialog').then((mod) => ({ default: mod.MoveToExistingEventDialog })),
-  { ssr: false }
-)
-
-const MoveToNewEventDialog = dynamic(
-  () => import('@/components/archive-dialogs/move-to-new-event-dialog').then((mod) => ({ default: mod.MoveToNewEventDialog })),
-  { ssr: false }
-)
-
-const KeyboardShortcutsDialog = dynamic(
-  () => import('@/components/keyboard-shortcuts-dialog').then((mod) => ({ default: mod.KeyboardShortcutsDialog })),
-  { ssr: false }
-)
+import { TournamentDialog } from '@/components/tournament-dialog'
+import { SubEventDialog } from '@/components/archive-dialogs/sub-event-dialog'
+import { SubEventInfoDialog } from '@/components/archive-dialogs/sub-event-info-dialog'
+import { DayDialog } from '@/components/archive-dialogs/day-dialog'
+import { VideoPlayerDialog } from '@/components/video-player-dialog'
+import { RenameDialog } from '@/components/archive-dialogs/rename-dialog'
+import { DeleteDialog } from '@/components/archive-dialogs/delete-dialog'
+import { EditEventDialog } from '@/components/edit-event-dialog'
+import { MoveToExistingEventDialog } from '@/components/archive-dialogs/move-to-existing-event-dialog'
+import { MoveToNewEventDialog } from '@/components/archive-dialogs/move-to-new-event-dialog'
+import { KeyboardShortcutsDialog } from '@/components/keyboard-shortcuts-dialog'
 
 export function ArchiveDialogs() {
   const {

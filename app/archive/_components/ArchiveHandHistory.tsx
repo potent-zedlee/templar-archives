@@ -9,29 +9,15 @@
  * - 빈 상태 표시
  */
 
-import dynamic from 'next/dynamic'
 import { CheckCircle, X, Play, Download, Folder } from 'lucide-react'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
+import { HandListAccordion } from '@/components/hand-list-accordion'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/empty-state'
 import { useMemo } from 'react'
-
-const HandListAccordion = dynamic(
-  () => import('@/components/hand-list-accordion').then((mod) => ({ default: mod.HandListAccordion })),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="space-y-2">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-16 bg-muted animate-pulse rounded-md" />
-        ))}
-      </div>
-    ),
-  }
-)
 
 export function ArchiveHandHistory() {
   const { tournaments, hands } = useArchiveData()

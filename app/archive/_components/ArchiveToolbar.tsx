@@ -12,7 +12,6 @@
  */
 
 import { useState } from 'react'
-import dynamic from 'next/dynamic'
 import { Plus, Filter, ChevronDown, ChevronUp } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
@@ -22,19 +21,11 @@ import { ArchiveTournamentLogosBar } from '@/components/archive-tournament-logos
 import { ArchiveUnifiedFilters } from '@/components/archive-unified-filters'
 import { ArchiveViewSwitcher } from '@/components/archive-view-switcher'
 import { ArchiveSearchSort } from '@/components/archive-search-sort'
+import { QuickUploadDialog } from '@/components/quick-upload-dialog'
+import { TournamentDialog } from '@/components/tournament-dialog'
 import { Button } from '@/components/ui/button'
 import { isAdmin } from '@/lib/auth-utils'
 import { cn } from '@/lib/utils'
-
-const QuickUploadDialog = dynamic(
-  () => import('@/components/quick-upload-dialog').then((mod) => ({ default: mod.QuickUploadDialog })),
-  { ssr: false }
-)
-
-const TournamentDialog = dynamic(
-  () => import('@/components/tournament-dialog').then((mod) => ({ default: mod.TournamentDialog })),
-  { ssr: false }
-)
 
 export function ArchiveToolbar() {
   const { userEmail } = useArchiveDataStore()
