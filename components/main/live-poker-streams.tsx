@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
@@ -52,10 +53,11 @@ function LiveStreamCard({ stream }: { stream: LiveStream }) {
       <Card className="overflow-hidden border-border/50 transition-all hover:border-primary/50 hover:shadow-lg">
         {/* Thumbnail */}
         <div className="relative aspect-video overflow-hidden bg-muted">
-          <img
+          <Image
             src={stream.thumbnailUrl}
             alt={stream.title}
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            fill
+            className="object-cover transition-transform group-hover:scale-105"
           />
 
           {/* Stream Type Badge */}
@@ -103,11 +105,15 @@ function LiveStreamCard({ stream }: { stream: LiveStream }) {
           </h3>
           <div className="flex items-center justify-center gap-2">
             {stream.channelThumbnail && (
-              <img
-                src={stream.channelThumbnail}
-                alt={stream.channelName}
-                className="w-6 h-6 rounded-full object-cover flex-shrink-0"
-              />
+              <div className="relative w-6 h-6 flex-shrink-0">
+                <Image
+                  src={stream.channelThumbnail}
+                  alt={stream.channelName}
+                  width={24}
+                  height={24}
+                  className="rounded-full object-cover"
+                />
+              </div>
             )}
             <p className="text-sm font-semibold text-foreground truncate">
               {stream.channelName}

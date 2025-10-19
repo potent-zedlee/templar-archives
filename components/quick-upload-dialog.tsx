@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react'
+import Image from 'next/image'
 import {
   Dialog,
   DialogContent,
@@ -633,11 +634,14 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
                           checked={selectedVideos.has(video.id)}
                           onCheckedChange={() => handleToggleVideo(video.id)}
                         />
-                        <img
-                          src={video.thumbnail}
-                          alt={video.title}
-                          className="w-24 h-18 object-cover rounded flex-shrink-0"
-                        />
+                        <div className="relative w-24 h-18 flex-shrink-0">
+                          <Image
+                            src={video.thumbnail}
+                            alt={video.title}
+                            fill
+                            className="object-cover rounded"
+                          />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium line-clamp-2">{video.title}</p>
                           <p className="text-xs text-muted-foreground mt-1">

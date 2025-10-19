@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { getCategoryById, getCategoryByAlias } from '@/lib/tournament-categories'
 
@@ -57,20 +58,21 @@ export function CategoryLogo({
   const displayName = categoryData?.name || category
   const isPng = logoPath.endsWith('.png')
 
-  // PNG 파일은 일반 img 태그 사용 (다크모드 대응 안됨)
+  // PNG 파일은 Next.js Image 사용 (최적화된 이미지 로딩)
   if (isPng) {
     return (
       <div
         className={cn(
-          'flex items-center justify-center',
+          'flex items-center justify-center relative',
           SIZE_CLASSES[size],
           className
         )}
       >
-        <img
+        <Image
           src={logoPath}
           alt={`${displayName} logo`}
-          className="w-full h-full object-contain"
+          fill
+          className="object-contain"
         />
       </div>
     )
