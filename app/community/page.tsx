@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
 import { Header } from "@/components/header"
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/page-transition"
 import { AnimatedCard, AnimatedButton, AnimatedIconButton } from "@/components/animated-card"
@@ -23,12 +24,17 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createPost } from "@/lib/supabase-community"
-import { HandSearchDialog } from "@/components/hand-search-dialog"
 import { CommunitySearchBar } from "@/components/community-search-bar"
 import { CommunityFilters } from "@/components/community-filters"
 import { PopularPostsSidebar } from "@/components/popular-posts-sidebar"
 import { useAuth } from "@/components/auth-provider"
 import { ReportButton } from "@/components/report-button"
+
+// Dynamic imports for heavy components
+const HandSearchDialog = dynamic(
+  () => import('@/components/hand-search-dialog').then((mod) => ({ default: mod.HandSearchDialog })),
+  { ssr: false }
+)
 
 const categoryColors: Record<Post['category'], string> = {
   "analysis": "bg-blue-500/10 text-blue-500",
