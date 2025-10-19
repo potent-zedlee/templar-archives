@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import dynamic from "next/dynamic"
 import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"
@@ -16,15 +15,7 @@ import { toast } from "sonner"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { useAuth } from "@/components/auth-provider"
 import { ReportButton } from "@/components/report-button"
-
-// Dynamic imports for heavy components
-const PostComments = dynamic(
-  () => import('@/components/post-comments').then((mod) => ({ default: mod.PostComments })),
-  {
-    ssr: false,
-    loading: () => <div className="text-center py-4">Loading comments...</div>
-  }
-)
+import { PostComments } from "@/components/post-comments"
 
 const categoryColors: Record<Post['category'], string> = {
   "analysis": "bg-blue-500/10 text-blue-500",

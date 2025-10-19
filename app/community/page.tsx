@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import dynamic from "next/dynamic"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Header } from "@/components/header"
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/page-transition"
@@ -30,12 +29,7 @@ import { CommunityFilters } from "@/components/community-filters"
 import { PopularPostsSidebar } from "@/components/popular-posts-sidebar"
 import { useAuth } from "@/components/auth-provider"
 import { ReportButton } from "@/components/report-button"
-
-// Dynamic imports for heavy components
-const HandSearchDialog = dynamic(
-  () => import('@/components/hand-search-dialog').then((mod) => ({ default: mod.HandSearchDialog })),
-  { ssr: false }
-)
+import { HandSearchDialog } from "@/components/hand-search-dialog"
 
 const categoryColors: Record<Post['category'], string> = {
   "analysis": "bg-blue-500/10 text-blue-500",

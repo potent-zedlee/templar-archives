@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useRef, useMemo, useEffect } from "react"
-import nextDynamic from "next/dynamic"
 import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"
@@ -23,22 +22,8 @@ import {
   usePlayerClaimQuery,
   useUpdatePlayerPhotoMutation
 } from "@/lib/queries/players-queries"
-
-// Dynamic imports for heavy components
-const HandListAccordion = nextDynamic(() => import("@/components/hand-list-accordion").then(mod => ({ default: mod.HandListAccordion })), {
-  ssr: false,
-  loading: () => <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-muted animate-pulse rounded-md" />)}</div>
-})
-
-const PrizeHistoryChart = nextDynamic(() => import("@/components/player-charts").then(mod => ({ default: mod.PrizeHistoryChart })), {
-  ssr: false,
-  loading: () => <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
-})
-
-const TournamentCategoryChart = nextDynamic(() => import("@/components/player-charts").then(mod => ({ default: mod.TournamentCategoryChart })), {
-  ssr: false,
-  loading: () => <div className="h-[300px] bg-muted animate-pulse rounded-lg" />
-})
+import { HandListAccordion } from "@/components/hand-list-accordion"
+import { PrizeHistoryChart, TournamentCategoryChart } from "@/components/player-charts"
 
 type Tournament = {
   id: string
@@ -230,6 +215,11 @@ export default function PlayerDetailClient() {
           : t
       )
     )
+  }
+
+  const handleClaimSuccess = () => {
+    setClaimDialogOpen(false)
+    toast.success('Claim request submitted successfully')
   }
 
   if (loading) {
