@@ -4,7 +4,7 @@
  * Players 페이지의 데이터 페칭을 위한 React Query hooks
  */
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   fetchPlayersWithHandCount,
   fetchPlayerHandsGrouped,
@@ -153,5 +153,51 @@ export function usePlayerClaimQuery(playerId: string, userId?: string) {
     staleTime: 2 * 60 * 1000, // 2분
     gcTime: 5 * 60 * 1000, // 5분
     enabled: !!playerId,
+  })
+}
+
+// ==================== Mutations ====================
+
+/**
+ * Update player photo
+ */
+export function useUpdatePlayerPhotoMutation(playerId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const supabase = createClientSupabaseClient()
+
+      // Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${playerId}-${Date.now()}.${fileExt}`
+      const filePath = `player-photos/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('player-photos')
+        .upload(filePath, file, { upsert: true })
+
+      if (uploadError) throw uploadError
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('player-photos')
+        .getPublicUrl(filePath)
+
+      // Update player photo_url
+      const { error: updateError } = await supabase
+        .from('players')
+        .update({ photo_url: publicUrl })
+        .eq('id', playerId)
+
+      if (updateError) throw updateError
+
+      return publicUrl
+    },
+    onSuccess: () => {
+      // Invalidate player detail query
+      queryClient.invalidateQueries({ queryKey: playersKeys.detail(playerId) })
+      queryClient.invalidateQueries({ queryKey: playersKeys.lists() })
+    },
   })
 }

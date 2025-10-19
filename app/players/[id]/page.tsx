@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef, useMemo, useEffect } from "react"
 import nextDynamic from "next/dynamic"
 import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
@@ -10,16 +10,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowLeft, TrendingUp, ChevronDown, ChevronRight, BarChart3, PieChart, Activity, Upload } from "lucide-react"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
-import type { Player } from "@/lib/supabase"
 import type { HandHistory } from "@/lib/types/hand-history"
 import { toast } from "sonner"
-import { fetchPlayerHandsGrouped, fetchPlayerPrizeHistory } from "@/lib/queries"
 import { isAdmin } from "@/lib/auth-utils"
-import { calculatePlayerStatistics, type PlayerStatistics } from "@/lib/player-stats"
-import { getPlayerClaimInfo, checkUserPlayerClaim, type PlayerClaimWithDetails } from "@/lib/player-claims"
 import { ClaimPlayerDialog } from "@/components/claim-player-dialog"
 import { useAuth } from "@/components/auth-provider"
+import {
+  usePlayerQuery,
+  usePlayerHandsQuery,
+  usePlayerStatsQuery,
+  usePlayerPrizesQuery,
+  usePlayerClaimQuery,
+  useUpdatePlayerPhotoMutation
+} from "@/lib/queries/players-queries"
 
 // Dynamic imports for heavy components
 const HandListAccordion = nextDynamic(() => import("@/components/hand-list-accordion").then(mod => ({ default: mod.HandListAccordion })), {
@@ -70,11 +73,10 @@ export default function PlayerDetailClient() {
   const playerId = params.id as string
   const { user } = useAuth()
 
-  const [player, setPlayer] = useState<Player | null>(null)
-  const [tournaments, setTournaments] = useState<Tournament[]>([])
-  const [loading, setLoading] = useState(true)
-  const [totalHandsCount, setTotalHandsCount] = useState(0)
-  const [playerStats, setPlayerStats] = useState<PlayerStatistics>({
+  // React Query hooks
+  const { data: player = null, isLoading: loading } = usePlayerQuery(playerId)
+  const { data: handsData = [] } = usePlayerHandsQuery(playerId)
+  const { data: playerStats = {
     vpip: 0,
     pfr: 0,
     threeBet: 0,
@@ -84,180 +86,49 @@ export default function PlayerDetailClient() {
     showdownWinRate: 0,
     totalHands: 0,
     handsWon: 0,
-  })
-  const [statistics, setStatistics] = useState({
-    eventsCount: 0,
-    tournamentsCount: 0,
-    handsPerEvent: [] as { name: string; hands: number }[],
-    tournamentCategories: [] as { name: string; value: number }[]
-  })
-  const [prizeHistory, setPrizeHistory] = useState<any[]>([])
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  } } = usePlayerStatsQuery(playerId)
+  const { data: prizeHistory = [] } = usePlayerPrizesQuery(playerId)
+  const { data: claimData } = usePlayerClaimQuery(playerId, user?.id)
+
+  // Mutations
+  const updatePhotoMutation = useUpdatePlayerPhotoMutation(playerId)
+
+  // UI states
+  const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [claimDialogOpen, setClaimDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Claim-related states
-  const [playerClaim, setPlayerClaim] = useState<PlayerClaimWithDetails | null>(null)
-  const [isClaimed, setIsClaimed] = useState(false)
-  const [userClaim, setUserClaim] = useState<any>(null)
-  const [claimDialogOpen, setClaimDialogOpen] = useState(false)
+  // Extract claim data
+  const playerClaim = claimData?.claimInfo.claim || null
+  const isClaimed = claimData?.claimInfo.claimed || false
+  const userClaim = claimData?.userClaim || null
 
+  // Update tournaments when hands data changes
   useEffect(() => {
-    if (playerId) {
-      loadPlayerAndHands()
-      loadPlayerClaim()
-    }
-  }, [playerId])
+    const tournamentsWithState = handsData.map((tournament: any) => ({
+      ...tournament,
+      expanded: true,
+      sub_events: tournament.sub_events.map((subEvent: any) => ({
+        ...subEvent,
+        expanded: false,
+      })),
+    }))
+    setTournaments(tournamentsWithState)
+  }, [handsData])
 
-  useEffect(() => {
-    async function getUser() {
-      const supabase = createClientSupabaseClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      setUserEmail(user?.email || null)
-    }
-    getUser()
-  }, [])
-
-  useEffect(() => {
-    if (user && playerId) {
-      loadUserClaim()
-    }
-  }, [user, playerId])
-
-  async function handlePhotoUpload(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
-    if (!file || !player) return
-
-    const supabase = createClientSupabaseClient()
-
-    try {
-      setUploadingPhoto(true)
-
-      // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${player.id}-${Date.now()}.${fileExt}`
-      const filePath = `player-photos/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('player-photos')
-        .upload(filePath, file, { upsert: true })
-
-      if (uploadError) throw uploadError
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('player-photos')
-        .getPublicUrl(filePath)
-
-      // Update player photo_url
-      const { error: updateError } = await supabase
-        .from('players')
-        .update({ photo_url: publicUrl })
-        .eq('id', player.id)
-
-      if (updateError) throw updateError
-
-      // Update local state
-      setPlayer({ ...player, photo_url: publicUrl })
-      toast.success('Player photo updated successfully')
-    } catch (error) {
-      console.error('Error uploading photo:', error)
-      toast.error('Failed to upload photo')
-    } finally {
-      setUploadingPhoto(false)
-    }
-  }
-
-  async function loadPlayerAndHands() {
-    setLoading(true)
-    const supabase = createClientSupabaseClient()
-    try {
-      // Get player info
-      const { data: playerData, error: playerError } = await supabase
-        .from('players')
-        .select('*')
-        .eq('id', playerId)
-        .single()
-
-      if (playerError) throw playerError
-      setPlayer(playerData)
-
-      // Get hands grouped by tournament/event hierarchy
-      const groupedData = await fetchPlayerHandsGrouped(playerId)
-
-      // Add UI state (expanded)
-      const tournamentsWithState = groupedData.map((tournament: any) => ({
-        ...tournament,
-        expanded: true,
-        sub_events: tournament.sub_events.map((subEvent: any) => ({
-          ...subEvent,
-          expanded: false,
-        })),
-      }))
-
-      setTournaments(tournamentsWithState)
-
-      // Calculate total hands count
-      const count = groupedData.reduce((total: number, tournament: any) => {
-        return total + tournament.sub_events.reduce((subTotal: number, subEvent: any) => {
-          return subTotal + subEvent.days.reduce((dayTotal: number, day: any) => {
-            return dayTotal + day.hands.length
-          }, 0)
+  // Calculate total hands count
+  const totalHandsCount = useMemo(() => {
+    return handsData.reduce((total: number, tournament: any) => {
+      return total + tournament.sub_events.reduce((subTotal: number, subEvent: any) => {
+        return subTotal + subEvent.days.reduce((dayTotal: number, day: any) => {
+          return dayTotal + day.hands.length
         }, 0)
       }, 0)
-      setTotalHandsCount(count)
+    }, 0)
+  }, [handsData])
 
-      // Get prize history
-      const prizeData = await fetchPlayerPrizeHistory(playerId)
-      setPrizeHistory(prizeData)
-
-      // Calculate player statistics
-      const stats = await calculatePlayerStatistics(playerId)
-      setPlayerStats(stats)
-    } catch (error) {
-      console.error('Error loading player and hands:', error)
-      toast.error('Failed to load player details')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function loadPlayerClaim() {
-    try {
-      const { claimed, claim } = await getPlayerClaimInfo(playerId)
-      setIsClaimed(claimed)
-      if (claim) {
-        setPlayerClaim(claim)
-      }
-    } catch (error) {
-      console.error('Error loading player claim:', error)
-    }
-  }
-
-  async function loadUserClaim() {
-    if (!user) return
-    try {
-      const { hasClaim, claim } = await checkUserPlayerClaim(user.id, playerId)
-      if (hasClaim) {
-        setUserClaim(claim)
-      }
-    } catch (error) {
-      console.error('Error loading user claim:', error)
-    }
-  }
-
-  function handleClaimSuccess() {
-    loadPlayerClaim()
-    loadUserClaim()
-  }
-
-  useEffect(() => {
-    if (tournaments.length > 0) {
-      calculateUIStatistics()
-    }
-  }, [tournaments])
-
-  function calculateUIStatistics() {
+  // Calculate UI statistics
+  const statistics = useMemo(() => {
     const eventsMap = new Map<string, number>()
     const categoriesMap = new Map<string, number>()
 
@@ -290,16 +161,31 @@ export default function PlayerDetailClient() {
     const handsPerEvent = Array.from(eventsMap.entries())
       .map(([name, hands]) => ({ name, hands }))
       .sort((a, b) => b.hands - a.hands)
-      .slice(0, 10) // Top 10 only
+      .slice(0, 10)
 
     const tournamentCategories = Array.from(categoriesMap.entries())
       .map(([name, value]) => ({ name, value }))
 
-    setStatistics({
+    return {
       eventsCount: eventsMap.size,
       tournamentsCount: tournaments.length,
       handsPerEvent,
       tournamentCategories
+    }
+  }, [tournaments])
+
+  function handlePhotoUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file || !player) return
+
+    updatePhotoMutation.mutate(file, {
+      onSuccess: () => {
+        toast.success('Player photo updated successfully')
+      },
+      onError: (error) => {
+        console.error('Error uploading photo:', error)
+        toast.error('Failed to upload photo')
+      }
     })
   }
 
@@ -394,7 +280,7 @@ export default function PlayerDetailClient() {
                   {player.name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
-              {isAdmin(userEmail) && (
+              {isAdmin(user?.email) && (
                 <>
                   <input
                     ref={fileInputRef}
@@ -408,7 +294,7 @@ export default function PlayerDetailClient() {
                     variant="secondary"
                     className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-8 px-2"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingPhoto}
+                    disabled={updatePhotoMutation.isPending}
                   >
                     <Upload className="h-3 w-3" />
                   </Button>
