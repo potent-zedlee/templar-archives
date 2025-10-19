@@ -55,9 +55,9 @@ export function WebVitalsReporter() {
     }
 
     // web-vitals 라이브러리 동적 import
-    import('web-vitals').then(({ onCLS, onFID, onFCP, onLCP, onTTFB, onINP }) => {
+    // web-vitals v4+: onFID 제거됨, onINP 사용
+    import('web-vitals').then(({ onCLS, onFCP, onLCP, onTTFB, onINP }) => {
       onCLS(handleMetric as any)
-      onFID(handleMetric as any)
       onFCP(handleMetric as any)
       onLCP(handleMetric as any)
       onTTFB(handleMetric as any)
