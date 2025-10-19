@@ -2,8 +2,8 @@
 
 > 단계별 기능 구현 계획 및 우선순위
 
-**마지막 업데이트**: 2025-10-19
-**현재 Phase**: Phase 0-15 완료 🎉
+**마지막 업데이트**: 2025-10-20
+**현재 Phase**: Phase 0-17 완료 🎉
 
 ---
 
@@ -187,6 +187,54 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 
 ---
 
+### Phase 16: React Query Migration (2025-10-20) ✅
+**소요 시간**: 6시간
+
+#### 완료 기능
+- 전체 앱 데이터 페칭 현대화 (@tanstack/react-query 5.x)
+- 6개 query 파일 생성 (총 650줄)
+  - `community-queries.ts` (89줄) - 포스트 상세, 좋아요
+  - `search-queries.ts` (68줄) - 핸드 검색, 필터 옵션
+  - `players-queries.ts` (203줄) - 플레이어 리스트, 상세, 통계, 사진
+  - `profile-queries.ts` (163줄) - 프로필, 닉네임 체크, 아바타
+  - `bookmarks-queries.ts` (79줄) - 북마크 CRUD
+  - `edit-requests-queries.ts` (38줄) - 수정 제안 목록
+- 9개 페이지 리팩토링 (~200줄 코드 감소)
+  - Community/[id], Search, Players, Players/[id]
+  - Profile, Profile/[id], Bookmarks, My Edit Requests
+- Optimistic Updates 구현
+  - Community 포스트 좋아요 (즉각적인 UI 반응)
+  - 자동 롤백 (onError 처리)
+- 성능 최적화
+  - 닉네임 중복 체크 500ms 디바운싱
+  - useMemo로 folders/filteredBookmarks 계산
+  - 계층적 쿼리 키 패턴
+- 캐시 전략 설정
+  - staleTime: 1분~10분 (데이터 특성별)
+  - gcTime: 5분 (메모리 관리)
+  - refetchOnWindowFocus: false
+
+**핵심 파일**:
+- `lib/queries/community-queries.ts`
+- `lib/queries/players-queries.ts`
+- `components/providers.tsx`
+
+---
+
+### Phase 17: DevTools Optimization (2025-10-20) ✅
+**소요 시간**: 30분
+
+#### 완료 기능
+- React Query DevTools 조건부 렌더링
+- `process.env.NODE_ENV === 'development'` 체크
+- Tree shaking으로 프로덕션 빌드에서 완전 제거
+- 프로덕션 번들 크기 감소
+
+**핵심 파일**:
+- `components/providers.tsx`
+
+---
+
 ## 📊 우선순위 요약
 
 | Phase | 기능 | 우선순위 | 상태 | 완료일 |
@@ -207,6 +255,8 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | Phase 13 | 보안 강화 | ⭐⭐⭐⭐ | ✅ | 2025-10-18 |
 | Phase 14 | Archive Redesign | ⭐⭐⭐ | ✅ | 2025-10-19 |
 | Phase 15 | 로고 관리 | ⭐⭐ | ✅ | 2025-10-19 |
+| Phase 16 | React Query Migration | ⭐⭐⭐⭐ | ✅ | 2025-10-20 |
+| Phase 17 | DevTools Optimization | ⭐⭐⭐ | ✅ | 2025-10-20 |
 
 ---
 
@@ -238,6 +288,7 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | 2025-10-16 (세션 12) | Phase 3 완료, 문서 정리 |
 | 2025-10-18 | Phase 9-13 완료 (코드 품질, 성능, 테스팅, 보안) |
 | 2025-10-19 | Phase 14-15 완료 (UI Redesign, 로고 관리) |
+| 2025-10-20 | Phase 16-17 완료 (React Query Migration, DevTools) |
 
 ---
 

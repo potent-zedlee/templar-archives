@@ -41,13 +41,16 @@ npm run dev
 
 ### API 문서
 - **[docs/HAND_IMPORT_API.md](./docs/HAND_IMPORT_API.md)** - 핸드 Import API
+- **[docs/REACT_QUERY_GUIDE.md](./docs/REACT_QUERY_GUIDE.md)** - React Query 사용 가이드
 - **[docs/ui-specifications/](./docs/ui-specifications/)** - UI 스펙 문서
 
 ## 🏗️ 기술 스택
 
 - **Framework**: Next.js 15.5.5 (App Router, Edge Runtime)
 - **UI**: shadcn/ui, Tailwind CSS 4
-- **State**: Zustand
+- **State**:
+  - Zustand (UI 상태 관리)
+  - React Query (@tanstack/react-query) (서버 상태 관리)
 - **Backend**: Supabase (PostgreSQL, Storage, Realtime, Auth)
 - **AI**: Anthropic Claude 3.5 Sonnet
 
@@ -172,7 +175,9 @@ supabase link --project-ref diopilmkehygiqpizvga
   "@supabase/supabase-js": "2.48.0",
   "@anthropic-ai/sdk": "0.30.1",
   "tailwindcss": "4.1.9",
-  "zustand": "5.0.2"
+  "zustand": "5.0.2",
+  "@tanstack/react-query": "5.x",
+  "@tanstack/react-query-devtools": "5.x"
 }
 ```
 
@@ -196,9 +201,9 @@ DEBUG=true  # 프로덕션 환경에서 디버그 로그 활성화
 - **Supabase**: [Dashboard](https://supabase.com/dashboard/project/diopilmkehygiqpizvga/settings/api) → Settings → API
 - **Anthropic**: [Claude Console](https://console.anthropic.com/settings/keys)
 
-## 🎯 현재 개발 상태 (2025-10-16)
+## 🎯 현재 개발 상태 (2025-10-20)
 
-### ✅ 완료된 기능 (Phase 0-7)
+### ✅ 완료된 기능 (Phase 0-17)
 
 #### Phase 0: 인증 시스템
 - Google OAuth 로그인
@@ -237,6 +242,17 @@ DEBUG=true  # 프로덕션 환경에서 디버그 로그 활성화
 - Full-Text Search (FTS)
 - 제목/내용 가중치 검색
 
+#### Phase 16: React Query Migration
+- 전체 앱 데이터 페칭 현대화
+- 6개 query 파일 생성 (650줄)
+- 9개 페이지 리팩토링
+- Optimistic Updates (좋아요, 북마크)
+- 500ms 디바운싱 (닉네임 중복 체크)
+
+#### Phase 17: DevTools Optimization
+- React Query DevTools 조건부 렌더링
+- 프로덕션 번들 최적화
+
 #### 추가 기능
 - ✅ **아카이브 카테고리 필터** (2025-10-16)
   - All, WSOP, Triton, EPT, Hustler, APT, APL, GGPOKER
@@ -263,15 +279,15 @@ DEBUG=true  # 프로덕션 환경에서 디버그 로그 활성화
 ---
 
 **프로젝트**: Templar Archives (구 GGVault)
-**버전**: 3.0
-**마지막 업데이트**: 2025-10-16
+**버전**: 4.0
+**마지막 업데이트**: 2025-10-20
 
-**최근 업데이트 (v3.0)**:
-- ✅ 브랜딩 변경: GGVault → Templar Archives
-- ✅ 파비콘 추가 (Protoss Carrier)
-- ✅ 아카이브 카테고리 필터 추가
-- ✅ 코드 최적화 (logger 유틸리티, console.log 정리)
-- ✅ Edge Runtime 적용 (모든 페이지)
-- ✅ Next.js 15.1.6 + React 19.0 업그레이드
+**최근 업데이트 (v4.0)**:
+- ✅ React Query Migration (Phase 16) - 전체 앱 데이터 페칭 현대화
+- ✅ DevTools Optimization (Phase 17) - 프로덕션 번들 최적화
+- ✅ 6개 query 파일 생성 (650줄)
+- ✅ 9개 페이지 리팩토링 (~200줄 감소)
+- ✅ Optimistic Updates (좋아요, 북마크)
+- ✅ 500ms 디바운싱 (닉네임 중복 체크)
 
 전체 프로젝트 정보는 [상위 README](../README.md)를 참조하세요.
