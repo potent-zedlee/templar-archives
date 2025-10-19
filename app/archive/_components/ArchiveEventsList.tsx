@@ -120,7 +120,7 @@ export function ArchiveEventsList() {
       setNavigationLevel('subevent')
       setCurrentSubEventId(item.id)
     }
-  }, [selectDay, setNavigationLevel, setCurrentTournamentId, setCurrentSubEventId])
+  }, [setSelectedDay, setNavigationLevel, setCurrentTournamentId, setCurrentSubEventId])
 
   // Build folder items with filtering and sorting
   const folderItems = useMemo((): FolderItem[] => {
@@ -278,7 +278,7 @@ export function ArchiveEventsList() {
       setCurrentTournamentId('')
       setCurrentSubEventId('')
     }
-  }, [selectDay, setNavigationLevel, setCurrentTournamentId, setCurrentSubEventId])
+  }, [setSelectedDay, setNavigationLevel, setCurrentTournamentId, setCurrentSubEventId])
 
   // Context menu handlers
   const handleRename = useCallback((item: FolderItem) => {
@@ -351,7 +351,7 @@ export function ArchiveEventsList() {
         <ArchiveFolderList
           items={folderItems}
           onNavigate={handleFolderNavigate}
-          onSelectDay={selectDay}
+          onSelectDay={setSelectedDay}
           loading={tournamentsLoading}
           isUnorganized={navigationLevel === 'unorganized'}
           selectedIds={selectedVideoIds}
@@ -371,7 +371,7 @@ export function ArchiveEventsList() {
         <ArchiveGridView
           items={folderItems}
           onNavigate={handleFolderNavigate}
-          onSelectDay={selectDay}
+          onSelectDay={setSelectedDay}
           loading={tournamentsLoading}
           isUnorganized={navigationLevel === 'unorganized'}
           selectedIds={selectedVideoIds}
@@ -390,7 +390,7 @@ export function ArchiveEventsList() {
         <ArchiveTimelineView
           items={folderItems}
           onNavigate={handleFolderNavigate}
-          onSelectDay={selectDay}
+          onSelectDay={setSelectedDay}
           loading={tournamentsLoading}
           isUnorganized={navigationLevel === 'unorganized'}
           selectedIds={selectedVideoIds}
