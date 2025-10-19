@@ -299,6 +299,7 @@ export default function SearchClient() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && searchHands()}
                     className="pl-10"
+                    aria-label="AI-powered hand search query"
                   />
                 </div>
               </div>

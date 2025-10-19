@@ -172,7 +172,7 @@ export default function homeClient() {
     <div className="min-h-screen">
       <Header />
       <PageTransition variant="fade">
-        <main>
+        <main id="main-content" role="main">
           {/* Live Poker Streams */}
           <section className="py-12 md:py-16">
             <div className="container max-w-7xl mx-auto px-4 md:px-6">
