@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import dynamic from "next/dynamic"
 import { Header } from "@/components/header"
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/page-transition"
@@ -74,11 +74,7 @@ export default function communityClient() {
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
 
-  useEffect(() => {
-    loadPosts()
-  }, [activeTab, searchQuery, filterCategory, dateFrom, dateTo])
-
-  async function loadPosts() {
+  const loadPosts = useCallback(async () => {
     setLoading(true)
     try {
       const data = await fetchPosts({
@@ -95,21 +91,25 @@ export default function communityClient() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [activeTab, searchQuery, filterCategory, dateFrom, dateTo])
 
-  function handleResetFilters() {
+  useEffect(() => {
+    loadPosts()
+  }, [loadPosts])
+
+  const handleResetFilters = useCallback(() => {
     setSearchQuery("")
     setFilterCategory(undefined)
     setDateFrom("")
     setDateTo("")
-  }
+  }, [])
 
-  function handleCategoryClick(category: Post['category']) {
+  const handleCategoryClick = useCallback((category: Post['category']) => {
     setFilterCategory(category)
     setShowFilters(true)
-  }
+  }, [])
 
-  async function handleLike(postId: string) {
+  const handleLike = useCallback(async (postId: string) => {
     if (!user) {
       toast.error('Login required')
       return
@@ -127,9 +127,9 @@ export default function communityClient() {
       console.error('Error toggling like:', error)
       toast.error('Failed to toggle like')
     }
-  }
+  }, [user, posts])
 
-  async function handleCreatePost() {
+  const handleCreatePost = useCallback(async () => {
     if (!user) {
       toast.error('Login required')
       return
@@ -168,7 +168,7 @@ export default function communityClient() {
     } finally {
       setCreating(false)
     }
-  }
+  }, [user, newTitle, newContent, newCategory, selectedHand, loadPosts])
 
   return (
     <ErrorBoundary>
