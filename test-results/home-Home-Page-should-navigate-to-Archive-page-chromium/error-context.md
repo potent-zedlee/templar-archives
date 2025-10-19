@@ -1,0 +1,42 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - link "TA Templar Archives" [ref=e6] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e8]: TA
+            - generic [ref=e9]: Templar Archives
+          - navigation [ref=e10]:
+            - link "SEARCH" [ref=e11] [cursor=pointer]:
+              - /url: /search
+            - link "ARCHIVE" [ref=e12] [cursor=pointer]:
+              - /url: /archive
+            - link "PLAYERS" [ref=e13] [cursor=pointer]:
+              - /url: /players
+            - link "FORUM" [ref=e14] [cursor=pointer]:
+              - /url: /community
+        - generic [ref=e15]:
+          - button "Toggle theme" [ref=e16]:
+            - img
+            - img
+            - generic [ref=e17]: Toggle theme
+          - button "LOGIN" [ref=e18]
+    - main [ref=e19]
+  - region "Notifications alt+T"
+  - generic [ref=e65] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e66]:
+      - img [ref=e67]
+    - generic [ref=e70]:
+      - button "Open issues overlay" [ref=e71]:
+        - generic [ref=e72]:
+          - generic [ref=e73]: "0"
+          - generic [ref=e74]: "1"
+        - generic [ref=e75]: Issue
+      - button "Collapse issues badge" [ref=e76]:
+        - img [ref=e77]
+  - alert [ref=e79]
+```

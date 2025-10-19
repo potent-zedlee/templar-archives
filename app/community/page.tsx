@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import dynamic from "next/dynamic"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Header } from "@/components/header"
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/page-transition"
 import { AnimatedCard, AnimatedButton, AnimatedIconButton } from "@/components/animated-card"
@@ -45,9 +46,8 @@ const categoryColors: Record<Post['category'], string> = {
 
 export default function communityClient() {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
   const [activeTab, setActiveTab] = useState<"trending" | "recent" | "popular">("trending")
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   // New post form
@@ -55,7 +55,6 @@ export default function communityClient() {
   const [newContent, setNewContent] = useState("")
   const [newCategory, setNewCategory] = useState<Post['category']>("general")
   const [newAuthorName, setNewAuthorName] = useState("")
-  const [creating, setCreating] = useState(false)
 
   // Hand attachment
   const [selectedHand, setSelectedHand] = useState<{
@@ -74,28 +73,18 @@ export default function communityClient() {
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
 
-  const loadPosts = useCallback(async () => {
-    setLoading(true)
-    try {
-      const data = await fetchPosts({
-        sortBy: activeTab,
-        searchQuery: searchQuery || undefined,
-        category: filterCategory,
-        dateFrom: dateFrom || undefined,
-        dateTo: dateTo || undefined
-      })
-      setPosts(data)
-    } catch (error) {
-      console.error('Error loading posts:', error)
-      toast.error('Failed to load posts')
-    } finally {
-      setLoading(false)
-    }
-  }, [activeTab, searchQuery, filterCategory, dateFrom, dateTo])
-
-  useEffect(() => {
-    loadPosts()
-  }, [loadPosts])
+  // React Query: Fetch posts
+  const { data: posts = [], isLoading: loading } = useQuery({
+    queryKey: ['posts', activeTab, searchQuery, filterCategory, dateFrom, dateTo],
+    queryFn: () => fetchPosts({
+      sortBy: activeTab,
+      searchQuery: searchQuery || undefined,
+      category: filterCategory,
+      dateFrom: dateFrom || undefined,
+      dateTo: dateTo || undefined
+    }),
+    staleTime: 30 * 1000, // 30초
+  })
 
   const handleResetFilters = useCallback(() => {
     setSearchQuery("")
@@ -109,27 +98,66 @@ export default function communityClient() {
     setShowFilters(true)
   }, [])
 
-  const handleLike = useCallback(async (postId: string) => {
+  // React Query: Toggle like mutation
+  const likeMutation = useMutation({
+    mutationFn: ({ postId, userId }: { postId: string; userId: string }) =>
+      togglePostLike(postId, userId),
+    onMutate: async ({ postId }) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['posts'] })
+      const previousPosts = queryClient.getQueryData(['posts', activeTab, searchQuery, filterCategory, dateFrom, dateTo])
+
+      queryClient.setQueryData(
+        ['posts', activeTab, searchQuery, filterCategory, dateFrom, dateTo],
+        (old: Post[] = []) =>
+          old.map(p =>
+            p.id === postId
+              ? { ...p, likes_count: p.likes_count + 1 }
+              : p
+          )
+      )
+
+      return { previousPosts }
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(
+        ['posts', activeTab, searchQuery, filterCategory, dateFrom, dateTo],
+        context?.previousPosts
+      )
+      toast.error('Failed to toggle like')
+    },
+  })
+
+  const handleLike = useCallback((postId: string) => {
     if (!user) {
       toast.error('Login required')
       return
     }
+    likeMutation.mutate({ postId, userId: user.id })
+  }, [user, likeMutation])
 
-    try {
-      const liked = await togglePostLike(postId, user.id)
-      // Update local state
-      setPosts(posts.map(p =>
-        p.id === postId
-          ? { ...p, likes_count: p.likes_count + (liked ? 1 : -1) }
-          : p
-      ))
-    } catch (error) {
-      console.error('Error toggling like:', error)
-      toast.error('Failed to toggle like')
-    }
-  }, [user, posts])
+  // React Query: Create post mutation
+  const createPostMutation = useMutation({
+    mutationFn: createPost,
+    onSuccess: (newPost) => {
+      queryClient.setQueryData(
+        ['posts', activeTab, searchQuery, filterCategory, dateFrom, dateTo],
+        (old: Post[] = []) => [newPost, ...old]
+      )
+      toast.success('Post created successfully!')
+      setIsDialogOpen(false)
+      setNewTitle("")
+      setNewContent("")
+      setNewAuthorName("")
+      setNewCategory("general")
+      setSelectedHand(null)
+    },
+    onError: () => {
+      toast.error('Failed to create post')
+    },
+  })
 
-  const handleCreatePost = useCallback(async () => {
+  const handleCreatePost = useCallback(() => {
     if (!user) {
       toast.error('Login required')
       return
@@ -140,35 +168,14 @@ export default function communityClient() {
       return
     }
 
-    setCreating(true)
-    try {
-      const newPost = await createPost({
-        title: newTitle,
-        content: newContent,
-        category: newCategory,
-        author_id: user.id,
-        hand_id: selectedHand?.id
-      })
-
-      // Optimistic UI: Add new post to the top of the list
-      setPosts((prev) => [newPost, ...prev])
-
-      toast.success('Post created successfully!')
-      setIsDialogOpen(false)
-      setNewTitle("")
-      setNewContent("")
-      setNewAuthorName("")
-      setNewCategory("general")
-      setSelectedHand(null)
-    } catch (error) {
-      console.error('Error creating post:', error)
-      toast.error('Failed to create post')
-      // Reload on error
-      loadPosts()
-    } finally {
-      setCreating(false)
-    }
-  }, [user, newTitle, newContent, newCategory, selectedHand, loadPosts])
+    createPostMutation.mutate({
+      title: newTitle,
+      content: newContent,
+      category: newCategory,
+      author_id: user.id,
+      hand_id: selectedHand?.id
+    })
+  }, [user, newTitle, newContent, newCategory, selectedHand, createPostMutation])
 
   return (
     <ErrorBoundary>
@@ -304,10 +311,10 @@ export default function communityClient() {
                     </div>
 
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={creating}>
+                      <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={createPostMutation.isPending}>
                         Cancel
                       </Button>
-                      <AnimatedButton onClick={handleCreatePost} disabled={creating} loading={creating}>
+                      <AnimatedButton onClick={handleCreatePost} disabled={createPostMutation.isPending} loading={createPostMutation.isPending}>
                         Create Post
                       </AnimatedButton>
                     </div>

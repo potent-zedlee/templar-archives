@@ -1,0 +1,75 @@
+
+> templar-archives@0.1.0 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/zed/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/zed/Desktop/Archive/templar-archives/pnpm-lock.yaml
+
+   ▲ Next.js 15.5.5
+   - Environments: .env.local, .env.production
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 3.3s
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/24) ...
+[YouTube API] Starting request...
+[YouTube API] API Key present: true
+[YouTube API] API Key length: 39
+[YouTube API] Fetching priority channels: WSOP, PokerGO, World Poker Tour, PokerStars, APT Poker, Hustler Casino Live
+[YouTube API] Priority streams found: 15
+[YouTube API] Unique videos after deduplication: 6
+[YouTube API] Final streams count: 5
+[YouTube API] Channels: Hustler Casino Live, World Poker Tour, World Poker Tour LATAM, Triton Poker, Poker Night in America
+[YouTube API] Request completed successfully
+   Generating static pages (6/24) 
+   Generating static pages (12/24) 
+   Generating static pages (18/24) 
+ ✓ Generating static pages (24/24)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS  Revalidate  Expire
+┌ ○ /                                    7.25 kB         220 kB
+├ ○ /_not-found                            151 B         102 kB
+├ ○ /admin/claims                        5.74 kB         215 kB
+├ ○ /admin/content                       5.72 kB         215 kB
+├ ○ /admin/dashboard                     3.74 kB         213 kB
+├ ○ /admin/edit-requests                 5.65 kB         215 kB
+├ ○ /admin/migration                     3.71 kB         114 kB
+├ ○ /admin/users                         4.92 kB         221 kB
+├ ƒ /api/import-hands                      151 B         102 kB
+├ ƒ /api/natural-search                    151 B         102 kB
+├ ƒ /api/parse-hendon-mob                  151 B         102 kB
+├ ƒ /api/parse-hendon-mob-html             151 B         102 kB
+├ ƒ /api/parse-payout-csv                  151 B         102 kB
+├ ƒ /api/youtube/channel-streams           151 B         102 kB
+├ ○ /api/youtube/live-streams              151 B         102 kB          5m      1y
+├ ○ /archive                             71.9 kB         295 kB
+├ ○ /auth/callback                       1.63 kB         151 kB
+├ ○ /auth/login                          1.72 kB         184 kB
+├ ○ /bookmarks                           6.75 kB         223 kB
+├ ○ /community                           7.97 kB         233 kB
+├ ƒ /community/[id]                      3.54 kB         225 kB
+├ ○ /my-edit-requests                    5.12 kB         214 kB
+├ ○ /players                             3.35 kB         226 kB
+├ ƒ /players/[id]                        8.01 kB         231 kB
+├ ○ /profile                             2.14 kB         212 kB
+├ ƒ /profile/[id]                        6.21 kB         216 kB
+├ ○ /search                              6.33 kB         229 kB
+└ ○ /test                                  487 B         103 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/1255-8ed6c64af9e8c6fb.js      45.5 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+  └ other shared chunks (total)          2.45 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

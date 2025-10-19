@@ -1,0 +1,390 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - link "TA Templar Archives" [ref=e6] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e8]: TA
+            - generic [ref=e9]: Templar Archives
+          - navigation [ref=e10]:
+            - link "SEARCH" [ref=e11] [cursor=pointer]:
+              - /url: /search
+            - link "ARCHIVE" [ref=e12] [cursor=pointer]:
+              - /url: /archive
+            - link "PLAYERS" [ref=e13] [cursor=pointer]:
+              - /url: /players
+            - link "FORUM" [ref=e14] [cursor=pointer]:
+              - /url: /community
+        - generic [ref=e15]:
+          - button "Toggle theme" [ref=e16]:
+            - img
+            - img
+            - generic [ref=e17]: Toggle theme
+          - button "LOGIN" [ref=e18]
+    - main [ref=e19]:
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - img [ref=e24]
+          - heading "Live & Recent Poker Streams" [level=2] [ref=e30]
+        - generic [ref=e34]:
+          - link "FINAL do Super High Roller | BSOP Foz do Iguaçu 🇧🇷 ENDED Oct 6 FINAL do Super High Roller | BSOP Foz do Iguaçu 🇧🇷 PokerStars Brasil PokerStars Brasil" [ref=e36] [cursor=pointer]:
+            - /url: https://www.youtube.com/watch?v=37nfSdOp05A
+            - generic [ref=e37]:
+              - generic [ref=e38]:
+                - img "FINAL do Super High Roller | BSOP Foz do Iguaçu 🇧🇷" [ref=e39]
+                - generic [ref=e41]: ENDED
+                - generic [ref=e43]: Oct 6
+                - img [ref=e45]
+              - generic [ref=e49]:
+                - heading "FINAL do Super High Roller | BSOP Foz do Iguaçu 🇧🇷" [level=3] [ref=e50]
+                - generic [ref=e51]:
+                  - img "PokerStars Brasil" [ref=e52]
+                  - paragraph [ref=e53]: PokerStars Brasil
+          - link "BSOP Poker Show | BSOP Winter Millions ENDED Jul 30 BSOP Poker Show | BSOP Winter Millions PokerStars Brasil PokerStars Brasil" [ref=e55] [cursor=pointer]:
+            - /url: https://www.youtube.com/watch?v=hDf47qREdH0
+            - generic [ref=e56]:
+              - generic [ref=e57]:
+                - img "BSOP Poker Show | BSOP Winter Millions" [ref=e58]
+                - generic [ref=e60]: ENDED
+                - generic [ref=e62]: Jul 30
+                - img [ref=e64]
+              - generic [ref=e68]:
+                - heading "BSOP Poker Show | BSOP Winter Millions" [level=3] [ref=e69]
+                - generic [ref=e70]:
+                  - img "PokerStars Brasil" [ref=e71]
+                  - paragraph [ref=e72]: PokerStars Brasil
+          - link "Super High Roller Poker FINAL TABLE with Benjamin Rolle ENDED 3d ago Super High Roller Poker FINAL TABLE with Benjamin Rolle GGPoker GGPoker" [ref=e74] [cursor=pointer]:
+            - /url: https://www.youtube.com/watch?v=ERem0a82AFY
+            - generic [ref=e75]:
+              - generic [ref=e76]:
+                - img "Super High Roller Poker FINAL TABLE with Benjamin Rolle" [ref=e77]
+                - generic [ref=e79]: ENDED
+                - generic [ref=e81]: 3d ago
+                - img [ref=e83]
+              - generic [ref=e87]:
+                - heading "Super High Roller Poker FINAL TABLE with Benjamin Rolle" [level=3] [ref=e88]
+                - generic [ref=e89]:
+                  - img "GGPoker" [ref=e90]
+                  - paragraph [ref=e91]: GGPoker
+          - link "$5M GTD | $5K MPP Main Event – Final Day ENDED May 14 $5M GTD | $5K MPP Main Event – Final Day GGPoker GGPoker" [ref=e93] [cursor=pointer]:
+            - /url: https://www.youtube.com/watch?v=gvX60S8CMko
+            - generic [ref=e94]:
+              - generic [ref=e95]:
+                - img "$5M GTD | $5K MPP Main Event – Final Day" [ref=e96]
+                - generic [ref=e98]: ENDED
+                - generic [ref=e100]: May 14
+                - img [ref=e102]
+              - generic [ref=e106]:
+                - heading "$5M GTD | $5K MPP Main Event – Final Day" [level=3] [ref=e107]
+                - generic [ref=e108]:
+                  - img "GGPoker" [ref=e109]
+                  - paragraph [ref=e110]: GGPoker
+          - 'link "O #vidente do #poker RECENT 15h ago O #vidente do #poker PokerStars Brasil PokerStars Brasil" [ref=e112] [cursor=pointer]':
+            - /url: https://www.youtube.com/watch?v=qljPfptuMjE
+            - generic [ref=e113]:
+              - generic [ref=e114]:
+                - 'img "O #vidente do #poker" [ref=e115]'
+                - generic [ref=e117]: RECENT
+                - generic [ref=e119]: 15h ago
+                - img [ref=e121]
+              - generic [ref=e125]:
+                - 'heading "O #vidente do #poker" [level=3] [ref=e126]'
+                - generic [ref=e127]:
+                  - img "PokerStars Brasil" [ref=e128]
+                  - paragraph [ref=e129]: PokerStars Brasil
+          - 'link "Completamente Dominado! #eptmontecarlo #allin RECENT Oct 7 Completamente Dominado! #eptmontecarlo #allin PokerStars Brasil PokerStars Brasil" [ref=e131] [cursor=pointer]':
+            - /url: https://www.youtube.com/watch?v=nVvjV9cH4B4
+            - generic [ref=e132]:
+              - generic [ref=e133]:
+                - 'img "Completamente Dominado! #eptmontecarlo #allin" [ref=e134]'
+                - generic [ref=e136]: RECENT
+                - generic [ref=e138]: Oct 7
+                - img [ref=e140]
+              - generic [ref=e144]:
+                - 'heading "Completamente Dominado! #eptmontecarlo #allin" [level=3] [ref=e145]'
+                - generic [ref=e146]:
+                  - img "PokerStars Brasil" [ref=e147]
+                  - paragraph [ref=e148]: PokerStars Brasil
+          - 'link "#BLEFE ARRISCADO 🥶 #poker RECENT Jul 10 #BLEFE ARRISCADO 🥶 #poker PokerStars Brasil PokerStars Brasil" [ref=e150] [cursor=pointer]':
+            - /url: https://www.youtube.com/watch?v=-DzKQ5tG8ns
+            - generic [ref=e151]:
+              - generic [ref=e152]:
+                - 'img "#BLEFE ARRISCADO 🥶 #poker" [ref=e153]'
+                - generic [ref=e155]: RECENT
+                - generic [ref=e157]: Jul 10
+                - img [ref=e159]
+              - generic [ref=e163]:
+                - 'heading "#BLEFE ARRISCADO 🥶 #poker" [level=3] [ref=e164]'
+                - generic [ref=e165]:
+                  - img "PokerStars Brasil" [ref=e166]
+                  - paragraph [ref=e167]: PokerStars Brasil
+          - link "Neither Has A Pair And They&#39;re Battling In A $75,000 Poker Hand @HustlerCasinoLive RECENT 1d ago Neither Has A Pair And They&#39;re Battling In A $75,000 Poker Hand @HustlerCasinoLive HCL Poker Clips HCL Poker Clips" [ref=e169] [cursor=pointer]:
+            - /url: https://www.youtube.com/watch?v=ea7kNxXLWW8
+            - generic [ref=e170]:
+              - generic [ref=e171]:
+                - img "Neither Has A Pair And They&#39;re Battling In A $75,000 Poker Hand @HustlerCasinoLive" [ref=e172]
+                - generic [ref=e174]: RECENT
+                - generic [ref=e176]: 1d ago
+                - img [ref=e178]
+              - generic [ref=e182]:
+                - heading "Neither Has A Pair And They&#39;re Battling In A $75,000 Poker Hand @HustlerCasinoLive" [level=3] [ref=e183]
+                - generic [ref=e184]:
+                  - img "HCL Poker Clips" [ref=e185]
+                  - paragraph [ref=e186]: HCL Poker Clips
+      - generic [ref=e189]:
+        - generic [ref=e191]:
+          - img [ref=e193]
+          - generic [ref=e196]:
+            - generic [ref=e197]: "4"
+            - generic [ref=e198]: Total Hands
+        - generic [ref=e200]:
+          - img [ref=e202]
+          - generic [ref=e209]:
+            - generic [ref=e210]: "7"
+            - generic [ref=e211]: Tournaments
+        - generic [ref=e213]:
+          - img [ref=e215]
+          - generic [ref=e220]:
+            - generic [ref=e221]: "5"
+            - generic [ref=e222]: Players
+        - generic [ref=e224]:
+          - img [ref=e226]
+          - generic [ref=e229]:
+            - generic [ref=e230]: "4"
+            - generic [ref=e231]: Members
+      - generic [ref=e234]:
+        - generic [ref=e235]:
+          - generic [ref=e236]:
+            - heading "최신 커뮤니티 포스트" [level=2] [ref=e237]
+            - paragraph [ref=e238]: 커뮤니티에서 활발하게 논의되고 있는 주제들
+          - link "View All Posts" [ref=e239] [cursor=pointer]:
+            - /url: /community
+            - text: View All Posts
+            - img
+        - generic [ref=e240]:
+          - link "제드리 general 2025. 10. 16. test test 0 0" [ref=e241] [cursor=pointer]:
+            - /url: /community/8c70abd8-40f6-4862-8a9d-80720a61799b
+            - generic [ref=e243]:
+              - generic [ref=e244]:
+                - img [ref=e246]
+                - generic [ref=e247]:
+                  - generic [ref=e248]:
+                    - generic [ref=e249]: 제드리
+                    - generic [ref=e250]: general
+                  - generic [ref=e251]: 2025. 10. 16.
+              - generic [ref=e252]:
+                - heading "test" [level=3] [ref=e253]
+                - paragraph [ref=e254]: test
+              - generic [ref=e255]:
+                - generic [ref=e256]:
+                  - img [ref=e257]
+                  - text: "0"
+                - generic [ref=e260]:
+                  - img [ref=e261]
+                  - text: "0"
+          - link "제드리 general 2025. 10. 16. test post ㅁㄴㅇㄹ 0 0" [ref=e263] [cursor=pointer]:
+            - /url: /community/b66fe2ce-3662-459a-9b97-d6e1a2e163f1
+            - generic [ref=e265]:
+              - generic [ref=e266]:
+                - img [ref=e268]
+                - generic [ref=e269]:
+                  - generic [ref=e270]:
+                    - generic [ref=e271]: 제드리
+                    - generic [ref=e272]: general
+                  - generic [ref=e273]: 2025. 10. 16.
+              - generic [ref=e274]:
+                - heading "test post" [level=3] [ref=e275]
+                - paragraph [ref=e276]: ㅁㄴㅇㄹ
+              - generic [ref=e277]:
+                - generic [ref=e278]:
+                  - img [ref=e279]
+                  - text: "0"
+                - generic [ref=e282]:
+                  - img [ref=e283]
+                  - text: "0"
+          - link "제드리 general 2025. 10. 16. ㅁㄴㅇㄹ ㅁㄴㅇㄹ 0 0" [ref=e285] [cursor=pointer]:
+            - /url: /community/54ff0e5a-9dad-4bbb-b599-9377b9b2464c
+            - generic [ref=e287]:
+              - generic [ref=e288]:
+                - img [ref=e290]
+                - generic [ref=e291]:
+                  - generic [ref=e292]:
+                    - generic [ref=e293]: 제드리
+                    - generic [ref=e294]: general
+                  - generic [ref=e295]: 2025. 10. 16.
+              - generic [ref=e296]:
+                - heading "ㅁㄴㅇㄹ" [level=3] [ref=e297]
+                - paragraph [ref=e298]: ㅁㄴㅇㄹ
+              - generic [ref=e299]:
+                - generic [ref=e300]:
+                  - img [ref=e301]
+                  - text: "0"
+                - generic [ref=e304]:
+                  - img [ref=e305]
+                  - text: "0"
+          - link "P Phil Ivey strategy 2025. 10. 6. ICM Bubble Strategy Discussion How do you approach ICM situations on the bubble? Looking for advanced strategies. 0 0" [ref=e307] [cursor=pointer]:
+            - /url: /community/00000000-0000-0000-0000-000000000011
+            - generic [ref=e309]:
+              - generic [ref=e310]:
+                - generic [ref=e312]: P
+                - generic [ref=e313]:
+                  - generic [ref=e314]:
+                    - generic [ref=e315]: Phil Ivey
+                    - generic [ref=e316]: strategy
+                  - generic [ref=e317]: 2025. 10. 6.
+              - generic [ref=e318]:
+                - heading "ICM Bubble Strategy Discussion" [level=3] [ref=e319]
+                - paragraph [ref=e320]: How do you approach ICM situations on the bubble? Looking for advanced strategies.
+              - generic [ref=e321]:
+                - generic [ref=e322]:
+                  - img [ref=e323]
+                  - text: "0"
+                - generic [ref=e326]:
+                  - img [ref=e327]
+                  - text: "0"
+      - generic [ref=e331]:
+        - generic [ref=e332]:
+          - generic [ref=e333]:
+            - heading "Top Players" [level=2] [ref=e334]
+            - paragraph [ref=e335]: 총 상금 기준 상위 플레이어
+          - link "View All Players" [ref=e336] [cursor=pointer]:
+            - /url: /players
+            - text: View All Players
+            - img
+        - generic [ref=e338]:
+          - link "C CHRISTOFOROU 1 hands • 0 tournaments $0 Total Winnings" [ref=e339] [cursor=pointer]:
+            - /url: /players/6601f4cf-2737-4362-961c-f016f652f711
+            - img [ref=e341]
+            - generic [ref=e349]: C
+            - generic [ref=e350]:
+              - heading "CHRISTOFOROU" [level=3] [ref=e351]
+              - generic [ref=e352]:
+                - generic [ref=e353]: 1 hands
+                - generic [ref=e354]: •
+                - generic [ref=e355]: 0 tournaments
+            - generic [ref=e356]:
+              - generic [ref=e357]:
+                - img [ref=e358]
+                - text: $0
+              - generic [ref=e361]: Total Winnings
+          - link "M MODENA 1 hands • 0 tournaments $0 Total Winnings" [ref=e362] [cursor=pointer]:
+            - /url: /players/1dfa3a80-9e63-423c-a0a2-32358d2646db
+            - img [ref=e364]
+            - generic [ref=e372]: M
+            - generic [ref=e373]:
+              - heading "MODENA" [level=3] [ref=e374]
+              - generic [ref=e375]:
+                - generic [ref=e376]: 1 hands
+                - generic [ref=e377]: •
+                - generic [ref=e378]: 0 tournaments
+            - generic [ref=e379]:
+              - generic [ref=e380]:
+                - img [ref=e381]
+                - text: $0
+              - generic [ref=e384]: Total Winnings
+          - link "O ONYX 1 hands • 0 tournaments $0 Total Winnings" [ref=e385] [cursor=pointer]:
+            - /url: /players/94f8bf7a-a24e-4875-8747-2f8bf9c59073
+            - img [ref=e387]
+            - generic [ref=e395]: O
+            - generic [ref=e396]:
+              - heading "ONYX" [level=3] [ref=e397]
+              - generic [ref=e398]:
+                - generic [ref=e399]: 1 hands
+                - generic [ref=e400]: •
+                - generic [ref=e401]: 0 tournaments
+            - generic [ref=e402]:
+              - generic [ref=e403]:
+                - img [ref=e404]
+                - text: $0
+              - generic [ref=e407]: Total Winnings
+          - link "4 S SMOLKA 1 hands • 0 tournaments $0 Total Winnings" [ref=e408] [cursor=pointer]:
+            - /url: /players/f93b27e6-32e6-491b-a5c3-51d6d27b38cb
+            - generic [ref=e410]: "4"
+            - generic [ref=e412]: S
+            - generic [ref=e413]:
+              - heading "SMOLKA" [level=3] [ref=e414]
+              - generic [ref=e415]:
+                - generic [ref=e416]: 1 hands
+                - generic [ref=e417]: •
+                - generic [ref=e418]: 0 tournaments
+            - generic [ref=e419]:
+              - generic [ref=e420]:
+                - img [ref=e421]
+                - text: $0
+              - generic [ref=e424]: Total Winnings
+          - link "5 S SABU 1 hands • 0 tournaments $0 Total Winnings" [ref=e425] [cursor=pointer]:
+            - /url: /players/532c3486-6ab5-4517-9a21-06b63a55c22f
+            - generic [ref=e427]: "5"
+            - generic [ref=e429]: S
+            - generic [ref=e430]:
+              - heading "SABU" [level=3] [ref=e431]
+              - generic [ref=e432]:
+                - generic [ref=e433]: 1 hands
+                - generic [ref=e434]: •
+                - generic [ref=e435]: 0 tournaments
+            - generic [ref=e436]:
+              - generic [ref=e437]:
+                - img [ref=e438]
+                - text: $0
+              - generic [ref=e441]: Total Winnings
+      - generic [ref=e443]:
+        - generic [ref=e444]:
+          - generic [ref=e445]:
+            - img [ref=e446]
+            - heading "On This Day" [level=2] [ref=e451]
+          - paragraph [ref=e452]: Relive poker history from October 18 in previous years
+        - generic [ref=e453]:
+          - link "WSOP 0 years ago Test Event 2026 Seoul • Oct 7, 2025 - Oct 17, 2025 Oct 7, 2025 0 hands" [ref=e454] [cursor=pointer]:
+            - /url: /archive
+            - generic [ref=e455]:
+              - generic [ref=e456]:
+                - img [ref=e458]
+                - generic [ref=e462]: WSOP
+                - generic [ref=e463]: 0 years ago
+              - generic [ref=e464]:
+                - heading "Test Event 2026" [level=3] [ref=e465]
+                - paragraph [ref=e466]: Seoul • Oct 7, 2025 - Oct 17, 2025
+                - generic [ref=e467]:
+                  - generic [ref=e468]: Oct 7, 2025
+                  - generic [ref=e469]:
+                    - img [ref=e470]
+                    - text: 0 hands
+          - link "WSOP 0 years ago Test Event 2025 Seoul • Oct 7, 2025 - Oct 17, 2025 Oct 7, 2025 4 hands" [ref=e473] [cursor=pointer]:
+            - /url: /archive
+            - generic [ref=e474]:
+              - generic [ref=e475]:
+                - img [ref=e477]
+                - generic [ref=e481]: WSOP
+                - generic [ref=e482]: 0 years ago
+              - generic [ref=e483]:
+                - heading "Test Event 2025" [level=3] [ref=e484]
+                - paragraph [ref=e485]: Seoul • Oct 7, 2025 - Oct 17, 2025
+                - generic [ref=e486]:
+                  - generic [ref=e487]: Oct 7, 2025
+                  - generic [ref=e488]:
+                    - img [ref=e489]
+                    - text: 4 hands
+          - link "Triton 0 years ago Triton Poker Series Montenegro 2025 Montenegro • Mar 1, 2025 - Mar 8, 2025 Mar 1, 2025 0 hands" [ref=e492] [cursor=pointer]:
+            - /url: /archive
+            - generic [ref=e493]:
+              - generic [ref=e494]:
+                - img [ref=e496]
+                - generic [ref=e500]: Triton
+                - generic [ref=e501]: 0 years ago
+              - generic [ref=e502]:
+                - heading "Triton Poker Series Montenegro 2025" [level=3] [ref=e503]
+                - paragraph [ref=e504]: Montenegro • Mar 1, 2025 - Mar 8, 2025
+                - generic [ref=e505]:
+                  - generic [ref=e506]: Mar 1, 2025
+                  - generic [ref=e507]:
+                    - img [ref=e508]
+                    - text: 0 hands
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e516] [cursor=pointer]:
+    - img [ref=e517]
+  - alert [ref=e521]: Templar Archives - Poker Hand History Archive
+```

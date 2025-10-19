@@ -1,0 +1,46 @@
+
+> templar-archives@0.1.0 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/zed/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/zed/Desktop/Archive/templar-archives/pnpm-lock.yaml
+
+   ▲ Next.js 15.5.5
+   - Environments: .env.local, .env.production
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 3.7s
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/25) ...
+[YouTube API] Starting request...
+[YouTube API] API Key present: true
+[YouTube API] API Key length: 39
+[YouTube API] Fetching live streams from priority channels: WSOP, Triton Poker, PokerStars, Hustler Casino Live
+[YouTube API] Using 4 hardcoded channel IDs
+   Generating static pages (6/25) 
+[YouTube API] Live streams found: 0
+✓ Found 5 recent video(s) for WSOP
+✓ Found 5 recent video(s) for Triton Poker
+✓ Found 5 recent video(s) for PokerStars
+✓ Found 5 recent video(s) for Hustler Casino Live
+[YouTube API] Total videos found (all types): 20
+[YouTube API] Unique videos after deduplication: 20
+[YouTube API] Final streams count: 8
+[YouTube API] Stream types: { completed: 4, recent: 4 }
+[YouTube API] Channels: PokerStars Brasil, PokerStars Brasil, GGPoker, GGPoker, PokerStars Brasil, PokerStars Brasil, PokerStars Brasil, HCL Poker Clips
+[YouTube API] Request completed successfully
+Error occurred prerendering page "/archive". Read more: https://nextjs.org/docs/messages/prerender-error
+ReferenceError: document is not defined
+    at 21092 (.next/server/app/archive/page.js:13:58541)
+    at Object.c [as require] (.next/server/webpack-runtime.js:1:143) {
+  digest: '3799050628'
+}
+Export encountered an error on /archive/page: /archive, exiting the build.
+ ⨯ Next.js build worker exited with code: 1 and signal: null
