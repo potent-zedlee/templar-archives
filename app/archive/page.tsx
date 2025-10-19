@@ -5,14 +5,15 @@
  *
  * 완전히 리팩토링된 Archive 페이지
  * - 1,733줄 → 100줄 이하로 대폭 축소
- * - Zustand stores를 사용한 상태 관리
+ * - React Query를 사용한 데이터 캐싱
+ * - Zustand는 UI 상태 관리만
  * - 컴포넌트 기반 아키텍처
  * - 타입 안전성 확보
  * - Error Boundary 적용 (Phase 11)
  * - Mobile Responsive (Phase 16-3)
  */
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Header } from "@/components/header"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
@@ -21,7 +22,9 @@ import { Button } from "@/components/ui/button"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
 import { Menu } from "lucide-react"
 import { useArchiveDataStore } from "@/stores/archive-data-store"
+import { useTournamentsQuery, useUnsortedVideosQuery, useHandsQuery } from "@/lib/queries/archive-queries"
 import { useIsMobile } from "@/hooks/use-media-query"
+import { ArchiveDataProvider } from "./_components/ArchiveDataContext"
 import { ArchiveProviders } from "./_components/ArchiveProviders"
 import { ArchiveToolbar } from "./_components/ArchiveToolbar"
 import { ArchiveEventsList } from "./_components/ArchiveEventsList"
@@ -29,21 +32,22 @@ import { ArchiveHandHistory } from "./_components/ArchiveHandHistory"
 import { ArchiveDialogs } from "./_components/ArchiveDialogs"
 
 export default function ArchivePage() {
-  // Zustand stores
-  const { loadTournaments, loadUnsortedVideos, loading, selectedDay } = useArchiveDataStore()
+  // React Query: Fetch data
+  const { data: tournaments = [], isLoading: tournamentsLoading } = useTournamentsQuery()
+  const { data: unsortedVideos = [] } = useUnsortedVideosQuery()
+
+  // Zustand: UI state
+  const { selectedDay } = useArchiveDataStore()
+
+  // React Query: Fetch hands for selected day
+  const { data: hands = [], isLoading: handsLoading } = useHandsQuery(selectedDay)
 
   // Mobile responsive
   const isMobile = useIsMobile()
   const [drawerOpen, setDrawerOpen] = useState(false)
 
-  // Initial data load
-  useEffect(() => {
-    loadTournaments()
-    loadUnsortedVideos()
-  }, [loadTournaments, loadUnsortedVideos])
-
   // Loading state
-  if (loading.tournaments) {
+  if (tournamentsLoading) {
     return (
       <div className="min-h-screen bg-muted/30">
         <Header />
@@ -64,9 +68,16 @@ export default function ArchivePage() {
 
   return (
     <ErrorBoundary>
-      <ArchiveProviders>
-        <div className="min-h-screen bg-muted/30">
-          <Header />
+      <ArchiveDataProvider
+        tournaments={tournaments}
+        hands={hands}
+        unsortedVideos={unsortedVideos}
+        tournamentsLoading={tournamentsLoading}
+        handsLoading={handsLoading}
+      >
+        <ArchiveProviders>
+          <div className="min-h-screen bg-muted/30">
+            <Header />
 
           {/* Toolbar */}
           <ArchiveToolbar />
@@ -130,7 +141,8 @@ export default function ArchivePage() {
           {/* All Dialogs */}
           <ArchiveDialogs />
         </div>
-      </ArchiveProviders>
+        </ArchiveProviders>
+      </ArchiveDataProvider>
     </ErrorBoundary>
   )
 }
