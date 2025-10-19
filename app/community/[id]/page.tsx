@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import dynamic from "next/dynamic"
 import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, ThumbsUp, Share2, Link2 } from "lucide-react"
 import Link from "next/link"
-import { fetchPost, togglePostLike, type Post } from "@/lib/supabase-community"
+import { type Post } from "@/lib/supabase-community"
+import { usePostQuery, useLikePostMutation } from "@/lib/queries/community-queries"
 import { toast } from "sonner"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { useAuth } from "@/components/auth-provider"
@@ -38,29 +39,23 @@ export default function PostDetailPage() {
   const { user } = useAuth()
   const postId = params.id as string
 
-  const [post, setPost] = useState<Post | null>(null)
-  const [loading, setLoading] = useState(true)
   const [commentsCount, setCommentsCount] = useState(0)
 
-  useEffect(() => {
-    loadPost()
-  }, [postId])
+  // React Query hooks
+  const { data: post = null, isLoading: loading, error } = usePostQuery(postId)
+  const likePostMutation = useLikePostMutation(user?.id || "")
 
-  async function loadPost() {
-    setLoading(true)
-    try {
-      const data = await fetchPost(postId)
-      setPost(data)
-      setCommentsCount(data.comments_count)
-    } catch (error) {
-      console.error('Error loading post:', error)
-      toast.error('Failed to load post')
-    } finally {
-      setLoading(false)
-    }
+  // Set initial comments count from post data
+  if (post && commentsCount === 0 && post.comments_count > 0) {
+    setCommentsCount(post.comments_count)
   }
 
-  async function handleLike() {
+  // Handle query error
+  if (error) {
+    toast.error('Failed to load post')
+  }
+
+  function handleLike() {
     if (!user) {
       toast.error('Login required')
       return
@@ -68,16 +63,15 @@ export default function PostDetailPage() {
 
     if (!post) return
 
-    try {
-      const liked = await togglePostLike(post.id, user.id)
-      setPost({
-        ...post,
-        likes_count: post.likes_count + (liked ? 1 : -1)
-      })
-    } catch (error) {
-      console.error('Error toggling like:', error)
-      toast.error('Failed to toggle like')
-    }
+    likePostMutation.mutate(
+      { postId: post.id },
+      {
+        onError: (error) => {
+          console.error('Error toggling like:', error)
+          toast.error('Failed to toggle like')
+        }
+      }
+    )
   }
 
   async function handleShare() {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Header } from "@/components/header"
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/page-transition"
 import { AnimatedCard } from "@/components/animated-card"
@@ -12,10 +12,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, TrendingUp, Filter, X, ChevronLeft, ChevronRight, Users } from "lucide-react"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
 import type { Player } from "@/lib/supabase"
 import Link from "next/link"
-import { fetchPlayersWithHandCount } from "@/lib/queries"
+import { usePlayersQuery } from "@/lib/queries/players-queries"
 import { toast } from "sonner"
 import { GridSkeleton } from "@/components/skeletons/grid-skeleton"
 import { EmptyState } from "@/components/empty-state"
@@ -25,9 +24,7 @@ type PlayerWithHandCount = Player & {
 }
 
 export default function playersClient() {
-  const [players, setPlayers] = useState<PlayerWithHandCount[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [loading, setLoading] = useState(true)
 
   // Filter states
   const [selectedCountry, setSelectedCountry] = useState<string>("all")
@@ -44,25 +41,20 @@ export default function playersClient() {
   const [currentPage, setCurrentPage] = useState(1)
   const PLAYERS_PER_PAGE = 12
 
-  useEffect(() => {
-    loadPlayers()
-  }, [])
+  // React Query hook
+  const { data: playersData = [], isLoading: loading, error } = usePlayersQuery()
+  const players = playersData as PlayerWithHandCount[]
 
-  async function loadPlayers() {
-    setLoading(true)
-    try {
-      const playersData = await fetchPlayersWithHandCount()
-      setPlayers(playersData as PlayerWithHandCount[])
-    } catch (error) {
-      console.error('Error loading players:', error)
-      toast.error('Failed to load players')
-    } finally {
-      setLoading(false)
-    }
+  // Handle query error
+  if (error) {
+    toast.error('Failed to load players')
   }
 
   // Get unique countries
-  const countries = Array.from(new Set(players.map(p => p.country).filter(Boolean))).sort()
+  const countries = useMemo(() =>
+    Array.from(new Set(players.map(p => p.country).filter(Boolean))).sort(),
+    [players]
+  )
 
   // Filter players
   const filteredPlayers = players.filter(player => {

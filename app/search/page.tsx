@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import nextDynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
@@ -28,8 +28,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Search, Filter, Star, Play, X, Sparkles, SearchX, TrendingUp } from "lucide-react"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
-import { fetchHandsWithDetails } from "@/lib/queries"
+import { useSearchHandsQuery, useTournamentsQuery, usePlayersQuery } from "@/lib/queries/search-queries"
 import type { Hand, Player } from "@/lib/supabase"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -71,9 +70,13 @@ export default function SearchClient() {
   // Advanced Filters from store
   const filterState = useFilterStore()
 
-  // Available options
-  const [tournaments, setTournaments] = useState<{id: string, name: string}[]>([])
-  const [players, setPlayers] = useState<Player[]>([])
+  // React Query hooks for filter options
+  const { data: tournamentsData = [] } = useTournamentsQuery()
+  const { data: playersData = [] } = usePlayersQuery()
+
+  // Extract simple lists
+  const tournaments = tournamentsData.map(t => ({ id: t.id, name: t.name }))
+  const players = playersData as Player[]
 
   // Update URL with current search params
   const updateURL = useCallback(() => {
@@ -90,32 +93,9 @@ export default function SearchClient() {
   }, [searchQuery, selectedTournament, selectedPlayer, favoriteOnly, dateFrom, dateTo, router])
 
   useEffect(() => {
-    loadFiltersData()
-  }, [])
-
-  useEffect(() => {
     searchHands()
     updateURL()
   }, [searchQuery, selectedTournament, selectedPlayer, favoriteOnly, dateFrom, dateTo])
-
-  async function loadFiltersData() {
-    const supabase = createClientSupabaseClient()
-    // Load tournaments
-    const { data: tournamentsData } = await supabase
-      .from('tournaments')
-      .select('id, name')
-      .order('created_at', { ascending: false })
-
-    setTournaments(tournamentsData || [])
-
-    // Load players
-    const { data: playersData } = await supabase
-      .from('players')
-      .select('*')
-      .order('name')
-
-    setPlayers(playersData || [])
-  }
 
   async function searchHands() {
     setLoading(true)
