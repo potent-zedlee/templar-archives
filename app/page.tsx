@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
-
+import { PageTransition } from "@/components/page-transition"
 import { OnThisDay } from "@/components/on-this-day"
 import { StatsCounter } from "@/components/main/stats-counter"
 import { WeeklyHighlights } from "@/components/main/weekly-highlights"
@@ -171,22 +171,23 @@ export default function homeClient() {
   return (
     <div className="min-h-screen">
       <Header />
-      <main>
-        {/* Live Poker Streams */}
-        <section className="py-12 md:py-16">
-          <div className="container max-w-7xl mx-auto px-4 md:px-6">
-            <LivePokerStreams />
-          </div>
-        </section>
-
-        {/* Platform Statistics */}
-        {data.stats && (
-          <section className="py-12 md:py-16 bg-muted/30">
+      <PageTransition variant="fade">
+        <main>
+          {/* Live Poker Streams */}
+          <section className="py-12 md:py-16">
             <div className="container max-w-7xl mx-auto px-4 md:px-6">
-              <StatsCounter stats={data.stats} />
+              <LivePokerStreams />
             </div>
           </section>
-        )}
+
+          {/* Platform Statistics */}
+          {data.stats && (
+            <section className="py-12 md:py-16 bg-muted/30">
+              <div className="container max-w-7xl mx-auto px-4 md:px-6">
+                <StatsCounter stats={data.stats} />
+              </div>
+            </section>
+          )}
 
         {/* Weekly Highlights */}
         {data.highlights && data.highlights.length > 0 && (
@@ -217,6 +218,7 @@ export default function homeClient() {
 
         <OnThisDay />
       </main>
+      </PageTransition>
     </div>
   )
 }

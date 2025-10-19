@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
+import { PageTransition, StaggerContainer, StaggerItem } from "@/components/page-transition"
+import { AnimatedCard } from "@/components/animated-card"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -157,7 +159,8 @@ export default function playersClient() {
     <div className="min-h-screen bg-muted/30">
       <Header />
 
-      <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
+      <PageTransition variant="slideUp">
+        <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="mb-8">
           <h1 className="text-title-lg mb-2">Poker Players</h1>
           <p className="text-body text-muted-foreground">
@@ -270,10 +273,12 @@ export default function playersClient() {
 
         {/* Players Grid */}
         <ScrollArea className="h-[calc(100vh-460px)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" staggerDelay={0.05}>
             {paginatedPlayers.map((player) => (
-              <Link key={player.id} href={`/players/${player.id}`}>
-                <Card className="p-6 hover:bg-muted/50 transition-colors cursor-pointer">
+              <StaggerItem key={player.id}>
+                <Link href={`/players/${player.id}`}>
+                  <AnimatedCard>
+                    <Card className="p-6">
                   <div className="flex items-start gap-4">
                     <Avatar className="h-16 w-16">
                       <AvatarImage src={player.photo_url} alt={player.name} />
@@ -304,10 +309,12 @@ export default function playersClient() {
                       </div>
                     </div>
                   </div>
-                </Card>
-              </Link>
+                    </Card>
+                  </AnimatedCard>
+                </Link>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
 
           {paginatedPlayers.length === 0 && (
             <EmptyState
@@ -369,7 +376,8 @@ export default function playersClient() {
             </Button>
           </div>
         )}
-      </div>
+        </div>
+      </PageTransition>
     </div>
   )
 }

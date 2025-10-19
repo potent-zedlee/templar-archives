@@ -1,6 +1,6 @@
-# GGVault 배포 가이드 (초보자용)
+# Templar Archives 배포 가이드
 
-이 가이드는 GGVault를 Vercel을 통해 배포하는 방법을 단계별로 설명합니다.
+이 가이드는 Templar Archives를 Vercel을 통해 배포하는 방법을 단계별로 설명합니다.
 
 ---
 
@@ -179,7 +179,7 @@ git push origin main
 
 ## 🎉 배포 완료!
 
-이제 다음 URL에서 GGVault를 사용할 수 있습니다:
+이제 다음 URL에서 Templar Archives를 사용할 수 있습니다:
 - **Production**: `https://templar-archives.vercel.app`
 - **대시보드**: https://vercel.com/dashboard
 
@@ -234,5 +234,6 @@ git push origin main
 
 ---
 
-**마지막 업데이트**: 2025-10-15
-**문서 버전**: 1.0
+**마지막 업데이트**: 2025-10-19
+**문서 버전**: 1.1
+**변경 사항**: GGVault → Templar Archives 리브랜딩

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
+import { PageTransition, StaggerContainer, StaggerItem } from "@/components/page-transition"
+import { AnimatedCard } from "@/components/animated-card"
 import { Card } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -352,9 +354,12 @@ export default function communityClient() {
                     </Button>
                   </div>
                 ) : (
-                  posts.map((post) => (
-                    <Card key={post.id} className="p-6 hover:bg-muted/30 transition-colors">
-                      <div className="flex gap-4">
+                  <StaggerContainer staggerDelay={0.1}>
+                    {posts.map((post) => (
+                      <StaggerItem key={post.id}>
+                        <AnimatedCard>
+                          <Card className="p-6">
+                            <div className="flex gap-4">
                         <Avatar className="h-12 w-12">
                           <AvatarImage src={post.author_avatar} alt={post.author_name} />
                           <AvatarFallback>{post.author_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
@@ -423,8 +428,11 @@ export default function communityClient() {
                           </div>
                         </div>
                       </div>
-                    </Card>
-                  ))
+                          </Card>
+                        </AnimatedCard>
+                      </StaggerItem>
+                    ))}
+                  </StaggerContainer>
                 )}
               </TabsContent>
             </Tabs>

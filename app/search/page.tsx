@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import nextDynamic from "next/dynamic"
 import { Header } from "@/components/header"
+import { PageTransition } from "@/components/page-transition"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -192,7 +193,8 @@ export default function SearchClient() {
         onApply={searchHands}
       />
 
-      <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
+      <PageTransition variant="slideUp">
+        <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="mb-8">
           <h1 className="text-title-lg mb-2">Search Hands</h1>
           <p className="text-body text-muted-foreground">
@@ -397,7 +399,8 @@ export default function SearchClient() {
             </ScrollArea>
           )}
         </Card>
-      </div>
+        </div>
+      </PageTransition>
     </div>
     </ErrorBoundary>
   )
