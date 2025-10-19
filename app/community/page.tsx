@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react"
 import { Header } from "@/components/header"
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/page-transition"
-import { AnimatedCard } from "@/components/animated-card"
+import { AnimatedCard, AnimatedButton, AnimatedIconButton } from "@/components/animated-card"
 import { Card } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { MessageSquare, TrendingUp, Clock, Star, Users, Award, ThumbsUp, Link2, X } from "lucide-react"
 import Link from "next/link"
 import { fetchPosts, togglePostLike, type Post } from "@/lib/supabase-community"
@@ -299,9 +300,9 @@ export default function communityClient() {
                       <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={creating}>
                         Cancel
                       </Button>
-                      <Button onClick={handleCreatePost} disabled={creating}>
-                        {creating ? 'Creating...' : 'Create Post'}
-                      </Button>
+                      <AnimatedButton onClick={handleCreatePost} disabled={creating} loading={creating}>
+                        Create Post
+                      </AnimatedButton>
                     </div>
                   </div>
                 </DialogContent>
@@ -411,19 +412,34 @@ export default function communityClient() {
                           )}
 
                           <div className="flex items-center gap-4 text-caption text-muted-foreground">
-                            <button
-                              onClick={() => handleLike(post.id)}
-                              className="flex items-center gap-1 hover:text-primary transition-colors"
-                            >
-                              <ThumbsUp className="h-4 w-4" />
+                            <div className="flex items-center gap-1">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div>
+                                    <AnimatedIconButton
+                                      onClick={() => handleLike(post.id)}
+                                      className="p-1"
+                                      activeColor="text-primary"
+                                    >
+                                      <ThumbsUp className="h-4 w-4" />
+                                    </AnimatedIconButton>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent>Like this post</TooltipContent>
+                              </Tooltip>
                               <span>{post.likes_count}</span>
-                            </button>
-                            <Link href={`/community/${post.id}`}>
-                              <button className="flex items-center gap-1 hover:text-primary transition-colors">
-                                <MessageSquare className="h-4 w-4" />
-                                <span>{post.comments_count}</span>
-                              </button>
-                            </Link>
+                            </div>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Link href={`/community/${post.id}`}>
+                                  <button className="flex items-center gap-1 hover:text-primary transition-colors p-1 rounded-md">
+                                    <MessageSquare className="h-4 w-4" />
+                                    <span>{post.comments_count}</span>
+                                  </button>
+                                </Link>
+                              </TooltipTrigger>
+                              <TooltipContent>View comments</TooltipContent>
+                            </Tooltip>
                             <ReportButton postId={post.id} variant="ghost" size="sm" />
                           </div>
                         </div>

@@ -152,4 +152,35 @@
   .text-caption {
     @apply text-xs font-normal;
   }
+
+  /* Link hover animation */
+  a:not(.no-underline-animation) {
+    @apply relative;
+  }
+
+  a:not(.no-underline-animation):hover::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-full h-[1px] bg-current;
+    animation: underline-slide 0.3s ease-out;
+  }
+
+  @keyframes underline-slide {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
+  }
+
+  /* Button hover effects */
+  button:not(:disabled):active {
+    @apply scale-95;
+    transition: transform 0.1s ease-out;
+  }
+
+  /* Focus visible improvements */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
 }
