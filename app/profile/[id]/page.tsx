@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"
@@ -20,70 +20,37 @@ import {
   Bookmark
 } from "lucide-react"
 import Link from "next/link"
-import {
-  getProfile,
-  fetchUserPosts,
-  fetchUserComments,
-  fetchUserBookmarks,
-  type UserProfile
-} from "@/lib/user-profile"
 import { useAuth } from "@/components/auth-provider"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { EditProfileDialog } from "@/components/edit-profile-dialog"
 import { toast } from "sonner"
+import {
+  useProfileQuery,
+  useUserPostsQuery,
+  useUserCommentsQuery,
+  useUserBookmarksQuery,
+} from "@/lib/queries/profile-queries"
 
 export default function profileidClient() {
   const params = useParams()
   const userId = params.id as string
   const { user } = useAuth()
 
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [posts, setPosts] = useState<any[]>([])
-  const [comments, setComments] = useState<any[]>([])
-  const [bookmarks, setBookmarks] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  // UI state
   const [activeTab, setActiveTab] = useState<"posts" | "comments" | "bookmarks">("posts")
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   const isOwnProfile = user?.id === userId
 
-  useEffect(() => {
-    loadProfile()
-  }, [userId])
+  // React Query hooks
+  const { data: profile = null, isLoading: loading, error } = useProfileQuery(userId)
+  const { data: posts = [] } = useUserPostsQuery(userId)
+  const { data: comments = [] } = useUserCommentsQuery(userId)
+  const { data: bookmarks = [] } = useUserBookmarksQuery(userId)
 
-  useEffect(() => {
-    loadTabData()
-  }, [activeTab, userId])
-
-  async function loadProfile() {
-    try {
-      const profileData = await getProfile(userId)
-      setProfile(profileData)
-    } catch (error) {
-      console.error('Error loading profile:', error)
-      toast.error('Failed to load profile')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function loadTabData() {
-    try {
-      if (activeTab === "posts") {
-        const data = await fetchUserPosts(userId)
-        setPosts(data)
-      } else if (activeTab === "comments") {
-        const data = await fetchUserComments(userId)
-        setComments(data)
-      } else if (activeTab === "bookmarks") {
-        if (isOwnProfile) {
-          const data = await fetchUserBookmarks(userId)
-          setBookmarks(data)
-        }
-      }
-    } catch (error) {
-      console.error('Error loading tab data:', error)
-    }
+  // Handle error
+  if (error) {
+    toast.error('Failed to load profile')
   }
 
   if (loading) {

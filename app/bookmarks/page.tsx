@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useRouter} from "next/navigation"
 import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"
@@ -10,86 +10,96 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Bookmark, Trash2, FolderOpen, Calendar, Edit } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
-import { getUserBookmarks, removeHandBookmark, updateBookmarkFolder, updateBookmarkNotes, type HandBookmarkWithDetails } from "@/lib/hand-bookmarks"
+import { type HandBookmarkWithDetails } from "@/lib/hand-bookmarks"
 import { BookmarkDialog } from "@/components/bookmark-dialog"
 import { toast } from "sonner"
 import Link from "next/link"
+import {
+  useBookmarksQuery,
+  useRemoveBookmarkMutation,
+  useUpdateBookmarkMutation,
+} from "@/lib/queries/bookmarks-queries"
 
 export default function bookmarksClient() {
   const { user } = useAuth()
   const router = useRouter()
-  const [bookmarks, setBookmarks] = useState<HandBookmarkWithDetails[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [folders, setFolders] = useState<string[]>([])
+
+  // UI state
   const [selectedFolder, setSelectedFolder] = useState<string>('all')
   const [editingBookmark, setEditingBookmark] = useState<HandBookmarkWithDetails | null>(null)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
 
+  // React Query hooks
+  const { data: bookmarks = [], isLoading, error } = useBookmarksQuery(user?.id || "")
+  const removeBookmarkMutation = useRemoveBookmarkMutation(user?.id || "")
+  const updateBookmarkMutation = useUpdateBookmarkMutation(user?.id || "")
+
+  // Redirect if not logged in
   useEffect(() => {
     if (!user) {
       router.push('/auth/login')
-      return
     }
-
-    loadBookmarks()
   }, [user, router])
 
-  const loadBookmarks = async () => {
-    if (!user) return
-
-    setIsLoading(true)
-    try {
-      const data = await getUserBookmarks(user.id)
-      setBookmarks(data)
-
-      // Extract folder list
-      const folderSet = new Set(data.map((b) => b.folder_name || 'Default').filter(Boolean))
-      setFolders(Array.from(folderSet).sort())
-    } catch (error) {
-      console.error('Failed to load bookmarks:', error)
-      toast.error('Failed to load bookmarks.')
-    } finally {
-      setIsLoading(false)
-    }
+  // Handle error
+  if (error) {
+    toast.error('Failed to load bookmarks.')
   }
 
-  const handleRemoveBookmark = async (handId: string) => {
+  // Extract folder list from bookmarks
+  const folders = useMemo(() => {
+    const folderSet = new Set(bookmarks.map((b) => b.folder_name || 'Default').filter(Boolean))
+    return Array.from(folderSet).sort()
+  }, [bookmarks])
+
+  // Filter bookmarks by folder
+  const filteredBookmarks = useMemo(() => {
+    return bookmarks.filter((bookmark) => {
+      if (selectedFolder === 'all') return true
+      return (bookmark.folder_name || 'Default') === selectedFolder
+    })
+  }, [bookmarks, selectedFolder])
+
+  function handleRemoveBookmark(handId: string) {
     if (!user) return
 
-    try {
-      await removeHandBookmark(handId, user.id)
-      toast.success('Bookmark removed.')
-      loadBookmarks()
-    } catch (error) {
-      console.error('Failed to remove bookmark:', error)
-      toast.error('Failed to remove bookmark.')
-    }
+    removeBookmarkMutation.mutate(handId, {
+      onSuccess: () => {
+        toast.success('Bookmark removed.')
+      },
+      onError: (error) => {
+        console.error('Failed to remove bookmark:', error)
+        toast.error('Failed to remove bookmark.')
+      }
+    })
   }
 
-  const handleEditBookmark = (bookmark: HandBookmarkWithDetails) => {
+  function handleEditBookmark(bookmark: HandBookmarkWithDetails) {
     setEditingBookmark(bookmark)
     setEditDialogOpen(true)
   }
 
-  const handleUpdateBookmark = async (folderName: string | null, notes: string) => {
+  async function handleUpdateBookmark(folderName: string | null, notes: string) {
     if (!user || !editingBookmark) return
 
-    try {
-      await updateBookmarkFolder(editingBookmark.hand_id, user.id, folderName)
-      await updateBookmarkNotes(editingBookmark.hand_id, user.id, notes)
-      toast.success('Bookmark updated')
-      loadBookmarks()
-    } catch (error) {
-      console.error('Failed to update bookmark:', error)
-      toast.error('Failed to update bookmark')
-      throw error
-    }
+    updateBookmarkMutation.mutate(
+      {
+        handId: editingBookmark.hand_id,
+        folderName,
+        notes,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Bookmark updated')
+        },
+        onError: (error) => {
+          console.error('Failed to update bookmark:', error)
+          toast.error('Failed to update bookmark')
+          throw error
+        }
+      }
+    )
   }
-
-  const filteredBookmarks = bookmarks.filter((bookmark) => {
-    if (selectedFolder === 'all') return true
-    return (bookmark.folder_name || 'Default') === selectedFolder
-  })
 
   if (!user) {
     return null

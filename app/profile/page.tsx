@@ -11,112 +11,107 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader2, Check, X } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
-import { getCurrentUserProfile, updateProfile, checkNicknameAvailable, type UserProfile } from "@/lib/user-profile"
 import { toast } from "sonner"
+import {
+  useCurrentUserProfileQuery,
+  useCheckNicknameQuery,
+  useUpdateProfileMutation,
+} from "@/lib/queries/profile-queries"
 
 export default function profileClient() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+
+  // React Query hooks
+  const { data: profile = null, isLoading: loading } = useCurrentUserProfileQuery()
+  const updateProfileMutation = useUpdateProfileMutation()
 
   // Form state
   const [nickname, setNickname] = useState("")
   const [bio, setBio] = useState("")
   const [pokerExperience, setPokerExperience] = useState("")
+  const [nicknameForCheck, setNicknameForCheck] = useState("")
 
-  // Nickname duplicate check state
-  const [checking, setChecking] = useState(false)
-  const [isNicknameAvailable, setIsNicknameAvailable] = useState<boolean | null>(null)
+  // Nickname duplicate check (with debounce)
+  const shouldCheckNickname = nicknameForCheck !== "" && nicknameForCheck !== profile?.nickname
+  const nicknameRegex = /^[a-zA-Z0-9가-힣_]{3,20}$/
+  const isValidFormat = nicknameRegex.test(nicknameForCheck)
 
-  // Load profile
+  const { data: isNicknameAvailable, isLoading: checking } = useCheckNicknameQuery(
+    nicknameForCheck,
+    user?.id,
+    shouldCheckNickname && isValidFormat
+  )
+
+  // Redirect if not logged in
   useEffect(() => {
-    if (authLoading) return
-
-    if (!user) {
+    if (!authLoading && !user) {
       router.push("/auth/login")
-      return
     }
-
-    const loadProfile = async () => {
-      const data = await getCurrentUserProfile()
-      if (data) {
-        setProfile(data)
-        setNickname(data.nickname)
-        setBio(data.bio || "")
-        setPokerExperience(data.poker_experience || "")
-      }
-      setLoading(false)
-    }
-
-    loadProfile()
   }, [user, authLoading, router])
 
-  // Check duplicate when nickname changes
-  const handleNicknameChange = async (value: string) => {
+  // Initialize form when profile loads
+  useEffect(() => {
+    if (profile) {
+      setNickname(profile.nickname)
+      setBio(profile.bio || "")
+      setPokerExperience(profile.poker_experience || "")
+    }
+  }, [profile])
+
+  // Debounce nickname check (500ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setNicknameForCheck(nickname)
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [nickname])
+
+  function handleNicknameChange(value: string) {
     setNickname(value)
-
-    // Don't check if empty or same as existing
-    if (!value || value === profile?.nickname) {
-      setIsNicknameAvailable(null)
-      return
-    }
-
-    // Nickname format validation (3-20 chars, alphanumeric + underscore)
-    const nicknameRegex = /^[a-zA-Z0-9가-힣_]{3,20}$/
-    if (!nicknameRegex.test(value)) {
-      setIsNicknameAvailable(false)
-      return
-    }
-
-    // Duplicate check
-    setChecking(true)
-    try {
-      const available = await checkNicknameAvailable(value, user?.id)
-      setIsNicknameAvailable(available)
-    } catch (error) {
-      console.error('Nickname duplicate check failed:', error)
-      setIsNicknameAvailable(null)
-    } finally {
-      setChecking(false)
-    }
   }
 
-  const handleSave = async () => {
+  function handleSave() {
     if (!user) return
 
     // Don't save if nickname changed but unavailable
-    if (nickname !== profile?.nickname && !isNicknameAvailable) {
+    const nicknameAvailability = nicknameForCheck === profile?.nickname ? true : isNicknameAvailable
+    if (nickname !== profile?.nickname && !nicknameAvailability) {
       toast.error('Please check your nickname.')
       return
     }
 
-    setSaving(true)
-    try {
-      const updated = await updateProfile(user.id, {
-        nickname,
-        bio: bio || undefined,
-        poker_experience: pokerExperience || undefined,
-      })
-
-      if (updated) {
-        setProfile(updated)
-        toast.success('Profile updated successfully!')
+    updateProfileMutation.mutate(
+      {
+        userId: user.id,
+        updates: {
+          nickname,
+          bio: bio || undefined,
+          poker_experience: pokerExperience || undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success('Profile updated successfully!')
+        },
+        onError: (error) => {
+          console.error('Profile save failed:', error)
+          toast.error('Failed to save profile. Please try again.')
+        },
       }
-    } catch (error) {
-      console.error('Profile save failed:', error)
-      toast.error('Failed to save profile. Please try again.')
-    } finally {
-      setSaving(false)
-    }
+    )
   }
+
+  const nicknameAvailability = nicknameForCheck === profile?.nickname ? true : isNicknameAvailable
 
   const canSave =
     nickname.length >= 3 &&
-    (nickname === profile?.nickname || isNicknameAvailable === true) &&
+    (nickname === profile?.nickname || nicknameAvailability === true) &&
     !checking &&
     (nickname !== profile?.nickname || bio !== (profile?.bio || "") || pokerExperience !== (profile?.poker_experience || ""))
+
+  const saving = updateProfileMutation.isPending
 
   if (authLoading || loading) {
     return (
@@ -181,12 +176,12 @@ export default function profileClient() {
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   </div>
                 )}
-                {!checking && isNicknameAvailable === true && nickname !== profile.nickname && (
+                {!checking && nicknameAvailability === true && nickname !== profile.nickname && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <Check className="h-4 w-4 text-green-500" />
                   </div>
                 )}
-                {!checking && isNicknameAvailable === false && (
+                {!checking && nicknameAvailability === false && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
                     <X className="h-4 w-4 text-destructive" />
                   </div>
@@ -195,7 +190,7 @@ export default function profileClient() {
               <p className="text-xs text-muted-foreground">
                 3-20 characters, alphanumeric and underscore only
               </p>
-              {isNicknameAvailable === false && (
+              {nicknameAvailability === false && (
                 <p className="text-xs text-destructive">
                   Nickname already in use or invalid format.
                 </p>

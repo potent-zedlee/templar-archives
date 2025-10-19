@@ -15,10 +15,11 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useAuth } from "@/components/auth-provider"
-import { fetchUserEditRequests, type HandEditRequest } from "@/lib/hand-edit-requests"
+import { type HandEditRequest, type EditRequestStatus } from "@/lib/hand-edit-requests"
 import { Clock, CheckCircle, XCircle } from "lucide-react"
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
+import { useUserEditRequestsQuery } from "@/lib/queries/edit-requests-queries"
 
 const EDIT_TYPE_LABELS: Record<string, string> = {
   "basic_info": "기본 정보",
@@ -30,41 +31,21 @@ const EDIT_TYPE_LABELS: Record<string, string> = {
 export default function EditRequestsClient() {
   const router = useRouter()
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [requests, setRequests] = useState<HandEditRequest[]>([])
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "approved" | "rejected">("all")
 
+  // React Query hook
+  const statusFilter: EditRequestStatus | undefined = activeTab === "all" ? undefined : activeTab as EditRequestStatus
+  const { data: requests = [], isLoading: loading } = useUserEditRequestsQuery(
+    user?.id || "",
+    statusFilter
+  )
+
+  // Redirect if not logged in
   useEffect(() => {
     if (!user) {
       router.push("/auth/login")
-      return
     }
-
-    loadRequests()
   }, [user, router])
-
-  async function loadRequests() {
-    if (!user) return
-
-    setLoading(true)
-    try {
-      const data = await fetchUserEditRequests({
-        userId: user.id,
-        status: activeTab === "all" ? undefined : activeTab as any
-      })
-      setRequests(data)
-    } catch (error) {
-      console.error("Error loading edit requests:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (user) {
-      loadRequests()
-    }
-  }, [activeTab])
 
   function getStatusBadge(status: string) {
     switch (status) {
