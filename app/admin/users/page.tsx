@@ -43,14 +43,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/components/auth-provider"
+import { isAdmin, type AdminRole } from "@/lib/admin"
 import {
-  isAdmin,
-  getUsers,
-  banUser,
-  unbanUser,
-  changeUserRole,
-  type AdminRole
-} from "@/lib/admin"
+  useUsersQuery,
+  useBanUserMutation,
+  useUnbanUserMutation,
+  useChangeRoleMutation
+} from "@/lib/queries/admin-queries"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -70,10 +69,7 @@ type User = {
 export default function usersClient() {
   const router = useRouter()
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
-  const [users, setUsers] = useState<User[]>([])
-  const [totalPages, setTotalPages] = useState(1)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState<AdminRole | "all">("all")
@@ -83,22 +79,33 @@ export default function usersClient() {
   const [banDialogOpen, setBanDialogOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [banReason, setBanReason] = useState("")
-  const [banning, setBanning] = useState(false)
 
   // Role dialog state
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
   const [newRole, setNewRole] = useState<AdminRole>("user")
-  const [changingRole, setChangingRole] = useState(false)
+
+  // React Query hooks
+  const {
+    data: usersData,
+    isLoading: loading
+  } = useUsersQuery({
+    page: currentPage,
+    limit: 20,
+    role: roleFilter === "all" ? undefined : roleFilter,
+    banned: bannedFilter === "all" ? undefined : bannedFilter === "banned",
+    search: searchQuery || undefined
+  })
+
+  const users = usersData?.users as User[] || []
+  const totalPages = usersData?.totalPages || 1
+
+  const banUserMutation = useBanUserMutation(user?.id || "")
+  const unbanUserMutation = useUnbanUserMutation(user?.id || "")
+  const changeRoleMutation = useChangeRoleMutation(user?.id || "")
 
   useEffect(() => {
     checkAccess()
   }, [user])
-
-  useEffect(() => {
-    if (hasAccess) {
-      loadUsers()
-    }
-  }, [hasAccess, currentPage, searchQuery, roleFilter, bannedFilter])
 
   async function checkAccess() {
     if (!user) {
@@ -122,28 +129,7 @@ export default function usersClient() {
     }
   }
 
-  async function loadUsers() {
-    try {
-      setLoading(true)
-      const result = await getUsers({
-        page: currentPage,
-        limit: 20,
-        role: roleFilter === "all" ? undefined : roleFilter,
-        banned: bannedFilter === "all" ? undefined : bannedFilter === "banned",
-        search: searchQuery || undefined
-      })
-
-      setUsers(result.users as User[])
-      setTotalPages(result.totalPages)
-    } catch (error) {
-      console.error("Error loading users:", error)
-      toast.error("Failed to load users")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleBanUser() {
+  function handleBanUser() {
     if (!selectedUser || !user) return
 
     if (!banReason.trim()) {
@@ -151,57 +137,54 @@ export default function usersClient() {
       return
     }
 
-    setBanning(true)
-    try {
-      await banUser(selectedUser.id, banReason, user.id)
-      toast.success(`${selectedUser.nickname} has been banned`)
-      setBanDialogOpen(false)
-      setBanReason("")
-      setSelectedUser(null)
-      loadUsers()
-    } catch (error) {
-      console.error("Error banning user:", error)
-      toast.error("Failed to ban user")
-    } finally {
-      setBanning(false)
-    }
+    banUserMutation.mutate(
+      { userId: selectedUser.id, reason: banReason },
+      {
+        onSuccess: () => {
+          toast.success(`${selectedUser.nickname} has been banned`)
+          setBanDialogOpen(false)
+          setBanReason("")
+          setSelectedUser(null)
+        },
+        onError: (error) => {
+          console.error("Error banning user:", error)
+          toast.error("Failed to ban user")
+        }
+      }
+    )
   }
 
-  async function handleUnbanUser(targetUser: User) {
+  function handleUnbanUser(targetUser: User) {
     if (!user) return
 
-    try {
-      await unbanUser(targetUser.id, user.id)
-      toast.success(`${targetUser.nickname} has been unbanned`)
-      loadUsers()
-    } catch (error) {
-      console.error("Error unbanning user:", error)
-      toast.error("Failed to unban user")
-    }
+    unbanUserMutation.mutate(targetUser.id, {
+      onSuccess: () => {
+        toast.success(`${targetUser.nickname} has been unbanned`)
+      },
+      onError: (error) => {
+        console.error("Error unbanning user:", error)
+        toast.error("Failed to unban user")
+      }
+    })
   }
 
-  async function handleChangeRole() {
+  function handleChangeRole() {
     if (!selectedUser || !user) return
 
-    setChangingRole(true)
-    try {
-      console.log('Changing role:', {
-        userId: selectedUser.id,
-        newRole,
-        adminId: user.id
-      })
-      await changeUserRole(selectedUser.id, newRole, user.id)
-      toast.success(`User role changed to ${newRole}`)
-      setRoleDialogOpen(false)
-      setSelectedUser(null)
-      await loadUsers()
-    } catch (error: any) {
-      console.error("Error changing user role:", error)
-      console.error("Error details:", error.message, error.code)
-      toast.error(`Failed to change role: ${error.message || 'Unknown error'}`)
-    } finally {
-      setChangingRole(false)
-    }
+    changeRoleMutation.mutate(
+      { userId: selectedUser.id, role: newRole },
+      {
+        onSuccess: () => {
+          toast.success(`User role changed to ${newRole}`)
+          setRoleDialogOpen(false)
+          setSelectedUser(null)
+        },
+        onError: (error: any) => {
+          console.error("Error changing user role:", error)
+          toast.error(`Failed to change role: ${error.message || 'Unknown error'}`)
+        }
+      }
+    )
   }
 
   function openBanDialog(targetUser: User) {
@@ -450,9 +433,9 @@ export default function usersClient() {
             <Button
               variant="destructive"
               onClick={handleBanUser}
-              disabled={banning || !banReason.trim()}
+              disabled={banUserMutation.isPending || !banReason.trim()}
             >
-              {banning ? "Processing..." : "Ban"}
+              {banUserMutation.isPending ? "Processing..." : "Ban"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -488,8 +471,8 @@ export default function usersClient() {
             <Button variant="outline" onClick={() => setRoleDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleChangeRole} disabled={changingRole}>
-              {changingRole ? "Processing..." : "Change"}
+            <Button onClick={handleChangeRole} disabled={changeRoleMutation.isPending}>
+              {changeRoleMutation.isPending ? "Processing..." : "Change"}
             </Button>
           </DialogFooter>
         </DialogContent>

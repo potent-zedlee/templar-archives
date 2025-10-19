@@ -28,12 +28,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/components/auth-provider"
 import { isAdmin } from "@/lib/admin"
+import { type HandEditRequest } from "@/lib/hand-edit-requests"
 import {
-  fetchEditRequests,
-  approveEditRequest,
-  rejectEditRequest,
-  type HandEditRequest
-} from "@/lib/hand-edit-requests"
+  useEditRequestsQuery,
+  useApproveEditRequestMutation,
+  useRejectEditRequestMutation,
+} from "@/lib/queries/admin-queries"
 import { Clock, CheckCircle, XCircle, FileEdit } from "lucide-react"
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
@@ -48,15 +48,17 @@ const EDIT_TYPE_LABELS: Record<string, string> = {
 export default function editrequestsClient() {
   const router = useRouter()
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [requests, setRequests] = useState<HandEditRequest[]>([])
   const [selectedRequest, setSelectedRequest] = useState<HandEditRequest | null>(null)
   const [adminComment, setAdminComment] = useState("")
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+
+  // React Query hooks
+  const { data: requests = [], isLoading: loading } = useEditRequestsQuery()
+  const approveEditRequestMutation = useApproveEditRequestMutation()
+  const rejectEditRequestMutation = useRejectEditRequestMutation()
 
   useEffect(() => {
-    async function checkAdminAndLoadData() {
+    async function checkAdminAccess() {
       if (!user) {
         router.push("/auth/login")
         return
@@ -67,22 +69,10 @@ export default function editrequestsClient() {
         router.push("/")
         return
       }
-
-      await loadRequests()
-      setLoading(false)
     }
 
-    checkAdminAndLoadData()
+    checkAdminAccess()
   }, [user, router])
-
-  async function loadRequests() {
-    try {
-      const data = await fetchEditRequests()
-      setRequests(data)
-    } catch (error) {
-      console.error("Error loading edit requests:", error)
-    }
-  }
 
   function handleReviewClick(request: HandEditRequest, action: "approve" | "reject") {
     setSelectedRequest(request)
@@ -90,34 +80,39 @@ export default function editrequestsClient() {
     setAdminComment("")
   }
 
-  async function handleSubmitReview() {
+  function handleSubmitReview() {
     if (!selectedRequest || !user || !actionType) return
 
-    setSubmitting(true)
-    try {
-      if (actionType === "approve") {
-        await approveEditRequest({
-          requestId: selectedRequest.id,
-          adminId: user.id,
-          adminComment
-        })
-      } else {
-        await rejectEditRequest({
-          requestId: selectedRequest.id,
-          adminId: user.id,
-          adminComment
-        })
-      }
-
-      setSelectedRequest(null)
-      setActionType(null)
-      setAdminComment("")
-      await loadRequests()
-    } catch (error) {
-      console.error("Error submitting review:", error)
-      alert("Failed to process review.")
-    } finally {
-      setSubmitting(false)
+    if (actionType === "approve") {
+      approveEditRequestMutation.mutate(
+        { requestId: selectedRequest.id, adminId: user.id },
+        {
+          onSuccess: () => {
+            setSelectedRequest(null)
+            setActionType(null)
+            setAdminComment("")
+          },
+          onError: (error) => {
+            console.error("Error approving edit request:", error)
+            alert("Failed to approve request.")
+          }
+        }
+      )
+    } else {
+      rejectEditRequestMutation.mutate(
+        { requestId: selectedRequest.id, adminId: user.id, rejectedReason: adminComment },
+        {
+          onSuccess: () => {
+            setSelectedRequest(null)
+            setActionType(null)
+            setAdminComment("")
+          },
+          onError: (error) => {
+            console.error("Error rejecting edit request:", error)
+            alert("Failed to reject request.")
+          }
+        }
+      )
     }
   }
 
@@ -413,16 +408,16 @@ export default function editrequestsClient() {
                   setActionType(null)
                   setAdminComment("")
                 }}
-                disabled={submitting}
+                disabled={approveEditRequestMutation.isPending || rejectEditRequestMutation.isPending}
               >
                 Cancel
               </Button>
               <Button
                 variant={actionType === "approve" ? "default" : "destructive"}
                 onClick={handleSubmitReview}
-                disabled={submitting}
+                disabled={approveEditRequestMutation.isPending || rejectEditRequestMutation.isPending}
               >
-                {submitting
+                {(approveEditRequestMutation.isPending || rejectEditRequestMutation.isPending)
                   ? "Processing..."
                   : actionType === "approve"
                   ? "Approve & Apply"

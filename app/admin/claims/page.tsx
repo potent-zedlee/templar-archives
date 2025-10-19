@@ -31,27 +31,31 @@ import { toast } from "sonner"
 import { useAuth } from "@/components/auth-provider"
 import { useRouter } from "next/navigation"
 import { isAdmin } from "@/lib/auth-utils"
+import { type PlayerClaimWithDetails } from "@/lib/player-claims"
 import {
-  getPendingClaims,
-  getAllClaims,
-  approvePlayerClaim,
-  rejectPlayerClaim,
-  type PlayerClaimWithDetails,
-} from "@/lib/player-claims"
+  usePendingClaimsQuery,
+  useAllClaimsQuery,
+  useApproveClaimMutation,
+  useRejectClaimMutation,
+} from "@/lib/queries/admin-queries"
 
 export default function claimsClient() {
   const { user } = useAuth()
   const router = useRouter()
   const [userEmail, setUserEmail] = useState<string | null>(null)
-  const [pendingClaims, setPendingClaims] = useState<PlayerClaimWithDetails[]>([])
-  const [allClaims, setAllClaims] = useState<PlayerClaimWithDetails[]>([])
-  const [loading, setLoading] = useState(true)
   const [selectedClaim, setSelectedClaim] = useState<PlayerClaimWithDetails | null>(null)
   const [actionDialogOpen, setActionDialogOpen] = useState(false)
   const [actionType, setActionType] = useState<"approve" | "reject">("approve")
   const [adminNotes, setAdminNotes] = useState("")
   const [rejectedReason, setRejectedReason] = useState("")
-  const [processing, setProcessing] = useState(false)
+
+  // React Query hooks
+  const { data: pendingClaims = [], isLoading: pendingLoading } = usePendingClaimsQuery()
+  const { data: allClaims = [], isLoading: allLoading } = useAllClaimsQuery()
+  const approveClaimMutation = useApproveClaimMutation()
+  const rejectClaimMutation = useRejectClaimMutation()
+
+  const loading = pendingLoading || allLoading
 
   useEffect(() => {
     async function getUser() {
@@ -65,31 +69,8 @@ export default function claimsClient() {
     if (userEmail && !isAdmin(userEmail)) {
       router.push("/")
       toast.error("Admin access only")
-    } else if (userEmail) {
-      loadClaims()
     }
   }, [userEmail])
-
-  async function loadClaims() {
-    setLoading(true)
-    try {
-      const [pendingResult, allResult] = await Promise.all([
-        getPendingClaims(),
-        getAllClaims(),
-      ])
-
-      if (pendingResult.error) throw pendingResult.error
-      if (allResult.error) throw allResult.error
-
-      setPendingClaims(pendingResult.data)
-      setAllClaims(allResult.data)
-    } catch (error) {
-      console.error("Error loading claims:", error)
-      toast.error("Failed to load claims")
-    } finally {
-      setLoading(false)
-    }
-  }
 
   function handleActionClick(claim: PlayerClaimWithDetails, type: "approve" | "reject") {
     setSelectedClaim(claim)
@@ -99,7 +80,7 @@ export default function claimsClient() {
     setRejectedReason("")
   }
 
-  async function handleAction() {
+  function handleAction() {
     if (!selectedClaim || !user) return
 
     if (actionType === "reject" && !rejectedReason) {
@@ -107,39 +88,43 @@ export default function claimsClient() {
       return
     }
 
-    setProcessing(true)
-
-    try {
-      if (actionType === "approve") {
-        const { error } = await approvePlayerClaim({
+    if (actionType === "approve") {
+      approveClaimMutation.mutate(
+        {
           claimId: selectedClaim.id,
           adminId: user.id,
           adminNotes,
-        })
-
-        if (error) throw error
-
-        toast.success("Claim approved")
-      } else {
-        const { error } = await rejectPlayerClaim({
+        },
+        {
+          onSuccess: () => {
+            toast.success("Claim approved")
+            setActionDialogOpen(false)
+          },
+          onError: (error) => {
+            console.error("Error approving claim:", error)
+            toast.error("Failed to approve claim")
+          }
+        }
+      )
+    } else {
+      rejectClaimMutation.mutate(
+        {
           claimId: selectedClaim.id,
           adminId: user.id,
           rejectedReason,
           adminNotes,
-        })
-
-        if (error) throw error
-
-        toast.success("Claim rejected")
-      }
-
-      setActionDialogOpen(false)
-      loadClaims()
-    } catch (error) {
-      console.error("Error processing claim:", error)
-      toast.error("Failed to process claim")
-    } finally {
-      setProcessing(false)
+        },
+        {
+          onSuccess: () => {
+            toast.success("Claim rejected")
+            setActionDialogOpen(false)
+          },
+          onError: (error) => {
+            console.error("Error rejecting claim:", error)
+            toast.error("Failed to reject claim")
+          }
+        }
+      )
     }
   }
 
@@ -448,9 +433,9 @@ export default function claimsClient() {
             <Button
               variant={actionType === "approve" ? "default" : "destructive"}
               onClick={handleAction}
-              disabled={processing}
+              disabled={approveClaimMutation.isPending || rejectClaimMutation.isPending}
             >
-              {processing
+              {(approveClaimMutation.isPending || rejectClaimMutation.isPending)
                 ? "Processing..."
                 : actionType === "approve"
                 ? "Approve"

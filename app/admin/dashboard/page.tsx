@@ -19,16 +19,20 @@ import {
   Activity
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
-import { isAdmin, getDashboardStats, getRecentActivity, type DashboardStats, type AdminLog } from "@/lib/admin"
+import { isAdmin } from "@/lib/admin"
+import { useDashboardStatsQuery, useRecentActivityQuery } from "@/lib/queries/admin-queries"
 import { toast } from "sonner"
 
 export default function dashboardClient() {
   const router = useRouter()
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [activities, setActivities] = useState<AdminLog[]>([])
   const [hasAccess, setHasAccess] = useState(false)
+
+  // React Query hooks
+  const { data: stats = null, isLoading: statsLoading } = useDashboardStatsQuery()
+  const { data: activities = [], isLoading: activitiesLoading } = useRecentActivityQuery(10)
+
+  const loading = statsLoading || activitiesLoading
 
   useEffect(() => {
     checkAccess()
@@ -49,28 +53,10 @@ export default function dashboardClient() {
       }
 
       setHasAccess(true)
-      loadDashboardData()
     } catch (error) {
       console.error("Error checking admin access:", error)
       toast.error("Error checking permissions")
       router.push("/")
-    }
-  }
-
-  async function loadDashboardData() {
-    try {
-      const [statsData, activityData] = await Promise.all([
-        getDashboardStats(),
-        getRecentActivity(10)
-      ])
-
-      setStats(statsData)
-      setActivities(activityData)
-    } catch (error) {
-      console.error("Error loading dashboard data:", error)
-      toast.error("Failed to load dashboard data")
-    } finally {
-      setLoading(false)
     }
   }
 
