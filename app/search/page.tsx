@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import nextDynamic from "next/dynamic"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { PageTransition } from "@/components/page-transition"
 import { useIsMobile } from "@/hooks/use-media-query"
@@ -26,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Search, Filter, Star, Play, X, Sparkles, SearchX } from "lucide-react"
+import { Search, Filter, Star, Play, X, Sparkles, SearchX, TrendingUp } from "lucide-react"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { fetchHandsWithDetails } from "@/lib/queries"
 import type { Hand, Player } from "@/lib/supabase"
@@ -51,17 +52,21 @@ type HandWithDetails = Hand & {
 
 export default function SearchClient() {
   const isMobile = useIsMobile()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Initialize state from URL params
   const [hands, setHands] = useState<HandWithDetails[]>([])
   const [loading, setLoading] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || "")
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
   // Basic Filters
-  const [selectedTournament, setSelectedTournament] = useState<string>("all")
-  const [selectedPlayer, setSelectedPlayer] = useState<string>("all")
-  const [favoriteOnly, setFavoriteOnly] = useState(false)
-  const [dateFrom, setDateFrom] = useState("")
-  const [dateTo, setDateTo] = useState("")
+  const [selectedTournament, setSelectedTournament] = useState<string>(searchParams.get('tournament') || "all")
+  const [selectedPlayer, setSelectedPlayer] = useState<string>(searchParams.get('player') || "all")
+  const [favoriteOnly, setFavoriteOnly] = useState(searchParams.get('favorite') === 'true')
+  const [dateFrom, setDateFrom] = useState(searchParams.get('from') || "")
+  const [dateTo, setDateTo] = useState(searchParams.get('to') || "")
 
   // Advanced Filters from store
   const filterState = useFilterStore()
@@ -70,10 +75,28 @@ export default function SearchClient() {
   const [tournaments, setTournaments] = useState<{id: string, name: string}[]>([])
   const [players, setPlayers] = useState<Player[]>([])
 
+  // Update URL with current search params
+  const updateURL = useCallback(() => {
+    const params = new URLSearchParams()
+    if (searchQuery) params.set('q', searchQuery)
+    if (selectedTournament !== 'all') params.set('tournament', selectedTournament)
+    if (selectedPlayer !== 'all') params.set('player', selectedPlayer)
+    if (favoriteOnly) params.set('favorite', 'true')
+    if (dateFrom) params.set('from', dateFrom)
+    if (dateTo) params.set('to', dateTo)
+
+    const queryString = params.toString()
+    router.push(queryString ? `/search?${queryString}` : '/search', { scroll: false })
+  }, [searchQuery, selectedTournament, selectedPlayer, favoriteOnly, dateFrom, dateTo, router])
+
   useEffect(() => {
     loadFiltersData()
-    searchHands()
   }, [])
+
+  useEffect(() => {
+    searchHands()
+    updateURL()
+  }, [searchQuery, selectedTournament, selectedPlayer, favoriteOnly, dateFrom, dateTo])
 
   async function loadFiltersData() {
     const supabase = createClientSupabaseClient()
@@ -204,6 +227,52 @@ export default function SearchClient() {
           </p>
         </div>
 
+        {/* Filter Presets */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              clearFilters()
+              setSearchQuery("big pot")
+            }}
+          >
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Big Pots
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              clearFilters()
+              setSearchQuery("all-in")
+            }}
+          >
+            All-In Hands
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              clearFilters()
+              setSearchQuery("river decision")
+            }}
+          >
+            River Decisions
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              clearFilters()
+              setFavoriteOnly(true)
+            }}
+          >
+            <Star className="h-4 w-4 mr-2 fill-yellow-400 text-yellow-400" />
+            My Favorites
+          </Button>
+        </div>
+
         {/* Search & Filters */}
         <Card className="p-6 mb-6">
           <div className="space-y-4">
@@ -322,9 +391,77 @@ export default function SearchClient() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-title">
-              {hands.length} {hands.length === 1 ? 'Hand' : 'Hands'} Found
+              {loading ? 'Searching...' : `${hands.length} ${hands.length === 1 ? 'Hand' : 'Hands'} Found`}
             </h2>
           </div>
+
+          {/* Active Filters Badges */}
+          {(searchQuery || selectedTournament !== 'all' || selectedPlayer !== 'all' || favoriteOnly || dateFrom || dateTo) && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {searchQuery && (
+                <Badge variant="secondary" className="gap-2">
+                  Query: {searchQuery}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                    onClick={() => setSearchQuery("")}
+                  />
+                </Badge>
+              )}
+              {selectedTournament !== 'all' && (
+                <Badge variant="secondary" className="gap-2">
+                  Tournament: {tournaments.find(t => t.id === selectedTournament)?.name || selectedTournament}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                    onClick={() => setSelectedTournament("all")}
+                  />
+                </Badge>
+              )}
+              {selectedPlayer !== 'all' && (
+                <Badge variant="secondary" className="gap-2">
+                  Player: {players.find(p => p.id === selectedPlayer)?.name || selectedPlayer}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                    onClick={() => setSelectedPlayer("all")}
+                  />
+                </Badge>
+              )}
+              {favoriteOnly && (
+                <Badge variant="secondary" className="gap-2">
+                  Favorites Only
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                    onClick={() => setFavoriteOnly(false)}
+                  />
+                </Badge>
+              )}
+              {dateFrom && (
+                <Badge variant="secondary" className="gap-2">
+                  From: {dateFrom}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                    onClick={() => setDateFrom("")}
+                  />
+                </Badge>
+              )}
+              {dateTo && (
+                <Badge variant="secondary" className="gap-2">
+                  To: {dateTo}
+                  <X
+                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                    onClick={() => setDateTo("")}
+                  />
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-caption"
+                onClick={clearFilters}
+              >
+                Clear All
+              </Button>
+            </div>
+          )}
 
           {loading ? (
             <TableSkeleton rows={8} columns={6} />
