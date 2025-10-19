@@ -13,6 +13,7 @@
 import dynamic from 'next/dynamic'
 import { Plus } from 'lucide-react'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
+import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { ArchiveBreadcrumb } from '@/components/archive-breadcrumb'
 import { ArchiveFolderList } from '@/components/archive-folder-list'
@@ -39,13 +40,8 @@ const ArchiveTimelineView = dynamic(
 )
 
 export function ArchiveEventsList() {
-  const {
-    tournaments,
-    unsortedVideos,
-    loading,
-    userEmail,
-    selectDay,
-  } = useArchiveDataStore()
+  const { tournaments, unsortedVideos, tournamentsLoading } = useArchiveData()
+  const { userEmail, setSelectedDay } = useArchiveDataStore()
 
   const {
     navigationLevel,
@@ -107,7 +103,7 @@ export function ArchiveEventsList() {
   // Handle breadcrumb navigation
   const handleBreadcrumbNavigate = useCallback((item: BreadcrumbItem | null) => {
     // Clear selected day when navigating
-    selectDay(null)
+    setSelectedDay(null)
 
     if (!item) {
       // Navigate to root
@@ -268,7 +264,7 @@ export function ArchiveEventsList() {
 
   // Handle folder navigation
   const handleFolderNavigate = useCallback((item: FolderItem) => {
-    selectDay(null)
+    setSelectedDay(null)
 
     if (item.type === 'tournament') {
       setNavigationLevel('tournament')
@@ -356,7 +352,7 @@ export function ArchiveEventsList() {
           items={folderItems}
           onNavigate={handleFolderNavigate}
           onSelectDay={selectDay}
-          loading={loading.tournaments}
+          loading={tournamentsLoading}
           isUnorganized={navigationLevel === 'unorganized'}
           selectedIds={selectedVideoIds}
           onToggleSelect={toggleVideoSelection}
@@ -376,7 +372,7 @@ export function ArchiveEventsList() {
           items={folderItems}
           onNavigate={handleFolderNavigate}
           onSelectDay={selectDay}
-          loading={loading.tournaments}
+          loading={tournamentsLoading}
           isUnorganized={navigationLevel === 'unorganized'}
           selectedIds={selectedVideoIds}
           onToggleSelect={toggleVideoSelection}
@@ -395,7 +391,7 @@ export function ArchiveEventsList() {
           items={folderItems}
           onNavigate={handleFolderNavigate}
           onSelectDay={selectDay}
-          loading={loading.tournaments}
+          loading={tournamentsLoading}
           isUnorganized={navigationLevel === 'unorganized'}
           selectedIds={selectedVideoIds}
           onToggleSelect={toggleVideoSelection}

@@ -12,6 +12,7 @@
 import dynamic from 'next/dynamic'
 import { CheckCircle, X, Play, Download, Folder } from 'lucide-react'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
+import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -33,7 +34,8 @@ const HandListAccordion = dynamic(
 )
 
 export function ArchiveHandHistory() {
-  const { tournaments, hands, selectDay, setHands } = useArchiveDataStore()
+  const { tournaments, hands } = useArchiveData()
+  const { setSelectedDay } = useArchiveDataStore()
   const { openVideoDialog } = useArchiveUIStore()
 
   // Get selected day data
@@ -117,8 +119,8 @@ export function ArchiveHandHistory() {
   }, [hands])
 
   const handleCloseHandHistory = () => {
-    selectDay(null)
-    setHands([])
+    setSelectedDay(null)
+    // React Query가 hands를 자동으로 관리
   }
 
   return (

@@ -14,14 +14,16 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Plus, Filter, ChevronDown, ChevronUp } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
+import { useArchiveDataStore } from '@/stores/archive-data-store'
+import { archiveKeys } from '@/lib/queries/archive-queries'
 import { ArchiveTournamentLogosBar } from '@/components/archive-tournament-logos-bar'
 import { ArchiveUnifiedFilters } from '@/components/archive-unified-filters'
 import { ArchiveViewSwitcher } from '@/components/archive-view-switcher'
 import { ArchiveSearchSort } from '@/components/archive-search-sort'
 import { Button } from '@/components/ui/button'
 import { isAdmin } from '@/lib/auth-utils'
-import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { cn } from '@/lib/utils'
 
 const QuickUploadDialog = dynamic(
@@ -35,7 +37,8 @@ const TournamentDialog = dynamic(
 )
 
 export function ArchiveToolbar() {
-  const { userEmail, loadUnsortedVideos } = useArchiveDataStore()
+  const { userEmail } = useArchiveDataStore()
+  const queryClient = useQueryClient()
   const {
     selectedCategory,
     setSelectedCategory,
@@ -113,7 +116,12 @@ export function ArchiveToolbar() {
             <ArchiveViewSwitcher currentView={viewMode} onViewChange={setViewMode} />
 
             {/* Quick Upload Button */}
-            <QuickUploadDialog onSuccess={loadUnsortedVideos} />
+            <QuickUploadDialog
+              onSuccess={() => {
+                // React Query: Invalidate unsorted videos cache
+                queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
+              }}
+            />
 
             {/* Add Tournament Button (Admin Only) */}
             {isUserAdmin && (
