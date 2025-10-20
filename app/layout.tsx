@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { WebVitalsReporter } from "@/components/analytics/web-vitals"
+import { Footer } from "@/components/footer"
 import "./globals.css"
 import { Providers } from "@/components/providers"
 
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased`}>
         <Providers>
           {children}
+          <Footer />
         </Providers>
         <WebVitalsReporter />
         <Analytics />

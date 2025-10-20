@@ -75,6 +75,7 @@ export function Header() {
   }
 
   const navLinks = [
+    { href: "/about", label: "ABOUT" },
     { href: "/search", label: "SEARCH" },
     { href: "/archive", label: "ARCHIVE" },
     { href: "/players", label: "PLAYERS" },
