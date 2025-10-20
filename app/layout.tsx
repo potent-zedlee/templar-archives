@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { WebVitalsReporter } from "@/components/analytics/web-vitals"
 import { Footer } from "@/components/footer"
+import { CookieConsentBanner } from "@/components/cookie-consent-banner"
 import "./globals.css"
 import { Providers } from "@/components/providers"
 
@@ -24,6 +25,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <Footer />
+          <CookieConsentBanner />
         </Providers>
         <WebVitalsReporter />
         <Analytics />

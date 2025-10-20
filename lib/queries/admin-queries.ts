@@ -46,6 +46,15 @@ import {
   type HandEditRequest,
   type EditRequestStatus,
 } from '@/lib/hand-edit-requests'
+import {
+  getAllDeletionRequests,
+  getPendingDeletionRequests,
+  approveDeletionRequest,
+  rejectDeletionRequest,
+  completeDeletionRequest,
+  type DeletionRequestWithUser,
+  type DeletionRequestStatus,
+} from '@/lib/data-deletion-requests'
 
 // ==================== Query Keys ====================
 
@@ -63,6 +72,9 @@ export const adminKeys = {
   reports: (status?: ReportStatus) => [...adminKeys.all, 'reports', status] as const,
   allPosts: (includeHidden?: boolean) => [...adminKeys.all, 'all-posts', includeHidden] as const,
   allComments: (includeHidden?: boolean) => [...adminKeys.all, 'all-comments', includeHidden] as const,
+  deletionRequests: () => [...adminKeys.all, 'deletion-requests'] as const,
+  pendingDeletionRequests: () => [...adminKeys.deletionRequests(), 'pending'] as const,
+  allDeletionRequests: () => [...adminKeys.deletionRequests(), 'all'] as const,
 }
 
 // ==================== Dashboard Queries ====================
@@ -540,6 +552,120 @@ export function useDeleteContentMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.allPosts() })
       queryClient.invalidateQueries({ queryKey: adminKeys.allComments() })
+      queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
+    },
+  })
+}
+
+// ==================== Data Deletion Requests Queries & Mutations ====================
+
+/**
+ * Get all deletion requests (admin)
+ */
+export function useAllDeletionRequestsQuery() {
+  return useQuery({
+    queryKey: adminKeys.allDeletionRequests(),
+    queryFn: async () => {
+      const result = await getAllDeletionRequests()
+      if (result.error) throw result.error
+      return result.data
+    },
+    staleTime: 2 * 60 * 1000, // 2분
+    gcTime: 5 * 60 * 1000, // 5분
+  })
+}
+
+/**
+ * Get pending deletion requests (admin)
+ */
+export function usePendingDeletionRequestsQuery() {
+  return useQuery({
+    queryKey: adminKeys.pendingDeletionRequests(),
+    queryFn: async () => {
+      const result = await getPendingDeletionRequests()
+      if (result.error) throw result.error
+      return result.data
+    },
+    staleTime: 2 * 60 * 1000, // 2분
+    gcTime: 5 * 60 * 1000, // 5분
+  })
+}
+
+/**
+ * Approve deletion request (admin)
+ */
+export function useApproveDeletionRequestMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      requestId,
+      adminId,
+      adminNotes,
+    }: {
+      requestId: string
+      adminId: string
+      adminNotes?: string
+    }) => {
+      const result = await approveDeletionRequest({ requestId, adminId, adminNotes })
+      if (result.error) throw result.error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.pendingDeletionRequests() })
+      queryClient.invalidateQueries({ queryKey: adminKeys.allDeletionRequests() })
+      queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
+    },
+  })
+}
+
+/**
+ * Reject deletion request (admin)
+ */
+export function useRejectDeletionRequestMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      requestId,
+      adminId,
+      rejectedReason,
+      adminNotes,
+    }: {
+      requestId: string
+      adminId: string
+      rejectedReason: string
+      adminNotes?: string
+    }) => {
+      const result = await rejectDeletionRequest({ requestId, adminId, rejectedReason, adminNotes })
+      if (result.error) throw result.error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.pendingDeletionRequests() })
+      queryClient.invalidateQueries({ queryKey: adminKeys.allDeletionRequests() })
+      queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
+    },
+  })
+}
+
+/**
+ * Complete deletion request (admin)
+ */
+export function useCompleteDeletionRequestMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      requestId,
+      adminId,
+    }: {
+      requestId: string
+      adminId: string
+    }) => {
+      const result = await completeDeletionRequest({ requestId, adminId })
+      if (result.error) throw result.error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.allDeletionRequests() })
       queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
     },
   })

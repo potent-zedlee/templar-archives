@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { CookieSettingsDialog } from "./cookie-settings-dialog"
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -102,6 +103,13 @@ export function Footer() {
                 >
                   Contact Legal
                 </a>
+              </li>
+              <li>
+                <CookieSettingsDialog>
+                  <button className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left">
+                    Cookie Settings
+                  </button>
+                </CookieSettingsDialog>
               </li>
             </ul>
           </div>

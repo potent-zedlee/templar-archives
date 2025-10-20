@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Loader2, Check, X } from "lucide-react"
+import { Loader2, Check, X, Trash2, AlertTriangle } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { toast } from "sonner"
 import {
@@ -248,6 +248,38 @@ export default function profileClient() {
                 ) : (
                   "Save"
                 )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Danger Zone */}
+        <Card className="mt-6 border-destructive">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Danger Zone
+            </CardTitle>
+            <CardDescription>
+              Irreversible actions that affect your account and data.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg bg-destructive/5">
+              <div className="flex-1">
+                <h3 className="font-semibold text-sm mb-1">Request Data Deletion</h3>
+                <p className="text-xs text-muted-foreground">
+                  Exercise your right to be forgotten under GDPR, CCPA, and PIPL. This will permanently delete all your data.
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => router.push("/profile/delete-data")}
+                className="ml-4 gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Request Deletion
               </Button>
             </div>
           </CardContent>
