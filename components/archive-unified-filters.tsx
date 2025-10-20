@@ -192,6 +192,53 @@ export function ArchiveUnifiedFilters({
         {/* Expanded Filters */}
         {(showToggleButton ? isOpen : true) && (
           <div className="pb-6 pt-4 space-y-6 bg-muted/30 border-t border-primary/10 -mx-4 md:-mx-6 px-4 md:px-6 rounded-b-lg">
+            {/* Quick Filters Section */}
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold text-foreground">Quick Filters</Label>
+              <div className="flex items-center gap-3 flex-wrap">
+                {/* Date Filter */}
+                <select className="px-3 py-1.5 rounded-md border border-border bg-background text-sm hover:bg-muted transition-colors">
+                  <option>Date: All time</option>
+                  <option>Last 7 days</option>
+                  <option>Last 30 days</option>
+                  <option>Last 90 days</option>
+                </select>
+
+                {/* Tournament Name */}
+                <input
+                  type="text"
+                  placeholder="Tournament Name"
+                  className="px-3 py-1.5 rounded-md border border-border bg-background text-sm w-[200px] hover:bg-muted transition-colors"
+                />
+
+                {/* Player */}
+                <input
+                  type="text"
+                  placeholder="Player"
+                  className="px-3 py-1.5 rounded-md border border-border bg-background text-sm w-[150px] hover:bg-muted transition-colors"
+                />
+
+                {/* Hole Card - Placeholder */}
+                <button className="px-3 py-1.5 rounded-md border border-border bg-background text-sm text-muted-foreground hover:bg-muted transition-colors">
+                  Hole Card: Any Cards
+                </button>
+
+                {/* Hand Value - Placeholder */}
+                <button className="px-3 py-1.5 rounded-md border border-border bg-background text-sm text-muted-foreground hover:bg-muted transition-colors">
+                  Hand Value: Any Cards
+                </button>
+
+                {/* RESET Quick Filters */}
+                <button className="px-3 py-1.5 rounded-md border border-border bg-background text-sm font-medium hover:bg-destructive hover:text-destructive-foreground transition-colors">
+                  <X className="h-3.5 w-3.5 inline mr-1" />
+                  Reset Quick
+                </button>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-border/40" />
+
             {/* Category Filter */}
             {showCategoryFilter && (
               <div className="space-y-4">

@@ -4,6 +4,50 @@
 
 ---
 
+## 2025-10-20 (세션 30) - Archive Filter Reorganization ✅
+
+### 작업 내용
+
+#### 1. 인라인 필터 행 제거 ✅
+- **파일**: `app/archive/_components/ArchiveToolbar.tsx` (수정)
+- **목적**: 깔끔한 UI를 위해 인라인 필터 행 삭제
+- **변경사항**:
+  - 68-110번 줄의 인라인 필터 행 완전 제거
+  - Tournament 로고 바 → Filters 버튼 섹션으로 바로 연결
+
+#### 2. Filters 드롭다운에 Quick Filters 섹션 추가 ✅
+- **파일**: `components/archive-unified-filters.tsx` (수정)
+- **목적**: 모든 필터를 Filters 드롭다운 내부로 통합
+- **변경사항**:
+  - **Quick Filters 섹션 추가** (195-240번 줄):
+    - Date 드롭다운 (All time, Last 7/30/90 days)
+    - Tournament Name 입력 필드 (w-[200px])
+    - Player 입력 필드 (w-[150px])
+    - Hole Card 버튼 (플레이스홀더)
+    - Hand Value 버튼 (플레이스홀더)
+    - Reset Quick 버튼 (X 아이콘)
+  - Quick Filters와 Advanced Filters 사이 Divider 추가
+  - 한 줄로 가로 정렬 (flex-wrap으로 모바일 대응)
+  - hover:bg-muted 효과 추가
+
+### 핵심 파일
+- `app/archive/_components/ArchiveToolbar.tsx` (수정, 인라인 필터 삭제)
+- `components/archive-unified-filters.tsx` (수정, Quick Filters 섹션 추가)
+
+### 기능 요약
+- ✅ 인라인 필터 행 제거로 깔끔한 UI
+- ✅ Filters 드롭다운에 Quick Filters 통합
+- ✅ Quick Filters (한 줄) + Divider + Advanced Filters 구조
+- ✅ 빌드 성공
+- ✅ 모바일 대응 (flex-wrap)
+
+### 디자인 개선
+- **간결한 레이아웃**: 불필요한 행 제거
+- **일관된 UX**: 모든 필터를 한 곳에서 관리
+- **직관적인 구조**: Quick Filters (자주 사용) → Advanced Filters (상세 설정)
+
+---
+
 ## 2025-10-20 (세션 29) - Archive UI Redesign: Filters & Event Cards ✅
 
 ### 작업 내용
