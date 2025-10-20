@@ -504,8 +504,9 @@ export function useHideContentMutation() {
       await hideContent(postId ? { postId } : { commentId: commentId! })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.allPosts() })
-      queryClient.invalidateQueries({ queryKey: adminKeys.allComments() })
+      // Use prefix matching to invalidate all variants (with/without includeHidden)
+      queryClient.invalidateQueries({ queryKey: ['admin', 'all-posts'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'all-comments'] })
     },
   })
 }
@@ -527,8 +528,9 @@ export function useUnhideContentMutation() {
       await unhideContent(postId ? { postId } : { commentId: commentId! })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.allPosts() })
-      queryClient.invalidateQueries({ queryKey: adminKeys.allComments() })
+      // Use prefix matching to invalidate all variants (with/without includeHidden)
+      queryClient.invalidateQueries({ queryKey: ['admin', 'all-posts'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'all-comments'] })
     },
   })
 }
@@ -550,8 +552,9 @@ export function useDeleteContentMutation() {
       await deleteContent(postId ? { postId } : { commentId: commentId! })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.allPosts() })
-      queryClient.invalidateQueries({ queryKey: adminKeys.allComments() })
+      // Use prefix matching to invalidate all variants (with/without includeHidden)
+      queryClient.invalidateQueries({ queryKey: ['admin', 'all-posts'] })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'all-comments'] })
       queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
     },
   })

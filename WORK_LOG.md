@@ -39,6 +39,46 @@
 
 ---
 
+## 2025-10-20 (세션 28) - Content Management Instant UI Update ✅
+
+### 작업 내용
+
+#### 1. React Query Invalidation 수정 ✅
+- **파일**: `lib/queries/admin-queries.ts` (수정)
+- **목적**: Delete/Hide/Unhide 시 새로고침 없이 즉시 UI 업데이트
+- **문제**: 쿼리 키 불일치로 invalidation 실패
+  - 페이지: `useAllPostsQuery(true)` → `['admin', 'all-posts', true]`
+  - 기존 invalidation: `adminKeys.allPosts()` → `['admin', 'all-posts', undefined]`
+  - 결과: 쿼리 키가 달라서 캐시 무효화 안 됨
+
+#### 2. 수정된 Mutation Functions (3개)
+1. **`useDeleteContentMutation()`** (line 554-559)
+   - ❌ Before: `adminKeys.allPosts()`, `adminKeys.allComments()`
+   - ✅ After: `['admin', 'all-posts']`, `['admin', 'all-comments']` (prefix matching)
+
+2. **`useHideContentMutation()`** (line 506-509)
+   - ❌ Before: `adminKeys.allPosts()`, `adminKeys.allComments()`
+   - ✅ After: `['admin', 'all-posts']`, `['admin', 'all-comments']` (prefix matching)
+
+3. **`useUnhideContentMutation()`** (line 530-533)
+   - ❌ Before: `adminKeys.allPosts()`, `adminKeys.allComments()`
+   - ✅ After: `['admin', 'all-posts']`, `['admin', 'all-comments']` (prefix matching)
+
+### 핵심 파일 (수정 1개)
+- `lib/queries/admin-queries.ts` (수정, 3개 mutation)
+
+### 기능 요약
+- ✅ Delete 버튼 클릭 시 **즉시** 목록에서 사라짐
+- ✅ Hide/Unhide 버튼 클릭 시 **즉시** 상태 업데이트
+- ✅ 새로고침 불필요
+- ✅ React Query prefix matching 활용 (모든 variant 무효화)
+
+### 기술적 개선
+- **Prefix Matching**: `['admin', 'all-posts']`로 짧게 지정하면 `['admin', 'all-posts', true]`, `['admin', 'all-posts', false]` 모두 무효화
+- **즉시 UI 반응**: 서버 응답 대기 없이 캐시 무효화 → 자동 재요청 → UI 업데이트
+
+---
+
 ## 2025-10-20 (세션 26) - Archive Data Cleanup ✅
 
 ### 작업 내용
