@@ -2,8 +2,8 @@
 
 > 단계별 기능 구현 계획 및 우선순위
 
-**마지막 업데이트**: 2025-10-20
-**현재 Phase**: Phase 0-18 완료 🎉
+**마지막 업데이트**: 2025-10-21
+**현재 Phase**: Phase 0-19 완료 🎉
 
 ---
 
@@ -273,6 +273,37 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 
 ---
 
+### Phase 19: Archive UI Enhancement (2025-10-21) ✅
+**소요 시간**: 2시간
+
+#### 완료 기능
+- **필터 간소화 및 사용자 경험 개선**
+- **Quick Filters 라벨 제거**: 깔끔한 인터페이스를 위한 텍스트 제거
+- **Date Range Picker 도입**:
+  - 기존 단순 Date 드롭다운 삭제
+  - From/To 캘린더 버튼으로 교체
+  - Shadcn/ui Popover + Calendar 컴포넌트 사용
+  - 날짜 포맷: "MMM dd, yyyy"
+- **불필요한 필터 완전 삭제**:
+  - Advanced Filters Grid 제거
+  - Hand Count Range 필터 삭제
+  - Video Sources 필터 삭제 (YouTube/Local Upload)
+  - "Show videos with hands only" 필터 삭제
+- **코드 정리**:
+  - 관련 핸들러 함수 삭제 (handleHandCountRangeChange, handleVideoSourceChange, handleHasHandsOnlyChange)
+  - activeFilterCount 함수 업데이트 (2개 파일)
+
+**핵심 파일**:
+- `components/archive-unified-filters.tsx` (수정)
+- `app/archive/_components/ArchiveToolbar.tsx` (수정)
+
+**개선 효과**:
+- 더 직관적인 날짜 범위 선택
+- 간결한 필터 UI로 사용자 경험 향상
+- 불필요한 복잡성 제거
+
+---
+
 ## 📊 우선순위 요약
 
 | Phase | 기능 | 우선순위 | 상태 | 완료일 |
@@ -296,6 +327,7 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | Phase 16 | React Query Migration | ⭐⭐⭐⭐ | ✅ | 2025-10-20 |
 | Phase 17 | DevTools Optimization | ⭐⭐⭐ | ✅ | 2025-10-20 |
 | Phase 18 | Manual Hand Actions | ⭐⭐⭐⭐ | ✅ | 2025-10-20 |
+| Phase 19 | Archive UI Enhancement | ⭐⭐⭐ | ✅ | 2025-10-21 |
 
 ---
 
