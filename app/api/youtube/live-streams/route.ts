@@ -28,6 +28,7 @@ interface YouTubeVideo {
       }
     }
     liveBroadcastContent: string
+    publishedAt?: string
   }
 }
 

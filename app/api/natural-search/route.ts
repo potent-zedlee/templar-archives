@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { query } = validation.data
+    const { query } = validation.data!
     const trimmedQuery = query.trim()
 
     // SQL Injection 시도 감지

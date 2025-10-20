@@ -76,7 +76,7 @@ export function ArchiveHandHistory() {
           hand.hand_players?.map((hp) => ({
             name: hp.player?.name || 'Unknown',
             position: hp.position || 'Unknown',
-            cards: hp.cards || [],
+            cards: hp.cards?.join('') || '',
             stackBefore: 0,
             stackAfter: 0,
             stackChange: 0,

@@ -136,8 +136,8 @@ export function ArchiveToolbar() {
               <ArchiveUnifiedFilters
                 selectedCategory={selectedCategory}
                 onCategoryChange={setSelectedCategory}
-                advancedFilters={advancedFilters}
-                onAdvancedFiltersChange={setAdvancedFilters}
+                advancedFilters={advancedFilters as any}
+                onAdvancedFiltersChange={setAdvancedFilters as any}
                 showCategoryFilter={false}
                 showToggleButton={false}
               />

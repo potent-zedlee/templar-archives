@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
+import type { Element } from 'domhandler'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { isSafeUrl, sanitizeText, logSecurityEvent } from '@/lib/security'
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Try multiple selectors to find the results table
     const tables = $('table')
 
-    let resultsTable: cheerio.Cheerio<cheerio.Element> | null = null
+    let resultsTable: cheerio.Cheerio<Element> | null = null
 
     // Find table with "Place" or "Pos" or "Rank" header
     tables.each((_, table) => {
@@ -94,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse table rows (skip header)
-    resultsTable.find('tr').slice(1).each((_, row) => {
+    resultsTable!.find('tr').slice(1).each((_: number, row: Element) => {
       const cells = $(row).find('td')
 
       if (cells.length >= 3) {

@@ -193,8 +193,8 @@ export default function editrequestsClient() {
     )
   }
 
-  const pendingRequests = requests.filter(r => r.status === "pending")
-  const reviewedRequests = requests.filter(r => r.status !== "pending")
+  const pendingRequests = requests.filter((r: any) => r.status === "pending")
+  const reviewedRequests = requests.filter((r: any) => r.status !== "pending")
 
   return (
     <div className="min-h-screen">
@@ -239,7 +239,7 @@ export default function editrequestsClient() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pendingRequests.map((request) => (
+                  {pendingRequests.map((request: any) => (
                     <TableRow key={request.id}>
                       <TableCell>
                         <div className="space-y-1">
@@ -307,7 +307,7 @@ export default function editrequestsClient() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reviewedRequests.map((request) => (
+                  {reviewedRequests.map((request: any) => (
                     <TableRow key={request.id}>
                       <TableCell>
                         <Link

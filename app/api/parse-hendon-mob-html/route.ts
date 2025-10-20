@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
+import type { Element } from 'domhandler'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
@@ -282,7 +283,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find table with Hendon Mob class structure (place, prize, name)
-    let resultsTable: cheerio.Cheerio<cheerio.Element> | null = null
+    let resultsTable: cheerio.Cheerio<Element> | null = null
 
     tables.each((_, table) => {
       const hasPlaceClass = $(table).find('td.place').length > 0
@@ -335,7 +336,7 @@ export async function POST(request: NextRequest) {
     logger.debug(`Found payout table. Total tables analyzed: ${tables.length}`)
 
     // Parse table rows (skip header)
-    resultsTable.find('tr').slice(1).each((_, row) => {
+    resultsTable!.find('tr').slice(1).each((_: number, row: Element) => {
       const cells = $(row).find('td')
 
       if (cells.length >= 3) {

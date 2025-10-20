@@ -2,6 +2,5 @@
   "buildCommand": "next build",
   "devCommand": "next dev",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "regions": ["sfo1", "iad1"]
+  "framework": "nextjs"
 }

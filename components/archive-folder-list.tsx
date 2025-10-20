@@ -22,15 +22,7 @@ import {
 import type { Tournament as TournamentType, SubEvent as SubEventType, Day as DayType } from "@/lib/supabase"
 import type { UnsortedVideo } from "@/lib/unsorted-videos"
 import { ArchiveEventCard } from "@/components/archive-event-card"
-
-export interface FolderItem {
-  id: string
-  name: string
-  type: 'tournament' | 'subevent' | 'day' | 'unorganized'
-  itemCount?: number
-  date?: string
-  data?: TournamentType | SubEventType | DayType
-}
+import type { FolderItem } from "@/lib/types/archive"
 
 interface ArchiveFolderListProps {
   items: FolderItem[]

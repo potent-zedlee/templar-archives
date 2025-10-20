@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { dayId, hands } = validation.data
+    const { dayId, hands } = validation.data!
 
     // Day가 존재하는지 확인
     const { data: day, error: dayError } = await supabase
