@@ -327,7 +327,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
                     </div>
                   ))}
                 {/* Pre-Flop 액션 */}
-                {hand.streets?.preflop?.actions.map((action, idx) => (
+                {hand.streets?.preflop?.actions?.map((action: any, idx: number) => (
                   <div key={idx} className="text-caption">
                     <div className="font-medium">{action.player}</div>
                     <div className="text-muted-foreground">
@@ -354,7 +354,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
                 )}
               </div>
               <div className="space-y-1">
-                {hand.streets?.flop?.actions.map((action, idx) => (
+                {hand.streets?.flop?.actions?.map((action: any, idx: number) => (
                   <div key={idx} className="text-caption">
                     <div className="font-medium">{action.player}</div>
                     <div className="text-muted-foreground">
@@ -381,7 +381,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
                 )}
               </div>
               <div className="space-y-1">
-                {hand.streets?.turn?.actions.map((action, idx) => (
+                {hand.streets?.turn?.actions?.map((action: any, idx: number) => (
                   <div key={idx} className="text-caption">
                     <div className="font-medium">{action.player}</div>
                     <div className="text-muted-foreground">
@@ -408,7 +408,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
                 )}
               </div>
               <div className="space-y-1">
-                {hand.streets?.river?.actions.map((action, idx) => (
+                {hand.streets?.river?.actions?.map((action: any, idx: number) => (
                   <div key={idx} className="text-caption">
                     <div className="font-medium">{action.player}</div>
                     <div className="text-muted-foreground">

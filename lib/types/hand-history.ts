@@ -31,6 +31,14 @@ export type HandHistory = {
   turn?: string[]
   river?: string[]
 
+  // 스트릿별 상세 정보 (확장된 포맷)
+  streets?: {
+    preflop?: { actions?: any[]; pot?: number }
+    flop?: { actions?: any[]; pot?: number }
+    turn?: { actions?: any[]; pot?: number }
+    river?: { actions?: any[]; pot?: number }
+  }
+
   // 메타데이터
   rawData?: any // 원본 데이터 (디버깅용)
 }
