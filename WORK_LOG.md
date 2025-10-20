@@ -4,6 +4,76 @@
 
 ---
 
+## 2025-10-20 (세션 29) - Archive UI Redesign: Filters & Event Cards ✅
+
+### 작업 내용
+
+#### 1. Tournament Categories Theme 시스템 추가 ✅
+- **파일**: `lib/tournament-categories.ts` (수정)
+- **목적**: 토너먼트 카테고리별 3D 배너 스타일링 지원
+- **변경사항**:
+  - `TournamentCategory` 인터페이스에 `theme` 필드 추가
+  - 4개 주요 토너먼트에 테마 색상 적용:
+    - **WSOP**: 앰버 그라데이션 (`from-amber-900 via-amber-800 to-amber-700`)
+    - **WPT**: 퍼플 그라데이션 (`from-purple-900 via-purple-800 to-purple-700`)
+    - **EPT**: 블루 그라데이션 (`from-blue-900 via-blue-800 to-blue-700`)
+    - **Triton**: 골드 그라데이션 (`from-yellow-900 via-yellow-800 to-yellow-700`)
+  - 각 테마에 텍스트 색상 및 그림자 효과 포함
+
+#### 2. TournamentEventCard 컴포넌트 생성 ✅
+- **파일**: `components/tournament-event-card.tsx` (신규, 104줄)
+- **목적**: 3D 배너 스타일의 토너먼트 이벤트 카드
+- **주요 기능**:
+  - 날짜/시간 표시 (왼쪽, min-w-[100px])
+  - 체크박스 선택 지원
+  - 토너먼트 로고 표시 (CategoryLogo 또는 커스텀 이미지)
+  - 3D 배너 효과:
+    - 카테고리별 그라데이션 배경
+    - 호버 시 크기 확대 (`hover:scale-[1.02]`)
+    - 2xl 그림자 (`hover:shadow-2xl`)
+    - 검은색 오버레이 그라데이션 (하단 → 상단)
+  - 폴백 테마 (카테고리 없을 시 회색)
+
+#### 3. Archive Toolbar 인라인 필터 추가 ✅
+- **파일**: `app/archive/_components/ArchiveToolbar.tsx` (수정)
+- **목적**: 스크린샷에 맞춘 인라인 필터 UI
+- **변경사항**:
+  - **새로운 필터 행 추가** (68-110번 줄):
+    - Date 드롭다운 (Last 7 days, Last 30 days, All time)
+    - Tournament Name 입력 필드 (w-[200px])
+    - Player 입력 필드 (w-[150px])
+    - Hole Card 버튼 (플레이스홀더, "Any Cards")
+    - Hand Value 버튼 (플레이스홀더, "Any Cards")
+    - RESET 버튼
+  - 로고 바와 기존 컨트롤 사이에 위치
+  - 모바일 대응 (`flex-wrap`)
+
+### 핵심 파일
+- `lib/tournament-categories.ts` (수정, theme 인터페이스 + 4개 테마)
+- `components/tournament-event-card.tsx` (신규, 104줄)
+- `app/archive/_components/ArchiveToolbar.tsx` (수정, 필터 행 추가)
+
+### 기능 요약
+- ✅ 카테고리별 3D 배너 테마 시스템 (WSOP, WPT, EPT, Triton)
+- ✅ TournamentEventCard 컴포넌트 (날짜, 체크박스, 로고, 3D 배너)
+- ✅ 인라인 필터 행 (Date, Tournament Name, Player, Hole Card, Hand Value, RESET)
+- ✅ 호버 애니메이션 (scale + shadow)
+- ✅ 빌드 성공 (95.8 kB for /archive)
+
+### 디자인 특징
+- **3D 효과**: 그라데이션 + 그림자 + 호버 애니메이션
+- **카테고리 브랜딩**: 각 토너먼트의 시그니처 색상 반영
+- **일관된 레이아웃**: 날짜(100px) + 체크박스 + 배너
+- **반응형 디자인**: flex-wrap으로 모바일 대응
+
+### 다음 세션 작업 (보류)
+- [ ] HoleCardDialog 컴포넌트 구현
+- [ ] HandValueDialog 컴포넌트 구현
+- [ ] Zustand store 상태 관리 (필터 상태)
+- [ ] ArchiveEventsList에 TournamentEventCard 통합
+
+---
+
 ## 2025-10-20 (세션 27) - Archive Logo Box Removal ✅
 
 ### 작업 내용

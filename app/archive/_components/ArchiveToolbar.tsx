@@ -65,6 +65,50 @@ export function ArchiveToolbar() {
         onCategoryChange={setSelectedCategory}
       />
 
+      {/* NEW: Inline Filters Row */}
+      <div className="bg-background border-b border-border/40">
+        <div className="container max-w-7xl mx-auto px-4 md:px-6 py-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Date Filter */}
+            <select className="px-3 py-1.5 rounded-md border border-border bg-background text-sm">
+              <option>Date</option>
+              <option>Last 7 days</option>
+              <option>Last 30 days</option>
+              <option>All time</option>
+            </select>
+
+            {/* Tournament Name */}
+            <input
+              type="text"
+              placeholder="Tournament Name"
+              className="px-3 py-1.5 rounded-md border border-border bg-background text-sm w-[200px]"
+            />
+
+            {/* Player */}
+            <input
+              type="text"
+              placeholder="Player"
+              className="px-3 py-1.5 rounded-md border border-border bg-background text-sm w-[150px]"
+            />
+
+            {/* Hole Card - Placeholder */}
+            <button className="px-3 py-1.5 rounded-md border border-border bg-background text-sm text-muted-foreground">
+              Hole Card: Any Cards
+            </button>
+
+            {/* Hand Value - Placeholder */}
+            <button className="px-3 py-1.5 rounded-md border border-border bg-background text-sm text-muted-foreground">
+              Hand Value: Any Cards
+            </button>
+
+            {/* RESET */}
+            <button className="px-3 py-1.5 rounded-md border border-border bg-background text-sm font-medium hover:bg-muted">
+              RESET
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Filters, Search, and Controls */}
       <div className="bg-background border-b border-border/40">
         <div className="container max-w-7xl mx-auto px-4 md:px-6 py-4">

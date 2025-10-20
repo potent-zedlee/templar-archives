@@ -15,6 +15,11 @@ export interface TournamentCategory {
   priority: number        // 인기순 정렬 (낮을수록 우선, 0-100)
   website?: string        // 공식 웹사이트
   isActive: boolean       // 활성 투어 여부
+  theme?: {               // 3D 배너 테마 색상
+    gradient: string      // 배경 그라데이션 (Tailwind 클래스)
+    text: string          // 텍스트 색상
+    shadow: string        // 그림자 색상
+  }
 }
 
 /**
@@ -36,6 +41,11 @@ export const TOURNAMENT_CATEGORIES: TournamentCategory[] = [
     priority: 1,
     website: 'https://www.wsop.com',
     isActive: true,
+    theme: {
+      gradient: 'from-amber-900 via-amber-800 to-amber-700',
+      text: 'text-white',
+      shadow: 'shadow-amber-900/50',
+    },
   },
   {
     id: 'wpt',
@@ -48,6 +58,11 @@ export const TOURNAMENT_CATEGORIES: TournamentCategory[] = [
     priority: 2,
     website: 'https://www.wpt.com',
     isActive: true,
+    theme: {
+      gradient: 'from-purple-900 via-purple-800 to-purple-700',
+      text: 'text-white',
+      shadow: 'shadow-purple-900/50',
+    },
   },
   {
     id: 'ept',
@@ -60,6 +75,11 @@ export const TOURNAMENT_CATEGORIES: TournamentCategory[] = [
     priority: 3,
     website: 'https://www.pokerstars.com/ept',
     isActive: true,
+    theme: {
+      gradient: 'from-blue-900 via-blue-800 to-blue-700',
+      text: 'text-white',
+      shadow: 'shadow-blue-900/50',
+    },
   },
   {
     id: 'triton',
@@ -72,6 +92,11 @@ export const TOURNAMENT_CATEGORIES: TournamentCategory[] = [
     priority: 4,
     website: 'https://www.triton-series.com',
     isActive: true,
+    theme: {
+      gradient: 'from-yellow-600 via-yellow-500 to-yellow-400',
+      text: 'text-black',
+      shadow: 'shadow-yellow-600/50',
+    },
   },
   {
     id: 'wsope',
