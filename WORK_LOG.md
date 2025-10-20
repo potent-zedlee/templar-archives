@@ -4,6 +4,53 @@
 
 ---
 
+## 2025-10-20 (세션 26) - Archive Data Cleanup ✅
+
+### 작업 내용
+
+#### 1. Archive 데이터 일괄 삭제 스크립트 작성 ✅
+- **파일**: `scripts/delete-all-archive-data.ts` (신규, 196줄)
+- **목적**: Archive의 모든 영상과 핸드 데이터를 안전하게 일괄 삭제
+- **삭제 대상**:
+  - `tournaments` 테이블 (CASCADE로 모든 하위 데이터 자동 삭제)
+  - `sub_events` 테이블
+  - `days` 테이블 (영상 데이터)
+  - `hands` 테이블 (핸드 데이터)
+  - Supabase Storage 'videos' 버킷의 파일들
+- **안전 장치**:
+  - 삭제 전 현재 데이터 통계 확인
+  - 5초 대기 후 삭제 실행
+  - 삭제 후 데이터 재확인
+- **실행 방법**:
+  ```bash
+  NEXT_PUBLIC_SUPABASE_URL=... \
+  SUPABASE_SERVICE_ROLE_KEY=... \
+  npx tsx scripts/delete-all-archive-data.ts
+  ```
+
+#### 2. 스크립트 실행 결과 ✅
+- **현재 상태**: 데이터가 이미 없는 상태
+  - 토너먼트: 0개
+  - 서브 이벤트: 0개
+  - 영상 (Days): 0개
+  - 핸드: 0개
+- **결론**: Archive가 깨끗한 상태이며, 새로운 영상을 업로드할 준비가 되었습니다.
+
+### 핵심 파일 (신규 1개)
+- `scripts/delete-all-archive-data.ts` (신규, 196줄)
+
+### 기능 요약
+- ✅ Archive 데이터 일괄 삭제 스크립트 작성
+- ✅ 안전한 삭제 프로세스 (확인 → 대기 → 삭제 → 재확인)
+- ✅ Supabase Storage 파일 삭제 포함
+- ✅ 현재 Archive는 깨끗한 상태
+
+### 다음 작업
+- 새로운 영상 업로드 준비 완료
+- Archive 페이지에서 토너먼트/영상 추가 가능
+
+---
+
 ## 2025-10-20 (세션 25) - Phase 21: Hand History Timeline View ✅
 
 ### 작업 내용
