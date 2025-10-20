@@ -4,6 +4,119 @@
 
 ---
 
+## 2025-10-20 (세션 25) - Phase 21: Hand History Timeline View ✅
+
+### 작업 내용
+
+#### 1. 플레이어 관리 백엔드 구현 ✅
+- **파일**: `lib/hand-players.ts` (신규, 218줄)
+- **핵심 함수**:
+  - `fetchHandPlayers(handId)` - 핸드의 플레이어 목록 조회 (player 정보 JOIN)
+  - `fetchAllPlayers()` - 전체 플레이어 목록 (이름순 정렬)
+  - `addPlayerToHand(handId, playerId, position?, cards?, startingStack?)` - 플레이어 추가 (중복 체크)
+  - `removePlayerFromHand(handId, playerId)` - 플레이어 제거
+  - `updatePlayerInHand(handId, playerId, data)` - 플레이어 정보 수정
+  - `searchPlayers(query)` - 플레이어 검색 (ILIKE, 최대 20개)
+- **타입**:
+  - `HandPlayer` (hand_players + player JOIN)
+  - `Player` (players 테이블)
+  - `POSITIONS` 상수 (BB, SB, BTN, CO, MP, UTG 등 10개)
+
+#### 2. React Query 훅 구현 ✅
+- **파일**: `lib/queries/hand-players-queries.ts` (신규, 203줄)
+- **Query Keys**:
+  - `handPlayersKeys.byHand(handId)` - 핸드별 플레이어
+  - `handPlayersKeys.allPlayers()` - 전체 플레이어
+  - `handPlayersKeys.searchPlayers(query)` - 검색 결과
+- **Hooks** (6개):
+  - `useHandPlayersQuery(handId)` - 핸드 플레이어 조회 (staleTime: 2분)
+  - `useAllPlayersQuery()` - 전체 플레이어 조회 (staleTime: 5분)
+  - `useSearchPlayersQuery(query)` - 플레이어 검색 (staleTime: 1분, min length: 2)
+  - `useAddPlayerMutation(handId)` - 플레이어 추가 (Optimistic Update)
+  - `useRemovePlayerMutation(handId)` - 플레이어 제거 (Optimistic Update)
+  - `useUpdatePlayerMutation(handId)` - 플레이어 정보 수정
+- **Optimistic Updates**: 추가/제거 시 즉각적인 UI 반영, 에러 시 롤백
+
+#### 3. PositionBadge 컴포넌트 ✅
+- **파일**: `components/position-badge.tsx` (신규, 28줄)
+- **기능**: 포지션을 초록색 배지로 표시 (BB, SB, BTN 등)
+- **스타일**: `bg-green-700 text-white`, 최소 너비 50px
+
+#### 4. AddPlayersDialog 컴포넌트 ✅
+- **파일**: `components/add-players-dialog.tsx` (신규, 289줄)
+- **핵심 기능**:
+  - 플레이어 검색 및 선택 (체크박스)
+  - 이미 추가된 플레이어 제외
+  - 선택한 플레이어에 대해:
+    - Position 선택 (Select, POSITIONS 10개)
+    - Cards 입력 (Input, 예: AA, KK)
+    - Starting Stack 입력 (Number Input)
+  - 여러 플레이어 일괄 추가
+  - React Query Optimistic Update 사용
+- **UI 구조**:
+  - 상단: 검색 Input
+  - 중간: ScrollArea (플레이어 리스트, 300px 높이)
+  - 하단: ScrollArea (선택된 플레이어 설정, 200px 높이)
+
+#### 5. HandHistoryTimeline 컴포넌트 ✅
+- **파일**: `components/hand-history-timeline.tsx` (신규, 200줄)
+- **핵심 레이아웃** (이미지와 동일):
+  ```
+  ┌─────────────┬──────────┬───────┬──────┬───────┐
+  │             │ Pre-Flop │ Flop  │ Turn │ River │ ← 상단 헤더만
+  │             │  1,500   │ 3,300 │10,824│10,824 │
+  ├─────────────┼──────────┼───────┼──────┼───────┤
+  │ 👤 Player   │  Action  │Action │      │       │ ← 왼쪽 헤더 없음!
+  │    Position │          │       │      │       │
+  ```
+- **주요 특징**:
+  - **CSS Grid 5열**: player info (200px) + 4 streets (1fr each)
+  - **왼쪽 열**: 플레이어 아바타 + 이름 + PositionBadge + 카드 (헤더 없음!)
+  - **상단 헤더**: 4개 street 이름 + 팟 사이즈 (노란색)
+  - **액션 스타일링**:
+    - Fold: `bg-yellow-100 text-yellow-800`
+    - Check: `bg-white border`
+    - Bet/Raise/Call: `bg-white border` with amount
+    - All-In: `bg-red-600 text-white`
+- **데이터 로직**:
+  - `useHandPlayersQuery(handId)` - 플레이어 목록
+  - `useHandActionsQuery(handId)` - 액션 목록
+  - `actionsByStreet` - 스트리트별 액션 그룹화
+  - `potSizes` - 스트리트별 누적 팟 계산
+  - `getActionsForPlayer(playerId, street)` - 특정 플레이어의 특정 스트리트 액션
+
+#### 6. 핸드 상세 페이지 통합 ✅
+- **파일**: `components/hand-history-detail.tsx` (수정)
+- **변경사항**:
+  - Line 21: `UserPlus` 아이콘, `AddPlayersDialog`, `HandHistoryTimeline`, `useHandPlayersQuery` import
+  - Line 63-66: `addPlayersDialogOpen` 상태, `useHandPlayersQuery(handId)` 추가
+  - Lines 245-252: "Add Players" 버튼 추가 (관리자만, UserPlus 아이콘)
+  - Lines 323-329: **기존 4열 액션 히스토리 완전 삭제**, HandHistoryTimeline로 교체
+  - Lines 449-456: AddPlayersDialog 추가 (existingPlayerIds 전달)
+- **위치**: Separator 직후, POT 정보 직전
+
+### 핵심 파일 (신규 6개, 수정 1개)
+- `lib/hand-players.ts` (신규, 218줄)
+- `lib/queries/hand-players-queries.ts` (신규, 203줄)
+- `components/position-badge.tsx` (신규, 28줄)
+- `components/add-players-dialog.tsx` (신규, 289줄)
+- `components/hand-history-timeline.tsx` (신규, 200줄)
+- `components/hand-history-detail.tsx` (수정 - Add Players 버튼 + Timeline 통합)
+
+### 기능 요약
+- ✅ 관리자가 영상 시청 중 쉽게 플레이어 추가 가능
+- ✅ 제공된 이미지와 동일한 타임라인 레이아웃
+- ✅ 왼쪽 열에 헤더 없이 플레이어 정보만 표시
+- ✅ 기존 list view 삭제, timeline view만 사용
+- ✅ 빌드 성공 (6.1s, 34 pages)
+
+### 빌드 결과
+- ✓ Compiled successfully in 6.1s
+- ✓ 34 pages generated
+- ✓ No errors or warnings
+
+---
+
 ## 2025-10-20 (세션 24) - Phase 20: Hand Tags System ✅
 
 ### 작업 내용

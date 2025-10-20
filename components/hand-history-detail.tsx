@@ -18,7 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ThumbsUp, ThumbsDown, Pencil, ChevronDown, ChevronRight, Bookmark, Edit, List, Tag } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Pencil, ChevronDown, ChevronRight, Bookmark, Edit, List, Tag, UserPlus } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -31,6 +31,9 @@ import { BookmarkDialog } from "@/components/bookmark-dialog"
 import { isAdmin } from "@/lib/auth-utils"
 import { HandComments } from "@/components/hand-comments"
 import { HandTagBadges } from "@/components/hand-tag-badges"
+import { AddPlayersDialog } from "@/components/add-players-dialog"
+import { HandHistoryTimeline } from "@/components/hand-history-timeline"
+import { useHandPlayersQuery } from "@/lib/queries/hand-players-queries"
 
 type HandHistoryDetailProps = {
   hand: HandHistory
@@ -57,6 +60,10 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
   const [playersOpen, setPlayersOpen] = useState(false)
   const [tagsOpen, setTagsOpen] = useState(false)
   const [commentsOpen, setCommentsOpen] = useState(false)
+  const [addPlayersDialogOpen, setAddPlayersDialogOpen] = useState(false)
+
+  // 핸드 플레이어 목록 조회
+  const { data: handPlayers = [] } = useHandPlayersQuery(handId || '')
 
   // 사용자 정보 로드
   useEffect(() => {
@@ -238,6 +245,14 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => setAddPlayersDialogOpen(true)}
+                  >
+                    <UserPlus className="h-4 w-4 mr-1" />
+                    Add Players
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => setEditDialogOpen(true)}
                   >
                     <Pencil className="h-4 w-4 mr-1" />
@@ -305,129 +320,13 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
 
       <Separator />
 
-      {/* 스트릿별 액션 - 4칼럼 레이아웃 */}
-      <div className="space-y-3">
-        <h4 className="text-body font-semibold">액션 히스토리</h4>
-
-        <Card className="p-4">
-          <div className="grid grid-cols-4 gap-4">
-            {/* Pre-Flop (Blind 포함) */}
-            <div className="space-y-2">
-              <div className="border-b pb-2">
-                <h5 className="text-caption font-semibold text-center">Pre-Flop</h5>
-              </div>
-              <div className="space-y-1">
-                {/* Blind 먼저 표시 */}
-                {hand.players
-                  .filter(p => p.position === 'SB' || p.position === 'BB')
-                  .map((player, idx) => (
-                    <div key={`blind-${idx}`} className="text-caption">
-                      <div className="font-medium">{player.name}</div>
-                      <div className="text-muted-foreground">
-                        {player.position === 'SB' ? 'Small Blind' : 'Big Blind'}
-                      </div>
-                    </div>
-                  ))}
-                {/* Pre-Flop 액션 */}
-                {hand.streets?.preflop?.actions?.map((action: any, idx: number) => (
-                  <div key={idx} className="text-caption">
-                    <div className="font-medium">{action.player}</div>
-                    <div className="text-muted-foreground">
-                      {action.action}
-                      {action.amount && (
-                        <span className="font-semibold text-foreground ml-1">
-                          {action.amount.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Flop */}
-            <div className="space-y-2">
-              <div className="border-b pb-2">
-                <h5 className="text-caption font-semibold text-center">Flop</h5>
-                {hand.streets?.flop?.cards && (
-                  <div className="text-center font-mono text-xs font-semibold mt-1">
-                    {hand.streets.flop.cards}
-                  </div>
-                )}
-              </div>
-              <div className="space-y-1">
-                {hand.streets?.flop?.actions?.map((action: any, idx: number) => (
-                  <div key={idx} className="text-caption">
-                    <div className="font-medium">{action.player}</div>
-                    <div className="text-muted-foreground">
-                      {action.action}
-                      {action.amount && (
-                        <span className="font-semibold text-foreground ml-1">
-                          {action.amount.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Turn */}
-            <div className="space-y-2">
-              <div className="border-b pb-2">
-                <h5 className="text-caption font-semibold text-center">Turn</h5>
-                {hand.streets?.turn?.cards && (
-                  <div className="text-center font-mono text-xs font-semibold mt-1">
-                    {hand.streets.turn.cards}
-                  </div>
-                )}
-              </div>
-              <div className="space-y-1">
-                {hand.streets?.turn?.actions?.map((action: any, idx: number) => (
-                  <div key={idx} className="text-caption">
-                    <div className="font-medium">{action.player}</div>
-                    <div className="text-muted-foreground">
-                      {action.action}
-                      {action.amount && (
-                        <span className="font-semibold text-foreground ml-1">
-                          {action.amount.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* River */}
-            <div className="space-y-2">
-              <div className="border-b pb-2">
-                <h5 className="text-caption font-semibold text-center">River</h5>
-                {hand.streets?.river?.cards && (
-                  <div className="text-center font-mono text-xs font-semibold mt-1">
-                    {hand.streets.river.cards}
-                  </div>
-                )}
-              </div>
-              <div className="space-y-1">
-                {hand.streets?.river?.actions?.map((action: any, idx: number) => (
-                  <div key={idx} className="text-caption">
-                    <div className="font-medium">{action.player}</div>
-                    <div className="text-muted-foreground">
-                      {action.action}
-                      {action.amount && (
-                        <span className="font-semibold text-foreground ml-1">
-                          {action.amount.toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </Card>
-      </div>
+      {/* Hand History Timeline */}
+      {handId && (
+        <div className="space-y-3">
+          <h4 className="text-body font-semibold">Hand History</h4>
+          <HandHistoryTimeline handId={handId} />
+        </div>
+      )}
 
       {/* 팟 정보 */}
       {hand.potSize && (
@@ -543,6 +442,16 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
           onSave={handleSaveBookmark}
           userId={user?.id}
           mode="add"
+        />
+      )}
+
+      {/* Add Players 다이얼로그 */}
+      {handId && (
+        <AddPlayersDialog
+          open={addPlayersDialogOpen}
+          onOpenChange={setAddPlayersDialogOpen}
+          handId={handId}
+          existingPlayerIds={handPlayers.map(p => p.player_id)}
         />
       )}
 
