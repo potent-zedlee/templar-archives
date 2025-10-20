@@ -4,6 +4,41 @@
 
 ---
 
+## 2025-10-20 (세션 27) - Archive Logo Box Removal ✅
+
+### 작업 내용
+
+#### 1. Archive 로고 바 디자인 개선 ✅
+- **파일**: `components/archive-tournament-logos-bar.tsx` (수정)
+- **목적**: 로고 뒤편의 박스 배경 제거, 깔끔한 디자인
+- **변경사항**:
+  - **ALL 버튼** (74-83번 줄):
+    - ❌ 원형 박스 배경 제거 (`bg-white/10`, `bg-white`)
+    - ✅ 선택 시 파란색 테두리 추가 (`ring-2 ring-primary`)
+    - ✅ 호버/선택 시 크기 변화 유지 (`hover:scale-110`)
+  - **토너먼트 로고** (138-145번 줄):
+    - ❌ 로고 뒤편 박스 배경 제거 (`bg-white/5 backdrop-blur-sm`)
+    - ❌ 호버 시 배경/테두리 효과 제거 (`hover:bg-white/10`, `hover:ring-1`)
+    - ✅ 선택 시 파란색 테두리 + 그림자 유지 (`ring-2 ring-primary shadow-lg`)
+    - ✅ 호버 시 크기 변화만 유지 (`hover:scale-110`)
+
+### 핵심 파일 (수정 1개)
+- `components/archive-tournament-logos-bar.tsx` (수정, 2개 섹션)
+
+### 기능 요약
+- ✅ ALL 버튼 박스 배경 제거
+- ✅ 토너먼트 로고 박스 배경 제거
+- ✅ 선택 시 파란색 테두리로 강조 (시각적 피드백 유지)
+- ✅ 호버 시 크기만 확대 (scale-110)
+- ✅ 깔끔하고 미니멀한 디자인
+
+### 디자인 결과
+- 로고만 깔끔하게 표시
+- 선택 시 명확한 시각적 피드백 (파란색 테두리)
+- 호버 시 부드러운 애니메이션 (크기 확대)
+
+---
+
 ## 2025-10-20 (세션 26) - Archive Data Cleanup ✅
 
 ### 작업 내용

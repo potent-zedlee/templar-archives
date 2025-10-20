@@ -75,8 +75,8 @@ export function ArchiveTournamentLogosBar({
               className={cn(
                 "w-16 h-16 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200",
                 selectedCategory === 'All'
-                  ? "bg-white text-black shadow-lg scale-110"
-                  : "bg-white/10 text-white hover:bg-white/20"
+                  ? "text-white ring-2 ring-primary shadow-lg scale-110"
+                  : "text-gray-400"
               )}
             >
               ALL
@@ -138,10 +138,7 @@ function TournamentLogoButton({
       <div
         className={cn(
           "w-16 h-16 rounded-lg flex items-center justify-center transition-all duration-200 overflow-hidden",
-          "bg-white/5 backdrop-blur-sm",
-          isSelected
-            ? "ring-2 ring-primary shadow-lg shadow-primary/20"
-            : "hover:bg-white/10 hover:ring-1 hover:ring-white/20"
+          isSelected && "ring-2 ring-primary shadow-lg shadow-primary/20"
         )}
       >
         <CategoryLogo
