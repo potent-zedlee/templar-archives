@@ -4,6 +4,66 @@
 
 ---
 
+## 2025-10-20 (세션 31) - Archive Filter Simplification ✅
+
+### 작업 내용
+
+#### 1. Quick Filters 라벨 제거 ✅
+- **파일**: `components/archive-unified-filters.tsx` (수정)
+- **목적**: 깔끔한 UI를 위해 "Quick Filters" 텍스트 제거
+- **변경사항**:
+  - 197번 줄의 Label 컴포넌트 완전 제거
+  - UI는 유지하되 텍스트 레이블만 삭제
+
+#### 2. Date 필터를 Date Range Picker로 변경 ✅
+- **파일**: `components/archive-unified-filters.tsx` (수정)
+- **목적**: 더 직관적인 날짜 범위 선택
+- **변경사항**:
+  - 기존 Date 드롭다운 삭제
+  - From/To 캘린더 버튼으로 교체
+  - Popover + Calendar 컴포넌트 사용
+  - format(date, "MMM dd, yyyy") 형식
+  - handleStartDateSelect, handleEndDateSelect 함수 활용
+
+#### 3. Advanced Filters Grid 삭제 ✅
+- **파일**: `components/archive-unified-filters.tsx` (수정)
+- **목적**: 불필요한 필터 제거로 UI 간소화
+- **변경사항**:
+  - 404-539번 줄 Advanced Filters Grid 완전 삭제
+  - Date Range 필터 삭제 (위에서 From/To로 대체)
+  - Hand Count Range 필터 삭제
+  - Video Sources 필터 삭제
+  - Has Hands Only 필터 삭제
+
+#### 4. 불필요한 핸들러 삭제 ✅
+- **파일**:
+  - `components/archive-unified-filters.tsx` (수정)
+  - `app/archive/_components/ArchiveToolbar.tsx` (수정)
+- **목적**: 삭제된 필터 관련 코드 정리
+- **변경사항**:
+  - handleHandCountRangeChange 함수 삭제
+  - handleVideoSourceChange 함수 삭제
+  - handleHasHandsOnlyChange 함수 삭제
+  - activeFilterCount 함수 업데이트 (삭제된 필터 카운팅 제거)
+
+### 핵심 파일
+- `components/archive-unified-filters.tsx` (수정)
+- `app/archive/_components/ArchiveToolbar.tsx` (수정)
+
+### 기능 요약
+- ✅ "Quick Filters" 라벨 제거
+- ✅ Date → Date Range Picker (From/To)
+- ✅ Advanced Filters Grid 완전 삭제
+- ✅ 불필요한 핸들러 정리
+- ✅ 빌드 성공 (Archive 페이지 91.5 kB)
+
+### 디자인 개선
+- **간결한 필터**: 텍스트 레이블 제거
+- **직관적인 날짜 선택**: From/To 캘린더
+- **단순화된 구조**: 필수 필터만 유지
+
+---
+
 ## 2025-10-20 (세션 30) - Archive Filter Reorganization ✅
 
 ### 작업 내용

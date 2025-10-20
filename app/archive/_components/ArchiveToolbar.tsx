@@ -51,9 +51,6 @@ export function ArchiveToolbar() {
   const activeFilterCount = () => {
     let count = 0
     if (advancedFilters.dateRange.start || advancedFilters.dateRange.end) count++
-    if (advancedFilters.handCountRange[0] !== 0 || advancedFilters.handCountRange[1] !== 1000) count++
-    if (!advancedFilters.videoSources.youtube || !advancedFilters.videoSources.upload) count++
-    if (advancedFilters.hasHandsOnly) count++
     return count
   }
 

@@ -77,30 +77,6 @@ export function ArchiveUnifiedFilters({
     })
   }
 
-  const handleHandCountRangeChange = (value: number[]) => {
-    onAdvancedFiltersChange({
-      ...advancedFilters,
-      handCountRange: [value[0], value[1]]
-    })
-  }
-
-  const handleVideoSourceChange = (source: 'youtube' | 'upload', checked: boolean) => {
-    onAdvancedFiltersChange({
-      ...advancedFilters,
-      videoSources: {
-        ...advancedFilters.videoSources,
-        [source]: checked
-      }
-    })
-  }
-
-  const handleHasHandsOnlyChange = (checked: boolean) => {
-    onAdvancedFiltersChange({
-      ...advancedFilters,
-      hasHandsOnly: checked
-    })
-  }
-
   const handleReset = () => {
     onCategoryChange("All")
     onAdvancedFiltersChange({
@@ -145,9 +121,6 @@ export function ArchiveUnifiedFilters({
     let count = 0
     if (selectedCategory !== "All") count++
     if (advancedFilters.dateRange.start || advancedFilters.dateRange.end) count++
-    if (advancedFilters.handCountRange[0] !== 0 || advancedFilters.handCountRange[1] !== 1000) count++
-    if (!advancedFilters.videoSources.youtube || !advancedFilters.videoSources.upload) count++
-    if (advancedFilters.hasHandsOnly) count++
     return count
   }
 
@@ -192,17 +165,64 @@ export function ArchiveUnifiedFilters({
         {/* Expanded Filters */}
         {(showToggleButton ? isOpen : true) && (
           <div className="pb-6 pt-4 space-y-6 bg-muted/30 border-t border-primary/10 -mx-4 md:-mx-6 px-4 md:px-6 rounded-b-lg">
-            {/* Quick Filters Section */}
+            {/* Filters Section */}
             <div className="space-y-3">
-              <Label className="text-sm font-semibold text-foreground">Quick Filters</Label>
               <div className="flex items-center gap-3 flex-wrap">
-                {/* Date Filter */}
-                <select className="px-3 py-1.5 rounded-md border border-border bg-background text-sm hover:bg-muted transition-colors">
-                  <option>Date: All time</option>
-                  <option>Last 7 days</option>
-                  <option>Last 30 days</option>
-                  <option>Last 90 days</option>
-                </select>
+                {/* Date Range - From */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "px-3 py-1.5 h-auto text-sm justify-start hover:bg-muted transition-colors",
+                        !advancedFilters.dateRange.start && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                      {advancedFilters.dateRange.start ? (
+                        format(advancedFilters.dateRange.start, "MMM dd, yyyy")
+                      ) : (
+                        <span>From Date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={advancedFilters.dateRange.start}
+                      onSelect={handleStartDateSelect}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+
+                {/* Date Range - To */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "px-3 py-1.5 h-auto text-sm justify-start hover:bg-muted transition-colors",
+                        !advancedFilters.dateRange.end && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                      {advancedFilters.dateRange.end ? (
+                        format(advancedFilters.dateRange.end, "MMM dd, yyyy")
+                      ) : (
+                        <span>To Date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={advancedFilters.dateRange.end}
+                      onSelect={handleEndDateSelect}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
 
                 {/* Tournament Name */}
                 <input
@@ -354,142 +374,6 @@ export function ArchiveUnifiedFilters({
               </div>
             )}
 
-            {/* Advanced Filters Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Date Range */}
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold text-foreground">Date Range</Label>
-                <div className="space-y-2">
-                  {/* Start Date */}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-medium text-sm h-10 hover:bg-gradient-to-r hover:from-primary/5 hover:to-purple-500/5 transition-all",
-                          !advancedFilters.dateRange.start && "text-muted-foreground"
-                        )}
-                        size="default"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {advancedFilters.dateRange.start ? (
-                          format(advancedFilters.dateRange.start, "MMM dd, yyyy")
-                        ) : (
-                          <span>From</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={advancedFilters.dateRange.start}
-                        onSelect={handleStartDateSelect}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-
-                  {/* End Date */}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-medium text-sm h-10 hover:bg-gradient-to-r hover:from-primary/5 hover:to-purple-500/5 transition-all",
-                          !advancedFilters.dateRange.end && "text-muted-foreground"
-                        )}
-                        size="default"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {advancedFilters.dateRange.end ? (
-                          format(advancedFilters.dateRange.end, "MMM dd, yyyy")
-                        ) : (
-                          <span>To</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={advancedFilters.dateRange.end}
-                        onSelect={handleEndDateSelect}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-
-              {/* Hand Count Range */}
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold text-foreground">Hand Count</Label>
-                <div className="space-y-2 pt-2">
-                  <Slider
-                    value={advancedFilters.handCountRange}
-                    onValueChange={handleHandCountRangeChange}
-                    min={0}
-                    max={1000}
-                    step={10}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{advancedFilters.handCountRange[0]}</span>
-                    <span>{advancedFilters.handCountRange[1]}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Video Sources */}
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold text-foreground">Video Sources</Label>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="unified-source-youtube"
-                      checked={advancedFilters.videoSources.youtube}
-                      onCheckedChange={(checked) =>
-                        handleVideoSourceChange('youtube', checked as boolean)
-                      }
-                    />
-                    <Label
-                      htmlFor="unified-source-youtube"
-                      className="text-xs font-normal cursor-pointer"
-                    >
-                      YouTube
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="unified-source-upload"
-                      checked={advancedFilters.videoSources.upload}
-                      onCheckedChange={(checked) =>
-                        handleVideoSourceChange('upload', checked as boolean)
-                      }
-                    />
-                    <Label
-                      htmlFor="unified-source-upload"
-                      className="text-xs font-normal cursor-pointer"
-                    >
-                      Local Upload
-                    </Label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Has Hands Only */}
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold text-foreground">Show videos with hands only</Label>
-                <div className="flex items-center space-x-2 pt-2">
-                  <Switch
-                    checked={advancedFilters.hasHandsOnly}
-                    onCheckedChange={handleHasHandsOnlyChange}
-                  />
-                  <span className="text-xs text-muted-foreground">
-                    Filter out videos without analyzed hands
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </div>
