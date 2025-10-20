@@ -4,6 +4,158 @@
 
 ---
 
+## 2025-10-20 (세션 24) - Phase 20: Hand Tags System ✅
+
+### 작업 내용
+
+#### 1. 핸드 태그 시스템 구현 ✅
+- **목적**: 유저가 핸드에 태그를 추가하여 카테고리화 및 검색 가능하게 함
+- **기능**:
+  - 10개 태그 (3개 카테고리)
+  - 여러 유저가 같은 태그 추가 가능 (집계 표시)
+  - 본인이 추가한 태그만 삭제 가능
+  - 색상 코딩 (Play Type: 파란색, Result: 빨간색, Action: 초록색)
+  - 태그 검색 기능
+
+#### 2. 데이터베이스 마이그레이션 ✅
+- **마이그레이션**: `20251020000031_add_hand_tags_system.sql` (신규, 120줄)
+- **hand_tags 테이블 생성**:
+  - `id`, `hand_id`, `tag_name`, `created_by`, `created_at`
+  - UNIQUE 제약조건: (hand_id, tag_name, created_by)
+  - 3개 인덱스 (hand_id, tag_name, created_by)
+- **RLS 정책**:
+  - SELECT: 모든 사용자
+  - INSERT/DELETE: 인증된 사용자만, 본인 태그만
+- **PostgreSQL 함수** (3개):
+  - `get_hand_tag_stats()` - 태그별 통계 (count, percentage)
+  - `search_hands_by_tags(tag_names TEXT[])` - 태그로 핸드 검색 (AND 조건)
+  - `get_user_tag_history(user_id UUID)` - 유저 태그 히스토리
+
+#### 3. 타입 정의 ✅
+- **파일**: `lib/types/hand-tags.ts` (신규, 119줄)
+- **타입**:
+  - `HandTagName` (10개 태그)
+  - `HandTagCategory` (Play Type, Result, Action)
+  - `HandTag`, `HandTagStats`, `UserTagHistory`
+- **상수**:
+  - `TAG_CATEGORIES`: 카테고리별 태그 그룹
+  - `TAG_COLORS`: 카테고리별 색상
+  - `ALL_TAG_NAMES`: 전체 태그 목록
+- **유틸리티 함수**:
+  - `getTagCategory(tagName)` - 태그 → 카테고리
+  - `getTagColor(tagName)` - 태그 → 색상
+
+#### 4. 백엔드 함수 ✅
+- **파일**: `lib/hand-tags.ts` (신규, 244줄)
+- **9개 함수**:
+  - `fetchHandTags(handId)` - 핸드의 태그 목록
+  - `fetchAllTags()` - 모든 고유 태그 이름
+  - `addHandTag(handId, tagName, userId)` - 태그 추가 (중복 체크)
+  - `removeHandTag(handId, tagName, userId)` - 태그 삭제 (권한 체크)
+  - `getTagStats(filters?)` - 태그 통계
+  - `searchHandsByTags(tags[])` - 태그로 핸드 검색
+  - `getUserTagHistory(userId)` - 유저 태그 히스토리
+  - `handHasTag(handId, tagName, userId?)` - 태그 존재 확인
+  - `getHandTagCount(handId, tagName)` - 태그 개수
+
+#### 5. React Query 훅 ✅
+- **파일**: `lib/queries/hand-tags-queries.ts` (신규, 203줄)
+- **Query Keys**:
+  - `handTagsKeys.byHand(handId)` - 핸드별
+  - `handTagsKeys.allTags()` - 전체 태그
+  - `handTagsKeys.stats(filters)` - 통계
+  - `handTagsKeys.userHistory(userId)` - 유저 히스토리
+- **Hooks** (6개):
+  - `useHandTagsQuery(handId)` - 핸드 태그 조회 (staleTime: 2분)
+  - `useAllTagsQuery()` - 전체 태그 조회 (staleTime: 5분)
+  - `useTagStatsQuery(filters?)` - 태그 통계 (staleTime: 5분)
+  - `useUserTagHistoryQuery(userId)` - 유저 히스토리 (staleTime: 2분)
+  - `useAddHandTagMutation(handId)` - 태그 추가 (Optimistic Update)
+  - `useRemoveHandTagMutation(handId)` - 태그 삭제 (Optimistic Update)
+
+#### 6. UI 컴포넌트 ✅
+- **HandTagBadges**: `components/hand-tag-badges.tsx` (신규, 128줄)
+  - 태그를 색상 코딩된 Badge로 표시
+  - 여러 유저가 추가한 태그는 개수 표시 (예: Bluff (3))
+  - 본인 태그에만 삭제 버튼 (X)
+  - "+ Add Tag" 버튼으로 다이얼로그 열기
+- **HandTagDialog**: `components/hand-tag-dialog.tsx` (신규, 171줄)
+  - 3개 카테고리별 태그 그룹화
+  - 검색 기능
+  - 선택된 태그는 체크 아이콘 표시
+  - 각 태그의 개수 표시
+  - 클릭으로 태그 추가/제거
+
+#### 7. 핸드 상세 페이지 통합 ✅
+- **파일**: `components/hand-history-detail.tsx` (수정)
+- **변경사항**:
+  - Line 21: `Tag` 아이콘 import, `HandTagBadges` import
+  - Line 58: `tagsOpen` 상태 추가
+  - Lines 496-513: Tags 섹션 추가 (Collapsible)
+- **위치**: Players 섹션과 Edit Dialogs 사이
+
+### 핵심 파일
+- `supabase/migrations/20251020000031_add_hand_tags_system.sql` (신규, 120줄)
+- `lib/types/hand-tags.ts` (신규, 119줄)
+- `lib/hand-tags.ts` (신규, 244줄)
+- `lib/queries/hand-tags-queries.ts` (신규, 203줄)
+- `components/hand-tag-badges.tsx` (신규, 128줄)
+- `components/hand-tag-dialog.tsx` (신규, 171줄)
+- `components/hand-history-detail.tsx` (수정)
+
+### 완료 기준 달성
+- ✅ 데이터베이스 스키마 생성 (hand_tags 테이블, 3개 RLS 정책, 3개 함수)
+- ✅ 타입 정의 완성 (10개 태그, 3개 카테고리)
+- ✅ 백엔드 함수 9개 구현 (CRUD, 통계, 검색)
+- ✅ React Query 훅 6개 구현 (Optimistic Updates)
+- ✅ UI 컴포넌트 2개 구현 (HandTagBadges, HandTagDialog)
+- ✅ 핸드 상세 페이지 통합 완료
+- ✅ 빌드 성공 (4.3초, 34 페이지)
+
+### 기술적 개선사항
+
+#### 태그 시스템 설계
+- **3단계 카테고리화**: Play Type, Result, Action
+- **색상 코딩**: 카테고리별 시각적 구분 (파란색/빨간색/초록색)
+- **집계 표시**: 여러 유저 태그를 count로 표시
+- **권한 관리**: 본인 태그만 삭제 가능
+
+#### React Query 최적화
+- **Optimistic Updates**: 태그 추가/삭제 시 즉각 UI 반영
+- **자동 롤백**: 에러 시 이전 상태로 복원
+- **캐싱 전략**:
+  - staleTime: 2분 (핸드 태그), 5분 (전체 태그, 통계)
+  - gcTime: 5분, 10분
+- **무효화 체인**: 태그 추가/삭제 시 관련 쿼리 자동 갱신
+
+#### 데이터베이스 최적화
+- **인덱스**: 3개 (hand_id, tag_name, created_by)
+- **UNIQUE 제약조건**: 중복 태그 방지
+- **PostgreSQL 함수**: 통계 집계, 태그 검색 (AND 조건)
+- **ON DELETE CASCADE**: 핸드/유저 삭제 시 태그도 자동 삭제
+
+### 태그 목록
+
+| 카테고리 | 태그 | 색상 | 설명 |
+|----------|------|------|------|
+| Play Type | Bluff | 파란색 | 블러프 플레이 |
+| Play Type | Value Bet | 파란색 | 밸류 베팅 |
+| Play Type | Slow Play | 파란색 | 슬로우 플레이 |
+| Play Type | Check Raise | 파란색 | 체크 레이즈 |
+| Result | Bad Beat | 빨간색 | 배드 비트 |
+| Result | Cooler | 빨간색 | 쿨러 |
+| Result | Suck Out | 빨간색 | 석 아웃 |
+| Action | Hero Call | 초록색 | 히어로 콜 |
+| Action | Hero Fold | 초록색 | 히어로 폴드 |
+| Action | Big Pot | 초록색 | 큰 팟 |
+
+### 다음 작업
+- [ ] 태그 필터 기능 추가 (Search 페이지, Archive 페이지)
+- [ ] 태그 통계 대시보드 (가장 많이 사용된 태그 등)
+- [ ] 태그 관리 (관리자 기능 - 태그 추가/삭제/이름 변경)
+
+---
+
 ## 2025-10-20 (세션 22) - TypeScript 안정성 & 배포 최적화 ✅
 
 ### 작업 내용

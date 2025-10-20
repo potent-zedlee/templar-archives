@@ -18,11 +18,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ThumbsUp, ThumbsDown, Pencil, ChevronDown, ChevronRight, Bookmark, Edit, List } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Pencil, ChevronDown, ChevronRight, Bookmark, Edit, List, Tag } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import type { HandHistory } from "@/lib/types/hand-history"
+import { HandHistory } from "@/lib/types/hand-history"
 import { getHandLikeStatus, toggleHandLike, type HandLikeStatus } from "@/lib/hand-likes"
 import { isHandBookmarked, addHandBookmark, removeHandBookmark } from "@/lib/hand-bookmarks"
 import { EditHandDialog } from "@/components/edit-hand-dialog"
@@ -30,6 +30,7 @@ import { EditRequestDialog } from "@/components/edit-request-dialog"
 import { BookmarkDialog } from "@/components/bookmark-dialog"
 import { isAdmin } from "@/lib/auth-utils"
 import { HandComments } from "@/components/hand-comments"
+import { HandTagBadges } from "@/components/hand-tag-badges"
 
 type HandHistoryDetailProps = {
   hand: HandHistory
@@ -54,6 +55,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
   const [editRequestDialogOpen, setEditRequestDialogOpen] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [playersOpen, setPlayersOpen] = useState(false)
+  const [tagsOpen, setTagsOpen] = useState(false)
   const [commentsOpen, setCommentsOpen] = useState(false)
 
   // 사용자 정보 로드
@@ -490,6 +492,25 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
           </CollapsibleContent>
         </Card>
       </Collapsible>
+
+      {/* Tags (접을 수 있음) */}
+      {handId && (
+        <Collapsible open={tagsOpen} onOpenChange={setTagsOpen}>
+          <Card className="p-4">
+            <CollapsibleTrigger className="flex items-center justify-between w-full">
+              <h4 className="text-body font-semibold">Tags</h4>
+              {tagsOpen ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-3">
+              <HandTagBadges handId={handId} />
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+      )}
 
       {/* 수정 다이얼로그 (관리자) */}
       {handId && (
