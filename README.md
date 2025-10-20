@@ -34,7 +34,7 @@ npm run dev
 
 ### 웹 앱 구조 (Templar Archives)
 - **[CLAUDE.md](./CLAUDE.md)** - Templar Archives 상세 문서
-- **[ROADMAP.md](./ROADMAP.md)** - 개발 로드맵 (Phase 0-7 완료)
+- **[ROADMAP.md](./ROADMAP.md)** - 개발 로드맵 (Phase 0-19 완료)
 - **[PAGES_STRUCTURE.md](./PAGES_STRUCTURE.md)** - 페이지 구조도
 - **[DIRECTORY_STRUCTURE.md](./DIRECTORY_STRUCTURE.md)** - 디렉토리 구조
 - **[WORK_LOG.md](./WORK_LOG.md)** - 작업 로그
