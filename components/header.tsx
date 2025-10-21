@@ -81,6 +81,7 @@ export function Header() {
     {
       label: "ARCHIVE",
       subItems: [
+        { href: "/search", label: "Search" },
         { href: "/archive/tournament", label: "Tournament" },
         { href: "/archive/cash-game", label: "Cash Game" },
       ]
