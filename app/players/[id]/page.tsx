@@ -24,6 +24,7 @@ import {
 } from "@/lib/queries/players-queries"
 import { HandListAccordion } from "@/components/hand-list-accordion"
 import { PrizeHistoryChart, TournamentCategoryChart } from "@/components/player-charts"
+import { AdvancedStatsCard, PositionalStatsCard, PerformanceChartCard } from "@/components/player-stats"
 
 type Tournament = {
   id: string
@@ -353,47 +354,18 @@ export default function PlayerDetailClient() {
         </Card>
 
         {/* Statistics Dashboard */}
-        {totalHandsCount > 0 && (
-          <div className="space-y-6">
-            {/* Statistics Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <Card className="p-4">
-                <div className="flex flex-col gap-1">
-                  <p className="text-caption text-muted-foreground">VPIP</p>
-                  <p className="text-title font-bold">{playerStats.vpip}%</p>
-                </div>
-              </Card>
+        <div className="space-y-6">
+          {/* Advanced Statistics Card */}
+          <AdvancedStatsCard playerId={playerId} />
 
-              <Card className="p-4">
-                <div className="flex flex-col gap-1">
-                  <p className="text-caption text-muted-foreground">PFR</p>
-                  <p className="text-title font-bold">{playerStats.pfr}%</p>
-                </div>
-              </Card>
+          {/* Positional Stats & Performance Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PositionalStatsCard playerId={playerId} />
+            <PerformanceChartCard playerId={playerId} />
+          </div>
 
-              <Card className="p-4">
-                <div className="flex flex-col gap-1">
-                  <p className="text-caption text-muted-foreground">3BET</p>
-                  <p className="text-title font-bold">{playerStats.threeBet}%</p>
-                </div>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex flex-col gap-1">
-                  <p className="text-caption text-muted-foreground">ATS</p>
-                  <p className="text-title font-bold">{playerStats.ats}%</p>
-                </div>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex flex-col gap-1">
-                  <p className="text-caption text-muted-foreground">Win Rate</p>
-                  <p className="text-title font-bold">{playerStats.winRate}%</p>
-                </div>
-              </Card>
-            </div>
-
-            {/* Charts */}
+          {/* Prize History & Tournament Category Charts */}
+          {totalHandsCount > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Prize History Chart */}
               <Card className="p-6">
@@ -409,8 +381,8 @@ export default function PlayerDetailClient() {
                 </Card>
               )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Hands List - Hierarchical */}
         <Card className="p-6 mt-6">
