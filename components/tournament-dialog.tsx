@@ -30,6 +30,8 @@ interface TournamentDialogProps {
   setNewTournamentName: (name: string) => void
   newCategory: Tournament["category"]
   setNewCategory: (category: Tournament["category"]) => void
+  newGameType: 'tournament' | 'cash-game'
+  setNewGameType: (gameType: 'tournament' | 'cash-game') => void
   newLocation: string
   setNewLocation: (location: string) => void
   newStartDate: string
@@ -49,6 +51,8 @@ export function TournamentDialog({
   setNewTournamentName,
   newCategory,
   setNewCategory,
+  newGameType,
+  setNewGameType,
   newLocation,
   setNewLocation,
   newStartDate,
@@ -86,6 +90,19 @@ export function TournamentDialog({
                 <SelectItem value="Hustler Casino Live">Hustler Casino Live</SelectItem>
                 <SelectItem value="WSOP Classic">WSOP Classic</SelectItem>
                 <SelectItem value="GGPOKER">GGPOKER</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="game-type">Game Type</Label>
+            <Select value={newGameType} onValueChange={(value) => setNewGameType(value as 'tournament' | 'cash-game')}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select game type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="tournament">Tournament</SelectItem>
+                <SelectItem value="cash-game">Cash Game</SelectItem>
               </SelectContent>
             </Select>
           </div>

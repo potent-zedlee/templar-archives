@@ -147,6 +147,8 @@ export function ArchiveDialogs() {
         setNewTournamentName={(name) => useArchiveFormStore.getState().setTournamentFormField('name', name)}
         newCategory={tournamentForm.category}
         setNewCategory={(category) => useArchiveFormStore.getState().setTournamentFormField('category', category)}
+        newGameType={tournamentForm.game_type}
+        setNewGameType={(gameType) => useArchiveFormStore.getState().setTournamentFormField('game_type', gameType)}
         newLocation={tournamentForm.location}
         setNewLocation={(location) => useArchiveFormStore.getState().setTournamentFormField('location', location)}
         newStartDate={tournamentForm.start_date}

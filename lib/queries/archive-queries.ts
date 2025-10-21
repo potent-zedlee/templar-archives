@@ -16,7 +16,8 @@ const supabase = createClientSupabaseClient()
 
 export const archiveKeys = {
   all: ['archive'] as const,
-  tournaments: () => [...archiveKeys.all, 'tournaments'] as const,
+  tournaments: (gameType?: 'tournament' | 'cash-game') =>
+    gameType ? [...archiveKeys.all, 'tournaments', gameType] as const : [...archiveKeys.all, 'tournaments'] as const,
   hands: (dayId: string) => [...archiveKeys.all, 'hands', dayId] as const,
   handsInfinite: (dayId: string) => [...archiveKeys.all, 'hands-infinite', dayId] as const,
   unsortedVideos: () => [...archiveKeys.all, 'unsorted-videos'] as const,
@@ -27,11 +28,11 @@ export const archiveKeys = {
 /**
  * Fetch tournaments with sub_events and days
  */
-export function useTournamentsQuery() {
+export function useTournamentsQuery(gameType?: 'tournament' | 'cash-game') {
   return useQuery({
-    queryKey: archiveKeys.tournaments(),
+    queryKey: archiveKeys.tournaments(gameType),
     queryFn: async () => {
-      const tournamentsData = await fetchTournamentsTree()
+      const tournamentsData = await fetchTournamentsTree(gameType)
 
       // Add UI state (expanded, selected)
       const tournamentsWithUIState = tournamentsData.map((tournament: any) => ({

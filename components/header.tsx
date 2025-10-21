@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { Moon, Sun, Menu, X, User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark } from "lucide-react"
+import { Moon, Sun, Menu, X, User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useAuth } from "@/components/auth-provider"
 import { signOut } from "@/lib/auth"
@@ -76,8 +76,15 @@ export function Header() {
 
   const navLinks = [
     { href: "/about", label: "ABOUT" },
-    { href: "/search", label: "SEARCH" },
-    { href: "/archive", label: "ARCHIVE" },
+    { href: "/news", label: "NEWS" },
+    { href: "/live-reporting", label: "LIVE" },
+    {
+      label: "ARCHIVE",
+      subItems: [
+        { href: "/archive/tournament", label: "Tournament" },
+        { href: "/archive/cash-game", label: "Cash Game" },
+      ]
+    },
     { href: "/players", label: "PLAYERS" },
     { href: "/community", label: "FORUM" },
   ]
@@ -103,13 +110,43 @@ export function Header() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6" role="navigation" aria-label="Main navigation">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href || (pathname !== "/" && pathname.startsWith(link.href))
+            {navLinks.map((link, index) => {
+              // Check if this link has subItems (dropdown)
+              if ('subItems' in link && link.subItems) {
+                const isActive = pathname.startsWith("/archive")
+
+                return (
+                  <DropdownMenu key={index}>
+                    <DropdownMenuTrigger className={cn(
+                      "text-sm font-medium transition-colors hover:text-foreground relative inline-flex items-center gap-1 bg-transparent border-0 cursor-pointer",
+                      isActive ? "text-foreground" : "text-muted-foreground"
+                    )}>
+                      {link.label}
+                      <ChevronDown className="h-3 w-3" />
+                      {isActive && (
+                        <span className="absolute -bottom-[21px] left-0 right-0 h-0.5 bg-primary" />
+                      )}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {link.subItems.map((subItem) => (
+                        <DropdownMenuItem key={subItem.href} asChild>
+                          <Link href={subItem.href}>
+                            {subItem.label}
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )
+              }
+
+              // Regular link
+              const isActive = pathname === link.href || (pathname !== "/" && pathname.startsWith(link.href!))
 
               return (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={link.href!}
                   className={cn(
                     "text-sm font-medium transition-colors hover:text-foreground relative",
                     isActive
@@ -239,13 +276,43 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-border bg-background">
           <nav className="container max-w-7xl mx-auto px-4 py-4 space-y-2">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href || (pathname !== "/" && pathname.startsWith(link.href))
+            {navLinks.map((link, index) => {
+              // Check if this link has subItems (dropdown)
+              if ('subItems' in link && link.subItems) {
+                return (
+                  <div key={index} className="space-y-1">
+                    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground">
+                      {link.label}
+                    </div>
+                    {link.subItems.map((subItem) => {
+                      const isActive = pathname === subItem.href || pathname.startsWith(subItem.href)
+                      return (
+                        <Link
+                          key={subItem.href}
+                          href={subItem.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={cn(
+                            "block px-8 py-2 rounded-md text-sm font-medium transition-colors",
+                            isActive
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          )}
+                        >
+                          {subItem.label}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )
+              }
+
+              // Regular link
+              const isActive = pathname === link.href || (pathname !== "/" && pathname.startsWith(link.href!))
 
               return (
                 <Link
                   key={link.href}
-                  href={link.href}
+                  href={link.href!}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
                     "block px-4 py-2 rounded-md text-sm font-medium transition-colors",
