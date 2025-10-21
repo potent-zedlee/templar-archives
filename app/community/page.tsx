@@ -178,13 +178,6 @@ export default function communityClient() {
 
       <main id="main-content" role="main">
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
-        <div className="mb-8">
-          <h1 className="text-title-lg mb-2">Community Forum</h1>
-          <p className="text-body-lg text-muted-foreground">
-            Discuss hands, share strategies, and learn from the community
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
           {/* Main Content */}
           <div className="lg:col-span-3 space-y-6">
