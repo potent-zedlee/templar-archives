@@ -3,7 +3,7 @@
 > 단계별 기능 구현 계획 및 우선순위
 
 **마지막 업데이트**: 2025-10-21
-**현재 Phase**: Phase 0-19 완료 🎉
+**현재 Phase**: Phase 0-20 완료 🎉
 
 ---
 
@@ -304,6 +304,54 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 
 ---
 
+### Phase 20: Notification System (2025-10-18, 2025-10-20, 문서화 2025-10-21) ✅
+**소요 시간**: 6시간 (구현 5시간, 문서화 1시간)
+
+#### 완료 기능
+- **완전한 실시간 알림 시스템** (Supabase Realtime + React Query)
+- **8가지 알림 타입**:
+  - `comment` - 포스트에 새 댓글
+  - `reply` - 댓글에 답글
+  - `like_post` - 포스트 좋아요
+  - `like_comment` - 댓글 좋아요
+  - `edit_approved` - 핸드 수정 제안 승인
+  - `edit_rejected` - 핸드 수정 제안 거부
+  - `claim_approved` - 플레이어 클레임 승인
+  - `claim_rejected` - 플레이어 클레임 거부
+- **백엔드 구조** (2개 마이그레이션, 680줄):
+  - `notifications` 테이블 (8개 컬럼, RLS 정책)
+  - 9개 자동 트리거 (포스트, 댓글, 핸드, 좋아요, 수정 제안, 클레임)
+  - 중복 알림 방지 (UNIQUE 제약조건)
+  - 성능 최적화 인덱스 2개
+- **라이브러리** (2개 파일, 497줄):
+  - 7개 함수: fetch, getUnreadCount, markAsRead, markAllAsRead, delete, deleteAllRead, subscribe
+  - 실시간 구독 (subscribeToNotifications)
+  - 유틸리티 함수 (아이콘, 시간 포맷팅)
+  - React Query 통합 (Optimistic Updates)
+- **프론트엔드** (2개 파일, 544줄):
+  - 알림 페이지 (`/notifications`) - All/Unread 탭, 필터링
+  - 알림 벨 컴포넌트 (헤더 통합) - 드롭다운 미리보기, 읽지 않은 알림 배지
+  - Toast 알림 (새 알림 실시간 표시)
+- **자동 폴링**: 1분마다 읽지 않은 알림 개수 업데이트
+- **Optimistic Updates**: 읽음 표시, 삭제 즉각 반영
+- **캐시 전략**: staleTime 2분, gcTime 5분
+
+**핵심 파일**:
+- `supabase/migrations/20251018000026_add_notifications_system.sql` (434줄)
+- `supabase/migrations/20251020000030_add_hand_notification_triggers.sql` (246줄)
+- `lib/notifications.ts` (253줄)
+- `lib/queries/notification-queries.ts` (244줄)
+- `app/notifications/page.tsx` (299줄)
+- `components/notification-bell.tsx` (245줄)
+
+**사용자 경험**:
+- 실시간 알림으로 즉각적인 피드백
+- 알림 벨 배지로 읽지 않은 알림 수 표시
+- 드롭다운에서 최근 10개 알림 미리보기
+- 알림 클릭 시 자동으로 읽음 처리 및 관련 페이지 이동
+
+---
+
 ## 📊 우선순위 요약
 
 | Phase | 기능 | 우선순위 | 상태 | 완료일 |
@@ -328,6 +376,7 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | Phase 17 | DevTools Optimization | ⭐⭐⭐ | ✅ | 2025-10-20 |
 | Phase 18 | Manual Hand Actions | ⭐⭐⭐⭐ | ✅ | 2025-10-20 |
 | Phase 19 | Archive UI Enhancement | ⭐⭐⭐ | ✅ | 2025-10-21 |
+| Phase 20 | Notification System | ⭐⭐⭐⭐ | ✅ | 2025-10-21 |
 
 ---
 
