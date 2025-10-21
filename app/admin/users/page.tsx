@@ -62,6 +62,7 @@ type User = {
   is_banned: boolean
   ban_reason?: string
   created_at: string
+  last_sign_in_at?: string
   posts_count: number
   comments_count: number
 }
@@ -330,6 +331,19 @@ export default function usersClient() {
                         <span>Posts {targetUser.posts_count}</span>
                         <span>Comments {targetUser.comments_count}</span>
                         <span>Joined: {new Date(targetUser.created_at).toLocaleDateString("ko-KR")}</span>
+                        {targetUser.last_sign_in_at ? (
+                          <span className={
+                            new Date().getTime() - new Date(targetUser.last_sign_in_at).getTime() < 7 * 24 * 60 * 60 * 1000
+                              ? "text-green-600 dark:text-green-400"
+                              : new Date().getTime() - new Date(targetUser.last_sign_in_at).getTime() > 30 * 24 * 60 * 60 * 1000
+                              ? "text-muted-foreground/50"
+                              : ""
+                          }>
+                            Last Sign In: {new Date(targetUser.last_sign_in_at).toLocaleDateString("ko-KR")}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground/50">Last Sign In: Never</span>
+                        )}
                       </div>
                       {targetUser.is_banned && targetUser.ban_reason && (
                         <p className="text-caption text-destructive mt-1">
