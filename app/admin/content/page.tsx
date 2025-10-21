@@ -39,12 +39,26 @@ import {
   useUnhideContentMutation,
   useDeleteContentMutation,
 } from "@/lib/queries/admin-queries"
+import {
+  usePendingNewsQuery,
+  useApproveNewsMutation,
+  useRejectNewsMutation,
+  type News,
+} from "@/lib/queries/news-queries"
+import {
+  usePendingLiveReportsQuery,
+  useApproveLiveReportMutation,
+  useRejectLiveReportMutation,
+  type LiveReport,
+} from "@/lib/queries/live-reports-queries"
 import { Eye, EyeOff, Trash2, CheckCircle, XCircle, AlertTriangle } from "lucide-react"
 
 export default function contentClient() {
   const router = useRouter()
   const { user } = useAuth()
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
+  const [selectedNews, setSelectedNews] = useState<News | null>(null)
+  const [selectedLiveReport, setSelectedLiveReport] = useState<LiveReport | null>(null)
   const [adminComment, setAdminComment] = useState("")
   const [actionDialog, setActionDialog] = useState<{
     open: boolean
@@ -57,14 +71,20 @@ export default function contentClient() {
   const { data: posts = [], isLoading: postsLoading } = useAllPostsQuery(true)
   const { data: comments = [], isLoading: commentsLoading } = useAllCommentsQuery(true)
   const { data: reports = [], isLoading: reportsLoading } = useReportsQuery()
+  const { data: pendingNews = [], isLoading: newsLoading } = usePendingNewsQuery()
+  const { data: pendingLiveReports = [], isLoading: liveReportsLoading } = usePendingLiveReportsQuery()
 
   const approveReportMutation = useApproveReportMutation()
   const rejectReportMutation = useRejectReportMutation()
   const hideContentMutation = useHideContentMutation()
   const unhideContentMutation = useUnhideContentMutation()
   const deleteContentMutation = useDeleteContentMutation()
+  const approveNewsMutation = useApproveNewsMutation()
+  const rejectNewsMutation = useRejectNewsMutation()
+  const approveLiveReportMutation = useApproveLiveReportMutation()
+  const rejectLiveReportMutation = useRejectLiveReportMutation()
 
-  const loading = postsLoading || commentsLoading || reportsLoading
+  const loading = postsLoading || commentsLoading || reportsLoading || newsLoading || liveReportsLoading
 
   useEffect(() => {
     async function checkAdminAccess() {
@@ -161,6 +181,58 @@ export default function contentClient() {
     }
   }
 
+  function handleApproveNews() {
+    if (!selectedNews || !user) return
+
+    approveNewsMutation.mutate(selectedNews.id, {
+      onSuccess: () => {
+        setSelectedNews(null)
+      },
+      onError: (error) => {
+        console.error("Error approving news:", error)
+      },
+    })
+  }
+
+  function handleRejectNews() {
+    if (!selectedNews || !user) return
+
+    rejectNewsMutation.mutate(selectedNews.id, {
+      onSuccess: () => {
+        setSelectedNews(null)
+      },
+      onError: (error) => {
+        console.error("Error rejecting news:", error)
+      },
+    })
+  }
+
+  function handleApproveLiveReport() {
+    if (!selectedLiveReport || !user) return
+
+    approveLiveReportMutation.mutate(selectedLiveReport.id, {
+      onSuccess: () => {
+        setSelectedLiveReport(null)
+      },
+      onError: (error) => {
+        console.error("Error approving live report:", error)
+      },
+    })
+  }
+
+  function handleRejectLiveReport() {
+    if (!selectedLiveReport || !user) return
+
+    rejectLiveReportMutation.mutate(selectedLiveReport.id, {
+      onSuccess: () => {
+        setSelectedLiveReport(null)
+      },
+      onError: (error) => {
+        console.error("Error rejecting live report:", error)
+      },
+    })
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -190,6 +262,22 @@ export default function contentClient() {
             {reports.filter(r => r.status === "pending").length > 0 && (
               <Badge variant="destructive" className="ml-2">
                 {reports.filter(r => r.status === "pending").length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="news">
+            News Approval
+            {pendingNews.length > 0 && (
+              <Badge variant="destructive" className="ml-2">
+                {pendingNews.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="live-reports">
+            Live Reports Approval
+            {pendingLiveReports.length > 0 && (
+              <Badge variant="destructive" className="ml-2">
+                {pendingLiveReports.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -256,6 +344,102 @@ export default function contentClient() {
                     </TableCell>
                   </TableRow>
                 ))}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+
+        {/* News Approval Tab */}
+        <TabsContent value="news">
+          <Card className="p-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Author</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingNews.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      No pending news articles
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  pendingNews.map((news) => (
+                    <TableRow key={news.id}>
+                      <TableCell className="max-w-sm truncate">{news.title}</TableCell>
+                      <TableCell>{news.author?.nickname || 'Unknown'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{news.category}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(news.created_at).toLocaleDateString("ko-KR")}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedNews(news)}
+                        >
+                          Review
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+
+        {/* Live Reports Approval Tab */}
+        <TabsContent value="live-reports">
+          <Card className="p-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Author</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingLiveReports.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      No pending live reports
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  pendingLiveReports.map((report) => (
+                    <TableRow key={report.id}>
+                      <TableCell className="max-w-sm truncate">{report.title}</TableCell>
+                      <TableCell>{report.author?.nickname || 'Unknown'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{report.category}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {new Date(report.created_at).toLocaleDateString("ko-KR")}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedLiveReport(report)}
+                        >
+                          Review
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </Card>
@@ -554,6 +738,222 @@ export default function contentClient() {
                 {actionDialog.type === "hide" && "Hide"}
                 {actionDialog.type === "unhide" && "Show"}
                 {actionDialog.type === "delete" && "Delete"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* News Review Dialog */}
+      {selectedNews && (
+        <Dialog open={!!selectedNews} onOpenChange={() => setSelectedNews(null)}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Review News Article</DialogTitle>
+              <DialogDescription>
+                Review the news article and approve or reject it
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label>Title</Label>
+                <p className="mt-1 font-semibold">{selectedNews.title}</p>
+              </div>
+
+              <div>
+                <Label>Category</Label>
+                <Badge variant="outline" className="mt-1">
+                  {selectedNews.category}
+                </Badge>
+              </div>
+
+              {selectedNews.tags.length > 0 && (
+                <div>
+                  <Label>Tags</Label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {selectedNews.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedNews.thumbnail_url && (
+                <div>
+                  <Label>Thumbnail</Label>
+                  <img
+                    src={selectedNews.thumbnail_url}
+                    alt="Thumbnail"
+                    className="mt-1 rounded-lg max-h-48 object-cover"
+                  />
+                </div>
+              )}
+
+              <div>
+                <Label>Content</Label>
+                <div className="mt-1 p-4 border rounded-lg bg-muted/50 max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm">{selectedNews.content}</pre>
+                </div>
+              </div>
+
+              {selectedNews.external_link && (
+                <div>
+                  <Label>External Link</Label>
+                  <a
+                    href={selectedNews.external_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 text-sm text-blue-500 hover:underline block"
+                  >
+                    {selectedNews.external_link}
+                  </a>
+                </div>
+              )}
+
+              <div>
+                <Label>Author</Label>
+                <p className="mt-1 text-sm">{selectedNews.author?.nickname || 'Unknown'}</p>
+              </div>
+
+              <div>
+                <Label>Created</Label>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {new Date(selectedNews.created_at).toLocaleString("ko-KR")}
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setSelectedNews(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={handleRejectNews}
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Reject (Back to Draft)
+              </Button>
+              <Button
+                variant="default"
+                onClick={handleApproveNews}
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Approve & Publish
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Live Report Review Dialog */}
+      {selectedLiveReport && (
+        <Dialog open={!!selectedLiveReport} onOpenChange={() => setSelectedLiveReport(null)}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Review Live Report</DialogTitle>
+              <DialogDescription>
+                Review the live report and approve or reject it
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label>Title</Label>
+                <p className="mt-1 font-semibold">{selectedLiveReport.title}</p>
+              </div>
+
+              <div>
+                <Label>Category</Label>
+                <Badge variant="outline" className="mt-1">
+                  {selectedLiveReport.category}
+                </Badge>
+              </div>
+
+              {selectedLiveReport.tags.length > 0 && (
+                <div>
+                  <Label>Tags</Label>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {selectedLiveReport.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedLiveReport.thumbnail_url && (
+                <div>
+                  <Label>Thumbnail</Label>
+                  <img
+                    src={selectedLiveReport.thumbnail_url}
+                    alt="Thumbnail"
+                    className="mt-1 rounded-lg max-h-48 object-cover"
+                  />
+                </div>
+              )}
+
+              <div>
+                <Label>Content</Label>
+                <div className="mt-1 p-4 border rounded-lg bg-muted/50 max-h-96 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-sm">{selectedLiveReport.content}</pre>
+                </div>
+              </div>
+
+              {selectedLiveReport.external_link && (
+                <div>
+                  <Label>External Link</Label>
+                  <a
+                    href={selectedLiveReport.external_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 text-sm text-blue-500 hover:underline block"
+                  >
+                    {selectedLiveReport.external_link}
+                  </a>
+                </div>
+              )}
+
+              <div>
+                <Label>Author</Label>
+                <p className="mt-1 text-sm">{selectedLiveReport.author?.nickname || 'Unknown'}</p>
+              </div>
+
+              <div>
+                <Label>Created</Label>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {new Date(selectedLiveReport.created_at).toLocaleString("ko-KR")}
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setSelectedLiveReport(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={handleRejectLiveReport}
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Reject (Back to Draft)
+              </Button>
+              <Button
+                variant="default"
+                onClick={handleApproveLiveReport}
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Approve & Publish
               </Button>
             </DialogFooter>
           </DialogContent>

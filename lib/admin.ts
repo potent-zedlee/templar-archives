@@ -1,6 +1,6 @@
 import { createClientSupabaseClient } from './supabase-client'
 
-export type AdminRole = 'user' | 'high_templar' | 'admin'
+export type AdminRole = 'user' | 'high_templar' | 'admin' | 'reporter'
 
 export type AdminLog = {
   id: string
@@ -47,6 +47,48 @@ export async function isAdmin(userId?: string): Promise<boolean> {
     .single()
 
   return data?.role === 'admin' || data?.role === 'high_templar'
+}
+
+/**
+ * Check if current user is reporter
+ */
+export async function isReporter(userId?: string): Promise<boolean> {
+  const supabase = createClientSupabaseClient()
+
+  if (!userId) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
+    userId = user.id
+  }
+
+  const { data } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  return data?.role === 'reporter'
+}
+
+/**
+ * Check if current user is reporter or admin
+ */
+export async function isReporterOrAdmin(userId?: string): Promise<boolean> {
+  const supabase = createClientSupabaseClient()
+
+  if (!userId) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
+    userId = user.id
+  }
+
+  const { data } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', userId)
+    .single()
+
+  return data?.role === 'reporter' || data?.role === 'admin' || data?.role === 'high_templar'
 }
 
 /**
