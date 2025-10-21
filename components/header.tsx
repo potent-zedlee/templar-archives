@@ -14,11 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { Moon, Sun, Menu, X, User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown } from "lucide-react"
+import { Moon, Sun, Menu, X, User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, Newspaper, Radio } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useAuth } from "@/components/auth-provider"
 import { signOut } from "@/lib/auth"
-import { isAdmin } from "@/lib/admin"
+import { isAdmin, isReporterOrAdmin } from "@/lib/admin"
 import { NotificationBell } from "@/components/notification-bell"
 
 export function Header() {
@@ -29,6 +29,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [isUserAdmin, setIsUserAdmin] = useState(false)
+  const [isUserReporter, setIsUserReporter] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -44,6 +45,18 @@ export function Header() {
       }
     }
     checkAdmin()
+  }, [user])
+
+  useEffect(() => {
+    async function checkReporter() {
+      if (user) {
+        const reporterStatus = await isReporterOrAdmin(user.id)
+        setIsUserReporter(reporterStatus)
+      } else {
+        setIsUserReporter(false)
+      }
+    }
+    checkReporter()
   }, [user])
 
   const handleSignOut = async () => {
@@ -213,6 +226,22 @@ export function Header() {
                       <Bookmark className="mr-2 h-4 w-4" />
                       Bookmarks
                     </DropdownMenuItem>
+                    {isUserReporter && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel className="text-xs text-muted-foreground">
+                          REPORTER MENU
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => router.push("/reporter/news")}>
+                          <Newspaper className="mr-2 h-4 w-4" />
+                          My News
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push("/reporter/live")}>
+                          <Radio className="mr-2 h-4 w-4" />
+                          My Live Reports
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     {isUserAdmin && (
                       <>
                         <DropdownMenuSeparator />
@@ -372,6 +401,37 @@ export function Header() {
                       <Bookmark className="mr-2 h-4 w-4" />
                       Bookmarks
                     </Button>
+                    {isUserReporter && (
+                      <>
+                        <div className="px-4 py-2 text-xs text-muted-foreground font-semibold">
+                          REPORTER MENU
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start px-4"
+                          onClick={() => {
+                            router.push("/reporter/news")
+                            setMobileMenuOpen(false)
+                          }}
+                        >
+                          <Newspaper className="mr-2 h-4 w-4" />
+                          My News
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start px-4"
+                          onClick={() => {
+                            router.push("/reporter/live")
+                            setMobileMenuOpen(false)
+                          }}
+                        >
+                          <Radio className="mr-2 h-4 w-4" />
+                          My Live Reports
+                        </Button>
+                      </>
+                    )}
                     {isUserAdmin && (
                       <>
                         <div className="px-4 py-2 text-xs text-muted-foreground font-semibold">
