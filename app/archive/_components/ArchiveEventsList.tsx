@@ -16,8 +16,6 @@ import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { ArchiveBreadcrumb } from '@/components/archive-breadcrumb'
 import { ArchiveFolderList } from '@/components/archive-folder-list'
-import { ArchiveGridView } from '@/components/archive-grid-view'
-import { ArchiveTimelineView } from '@/components/archive-timeline-view'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { isAdmin } from '@/lib/auth-utils'
@@ -32,7 +30,6 @@ export function ArchiveEventsList() {
     navigationLevel,
     currentTournamentId,
     currentSubEventId,
-    viewMode,
     selectedCategory,
     searchQuery,
     sortBy,
@@ -336,64 +333,24 @@ export function ArchiveEventsList() {
       {/* Breadcrumb Navigation */}
       <ArchiveBreadcrumb items={breadcrumbItems} onNavigate={handleBreadcrumbNavigate} />
 
-      {/* Folder List/Grid/Timeline - Conditional Rendering */}
-      {viewMode === 'list' && (
-        <ArchiveFolderList
-          items={folderItems}
-          onNavigate={handleFolderNavigate}
-          onSelectDay={handleSelectDay}
-          loading={tournamentsLoading}
-          isUnorganized={navigationLevel === 'unorganized'}
-          selectedIds={selectedVideoIds}
-          onToggleSelect={toggleVideoSelection}
-          onSelectAll={handleSelectAllVideos}
-          onRename={handleRename}
-          onDelete={handleDelete}
-          onMoveToEvent={handleMoveToEvent}
-          onMoveToNewEvent={handleMoveToNewEventSingle}
-          onAddSubItem={handleAddSubItem}
-          onEditEvent={handleEditEvent}
-          isAdmin={isUserAdmin}
-        />
-      )}
-
-      {viewMode === 'grid' && (
-        <ArchiveGridView
-          items={folderItems}
-          onNavigate={handleFolderNavigate}
-          onSelectDay={handleSelectDay}
-          loading={tournamentsLoading}
-          isUnorganized={navigationLevel === 'unorganized'}
-          selectedIds={selectedVideoIds}
-          onToggleSelect={toggleVideoSelection}
-          onRename={handleRename}
-          onDelete={handleDelete}
-          onMoveToEvent={handleMoveToEvent}
-          onMoveToNewEvent={handleMoveToNewEventSingle}
-          onAddSubItem={handleAddSubItem}
-          onEditEvent={handleEditEvent}
-          isAdmin={isUserAdmin}
-        />
-      )}
-
-      {viewMode === 'timeline' && (
-        <ArchiveTimelineView
-          items={folderItems}
-          onNavigate={handleFolderNavigate}
-          onSelectDay={handleSelectDay}
-          loading={tournamentsLoading}
-          isUnorganized={navigationLevel === 'unorganized'}
-          selectedIds={selectedVideoIds}
-          onToggleSelect={toggleVideoSelection}
-          onRename={handleRename}
-          onDelete={handleDelete}
-          onMoveToEvent={handleMoveToEvent}
-          onMoveToNewEvent={handleMoveToNewEventSingle}
-          onAddSubItem={handleAddSubItem}
-          onEditEvent={handleEditEvent}
-          isAdmin={isUserAdmin}
-        />
-      )}
+      {/* Folder List */}
+      <ArchiveFolderList
+        items={folderItems}
+        onNavigate={handleFolderNavigate}
+        onSelectDay={handleSelectDay}
+        loading={tournamentsLoading}
+        isUnorganized={navigationLevel === 'unorganized'}
+        selectedIds={selectedVideoIds}
+        onToggleSelect={toggleVideoSelection}
+        onSelectAll={handleSelectAllVideos}
+        onRename={handleRename}
+        onDelete={handleDelete}
+        onMoveToEvent={handleMoveToEvent}
+        onMoveToNewEvent={handleMoveToNewEventSingle}
+        onAddSubItem={handleAddSubItem}
+        onEditEvent={handleEditEvent}
+        isAdmin={isUserAdmin}
+      />
     </Card>
   )
 }
