@@ -15,6 +15,8 @@ import {
   Brain,
   FileText,
   Play,
+  Newspaper,
+  Radio,
 } from "lucide-react"
 
 export default function AboutPage() {
@@ -27,9 +29,9 @@ export default function AboutPage() {
     },
     {
       icon: Database,
-      title: "Comprehensive Archive",
+      title: "Dual Archive System",
       description:
-        "Store and organize hands from major tournaments (WSOP, EPT, Triton) and cash game streams.",
+        "Separate archives for tournaments (WSOP, EPT, Triton) and cash games (Hustler, Live at the Bike). Organized and searchable.",
     },
     {
       icon: Search,
@@ -42,6 +44,18 @@ export default function AboutPage() {
       title: "Player Profiles",
       description:
         "Track stats for thousands of players. Claim your own profile and showcase your achievements.",
+    },
+    {
+      icon: Newspaper,
+      title: "Poker News",
+      description:
+        "Stay updated with the latest poker tournament announcements, industry news, and community highlights.",
+    },
+    {
+      icon: Radio,
+      title: "Live Reporting",
+      description:
+        "Real-time tournament updates, live chip counts, and results from ongoing events around the world.",
     },
     {
       icon: Brain,
