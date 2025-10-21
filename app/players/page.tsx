@@ -135,12 +135,6 @@ export default function playersClient() {
       <div className="min-h-screen bg-muted/30">
         <Header />
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
-          <div className="mb-8">
-            <h1 className="text-title-lg mb-2">Poker Players</h1>
-            <p className="text-body text-muted-foreground">
-              Browse professional poker players and view their hand histories
-            </p>
-          </div>
           <GridSkeleton count={9} columns={3} />
         </div>
       </div>
@@ -153,13 +147,6 @@ export default function playersClient() {
 
       <PageTransition variant="slideUp">
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
-        <div className="mb-8">
-          <h1 className="text-title-lg mb-2">Poker Players</h1>
-          <p className="text-body text-muted-foreground">
-            Browse professional poker players and view their hand histories
-          </p>
-        </div>
-
         {/* Search and Filter Bar */}
         <Card className="p-3 md:p-4 mb-6 space-y-4">
           {/* Search and Sort Row */}

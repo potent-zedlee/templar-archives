@@ -196,13 +196,6 @@ export default function SearchClient() {
 
       <PageTransition variant="slideUp">
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
-        <div className="mb-8">
-          <h1 className="text-title-lg mb-2">Search Hands</h1>
-          <p className="text-body text-muted-foreground">
-            Find and analyze poker hands with advanced filters
-          </p>
-        </div>
-
         {/* Filter Presets */}
         <div className="flex flex-wrap gap-2 mb-4">
           <Button
