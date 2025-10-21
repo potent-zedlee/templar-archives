@@ -81,9 +81,6 @@ interface ArchiveUIState {
   navigateToUnorganized: () => void
   navigateBack: () => void
 
-  // Actions - View Mode
-  setViewMode: (mode: ViewMode) => void
-
   // Actions - Search & Sort
   setSearchQuery: (query: string) => void
   setSortBy: (sort: SortOption) => void
@@ -255,9 +252,6 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
             })
           }
         },
-
-        // Actions - View Mode
-        setViewMode: (mode) => set({ viewMode: mode }),
 
         // Actions - Search & Sort
         setSearchQuery: (query) => set({ searchQuery: query }),

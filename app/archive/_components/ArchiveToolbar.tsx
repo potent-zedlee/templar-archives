@@ -19,7 +19,6 @@ import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { archiveKeys } from '@/lib/queries/archive-queries'
 import { ArchiveTournamentLogosBar } from '@/components/archive-tournament-logos-bar'
 import { ArchiveUnifiedFilters } from '@/components/archive-unified-filters'
-import { ArchiveViewSwitcher } from '@/components/archive-view-switcher'
 import { ArchiveSearchSort } from '@/components/archive-search-sort'
 import { QuickUploadDialog } from '@/components/quick-upload-dialog'
 import { TournamentDialog } from '@/components/tournament-dialog'
@@ -35,8 +34,6 @@ export function ArchiveToolbar() {
     setSelectedCategory,
     advancedFilters,
     setAdvancedFilters,
-    viewMode,
-    setViewMode,
     searchQuery,
     setSearchQuery,
     sortBy,
@@ -99,9 +96,6 @@ export function ArchiveToolbar() {
                 onSortChange={setSortBy}
               />
             </div>
-
-            {/* View Mode Switcher */}
-            <ArchiveViewSwitcher currentView={viewMode} onViewChange={setViewMode} />
 
             {/* Quick Upload Button */}
             <QuickUploadDialog
