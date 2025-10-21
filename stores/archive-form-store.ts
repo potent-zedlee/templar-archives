@@ -91,6 +91,7 @@ export const useArchiveFormStore = create<ArchiveFormState>()(
       tournamentForm: {
         name: '',
         category: 'WSOP',
+        game_type: 'tournament',
         location: '',
         start_date: '',
         end_date: '',

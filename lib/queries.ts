@@ -124,11 +124,11 @@ export async function fetchHandDetails(handId: string) {
 /**
  * Fetch tournaments with sub_events and days (optimized)
  */
-export async function fetchTournamentsTree() {
+export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game') {
   const supabase = createClientSupabaseClient()
 
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('tournaments')
       .select(`
         *,
@@ -138,6 +138,13 @@ export async function fetchTournamentsTree() {
         )
       `)
       .order('created_at', { ascending: false })
+
+    // Filter by game_type if provided
+    if (gameType) {
+      query = query.eq('game_type', gameType)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
 

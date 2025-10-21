@@ -139,6 +139,7 @@ export interface Payout {
 export interface TournamentFormData {
   name: string
   category: TournamentCategory
+  game_type: 'tournament' | 'cash-game'
   location: string
   start_date: string
   end_date: string
@@ -321,6 +322,7 @@ export function isDay(item: unknown): item is Day {
 export const INITIAL_TOURNAMENT_FORM: TournamentFormData = {
   name: "",
   category: "WSOP",
+  game_type: "tournament",
   location: "",
   start_date: "",
   end_date: "",
