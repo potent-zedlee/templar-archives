@@ -10,13 +10,6 @@ export default function NewsPage() {
       <Header />
 
       <main className="container max-w-7xl mx-auto py-8 px-4" id="main-content">
-        <div className="mb-8">
-          <h1 className="text-title-lg mb-2">Poker News</h1>
-          <p className="text-body text-muted-foreground">
-            Latest poker news, updates, and announcements
-          </p>
-        </div>
-
         <Card className="p-8 text-center">
           <div className="flex flex-col items-center gap-4">
             <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
