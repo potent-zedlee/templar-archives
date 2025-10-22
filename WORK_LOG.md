@@ -4,6 +4,96 @@
 
 ---
 
+## 2025-10-22 (세션 33) - Documentation Update & Logo System Guide ✅
+
+### 작업 내용
+
+#### 1. 문서 업데이트 (Phase 22-26 추가) ✅
+- **CLAUDE.md** (문서 버전 17.0 → 18.0)
+  - Phase 22: News & Live Reporting System 추가 (13개 파일, 2,663줄)
+    - Reporter 역할 추가 (user/high_templar/reporter/admin)
+    - News CRUD 시스템, Live Reporting 시스템
+    - 관리자 승인 워크플로우, Public 페이지
+    - React Query 통합 (626줄)
+  - Phase 23: Navigation Expansion & Archive Split 추가 (13개 파일, 485줄)
+    - Navigation 구조 변경 (About, News, Live, Archive dropdown, Players, Forum)
+    - Archive를 Tournament/Cash Game으로 분리
+    - game_type 필드 추가 (tournaments 테이블)
+  - Phase 24: Archive UI Enhancement 추가 (12개 파일, 865줄)
+    - Card Selector 컴포넌트 (52-card deck)
+    - Archive Info Dialog (상세 정보)
+    - Advanced Filters 확장 (Tournament Name, Player Name, Hole Cards, Board Cards)
+  - Phase 25: Last Sign-in Tracking 추가 (2개 파일, 56줄)
+    - last_sign_in_at 필드 추가 (users 테이블)
+    - 관리자 UI 업데이트 (색상 코딩)
+  - Phase 26: UI Simplification 추가
+    - Page Intro 섹션 제거 (Search, Players, Forum, News, Live)
+    - Archive 드롭다운 개선, About 페이지 업데이트
+  - 개발 현황 날짜 변경: 2025-10-21 → 2025-10-22
+  - Phase 범위 변경: 0-21 → 0-26
+  - 마이그레이션 개수 변경: 25개 → 38개
+  - 역할 관리 업데이트: user/high_templar/reporter/admin
+  - 프론트엔드 페이지 개수 변경: 23개 → 27+개
+  - 마지막 업데이트: 2025-10-22
+  - 주요 변경: Phase 22-26 완료
+
+- **ROADMAP.md** (현재 Phase: 0-20 → 0-26)
+  - Phase 21: Player Statistics Enhancement 추가 (4시간)
+  - Phase 22: News & Live Reporting System 추가 (6시간)
+  - Phase 23: Navigation Expansion & Archive Split 추가 (3시간)
+  - Phase 24: Archive UI Enhancement 추가 (4시간)
+  - Phase 25: Last Sign-in Tracking 추가 (1시간)
+  - Phase 26: UI Simplification 추가 (1시간)
+  - 우선순위 요약 테이블 업데이트 (Phase 21-26 추가)
+  - 변경 이력 추가 (2025-10-21, 2025-10-22)
+  - 마지막 업데이트: 2025-10-22
+  - 현재 상태: Phase 0-26 완료, News & Live Reporting 시스템 구축
+
+#### 2. 로고 시스템 가이드 생성 (다음 단계) 🔄
+- **public/logos/LOGO_GUIDE.md** (새 파일 생성 예정)
+  - 로고 추가/교체 완벽 가이드
+  - 지원 파일 형식: SVG (권장), PNG
+  - 저장 디렉토리: public/logos/
+  - 파일명 규칙: {id}.svg 또는 {id}.png
+  - 권장 사양 (크기, 색상, 파일 크기)
+  - 자동 업데이트 스크립트 사용법: `npx tsx scripts/update-logo-extensions.ts`
+  - 새 투어 추가 방법 (tournament-categories.ts 편집)
+  - 플레이스홀더 목록 (교체 필요한 24개 투어)
+
+#### 3. 로고 시스템 현황 분석 ✅
+- **현재 로고 파일**: 36개
+  - 실제 로고: 12개 (wsop 21KB, triton 26KB, ept 8KB, wpt 2KB 등)
+  - 플레이스홀더: 24개 (200-230 bytes SVG)
+- **지원 파일 형식**: SVG, PNG
+- **자동 관리 시스템**: `scripts/update-logo-extensions.ts` (132줄)
+  - SVG/PNG 자동 감지
+  - 더 큰 파일 우선 (실제 로고 vs 플레이스홀더)
+  - tournament-categories.ts 자동 업데이트
+
+### 핵심 파일
+- `../CLAUDE.md` (수정) - 문서 버전 18.0
+- `ROADMAP.md` (수정) - Phase 0-26 완료
+- `WORK_LOG.md` (수정) - 세션 33 추가
+- `public/logos/LOGO_GUIDE.md` (생성 예정) - 로고 시스템 완벽 가이드
+
+### 다음 세션 시작 시
+1. **로고 가이드 생성 완료**
+   - public/logos/LOGO_GUIDE.md 작성
+   - 새 투어 추가 템플릿 제공
+   - 플레이스홀더 로고 목록 작성
+2. **변경사항 커밋**
+   - 3개 문서 업데이트 커밋
+   - 로고 가이드 추가 커밋
+
+### 성과
+- ✅ Phase 22-26 문서화 완료 (5개 Phase, 총 4,069줄)
+- ✅ CLAUDE.md 버전 18.0 업데이트
+- ✅ ROADMAP.md Phase 0-26 완료
+- ✅ 로고 시스템 분석 완료
+- 🔄 로고 가이드 생성 대기 중
+
+---
+
 ## 2025-10-21 (세션 32) - Phase 20 Documentation & Planning ✅
 
 ### 작업 내용
