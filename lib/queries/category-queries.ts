@@ -180,6 +180,8 @@ export function useCreateCategoryMutation() {
           priority: newCategory.priority ?? 50,
           website: newCategory.website || null,
           is_active: newCategory.is_active ?? true,
+          game_type: newCategory.game_type || 'both',
+          parent_id: newCategory.parent_id || null,
           theme_gradient: newCategory.theme_gradient || null,
           theme_text: newCategory.theme_text || null,
           theme_shadow: newCategory.theme_shadow || null,
