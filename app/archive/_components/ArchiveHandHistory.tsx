@@ -22,7 +22,48 @@ import { useMemo } from 'react'
 export function ArchiveHandHistory() {
   const { tournaments, hands } = useArchiveData()
   const { setSelectedDay } = useArchiveDataStore()
-  const { openVideoDialog } = useArchiveUIStore()
+  const { openVideoDialog, advancedFilters } = useArchiveUIStore()
+
+  // Filter hands based on advanced filters
+  const filteredHands = useMemo(() => {
+    let filtered = [...hands]
+
+    // Filter by player name
+    if (advancedFilters.playerName?.trim()) {
+      const playerQuery = advancedFilters.playerName.toLowerCase()
+      filtered = filtered.filter((hand) =>
+        hand.hand_players?.some((hp) =>
+          hp.player?.name?.toLowerCase().includes(playerQuery)
+        )
+      )
+    }
+
+    // Filter by hole cards
+    if (advancedFilters.holeCards && advancedFilters.holeCards.length > 0) {
+      filtered = filtered.filter((hand) => {
+        return hand.hand_players?.some((hp) => {
+          const playerCards = hp.cards || []
+          // Check if player has all specified hole cards
+          return advancedFilters.holeCards!.every((card) =>
+            playerCards.includes(card)
+          )
+        })
+      })
+    }
+
+    // Filter by hand value (board cards)
+    if (advancedFilters.handValue && advancedFilters.handValue.length > 0) {
+      filtered = filtered.filter((hand) => {
+        const boardCards = hand.board_cards || []
+        // Check if board contains all specified cards
+        return advancedFilters.handValue!.every((card) =>
+          boardCards.includes(card)
+        )
+      })
+    }
+
+    return filtered
+  }, [hands, advancedFilters])
 
   // Get selected day data
   const selectedDayData = useMemo(() => {
@@ -55,7 +96,7 @@ export function ArchiveHandHistory() {
 
   // Transform hands for HandListAccordion
   const transformedHands = useMemo(() => {
-    return hands.map((hand) => {
+    return filteredHands.map((hand) => {
       // Parse timestamp: Supports "MM:SS-MM:SS" or "MM:SS" format
       const timestamp = hand.timestamp || ''
       const parts = timestamp.split('-')
@@ -102,7 +143,7 @@ export function ArchiveHandHistory() {
         confidence: 0.8,
       }
     })
-  }, [hands])
+  }, [filteredHands])
 
   const handleCloseHandHistory = () => {
     setSelectedDay(null)

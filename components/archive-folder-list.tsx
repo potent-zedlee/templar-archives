@@ -1,7 +1,7 @@
 "use client"
 
 import { memo } from "react"
-import { Folder, FileVideo, ChevronRight, Video, Play, Edit, Trash, FolderPlus, FolderInput, CheckSquare, MoreVertical } from "lucide-react"
+import { Folder, FileVideo, ChevronRight, Video, Play, Edit, Trash, FolderPlus, FolderInput, CheckSquare, MoreVertical, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -41,6 +41,7 @@ interface ArchiveFolderListProps {
   onMoveToNewEvent?: (item: FolderItem) => void
   onAddSubItem?: (item: FolderItem) => void
   onEditEvent?: (item: FolderItem) => void
+  onShowInfo?: (item: FolderItem) => void
   isAdmin?: boolean
 }
 
@@ -59,6 +60,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   onMoveToNewEvent,
   onAddSubItem,
   onEditEvent,
+  onShowInfo,
   isAdmin = false,
 }: ArchiveFolderListProps) {
   if (loading) {
@@ -461,7 +463,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
               return (
                 <ContextMenu key={item.id}>
                   <ContextMenuTrigger asChild>
-                    <div>
+                    <div className="relative group">
                       <ArchiveEventCard
                         item={item}
                         onClick={() => handleItemClick(item)}
@@ -469,6 +471,22 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                         isAdmin={isAdmin}
                         variant="list"
                       />
+                      {/* Info Icon Button (visible on hover) */}
+                      {onShowInfo && (
+                        <div className="absolute right-12 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 hover:bg-primary/10"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onShowInfo(item)
+                            }}
+                          >
+                            <Info className="h-4 w-4 text-primary" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </ContextMenuTrigger>
                   <ContextMenuContent>
@@ -530,8 +548,24 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                       </div>
                     </Button>
 
-                    {/* Dropdown Menu Button (visible on hover) */}
-                    <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Action Buttons (visible on hover) */}
+                    <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                      {/* Info Button */}
+                      {onShowInfo && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-primary/10"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onShowInfo(item)
+                          }}
+                        >
+                          <Info className="h-3.5 w-3.5 text-primary" />
+                        </Button>
+                      )}
+
+                      {/* Dropdown Menu */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
