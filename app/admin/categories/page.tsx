@@ -1,16 +1,10 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { DndContext, DragEndEvent, DragOverlay, closestCenter } from "@dnd-kit/core"
-
-// Helper function to reorder array
-function arrayMove<T>(array: T[], from: number, to: number): T[] {
-  const newArray = array.slice()
-  const item = newArray.splice(from, 1)[0]
-  newArray.splice(to, 0, item)
-  return newArray
-}
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, closestCenter } from "@dnd-kit/core"
+import { arrayMove } from "@/lib/utils/array"
+import { useDebounce } from "@/hooks/useDebounce"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,6 +23,7 @@ import { CategoryTable } from "@/components/admin/CategoryTable"
 import {
   useCategoriesQuery,
   useReorderCategoriesMutation,
+  useAllCategoryUsageQuery,
 } from "@/lib/queries/category-queries"
 import { useAuth } from "@/components/auth-provider"
 import { isAdmin } from "@/lib/admin"
@@ -42,6 +37,7 @@ export default function CategoriesPage() {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("")
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
   const [regionFilter, setRegionFilter] = useState<string>("all")
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all")
   const [includeInactive, setIncludeInactive] = useState(true)
@@ -53,6 +49,7 @@ export default function CategoriesPage() {
 
   // React Query hooks
   const { data: categories, isLoading } = useCategoriesQuery(includeInactive)
+  const { data: usageCounts } = useAllCategoryUsageQuery()
   const reorderMutation = useReorderCategoriesMutation()
 
   // Update local categories when data changes
@@ -64,11 +61,7 @@ export default function CategoriesPage() {
   }, [categories])
 
   // Check admin access
-  useEffect(() => {
-    checkAccess()
-  }, [user])
-
-  async function checkAccess() {
+  const checkAccess = useCallback(async () => {
     if (!user) {
       router.push("/auth/login")
       return
@@ -88,19 +81,23 @@ export default function CategoriesPage() {
       toast.error("권한 확인 중 오류가 발생했습니다")
       router.push("/")
     }
-  }
+  }, [user, router])
+
+  useEffect(() => {
+    checkAccess()
+  }, [checkAccess])
 
   // Filter categories
   const filteredCategories = useMemo(() => {
     return localCategories.filter((category) => {
       // Search filter
       const searchMatch =
-        !searchQuery ||
-        category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        category.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        category.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        !debouncedSearchQuery ||
+        category.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        category.display_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        category.id.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
         category.aliases.some((alias) =>
-          alias.toLowerCase().includes(searchQuery.toLowerCase())
+          alias.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
         )
 
       // Region filter
@@ -115,11 +112,11 @@ export default function CategoriesPage() {
 
       return searchMatch && regionMatch && activeMatch
     })
-  }, [localCategories, searchQuery, regionFilter, activeFilter])
+  }, [localCategories, debouncedSearchQuery, regionFilter, activeFilter])
 
   // Drag handlers
-  function handleDragStart(event: any) {
-    setActiveId(event.active.id)
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as string)
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -173,30 +170,31 @@ export default function CategoriesPage() {
 
       <div className="container max-w-7xl mx-auto py-8 px-4">
         {/* Header */}
-        <div className="mb-8">
+        <header className="mb-8">
           <h1 className="text-3xl font-bold mb-2">카테고리 관리</h1>
           <p className="text-muted-foreground">
             토너먼트 카테고리를 추가, 수정, 삭제하고 순서를 변경할 수 있습니다.
           </p>
-        </div>
+        </header>
 
         {/* Toolbar */}
         <Card className="p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
                 placeholder="카테고리 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
+                aria-label="카테고리 검색"
               />
             </div>
 
             {/* Region Filter */}
             <Select value={regionFilter} onValueChange={setRegionFilter}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px]" aria-label="지역 필터">
                 <SelectValue placeholder="지역 필터" />
               </SelectTrigger>
               <SelectContent>
@@ -211,12 +209,13 @@ export default function CategoriesPage() {
             {/* Active Filter */}
             <Select
               value={activeFilter}
-              onValueChange={(value: any) => {
-                setActiveFilter(value)
-                setIncludeInactive(value === "all" || value === "inactive")
+              onValueChange={(value: string) => {
+                const filter = value as "all" | "active" | "inactive"
+                setActiveFilter(filter)
+                setIncludeInactive(filter === "all" || filter === "inactive")
               }}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px]" aria-label="활성 상태 필터">
                 <SelectValue placeholder="활성 상태" />
               </SelectTrigger>
               <SelectContent>
@@ -232,15 +231,16 @@ export default function CategoriesPage() {
 
           {/* Save Order Button */}
           {hasChanges && (
-            <div className="flex items-center gap-2 mt-4 pt-4 border-t">
-              <Button onClick={handleSaveOrder} disabled={reorderMutation.isPending}>
-                <Save className="h-4 w-4 mr-2" />
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t" role="alert" aria-live="polite">
+              <Button onClick={handleSaveOrder} disabled={reorderMutation.isPending} aria-label="카테고리 순서 저장">
+                <Save className="h-4 w-4 mr-2" aria-hidden="true" />
                 순서 저장
               </Button>
               <Button
                 variant="outline"
                 onClick={handleResetOrder}
                 disabled={reorderMutation.isPending}
+                aria-label="순서 변경 취소"
               >
                 취소
               </Button>
@@ -253,7 +253,7 @@ export default function CategoriesPage() {
 
         {/* Categories Table */}
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-4" role="status" aria-label="카테고리 목록 로딩 중">
             <CardSkeleton />
             <CardSkeleton />
             <CardSkeleton />
@@ -265,7 +265,7 @@ export default function CategoriesPage() {
             onDragEnd={handleDragEnd}
             onDragCancel={handleDragCancel}
           >
-            <CategoryTable categories={filteredCategories} />
+            <CategoryTable categories={filteredCategories} usageCounts={usageCounts || {}} />
             <DragOverlay>
               {activeId ? (
                 <div className="bg-background border rounded-lg p-4 shadow-2xl">
@@ -280,7 +280,7 @@ export default function CategoriesPage() {
 
         {/* Results Count */}
         {!isLoading && (
-          <div className="mt-4 text-sm text-muted-foreground text-center">
+          <div className="mt-4 text-sm text-muted-foreground text-center" role="status" aria-live="polite">
             총 {filteredCategories.length}개의 카테고리
             {searchQuery && ` (검색 결과)`}
           </div>

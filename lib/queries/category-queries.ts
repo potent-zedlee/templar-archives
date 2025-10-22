@@ -19,6 +19,7 @@ import {
   toggleCategoryActive,
   searchCategories,
   getCategoryUsageCount,
+  getAllCategoryUsageCounts,
   type TournamentCategory,
   type CategoryInput,
   type CategoryUpdateInput,
@@ -112,6 +113,20 @@ export function useCategoryUsageQuery(categoryId: string) {
     staleTime: 2 * 60 * 1000, // 2분
     gcTime: 5 * 60 * 1000, // 5분
     enabled: !!categoryId,
+  })
+}
+
+/**
+ * Get all category usage counts at once (prevents N+1 queries)
+ */
+export function useAllCategoryUsageQuery() {
+  return useQuery({
+    queryKey: [...categoryKeys.all, 'usage', 'all'] as const,
+    queryFn: async () => {
+      return await getAllCategoryUsageCounts()
+    },
+    staleTime: 2 * 60 * 1000, // 2분
+    gcTime: 5 * 60 * 1000, // 5분
   })
 }
 

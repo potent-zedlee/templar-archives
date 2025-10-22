@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -175,6 +175,15 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
     setLogoFile(null)
     setLogoPreview(category?.logo_url || null)
   }
+
+  // Cleanup blob URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (logoPreview && logoPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(logoPreview)
+      }
+    }
+  }, [logoPreview])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

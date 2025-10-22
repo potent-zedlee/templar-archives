@@ -5,6 +5,7 @@
  */
 
 import { createClientSupabaseClient } from './supabase-client'
+import { CATEGORY_ERRORS, CATEGORY_VALIDATIONS } from './constants/category-errors'
 
 export interface TournamentCategory {
   id: string
@@ -60,7 +61,7 @@ export async function getAllCategories(includeInactive = false): Promise<Tournam
   const { data, error } = await query
 
   if (error) {
-    throw new Error(`Failed to fetch categories: ${error.message}`)
+    throw new Error(CATEGORY_ERRORS.FETCH_FAILED(error.message))
   }
 
   return data || []
@@ -89,7 +90,7 @@ export async function getCategoriesByRegion(
     .order('priority', { ascending: true })
 
   if (error) {
-    throw new Error(`Failed to fetch categories by region: ${error.message}`)
+    throw new Error(CATEGORY_ERRORS.FETCH_BY_REGION_FAILED(error.message))
   }
 
   return data || []
@@ -111,7 +112,7 @@ export async function getCategoryById(id: string): Promise<TournamentCategory | 
     if (error.code === 'PGRST116') {
       return null // Not found
     }
-    throw new Error(`Failed to fetch category: ${error.message}`)
+    throw new Error(CATEGORY_ERRORS.FETCH_BY_ID_FAILED(error.message))
   }
 
   return data
@@ -135,7 +136,7 @@ export async function getCategoryByAlias(alias: string): Promise<TournamentCateg
     if (error.code === 'PGRST116') {
       return null // Not found
     }
-    throw new Error(`Failed to fetch category by alias: ${error.message}`)
+    throw new Error(CATEGORY_ERRORS.FETCH_BY_ALIAS_FAILED(error.message))
   }
 
   return data
@@ -150,7 +151,7 @@ export async function createCategory(input: CategoryInput): Promise<TournamentCa
   // ID 중복 확인
   const existing = await getCategoryById(input.id)
   if (existing) {
-    throw new Error(`Category with ID "${input.id}" already exists`)
+    throw new Error(CATEGORY_ERRORS.DUPLICATE_ID(input.id))
   }
 
   const { data, error } = await supabase
@@ -174,7 +175,7 @@ export async function createCategory(input: CategoryInput): Promise<TournamentCa
     .single()
 
   if (error) {
-    throw new Error(`Failed to create category: ${error.message}`)
+    throw new Error(CATEGORY_ERRORS.CREATE_FAILED(error.message))
   }
 
   return data
@@ -210,7 +211,7 @@ export async function updateCategory(
     .single()
 
   if (error) {
-    throw new Error(`Failed to update category: ${error.message}`)
+    throw new Error(CATEGORY_ERRORS.UPDATE_FAILED(error.message))
   }
 
   return data
@@ -226,10 +227,7 @@ export async function deleteCategory(id: string): Promise<void> {
   // 사용 여부 확인
   const usageCount = await getCategoryUsageCount(id)
   if (usageCount > 0) {
-    throw new Error(
-      `Cannot delete category because it is used by ${usageCount} tournament(s). ` +
-      `Please reassign or delete those tournaments first.`
-    )
+    throw new Error(CATEGORY_ERRORS.DELETE_IN_USE(usageCount))
   }
 
   const { error } = await supabase
@@ -238,7 +236,7 @@ export async function deleteCategory(id: string): Promise<void> {
     .eq('id', id)
 
   if (error) {
-    throw new Error(`Failed to delete category: ${error.message}`)
+    throw new Error(CATEGORY_ERRORS.DELETE_FAILED(error.message))
   }
 }
 
@@ -254,10 +252,35 @@ export async function getCategoryUsageCount(categoryId: string): Promise<number>
     .eq('category_id', categoryId)
 
   if (error) {
-    throw new Error(`Failed to get category usage count: ${error.message}`)
+    throw new Error(CATEGORY_ERRORS.USAGE_COUNT_FAILED(error.message))
   }
 
   return count || 0
+}
+
+/**
+ * 모든 카테고리의 사용 개수를 한 번에 조회 (N+1 쿼리 방지)
+ */
+export async function getAllCategoryUsageCounts(): Promise<Record<string, number>> {
+  const supabase = createClientSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('tournaments')
+    .select('category_id')
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.USAGE_COUNTS_FAILED(error.message))
+  }
+
+  // Count by category_id
+  const counts: Record<string, number> = {}
+  data?.forEach((tournament) => {
+    if (tournament.category_id) {
+      counts[tournament.category_id] = (counts[tournament.category_id] || 0) + 1
+    }
+  })
+
+  return counts
 }
 
 /**
@@ -269,7 +292,7 @@ export async function toggleCategoryActive(id: string): Promise<TournamentCatego
   // 현재 상태 조회
   const category = await getCategoryById(id)
   if (!category) {
-    throw new Error(`Category with ID "${id}" not found`)
+    throw new Error(CATEGORY_ERRORS.NOT_FOUND(id))
   }
 
   // 토글
@@ -284,15 +307,17 @@ export async function reorderCategories(
 ): Promise<TournamentCategory[]> {
   const supabase = createClientSupabaseClient()
 
-  // 각 카테고리의 priority를 순서대로 업데이트
-  const updates = categoryIds.map((id, index) =>
-    supabase
+  // 순차 실행으로 Race Condition 방지
+  for (let i = 0; i < categoryIds.length; i++) {
+    const { error } = await supabase
       .from('tournament_categories')
-      .update({ priority: index + 1 })
-      .eq('id', id)
-  )
+      .update({ priority: i + 1 })
+      .eq('id', categoryIds[i])
 
-  await Promise.all(updates)
+    if (error) {
+      throw new Error(CATEGORY_ERRORS.REORDER_FAILED(categoryIds[i], error.message))
+    }
+  }
 
   // 업데이트된 카테고리 목록 반환
   return getAllCategories(true)
@@ -308,18 +333,17 @@ export async function uploadCategoryLogo(
   const supabase = createClientSupabaseClient()
 
   // 파일 크기 확인 (5MB)
-  if (file.size > 5 * 1024 * 1024) {
-    throw new Error('File size must be less than 5MB')
+  if (file.size > CATEGORY_VALIDATIONS.MAX_FILE_SIZE) {
+    throw new Error(CATEGORY_ERRORS.FILE_TOO_LARGE)
   }
 
   // 파일 타입 확인
-  const allowedTypes = ['image/svg+xml', 'image/png', 'image/jpeg']
-  if (!allowedTypes.includes(file.type)) {
-    throw new Error('File must be SVG, PNG, or JPEG')
+  if (!CATEGORY_VALIDATIONS.ALLOWED_FILE_TYPES.includes(file.type)) {
+    throw new Error(CATEGORY_ERRORS.INVALID_FILE_TYPE)
   }
 
   // 파일 확장자
-  const fileExt = file.name.split('.').pop()
+  const fileExt = file.name.split('.').pop() || 'png'
   const fileName = `${categoryId}.${fileExt}`
   const filePath = `${fileName}`
 
@@ -343,7 +367,7 @@ export async function uploadCategoryLogo(
     })
 
   if (uploadError) {
-    throw new Error(`Failed to upload logo: ${uploadError.message}`)
+    throw new Error(CATEGORY_ERRORS.UPLOAD_FAILED(uploadError.message))
   }
 
   // Public URL 가져오기
@@ -383,29 +407,41 @@ export async function deleteCategoryLogo(categoryId: string): Promise<void> {
 }
 
 /**
- * 검색 (이름, display_name, aliases로 검색)
+ * 검색 (이름, display_name, aliases로 검색) - DB 쿼리로 최적화
  */
 export async function searchCategories(query: string): Promise<TournamentCategory[]> {
   const supabase = createClientSupabaseClient()
 
-  const lowerQuery = query.toLowerCase()
+  const searchPattern = `%${query}%`
 
-  // 모든 카테고리를 가져와서 클라이언트에서 필터링
-  // (Postgres의 배열 검색이 복잡하므로)
   const { data, error } = await supabase
     .from('tournament_categories')
     .select('*')
     .eq('is_active', true)
+    .or(`name.ilike.${searchPattern},display_name.ilike.${searchPattern},short_name.ilike.${searchPattern}`)
+    .order('priority', { ascending: true })
 
   if (error) {
-    throw new Error(`Failed to search categories: ${error.message}`)
+    throw new Error(CATEGORY_ERRORS.SEARCH_FAILED(error.message))
   }
 
-  // 클라이언트에서 필터링
-  return (data || []).filter((cat) =>
-    cat.name.toLowerCase().includes(lowerQuery) ||
-    cat.display_name.toLowerCase().includes(lowerQuery) ||
-    cat.short_name?.toLowerCase().includes(lowerQuery) ||
-    cat.aliases.some((alias) => alias.toLowerCase().includes(lowerQuery))
-  )
+  // Also check aliases (DB query doesn't cover aliases)
+  if (!data || data.length === 0) {
+    // If no results from DB, search all categories for alias matches
+    const { data: allData, error: allError } = await supabase
+      .from('tournament_categories')
+      .select('*')
+      .eq('is_active', true)
+
+    if (allError) {
+      throw new Error(CATEGORY_ERRORS.SEARCH_FAILED(allError.message))
+    }
+
+    const lowerQuery = query.toLowerCase()
+    return (allData || []).filter((cat) =>
+      cat.aliases.some((alias) => alias.toLowerCase().includes(lowerQuery))
+    )
+  }
+
+  return data
 }
