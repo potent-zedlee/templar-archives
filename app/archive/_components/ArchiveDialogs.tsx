@@ -27,6 +27,8 @@ import { EditEventDialog } from '@/components/edit-event-dialog'
 import { MoveToExistingEventDialog } from '@/components/archive-dialogs/move-to-existing-event-dialog'
 import { MoveToNewEventDialog } from '@/components/archive-dialogs/move-to-new-event-dialog'
 import { KeyboardShortcutsDialog } from '@/components/keyboard-shortcuts-dialog'
+import { ArchiveInfoDialog } from '@/components/archive-info-dialog'
+import type { FolderItem } from '@/lib/types/archive'
 
 export function ArchiveDialogs() {
   const queryClient = useQueryClient()
@@ -46,6 +48,7 @@ export function ArchiveDialogs() {
     moveToEventDialog,
     moveToNewEventDialog,
     keyboardShortcutsDialog,
+    infoDialog,
     selectedVideoIds,
     selectedTournamentIdForDialog,
     selectedSubEventIdForDialog,
@@ -63,6 +66,7 @@ export function ArchiveDialogs() {
     closeMoveToEventDialog,
     closeMoveToNewEventDialog,
     closeKeyboardShortcutsDialog,
+    closeInfoDialog,
     clearSelection,
   } = useArchiveUIStore()
 
@@ -133,6 +137,49 @@ export function ArchiveDialogs() {
     }
     return null
   }, [selectedDay, tournaments])
+
+  // Get current item for info dialog
+  const infoDialogItem = useMemo((): FolderItem | null => {
+    if (!infoDialog.editingId) return null
+
+    // Check if it's a tournament
+    const tournament = tournaments.find((t) => t.id === infoDialog.editingId)
+    if (tournament) {
+      return {
+        id: tournament.id,
+        name: tournament.name,
+        type: 'tournament',
+        data: tournament,
+      }
+    }
+
+    // Check if it's a subevent or day
+    for (const tournament of tournaments) {
+      const subEvent = tournament.sub_events?.find((se) => se.id === infoDialog.editingId)
+      if (subEvent) {
+        return {
+          id: subEvent.id,
+          name: subEvent.name,
+          type: 'subevent',
+          data: subEvent,
+        }
+      }
+
+      for (const subEvent of tournament.sub_events || []) {
+        const day = subEvent.days?.find((d) => d.id === infoDialog.editingId)
+        if (day) {
+          return {
+            id: day.id,
+            name: day.name,
+            type: 'day',
+            data: day,
+          }
+        }
+      }
+    }
+
+    return null
+  }, [infoDialog.editingId, tournaments])
 
   return (
     <>
@@ -240,6 +287,14 @@ export function ArchiveDialogs() {
       <KeyboardShortcutsDialog
         isOpen={keyboardShortcutsDialog.isOpen}
         onOpenChange={closeKeyboardShortcutsDialog}
+      />
+
+      {/* Archive Info Dialog */}
+      <ArchiveInfoDialog
+        item={infoDialogItem}
+        isOpen={infoDialog.isOpen}
+        onClose={closeInfoDialog}
+        isAdmin={isUserAdmin}
       />
     </>
   )

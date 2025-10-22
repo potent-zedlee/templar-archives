@@ -55,24 +55,6 @@ export const KEYBOARD_SHORTCUTS: KeyboardShortcut[] = [
     modifier: 'ctrl',
     group: 'view'
   },
-  {
-    key: '1',
-    description: 'Switch to List view',
-    modifier: 'ctrl',
-    group: 'view'
-  },
-  {
-    key: '2',
-    description: 'Switch to Grid view',
-    modifier: 'ctrl',
-    group: 'view'
-  },
-  {
-    key: '3',
-    description: 'Switch to Timeline view',
-    modifier: 'ctrl',
-    group: 'view'
-  },
 
   // Help
   {
@@ -91,7 +73,6 @@ interface UseArchiveKeyboardOptions {
   onSelectAll?: () => void
   onEscape?: () => void
   onFocusSearch?: () => void
-  onViewModeChange?: (mode: 'list' | 'grid' | 'timeline') => void
   onShowHelp?: () => void
   enabled?: boolean
 }
@@ -105,7 +86,6 @@ export function useArchiveKeyboard({
   onSelectAll,
   onEscape,
   onFocusSearch,
-  onViewModeChange,
   onShowHelp,
   enabled = true,
 }: UseArchiveKeyboardOptions) {
@@ -164,15 +144,6 @@ export function useArchiveKeyboard({
       else if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault()
         onFocusSearch?.()
-      } else if ((e.ctrlKey || e.metaKey) && e.key === '1') {
-        e.preventDefault()
-        onViewModeChange?.('list')
-      } else if ((e.ctrlKey || e.metaKey) && e.key === '2') {
-        e.preventDefault()
-        onViewModeChange?.('grid')
-      } else if ((e.ctrlKey || e.metaKey) && e.key === '3') {
-        e.preventDefault()
-        onViewModeChange?.('timeline')
       }
 
       // Help shortcut
@@ -194,7 +165,6 @@ export function useArchiveKeyboard({
     onSelectAll,
     onEscape,
     onFocusSearch,
-    onViewModeChange,
     onShowHelp,
   ])
 

@@ -10,12 +10,13 @@ import { Slider } from "@/components/ui/slider"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
-import { Filter, X, Calendar as CalendarIcon, ChevronDown, ChevronUp, Search, Star } from "lucide-react"
+import { Filter, X, Calendar as CalendarIcon, ChevronDown, ChevronUp, Search, Star, Spade } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import type { AdvancedFilters } from "@/components/archive-advanced-filters"
+import type { AdvancedFilters } from "@/lib/types/archive"
 import { CategoryLogo } from "@/components/category-logo"
+import { CardSelector } from "@/components/card-selector"
 import {
   TOURNAMENT_CATEGORIES,
   POPULAR_CATEGORIES,
@@ -83,10 +84,42 @@ export function ArchiveUnifiedFilters({
       dateRange: { start: undefined, end: undefined },
       handCountRange: [0, 1000],
       videoSources: { youtube: true, upload: true },
-      hasHandsOnly: false
+      hasHandsOnly: false,
+      tournamentName: undefined,
+      playerName: undefined,
+      holeCards: undefined,
+      handValue: undefined,
     })
     setSearchQuery("")
     setShowOnlyPopular(false)
+  }
+
+  const handleTournamentNameChange = (value: string) => {
+    onAdvancedFiltersChange({
+      ...advancedFilters,
+      tournamentName: value || undefined
+    })
+  }
+
+  const handlePlayerNameChange = (value: string) => {
+    onAdvancedFiltersChange({
+      ...advancedFilters,
+      playerName: value || undefined
+    })
+  }
+
+  const handleHoleCardsChange = (cards: string[]) => {
+    onAdvancedFiltersChange({
+      ...advancedFilters,
+      holeCards: cards.length > 0 ? cards : undefined
+    })
+  }
+
+  const handleHandValueChange = (cards: string[]) => {
+    onAdvancedFiltersChange({
+      ...advancedFilters,
+      handValue: cards.length > 0 ? cards : undefined
+    })
   }
 
   // 그룹 토글 핸들러
@@ -116,11 +149,26 @@ export function ArchiveUnifiedFilters({
     return TOURNAMENT_CATEGORIES.filter(cat => cat.isActive)
   }, [searchQuery, showOnlyPopular])
 
+  const handleResetQuickFilters = () => {
+    onAdvancedFiltersChange({
+      ...advancedFilters,
+      tournamentName: undefined,
+      playerName: undefined,
+      holeCards: undefined,
+      handValue: undefined,
+      dateRange: { start: undefined, end: undefined },
+    })
+  }
+
   // Count active filters
   const activeFilterCount = () => {
     let count = 0
     if (selectedCategory !== "All") count++
     if (advancedFilters.dateRange.start || advancedFilters.dateRange.end) count++
+    if (advancedFilters.tournamentName) count++
+    if (advancedFilters.playerName) count++
+    if (advancedFilters.holeCards?.length) count++
+    if (advancedFilters.handValue?.length) count++
     return count
   }
 
@@ -225,34 +273,85 @@ export function ArchiveUnifiedFilters({
                 </Popover>
 
                 {/* Tournament Name */}
-                <input
+                <Input
                   type="text"
                   placeholder="Tournament Name"
-                  className="px-3 py-1.5 rounded-md border border-border bg-background text-sm w-[200px] hover:bg-muted transition-colors"
+                  value={advancedFilters.tournamentName || ""}
+                  onChange={(e) => handleTournamentNameChange(e.target.value)}
+                  className="h-8 text-sm w-[200px]"
                 />
 
                 {/* Player */}
-                <input
+                <Input
                   type="text"
                   placeholder="Player"
-                  className="px-3 py-1.5 rounded-md border border-border bg-background text-sm w-[150px] hover:bg-muted transition-colors"
+                  value={advancedFilters.playerName || ""}
+                  onChange={(e) => handlePlayerNameChange(e.target.value)}
+                  className="h-8 text-sm w-[150px]"
                 />
 
-                {/* Hole Card - Placeholder */}
-                <button className="px-3 py-1.5 rounded-md border border-border bg-background text-sm text-muted-foreground hover:bg-muted transition-colors">
-                  Hole Card: Any Cards
-                </button>
+                {/* Hole Card */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "px-3 py-1.5 h-8 text-sm justify-start hover:bg-muted transition-colors",
+                        !advancedFilters.holeCards?.length && "text-muted-foreground"
+                      )}
+                    >
+                      <Spade className="mr-2 h-3.5 w-3.5" />
+                      {advancedFilters.holeCards?.length
+                        ? `Hole Cards: ${advancedFilters.holeCards.join(", ")}`
+                        : "Hole Card: Any Cards"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-4" align="start">
+                    <CardSelector
+                      value={advancedFilters.holeCards || []}
+                      onChange={handleHoleCardsChange}
+                      maxCards={2}
+                      label="Select Hole Cards (Maximum 2)"
+                    />
+                  </PopoverContent>
+                </Popover>
 
-                {/* Hand Value - Placeholder */}
-                <button className="px-3 py-1.5 rounded-md border border-border bg-background text-sm text-muted-foreground hover:bg-muted transition-colors">
-                  Hand Value: Any Cards
-                </button>
+                {/* Hand Value */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "px-3 py-1.5 h-8 text-sm justify-start hover:bg-muted transition-colors",
+                        !advancedFilters.handValue?.length && "text-muted-foreground"
+                      )}
+                    >
+                      <Spade className="mr-2 h-3.5 w-3.5" />
+                      {advancedFilters.handValue?.length
+                        ? `Hand Value: ${advancedFilters.handValue.join(", ")}`
+                        : "Hand Value: Any Cards"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-4" align="start">
+                    <CardSelector
+                      value={advancedFilters.handValue || []}
+                      onChange={handleHandValueChange}
+                      maxCards={5}
+                      label="Select Board Cards (Maximum 5)"
+                    />
+                  </PopoverContent>
+                </Popover>
 
                 {/* RESET Quick Filters */}
-                <button className="px-3 py-1.5 rounded-md border border-border bg-background text-sm font-medium hover:bg-destructive hover:text-destructive-foreground transition-colors">
-                  <X className="h-3.5 w-3.5 inline mr-1" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetQuickFilters}
+                  className="h-8 text-sm font-medium hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                >
+                  <X className="h-3.5 w-3.5 mr-1" />
                   Reset Quick
-                </button>
+                </Button>
               </div>
             </div>
 

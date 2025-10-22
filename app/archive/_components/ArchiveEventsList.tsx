@@ -46,6 +46,7 @@ export function ArchiveEventsList() {
     openMoveToNewEventDialog,
     openSubEventDialog,
     openEditEventDialog,
+    openInfoDialog,
     selectAllVideos,
     openMoveToNewEventDialog: setIsMoveToNewEventDialogOpen,
   } = useArchiveUIStore()
@@ -178,6 +179,44 @@ export function ArchiveEventsList() {
       items = items.filter((item) => item.name.toLowerCase().includes(query))
     }
 
+    // Apply Tournament Name filter
+    if (advancedFilters.tournamentName?.trim()) {
+      const tournamentQuery = advancedFilters.tournamentName.toLowerCase()
+
+      if (navigationLevel === 'root') {
+        // Filter tournaments by name
+        items = items.filter((item) => {
+          if (item.type === 'tournament') {
+            return item.name.toLowerCase().includes(tournamentQuery)
+          }
+          return true // Keep unorganized folder
+        })
+      } else if (navigationLevel === 'tournament') {
+        // Filter subevents by tournament name (match parent tournament)
+        const tournament = tournaments.find((t) => t.id === currentTournamentId)
+        if (tournament && !tournament.name.toLowerCase().includes(tournamentQuery)) {
+          items = [] // Hide all subevents if tournament doesn't match
+        }
+      }
+    }
+
+    // Apply Player Name filter (only for days with hands)
+    if (advancedFilters.playerName?.trim()) {
+      const playerQuery = advancedFilters.playerName.toLowerCase()
+
+      // This filter only works meaningfully at the day level
+      // For now, we'll apply it to day names (limited functionality)
+      if (navigationLevel === 'subevent') {
+        items = items.filter((item) => {
+          if (item.type === 'day') {
+            // Check if day name contains player name (basic filter)
+            return item.name.toLowerCase().includes(playerQuery)
+          }
+          return true
+        })
+      }
+    }
+
     // Apply advanced filters (date range, video sources, etc.)
     if (advancedFilters.dateRange.start || advancedFilters.dateRange.end) {
       items = items.filter((item) => {
@@ -276,6 +315,10 @@ export function ArchiveEventsList() {
     openDeleteDialog(item.id)
   }, [openDeleteDialog])
 
+  const handleShowInfo = useCallback((item: FolderItem) => {
+    openInfoDialog(item.id)
+  }, [openInfoDialog])
+
   const handleEditEvent = useCallback((item: FolderItem) => {
     if (item.type === 'subevent') {
       openEditEventDialog(item.id)
@@ -349,6 +392,7 @@ export function ArchiveEventsList() {
         onMoveToNewEvent={handleMoveToNewEventSingle}
         onAddSubItem={handleAddSubItem}
         onEditEvent={handleEditEvent}
+        onShowInfo={handleShowInfo}
         isAdmin={isUserAdmin}
       />
     </Card>

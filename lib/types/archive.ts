@@ -29,6 +29,19 @@ export type SortOption =
   | "count-asc"
   | "count-desc"
 
+// ==================== Card Types ====================
+
+export type CardSuit = '♠' | '♥' | '♦' | '♣'
+export type CardRank = 'A' | 'K' | 'Q' | 'J' | '10' | '9' | '8' | '7' | '6' | '5' | '4' | '3' | '2'
+
+export interface Card {
+  rank: CardRank
+  suit: CardSuit
+}
+
+// CardString: 예) 'A♠', 'K♥', '10♦'
+export type CardString = string
+
 // ==================== Database Types ====================
 
 export interface Tournament {
@@ -197,6 +210,24 @@ export interface FilterState {
     upload: boolean
   }
   hasHandsOnly: boolean
+}
+
+export interface AdvancedFilters {
+  dateRange: {
+    start: Date | undefined
+    end: Date | undefined
+  }
+  handCountRange: [number, number]
+  videoSources: {
+    youtube: boolean
+    upload: boolean
+  }
+  hasHandsOnly: boolean
+  // 새로운 필터
+  tournamentName?: string
+  playerName?: string
+  holeCards?: CardString[]  // 홀 카드 (최대 2장)
+  handValue?: CardString[]  // 핸드 밸류 (최대 5장)
 }
 
 // ==================== Folder Navigation Types ====================

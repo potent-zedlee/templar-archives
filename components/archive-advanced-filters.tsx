@@ -12,19 +12,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Filter, X, Calendar as CalendarIcon, ChevronDown, ChevronUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
-
-export interface AdvancedFilters {
-  dateRange: {
-    start: Date | undefined
-    end: Date | undefined
-  }
-  handCountRange: [number, number]
-  videoSources: {
-    youtube: boolean
-    upload: boolean
-  }
-  hasHandsOnly: boolean
-}
+import type { AdvancedFilters } from "@/lib/types/archive"
 
 interface ArchiveAdvancedFiltersProps {
   filters: AdvancedFilters

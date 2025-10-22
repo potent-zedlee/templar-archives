@@ -12,9 +12,9 @@ import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import type {
   NavigationLevel,
-  ViewMode,
   SortOption,
   FilterState,
+  AdvancedFilters,
   DialogState,
   VideoPlayerState,
   UploadState,
@@ -26,9 +26,6 @@ interface ArchiveUIState {
   currentTournamentId: string
   currentSubEventId: string
 
-  // View Mode
-  viewMode: ViewMode
-
   // Search & Sort
   searchQuery: string
   sortBy: SortOption
@@ -37,7 +34,7 @@ interface ArchiveUIState {
   selectedCategory: string
 
   // Advanced Filters
-  advancedFilters: FilterState
+  advancedFilters: AdvancedFilters
 
   // Dialogs
   tournamentDialog: DialogState
@@ -51,6 +48,7 @@ interface ArchiveUIState {
   moveToEventDialog: DialogState
   moveToNewEventDialog: DialogState
   keyboardShortcutsDialog: DialogState
+  infoDialog: DialogState
 
   // Upload State
   uploadState: UploadState
@@ -85,7 +83,7 @@ interface ArchiveUIState {
   setSearchQuery: (query: string) => void
   setSortBy: (sort: SortOption) => void
   setSelectedCategory: (category: string) => void
-  setAdvancedFilters: (filters: FilterState) => void
+  setAdvancedFilters: (filters: AdvancedFilters) => void
 
   // Actions - Dialogs
   openTournamentDialog: (editingId?: string) => void
@@ -110,6 +108,8 @@ interface ArchiveUIState {
   closeMoveToNewEventDialog: () => void
   openKeyboardShortcutsDialog: () => void
   closeKeyboardShortcutsDialog: () => void
+  openInfoDialog: (itemId: string) => void
+  closeInfoDialog: () => void
 
   // Actions - Upload
   setUploadFile: (file: File | null) => void
@@ -133,10 +133,7 @@ interface ArchiveUIState {
   setIsEditingViewingPayouts: (editing: boolean) => void
 }
 
-const INITIAL_FILTER_STATE: FilterState = {
-  searchQuery: '',
-  sortBy: 'date-desc',
-  selectedCategory: 'All',
+const INITIAL_ADVANCED_FILTERS: AdvancedFilters = {
   dateRange: {
     start: undefined,
     end: undefined,
@@ -147,6 +144,10 @@ const INITIAL_FILTER_STATE: FilterState = {
     upload: true,
   },
   hasHandsOnly: false,
+  tournamentName: undefined,
+  playerName: undefined,
+  holeCards: undefined,
+  handValue: undefined,
 }
 
 export const useArchiveUIStore = create<ArchiveUIState>()(
@@ -158,14 +159,11 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         currentTournamentId: '',
         currentSubEventId: '',
 
-        // Initial State - View Mode
-        viewMode: 'list',
-
         // Initial State - Search & Sort
         searchQuery: '',
         sortBy: 'date-desc',
         selectedCategory: 'All',
-        advancedFilters: INITIAL_FILTER_STATE,
+        advancedFilters: INITIAL_ADVANCED_FILTERS,
 
         // Initial State - Dialogs
         tournamentDialog: { isOpen: false, editingId: null },
@@ -179,6 +177,7 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         moveToEventDialog: { isOpen: false, editingId: null },
         moveToNewEventDialog: { isOpen: false, editingId: null },
         keyboardShortcutsDialog: { isOpen: false, editingId: null },
+        infoDialog: { isOpen: false, editingId: null },
 
         // Initial State - Upload
         uploadState: {
@@ -344,6 +343,11 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         closeKeyboardShortcutsDialog: () =>
           set({ keyboardShortcutsDialog: { isOpen: false, editingId: null } }),
 
+        openInfoDialog: (itemId) =>
+          set({ infoDialog: { isOpen: true, editingId: itemId } }),
+        closeInfoDialog: () =>
+          set({ infoDialog: { isOpen: false, editingId: null } }),
+
         // Actions - Upload
         setUploadFile: (file) =>
           set((state) => ({
@@ -393,7 +397,6 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         name: 'ArchiveUIStore',
         // Persist only certain fields
         partialize: (state) => ({
-          viewMode: state.viewMode,
           selectedCategory: state.selectedCategory,
           sortBy: state.sortBy,
         }),
