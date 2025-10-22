@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { Moon, Sun, Menu, X, User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, Newspaper, Radio } from "lucide-react"
+import { Moon, Sun, Menu, X, User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, Newspaper, Radio, Folder } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useAuth } from "@/components/auth-provider"
 import { signOut } from "@/lib/auth"
@@ -268,6 +268,10 @@ export function Header() {
                           <Edit className="mr-2 h-4 w-4" />
                           Edit Requests
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => router.push("/admin/categories")}>
+                          <Folder className="mr-2 h-4 w-4" />
+                          Categories
+                        </DropdownMenuItem>
                       </>
                     )}
                     <DropdownMenuSeparator />
@@ -496,6 +500,18 @@ export function Header() {
                         >
                           <Edit className="mr-2 h-4 w-4" />
                           Edit Requests
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start px-4"
+                          onClick={() => {
+                            router.push("/admin/categories")
+                            setMobileMenuOpen(false)
+                          }}
+                        >
+                          <Folder className="mr-2 h-4 w-4" />
+                          Categories
                         </Button>
                       </>
                     )}
