@@ -11,6 +11,7 @@ import {
   Eye,
   EyeOff,
   ExternalLink,
+  ChevronRight,
 } from "lucide-react"
 import {
   Table,
@@ -42,9 +43,10 @@ import type { TournamentCategory } from "@/lib/tournament-categories-db"
 interface CategoryRowProps {
   category: TournamentCategory
   usageCount: number
+  allCategories: TournamentCategory[]
 }
 
-function CategoryRow({ category, usageCount }: CategoryRowProps) {
+function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: category.id,
     data: {
@@ -76,6 +78,25 @@ function CategoryRow({ category, usageCount }: CategoryRowProps) {
       await toggleActiveMutation.mutateAsync()
     } catch (error) {
       // Error toast is handled by mutation
+    }
+  }
+
+  // Find parent category
+  const parentCategory = category.parent_id
+    ? allCategories.find((cat) => cat.id === category.parent_id)
+    : null
+
+  // Determine game type badge color
+  const getGameTypeBadge = (gameType: string) => {
+    switch (gameType) {
+      case "tournament":
+        return <Badge variant="default">토너먼트</Badge>
+      case "cash_game":
+        return <Badge variant="secondary">캐쉬게임</Badge>
+      case "both":
+        return <Badge variant="outline">둘 다</Badge>
+      default:
+        return <Badge variant="outline">{gameType}</Badge>
     }
   }
 
@@ -121,7 +142,12 @@ function CategoryRow({ category, usageCount }: CategoryRowProps) {
         {/* Name */}
         <TableCell>
           <div className="space-y-1">
-            <div className="font-medium">{category.display_name}</div>
+            <div className="flex items-center gap-2">
+              {category.parent_id && (
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              )}
+              <div className="font-medium">{category.display_name}</div>
+            </div>
             <div className="text-xs text-muted-foreground">{category.name}</div>
             {category.short_name && (
               <Badge variant="outline" className="text-xs">
@@ -130,6 +156,20 @@ function CategoryRow({ category, usageCount }: CategoryRowProps) {
             )}
           </div>
         </TableCell>
+
+        {/* Parent Category */}
+        <TableCell>
+          {parentCategory ? (
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <span>{parentCategory.display_name}</span>
+            </div>
+          ) : (
+            <span className="text-xs text-muted-foreground">-</span>
+          )}
+        </TableCell>
+
+        {/* Game Type */}
+        <TableCell>{getGameTypeBadge(category.game_type)}</TableCell>
 
         {/* Region */}
         <TableCell>
@@ -255,6 +295,8 @@ export function CategoryTable({ categories, usageCounts }: CategoryTableProps) {
             <TableHead className="w-16">로고</TableHead>
             <TableHead>ID</TableHead>
             <TableHead>이름</TableHead>
+            <TableHead>상위 카테고리</TableHead>
+            <TableHead>게임 타입</TableHead>
             <TableHead>지역</TableHead>
             <TableHead className="text-center">우선순위</TableHead>
             <TableHead className="text-center">사용 개수</TableHead>
@@ -269,6 +311,7 @@ export function CategoryTable({ categories, usageCounts }: CategoryTableProps) {
               key={category.id}
               category={category}
               usageCount={usageCounts[category.id] || 0}
+              allCategories={categories}
             />
           ))}
         </TableBody>

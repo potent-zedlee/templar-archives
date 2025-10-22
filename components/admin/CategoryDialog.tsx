@@ -34,9 +34,11 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { useCreateCategoryMutation, useUpdateCategoryMutation, useUploadLogoMutation } from "@/lib/queries/category-queries"
+import { useCreateCategoryMutation, useUpdateCategoryMutation, useUploadLogoMutation, useCategoriesQuery } from "@/lib/queries/category-queries"
 import type { TournamentCategory } from "@/lib/tournament-categories-db"
 import Image from "next/image"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
 
 // Zod Schema
 const categoryFormSchema = z.object({
@@ -56,6 +58,8 @@ const categoryFormSchema = z.object({
   priority: z.coerce.number().int().min(0).max(100).default(50),
   website: z.string().url("올바른 URL을 입력해주세요").optional().or(z.literal("")),
   is_active: z.boolean().default(true),
+  game_type: z.enum(["tournament", "cash_game", "both"]).default("both"),
+  parent_id: z.string().optional(),
   theme_gradient: z.string().optional(),
   theme_text: z.string().optional(),
   theme_shadow: z.string().optional(),
@@ -78,6 +82,9 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
   const updateMutation = useUpdateCategoryMutation(category?.id || "")
   const uploadLogoMutation = useUploadLogoMutation(category?.id || "")
 
+  // Fetch all categories for parent selection (root categories only)
+  const { data: allCategories = [] } = useCategoriesQuery(true)
+
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
     defaultValues: {
@@ -90,6 +97,8 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
       priority: category?.priority || 50,
       website: category?.website || "",
       is_active: category?.is_active ?? true,
+      game_type: category?.game_type || "both",
+      parent_id: category?.parent_id || "",
       theme_gradient: category?.theme_gradient || "",
       theme_text: category?.theme_text || "",
       theme_shadow: category?.theme_shadow || "",
@@ -133,6 +142,8 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
         priority: values.priority,
         website: values.website || undefined,
         is_active: values.is_active,
+        game_type: values.game_type,
+        parent_id: values.parent_id || null,
         theme_gradient: values.theme_gradient || undefined,
         theme_text: values.theme_text || undefined,
         theme_shadow: values.theme_shadow || undefined,
@@ -382,6 +393,79 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
                 )}
               />
             </div>
+
+            {/* Game Type */}
+            <FormField
+              control={form.control}
+              name="game_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>게임 타입 *</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex gap-4"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="tournament" id="tournament" />
+                        <Label htmlFor="tournament" className="cursor-pointer">
+                          토너먼트
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="cash_game" id="cash_game" />
+                        <Label htmlFor="cash_game" className="cursor-pointer">
+                          캐쉬게임
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="both" id="both" />
+                        <Label htmlFor="both" className="cursor-pointer">
+                          둘 다
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormDescription>
+                    이 카테고리가 표시될 페이지를 선택하세요
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Parent Category */}
+            <FormField
+              control={form.control}
+              name="parent_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>상위 카테고리</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="없음 (최상위 카테고리)" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">없음 (최상위 카테고리)</SelectItem>
+                      {allCategories
+                        .filter((cat) => cat.id !== category?.id && !cat.parent_id)
+                        .map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.display_name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    상위 카테고리를 선택하면 하위 카테고리로 설정됩니다
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* Website */}
             <FormField

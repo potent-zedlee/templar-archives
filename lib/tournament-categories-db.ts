@@ -7,6 +7,8 @@
 import { createClientSupabaseClient } from './supabase-client'
 import { CATEGORY_ERRORS, CATEGORY_VALIDATIONS } from './constants/category-errors'
 
+export type GameType = 'tournament' | 'cash_game' | 'both'
+
 export interface TournamentCategory {
   id: string
   name: string
@@ -18,6 +20,8 @@ export interface TournamentCategory {
   priority: number
   website?: string | null
   is_active: boolean
+  game_type: GameType
+  parent_id?: string | null
   theme_gradient?: string | null
   theme_text?: string | null
   theme_shadow?: string | null
@@ -36,6 +40,8 @@ export interface CategoryInput {
   priority?: number
   website?: string
   is_active?: boolean
+  game_type?: GameType
+  parent_id?: string | null
   theme_gradient?: string
   theme_text?: string
   theme_shadow?: string
@@ -46,7 +52,10 @@ export interface CategoryUpdateInput extends Partial<Omit<CategoryInput, 'id'>> 
 /**
  * 모든 카테고리 조회 (Admin용)
  */
-export async function getAllCategories(includeInactive = false): Promise<TournamentCategory[]> {
+export async function getAllCategories(
+  includeInactive = false,
+  gameType?: GameType
+): Promise<TournamentCategory[]> {
   const supabase = createClientSupabaseClient()
 
   let query = supabase
@@ -56,6 +65,10 @@ export async function getAllCategories(includeInactive = false): Promise<Tournam
 
   if (!includeInactive) {
     query = query.eq('is_active', true)
+  }
+
+  if (gameType) {
+    query = query.or(`game_type.eq.${gameType},game_type.eq.both`)
   }
 
   const { data, error } = await query
@@ -70,8 +83,63 @@ export async function getAllCategories(includeInactive = false): Promise<Tournam
 /**
  * 활성화된 카테고리만 조회 (Public)
  */
-export async function getActiveCategories(): Promise<TournamentCategory[]> {
-  return getAllCategories(false)
+export async function getActiveCategories(gameType?: GameType): Promise<TournamentCategory[]> {
+  return getAllCategories(false, gameType)
+}
+
+/**
+ * 최상위 카테고리만 조회 (parent_id가 null인 카테고리)
+ */
+export async function getRootCategories(gameType?: GameType): Promise<TournamentCategory[]> {
+  const supabase = createClientSupabaseClient()
+
+  let query = supabase
+    .from('tournament_categories')
+    .select('*')
+    .is('parent_id', null)
+    .eq('is_active', true)
+    .order('priority', { ascending: true })
+
+  if (gameType) {
+    query = query.or(`game_type.eq.${gameType},game_type.eq.both`)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.FETCH_FAILED(error.message))
+  }
+
+  return data || []
+}
+
+/**
+ * 하위 카테고리 조회 (특정 parent_id의 자식들)
+ */
+export async function getChildCategories(
+  parentId: string,
+  gameType?: GameType
+): Promise<TournamentCategory[]> {
+  const supabase = createClientSupabaseClient()
+
+  let query = supabase
+    .from('tournament_categories')
+    .select('*')
+    .eq('parent_id', parentId)
+    .eq('is_active', true)
+    .order('priority', { ascending: true })
+
+  if (gameType) {
+    query = query.or(`game_type.eq.${gameType},game_type.eq.both`)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.FETCH_FAILED(error.message))
+  }
+
+  return data || []
 }
 
 /**
@@ -167,6 +235,8 @@ export async function createCategory(input: CategoryInput): Promise<TournamentCa
       priority: input.priority ?? 50,
       website: input.website || null,
       is_active: input.is_active ?? true,
+      game_type: input.game_type || 'both',
+      parent_id: input.parent_id || null,
       theme_gradient: input.theme_gradient || null,
       theme_text: input.theme_text || null,
       theme_shadow: input.theme_shadow || null,
@@ -202,6 +272,8 @@ export async function updateCategory(
       ...(input.priority !== undefined && { priority: input.priority }),
       ...(input.website !== undefined && { website: input.website || null }),
       ...(input.is_active !== undefined && { is_active: input.is_active }),
+      ...(input.game_type !== undefined && { game_type: input.game_type }),
+      ...(input.parent_id !== undefined && { parent_id: input.parent_id }),
       ...(input.theme_gradient !== undefined && { theme_gradient: input.theme_gradient || null }),
       ...(input.theme_text !== undefined && { theme_text: input.theme_text || null }),
       ...(input.theme_shadow !== undefined && { theme_shadow: input.theme_shadow || null }),

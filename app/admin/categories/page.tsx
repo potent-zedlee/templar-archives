@@ -40,6 +40,7 @@ export default function CategoriesPage() {
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
   const [regionFilter, setRegionFilter] = useState<string>("all")
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all")
+  const [gameTypeFilter, setGameTypeFilter] = useState<string>("all")
   const [includeInactive, setIncludeInactive] = useState(true)
 
   // Drag & Drop state
@@ -110,9 +111,13 @@ export default function CategoriesPage() {
         (activeFilter === "active" && category.is_active) ||
         (activeFilter === "inactive" && !category.is_active)
 
-      return searchMatch && regionMatch && activeMatch
+      // Game type filter
+      const gameTypeMatch =
+        gameTypeFilter === "all" || category.game_type === gameTypeFilter
+
+      return searchMatch && regionMatch && activeMatch && gameTypeMatch
     })
-  }, [localCategories, debouncedSearchQuery, regionFilter, activeFilter])
+  }, [localCategories, debouncedSearchQuery, regionFilter, activeFilter, gameTypeFilter])
 
   // Drag handlers
   function handleDragStart(event: DragStartEvent) {
@@ -222,6 +227,19 @@ export default function CategoriesPage() {
                 <SelectItem value="all">모두</SelectItem>
                 <SelectItem value="active">활성</SelectItem>
                 <SelectItem value="inactive">비활성</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Game Type Filter */}
+            <Select value={gameTypeFilter} onValueChange={setGameTypeFilter}>
+              <SelectTrigger className="w-[180px]" aria-label="게임 타입 필터">
+                <SelectValue placeholder="게임 타입" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">모든 타입</SelectItem>
+                <SelectItem value="tournament">토너먼트</SelectItem>
+                <SelectItem value="cash_game">캐쉬게임</SelectItem>
+                <SelectItem value="both">둘 다</SelectItem>
               </SelectContent>
             </Select>
 
