@@ -12,6 +12,7 @@
  */
 
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Plus, Filter, ChevronDown, ChevronUp } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
@@ -25,10 +26,12 @@ import { TournamentDialog } from '@/components/tournament-dialog'
 import { Button } from '@/components/ui/button'
 import { isAdmin } from '@/lib/auth-utils'
 import { cn } from '@/lib/utils'
+import type { GameType } from '@/lib/tournament-categories-db'
 
 export function ArchiveToolbar() {
   const { userEmail } = useArchiveDataStore()
   const queryClient = useQueryClient()
+  const pathname = usePathname()
   const {
     selectedCategory,
     setSelectedCategory,
@@ -44,6 +47,13 @@ export function ArchiveToolbar() {
   const [showFilters, setShowFilters] = useState(false)
   const isUserAdmin = isAdmin(userEmail)
 
+  // Determine game type based on current route
+  const gameType: GameType | undefined = pathname.includes('/tournament')
+    ? 'tournament'
+    : pathname.includes('/cash-game')
+    ? 'cash_game'
+    : undefined
+
   // Count active advanced filters
   const activeFilterCount = () => {
     let count = 0
@@ -57,6 +67,7 @@ export function ArchiveToolbar() {
       <ArchiveTournamentLogosBar
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
+        gameType={gameType}
       />
 
       {/* Filters, Search, and Controls */}
