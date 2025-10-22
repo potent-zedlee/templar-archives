@@ -2,8 +2,8 @@
 
 > 단계별 기능 구현 계획 및 우선순위
 
-**마지막 업데이트**: 2025-10-21
-**현재 Phase**: Phase 0-20 완료 🎉
+**마지막 업데이트**: 2025-10-22
+**현재 Phase**: Phase 0-26 완료 🎉
 
 ---
 
@@ -352,6 +352,199 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 
 ---
 
+### Phase 21: Player Statistics Enhancement (2025-10-21) ✅
+**소요 시간**: 4시간
+
+#### 완료 기능
+- **고급 통계 시스템**: 플레이어 통계 분석 고도화
+- **React Query 훅** (218줄):
+  - `lib/queries/player-stats-queries.ts` - 통계 조회, 캐싱, 포맷팅 유틸리티
+  - usePlayerStatsQuery, usePositionalStatsQuery, usePlayStyleQuery
+  - staleTime: 10분, gcTime: 30분 (효율적인 캐싱)
+- **UI 컴포넌트** (3개, 총 약 500줄):
+  - `components/player-stats/AdvancedStatsCard.tsx` - VPIP, PFR, 3-Bet, ATS, 승률, 평균 팟 크기, 플레이 스타일
+  - `components/player-stats/PositionalStatsCard.tsx` - 포지션별 통계 테이블 (BTN, CO, MP, UTG, SB, BB)
+  - `components/player-stats/PerformanceChartCard.tsx` - Recharts 기반 성과 차트 (바 차트, 레이더 차트)
+- **플레이어 페이지 통합**: `app/players/[id]/page.tsx` 업데이트
+  - 기존 5개 통계 카드를 AdvancedStatsCard로 교체
+  - 포지션별 통계 및 성과 차트 추가
+- **Empty State 처리**: 데이터 없을 때 안내 메시지 표시
+- **기존 lib/player-stats.ts 활용**: 이미 구현된 통계 계산 함수 사용 (446줄)
+  - calculatePlayerStatistics, calculatePositionStats, classifyPlayStyle
+  - VPIP, PFR, 3-Bet, ATS, Win Rate 계산
+
+**핵심 파일**:
+- `lib/queries/player-stats-queries.ts` (218줄)
+- `components/player-stats/AdvancedStatsCard.tsx`
+- `components/player-stats/PositionalStatsCard.tsx`
+- `components/player-stats/PerformanceChartCard.tsx`
+
+---
+
+### Phase 22: News & Live Reporting System (2025-10-22) ✅
+**소요 시간**: 6시간
+
+#### 완료 기능
+- **Reporter 역할 추가**: user/high_templar/reporter/admin 4단계 역할 시스템
+- **News 시스템** (완전한 CRUD):
+  - 뉴스 작성/수정/삭제 (`/reporter/news`)
+  - 5가지 카테고리 (Tournament News, Player News, Industry, General, Other)
+  - Markdown 에디터, 이미지 업로드 (Supabase Storage)
+  - 상태 워크플로우: draft → pending → published
+  - 태그 관리, 외부 링크 지원
+- **Live Reporting 시스템** (실시간 리포팅):
+  - 라이브 리포트 작성/수정/삭제 (`/reporter/live`)
+  - 5가지 카테고리 (Tournament Update, Chip Counts, Breaking News, Results, Other)
+  - LIVE 배지 표시
+  - 동일한 승인 워크플로우
+- **관리자 승인 시스템**:
+  - News/Live Reports Approval 탭 (`/admin/content`)
+  - 전체 콘텐츠 미리보기 다이얼로그
+  - Approve/Reject 버튼
+- **Public 페이지**:
+  - `/news` - 뉴스 목록 (카테고리 필터)
+  - `/news/[id]` - 뉴스 상세 (Markdown 렌더링)
+  - `/live-reporting` - 라이브 리포트 목록
+  - `/live-reporting/[id]` - 라이브 리포트 상세
+- **React Query 통합**:
+  - `lib/queries/news-queries.ts` (313줄)
+  - `lib/queries/live-reports-queries.ts` (313줄)
+  - Optimistic Updates
+
+**핵심 파일**:
+- `supabase/migrations/20251022000002_add_news_and_live_reports.sql`
+- `lib/queries/news-queries.ts` (313줄)
+- `lib/queries/live-reports-queries.ts` (313줄)
+- `app/reporter/news/page.tsx` (225줄)
+- `app/reporter/live/page.tsx` (225줄)
+- `app/news/page.tsx`, `app/news/[id]/page.tsx`
+- `app/live-reporting/page.tsx`, `app/live-reporting/[id]/page.tsx`
+- `components/reporter/content-editor.tsx` (293줄)
+
+**파일**: 13개 파일, 2,663줄 추가
+
+---
+
+### Phase 23: Navigation Expansion & Archive Split (2025-10-22) ✅
+**소요 시간**: 3시간
+
+#### 완료 기능
+- **Navigation 구조 변경**:
+  - 기존: About, Archive, Players, Community, Search
+  - 신규: About, News, Live, Archive (dropdown), Players, Forum
+  - Archive 드롭다운: Tournament, Cash Game, Search
+- **Archive 분리**:
+  - `/archive/tournament` - 토너먼트 전용 페이지
+  - `/archive/cash-game` - 캐시 게임 전용 페이지
+  - `/archive` → `/archive/tournament` 자동 리다이렉트
+- **game_type 필드 추가** (tournaments 테이블):
+  - tournament / cash-game 구분
+  - TournamentDialog에 game_type 선택 추가
+  - 쿼리 자동 필터링
+
+**핵심 파일**:
+- `supabase/migrations/20251022000001_add_game_type_to_tournaments.sql`
+- `app/archive/tournament/page.tsx` (141줄)
+- `app/archive/cash-game/page.tsx` (141줄)
+- `components/header.tsx` (업데이트)
+- `components/tournament-dialog.tsx` (업데이트)
+
+**파일**: 13개 파일, 485줄 추가
+
+---
+
+### Phase 24: Archive UI Enhancement (2025-10-22) ✅
+**소요 시간**: 4시간
+
+#### 완료 기능
+- **Card Selector 컴포넌트** (`components/card-selector.tsx` 171줄):
+  - 52-card 포커 덱 인터랙티브 선택
+  - 멀티 셀렉트 (홀카드 2장, 보드 5장)
+  - Suit 색상 및 선택 상태 시각화
+  - Clear all, 개별 카드 제거
+- **Archive Info Dialog** (`components/archive-info-dialog.tsx` 345줄):
+  - Tournament/SubEvent/Day 상세 정보 표시
+  - 레벨별 렌더링 (계층 구조 반영)
+  - 관리자 액션: Edit/Delete 버튼
+  - 아이콘 및 배지 리치 디스플레이
+- **Advanced Filters 확장** (4개 신규 필터):
+  - Tournament Name 텍스트 필터
+  - Player Name 텍스트 필터
+  - Hole Cards 선택기 (최대 2장)
+  - Board Cards 선택기 (최대 5장)
+  - Active filter counter 및 "Reset Quick" 버튼
+- **Filtering Logic 구현**:
+  - Tournament Name: tournaments, subevents 필터링
+  - Player Name: hand_players로 핸드 필터링
+  - Hole Cards: player_cards로 핸드 필터링
+  - Board Cards: community_cards로 핸드 필터링
+- **UI 개선**:
+  - 모든 폴더 아이템에 Info 아이콘 (호버 표시)
+  - Grid/Timeline 뷰 모드 제거 (List only)
+  - 뷰 모드 키보드 단축키 삭제
+  - Tailwind grid-cols-13 추가 (카드 덱 레이아웃)
+
+**핵심 파일**:
+- `components/card-selector.tsx` (171줄)
+- `components/archive-info-dialog.tsx` (345줄)
+- `components/archive-unified-filters.tsx` (업데이트)
+- `app/archive/_components/ArchiveEventsList.tsx` (업데이트)
+
+**파일**: 12개 파일, 865줄 추가
+
+---
+
+### Phase 25: Last Sign-in Tracking (2025-10-21) ✅
+**소요 시간**: 1시간
+
+#### 완료 기능
+- **last_sign_in_at 필드 추가** (users 테이블):
+  - auth.users 테이블과 자동 동기화 트리거
+  - 기존 유저 데이터 초기화
+  - 성능 인덱스 (last_sign_in_at DESC)
+- **관리자 UI 업데이트** (`/admin/users`):
+  - 마지막 로그인 날짜 표시
+  - 색상 코딩:
+    - 🟢 Green: 7일 이내 (활성 유저)
+    - ⚫ Gray: 30일 이상 (비활성 유저)
+    - 기본: 7-30일
+  - "Never" 표시 (로그인 기록 없음)
+
+**핵심 파일**:
+- `supabase/migrations/20251021000032_add_last_sign_in_tracking.sql`
+- `app/admin/users/page.tsx` (업데이트)
+
+**파일**: 2개 파일, 56줄 추가
+
+---
+
+### Phase 26: UI Simplification (2025-10-22) ✅
+**소요 시간**: 1시간
+
+#### 완료 기능
+- **Page Intro 섹션 제거**: 더 깔끔한 UI를 위한 간소화
+  - Search 페이지
+  - Players 페이지
+  - Forum (Community) 페이지
+  - News 페이지
+  - Live Reporting 페이지
+- **Archive 드롭다운 개선**:
+  - Search 메뉴 추가
+  - Tournament/Cash Game/Search 3개 항목
+- **About 페이지 업데이트**:
+  - News & Live Reporting 기능 소개 추가
+  - 기능 설명 업데이트
+
+**핵심 파일**:
+- `app/search/page.tsx` (업데이트)
+- `app/players/page.tsx` (업데이트)
+- `app/community/page.tsx` (업데이트)
+- `app/news/page.tsx` (업데이트)
+- `app/live-reporting/page.tsx` (업데이트)
+- `components/header.tsx` (업데이트)
+
+---
+
 ## 📊 우선순위 요약
 
 | Phase | 기능 | 우선순위 | 상태 | 완료일 |
@@ -377,6 +570,12 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | Phase 18 | Manual Hand Actions | ⭐⭐⭐⭐ | ✅ | 2025-10-20 |
 | Phase 19 | Archive UI Enhancement | ⭐⭐⭐ | ✅ | 2025-10-21 |
 | Phase 20 | Notification System | ⭐⭐⭐⭐ | ✅ | 2025-10-21 |
+| Phase 21 | Player Statistics | ⭐⭐⭐⭐ | ✅ | 2025-10-21 |
+| Phase 22 | News & Live Reporting | ⭐⭐⭐⭐⭐ | ✅ | 2025-10-22 |
+| Phase 23 | Navigation Expansion | ⭐⭐⭐ | ✅ | 2025-10-22 |
+| Phase 24 | Archive UI Enhancement | ⭐⭐⭐⭐ | ✅ | 2025-10-22 |
+| Phase 25 | Last Sign-in Tracking | ⭐⭐ | ✅ | 2025-10-21 |
+| Phase 26 | UI Simplification | ⭐⭐ | ✅ | 2025-10-22 |
 
 ---
 
@@ -410,13 +609,15 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | 2025-10-19 | Phase 14-15 완료 (UI Redesign, 로고 관리) |
 | 2025-10-20 (세션 1) | Phase 16-17 완료 (React Query Migration, DevTools) |
 | 2025-10-20 (세션 2) | Phase 18 완료 (Manual Hand Action Input System) |
+| 2025-10-21 | Phase 19-21 완료 (Archive UI, Notification, Player Stats) |
+| 2025-10-22 | Phase 22-26 완료 (News, Navigation, Archive Enhancement, Last Sign-in, UI Simplification) |
 
 ---
 
 **다음 작업** (선택적):
-- 알림 시스템 (댓글, 수정 제안 응답)
-- 플레이어 통계 고도화 (VPIP, PFR, 포지션별 분석) - 이제 가능!
-- 핸드 태그 시스템
+- 영상 분석 자동화 개선 (YouTube API 캐싱, Claude Vision 최적화, 배치 처리)
+- 핸드 태그 시스템 (태그 생성/관리, 태그 기반 검색, 태그 추천)
+- 소셜 공유 기능 강화
 
-**현재 상태**: Phase 0-18 완료, 핸드 액션 입력 시스템 구축 🎉
+**현재 상태**: Phase 0-26 완료, News & Live Reporting 시스템 구축 🎉
 **상세 정보**: `../CLAUDE.md` 참조
