@@ -93,9 +93,10 @@ async function applyMigration() {
       console.log('\n✨ 마이그레이션이 이미 적용되어 있습니다.')
       return
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Table doesn't exist, continue with migration
-    if (error.code === '42P01' || error.message?.includes('does not exist')) {
+    const err = error as { code?: string; message?: string }
+    if (err.code === '42P01' || err.message?.includes('does not exist')) {
       console.log('✓ tournament_categories 테이블이 존재하지 않습니다. 생성합니다...\n')
     } else {
       console.error('❌ Error checking existing table:', error)
@@ -141,15 +142,16 @@ async function applyMigration() {
           console.log('  ✓ Success')
           successCount++
         }
-      } catch (error: any) {
-        console.error('  ❌ Error:', error.message)
+      } catch (error: unknown) {
+        const err = error as { code?: string; message?: string }
+        console.error('  ❌ Error:', err.message)
         console.error('\nStatement:', statement)
 
         // Don't exit on certain errors
         if (
-          error.message?.includes('already exists') ||
-          error.code === '42P07' ||
-          error.code === '42710'
+          err.message?.includes('already exists') ||
+          err.code === '42P07' ||
+          err.code === '42710'
         ) {
           console.log('  ⏭️  Continuing...')
           skipCount++
@@ -191,8 +193,9 @@ async function applyMigration() {
     }
 
     console.log('\n✨ All done!\n')
-  } catch (error: any) {
-    console.error('\n❌ Migration failed:', error.message)
+  } catch (error: unknown) {
+    const err = error as { message?: string }
+    console.error('\n❌ Migration failed:', err.message)
     console.error(error)
     process.exit(1)
   }
@@ -250,7 +253,7 @@ async function applyMigrationDirect() {
         console.log(`   ${supabaseUrl.replace('/v1', '')}/project/_/editor`)
         return
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Table doesn't exist, proceed with migration
       console.log('✓ 테이블이 없습니다. 마이그레이션을 진행합니다.\n')
     }
@@ -263,8 +266,9 @@ async function applyMigrationDirect() {
 
     console.log('또는 Supabase CLI 사용:')
     console.log('   npx supabase db push\n')
-  } catch (error: any) {
-    console.error('❌ Error:', error.message)
+  } catch (error: unknown) {
+    const err = error as { message?: string }
+    console.error('❌ Error:', err.message)
     process.exit(1)
   }
 }

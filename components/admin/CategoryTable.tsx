@@ -36,15 +36,15 @@ import { CategoryDialog } from "./CategoryDialog"
 import {
   useDeleteCategoryMutation,
   useToggleActiveMutation,
-  useCategoryUsageQuery,
 } from "@/lib/queries/category-queries"
 import type { TournamentCategory } from "@/lib/tournament-categories-db"
 
 interface CategoryRowProps {
   category: TournamentCategory
+  usageCount: number
 }
 
-function CategoryRow({ category }: CategoryRowProps) {
+function CategoryRow({ category, usageCount }: CategoryRowProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: category.id,
     data: {
@@ -61,7 +61,6 @@ function CategoryRow({ category }: CategoryRowProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const deleteMutation = useDeleteCategoryMutation()
   const toggleActiveMutation = useToggleActiveMutation(category.id)
-  const { data: usageCount, isLoading: usageLoading } = useCategoryUsageQuery(category.id)
 
   const handleDelete = async () => {
     try {
@@ -154,11 +153,7 @@ function CategoryRow({ category }: CategoryRowProps) {
 
         {/* Usage Count */}
         <TableCell className="text-center">
-          {usageLoading ? (
-            <span className="text-muted-foreground">-</span>
-          ) : (
-            <Badge variant="secondary">{usageCount || 0}</Badge>
-          )}
+          <Badge variant="secondary">{usageCount || 0}</Badge>
         </TableCell>
 
         {/* Active Status */}
@@ -239,9 +234,10 @@ function CategoryRow({ category }: CategoryRowProps) {
 
 interface CategoryTableProps {
   categories: TournamentCategory[]
+  usageCounts: Record<string, number>
 }
 
-export function CategoryTable({ categories }: CategoryTableProps) {
+export function CategoryTable({ categories, usageCounts }: CategoryTableProps) {
   if (categories.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
@@ -269,7 +265,11 @@ export function CategoryTable({ categories }: CategoryTableProps) {
         </TableHeader>
         <TableBody>
           {categories.map((category) => (
-            <CategoryRow key={category.id} category={category} />
+            <CategoryRow
+              key={category.id}
+              category={category}
+              usageCount={usageCounts[category.id] || 0}
+            />
           ))}
         </TableBody>
       </Table>
