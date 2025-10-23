@@ -77,45 +77,60 @@ export function TournamentDialog({
     }
 
     setSaving(true)
+
+    // Log the data being submitted
+    const tournamentData = {
+      name: newTournamentName.trim(),
+      category: newCategory,
+      game_type: newGameType,
+      location: newLocation.trim(),
+      start_date: newStartDate,
+      end_date: newEndDate,
+    }
+    console.log('Submitting tournament data:', tournamentData)
+
     try {
       if (editingTournamentId) {
         // Update existing tournament
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('tournaments')
-          .update({
-            name: newTournamentName.trim(),
-            category: newCategory,
-            game_type: newGameType,
-            location: newLocation.trim(),
-            start_date: newStartDate,
-            end_date: newEndDate,
-          })
+          .update(tournamentData)
           .eq('id', editingTournamentId)
+          .select()
 
-        if (error) throw error
+        if (error) {
+          console.error('Supabase update error:', error)
+          console.error('Error details:', JSON.stringify(error, null, 2))
+          throw error
+        }
+        console.log('Tournament updated successfully:', data)
         toast.success('Tournament updated successfully')
       } else {
         // Create new tournament
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('tournaments')
-          .insert({
-            name: newTournamentName.trim(),
-            category: newCategory,
-            game_type: newGameType,
-            location: newLocation.trim(),
-            start_date: newStartDate,
-            end_date: newEndDate,
-          })
+          .insert(tournamentData)
+          .select()
 
-        if (error) throw error
+        if (error) {
+          console.error('Supabase insert error:', error)
+          console.error('Error details:', JSON.stringify(error, null, 2))
+          console.error('Error code:', error.code)
+          console.error('Error message:', error.message)
+          console.error('Error hint:', error.hint)
+          console.error('Error details:', error.details)
+          throw error
+        }
+        console.log('Tournament created successfully:', data)
         toast.success('Tournament created successfully')
       }
 
       // Call success callback
       onSave()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving tournament:', error)
-      toast.error('Failed to save tournament')
+      const errorMessage = error?.message || error?.hint || 'Unknown error'
+      toast.error(`Failed to save tournament: ${errorMessage}`)
     } finally {
       setSaving(false)
     }
