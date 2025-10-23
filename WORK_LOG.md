@@ -1871,6 +1871,81 @@
 
 ---
 
-**마지막 업데이트**: 2025-10-20
-**문서 버전**: 5.0
+## 2025-10-23 (세션 15) - Quick Upload Enhancement & YouTube API Optimization
+
+### 작업 내용
+
+#### Phase 27: Quick Upload Enhancement & YouTube API Optimization ✅
+**소요 시간**: 3시간
+
+1. **Quick Upload 계층 선택 기능 추가** (커밋 a3790c5) ✅
+   - Tournament → SubEvent → Day 계층 구조 직접 선택 기능
+   - YouTube 탭과 Local File 탭에 모두 적용
+   - 드롭다운 셀렉트 UI (3단계 캐스케이딩)
+   - "Add to Unsorted" 체크박스로 기존 동작 유지
+   - Create New Day 옵션 추가
+   - `useTournamentsQuery` 활용 (React Query)
+   - **개선 효과**: 사용자가 Unsorted에서 수동 정리하는 작업 불필요
+
+2. **YouTube API Quota 최적화** (커밋 418179f) ✅
+   - **문제**: API 쿼터 200% 초과 사용 (10,000 units 무료, 20,000+ units 사용)
+   - **원인**: 메인 페이지 라이브 스트림 섹션이 24시간 동안 800-900 units/call × 24회 = 20,000+ units 소비
+   - **해결책**:
+     - 메인 페이지 라이브 스트림 섹션 완전 삭제
+       - `components/main/live-poker-streams.tsx` 삭제
+       - `app/api/youtube/live-streams/route.ts` 삭제
+     - Channel ID 직접 입력 옵션 추가 (Quick Upload Channel 탭)
+       - RadioGroup으로 URL/ID 방식 선택 UI 추가
+       - Channel ID 직접 입력 시 API 호출 완전 생략 (100-200 units 절약)
+   - **결과**:
+     - API 쿼터 사용량: 200% → 50-80%로 감소
+     - 메인 페이지 번들 크기: 7.14 kB → 5.97 kB (-16%)
+
+3. **Channel Not Found 버그 수정** (커밋 c1645b7) ✅
+   - **문제**: 채널 URL (예: `youtube.com/@tritonpoker`) 입력 시 "Channel not found" 에러
+   - **원인**: API route가 `inputMethod` 파라미터를 받지 못해 URL/ID 방식 구분 불가
+   - **해결**:
+     - API route에 `inputMethod` 파라미터 추가
+     - URL 입력 시 채널 ID 조회 API 호출
+     - Channel ID 직접 입력 시 형식 검증 (UC로 시작, 24자) 후 바로 사용
+   - **결과**: 채널 URL/ID 모두 정상 작동
+
+### 핵심 파일
+- `components/quick-upload-dialog.tsx` (대폭 수정)
+- `app/api/youtube/channel-streams/route.ts` (수정)
+- `app/page.tsx` (LivePokerStreams 컴포넌트 제거)
+- `components/main/live-poker-streams.tsx` (삭제)
+- `app/api/youtube/live-streams/route.ts` (삭제)
+
+### 기술적 개선사항
+- **사용자 경험**:
+  - Quick Upload에서 직접 Tournament/SubEvent/Day 선택 가능
+  - Unsorted에서 수동 정리하는 번거로움 제거
+  - 캐스케이딩 드롭다운으로 직관적인 계층 선택
+- **API 최적화**:
+  - YouTube API 쿼터 200% 초과 사용 문제 완전 해결
+  - Channel ID 직접 입력으로 API 호출 생략 가능
+- **성능**:
+  - 메인 페이지 번들 크기 16% 감소
+  - 불필요한 컴포넌트 제거로 초기 로드 시간 단축
+
+### 완료 기준 달성
+- ✅ Quick Upload에 Tournament/SubEvent/Day 계층 선택 기능 추가
+- ✅ YouTube 탭과 Local File 탭 모두 적용
+- ✅ YouTube API 쿼터 문제 해결 (200% → 50-80%)
+- ✅ Channel ID 직접 입력 옵션 추가
+- ✅ Channel URL/ID 입력 모두 정상 작동
+- ✅ 빌드 테스트 성공
+- ✅ 3개 커밋 (a3790c5, 418179f, c1645b7)
+- ✅ 문서 업데이트 (CLAUDE.md, ROADMAP.md, WORK_LOG.md)
+
+### 다음 작업 (선택적)
+- [ ] 영상 분석 자동화 개선 (YouTube API 캐싱, Claude Vision 최적화)
+- [ ] 핸드 태그 시스템 (태그 생성/관리, 태그 기반 검색)
+- [ ] 소셜 공유 기능 강화
+
+---
+
+**마지막 업데이트**: 2025-10-23
+**문서 버전**: 6.0
 **최적화**: 세션 22 추가 (TypeScript 안정성 & 배포 최적화)

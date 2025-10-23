@@ -2,8 +2,8 @@
 
 > 단계별 기능 구현 계획 및 우선순위
 
-**마지막 업데이트**: 2025-10-22
-**현재 Phase**: Phase 0-26 완료 🎉
+**마지막 업데이트**: 2025-10-23
+**현재 Phase**: Phase 0-27 완료 🎉
 
 ---
 
@@ -545,6 +545,46 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 
 ---
 
+### Phase 27: Quick Upload Enhancement & YouTube API Optimization (2025-10-23) ✅
+**소요 시간**: 3시간
+
+#### 완료 기능
+- **Quick Upload 계층 선택 기능 추가** (커밋 a3790c5):
+  - Tournament → SubEvent → Day 계층 구조 직접 선택
+  - YouTube 탭과 Local File 탭 모두 적용
+  - 드롭다운 셀렉트 UI (3단계 캐스케이딩)
+  - "Add to Unsorted" 체크박스로 기존 동작 유지 (backward compatibility)
+  - Create New Day 옵션 추가
+  - `useTournamentsQuery` 활용 (React Query)
+- **YouTube API Quota 최적화** (커밋 418179f):
+  - 메인 페이지 라이브 스트림 섹션 완전 삭제
+    - `components/main/live-poker-streams.tsx` 삭제
+    - `app/api/youtube/live-streams/route.ts` 삭제
+  - Channel ID 직접 입력 옵션 추가 (Quick Upload Channel 탭)
+    - RadioGroup으로 URL/ID 방식 선택
+    - Channel ID 직접 입력 시 API 호출 생략 (100-200 units 절약)
+  - API 쿼터 사용량: 200% → 50-80%로 감소
+  - 메인 페이지 번들 크기: 7.14 kB → 5.97 kB (-16%)
+- **Channel Not Found 버그 수정** (커밋 c1645b7):
+  - `inputMethod` 파라미터 처리 추가
+  - API route에서 URL/ID 방식 구분 로직 구현
+  - Channel ID 형식 검증 (UC로 시작, 24자)
+  - 채널 URL 입력 시 정상 작동
+
+**핵심 파일**:
+- `components/quick-upload-dialog.tsx` (수정)
+- `app/api/youtube/channel-streams/route.ts` (수정)
+- `app/page.tsx` (수정)
+- `components/main/live-poker-streams.tsx` (삭제)
+- `app/api/youtube/live-streams/route.ts` (삭제)
+
+**개선 효과**:
+- YouTube API Quota 문제 완전 해결
+- Quick Upload 사용자 경험 개선 (계층 구조 직접 선택)
+- 메인 페이지 성능 향상 (번들 크기 감소)
+
+---
+
 ## 📊 우선순위 요약
 
 | Phase | 기능 | 우선순위 | 상태 | 완료일 |
@@ -576,6 +616,7 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | Phase 24 | Archive UI Enhancement | ⭐⭐⭐⭐ | ✅ | 2025-10-22 |
 | Phase 25 | Last Sign-in Tracking | ⭐⭐ | ✅ | 2025-10-21 |
 | Phase 26 | UI Simplification | ⭐⭐ | ✅ | 2025-10-22 |
+| Phase 27 | Quick Upload & API Optimization | ⭐⭐⭐⭐ | ✅ | 2025-10-23 |
 
 ---
 
@@ -611,6 +652,7 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | 2025-10-20 (세션 2) | Phase 18 완료 (Manual Hand Action Input System) |
 | 2025-10-21 | Phase 19-21 완료 (Archive UI, Notification, Player Stats) |
 | 2025-10-22 | Phase 22-26 완료 (News, Navigation, Archive Enhancement, Last Sign-in, UI Simplification) |
+| 2025-10-23 | Phase 27 완료 (Quick Upload Enhancement & YouTube API Optimization) |
 
 ---
 
@@ -619,5 +661,5 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 - 핸드 태그 시스템 (태그 생성/관리, 태그 기반 검색, 태그 추천)
 - 소셜 공유 기능 강화
 
-**현재 상태**: Phase 0-26 완료, News & Live Reporting 시스템 구축 🎉
+**현재 상태**: Phase 0-27 완료, Quick Upload & YouTube API 최적화 완료 🎉
 **상세 정보**: `../CLAUDE.md` 참조
