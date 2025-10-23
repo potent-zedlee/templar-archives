@@ -171,6 +171,12 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             <Folder className="mr-2 h-4 w-4" />
             Open
           </DropdownMenuItem>
+          {isAdmin && onAddSubItem && (
+            <DropdownMenuItem onClick={() => onAddSubItem(item)}>
+              <FolderPlus className="mr-2 h-4 w-4" />
+              Add Day
+            </DropdownMenuItem>
+          )}
           {isAdmin && onEditEvent && (
             <DropdownMenuItem onClick={() => onEditEvent(item)}>
               <Edit className="mr-2 h-4 w-4" />

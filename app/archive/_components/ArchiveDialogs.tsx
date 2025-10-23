@@ -322,6 +322,28 @@ export function ArchiveDialogs() {
         isOpen={infoDialog.isOpen}
         onClose={closeInfoDialog}
         isAdmin={isUserAdmin}
+        onEdit={(item) => {
+          // Open appropriate dialog based on type
+          if (item.type === 'tournament') {
+            useArchiveUIStore.getState().openTournamentDialog(item.id)
+          } else if (item.type === 'subevent') {
+            useArchiveUIStore.getState().openEditEventDialog(item.id)
+          } else if (item.type === 'day') {
+            // Find parent subevent
+            const tournament = tournaments.find(t =>
+              t.sub_events?.some(se => se.days?.some(d => d.id === item.id))
+            )
+            const subEvent = tournament?.sub_events?.find(se =>
+              se.days?.some(d => d.id === item.id)
+            )
+            if (subEvent) {
+              useArchiveUIStore.getState().openDayDialog(subEvent.id, item.id)
+            }
+          }
+        }}
+        onDelete={(item) => {
+          useArchiveUIStore.getState().openDeleteDialog(item.id)
+        }}
       />
     </>
   )

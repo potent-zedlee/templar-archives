@@ -112,12 +112,18 @@ export function MoveToNewEventDialog({
               <SelectTrigger id="move-tournament">
                 <SelectValue placeholder="Select a tournament" />
               </SelectTrigger>
-              <SelectContent>
-                {tournaments.map((tournament) => (
-                  <SelectItem key={tournament.id} value={tournament.id}>
-                    {tournament.name}
-                  </SelectItem>
-                ))}
+              <SelectContent className="z-[100]">
+                {tournaments.length === 0 ? (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    No tournaments available
+                  </div>
+                ) : (
+                  tournaments.map((tournament) => (
+                    <SelectItem key={tournament.id} value={tournament.id}>
+                      {tournament.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>

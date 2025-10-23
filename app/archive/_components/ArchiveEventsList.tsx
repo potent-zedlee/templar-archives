@@ -337,9 +337,18 @@ export function ArchiveEventsList() {
 
   const handleAddSubItem = useCallback((item: FolderItem) => {
     if (item.type === 'tournament') {
+      // Add SubEvent to Tournament
       openSubEventDialog(item.id)
+    } else if (item.type === 'subevent') {
+      // Add Day to SubEvent
+      const tournament = tournaments.find(t =>
+        t.sub_events?.some(se => se.id === item.id)
+      )
+      if (tournament) {
+        useArchiveUIStore.getState().openDayDialog(tournament.id, item.id)
+      }
     }
-  }, [openSubEventDialog])
+  }, [openSubEventDialog, tournaments])
 
   const handleSelectAllVideos = useCallback(() => {
     if (selectedVideoIds.size === unsortedVideos.length) {
