@@ -47,6 +47,7 @@ export function ArchiveEventsList() {
     openSubEventDialog,
     openEditEventDialog,
     openInfoDialog,
+    openTournamentDialog,
     selectAllVideos,
     openMoveToNewEventDialog: setIsMoveToNewEventDialogOpen,
   } = useArchiveUIStore()
@@ -402,6 +403,7 @@ export function ArchiveEventsList() {
         onAddSubItem={handleAddSubItem}
         onEditEvent={handleEditEvent}
         onShowInfo={handleShowInfo}
+        onAddTournament={navigationLevel === 'root' ? () => openTournamentDialog() : undefined}
         isAdmin={isUserAdmin}
       />
     </Card>
