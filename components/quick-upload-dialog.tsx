@@ -29,6 +29,7 @@ import type { YouTubeVideo } from '@/lib/youtube-api'
 import { createAutoOrganizedStructure, previewOrganizedStructure, type GroupingStrategy, type OrganizedStructure } from '@/lib/auto-organizer'
 import { createClientSupabaseClient } from '@/lib/supabase-client'
 import { toast } from 'sonner'
+import { useTournamentsQuery } from '@/lib/queries/archive-queries'
 
 interface QuickUploadDialogProps {
   onSuccess?: () => void
@@ -46,6 +47,14 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
   const [localFile, setLocalFile] = useState<File | null>(null)
   const [localName, setLocalName] = useState('')
 
+  // Tournament/SubEvent/Day selection state (shared by YouTube and Local File tabs)
+  const [addToUnsorted, setAddToUnsorted] = useState(true) // 기본값: Unsorted에 추가
+  const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null)
+  const [selectedSubEventId, setSelectedSubEventId] = useState<string | null>(null)
+  const [selectedDayId, setSelectedDayId] = useState<string | null>(null)
+  const [createNewDay, setCreateNewDay] = useState(false)
+  const [newDayName, setNewDayName] = useState('')
+
   // Channel Import tab state
   const [channelUrl, setChannelUrl] = useState('')
   const [maxResults, setMaxResults] = useState('25')
@@ -62,6 +71,15 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
   const [locationInput, setLocationInput] = useState('Online')
   const [organizationPreview, setOrganizationPreview] = useState<OrganizedStructure | null>(null)
 
+  // Fetch tournaments tree
+  const { data: tournaments = [] } = useTournamentsQuery()
+
+  // Get selected tournament, sub-event, day data
+  const selectedTournament = tournaments.find(t => t.id === selectedTournamentId)
+  const selectedSubEvent = selectedTournament?.sub_events?.find(se => se.id === selectedSubEventId)
+  const subEvents = selectedTournament?.sub_events || []
+  const days = selectedSubEvent?.days || []
+
   const handleYoutubeUpload = async () => {
     if (!youtubeUrl || !youtubeName) {
       toast.error('Please enter both video name and YouTube URL')
@@ -69,21 +87,85 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
     }
 
     setLoading(true)
-    try {
-      const result = await createUnsortedVideo({
-        name: youtubeName,
-        video_url: youtubeUrl,
-        video_source: 'youtube',
-      })
+    const supabase = createClientSupabaseClient()
 
-      if (result.success) {
-        toast.success('Video added to Unsorted')
+    try {
+      if (addToUnsorted) {
+        // 기존 로직: Unsorted에 추가
+        const result = await createUnsortedVideo({
+          name: youtubeName,
+          video_url: youtubeUrl,
+          video_source: 'youtube',
+        })
+
+        if (result.success) {
+          toast.success('Video added to Unsorted')
+          setYoutubeUrl('')
+          setYoutubeName('')
+          setOpen(false)
+          onSuccess?.()
+        } else {
+          toast.error(result.error || 'Failed to add video')
+        }
+      } else {
+        // 새 로직: Tournament → SubEvent → Day에 직접 추가
+        let targetDayId = selectedDayId
+
+        // Create new day if needed
+        if (createNewDay) {
+          if (!newDayName) {
+            toast.error('Please enter new day name')
+            return
+          }
+          if (!selectedSubEventId) {
+            toast.error('Please select a sub-event to create a new day')
+            return
+          }
+
+          const { data: newDay, error: dayError } = await supabase
+            .from('days')
+            .insert({
+              sub_event_id: selectedSubEventId,
+              name: newDayName,
+              video_url: youtubeUrl,
+              is_organized: true,
+              organized_at: new Date().toISOString(),
+            })
+            .select()
+            .single()
+
+          if (dayError) {
+            console.error('Error creating new day:', dayError)
+            toast.error('Failed to create new day')
+            return
+          }
+
+          targetDayId = newDay.id
+          toast.success(`Created new day: ${newDayName}`)
+        } else {
+          // Add to existing day
+          if (!targetDayId) {
+            toast.error('Please select a day')
+            return
+          }
+
+          const { error: updateError } = await supabase
+            .from('days')
+            .update({ video_url: youtubeUrl })
+            .eq('id', targetDayId)
+
+          if (updateError) {
+            console.error('Error updating day:', updateError)
+            toast.error('Failed to add video to day')
+            return
+          }
+        }
+
+        toast.success('Video added successfully')
         setYoutubeUrl('')
         setYoutubeName('')
         setOpen(false)
         onSuccess?.()
-      } else {
-        toast.error(result.error || 'Failed to add video')
       }
     } catch (error) {
       console.error('Error uploading YouTube video:', error)
@@ -100,22 +182,85 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
     }
 
     setLoading(true)
-    try {
-      // Create a record with filename
-      const result = await createUnsortedVideo({
-        name: localName,
-        video_file: localFile.name,
-        video_source: 'local',
-      })
+    const supabase = createClientSupabaseClient()
 
-      if (result.success) {
-        toast.success('Video added to Unsorted')
+    try {
+      if (addToUnsorted) {
+        // 기존 로직: Unsorted에 추가
+        const result = await createUnsortedVideo({
+          name: localName,
+          video_file: localFile.name,
+          video_source: 'local',
+        })
+
+        if (result.success) {
+          toast.success('Video added to Unsorted')
+          setLocalFile(null)
+          setLocalName('')
+          setOpen(false)
+          onSuccess?.()
+        } else {
+          toast.error(result.error || 'Failed to add video')
+        }
+      } else {
+        // 새 로직: Tournament → SubEvent → Day에 직접 추가
+        let targetDayId = selectedDayId
+
+        // Create new day if needed
+        if (createNewDay) {
+          if (!newDayName) {
+            toast.error('Please enter new day name')
+            return
+          }
+          if (!selectedSubEventId) {
+            toast.error('Please select a sub-event to create a new day')
+            return
+          }
+
+          const { data: newDay, error: dayError } = await supabase
+            .from('days')
+            .insert({
+              sub_event_id: selectedSubEventId,
+              name: newDayName,
+              video_file: localFile.name,
+              is_organized: true,
+              organized_at: new Date().toISOString(),
+            })
+            .select()
+            .single()
+
+          if (dayError) {
+            console.error('Error creating new day:', dayError)
+            toast.error('Failed to create new day')
+            return
+          }
+
+          targetDayId = newDay.id
+          toast.success(`Created new day: ${newDayName}`)
+        } else {
+          // Add to existing day
+          if (!targetDayId) {
+            toast.error('Please select a day')
+            return
+          }
+
+          const { error: updateError } = await supabase
+            .from('days')
+            .update({ video_file: localFile.name })
+            .eq('id', targetDayId)
+
+          if (updateError) {
+            console.error('Error updating day:', updateError)
+            toast.error('Failed to add video to day')
+            return
+          }
+        }
+
+        toast.success('Video added successfully')
         setLocalFile(null)
         setLocalName('')
         setOpen(false)
         onSuccess?.()
-      } else {
-        toast.error(result.error || 'Failed to add video')
       }
     } catch (error) {
       console.error('Error uploading local file:', error)
@@ -407,6 +552,122 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
               />
             </div>
 
+            {/* Add to Unsorted Checkbox */}
+            <div className="flex items-center gap-2 pt-2 border-t">
+              <Checkbox
+                id="add-to-unsorted-youtube"
+                checked={addToUnsorted}
+                onCheckedChange={(checked) => setAddToUnsorted(checked as boolean)}
+              />
+              <Label htmlFor="add-to-unsorted-youtube" className="cursor-pointer">
+                Add to Unsorted (organize later)
+              </Label>
+            </div>
+
+            {/* Tournament/SubEvent/Day Selection */}
+            {!addToUnsorted && (
+              <div className="space-y-3 pl-6 border-l-2">
+                <div className="space-y-2">
+                  <Label htmlFor="tournament-select">Tournament</Label>
+                  <Select
+                    value={selectedTournamentId || 'none'}
+                    onValueChange={(value) => {
+                      setSelectedTournamentId(value === 'none' ? null : value)
+                      setSelectedSubEventId(null)
+                      setSelectedDayId(null)
+                    }}
+                  >
+                    <SelectTrigger id="tournament-select">
+                      <SelectValue placeholder="Select tournament" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Select tournament</SelectItem>
+                      {tournaments.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="subevent-select">Sub-Event</Label>
+                  <Select
+                    value={selectedSubEventId || 'none'}
+                    onValueChange={(value) => {
+                      setSelectedSubEventId(value === 'none' ? null : value)
+                      setSelectedDayId(null)
+                    }}
+                    disabled={!selectedTournamentId}
+                  >
+                    <SelectTrigger id="subevent-select">
+                      <SelectValue placeholder="Select sub-event" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Select sub-event</SelectItem>
+                      {subEvents.map((se) => (
+                        <SelectItem key={se.id} value={se.id}>
+                          {se.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="day-select">Day</Label>
+                  <Select
+                    value={selectedDayId || 'none'}
+                    onValueChange={(value) => {
+                      setSelectedDayId(value === 'none' ? null : value)
+                      setCreateNewDay(false)
+                    }}
+                    disabled={!selectedSubEventId || createNewDay}
+                  >
+                    <SelectTrigger id="day-select">
+                      <SelectValue placeholder="Select day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Select day</SelectItem>
+                      {days.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="create-new-day-youtube"
+                    checked={createNewDay}
+                    onCheckedChange={(checked) => {
+                      setCreateNewDay(checked as boolean)
+                      if (checked) setSelectedDayId(null)
+                    }}
+                    disabled={!selectedSubEventId}
+                  />
+                  <Label htmlFor="create-new-day-youtube" className="cursor-pointer text-sm">
+                    Create new day
+                  </Label>
+                </div>
+
+                {createNewDay && (
+                  <div className="space-y-2">
+                    <Label htmlFor="new-day-name-youtube">New Day Name</Label>
+                    <Input
+                      id="new-day-name-youtube"
+                      placeholder="e.g., Day 1"
+                      value={newDayName}
+                      onChange={(e) => setNewDayName(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             <Button
               className="w-full"
               onClick={handleYoutubeUpload}
@@ -417,8 +678,10 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Adding...
                 </>
-              ) : (
+              ) : addToUnsorted ? (
                 'Add to Unsorted'
+              ) : (
+                'Add to Tournament'
               )}
             </Button>
           </TabsContent>
@@ -449,6 +712,122 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
               )}
             </div>
 
+            {/* Add to Unsorted Checkbox */}
+            <div className="flex items-center gap-2 pt-2 border-t">
+              <Checkbox
+                id="add-to-unsorted-local"
+                checked={addToUnsorted}
+                onCheckedChange={(checked) => setAddToUnsorted(checked as boolean)}
+              />
+              <Label htmlFor="add-to-unsorted-local" className="cursor-pointer">
+                Add to Unsorted (organize later)
+              </Label>
+            </div>
+
+            {/* Tournament/SubEvent/Day Selection */}
+            {!addToUnsorted && (
+              <div className="space-y-3 pl-6 border-l-2">
+                <div className="space-y-2">
+                  <Label htmlFor="tournament-select-local">Tournament</Label>
+                  <Select
+                    value={selectedTournamentId || 'none'}
+                    onValueChange={(value) => {
+                      setSelectedTournamentId(value === 'none' ? null : value)
+                      setSelectedSubEventId(null)
+                      setSelectedDayId(null)
+                    }}
+                  >
+                    <SelectTrigger id="tournament-select-local">
+                      <SelectValue placeholder="Select tournament" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Select tournament</SelectItem>
+                      {tournaments.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="subevent-select-local">Sub-Event</Label>
+                  <Select
+                    value={selectedSubEventId || 'none'}
+                    onValueChange={(value) => {
+                      setSelectedSubEventId(value === 'none' ? null : value)
+                      setSelectedDayId(null)
+                    }}
+                    disabled={!selectedTournamentId}
+                  >
+                    <SelectTrigger id="subevent-select-local">
+                      <SelectValue placeholder="Select sub-event" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Select sub-event</SelectItem>
+                      {subEvents.map((se) => (
+                        <SelectItem key={se.id} value={se.id}>
+                          {se.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="day-select-local">Day</Label>
+                  <Select
+                    value={selectedDayId || 'none'}
+                    onValueChange={(value) => {
+                      setSelectedDayId(value === 'none' ? null : value)
+                      setCreateNewDay(false)
+                    }}
+                    disabled={!selectedSubEventId || createNewDay}
+                  >
+                    <SelectTrigger id="day-select-local">
+                      <SelectValue placeholder="Select day" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Select day</SelectItem>
+                      {days.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="create-new-day-local"
+                    checked={createNewDay}
+                    onCheckedChange={(checked) => {
+                      setCreateNewDay(checked as boolean)
+                      if (checked) setSelectedDayId(null)
+                    }}
+                    disabled={!selectedSubEventId}
+                  />
+                  <Label htmlFor="create-new-day-local" className="cursor-pointer text-sm">
+                    Create new day
+                  </Label>
+                </div>
+
+                {createNewDay && (
+                  <div className="space-y-2">
+                    <Label htmlFor="new-day-name-local">New Day Name</Label>
+                    <Input
+                      id="new-day-name-local"
+                      placeholder="e.g., Day 1"
+                      value={newDayName}
+                      onChange={(e) => setNewDayName(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             <Button
               className="w-full"
               onClick={handleLocalUpload}
@@ -459,8 +838,10 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Adding...
                 </>
-              ) : (
+              ) : addToUnsorted ? (
                 'Add to Unsorted'
+              ) : (
+                'Add to Tournament'
               )}
             </Button>
           </TabsContent>
