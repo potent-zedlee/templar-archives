@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         )
       }
       channelId = channelUrl
-      console.log('Using direct channel ID:', channelId)
+      // Using direct channel ID
     } else {
       // Channel URL - need to resolve to channel ID
       const identifier = parseChannelIdentifier(channelUrl)
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         )
       }
       channelId = resolvedChannelId
-      console.log('Resolved channel ID from URL:', channelId)
+      // Resolved channel ID from URL
     }
 
     // Fetch live streams

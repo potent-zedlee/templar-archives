@@ -2,10 +2,19 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import dynamic from "next/dynamic"
 import { Header } from "@/components/header"
 import { MetricsCard } from "@/components/admin/metrics-card"
-import { PerformanceChart } from "@/components/admin/performance-chart"
 import { Card } from "@/components/ui/card"
+
+// Dynamic import for heavy chart component
+const PerformanceChart = dynamic(
+  () => import("@/components/admin/performance-chart").then(mod => ({ default: mod.PerformanceChart })),
+  {
+    ssr: false,
+    loading: () => <div className="h-64 flex items-center justify-center text-muted-foreground">차트 로딩 중...</div>
+  }
+)
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
