@@ -42,6 +42,7 @@ interface ArchiveFolderListProps {
   onAddSubItem?: (item: FolderItem) => void
   onEditEvent?: (item: FolderItem) => void
   onShowInfo?: (item: FolderItem) => void
+  onAddTournament?: () => void
   isAdmin?: boolean
 }
 
@@ -61,6 +62,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   onAddSubItem,
   onEditEvent,
   onShowInfo,
+  onAddTournament,
   isAdmin = false,
 }: ArchiveFolderListProps) {
   if (loading) {
@@ -75,9 +77,23 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
 
   if (items.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <Folder className="h-12 w-12 mx-auto mb-3 opacity-50" />
-        <p className="text-body">No items to display</p>
+      <div className="text-center py-16 text-muted-foreground">
+        <Folder className="h-16 w-16 mx-auto mb-4 opacity-50" />
+        <p className="text-lg font-medium mb-2">No tournaments yet</p>
+        <p className="text-sm mb-6">Get started by creating your first tournament</p>
+
+        {/* Add Tournament Button (Admin only) */}
+        {isAdmin && onAddTournament && (
+          <Button
+            variant="default"
+            size="lg"
+            onClick={onAddTournament}
+            className="mx-auto shadow-lg hover:shadow-xl transition-all"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Create Your First Tournament
+          </Button>
+        )}
       </div>
     )
   }
