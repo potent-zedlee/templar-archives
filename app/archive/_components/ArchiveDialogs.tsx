@@ -125,6 +125,7 @@ export function ArchiveDialogs() {
 
   const handleDaySuccess = () => {
     queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
+    queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
     closeDayDialog()
   }
 

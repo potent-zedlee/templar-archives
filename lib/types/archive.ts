@@ -83,6 +83,7 @@ export interface Day {
   video_url?: string
   video_file?: string
   video_source?: VideoSource
+  published_at?: string
   created_at?: string
   // UI state (클라이언트 전용)
   selected?: boolean
@@ -176,6 +177,7 @@ export interface DayFormData {
   video_source: VideoSource
   video_url: string
   upload_file: File | null
+  published_at: string
 }
 
 // ==================== UI State Types ====================
@@ -387,4 +389,5 @@ export const INITIAL_DAY_FORM: DayFormData = {
   video_source: "youtube",
   video_url: "",
   upload_file: null,
+  published_at: "",
 }
