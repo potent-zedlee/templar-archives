@@ -212,8 +212,8 @@ export function useCreateCategoryMutation() {
     },
     onSettled: () => {
       // Refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: categoryKeys.lists() })
-      queryClient.invalidateQueries({ queryKey: categoryKeys.active() })
+      queryClient.refetchQueries({ queryKey: categoryKeys.lists() })
+      queryClient.refetchQueries({ queryKey: categoryKeys.active() })
     },
   })
 }
@@ -261,8 +261,8 @@ export function useUpdateCategoryMutation(categoryId: string) {
     onSettled: () => {
       // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: categoryKeys.detail(categoryId) })
-      queryClient.invalidateQueries({ queryKey: categoryKeys.lists() })
-      queryClient.invalidateQueries({ queryKey: categoryKeys.active() })
+      queryClient.refetchQueries({ queryKey: categoryKeys.lists() })
+      queryClient.refetchQueries({ queryKey: categoryKeys.active() })
     },
   })
 }
@@ -312,8 +312,8 @@ export function useDeleteCategoryMutation() {
     },
     onSettled: () => {
       // Refetch to ensure consistency
-      queryClient.invalidateQueries({ queryKey: categoryKeys.lists() })
-      queryClient.invalidateQueries({ queryKey: categoryKeys.active() })
+      queryClient.refetchQueries({ queryKey: categoryKeys.lists() })
+      queryClient.refetchQueries({ queryKey: categoryKeys.active() })
     },
   })
 }
@@ -456,8 +456,8 @@ export function useToggleActiveMutation(categoryId: string) {
     onSettled: () => {
       // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: categoryKeys.detail(categoryId) })
-      queryClient.invalidateQueries({ queryKey: categoryKeys.lists() })
-      queryClient.invalidateQueries({ queryKey: categoryKeys.active() })
+      queryClient.refetchQueries({ queryKey: categoryKeys.lists() })
+      queryClient.refetchQueries({ queryKey: categoryKeys.active() })
     },
   })
 }
