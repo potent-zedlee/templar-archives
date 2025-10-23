@@ -385,6 +385,35 @@ export function ArchiveEventsList() {
       {/* Breadcrumb Navigation */}
       <ArchiveBreadcrumb items={breadcrumbItems} onNavigate={handleBreadcrumbNavigate} />
 
+      {/* Admin Action Buttons */}
+      {isUserAdmin && navigationLevel === 'tournament' && (
+        <div className="mb-3 flex justify-end">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => openSubEventDialog(currentTournamentId)}
+          >
+            <Plus className="mr-2 h-3 w-3" />
+            Add SubEvent
+          </Button>
+        </div>
+      )}
+
+      {isUserAdmin && navigationLevel === 'subevent' && (
+        <div className="mb-3 flex justify-end">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => {
+              useArchiveUIStore.getState().openDayDialog(currentSubEventId)
+            }}
+          >
+            <Plus className="mr-2 h-3 w-3" />
+            Add Day
+          </Button>
+        </div>
+      )}
+
       {/* Folder List */}
       <ArchiveFolderList
         items={folderItems}
