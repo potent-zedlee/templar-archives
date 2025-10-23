@@ -11,7 +11,7 @@ export const runtime = 'edge'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { channelUrl, maxResults = 25 } = body
+    const { channelUrl, maxResults = 25, inputMethod = 'url' } = body
 
     if (!channelUrl) {
       return NextResponse.json(
@@ -30,22 +30,37 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Parse channel identifier
-    const identifier = parseChannelIdentifier(channelUrl)
-    if (!identifier) {
-      return NextResponse.json(
-        { error: 'Invalid channel URL format' },
-        { status: 400 }
-      )
-    }
+    let channelId: string
 
-    // Get channel ID
-    const channelId = await getChannelIdFromIdentifier(identifier, apiKey)
-    if (!channelId) {
-      return NextResponse.json(
-        { error: 'Channel not found' },
-        { status: 404 }
-      )
+    if (inputMethod === 'id') {
+      // Direct channel ID input - no API call needed
+      if (!channelUrl.match(/^UC[a-zA-Z0-9_-]{22}$/)) {
+        return NextResponse.json(
+          { error: 'Invalid channel ID format. Must start with "UC" and be 24 characters long.' },
+          { status: 400 }
+        )
+      }
+      channelId = channelUrl
+      console.log('Using direct channel ID:', channelId)
+    } else {
+      // Channel URL - need to resolve to channel ID
+      const identifier = parseChannelIdentifier(channelUrl)
+      if (!identifier) {
+        return NextResponse.json(
+          { error: 'Invalid channel URL format' },
+          { status: 400 }
+        )
+      }
+
+      const resolvedChannelId = await getChannelIdFromIdentifier(identifier, apiKey)
+      if (!resolvedChannelId) {
+        return NextResponse.json(
+          { error: 'Channel not found' },
+          { status: 404 }
+        )
+      }
+      channelId = resolvedChannelId
+      console.log('Resolved channel ID from URL:', channelId)
     }
 
     // Fetch live streams
