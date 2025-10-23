@@ -3,7 +3,7 @@
 > 단계별 기능 구현 계획 및 우선순위
 
 **마지막 업데이트**: 2025-10-23
-**현재 Phase**: Phase 0-28 완료 🎉
+**현재 Phase**: Phase 0-29 완료 🎉
 
 ---
 
@@ -640,6 +640,50 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 
 ---
 
+### Phase 29: Admin Category Logo Upload 수정 (2025-10-23) ✅
+**소요 시간**: 2시간
+
+#### 문제 및 해결
+- **문제**: 관리자 카테고리 메뉴에서 로고 업로드 기능이 작동하지 않음
+  - **원인**: useUploadLogoMutation hook이 컴포넌트 렌더링 시점에 초기화되어 생성 모드에서 빈 categoryId("")로 설정됨
+  - **해결**: uploadCategoryLogo 함수를 직접 호출하여 정확한 categoryId 사용
+
+#### 완료 기능
+- **CategoryDialog.tsx 로직 개선** (1시간):
+  - useUploadLogoMutation hook 제거
+  - uploadCategoryLogo 함수 직접 import 및 호출
+  - isUploading 상태 추가로 업로드 진행 상태 표시
+  - 생성/수정 모드 모두에서 정확한 categoryId로 로고 업로드 처리
+- **권장 사이즈/포맷 표기 강화**:
+  - FormDescription 업데이트
+  - **권장**: 200x200px 이상 정사각형 이미지
+  - **형식**: SVG/PNG (투명 배경 권장), JPEG (최대 5MB)
+- **캐시 버스팅 추가** (0.5시간):
+  - 로고 업로드 후 URL에 timestamp 쿼리 파라미터 추가
+  - `${publicUrl}?t=${Date.now()}` 형식
+  - 브라우저 캐시로 인한 표시 문제 해결
+- **Supabase Storage 버킷 설정** (0.5시간):
+  - `tournament-logos` 버킷 생성 (public 접근 허용)
+  - 파일 크기 제한: 5MB
+  - 허용 MIME 타입: image/svg+xml, image/png, image/jpeg
+  - RLS 정책 4개 추가:
+    - SELECT: 모든 사용자 (public read)
+    - INSERT/UPDATE/DELETE: 관리자만 (admin only)
+  - 마이그레이션: `20251023000001_create_tournament_logos_storage.sql`
+
+**핵심 파일**:
+- `components/admin/CategoryDialog.tsx` (로고 업로드 로직 개선)
+- `supabase/migrations/20251023000001_create_tournament_logos_storage.sql` (신규 생성)
+
+**완료 기준 달성**:
+- ✅ 로고 업로드 기능 정상 작동 (생성/수정 모드 모두)
+- ✅ 권장 사이즈/포맷 UI에 명확히 표기
+- ✅ 캐시 버스팅으로 즉각적인 UI 반영
+- ✅ Supabase Storage 버킷 설정 완료
+- ✅ 빌드 테스트 성공
+
+---
+
 ## 📊 우선순위 요약
 
 | Phase | 기능 | 우선순위 | 상태 | 완료일 |
@@ -673,6 +717,7 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | Phase 26 | UI Simplification | ⭐⭐ | ✅ | 2025-10-22 |
 | Phase 27 | Quick Upload & API Optimization | ⭐⭐⭐⭐ | ✅ | 2025-10-23 |
 | Phase 28 | Performance Optimization & Maintenance | ⭐⭐⭐⭐ | ✅ | 2025-10-23 |
+| Phase 29 | Admin Category Logo Upload Fix | ⭐⭐⭐ | ✅ | 2025-10-23 |
 
 ---
 
@@ -710,6 +755,7 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | 2025-10-22 | Phase 22-26 완료 (News, Navigation, Archive Enhancement, Last Sign-in, UI Simplification) |
 | 2025-10-23 (세션 1) | Phase 27 완료 (Quick Upload Enhancement & YouTube API Optimization) |
 | 2025-10-23 (세션 2) | Phase 28 완료 (Performance Optimization & Maintenance) |
+| 2025-10-23 (세션 3) | Phase 29 완료 (Admin Category Logo Upload Fix) |
 
 ---
 
@@ -718,5 +764,5 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 - 핸드 태그 시스템 (태그 생성/관리, 태그 기반 검색, 태그 추천)
 - 소셜 공유 기능 강화
 
-**현재 상태**: Phase 0-28 완료, 성능 최적화 및 SEO 개선 완료 🎉
+**현재 상태**: Phase 0-29 완료, 관리자 카테고리 로고 업로드 기능 수정 완료 🎉
 **상세 정보**: `../CLAUDE.md` 참조

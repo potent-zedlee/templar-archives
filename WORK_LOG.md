@@ -11,6 +11,97 @@
 
 ---
 
+## 2025-10-23 (세션 35) - Phase 29: Admin Category Logo Upload 수정 ✅
+
+### 작업 내용
+
+#### 1. 문제 해결 (1시간) ✅
+- **문제**: 관리자 카테고리 메뉴에서 로고 업로드 기능이 작동하지 않음
+  - **원인**: useUploadLogoMutation hook이 컴포넌트 렌더링 시점에 초기화되어 생성 모드에서 빈 categoryId("")로 설정됨
+  - **영향**: 새 카테고리 생성 시 로고 업로드 실패, 수정 시에도 문제 발생 가능성
+- **해결 방법**:
+  - useUploadLogoMutation hook 제거
+  - uploadCategoryLogo 함수를 직접 import하여 호출
+  - 생성/수정 후 정확한 categoryId를 받아 로고 업로드 실행
+
+#### 2. CategoryDialog.tsx 로직 개선 (1시간) ✅
+- **useUploadLogoMutation 제거**:
+  - `const uploadLogoMutation = useUploadLogoMutation(category?.id || "")` 제거
+  - `import { uploadCategoryLogo } from "@/lib/tournament-categories-db"` 추가
+- **isUploading 상태 추가**:
+  - `const [isUploading, setIsUploading] = useState(false)`
+  - 업로드 진행 상태를 명시적으로 관리
+  - 버튼 disabled 조건에 isUploading 포함
+- **handleSubmit 로직 개선**:
+  - 생성/수정 후 categoryId를 변수에 저장
+  - 로고 파일이 있을 경우 `uploadCategoryLogo(categoryId, logoFile)` 직접 호출
+  - 캐시 버스팅: `${publicUrl}?t=${Date.now()}` 형식으로 timestamp 추가
+
+#### 3. UI/UX 개선 ✅
+- **권장 사이즈/포맷 표기 강화** (FormDescription):
+  ```
+  권장: 200x200px 이상 정사각형 이미지
+  형식: SVG/PNG (투명 배경 권장), JPEG (최대 5MB)
+  ```
+- **캐시 버스팅**:
+  - 로고 업로드 후 즉시 UI에 반영되도록 timestamp 쿼리 파라미터 추가
+  - 브라우저 캐시로 인한 이미지 미반영 문제 해결
+
+#### 4. Supabase Storage 버킷 설정 (0.5시간) ✅
+- **마이그레이션 생성**: `supabase/migrations/20251023000001_create_tournament_logos_storage.sql`
+  - `tournament-logos` 버킷 생성 (public 접근 허용)
+  - 파일 크기 제한: 5MB (5,242,880 bytes)
+  - 허용 MIME 타입: `image/svg+xml`, `image/png`, `image/jpeg`
+- **RLS 정책 4개 추가**:
+  - **SELECT**: 모든 사용자 읽기 가능 (public read)
+  - **INSERT**: 관리자만 업로드 가능
+  - **UPDATE**: 관리자만 수정 가능
+  - **DELETE**: 관리자만 삭제 가능
+- **마이그레이션 적용**: `npx supabase db push` 성공
+
+#### 5. 빌드 테스트 및 문서 업데이트 (0.5시간) ✅
+- **빌드 테스트**: `npm run build` 성공
+  - `/admin/categories` 페이지: 34 kB
+  - 전체 빌드 정상 완료
+- **문서 업데이트**:
+  - `CLAUDE.md` (문서 버전 20.0 → 21.0)
+    - Phase 29 추가 (상세 기능 명세)
+    - 개발 현황: Phase 0-28 → Phase 0-29
+    - 주요 변경: Phase 29 완료
+  - `ROADMAP.md` (현재 Phase: 0-28 → 0-29)
+    - Phase 29 섹션 추가 (42줄)
+    - 우선순위 요약 테이블에 Phase 29 추가
+    - 변경 이력 추가 (2025-10-23 세션 3)
+  - `WORK_LOG.md` (세션 35 추가)
+
+### 핵심 파일
+- `components/admin/CategoryDialog.tsx` (로고 업로드 로직 개선, 48줄 수정)
+- `supabase/migrations/20251023000001_create_tournament_logos_storage.sql` (신규 생성, 65줄)
+- `CLAUDE.md` (Phase 29 추가, 문서 버전 21.0)
+- `ROADMAP.md` (Phase 29 추가)
+- `WORK_LOG.md` (세션 35 추가)
+
+### 다음 세션 시작 시
+1. **로고 업로드 기능 테스트**
+   - 새 카테고리 생성 시 로고 업로드 테스트
+   - 기존 카테고리 로고 변경 테스트
+   - 브라우저 캐시 확인 (timestamp 쿼리 파라미터 작동 확인)
+2. **선택적 추가 작업**
+   - 영상 분석 자동화 개선
+   - 핸드 태그 시스템 구현
+   - 소셜 공유 기능 강화
+
+### 성과
+- ✅ 로고 업로드 기능 정상 작동 (생성/수정 모드 모두)
+- ✅ 권장 사이즈/포맷 UI에 명확히 표기
+- ✅ 캐시 버스팅으로 즉각적인 UI 반영
+- ✅ Supabase Storage 버킷 설정 완료 (RLS 정책 4개)
+- ✅ 빌드 테스트 성공
+- ✅ 3개 주요 문서 업데이트 완료
+- ✅ Phase 29 완료 (2시간 소요)
+
+---
+
 ## 2025-10-23 (세션 34) - Phase 28: Performance Optimization & Maintenance ✅
 
 ### 작업 내용

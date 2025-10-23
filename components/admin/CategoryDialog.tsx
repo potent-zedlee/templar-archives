@@ -34,8 +34,9 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { useCreateCategoryMutation, useUpdateCategoryMutation, useUploadLogoMutation, useCategoriesQuery } from "@/lib/queries/category-queries"
+import { useCreateCategoryMutation, useUpdateCategoryMutation, useCategoriesQuery } from "@/lib/queries/category-queries"
 import type { TournamentCategory } from "@/lib/tournament-categories-db"
+import { uploadCategoryLogo } from "@/lib/tournament-categories-db"
 import Image from "next/image"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
@@ -76,11 +77,11 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
   const [open, setOpen] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(category?.logo_url || null)
+  const [isUploading, setIsUploading] = useState(false)
 
   const isEditing = !!category
   const createMutation = useCreateCategoryMutation()
   const updateMutation = useUpdateCategoryMutation(category?.id || "")
-  const uploadLogoMutation = useUploadLogoMutation(category?.id || "")
 
   // Fetch all categories for parent selection (root categories only)
   const { data: allCategories = [] } = useCategoriesQuery(true)
@@ -127,6 +128,8 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
 
   const handleSubmit = async (values: CategoryFormValues) => {
     try {
+      setIsUploading(true)
+
       // Parse aliases
       const aliasesArray = values.aliases
         ? values.aliases.split(",").map((a) => a.trim()).filter(Boolean)
@@ -149,23 +152,25 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
         theme_shadow: values.theme_shadow || undefined,
       }
 
+      let categoryId: string
+
       if (isEditing) {
         // Update existing category
         const { id, ...updateInput } = input
         await updateMutation.mutateAsync(updateInput)
-
-        // Upload logo if changed
-        if (logoFile) {
-          await uploadLogoMutation.mutateAsync(logoFile)
-        }
+        categoryId = category!.id
       } else {
         // Create new category
         const newCategory = await createMutation.mutateAsync(input)
+        categoryId = newCategory.id
+      }
 
-        // Upload logo if provided
-        if (logoFile && newCategory.id) {
-          await uploadLogoMutation.mutateAsync(logoFile)
-        }
+      // Upload logo if provided (after category creation/update)
+      if (logoFile && categoryId) {
+        const publicUrl = await uploadCategoryLogo(categoryId, logoFile)
+        // Add cache busting timestamp to force reload
+        const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`
+        setLogoPreview(urlWithTimestamp)
       }
 
       // Close dialog and reset form
@@ -177,6 +182,8 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
       form.setError("root", {
         message: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다",
       })
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -240,7 +247,9 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
                     className="cursor-pointer"
                   />
                   <FormDescription className="mt-1">
-                    SVG, PNG, JPEG (최대 5MB)
+                    <strong>권장:</strong> 200x200px 이상 정사각형 이미지
+                    <br />
+                    <strong>형식:</strong> SVG/PNG (투명 배경 권장), JPEG (최대 5MB)
                   </FormDescription>
                 </div>
                 {logoPreview && (
@@ -571,12 +580,12 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
                 disabled={
                   createMutation.isPending ||
                   updateMutation.isPending ||
-                  uploadLogoMutation.isPending
+                  isUploading
                 }
               >
                 {(createMutation.isPending ||
                   updateMutation.isPending ||
-                  uploadLogoMutation.isPending) && (
+                  isUploading) && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 {isEditing ? "수정" : "추가"}
