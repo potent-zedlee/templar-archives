@@ -18,6 +18,14 @@ const SIZE_CLASSES = {
   xl: 'w-12 h-12',
 }
 
+// 심볼 로고 우선 사용 매핑
+const SYMBOL_LOGO_MAPPING: Record<string, string> = {
+  '/logos/wsop.svg': '/logos/wsop-symbol.svg',
+  '/logos/triton.svg': '/logos/triton-symbol.svg',
+  '/logos/triton.png': '/logos/triton-symbol.svg',
+  '/logos/wpt.svg': '/logos/wpt-symbol.svg',
+}
+
 export function CategoryLogo({
   category,
   size = 'md',
@@ -26,7 +34,12 @@ export function CategoryLogo({
 }: CategoryLogoProps) {
   // 카테고리 정보 가져오기 (ID 또는 별칭으로)
   const categoryData = getCategoryById(category) || getCategoryByAlias(category)
-  const logoPath = categoryData?.logoUrl
+  let logoPath = categoryData?.logoUrl
+
+  // 심볼 버전이 있으면 우선 사용
+  if (logoPath && SYMBOL_LOGO_MAPPING[logoPath]) {
+    logoPath = SYMBOL_LOGO_MAPPING[logoPath]
+  }
 
   // If no logo exists for this category
   if (!logoPath) {
@@ -78,7 +91,7 @@ export function CategoryLogo({
     )
   }
 
-  // SVG는 CSS mask를 사용하여 currentColor로 렌더링 (다크모드 대응)
+  // SVG는 img 태그로 렌더링하여 원본 컬러 유지
   return (
     <div
       className={cn(
@@ -86,20 +99,13 @@ export function CategoryLogo({
         SIZE_CLASSES[size],
         className
       )}
-      style={{
-        maskImage: `url(${logoPath})`,
-        WebkitMaskImage: `url(${logoPath})`,
-        maskSize: 'contain',
-        WebkitMaskSize: 'contain',
-        maskRepeat: 'no-repeat',
-        WebkitMaskRepeat: 'no-repeat',
-        maskPosition: 'center',
-        WebkitMaskPosition: 'center',
-        backgroundColor: 'currentColor',
-      }}
-      role="img"
-      aria-label={`${displayName} logo`}
-    />
+    >
+      <img
+        src={logoPath}
+        alt={`${displayName} logo`}
+        className="w-full h-full object-contain"
+      />
+    </div>
   )
 }
 
