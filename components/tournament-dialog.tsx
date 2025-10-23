@@ -96,7 +96,8 @@ export function TournamentDialog({
     // Log the data being submitted
     const tournamentData = {
       name: newTournamentName.trim(),
-      category_id: getCategoryId(newCategory),
+      category: newCategory, // Keep original category column
+      category_id: getCategoryId(newCategory), // New category_id foreign key
       game_type: newGameType,
       location: newLocation.trim(),
       start_date: newStartDate,
