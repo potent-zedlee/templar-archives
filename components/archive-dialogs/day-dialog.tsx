@@ -243,7 +243,7 @@ export function DayDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[800px]">
+      <DialogContent className="max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{editingDayId ? "Day Edit" : "Day Add"}</DialogTitle>
         </DialogHeader>
@@ -368,7 +368,7 @@ export function DayDialog({
                   </p>
                 </div>
               ) : (
-                <ScrollArea className="h-[500px] border rounded-lg">
+                <ScrollArea className="h-[500px] w-[460px] border rounded-lg">
                   <div className="p-4 space-y-3">
                     {unsortedVideos.map((video) => (
                       <Card
