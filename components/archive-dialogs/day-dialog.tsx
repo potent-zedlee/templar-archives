@@ -243,7 +243,7 @@ export function DayDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[500px]">
+      <DialogContent className="max-w-[1000px]">
         <DialogHeader>
           <DialogTitle>{editingDayId ? "Day Edit" : "Day Add"}</DialogTitle>
         </DialogHeader>
