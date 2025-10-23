@@ -518,7 +518,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
           Quick Upload
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[650px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Quick Upload Video</DialogTitle>
           <DialogDescription>
@@ -526,7 +526,8 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="youtube" className="w-full">
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <Tabs defaultValue="youtube" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="youtube" className="gap-2">
               <Youtube className="h-4 w-4" />
@@ -1098,7 +1099,8 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
               </>
             )}
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        </div>
       </DialogContent>
     </Dialog>
   )
