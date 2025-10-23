@@ -98,7 +98,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
       website: category?.website || "",
       is_active: category?.is_active ?? true,
       game_type: category?.game_type || "both",
-      parent_id: category?.parent_id || "",
+      parent_id: category?.parent_id || "none",
       theme_gradient: category?.theme_gradient || "",
       theme_text: category?.theme_text || "",
       theme_shadow: category?.theme_shadow || "",
@@ -143,7 +143,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
         website: values.website || undefined,
         is_active: values.is_active,
         game_type: values.game_type,
-        parent_id: values.parent_id || null,
+        parent_id: values.parent_id === "none" || !values.parent_id ? null : values.parent_id,
         theme_gradient: values.theme_gradient || undefined,
         theme_text: values.theme_text || undefined,
         theme_shadow: values.theme_shadow || undefined,
@@ -442,14 +442,14 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>상위 카테고리</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <Select onValueChange={field.onChange} value={field.value || "none"}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="없음 (최상위 카테고리)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">없음 (최상위 카테고리)</SelectItem>
+                      <SelectItem value="none">없음 (최상위 카테고리)</SelectItem>
                       {allCategories
                         .filter((cat) => cat.id !== category?.id && !cat.parent_id)
                         .map((cat) => (
