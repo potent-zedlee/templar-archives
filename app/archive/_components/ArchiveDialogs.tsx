@@ -17,6 +17,7 @@ import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { useArchiveFormStore } from '@/stores/archive-form-store'
 import { useArchiveData } from './ArchiveDataContext'
 import { archiveKeys } from '@/lib/queries/archive-queries'
+import { isAdmin } from '@/lib/auth-utils'
 import type { FolderItem } from '@/lib/types/archive'
 
 // Dynamic imports for all dialogs (only load when needed)
@@ -103,7 +104,7 @@ export function ArchiveDialogs() {
     dayForm,
   } = useArchiveFormStore()
 
-  const isUserAdmin = userEmail ? userEmail.endsWith('@admin.com') : false
+  const isUserAdmin = isAdmin(userEmail)
 
   // Filtered tournaments
   const filteredTournaments =
