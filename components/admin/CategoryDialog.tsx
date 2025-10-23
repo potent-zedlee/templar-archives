@@ -359,7 +359,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>지역 *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="지역 선택" />
@@ -404,7 +404,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                       className="flex gap-4"
                     >
                       <div className="flex items-center space-x-2">
