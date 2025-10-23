@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
+import { toast } from "sonner"
 import type { Tournament } from "@/lib/supabase"
 
 interface TournamentDialogProps {
@@ -61,7 +64,62 @@ export function TournamentDialog({
   setNewEndDate,
   isUserAdmin,
 }: TournamentDialogProps) {
+  const [saving, setSaving] = useState(false)
+  const supabase = createClientSupabaseClient()
+
   if (!isUserAdmin) return null
+
+  const handleSave = async () => {
+    // Validation
+    if (!newTournamentName.trim() || !newLocation.trim() || !newStartDate || !newEndDate) {
+      toast.error('Please fill in all required fields')
+      return
+    }
+
+    setSaving(true)
+    try {
+      if (editingTournamentId) {
+        // Update existing tournament
+        const { error } = await supabase
+          .from('tournaments')
+          .update({
+            name: newTournamentName.trim(),
+            category: newCategory,
+            game_type: newGameType,
+            location: newLocation.trim(),
+            start_date: newStartDate,
+            end_date: newEndDate,
+          })
+          .eq('id', editingTournamentId)
+
+        if (error) throw error
+        toast.success('Tournament updated successfully')
+      } else {
+        // Create new tournament
+        const { error } = await supabase
+          .from('tournaments')
+          .insert({
+            name: newTournamentName.trim(),
+            category: newCategory,
+            game_type: newGameType,
+            location: newLocation.trim(),
+            start_date: newStartDate,
+            end_date: newEndDate,
+          })
+
+        if (error) throw error
+        toast.success('Tournament created successfully')
+      }
+
+      // Call success callback
+      onSave()
+    } catch (error) {
+      console.error('Error saving tournament:', error)
+      toast.error('Failed to save tournament')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -149,11 +207,11 @@ export function TournamentDialog({
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onCancel}>
+            <Button variant="outline" onClick={onCancel} disabled={saving}>
               Cancel
             </Button>
-            <Button onClick={onSave}>
-              {editingTournamentId ? "Edit" : "Add"}
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? 'Saving...' : editingTournamentId ? "Edit" : "Add"}
             </Button>
           </div>
         </div>
