@@ -305,6 +305,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
         body: JSON.stringify({
           channelUrl,
           maxResults: parseInt(maxResults),
+          inputMethod, // Pass inputMethod to API
         }),
       })
 
