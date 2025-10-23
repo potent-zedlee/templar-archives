@@ -55,7 +55,7 @@ import { Eye, EyeOff, Trash2, CheckCircle, XCircle, AlertTriangle } from "lucide
 
 export default function contentClient() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [selectedNews, setSelectedNews] = useState<News | null>(null)
   const [selectedLiveReport, setSelectedLiveReport] = useState<LiveReport | null>(null)
@@ -88,6 +88,9 @@ export default function contentClient() {
 
   useEffect(() => {
     async function checkAdminAccess() {
+      // Wait for auth loading to complete
+      if (authLoading) return
+
       if (!user) {
         router.push("/auth/login")
         return
@@ -101,7 +104,7 @@ export default function contentClient() {
     }
 
     checkAdminAccess()
-  }, [user, router])
+  }, [user, authLoading, router])
 
   function handleApproveReport() {
     if (!selectedReport || !user) return

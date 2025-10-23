@@ -69,7 +69,7 @@ type User = {
 
 export default function usersClient() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const [hasAccess, setHasAccess] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
@@ -88,7 +88,7 @@ export default function usersClient() {
   // React Query hooks
   const {
     data: usersData,
-    isLoading: loading
+    isLoading: usersLoading
   } = useUsersQuery({
     page: currentPage,
     limit: 20,
@@ -106,9 +106,12 @@ export default function usersClient() {
 
   useEffect(() => {
     checkAccess()
-  }, [user])
+  }, [user, loading])
 
   async function checkAccess() {
+    // Wait for auth loading to complete
+    if (loading) return
+
     if (!user) {
       router.push("/auth/login")
       return

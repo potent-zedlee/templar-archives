@@ -40,7 +40,7 @@ import {
 } from "@/lib/queries/admin-queries"
 
 export default function claimsClient() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [selectedClaim, setSelectedClaim] = useState<PlayerClaimWithDetails | null>(null)
@@ -66,11 +66,14 @@ export default function claimsClient() {
   }, [])
 
   useEffect(() => {
+    // Wait for auth loading to complete
+    if (authLoading) return
+
     if (userEmail && !isAdmin(userEmail)) {
       router.push("/")
       toast.error("Admin access only")
     }
-  }, [userEmail])
+  }, [userEmail, authLoading])
 
   function handleActionClick(claim: PlayerClaimWithDetails, type: "approve" | "reject") {
     setSelectedClaim(claim)

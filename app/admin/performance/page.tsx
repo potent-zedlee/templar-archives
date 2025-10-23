@@ -34,7 +34,7 @@ const METRIC_DESCRIPTIONS: Record<MetricName, string> = {
 
 export default function PerformancePage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [hasAccess, setHasAccess] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -45,9 +45,12 @@ export default function PerformancePage() {
 
   useEffect(() => {
     checkAccess()
-  }, [user])
+  }, [user, authLoading])
 
   async function checkAccess() {
+    // Wait for auth loading to complete
+    if (authLoading) return
+
     if (!user) {
       router.push("/auth/login")
       return
