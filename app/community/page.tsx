@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
+import dynamic from "next/dynamic"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Header } from "@/components/header"
 import { PageTransition, StaggerContainer, StaggerItem } from "@/components/page-transition"
@@ -26,10 +27,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createPost } from "@/lib/supabase-community"
 import { CommunitySearchBar } from "@/components/community-search-bar"
 import { CommunityFilters } from "@/components/community-filters"
-import { PopularPostsSidebar } from "@/components/popular-posts-sidebar"
 import { useAuth } from "@/components/auth-provider"
 import { ReportButton } from "@/components/report-button"
-import { HandSearchDialog } from "@/components/hand-search-dialog"
+
+// Dynamic imports for heavy components
+const PopularPostsSidebar = dynamic(
+  () => import("@/components/popular-posts-sidebar").then(mod => ({ default: mod.PopularPostsSidebar })),
+  {
+    ssr: false,
+    loading: () => <CardSkeleton count={3} variant="compact" />
+  }
+)
+
+const HandSearchDialog = dynamic(
+  () => import("@/components/hand-search-dialog").then(mod => ({ default: mod.HandSearchDialog })),
+  {
+    ssr: false
+  }
+)
 
 const categoryColors: Record<Post['category'], string> = {
   "analysis": "bg-blue-500/10 text-blue-500",
