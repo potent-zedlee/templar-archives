@@ -28,11 +28,8 @@ export function ArchiveProviders({ children }: ArchiveProvidersProps) {
   const {
     selectedVideoIds,
     clearSelection,
-    navigateBack,
     openKeyboardShortcutsDialog,
     openVideoDialog,
-    setViewMode,
-    navigationLevel,
     tournamentDialog,
     subEventDialog,
     dayDialog,
@@ -96,8 +93,8 @@ export function ArchiveProviders({ children }: ArchiveProvidersProps) {
 
   useArchiveKeyboard({
     onBackspace: () => {
+      // Clear selected day (no navigation in tree view)
       setSelectedDay(null)
-      navigateBack()
     },
     onSpace: () => {
       const selectedDay = useArchiveDataStore.getState().selectedDay
@@ -106,10 +103,10 @@ export function ArchiveProviders({ children }: ArchiveProvidersProps) {
       }
     },
     onSelectAll: () => {
-      if (navigationLevel === 'unorganized') {
-        // Get unsortedVideos from React Query cache
-        const unsortedVideos = queryClient.getQueryData(archiveKeys.unsortedVideos()) as any[] || []
-        const videoIds = unsortedVideos.map((v) => v.id)
+      // Select all videos (if any are visible)
+      const unsortedVideos = queryClient.getQueryData(archiveKeys.unsortedVideos()) as any[] || []
+      const videoIds = unsortedVideos.map((v) => v.id)
+      if (videoIds.length > 0) {
         useArchiveUIStore.getState().selectAllVideos(videoIds)
       }
     },
@@ -123,9 +120,6 @@ export function ArchiveProviders({ children }: ArchiveProvidersProps) {
       if (searchInput) {
         searchInput.focus()
       }
-    },
-    onViewModeChange: (mode) => {
-      setViewMode(mode)
     },
     onShowHelp: () => {
       openKeyboardShortcutsDialog()
