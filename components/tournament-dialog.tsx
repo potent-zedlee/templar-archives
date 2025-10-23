@@ -78,10 +78,25 @@ export function TournamentDialog({
 
     setSaving(true)
 
+    // Map category display name to category_id
+    const getCategoryId = (category: string): string => {
+      const mapping: Record<string, string> = {
+        'WSOP': 'wsop',
+        'Triton': 'triton',
+        'EPT': 'ept',
+        'APT': 'apt',
+        'APL': 'apl',
+        'Hustler Casino Live': 'hustler',
+        'WSOP Classic': 'wsop',
+        'GGPOKER': 'ggpoker',
+      }
+      return mapping[category] || category.toLowerCase().replace(/\s+/g, '-')
+    }
+
     // Log the data being submitted
     const tournamentData = {
       name: newTournamentName.trim(),
-      category: newCategory,
+      category_id: getCategoryId(newCategory),
       game_type: newGameType,
       location: newLocation.trim(),
       start_date: newStartDate,
