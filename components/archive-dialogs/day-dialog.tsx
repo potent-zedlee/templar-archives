@@ -368,7 +368,7 @@ export function DayDialog({
                   </p>
                 </div>
               ) : (
-                <ScrollArea className="h-[350px] border rounded-lg">
+                <ScrollArea className="h-[500px] border rounded-lg">
                   <div className="p-4 space-y-3">
                     {unsortedVideos.map((video) => (
                       <Card
