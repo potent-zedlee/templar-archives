@@ -1,7 +1,7 @@
 "use client"
 
 import { memo } from "react"
-import { Folder, FileVideo, ChevronRight, Video, Play, Edit, Trash, FolderPlus, FolderInput, CheckSquare, MoreVertical, Info } from "lucide-react"
+import { Folder, FileVideo, ChevronRight, Video, Play, Edit, Trash, FolderPlus, FolderInput, CheckSquare, MoreVertical, Info, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -477,6 +477,23 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                         isAdmin={isAdmin}
                         variant="list"
                       />
+                      {/* Quick Action Button (Admin only, visible on hover) */}
+                      {isAdmin && onAddSubItem && (
+                        <div className="absolute right-24 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="h-8 px-3 text-xs font-medium shadow-md hover:shadow-lg transition-all"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onAddSubItem(item)
+                            }}
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            {item.type === 'tournament' ? 'Add SubEvent' : 'Add Day'}
+                          </Button>
+                        </div>
+                      )}
                       {/* Info Icon Button (visible on hover) */}
                       {onShowInfo && (
                         <div className="absolute right-12 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
