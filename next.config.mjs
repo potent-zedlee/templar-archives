@@ -6,6 +6,9 @@ const bundleAnalyzer = withBundleAnalyzer({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Specify the workspace root to silence warnings
+  output: 'standalone',
+  outputFileTracingRoot: import.meta.dirname,
   eslint: {
     ignoreDuringBuilds: true,
   },

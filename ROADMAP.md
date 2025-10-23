@@ -3,7 +3,7 @@
 > 단계별 기능 구현 계획 및 우선순위
 
 **마지막 업데이트**: 2025-10-23
-**현재 Phase**: Phase 0-27 완료 🎉
+**현재 Phase**: Phase 0-28 완료 🎉
 
 ---
 
@@ -585,6 +585,61 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 
 ---
 
+### Phase 28: Performance Optimization & Maintenance (2025-10-23) ✅
+**소요 시간**: 5시간
+
+#### 완료 기능
+- **번들 크기 최적화** (2시간):
+  - Archive 페이지 동적 임포트 (11개 다이얼로그)
+    - `app/archive/_components/ArchiveDialogs.tsx` 수정
+    - Dynamic import로 모든 다이얼로그 lazy loading
+    - ssr: false 설정으로 서버 렌더링 비활성화
+  - Players 상세 페이지 동적 임포트 (5개 차트/통계 컴포넌트)
+    - `app/players/[id]/page.tsx` 수정
+    - Recharts 차트 컴포넌트 lazy loading
+    - 로딩 상태 표시 추가 ("차트 로딩 중...", "통계 로딩 중...")
+  - 예상 효과: 페이지 번들 크기 30-40% 감소
+- **기술 부채 정리** (1시간):
+  - pnpm-lock.yaml 삭제 (npm만 사용으로 통일)
+  - README.md 버전 업데이트
+    - Next.js: 15.1.6 → 15.5.5
+    - React Query: 5.x → 5.90.5
+    - 프로젝트 버전: v4.0 → v5.0
+  - next.config.mjs workspace root 경고 해결
+    - output: 'standalone' 추가
+    - outputFileTracingRoot: import.meta.dirname 설정
+- **SEO 최적화** (2시간):
+  - 루트 layout metadata 강화 (`app/layout.tsx`)
+    - metadataBase 설정 (https://templar-archives.vercel.app)
+    - OpenGraph 메타태그 (type, locale, url, siteName, images)
+    - Twitter Card 메타태그 (card, title, description, images)
+    - keywords, authors, creator, publisher 설정
+    - robots 설정 (index, follow, googleBot)
+  - sitemap.xml 자동 생성 (`app/sitemap.ts` 신규 생성)
+    - 10개 정적 라우트 등록 (/, /about, /archive/tournament 등)
+    - changeFrequency: 'daily', priority 설정
+    - 동적 라우트 확장 가능 구조
+  - robots.txt 자동 생성 (`app/robots.ts` 신규 생성)
+    - API, admin, auth, reporter 경로 차단
+    - sitemap 위치 명시
+
+**핵심 파일**:
+- `app/archive/_components/ArchiveDialogs.tsx` (동적 임포트)
+- `app/players/[id]/page.tsx` (동적 임포트)
+- `app/layout.tsx` (SEO metadata)
+- `app/sitemap.ts` (신규 생성)
+- `app/robots.ts` (신규 생성)
+- `next.config.mjs` (workspace root 설정)
+- `README.md` (버전 업데이트)
+
+**예상 효과**:
+- 페이지 로딩 속도 30-40% 개선 (번들 크기 감소)
+- 검색 엔진 노출 향상 (SEO 최적화)
+- 기술 부채 감소로 유지보수 용이성 증가
+- Next.js 빌드 경고 제거
+
+---
+
 ## 📊 우선순위 요약
 
 | Phase | 기능 | 우선순위 | 상태 | 완료일 |
@@ -617,6 +672,7 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | Phase 25 | Last Sign-in Tracking | ⭐⭐ | ✅ | 2025-10-21 |
 | Phase 26 | UI Simplification | ⭐⭐ | ✅ | 2025-10-22 |
 | Phase 27 | Quick Upload & API Optimization | ⭐⭐⭐⭐ | ✅ | 2025-10-23 |
+| Phase 28 | Performance Optimization & Maintenance | ⭐⭐⭐⭐ | ✅ | 2025-10-23 |
 
 ---
 
@@ -652,7 +708,8 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | 2025-10-20 (세션 2) | Phase 18 완료 (Manual Hand Action Input System) |
 | 2025-10-21 | Phase 19-21 완료 (Archive UI, Notification, Player Stats) |
 | 2025-10-22 | Phase 22-26 완료 (News, Navigation, Archive Enhancement, Last Sign-in, UI Simplification) |
-| 2025-10-23 | Phase 27 완료 (Quick Upload Enhancement & YouTube API Optimization) |
+| 2025-10-23 (세션 1) | Phase 27 완료 (Quick Upload Enhancement & YouTube API Optimization) |
+| 2025-10-23 (세션 2) | Phase 28 완료 (Performance Optimization & Maintenance) |
 
 ---
 
@@ -661,5 +718,5 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 - 핸드 태그 시스템 (태그 생성/관리, 태그 기반 검색, 태그 추천)
 - 소셜 공유 기능 강화
 
-**현재 상태**: Phase 0-27 완료, Quick Upload & YouTube API 최적화 완료 🎉
+**현재 상태**: Phase 0-28 완료, 성능 최적화 및 SEO 개선 완료 🎉
 **상세 정보**: `../CLAUDE.md` 참조
