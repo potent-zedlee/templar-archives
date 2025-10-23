@@ -11,7 +11,6 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import type {
-  NavigationLevel,
   SortOption,
   FilterState,
   AdvancedFilters,
@@ -21,10 +20,9 @@ import type {
 } from '@/lib/types/archive'
 
 interface ArchiveUIState {
-  // Navigation
-  navigationLevel: NavigationLevel
-  currentTournamentId: string
-  currentSubEventId: string
+  // Expansion State (Tree View)
+  expandedTournaments: Set<string>
+  expandedSubEvents: Set<string>
 
   // Search & Sort
   searchQuery: string
@@ -69,15 +67,13 @@ interface ArchiveUIState {
   loadingViewingPayouts: boolean
   isEditingViewingPayouts: boolean
 
-  // Actions - Navigation
-  setNavigationLevel: (level: NavigationLevel) => void
-  setCurrentTournamentId: (id: string) => void
-  setCurrentSubEventId: (id: string) => void
-  navigateToRoot: () => void
-  navigateToTournament: (tournamentId: string) => void
-  navigateToSubEvent: (tournamentId: string, subEventId: string) => void
-  navigateToUnorganized: () => void
-  navigateBack: () => void
+  // Actions - Expansion (Tree View)
+  toggleTournamentExpand: (id: string) => void
+  toggleSubEventExpand: (id: string) => void
+  expandAllTournaments: () => void
+  collapseAllTournaments: () => void
+  expandAllSubEvents: () => void
+  collapseAllSubEvents: () => void
 
   // Actions - Search & Sort
   setSearchQuery: (query: string) => void
@@ -154,10 +150,9 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
   devtools(
     persist(
       (set, get) => ({
-        // Initial State - Navigation
-        navigationLevel: 'root',
-        currentTournamentId: '',
-        currentSubEventId: '',
+        // Initial State - Expansion (Tree View)
+        expandedTournaments: new Set<string>(),
+        expandedSubEvents: new Set<string>(),
 
         // Initial State - Search & Sort
         searchQuery: '',
@@ -202,55 +197,46 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         loadingViewingPayouts: false,
         isEditingViewingPayouts: false,
 
-        // Actions - Navigation
-        setNavigationLevel: (level) => set({ navigationLevel: level }),
-        setCurrentTournamentId: (id) => set({ currentTournamentId: id }),
-        setCurrentSubEventId: (id) => set({ currentSubEventId: id }),
-
-        navigateToRoot: () =>
-          set({
-            navigationLevel: 'root',
-            currentTournamentId: '',
-            currentSubEventId: '',
+        // Actions - Expansion (Tree View)
+        toggleTournamentExpand: (id) =>
+          set((state) => {
+            const newSet = new Set(state.expandedTournaments)
+            if (newSet.has(id)) {
+              newSet.delete(id)
+            } else {
+              newSet.add(id)
+            }
+            return { expandedTournaments: newSet }
           }),
 
-        navigateToTournament: (tournamentId) =>
-          set({
-            navigationLevel: 'tournament',
-            currentTournamentId: tournamentId,
-            currentSubEventId: '',
+        toggleSubEventExpand: (id) =>
+          set((state) => {
+            const newSet = new Set(state.expandedSubEvents)
+            if (newSet.has(id)) {
+              newSet.delete(id)
+            } else {
+              newSet.add(id)
+            }
+            return { expandedSubEvents: newSet }
           }),
 
-        navigateToSubEvent: (tournamentId, subEventId) =>
-          set({
-            navigationLevel: 'subevent',
-            currentTournamentId: tournamentId,
-            currentSubEventId: subEventId,
+        expandAllTournaments: () =>
+          set((state) => {
+            // This will be populated with all tournament IDs by the component
+            return { expandedTournaments: new Set<string>() }
           }),
 
-        navigateToUnorganized: () =>
-          set({
-            navigationLevel: 'unorganized',
-            currentTournamentId: '',
-            currentSubEventId: '',
+        collapseAllTournaments: () =>
+          set({ expandedTournaments: new Set<string>() }),
+
+        expandAllSubEvents: () =>
+          set((state) => {
+            // This will be populated with all subevent IDs by the component
+            return { expandedSubEvents: new Set<string>() }
           }),
 
-        navigateBack: () => {
-          const { navigationLevel, currentTournamentId } = get()
-
-          if (navigationLevel === 'subevent') {
-            set({
-              navigationLevel: 'tournament',
-              currentSubEventId: '',
-            })
-          } else if (navigationLevel === 'tournament' || navigationLevel === 'unorganized') {
-            set({
-              navigationLevel: 'root',
-              currentTournamentId: '',
-              currentSubEventId: '',
-            })
-          }
-        },
+        collapseAllSubEvents: () =>
+          set({ expandedSubEvents: new Set<string>() }),
 
         // Actions - Search & Sort
         setSearchQuery: (query) => set({ searchQuery: query }),

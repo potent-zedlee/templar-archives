@@ -14,12 +14,11 @@ import { Plus } from 'lucide-react'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
-import { ArchiveBreadcrumb } from '@/components/archive-breadcrumb'
 import { ArchiveFolderList } from '@/components/archive-folder-list'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { isAdmin } from '@/lib/auth-utils'
-import type { FolderItem, BreadcrumbItem } from '@/lib/types/archive'
+import type { FolderItem } from '@/lib/types/archive'
 import { useMemo, useCallback } from 'react'
 
 export function ArchiveEventsList() {
@@ -27,17 +26,15 @@ export function ArchiveEventsList() {
   const { userEmail, setSelectedDay } = useArchiveDataStore()
 
   const {
-    navigationLevel,
-    currentTournamentId,
-    currentSubEventId,
+    expandedTournaments,
+    expandedSubEvents,
     selectedCategory,
     searchQuery,
     sortBy,
     advancedFilters,
     selectedVideoIds,
-    setNavigationLevel,
-    setCurrentTournamentId,
-    setCurrentSubEventId,
+    toggleTournamentExpand,
+    toggleSubEventExpand,
     toggleVideoSelection,
     clearSelection,
     openRenameDialog,
@@ -59,59 +56,7 @@ export function ArchiveEventsList() {
     setSelectedDay(dayId)
   }, [setSelectedDay])
 
-  // Build breadcrumb items
-  const breadcrumbItems = useMemo((): BreadcrumbItem[] => {
-    const items: BreadcrumbItem[] = []
-
-    if (navigationLevel === 'tournament' || navigationLevel === 'subevent') {
-      const tournament = tournaments.find((t) => t.id === currentTournamentId)
-      if (tournament) {
-        items.push({
-          id: tournament.id,
-          name: tournament.name,
-          type: 'tournament',
-        })
-      }
-    }
-
-    if (navigationLevel === 'subevent') {
-      const tournament = tournaments.find((t) => t.id === currentTournamentId)
-      const subEvent = tournament?.sub_events?.find((se) => se.id === currentSubEventId)
-      if (subEvent) {
-        items.push({
-          id: subEvent.id,
-          name: subEvent.name,
-          type: 'subevent',
-        })
-      }
-    }
-
-    return items
-  }, [navigationLevel, currentTournamentId, currentSubEventId, tournaments])
-
-  // Handle breadcrumb navigation
-  const handleBreadcrumbNavigate = useCallback((item: BreadcrumbItem | null) => {
-    // Clear selected day when navigating
-    setSelectedDay(null)
-
-    if (!item) {
-      // Navigate to root
-      setNavigationLevel('root')
-      setCurrentTournamentId('')
-      setCurrentSubEventId('')
-    } else if (item.type === 'tournament') {
-      // Navigate to tournament level
-      setNavigationLevel('tournament')
-      setCurrentTournamentId(item.id)
-      setCurrentSubEventId('')
-    } else if (item.type === 'subevent') {
-      // Navigate to subevent level
-      setNavigationLevel('subevent')
-      setCurrentSubEventId(item.id)
-    }
-  }, [setSelectedDay, setNavigationLevel, setCurrentTournamentId, setCurrentSubEventId])
-
-  // Build folder items with filtering and sorting
+  // Build folder items in tree structure (with expansion)
   const folderItems = useMemo((): FolderItem[] => {
     let items: FolderItem[] = []
 
@@ -121,58 +66,65 @@ export function ArchiveEventsList() {
         ? tournaments
         : tournaments.filter((t) => t.category === selectedCategory)
 
-    if (navigationLevel === 'root') {
-      // Show all tournaments + Unorganized folder
-      const tournamentItems = filteredTournaments.map((tournament) => ({
+    // Add Unorganized folder
+    const unorganizedItem: FolderItem = {
+      id: 'unorganized',
+      name: 'Unorganized',
+      type: 'unorganized' as const,
+      itemCount: unsortedVideos.length,
+      level: 0,
+    }
+    items.push(unorganizedItem)
+
+    // Build tree structure for tournaments
+    filteredTournaments.forEach((tournament) => {
+      // Add tournament
+      items.push({
         id: tournament.id,
         name: tournament.name,
         type: 'tournament' as const,
         itemCount: tournament.sub_events?.length || 0,
         data: tournament,
-      }))
+        level: 0,
+        isExpanded: expandedTournaments.has(tournament.id),
+      })
 
-      const unorganizedItem: FolderItem = {
-        id: 'unorganized',
-        name: 'Unorganized',
-        type: 'unorganized' as const,
-        itemCount: unsortedVideos.length,
+      // If tournament is expanded, add sub-events
+      if (expandedTournaments.has(tournament.id)) {
+        const subEvents = tournament.sub_events || []
+
+        subEvents.forEach((subEvent) => {
+          // Add sub-event
+          items.push({
+            id: subEvent.id,
+            name: subEvent.name,
+            type: 'subevent' as const,
+            itemCount: subEvent.days?.length || 0,
+            date: subEvent.date,
+            data: subEvent,
+            level: 1,
+            isExpanded: expandedSubEvents.has(subEvent.id),
+            parentId: tournament.id,
+          })
+
+          // If sub-event is expanded, add days
+          if (expandedSubEvents.has(subEvent.id)) {
+            const days = subEvent.days || []
+
+            days.forEach((day) => {
+              items.push({
+                id: day.id,
+                name: day.name,
+                type: 'day' as const,
+                data: day,
+                level: 2,
+                parentId: subEvent.id,
+              })
+            })
+          }
+        })
       }
-
-      items = [unorganizedItem, ...tournamentItems]
-    } else if (navigationLevel === 'unorganized') {
-      // Show unsorted videos
-      items = unsortedVideos.map((video) => ({
-        id: video.id,
-        name: video.name,
-        type: 'day' as const,
-        date: video.published_at || video.created_at,
-        data: video,
-      }))
-    } else if (navigationLevel === 'tournament') {
-      // Show sub-events of current tournament
-      const tournament = tournaments.find((t) => t.id === currentTournamentId)
-      const subEvents = tournament?.sub_events || []
-
-      items = subEvents.map((subEvent) => ({
-        id: subEvent.id,
-        name: subEvent.name,
-        type: 'subevent' as const,
-        itemCount: subEvent.days?.length || 0,
-        date: subEvent.date,
-        data: subEvent,
-      }))
-    } else if (navigationLevel === 'subevent') {
-      // Show days of current sub-event
-      const tournament = tournaments.find((t) => t.id === currentTournamentId)
-      const subEvent = tournament?.sub_events?.find((se) => se.id === currentSubEventId)
-      items =
-        subEvent?.days?.map((day) => ({
-          id: day.id,
-          name: day.name,
-          type: 'day' as const,
-          data: day,
-        })) || []
-    }
+    })
 
     // Apply search filter
     if (searchQuery.trim()) {
@@ -180,42 +132,31 @@ export function ArchiveEventsList() {
       items = items.filter((item) => item.name.toLowerCase().includes(query))
     }
 
-    // Apply Tournament Name filter
+    // Apply Tournament Name filter (search in tournament/subevent names)
     if (advancedFilters.tournamentName?.trim()) {
       const tournamentQuery = advancedFilters.tournamentName.toLowerCase()
-
-      if (navigationLevel === 'root') {
-        // Filter tournaments by name
-        items = items.filter((item) => {
-          if (item.type === 'tournament') {
-            return item.name.toLowerCase().includes(tournamentQuery)
-          }
-          return true // Keep unorganized folder
-        })
-      } else if (navigationLevel === 'tournament') {
-        // Filter subevents by tournament name (match parent tournament)
-        const tournament = tournaments.find((t) => t.id === currentTournamentId)
-        if (tournament && !tournament.name.toLowerCase().includes(tournamentQuery)) {
-          items = [] // Hide all subevents if tournament doesn't match
+      items = items.filter((item) => {
+        if (item.type === 'tournament' || item.type === 'subevent') {
+          return item.name.toLowerCase().includes(tournamentQuery)
         }
-      }
+        if (item.type === 'day') {
+          // Keep days if their parent subevent/tournament matches
+          // This is handled by the tree structure - filtered parents won't render children
+          return true
+        }
+        return true // Keep unorganized
+      })
     }
 
-    // Apply Player Name filter (only for days with hands)
+    // Apply Player Name filter (only for day items)
     if (advancedFilters.playerName?.trim()) {
       const playerQuery = advancedFilters.playerName.toLowerCase()
-
-      // This filter only works meaningfully at the day level
-      // For now, we'll apply it to day names (limited functionality)
-      if (navigationLevel === 'subevent') {
-        items = items.filter((item) => {
-          if (item.type === 'day') {
-            // Check if day name contains player name (basic filter)
-            return item.name.toLowerCase().includes(playerQuery)
-          }
-          return true
-        })
-      }
+      items = items.filter((item) => {
+        if (item.type === 'day') {
+          return item.name.toLowerCase().includes(playerQuery)
+        }
+        return true
+      })
     }
 
     // Apply advanced filters (date range, video sources, etc.)
@@ -240,19 +181,8 @@ export function ArchiveEventsList() {
       })
     }
 
-    // Video Source filter (only for unorganized videos)
-    if (navigationLevel === 'unorganized') {
-      const selectedSources = Object.entries(advancedFilters.videoSources)
-        .filter(([_, enabled]) => enabled)
-        .map(([source]) => source)
-
-      if (selectedSources.length > 0 && selectedSources.length < 2) {
-        items = items.filter((item) => {
-          const video = item.data as any
-          return selectedSources.includes(video?.video_source || 'youtube')
-        })
-      }
-    }
+    // Video Source filter is not applicable in tree view
+    // (Videos are organized by tournaments, not displayed directly)
 
     // Apply sorting
     items.sort((a, b) => {
@@ -278,34 +208,27 @@ export function ArchiveEventsList() {
 
     return items
   }, [
-    navigationLevel,
     tournaments,
     unsortedVideos,
-    currentTournamentId,
-    currentSubEventId,
+    expandedTournaments,
+    expandedSubEvents,
     selectedCategory,
     searchQuery,
     sortBy,
     advancedFilters,
   ])
 
-  // Handle folder navigation
-  const handleFolderNavigate = useCallback((item: FolderItem) => {
-    setSelectedDay(null)
-
+  // Handle expansion toggle
+  const handleToggleExpand = useCallback((item: FolderItem) => {
     if (item.type === 'tournament') {
-      setNavigationLevel('tournament')
-      setCurrentTournamentId(item.id)
-      setCurrentSubEventId('')
+      toggleTournamentExpand(item.id)
     } else if (item.type === 'subevent') {
-      setNavigationLevel('subevent')
-      setCurrentSubEventId(item.id)
+      toggleSubEventExpand(item.id)
     } else if (item.type === 'unorganized') {
-      setNavigationLevel('unorganized')
-      setCurrentTournamentId('')
-      setCurrentSubEventId('')
+      // Unorganized folder doesn't expand - just navigate
+      // TODO: Implement unorganized folder view
     }
-  }, [setSelectedDay, setNavigationLevel, setCurrentTournamentId, setCurrentSubEventId])
+  }, [toggleTournamentExpand, toggleSubEventExpand])
 
   // Context menu handlers
   const handleRename = useCallback((item: FolderItem) => {
@@ -342,14 +265,9 @@ export function ArchiveEventsList() {
       openSubEventDialog(item.id)
     } else if (item.type === 'subevent') {
       // Add Day to SubEvent
-      const tournament = tournaments.find(t =>
-        t.sub_events?.some(se => se.id === item.id)
-      )
-      if (tournament) {
-        useArchiveUIStore.getState().openDayDialog(tournament.id, item.id)
-      }
+      useArchiveUIStore.getState().openDayDialog(item.id)
     }
-  }, [openSubEventDialog, tournaments])
+  }, [openSubEventDialog])
 
   const handleSelectAllVideos = useCallback(() => {
     if (selectedVideoIds.size === unsortedVideos.length) {
@@ -361,8 +279,8 @@ export function ArchiveEventsList() {
 
   return (
     <Card className="p-4 bg-card/95 backdrop-blur-md h-full border-2 shadow-lg hover:shadow-xl transition-all duration-300">
-      {/* Selection Actions (only show in unorganized view) */}
-      {navigationLevel === 'unorganized' && selectedVideoIds.size > 0 && (
+      {/* Selection Actions for videos */}
+      {selectedVideoIds.size > 0 && (
         <div className="mb-3 p-2 bg-primary/10 rounded-md flex items-center justify-between">
           <span className="text-caption font-medium">
             {selectedVideoIds.size} video{selectedVideoIds.size > 1 ? 's' : ''} selected
@@ -383,16 +301,13 @@ export function ArchiveEventsList() {
         </div>
       )}
 
-      {/* Breadcrumb Navigation */}
-      <ArchiveBreadcrumb items={breadcrumbItems} onNavigate={handleBreadcrumbNavigate} />
-
-      {/* Folder List */}
+      {/* Folder List (Tree View) */}
       <ArchiveFolderList
         items={folderItems}
-        onNavigate={handleFolderNavigate}
+        onNavigate={handleToggleExpand}
         onSelectDay={handleSelectDay}
         loading={tournamentsLoading}
-        isUnorganized={navigationLevel === 'unorganized'}
+        isUnorganized={false}
         selectedIds={selectedVideoIds}
         onToggleSelect={toggleVideoSelection}
         onSelectAll={handleSelectAllVideos}
@@ -403,7 +318,7 @@ export function ArchiveEventsList() {
         onAddSubItem={handleAddSubItem}
         onEditEvent={handleEditEvent}
         onShowInfo={handleShowInfo}
-        onAddTournament={navigationLevel === 'root' ? () => openTournamentDialog() : undefined}
+        onAddTournament={() => openTournamentDialog()}
         isAdmin={isUserAdmin}
       />
     </Card>

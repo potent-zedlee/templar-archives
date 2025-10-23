@@ -13,11 +13,12 @@ import {
   Calendar,
   Trophy,
   ChevronRight,
+  ChevronDown,
   MoreVertical
 } from "lucide-react"
 import { ArchiveStatsBadge } from "@/components/archive-stats-badge"
 import { Progress } from "@/components/ui/progress"
-import type { FolderItem } from "@/components/archive-folder-list"
+import type { FolderItem } from "@/lib/types/archive"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
@@ -261,11 +262,25 @@ export function ArchiveEventCard({
           <span className="text-xs text-muted-foreground">
             {item.type === 'tournament' ? 'Tournament' : item.type === 'subevent' ? 'Event' : 'Video'}
           </span>
-          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          {(item.type === 'tournament' || item.type === 'subevent') && (
+            item.isExpanded ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            )
+          )}
         </div>
       </Card>
     )
   }
+
+  // Calculate indentation based on level
+  const indentLevel = item.level || 0
+  const paddingLeft = indentLevel * 24 // 24px per level (pl-0, pl-6, pl-12)
+
+  // Determine chevron icon
+  const ChevronIcon = item.isExpanded ? ChevronDown : ChevronRight
+  const showChevron = item.type === 'tournament' || item.type === 'subevent'
 
   // List variant
   return (
@@ -275,6 +290,7 @@ export function ArchiveEventCard({
         "hover:shadow-md hover:scale-[1.01]",
         `bg-gradient-to-r ${gradient} p-3`
       )}
+      style={{ paddingLeft: `${12 + paddingLeft}px` }}
       onClick={onClick}
     >
       <div className="flex items-center gap-3">
@@ -360,7 +376,9 @@ export function ArchiveEventCard({
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          {showChevron && (
+            <ChevronIcon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          )}
         </div>
       </div>
     </Card>

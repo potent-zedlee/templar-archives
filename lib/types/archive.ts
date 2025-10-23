@@ -17,8 +17,6 @@ export type TournamentCategory =
 
 export type VideoSource = "youtube" | "upload"
 
-export type NavigationLevel = "root" | "tournament" | "subevent" | "unorganized"
-
 export type ViewMode = "list" | "grid" | "timeline"
 
 export type SortOption =
@@ -241,6 +239,9 @@ export interface FolderItem {
   itemCount?: number
   date?: string
   data?: Tournament | SubEvent | Day | UnsortedVideo
+  level?: number  // Tree level: 0=tournament, 1=subevent, 2=day
+  isExpanded?: boolean  // Expansion state
+  parentId?: string  // Parent folder ID
 }
 
 export interface BreadcrumbItem {
