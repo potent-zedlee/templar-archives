@@ -8,13 +8,17 @@
       }
 
       .cls-2 {
-        letter-spacing: -.03em;
+        letter-spacing: 0em;
       }
 
       .cls-3 {
         letter-spacing: 0em;
       }
+
+      .cls-4 {
+        letter-spacing: 0em;
+      }
     </style>
   </defs>
-  <text class="cls-1" transform="translate(145.34 336.89)"><tspan class="cls-2" x="0" y="0">P</tspan><tspan x="49.76" y="0">a</tspan><tspan class="cls-3" x="97.16" y="0">r</tspan><tspan x="128.83" y="0">adise</tspan></text>
+  <text class="cls-1" transform="translate(184.43 336.89)"><tspan class="cls-4" x="0" y="0">C</tspan><tspan x="56.74" y="0">i</tspan><tspan class="cls-3" x="79.76" y="0">r</tspan><tspan class="cls-2" x="110.93" y="0">cuit</tspan></text>
 </svg>
