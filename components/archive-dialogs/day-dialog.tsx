@@ -41,6 +41,7 @@ export function DayDialog({
   const [newDayVideoUrl, setNewDayVideoUrl] = useState("")
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [selectedUnsortedId, setSelectedUnsortedId] = useState<string | null>(null)
+  const [publishedAt, setPublishedAt] = useState("")
   const [uploading, setUploading] = useState(false)
 
   const supabase = createClientSupabaseClient()
@@ -52,6 +53,7 @@ export function DayDialog({
       setNewDayVideoUrl("")
       setUploadFile(null)
       setSelectedUnsortedId(null)
+      setPublishedAt("")
       setVideoSourceTab('youtube')
       setUploading(false)
     }
@@ -79,6 +81,7 @@ export function DayDialog({
       setNewDayName(data.name || "")
       setVideoSourceTab(data.video_source || 'youtube')
       setNewDayVideoUrl(data.video_url || "")
+      setPublishedAt(data.published_at ? new Date(data.published_at).toISOString().split('T')[0] : "")
     } catch (error) {
       console.error('Error loading day:', error)
       toast.error('Failed to load day data')
@@ -94,6 +97,7 @@ export function DayDialog({
         video_source: videoSourceTab,
         video_url: null,
         video_file: null,
+        published_at: publishedAt || null,
       }
 
       // Set appropriate video source field
@@ -172,6 +176,7 @@ export function DayDialog({
         sub_event_id: selectedSubEventId,
         name: newDayName.trim() || `Day ${new Date().toISOString()}`,
         video_source: videoSourceTab,
+        published_at: publishedAt || null,
       }
 
       // YouTube source
@@ -238,7 +243,7 @@ export function DayDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>{editingDayId ? "Day Edit" : "Day Add"}</DialogTitle>
         </DialogHeader>
@@ -251,6 +256,19 @@ export function DayDialog({
               value={newDayName}
               onChange={(e) => setNewDayName(e.target.value)}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="published-at">Stream Date</Label>
+            <Input
+              id="published-at"
+              type="date"
+              value={publishedAt}
+              onChange={(e) => setPublishedAt(e.target.value)}
+            />
+            <p className="text-caption text-muted-foreground">
+              Original stream/upload date (auto-filled from selected video)
+            </p>
           </div>
 
           {/* Video Source Tabs */}
@@ -360,7 +378,13 @@ export function DayDialog({
                             ? 'border-primary bg-primary/5'
                             : 'hover:border-primary/50'
                         }`}
-                        onClick={() => setSelectedUnsortedId(video.id)}
+                        onClick={() => {
+                          setSelectedUnsortedId(video.id)
+                          // Auto-fill published_at from selected video
+                          if (video.published_at) {
+                            setPublishedAt(new Date(video.published_at).toISOString().split('T')[0])
+                          }
+                        }}
                       >
                         <div className="flex items-start gap-3">
                           {/* Video Icon/Thumbnail */}
