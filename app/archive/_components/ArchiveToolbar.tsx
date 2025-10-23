@@ -119,13 +119,13 @@ export function ArchiveToolbar() {
             {/* Add Tournament Button (Admin Only) */}
             {isUserAdmin && (
               <Button
-                variant="default"
-                size="sm"
+                variant="outline"
+                size="icon"
                 onClick={() => openTournamentDialog()}
                 aria-label="Add new tournament"
+                className="hover:bg-primary/10 transition-colors"
               >
-                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                Add Tournament
+                <Plus className="h-5 w-5" />
               </Button>
             )}
           </div>
