@@ -25,7 +25,7 @@ import { toast } from "sonner"
 
 export default function dashboardClient() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [hasAccess, setHasAccess] = useState(false)
 
   // React Query hooks
@@ -36,9 +36,12 @@ export default function dashboardClient() {
 
   useEffect(() => {
     checkAccess()
-  }, [user])
+  }, [user, authLoading])
 
   async function checkAccess() {
+    // Wait for auth loading to complete
+    if (authLoading) return
+
     if (!user) {
       router.push("/auth/login")
       return

@@ -32,7 +32,7 @@ import type { TournamentCategory } from "@/lib/tournament-categories-db"
 
 export default function CategoriesPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const [hasAccess, setHasAccess] = useState(false)
 
   // Filters
@@ -63,6 +63,9 @@ export default function CategoriesPage() {
 
   // Check admin access
   const checkAccess = useCallback(async () => {
+    // Wait for auth loading to complete
+    if (loading) return
+
     if (!user) {
       router.push("/auth/login")
       return
@@ -82,7 +85,7 @@ export default function CategoriesPage() {
       toast.error("권한 확인 중 오류가 발생했습니다")
       router.push("/")
     }
-  }, [user, router])
+  }, [user, loading, router])
 
   useEffect(() => {
     checkAccess()

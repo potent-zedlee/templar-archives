@@ -47,7 +47,7 @@ const EDIT_TYPE_LABELS: Record<string, string> = {
 
 export default function editrequestsClient() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [selectedRequest, setSelectedRequest] = useState<HandEditRequest | null>(null)
   const [adminComment, setAdminComment] = useState("")
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null)
@@ -59,6 +59,9 @@ export default function editrequestsClient() {
 
   useEffect(() => {
     async function checkAdminAccess() {
+      // Wait for auth loading to complete
+      if (authLoading) return
+
       if (!user) {
         router.push("/auth/login")
         return
@@ -72,7 +75,7 @@ export default function editrequestsClient() {
     }
 
     checkAdminAccess()
-  }, [user, router])
+  }, [user, authLoading, router])
 
   function handleReviewClick(request: HandEditRequest, action: "approve" | "reject") {
     setSelectedRequest(request)

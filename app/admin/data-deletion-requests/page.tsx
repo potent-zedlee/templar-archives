@@ -40,7 +40,7 @@ import {
 } from "@/lib/queries/admin-queries"
 
 export default function DataDeletionRequestsPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [selectedRequest, setSelectedRequest] = useState<DeletionRequestWithUser | null>(null)
@@ -67,11 +67,14 @@ export default function DataDeletionRequestsPage() {
   }, [])
 
   useEffect(() => {
+    // Wait for auth loading to complete
+    if (authLoading) return
+
     if (userEmail && !isAdmin(userEmail)) {
       router.push("/")
       toast.error("Admin access only")
     }
-  }, [userEmail, router])
+  }, [userEmail, authLoading, router])
 
   function handleActionClick(
     request: DeletionRequestWithUser,
