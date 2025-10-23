@@ -6,8 +6,9 @@
  * Tournament 전용 Archive 페이지
  */
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
+import { useAuth } from "@/components/auth-provider"
 import { Header } from "@/components/header"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
@@ -47,12 +48,20 @@ const ArchiveDialogs = dynamic(
 )
 
 export default function TournamentArchivePage() {
+  // Auth: Get user info
+  const { user } = useAuth()
+
   // React Query: Fetch data (only tournaments)
   const { data: tournaments = [], isLoading: tournamentsLoading } = useTournamentsQuery('tournament')
   const { data: unsortedVideos = [] } = useUnsortedVideosQuery()
 
   // Zustand: UI state
-  const { selectedDay } = useArchiveDataStore()
+  const { selectedDay, setUserEmail } = useArchiveDataStore()
+
+  // Set user email in store for admin checks
+  useEffect(() => {
+    setUserEmail(user?.email || null)
+  }, [user, setUserEmail])
 
   // React Query: Fetch hands for selected day
   const { data: hands = [], isLoading: handsLoading } = useHandsQuery(selectedDay)
