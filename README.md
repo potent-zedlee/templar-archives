@@ -169,15 +169,15 @@ supabase link --project-ref diopilmkehygiqpizvga
 
 ```json
 {
-  "next": "15.1.6",
+  "next": "15.5.5",
   "react": "19.0.0",
   "typescript": "5.x",
   "@supabase/supabase-js": "2.48.0",
   "@anthropic-ai/sdk": "0.30.1",
   "tailwindcss": "4.1.9",
   "zustand": "5.0.2",
-  "@tanstack/react-query": "5.x",
-  "@tanstack/react-query-devtools": "5.x"
+  "@tanstack/react-query": "5.90.5",
+  "@tanstack/react-query-devtools": "5.90.2"
 }
 ```
 
@@ -201,9 +201,9 @@ DEBUG=true  # 프로덕션 환경에서 디버그 로그 활성화
 - **Supabase**: [Dashboard](https://supabase.com/dashboard/project/diopilmkehygiqpizvga/settings/api) → Settings → API
 - **Anthropic**: [Claude Console](https://console.anthropic.com/settings/keys)
 
-## 🎯 현재 개발 상태 (2025-10-20)
+## 🎯 현재 개발 상태 (2025-10-23)
 
-### ✅ 완료된 기능 (Phase 0-17)
+### ✅ 완료된 기능 (Phase 0-28)
 
 #### Phase 0: 인증 시스템
 - Google OAuth 로그인
@@ -279,15 +279,14 @@ DEBUG=true  # 프로덕션 환경에서 디버그 로그 활성화
 ---
 
 **프로젝트**: Templar Archives (구 GGVault)
-**버전**: 4.0
-**마지막 업데이트**: 2025-10-20
+**버전**: 5.0
+**마지막 업데이트**: 2025-10-23
 
-**최근 업데이트 (v4.0)**:
-- ✅ React Query Migration (Phase 16) - 전체 앱 데이터 페칭 현대화
-- ✅ DevTools Optimization (Phase 17) - 프로덕션 번들 최적화
-- ✅ 6개 query 파일 생성 (650줄)
-- ✅ 9개 페이지 리팩토링 (~200줄 감소)
-- ✅ Optimistic Updates (좋아요, 북마크)
-- ✅ 500ms 디바운싱 (닉네임 중복 체크)
+**최근 업데이트 (v5.0)**:
+- ✅ Performance Optimization (Phase 28) - 번들 크기 최적화
+- ✅ Archive 페이지 동적 임포트 (11개 다이얼로그)
+- ✅ Players 페이지 동적 임포트 (5개 차트/통계 컴포넌트)
+- ✅ 기술 부채 정리 (lockfile, 문서 버전 업데이트)
+- ✅ SEO 최적화 준비
 
 전체 프로젝트 정보는 [상위 README](../README.md)를 참조하세요.

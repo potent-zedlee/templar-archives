@@ -4,6 +4,110 @@
 
 ---
 
+## 2025-10-23 (세션 34) - Phase 28: Performance Optimization & Maintenance ✅
+
+### 작업 내용
+
+#### 1. 번들 크기 최적화 (2시간) ✅
+- **Archive 페이지 동적 임포트** (`app/archive/_components/ArchiveDialogs.tsx`)
+  - 11개 다이얼로그를 dynamic import로 전환
+  - ssr: false 설정으로 서버 렌더링 비활성화
+  - 필요할 때만 로드되도록 lazy loading
+  - 컴포넌트: TournamentDialog, SubEventDialog, SubEventInfoDialog, DayDialog, VideoPlayerDialog, RenameDialog, DeleteDialog, EditEventDialog, MoveToExistingEventDialog, MoveToNewEventDialog, KeyboardShortcutsDialog, ArchiveInfoDialog
+- **Players 상세 페이지 동적 임포트** (`app/players/[id]/page.tsx`)
+  - 5개 차트/통계 컴포넌트를 dynamic import로 전환
+  - Recharts 차트 컴포넌트 lazy loading (무거운 라이브러리)
+  - 로딩 상태 표시 추가 ("차트 로딩 중...", "통계 로딩 중...")
+  - 컴포넌트: PrizeHistoryChart, TournamentCategoryChart, AdvancedStatsCard, PositionalStatsCard, PerformanceChartCard
+- **예상 효과**: 페이지 번들 크기 30-40% 감소, 초기 로딩 속도 향상
+
+#### 2. 기술 부채 정리 (1시간) ✅
+- **pnpm-lock.yaml 삭제**
+  - npm만 사용하도록 통일 (package-lock.json)
+  - Next.js workspace root 경고 원인 제거
+- **README.md 버전 업데이트**
+  - Next.js: 15.1.6 → 15.5.5
+  - React Query: 5.x → 5.90.5, 5.x → 5.90.2
+  - 프로젝트 버전: v4.0 → v5.0
+  - 현재 Phase: 0-17 → 0-28
+  - 최근 업데이트 섹션 수정
+- **next.config.mjs workspace root 경고 해결**
+  - output: 'standalone' 추가
+  - outputFileTracingRoot: import.meta.dirname 설정
+  - Next.js 빌드 경고 제거
+
+#### 3. SEO 최적화 (2시간) ✅
+- **루트 layout metadata 강화** (`app/layout.tsx`)
+  - metadataBase 설정 (https://templar-archives.vercel.app)
+  - OpenGraph 메타태그 (type, locale, url, siteName, title, description, images)
+  - Twitter Card 메타태그 (card, title, description, images)
+  - keywords, authors, creator, publisher 설정
+  - robots 설정 (index, follow, googleBot)
+  - verification 필드 추가 (Google Search Console 준비)
+- **sitemap.xml 자동 생성** (`app/sitemap.ts` 신규 생성, 35줄)
+  - 10개 정적 라우트 등록 (/, /about, /archive/tournament, /archive/cash-game, /search, /players, /community, /news, /live-reporting, /bookmarks, /profile)
+  - changeFrequency: 'daily', priority 설정 (루트 1.0, 나머지 0.8)
+  - 동적 라우트 확장 가능 구조 (플레이어, 뉴스, 커뮤니티 페이지 추가 예정)
+- **robots.txt 자동 생성** (`app/robots.ts` 신규 생성, 18줄)
+  - userAgent: '*'
+  - allow: '/'
+  - disallow: ['/api/', '/admin/', '/auth/', '/reporter/']
+  - sitemap: https://templar-archives.vercel.app/sitemap.xml
+
+#### 4. 문서 업데이트 (1시간) ✅
+- **CLAUDE.md** (문서 버전 19.0 → 20.0)
+  - Phase 28 추가 (상세 기능 명세)
+  - 개발 현황: Phase 0-27 → Phase 0-28
+  - 프로젝트 상태: Phase 0-27 완료 → Phase 0-28 완료
+  - 최근 완료 섹션에 Phase 28 추가
+  - 주요 변경: Phase 27 → Phase 28
+- **ROADMAP.md** (현재 Phase: 0-27 → 0-28)
+  - Phase 28 섹션 추가 (54줄)
+    - 번들 크기 최적화, 기술 부채 정리, SEO 최적화 상세
+    - 핵심 파일 7개 나열
+    - 예상 효과 4가지
+  - 우선순위 요약 테이블 업데이트 (Phase 28 추가)
+  - 변경 이력 추가 (2025-10-23 세션 2)
+  - 현재 상태: Phase 0-27 → Phase 0-28 완료
+- **README.md** (v4.0 → v5.0)
+  - 버전 정보 업데이트 (위에서 설명)
+
+### 핵심 파일
+- `app/archive/_components/ArchiveDialogs.tsx` (동적 임포트)
+- `app/players/[id]/page.tsx` (동적 임포트)
+- `app/layout.tsx` (SEO metadata)
+- `app/sitemap.ts` (신규 생성)
+- `app/robots.ts` (신규 생성)
+- `next.config.mjs` (workspace root 설정)
+- `README.md` (버전 업데이트)
+- `CLAUDE.md` (Phase 28 추가)
+- `ROADMAP.md` (Phase 28 추가)
+- `WORK_LOG.md` (세션 34 추가)
+
+### 다음 세션 시작 시
+1. **성능 측정**
+   - 번들 크기 비교 (최적화 전/후)
+   - Lighthouse 점수 측정 (SEO, Performance)
+   - Core Web Vitals 확인
+2. **선택적 추가 작업**
+   - 영상 분석 자동화 개선
+   - 핸드 태그 시스템 구현
+   - 소셜 공유 기능 강화
+3. **변경사항 커밋**
+   - Phase 28 모든 변경사항 커밋
+   - 문서 업데이트 커밋
+
+### 성과
+- ✅ 번들 크기 최적화 (16개 컴포넌트 동적 임포트)
+- ✅ 기술 부채 정리 (lockfile, 버전 업데이트, 경고 제거)
+- ✅ SEO 최적화 (metadata, sitemap, robots)
+- ✅ 3개 주요 문서 업데이트 완료
+- ✅ 예상 효과: 페이지 로딩 속도 30-40% 개선, 검색 엔진 노출 향상
+
+---
+
+
+
 ## 2025-10-22 (세션 33) - Documentation Update & Logo System Guide ✅
 
 ### 작업 내용

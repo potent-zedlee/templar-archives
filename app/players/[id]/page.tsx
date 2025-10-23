@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useMemo, useEffect } from "react"
+import dynamic from "next/dynamic"
 import { useParams, useRouter } from "next/navigation"
 import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"
@@ -23,8 +24,30 @@ import {
   useUpdatePlayerPhotoMutation
 } from "@/lib/queries/players-queries"
 import { HandListAccordion } from "@/components/hand-list-accordion"
-import { PrizeHistoryChart, TournamentCategoryChart } from "@/components/player-charts"
-import { AdvancedStatsCard, PositionalStatsCard, PerformanceChartCard } from "@/components/player-stats"
+
+// Dynamic imports for chart components (Recharts is heavy)
+const PrizeHistoryChart = dynamic(() => import("@/components/player-charts").then(mod => ({ default: mod.PrizeHistoryChart })), {
+  ssr: false,
+  loading: () => <div className="h-64 flex items-center justify-center">차트 로딩 중...</div>
+})
+const TournamentCategoryChart = dynamic(() => import("@/components/player-charts").then(mod => ({ default: mod.TournamentCategoryChart })), {
+  ssr: false,
+  loading: () => <div className="h-64 flex items-center justify-center">차트 로딩 중...</div>
+})
+
+// Dynamic imports for stats cards
+const AdvancedStatsCard = dynamic(() => import("@/components/player-stats").then(mod => ({ default: mod.AdvancedStatsCard })), {
+  ssr: false,
+  loading: () => <div className="h-48 flex items-center justify-center">통계 로딩 중...</div>
+})
+const PositionalStatsCard = dynamic(() => import("@/components/player-stats").then(mod => ({ default: mod.PositionalStatsCard })), {
+  ssr: false,
+  loading: () => <div className="h-64 flex items-center justify-center">통계 로딩 중...</div>
+})
+const PerformanceChartCard = dynamic(() => import("@/components/player-stats").then(mod => ({ default: mod.PerformanceChartCard })), {
+  ssr: false,
+  loading: () => <div className="h-64 flex items-center justify-center">차트 로딩 중...</div>
+})
 
 type Tournament = {
   id: string
