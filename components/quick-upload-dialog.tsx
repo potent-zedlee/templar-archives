@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Plus, Youtube, Upload, Radio, Loader2, CheckCircle2, FolderTree } from 'lucide-react'
 import { createUnsortedVideo, createUnsortedVideosBatch } from '@/lib/unsorted-videos'
@@ -56,6 +57,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
   const [newDayName, setNewDayName] = useState('')
 
   // Channel Import tab state
+  const [inputMethod, setInputMethod] = useState<'url' | 'id'>('url') // URL or Channel ID
   const [channelUrl, setChannelUrl] = useState('')
   const [maxResults, setMaxResults] = useState('25')
   const [fetchedVideos, setFetchedVideos] = useState<YouTubeVideo[]>([])
@@ -283,8 +285,16 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
 
   const handleFetchChannelStreams = async () => {
     if (!channelUrl) {
-      toast.error('Please enter a channel URL')
+      toast.error(inputMethod === 'id' ? 'Please enter a channel ID' : 'Please enter a channel URL')
       return
+    }
+
+    // Validate channel ID format if inputMethod is 'id'
+    if (inputMethod === 'id') {
+      if (!channelUrl.match(/^UC[a-zA-Z0-9_-]{22}$/)) {
+        toast.error('Invalid channel ID format. Must start with "UC" and be 24 characters long.')
+        return
+      }
     }
 
     setFetchingVideos(true)
@@ -847,16 +857,44 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
           </TabsContent>
 
           <TabsContent value="channel" className="space-y-4">
+            {/* Input Method Selection */}
+            <div className="space-y-3">
+              <Label>Input Method</Label>
+              <RadioGroup value={inputMethod} onValueChange={(value) => setInputMethod(value as 'url' | 'id')}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="url" id="input-url" />
+                  <Label htmlFor="input-url" className="font-normal cursor-pointer">
+                    Channel URL (e.g., youtube.com/@channelname)
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="id" id="input-id" />
+                  <Label htmlFor="input-id" className="font-normal cursor-pointer">
+                    Channel ID (e.g., UC... - saves API quota)
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Channel Input */}
             <div className="space-y-2">
-              <Label htmlFor="channel-url">YouTube Channel URL</Label>
+              <Label htmlFor="channel-input">
+                {inputMethod === 'id' ? 'YouTube Channel ID' : 'YouTube Channel URL'}
+              </Label>
               <Input
-                id="channel-url"
-                placeholder="https://www.youtube.com/@channelname"
+                id="channel-input"
+                placeholder={
+                  inputMethod === 'id'
+                    ? 'UC... (24 characters, starts with UC)'
+                    : 'https://www.youtube.com/@channelname'
+                }
                 value={channelUrl}
                 onChange={(e) => setChannelUrl(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Enter a channel URL to fetch completed live streams
+                {inputMethod === 'id'
+                  ? 'Directly input channel ID to save API quota (100+ units)'
+                  : 'Enter a channel URL to fetch completed live streams'}
               </p>
             </div>
 
