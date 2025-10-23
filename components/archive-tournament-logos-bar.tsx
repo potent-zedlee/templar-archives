@@ -7,7 +7,7 @@
  * - Netflix/Spotify 스타일 수평 스크롤
  * - ALL 버튼 + 주요 투어 로고
  * - 선택된 투어 강조
- * - 부모 카테고리 클릭 시 자식 카테고리 드롭다운 표시
+ * - 부모 카테고리 클릭 시 자식 카테고리가 옆에 인라인 확장
  * - 게임 타입별 필터링 (토너먼트/캐쉬게임/둘 다)
  */
 
@@ -16,8 +16,7 @@ import { cn } from '@/lib/utils'
 import { CategoryLogo } from '@/components/category-logo'
 import { useActiveCategoriesQuery } from '@/lib/queries/category-queries'
 import type { TournamentCategory as DatabaseCategory, GameType } from '@/lib/tournament-categories-db'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 
 interface ArchiveTournamentLogosBarProps {
   selectedCategory: string
@@ -33,7 +32,7 @@ export function ArchiveTournamentLogosBar({
   className
 }: ArchiveTournamentLogosBarProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null)
+  const [expandedParentId, setExpandedParentId] = useState<string | null>(null)
 
   // Fetch active categories from database
   const { data: allCategories = [] } = useActiveCategoriesQuery()
@@ -129,80 +128,42 @@ export function ArchiveTournamentLogosBar({
           {rootCategories.map((category) => {
             const children = getChildren(category.id)
             const hasChildren = children.length > 0
+            const isExpanded = expandedParentId === category.id
 
-            if (hasChildren) {
-              // Parent category with children - show dropdown
-              return (
-                <Popover
-                  key={category.id}
-                  open={openPopoverId === category.id}
-                  onOpenChange={(open) => {
-                    setOpenPopoverId(open ? category.id : null)
-                  }}
-                >
-                  <PopoverTrigger asChild>
-                    <div className="flex-shrink-0 relative">
-                      <TournamentLogoButton
-                        category={category}
-                        isSelected={selectedCategory === category.id}
-                        onClick={() => {
-                          onCategoryChange(category.id)
-                          setOpenPopoverId(category.id)
-                        }}
-                        hasChildren={hasChildren}
-                      />
-                    </div>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    side="bottom"
-                    align="start"
-                    className="w-auto p-2"
-                    sideOffset={8}
-                  >
-                    <div className="space-y-1">
-                      {children.map((child) => (
-                        <button
-                          key={child.id}
-                          onClick={() => {
-                            onCategoryChange(child.id)
-                            setOpenPopoverId(null)
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors",
-                            selectedCategory === child.id
-                              ? "bg-primary text-primary-foreground"
-                              : "hover:bg-muted"
-                          )}
-                        >
-                          <div className="w-8 h-8 flex items-center justify-center">
-                            <CategoryLogo
-                              category={child.id}
-                              size="sm"
-                              className="w-6 h-6"
-                              fallback="text"
-                            />
-                          </div>
-                          <span className="text-sm font-medium whitespace-nowrap">
-                            {child.display_name}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              )
-            } else {
-              // Regular category without children
-              return (
+            return (
+              <div key={category.id} className="flex-shrink-0 flex items-center gap-4">
+                {/* Parent Category Button */}
                 <TournamentLogoButton
-                  key={category.id}
                   category={category}
                   isSelected={selectedCategory === category.id}
-                  onClick={() => onCategoryChange(category.id)}
-                  hasChildren={false}
+                  onClick={() => {
+                    if (hasChildren) {
+                      setExpandedParentId(isExpanded ? null : category.id)
+                    }
+                    onCategoryChange(category.id)
+                  }}
+                  hasChildren={hasChildren}
                 />
-              )
-            }
+
+                {/* Child Categories (shown inline when expanded) */}
+                {isExpanded && hasChildren && (
+                  <div className="flex items-center gap-3 pl-2">
+                    {children.map((child) => (
+                      <TournamentLogoButton
+                        key={child.id}
+                        category={child}
+                        isSelected={selectedCategory === child.id}
+                        onClick={() => {
+                          onCategoryChange(child.id)
+                        }}
+                        hasChildren={false}
+                        isChildCategory={true}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
           })}
 
           {/* Fade out effect at the end */}
@@ -218,13 +179,15 @@ interface TournamentLogoButtonProps {
   isSelected: boolean
   onClick: () => void
   hasChildren?: boolean
+  isChildCategory?: boolean
 }
 
 function TournamentLogoButton({
   category,
   isSelected,
   onClick,
-  hasChildren = false
+  hasChildren = false,
+  isChildCategory = false
 }: TournamentLogoButtonProps) {
   return (
     <button
@@ -234,7 +197,8 @@ function TournamentLogoButton({
         "flex-shrink-0 flex flex-col items-center gap-2 group transition-all duration-200",
         "hover:scale-110",
         isSelected && "scale-110",
-        "relative"
+        "relative",
+        isChildCategory && "opacity-90"
       )}
       aria-label={`Filter by ${category.display_name}`}
       aria-pressed={isSelected}
@@ -243,14 +207,20 @@ function TournamentLogoButton({
       {/* Logo Container */}
       <div
         className={cn(
-          "w-16 h-16 rounded-lg flex items-center justify-center transition-all duration-200 overflow-hidden relative",
+          "rounded-lg flex items-center justify-center transition-all duration-200 overflow-hidden relative",
+          isChildCategory ? "w-12 h-12" : "w-16 h-16",
           isSelected && "ring-2 ring-primary shadow-lg shadow-primary/20"
         )}
       >
+        {isChildCategory && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3">
+            <ChevronRight className="w-3 h-3 text-primary/70" />
+          </div>
+        )}
         <CategoryLogo
           category={category.id}
-          size="lg"
-          className="w-12 h-12"
+          size={isChildCategory ? "md" : "lg"}
+          className={isChildCategory ? "w-10 h-10" : "w-12 h-12"}
           fallback="text"
         />
         {hasChildren && (
@@ -263,7 +233,8 @@ function TournamentLogoButton({
       {/* Tournament Name */}
       <span
         className={cn(
-          "text-xs font-medium transition-colors duration-200 max-w-[64px] text-center truncate",
+          "text-xs font-medium transition-colors duration-200 text-center truncate",
+          isChildCategory ? "max-w-[48px]" : "max-w-[64px]",
           isSelected
             ? "text-white"
             : "text-gray-400 group-hover:text-gray-300"
