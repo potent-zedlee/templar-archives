@@ -7,6 +7,7 @@
  */
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { Header } from "@/components/header"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
@@ -20,9 +21,30 @@ import { useIsMobile } from "@/hooks/use-media-query"
 import { ArchiveDataProvider } from "../_components/ArchiveDataContext"
 import { ArchiveProviders } from "../_components/ArchiveProviders"
 import { ArchiveToolbar } from "../_components/ArchiveToolbar"
-import { ArchiveEventsList } from "../_components/ArchiveEventsList"
-import { ArchiveHandHistory } from "../_components/ArchiveHandHistory"
-import { ArchiveDialogs } from "../_components/ArchiveDialogs"
+
+// Dynamic imports for heavy components
+const ArchiveEventsList = dynamic(
+  () => import("../_components/ArchiveEventsList").then(mod => ({ default: mod.ArchiveEventsList })),
+  {
+    ssr: false,
+    loading: () => <CardSkeleton count={3} variant="compact" />
+  }
+)
+
+const ArchiveHandHistory = dynamic(
+  () => import("../_components/ArchiveHandHistory").then(mod => ({ default: mod.ArchiveHandHistory })),
+  {
+    ssr: false,
+    loading: () => <CardSkeleton count={2} variant="detailed" />
+  }
+)
+
+const ArchiveDialogs = dynamic(
+  () => import("../_components/ArchiveDialogs").then(mod => ({ default: mod.ArchiveDialogs })),
+  {
+    ssr: false
+  }
+)
 
 export default function TournamentArchivePage() {
   // React Query: Fetch data (only tournaments)

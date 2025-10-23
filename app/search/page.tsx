@@ -1,12 +1,20 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
+import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { PageTransition } from "@/components/page-transition"
 import { useIsMobile } from "@/hooks/use-media-query"
-import { FilterPanel } from "@/components/filter-panel"
 import { fetchHandsWithDetails } from "@/lib/queries"
+
+// Dynamic import for heavy filter panel
+const FilterPanel = dynamic(
+  () => import("@/components/filter-panel").then(mod => ({ default: mod.FilterPanel })),
+  {
+    ssr: false
+  }
+)
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
