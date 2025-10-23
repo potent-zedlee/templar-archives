@@ -8,7 +8,6 @@ import { StatsCounter } from "@/components/main/stats-counter"
 import { WeeklyHighlights } from "@/components/main/weekly-highlights"
 import { LatestPosts } from "@/components/main/latest-posts"
 import { TopPlayers } from "@/components/main/top-players"
-import { LivePokerStreams } from "@/components/main/live-poker-streams"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
 import type { PlatformStats, WeeklyHighlight, TopPlayer } from "@/lib/main-page"
@@ -173,16 +172,9 @@ export default function homeClient() {
       <Header />
       <PageTransition variant="fade">
         <main id="main-content" role="main">
-          {/* Live Poker Streams */}
-          <section className="py-12 md:py-16">
-            <div className="container max-w-7xl mx-auto px-4 md:px-6">
-              <LivePokerStreams />
-            </div>
-          </section>
-
           {/* Platform Statistics */}
           {data.stats && (
-            <section className="py-12 md:py-16 bg-muted/30">
+            <section className="py-12 md:py-16">
               <div className="container max-w-7xl mx-auto px-4 md:px-6">
                 <StatsCounter stats={data.stats} />
               </div>
