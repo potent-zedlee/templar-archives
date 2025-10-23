@@ -10,15 +10,21 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Youtube, Upload } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Youtube, Upload, FolderOpen, Calendar, PlayCircle } from "lucide-react"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
+import { organizeVideo } from "@/lib/unsorted-videos"
+import type { UnsortedVideo } from "@/lib/types/archive"
 
 interface DayDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   selectedSubEventId: string | null
   editingDayId?: string
+  unsortedVideos?: UnsortedVideo[]
   onSuccess?: () => void
 }
 
@@ -27,12 +33,14 @@ export function DayDialog({
   onOpenChange,
   selectedSubEventId,
   editingDayId = "",
+  unsortedVideos = [],
   onSuccess,
 }: DayDialogProps) {
   const [newDayName, setNewDayName] = useState("")
-  const [videoSourceTab, setVideoSourceTab] = useState<'youtube' | 'upload'>('youtube')
+  const [videoSourceTab, setVideoSourceTab] = useState<'youtube' | 'upload' | 'unsorted'>('youtube')
   const [newDayVideoUrl, setNewDayVideoUrl] = useState("")
   const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [selectedUnsortedId, setSelectedUnsortedId] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
 
   const supabase = createClientSupabaseClient()
@@ -43,6 +51,7 @@ export function DayDialog({
       setNewDayName("")
       setNewDayVideoUrl("")
       setUploadFile(null)
+      setSelectedUnsortedId(null)
       setVideoSourceTab('youtube')
       setUploading(false)
     }
@@ -112,6 +121,36 @@ export function DayDialog({
     }
   }
 
+  const organizeUnsortedVideo = async () => {
+    if (!selectedSubEventId) {
+      toast.error('No sub-event selected')
+      return
+    }
+
+    if (!selectedUnsortedId) {
+      toast.error('Please select a video')
+      return
+    }
+
+    try {
+      setUploading(true)
+      const result = await organizeVideo(selectedUnsortedId, selectedSubEventId)
+
+      if (result.success) {
+        toast.success('Video organized successfully')
+        onOpenChange(false)
+        onSuccess?.()
+      } else {
+        toast.error(result.error || 'Failed to organize video')
+      }
+    } catch (error) {
+      console.error('Error organizing video:', error)
+      toast.error('Failed to organize video')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   const addDay = async () => {
     if (!selectedSubEventId) {
       toast.error('No sub-event selected')
@@ -121,6 +160,11 @@ export function DayDialog({
     // If editing, call updateDay instead
     if (editingDayId) {
       return updateDay()
+    }
+
+    // If unsorted tab, organize existing video
+    if (videoSourceTab === 'unsorted') {
+      return organizeUnsortedVideo()
     }
 
     try {
@@ -231,6 +275,15 @@ export function DayDialog({
                 <Upload className="mr-2 h-4 w-4" />
                 Upload
               </Button>
+              <Button
+                type="button"
+                variant={videoSourceTab === 'unsorted' ? 'default' : 'outline'}
+                onClick={() => setVideoSourceTab('unsorted')}
+                className="flex-1"
+              >
+                <FolderOpen className="mr-2 h-4 w-4" />
+                From Unsorted
+              </Button>
             </div>
           </div>
 
@@ -281,6 +334,88 @@ export function DayDialog({
                   </p>
                 </label>
               </div>
+            </div>
+          )}
+
+          {/* Unsorted Tab */}
+          {videoSourceTab === 'unsorted' && (
+            <div className="space-y-2">
+              <Label>Select Video from Unsorted</Label>
+              {unsortedVideos.length === 0 ? (
+                <div className="border-2 border-dashed rounded-lg p-8 text-center">
+                  <FolderOpen className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
+                  <p className="text-body font-medium text-muted-foreground">No unsorted videos available</p>
+                  <p className="text-caption text-muted-foreground mt-1">
+                    Upload videos to the Unsorted folder first
+                  </p>
+                </div>
+              ) : (
+                <ScrollArea className="h-[350px] border rounded-lg">
+                  <div className="p-4 space-y-3">
+                    {unsortedVideos.map((video) => (
+                      <Card
+                        key={video.id}
+                        className={`p-4 cursor-pointer transition-all ${
+                          selectedUnsortedId === video.id
+                            ? 'border-primary bg-primary/5'
+                            : 'hover:border-primary/50'
+                        }`}
+                        onClick={() => setSelectedUnsortedId(video.id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          {/* Video Icon/Thumbnail */}
+                          <div className="shrink-0">
+                            {video.video_source === 'youtube' ? (
+                              <div className="w-16 h-16 bg-red-500/10 rounded flex items-center justify-center">
+                                <Youtube className="h-8 w-8 text-red-500" />
+                              </div>
+                            ) : (
+                              <div className="w-16 h-16 bg-primary/10 rounded flex items-center justify-center">
+                                <PlayCircle className="h-8 w-8 text-primary" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Video Info */}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-sm truncate mb-1">{video.name}</h4>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="outline" className="text-xs">
+                                {video.video_source === 'youtube' ? 'YouTube' :
+                                 video.video_source === 'upload' ? 'Upload' :
+                                 video.video_source || 'Unknown'}
+                              </Badge>
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(video.created_at).toLocaleDateString()}
+                              </div>
+                            </div>
+                            {video.video_url && (
+                              <p className="text-xs text-muted-foreground mt-1 truncate">
+                                {video.video_url}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Selected Indicator */}
+                          {selectedUnsortedId === video.id && (
+                            <div className="shrink-0">
+                              <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                                <svg className="w-4 h-4 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+              <p className="text-caption text-muted-foreground">
+                Selected video will be moved from Unsorted to this event
+              </p>
             </div>
           )}
 
