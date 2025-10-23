@@ -60,7 +60,7 @@ const ArchiveInfoDialog = dynamic(() => import('@/components/archive-info-dialog
 
 export function ArchiveDialogs() {
   const queryClient = useQueryClient()
-  const { tournaments } = useArchiveData()
+  const { tournaments, unsortedVideos } = useArchiveData()
   const { userEmail, selectedDay } = useArchiveDataStore()
 
   const {
@@ -258,6 +258,7 @@ export function ArchiveDialogs() {
         onOpenChange={closeDayDialog}
         selectedSubEventId={selectedSubEventIdForDialog}
         editingDayId={dayDialog.editingId || ''}
+        unsortedVideos={unsortedVideos}
         onSuccess={handleDaySuccess}
       />
 

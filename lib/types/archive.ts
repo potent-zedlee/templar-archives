@@ -61,6 +61,7 @@ export interface SubEvent {
   tournament_id: string
   name: string
   date: string
+  event_number?: string
   total_prize?: string
   winner?: string
   buy_in?: string
@@ -159,6 +160,7 @@ export interface TournamentFormData {
 export interface SubEventFormData {
   name: string
   date: string
+  event_number: string
   total_prize: string
   winner: string
   buy_in: string
@@ -366,6 +368,7 @@ export const INITIAL_TOURNAMENT_FORM: TournamentFormData = {
 export const INITIAL_SUBEVENT_FORM: SubEventFormData = {
   name: "",
   date: "",
+  event_number: "",
   total_prize: "",
   winner: "",
   buy_in: "",

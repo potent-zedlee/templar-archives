@@ -43,6 +43,7 @@ export function SubEventDialog({
   // Form state
   const [newSubEventName, setNewSubEventName] = useState("")
   const [newSubEventDate, setNewSubEventDate] = useState("")
+  const [newSubEventEventNumber, setNewSubEventEventNumber] = useState("")
   const [newSubEventPrize, setNewSubEventPrize] = useState("")
   const [newSubEventWinner, setNewSubEventWinner] = useState("")
   const [newSubEventBuyIn, setNewSubEventBuyIn] = useState("")
@@ -84,6 +85,7 @@ export function SubEventDialog({
 
       setNewSubEventName(subEvent.name)
       setNewSubEventDate(subEvent.date || "")
+      setNewSubEventEventNumber(subEvent.event_number || "")
       setNewSubEventPrize(subEvent.total_prize || "")
       setNewSubEventWinner(subEvent.winner || "")
       setNewSubEventBuyIn(subEvent.buy_in || "")
@@ -121,6 +123,7 @@ export function SubEventDialog({
   const resetForm = () => {
     setNewSubEventName("")
     setNewSubEventDate("")
+    setNewSubEventEventNumber("")
     setNewSubEventPrize("")
     setNewSubEventWinner("")
     setNewSubEventBuyIn("")
@@ -265,6 +268,7 @@ export function SubEventDialog({
           .update({
             name: newSubEventName,
             date: newSubEventDate,
+            event_number: newSubEventEventNumber || null,
             total_prize: newSubEventPrize || null,
             winner: newSubEventWinner || null,
             buy_in: newSubEventBuyIn || null,
@@ -307,6 +311,7 @@ export function SubEventDialog({
             tournament_id: selectedTournamentId,
             name: newSubEventName,
             date: newSubEventDate,
+            event_number: newSubEventEventNumber || null,
             total_prize: newSubEventPrize || null,
             winner: newSubEventWinner || null,
             buy_in: newSubEventBuyIn || null,
@@ -381,6 +386,19 @@ export function SubEventDialog({
                     value={newSubEventDate}
                     onChange={(e) => setNewSubEventDate(e.target.value)}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="subevent-event-number">Event Number</Label>
+                  <Input
+                    id="subevent-event-number"
+                    placeholder="e.g., #15, Event 1A, #1"
+                    value={newSubEventEventNumber}
+                    onChange={(e) => setNewSubEventEventNumber(e.target.value)}
+                  />
+                  <p className="text-caption text-muted-foreground">
+                    Optional. Supports both sequential numbering and official event codes.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
