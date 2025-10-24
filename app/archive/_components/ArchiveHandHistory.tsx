@@ -21,7 +21,7 @@ import { useMemo } from 'react'
 
 export function ArchiveHandHistory() {
   const { tournaments, hands } = useArchiveData()
-  const { setSelectedDay } = useArchiveDataStore()
+  const { selectedDay, setSelectedDay } = useArchiveDataStore()
   const { openVideoDialog, advancedFilters } = useArchiveUIStore()
 
   // Filter hands based on advanced filters
@@ -67,9 +67,11 @@ export function ArchiveHandHistory() {
 
   // Get selected day data
   const selectedDayData = useMemo(() => {
+    if (!selectedDay) return null
+
     for (const tournament of tournaments) {
       for (const subEvent of tournament.sub_events || []) {
-        const day = subEvent.days?.find((d) => d.selected)
+        const day = subEvent.days?.find((d) => d.id === selectedDay)
         if (day) {
           return {
             day,
@@ -80,7 +82,7 @@ export function ArchiveHandHistory() {
       }
     }
     return null
-  }, [tournaments])
+  }, [tournaments, selectedDay])
 
   // Build breadcrumb title
   const title = useMemo(() => {
