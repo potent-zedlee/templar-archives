@@ -1,7 +1,7 @@
 "use client"
 
 import { memo } from "react"
-import { ChevronRight, Play, Info, Plus } from "lucide-react"
+import { ChevronRight, Play, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { getCategoryByAlias } from "@/lib/tournament-categories"
@@ -16,8 +16,6 @@ interface ArchiveFolderListProps {
   loading?: boolean
   // Context menu actions
   onShowInfo?: (item: FolderItem) => void
-  onAddTournament?: () => void
-  isAdmin?: boolean
 }
 
 export const ArchiveFolderList = memo(function ArchiveFolderList({
@@ -26,8 +24,6 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   onSelectDay,
   loading = false,
   onShowInfo,
-  onAddTournament,
-  isAdmin = false,
 }: ArchiveFolderListProps) {
   if (loading) {
     return (
@@ -43,19 +39,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     return (
       <div className="text-center py-16 text-muted-foreground">
         <p className="text-lg font-medium mb-2">No tournaments yet</p>
-        <p className="text-sm mb-6">Get started by creating your first tournament</p>
-
-        {isAdmin && onAddTournament && (
-          <Button
-            variant="default"
-            size="lg"
-            onClick={onAddTournament}
-            className="mx-auto shadow-lg hover:shadow-xl transition-all"
-          >
-            <Plus className="mr-2 h-5 w-5" />
-            Create Your First Tournament
-          </Button>
-        )}
+        <p className="text-sm">Use the toolbar above to add tournaments</p>
       </div>
     )
   }
