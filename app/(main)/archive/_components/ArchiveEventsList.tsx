@@ -299,6 +299,8 @@ export function ArchiveEventsList() {
         onSelectDay={handleSelectDay}
         loading={tournamentsLoading}
         onShowInfo={handleShowInfo}
+        onAddSubEvent={(tournamentId) => openSubEventDialog(tournamentId)}
+        isAdmin={isUserAdmin}
       />
     </Card>
   )
