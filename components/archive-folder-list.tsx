@@ -4,6 +4,7 @@ import { memo } from "react"
 import { ChevronRight, Play, Info, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { getCategoryByAlias } from "@/lib/tournament-categories"
 import type { FolderItem } from "@/lib/types/archive"
 import type { Tournament, SubEvent, Day } from "@/lib/types/archive"
 import Image from "next/image"
@@ -94,19 +95,22 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
 
           {/* Logo */}
           <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
-            {tournament.category_logo ? (
-              <Image
-                src={tournament.category_logo}
-                alt={tournament.category}
-                width={48}
-                height={48}
-                className="object-contain"
-              />
-            ) : (
-              <div className="w-full h-full bg-primary/10 rounded flex items-center justify-center text-xs font-bold text-primary">
-                {tournament.category.slice(0, 2)}
-              </div>
-            )}
+            {(() => {
+              const logoUrl = tournament.category_logo || getCategoryByAlias(tournament.category)?.logoUrl
+              return logoUrl ? (
+                <Image
+                  src={logoUrl}
+                  alt={tournament.category}
+                  width={48}
+                  height={48}
+                  className="object-contain"
+                />
+              ) : (
+                <div className="w-full h-full bg-primary/10 rounded flex items-center justify-center text-xs font-bold text-primary">
+                  {tournament.category.slice(0, 2).toUpperCase()}
+                </div>
+              )
+            })()}
           </div>
 
           {/* Location */}
@@ -283,13 +287,17 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           {/* Empty space */}
         </div>
 
-        {/* YouTube Icon */}
+        {/* Video Icon */}
         <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
-          {day.video_source === "youtube" && day.video_url && (
+          {day.video_source === "youtube" && day.video_url ? (
             <div className="w-10 h-10 bg-red-600 rounded flex items-center justify-center">
               <Play className="h-5 w-5 text-white fill-white" />
             </div>
-          )}
+          ) : (day.video_file || day.video_nas_path) ? (
+            <div className="w-10 h-10 bg-yellow-500 rounded flex items-center justify-center">
+              <Play className="h-5 w-5 text-white fill-white" />
+            </div>
+          ) : null}
         </div>
 
         {/* Empty (location column) */}
@@ -327,17 +335,6 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
 
   return (
     <div className="border border-border rounded-lg overflow-hidden bg-card">
-      {/* Table Header */}
-      <div className="flex items-center gap-4 px-4 py-3 bg-muted/50 border-b border-border font-semibold text-sm">
-        <div className="w-24 flex-shrink-0">Date</div>
-        <div className="flex-shrink-0 w-4">{/* Expand icon space */}</div>
-        <div className="flex-shrink-0 w-12">{/* Logo space */}</div>
-        <div className="w-32 flex-shrink-0">Location</div>
-        <div className="flex-1 min-w-0">Event Name</div>
-        <div className="w-32 text-right">Prize</div>
-        <div className="flex-shrink-0 w-8">{/* Info button space */}</div>
-      </div>
-
       {/* Table Body */}
       <div className="divide-y divide-border/50">
         {items

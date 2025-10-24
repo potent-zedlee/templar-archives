@@ -9,6 +9,7 @@
 
 import { useState, useEffect, memo, useCallback, useMemo } from "react"
 import dynamic from "next/dynamic"
+import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/components/auth-provider"
 import { Header } from "@/components/header"
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
@@ -157,7 +158,7 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
             <ArchiveToolbar />
 
             {/* Main Content */}
-            <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
+            <div className="container max-w-7xl mx-auto py-4 md:py-6 px-4 md:px-6">
               {isMobile ? (
                 // ============================================================
                 // Mobile Layout
@@ -186,7 +187,19 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
                         </DrawerContent>
                       </Drawer>
 
-                      <ArchiveHandHistory />
+                      <AnimatePresence mode="wait">
+                        {selectedDay && (
+                          <motion.div
+                            key="mobile-hand-history"
+                            initial={{ opacity: 0, x: 100 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 100 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                          >
+                            <ArchiveHandHistory />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   )}
                 </>
@@ -207,9 +220,22 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
 
                       <ResizableHandle withHandle />
 
-                      <ResizablePanel defaultSize={65} minSize={50}>
-                        <ArchiveHandHistory />
-                      </ResizablePanel>
+                      <AnimatePresence mode="wait">
+                        {selectedDay && (
+                          <ResizablePanel defaultSize={65} minSize={50}>
+                            <motion.div
+                              key="hand-history"
+                              initial={{ opacity: 0, x: 100 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 100 }}
+                              transition={{ duration: 0.3, ease: "easeInOut" }}
+                              className="h-full"
+                            >
+                              <ArchiveHandHistory />
+                            </motion.div>
+                          </ResizablePanel>
+                        )}
+                      </AnimatePresence>
                     </ResizablePanelGroup>
                   )}
                 </>
