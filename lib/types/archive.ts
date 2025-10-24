@@ -52,6 +52,7 @@ export interface Tournament {
   country?: string
   start_date: string
   end_date: string
+  total_prize?: string
   created_at?: string
   // UI state (클라이언트 전용)
   sub_events?: SubEvent[]
@@ -84,6 +85,7 @@ export interface Day {
   name: string
   video_url?: string
   video_file?: string
+  video_nas_path?: string
   video_source?: VideoSource
   published_at?: string
   created_at?: string
