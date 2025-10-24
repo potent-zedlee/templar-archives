@@ -14,12 +14,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { Moon, Sun, Menu, X, User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, Newspaper, Radio, Folder, Archive } from "lucide-react"
+import { Moon, Sun, Menu, X, User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, ChevronRight, Newspaper, Radio, Folder, Archive } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useAuth } from "@/components/auth-provider"
 import { signOut } from "@/lib/auth"
 import { isAdmin, isReporterOrAdmin } from "@/lib/admin"
 import { NotificationBell } from "@/components/notification-bell"
+import { motion, AnimatePresence } from "framer-motion"
 
 export function Header() {
   const pathname = usePathname()
@@ -30,6 +31,8 @@ export function Header() {
   const [mounted, setMounted] = useState(false)
   const [isUserAdmin, setIsUserAdmin] = useState(false)
   const [isUserReporter, setIsUserReporter] = useState(false)
+  const [archiveExpanded, setArchiveExpanded] = useState(false)
+  const [archiveExpandedMobile, setArchiveExpandedMobile] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -125,32 +128,63 @@ export function Header() {
 
           <nav className="hidden md:flex items-center gap-6" role="navigation" aria-label="Main navigation">
             {navLinks.map((link, index) => {
-              // Check if this link has subItems (dropdown)
+              // Check if this link has subItems (expandable)
               if ('subItems' in link && link.subItems) {
-                const isActive = pathname.startsWith("/archive")
+                const isActive = pathname.startsWith("/archive") ||
+                               pathname.startsWith("/search")
 
                 return (
-                  <DropdownMenu key={index}>
-                    <DropdownMenuTrigger className={cn(
-                      "text-sm font-medium transition-colors hover:text-foreground relative inline-flex items-center gap-1 bg-transparent border-0 cursor-pointer",
+                  <div
+                    key={index}
+                    className="relative flex items-center"
+                    onMouseEnter={() => setArchiveExpanded(true)}
+                    onMouseLeave={() => setArchiveExpanded(false)}
+                  >
+                    <div className={cn(
+                      "text-sm font-medium transition-colors hover:text-foreground relative inline-flex items-center gap-1 cursor-pointer",
                       isActive ? "text-foreground" : "text-muted-foreground"
                     )}>
                       {link.label}
-                      <ChevronDown className="h-3 w-3" />
+                      <ChevronRight className={cn(
+                        "h-3 w-3 transition-transform duration-300",
+                        archiveExpanded && "rotate-90"
+                      )} />
                       {isActive && (
                         <span className="absolute -bottom-[21px] left-0 right-0 h-0.5 bg-primary" />
                       )}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      {link.subItems.map((subItem) => (
-                        <DropdownMenuItem key={subItem.href} asChild>
-                          <Link href={subItem.href}>
-                            {subItem.label}
-                          </Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </div>
+
+                    <AnimatePresence>
+                      {archiveExpanded && (
+                        <motion.div
+                          initial={{ opacity: 0, width: 0, x: -10 }}
+                          animate={{ opacity: 1, width: "auto", x: 0 }}
+                          exit={{ opacity: 0, width: 0, x: -10 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                          className="absolute left-full top-0 ml-2 flex items-center gap-3 bg-background/95 backdrop-blur-sm border border-border/40 rounded-md shadow-lg px-4 py-2 whitespace-nowrap"
+                        >
+                          {link.subItems.map((subItem, idx) => {
+                            const subIsActive = pathname === subItem.href ||
+                                              pathname.startsWith(subItem.href)
+                            return (
+                              <Link
+                                key={subItem.href}
+                                href={subItem.href}
+                                className={cn(
+                                  "text-sm font-medium transition-colors hover:text-foreground",
+                                  subIsActive
+                                    ? "text-primary"
+                                    : "text-muted-foreground"
+                                )}
+                              >
+                                {subItem.label}
+                              </Link>
+                            )
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 )
               }
 
@@ -315,31 +349,62 @@ export function Header() {
         <div className="md:hidden border-b border-border bg-background">
           <nav className="container max-w-7xl mx-auto px-4 py-4 space-y-2">
             {navLinks.map((link, index) => {
-              // Check if this link has subItems (dropdown)
+              // Check if this link has subItems (accordion)
               if ('subItems' in link && link.subItems) {
+                const isActive = pathname.startsWith("/archive") ||
+                               pathname.startsWith("/search")
+
                 return (
                   <div key={index} className="space-y-1">
-                    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground">
-                      {link.label}
-                    </div>
-                    {link.subItems.map((subItem) => {
-                      const isActive = pathname === subItem.href || pathname.startsWith(subItem.href)
-                      return (
-                        <Link
-                          key={subItem.href}
-                          href={subItem.href}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={cn(
-                            "block px-8 py-2 rounded-md text-sm font-medium transition-colors",
-                            isActive
-                              ? "bg-primary/10 text-primary"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                          )}
+                    <button
+                      onClick={() => setArchiveExpandedMobile(!archiveExpandedMobile)}
+                      className={cn(
+                        "w-full flex items-center justify-between px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                        isActive
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      )}
+                    >
+                      <span>{link.label}</span>
+                      <ChevronDown className={cn(
+                        "h-4 w-4 transition-transform duration-300",
+                        archiveExpandedMobile && "rotate-180"
+                      )} />
+                    </button>
+
+                    <AnimatePresence>
+                      {archiveExpandedMobile && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                          className="overflow-hidden"
                         >
-                          {subItem.label}
-                        </Link>
-                      )
-                    })}
+                          <div className="pl-4 space-y-1 pt-1">
+                            {link.subItems.map((subItem) => {
+                              const subIsActive = pathname === subItem.href ||
+                                                pathname.startsWith(subItem.href)
+                              return (
+                                <Link
+                                  key={subItem.href}
+                                  href={subItem.href}
+                                  onClick={() => setMobileMenuOpen(false)}
+                                  className={cn(
+                                    "block px-8 py-2 rounded-md text-sm font-medium transition-colors",
+                                    subIsActive
+                                      ? "bg-primary/10 text-primary"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                  )}
+                                >
+                                  {subItem.label}
+                                </Link>
+                              )
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )
               }
