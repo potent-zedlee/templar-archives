@@ -218,7 +218,7 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
                         <ArchiveEventsList />
                       </ResizablePanel>
 
-                      <ResizableHandle withHandle />
+                      <ResizableHandle />
 
                       <AnimatePresence mode="wait">
                         {selectedDay && (
