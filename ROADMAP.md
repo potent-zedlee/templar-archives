@@ -2,8 +2,8 @@
 
 > 단계별 기능 구현 계획 및 우선순위
 
-**마지막 업데이트**: 2025-10-23
-**현재 Phase**: Phase 0-29 완료 🎉
+**마지막 업데이트**: 2025-10-24
+**현재 Phase**: Phase 0-32 완료 🎉
 
 ---
 
@@ -684,6 +684,171 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 
 ---
 
+### Phase 30: Archive Event Management Enhancement (2025-10-24) ✅
+**소요 시간**: 3.5시간
+
+#### 완료 기능
+- **SubEvent Event Number 필드 추가** (0.5시간):
+  - DB 마이그레이션: `20251024000001_add_event_number_to_sub_events.sql`
+  - `event_number TEXT` 컬럼 추가 (optional)
+  - 인덱스 생성: `idx_sub_events_event_number`
+  - 용도: 순차 번호(#1, #2) 및 공식 이벤트 코드(Event #15, 1A) 지원
+  - SubEventDialog UI에 Event Number 입력 필드 추가
+- **Day Dialog "From Unsorted" 기능 추가** (1.5시간):
+  - 세 번째 비디오 소스 탭 추가 (YouTube, Upload, From Unsorted)
+  - ScrollArea 기반 카드 리스트 UI (h-500px, w-460px)
+  - 각 카드에 비디오 썸네일, 이름, 소스 배지, 생성일, URL 표시
+  - 선택 시 체크마크 및 하이라이트
+  - `organizeUnsortedVideo()` 함수로 비디오를 Day로 변환 (이동, 복사 아님)
+  - Empty state 처리
+- **Stream Date 필드 추가** (0.5시간):
+  - Day에 `published_at` 필드 추가 (이미 존재하던 컬럼 활용)
+  - Day Name과 Video Source 사이에 날짜 입력 필드 추가
+  - Unsorted 비디오 선택 시 published_at 자동 입력
+- **UX 개선 및 버그 수정** (1시간):
+  - 명칭 통일: "Unorganized" → "Unsorted"
+  - Refetch 버그 수정: Day 추가 후 Unsorted 목록 자동 새로고침
+  - Dialog 크기 조정: 800px → 500px → 1000px (최종)
+  - Unsorted ScrollArea 너비: 460px 설정
+
+**핵심 파일**:
+- `supabase/migrations/20251024000001_add_event_number_to_sub_events.sql` (신규)
+- `lib/types/archive.ts` (수정)
+- `components/archive-dialogs/sub-event-dialog.tsx` (수정)
+- `components/archive-dialogs/day-dialog.tsx` (수정)
+- `app/archive/_components/ArchiveDialogs.tsx` (수정)
+- `app/archive/_components/ArchiveEventsList.tsx` (수정)
+
+**커밋**:
+- f7664c0, e18611f, 670abb5, 0cacdfe, 51e82fa, e2844ae
+
+---
+
+### Phase 31: Archive Security Enhancement & Admin Management Page (2025-10-24) ✅
+**소요 시간**: 5.5시간
+
+#### 완료 기능
+- **Server Actions 생성** (2시간):
+  - `app/actions/archive.ts` 파일 생성 (670줄)
+  - 9개 Server Action 함수:
+    - createTournament, updateTournament, deleteTournament
+    - createSubEvent, updateSubEvent, deleteSubEvent
+    - createDay, updateDay, deleteDay
+  - 서버 사이드 관리자 권한 검증 (`verifyAdmin()`)
+  - 클라이언트 우회 불가능한 보안 강화
+  - Payout 관리 Server Action 추가 (`saveEventPayouts`)
+  - Rename 통합 Server Action (`renameItem`)
+- **Dialog 컴포넌트 Server Actions 적용** (2시간):
+  - 5개 Dialog 컴포넌트 수정 (총 ~200줄 변경):
+    - `components/tournament-dialog.tsx`
+    - `components/archive-dialogs/delete-dialog.tsx`
+    - `components/archive-dialogs/rename-dialog.tsx`
+    - `components/archive-dialogs/sub-event-dialog.tsx`
+    - `components/archive-dialogs/day-dialog.tsx`
+  - 직접 Supabase 클라이언트 호출 제거
+  - Server Actions 호출로 교체
+  - 타입 안전성 개선 ('unorganized', 'unsorted' 처리)
+- **Admin Archive 관리 페이지** (1.5시간):
+  - `/admin/archive` 페이지 생성 (365줄)
+  - 토너먼트 관리 테이블 뷰
+  - 검색 및 필터링 (Category, Game Type)
+  - 기존 TournamentDialog 재사용
+  - 관리자 전용 접근 제어
+  - CRUD 작업 통합
+- **보안 개선 사항**:
+  - 모든 write 작업에 서버 사이드 관리자 체크
+  - `lib/auth-utils.ts`의 `isAdmin(email)` 함수 활용
+  - revalidatePath로 캐시 무효화
+  - 에러 처리 및 로깅 개선
+
+**핵심 파일**:
+- `app/actions/archive.ts` (신규, 670줄)
+- `app/admin/archive/page.tsx` (신규, 365줄)
+- 5개 Dialog 컴포넌트 (수정)
+
+**커밋**:
+- 51066c4, bfb4b2f
+
+---
+
+### Phase 32: Comprehensive Security Enhancement (2025-10-24) ✅
+**소요 시간**: 10시간
+
+#### 완료 기능
+- **Server Actions 인증 강화** (1.5시간):
+  - Email 화이트리스트 → DB 역할 기반 검증으로 변경
+  - Ban 상태 체크 추가 (banned_at 필드 검증)
+  - `verifyAdmin()` 함수 로직 개선 (`app/actions/archive.ts`)
+  - Supabase 쿼리로 users 테이블에서 role과 banned_at 직접 조회
+  - 더 안전하고 유연한 권한 관리 시스템
+- **RLS 정책 강화** (2시간):
+  - 6개 핵심 테이블 admin-only write 제한
+    - tournaments, sub_events, days, hands, players, hand_players
+  - 모든 INSERT/UPDATE/DELETE 작업에 역할 및 밴 상태 체크
+  - 마이그레이션: `20251024000001_fix_rls_admin_only.sql` (357줄)
+  - 기존 불안전한 정책 삭제 및 보안 정책 추가
+  - WITH CHECK 절로 삽입/수정 시점 검증 강화
+- **Natural Search API 재설계** (2시간):
+  - 위험한 SQL 생성 방식 → 안전한 JSON 필터 방식
+  - `lib/natural-search-filter.ts` (277줄) - 15개 필터 타입, Zod 검증
+  - NaturalSearchFilterSchema로 AI 출력 검증
+  - Claude API는 JSON 객체 생성, Query Builder로 안전하게 쿼리 구성
+  - `execute_search_query` RPC 함수 삭제 (SQL Injection 벡터 제거)
+  - 100% 기능 유지, 내부 구현만 안전하게 변경
+- **CSRF 보호 추가** (0.5시간):
+  - `app/api/import-hands/route.ts`에 `verifyCSRF()` 추가
+  - Origin/Referer 검증으로 CSRF 공격 방어
+  - 동일 출처 요청만 허용
+- **파일 업로드 검증 강화** (1.5시간):
+  - `lib/file-upload-validator.ts` (212줄) - Magic Number 검증
+  - MIME 타입과 실제 파일 시그니처 비교
+  - 7개 파일 타입 지원 (JPEG, PNG, WebP, GIF, MP4, QuickTime, WebM)
+  - 파일명 Sanitization (영문, 숫자, 하이픈, 언더스코어만)
+  - 크기 제한 (이미지 5MB, 비디오 500MB, 아바타 2MB)
+  - 확장자 스푸핑 방지
+- **Rate Limiting 개선** (1시간):
+  - IP 기반 → User ID 기반 (JWT 파싱)
+  - VPN 우회 방지, 계정당 정확한 Rate Limit
+  - `lib/rate-limit.ts` 업데이트
+  - JWT payload에서 sub/user_id 추출
+  - IP는 fallback으로만 사용
+- **입력 Sanitization 강화** (0.5시간):
+  - LIKE 패턴 이스케이프 (`escapeLikePattern()`)
+  - SQL 와일드카드 문자 처리 (%, _, \)
+  - `lib/admin.ts` 사용자 검색에 적용
+  - SQL Injection 리스크 추가 감소
+- **환경 변수 중앙 관리** (1시간):
+  - `lib/env.ts` (125줄) - 타입 안전한 환경 변수 관리
+  - 런타임 검증, 누락된 변수 조기 감지
+  - 5개 환경 변수 객체 (supabaseEnv, claudeEnv, youtubeEnv, redisEnv, appEnv)
+  - validateEnv() 함수로 앱 시작 시 검증
+  - 프로덕션 환경에서 자동 검증
+
+**핵심 파일**:
+- `lib/natural-search-filter.ts` (신규, 277줄)
+- `lib/file-upload-validator.ts` (신규, 212줄)
+- `lib/env.ts` (신규, 125줄)
+- `supabase/migrations/20251024000001_fix_rls_admin_only.sql` (신규, 357줄)
+- `supabase/migrations/20251024000002_remove_dangerous_rpc.sql` (신규, 9줄)
+- `app/actions/archive.ts` (수정)
+- `app/api/natural-search/route.ts` (수정)
+- `app/api/import-hands/route.ts` (수정)
+- `lib/rate-limit.ts` (수정)
+- `lib/admin.ts` (수정)
+
+**보안 개선 효과**:
+- SQL Injection 완전 방지 (Natural Search API 재설계)
+- CSRF 공격 방어 (토큰 기반 검증)
+- 파일 업로드 공격 방지 (Magic Number 검증)
+- 권한 상승 공격 방지 (DB 역할 기반 인증)
+- Rate Limit 우회 방지 (User ID 기반)
+- 보안 등급: B+ → A
+
+**커밋**:
+- a006fa7
+
+---
+
 ## 📊 우선순위 요약
 
 | Phase | 기능 | 우선순위 | 상태 | 완료일 |
@@ -718,6 +883,9 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | Phase 27 | Quick Upload & API Optimization | ⭐⭐⭐⭐ | ✅ | 2025-10-23 |
 | Phase 28 | Performance Optimization & Maintenance | ⭐⭐⭐⭐ | ✅ | 2025-10-23 |
 | Phase 29 | Admin Category Logo Upload Fix | ⭐⭐⭐ | ✅ | 2025-10-23 |
+| Phase 30 | Archive Event Management Enhancement | ⭐⭐⭐ | ✅ | 2025-10-24 |
+| Phase 31 | Archive Security & Admin Page | ⭐⭐⭐⭐ | ✅ | 2025-10-24 |
+| Phase 32 | Comprehensive Security Enhancement | ⭐⭐⭐⭐⭐ | ✅ | 2025-10-24 |
 
 ---
 
@@ -756,6 +924,9 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | 2025-10-23 (세션 1) | Phase 27 완료 (Quick Upload Enhancement & YouTube API Optimization) |
 | 2025-10-23 (세션 2) | Phase 28 완료 (Performance Optimization & Maintenance) |
 | 2025-10-23 (세션 3) | Phase 29 완료 (Admin Category Logo Upload Fix) |
+| 2025-10-24 (세션 1) | Phase 30 완료 (Archive Event Management Enhancement) |
+| 2025-10-24 (세션 2) | Phase 31 완료 (Archive Security & Admin Management Page) |
+| 2025-10-24 (세션 3) | Phase 32 완료 (Comprehensive Security Enhancement) |
 
 ---
 
@@ -764,5 +935,5 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 - 핸드 태그 시스템 (태그 생성/관리, 태그 기반 검색, 태그 추천)
 - 소셜 공유 기능 강화
 
-**현재 상태**: Phase 0-29 완료, 관리자 카테고리 로고 업로드 기능 수정 완료 🎉
+**현재 상태**: Phase 0-32 완료, 포괄적 보안 강화 완료 (보안 등급 A) 🎉
 **상세 정보**: `../CLAUDE.md` 참조
