@@ -300,10 +300,11 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           {day.name}
         </div>
 
-        {/* Player count (placeholder for now) */}
+        {/* Player count */}
         <div className="w-32 text-sm text-right text-muted-foreground">
-          {/* TODO: Calculate from hand_players */}
-          - players in video
+          {day.player_count !== undefined && day.player_count > 0
+            ? `${day.player_count} players in video`
+            : "-"}
         </div>
 
         {/* Info Button */}

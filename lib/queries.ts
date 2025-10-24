@@ -137,7 +137,7 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
           days(*)
         )
       `)
-      .order('created_at', { ascending: false })
+      .order('start_date', { ascending: false })
 
     // Filter by game_type if provided
     if (gameType) {
@@ -148,7 +148,63 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
 
     if (error) throw error
 
-    return data || []
+    const tournaments = data || []
+
+    // Get all day IDs from the tournaments tree
+    const allDayIds: string[] = []
+    tournaments.forEach((tournament: any) => {
+      tournament.sub_events?.forEach((subEvent: any) => {
+        subEvent.days?.forEach((day: any) => {
+          allDayIds.push(day.id)
+        })
+      })
+    })
+
+    // Calculate player counts for each day
+    let playerCountsByDayId: Record<string, number> = {}
+    if (allDayIds.length > 0) {
+      const { data: playerCounts, error: pcError } = await supabase
+        .rpc('get_player_counts_by_day', { day_ids: allDayIds })
+
+      if (pcError) {
+        console.error('Error fetching player counts:', pcError)
+      } else if (playerCounts) {
+        playerCountsByDayId = playerCounts.reduce((acc: Record<string, number>, item: any) => {
+          acc[item.day_id] = item.player_count
+          return acc
+        }, {})
+      }
+    }
+
+    // Add player counts to days and sort nested arrays
+    tournaments.forEach((tournament: any) => {
+      // Sort sub_events by date descending
+      if (tournament.sub_events) {
+        tournament.sub_events.sort((a: any, b: any) => {
+          const dateA = new Date(a.date).getTime()
+          const dateB = new Date(b.date).getTime()
+          return dateB - dateA // Descending order
+        })
+
+        tournament.sub_events.forEach((subEvent: any) => {
+          // Sort days by published_at descending
+          if (subEvent.days) {
+            subEvent.days.sort((a: any, b: any) => {
+              const dateA = a.published_at ? new Date(a.published_at).getTime() : 0
+              const dateB = b.published_at ? new Date(b.published_at).getTime() : 0
+              return dateB - dateA // Descending order
+            })
+
+            // Add player counts
+            subEvent.days.forEach((day: any) => {
+              day.player_count = playerCountsByDayId[day.id] || 0
+            })
+          }
+        })
+      }
+    })
+
+    return tournaments
   } catch (error) {
     console.error('Error fetching tournaments:', error)
     throw error
