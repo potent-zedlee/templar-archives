@@ -18,6 +18,7 @@ import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
 import { organizeVideo } from "@/lib/unsorted-videos"
 import type { UnsortedVideo } from "@/lib/types/archive"
+import { createDay, updateDay as updateDayAction } from "@/app/actions/archive"
 
 interface DayDialogProps {
   isOpen: boolean
@@ -92,36 +93,39 @@ export function DayDialog({
     if (!editingDayId) return
 
     try {
-      let updateData: any = {
-        name: newDayName.trim() || `Day ${new Date().toISOString()}`,
-        video_source: videoSourceTab,
-        video_url: null,
-        video_file: null,
-        published_at: publishedAt || null,
+      // Unsorted tab is not allowed for editing
+      if (videoSourceTab === 'unsorted') {
+        toast.error('Cannot update day with unsorted video source')
+        return
       }
 
-      // Set appropriate video source field
-      if (videoSourceTab === 'youtube') {
-        if (!newDayVideoUrl.trim()) {
-          toast.error('Please enter YouTube URL')
-          return
-        }
-        updateData.video_url = newDayVideoUrl.trim()
+      // Validate YouTube URL if needed
+      if (videoSourceTab === 'youtube' && !newDayVideoUrl.trim()) {
+        toast.error('Please enter YouTube URL')
+        return
       }
 
-      const { error } = await supabase
-        .from('days')
-        .update(updateData)
-        .eq('id', editingDayId)
+      const dayData = {
+        name: newDayName.trim() || undefined,
+        video_source: videoSourceTab as 'youtube' | 'upload',
+        video_url: videoSourceTab === 'youtube' ? newDayVideoUrl.trim() : undefined,
+        video_file: undefined,
+        published_at: publishedAt || undefined,
+      }
 
-      if (error) throw error
+      // Call Server Action
+      const result = await updateDayAction(editingDayId, dayData)
+
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown error')
+      }
 
       toast.success('Day updated successfully')
       onOpenChange(false)
       onSuccess?.()
-    } catch (error) {
-      console.error('Error updating day:', error)
-      toast.error('Failed to update day')
+    } catch (error: any) {
+      console.error('[DayDialog] Error updating day:', error)
+      toast.error(error.message || 'Failed to update day')
     }
   }
 
@@ -172,12 +176,7 @@ export function DayDialog({
     }
 
     try {
-      let videoData: any = {
-        sub_event_id: selectedSubEventId,
-        name: newDayName.trim() || `Day ${new Date().toISOString()}`,
-        video_source: videoSourceTab,
-        published_at: publishedAt || null,
-      }
+      let videoFile: string | undefined = undefined
 
       // YouTube source
       if (videoSourceTab === 'youtube') {
@@ -185,7 +184,6 @@ export function DayDialog({
           toast.error('Please enter YouTube URL')
           return
         }
-        videoData.video_url = newDayVideoUrl.trim()
       }
 
       // File upload source
@@ -218,25 +216,31 @@ export function DayDialog({
           .from('videos')
           .getPublicUrl(fileName)
 
-        videoData.video_file = publicUrl
+        videoFile = publicUrl
         setUploading(false)
       }
 
-      // Create Day
-      const { data, error } = await supabase
-        .from('days')
-        .insert(videoData)
-        .select()
-        .single()
+      // Create Day via Server Action
+      const dayData = {
+        name: newDayName.trim() || undefined,
+        video_source: videoSourceTab as 'youtube' | 'upload',
+        video_url: videoSourceTab === 'youtube' ? newDayVideoUrl.trim() : undefined,
+        video_file: videoFile,
+        published_at: publishedAt || undefined,
+      }
 
-      if (error) throw error
+      const result = await createDay(selectedSubEventId, dayData)
+
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown error')
+      }
 
       toast.success('Day added successfully')
       onOpenChange(false)
       onSuccess?.()
-    } catch (error) {
-      console.error('Error adding day:', error)
-      toast.error('Failed to add day')
+    } catch (error: any) {
+      console.error('[DayDialog] Error adding day:', error)
+      toast.error(error.message || 'Failed to add day')
       setUploading(false)
     }
   }

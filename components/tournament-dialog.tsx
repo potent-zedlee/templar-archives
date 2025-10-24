@@ -17,9 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
 import type { Tournament } from "@/lib/supabase"
+import { createTournament, updateTournament } from "@/app/actions/archive"
 
 interface TournamentDialogProps {
   isOpen: boolean
@@ -71,7 +71,6 @@ export function TournamentDialog({
   isUserAdmin,
 }: TournamentDialogProps) {
   const [saving, setSaving] = useState(false)
-  const supabase = createClientSupabaseClient()
 
   if (!isUserAdmin) return null
 
@@ -84,77 +83,40 @@ export function TournamentDialog({
 
     setSaving(true)
 
-    // Map category display name to category_id
-    const getCategoryId = (category: string): string => {
-      const mapping: Record<string, string> = {
-        'WSOP': 'wsop',
-        'Triton': 'triton',
-        'EPT': 'ept',
-        'APT': 'apt',
-        'APL': 'apl',
-        'Hustler Casino Live': 'hustler',
-        'WSOP Classic': 'wsop',
-        'GGPOKER': 'ggpoker',
-      }
-      return mapping[category] || category.toLowerCase().replace(/\s+/g, '-')
-    }
-
-    // Log the data being submitted
+    // Tournament data
     const tournamentData = {
       name: newTournamentName.trim(),
-      category: newCategory, // Keep original category column
-      category_id: getCategoryId(newCategory), // New category_id foreign key
+      category: newCategory,
       game_type: newGameType,
       location: newLocation.trim(),
-      city: newCity.trim() || null,
-      country: newCountry.trim() || null,
+      city: newCity.trim() || undefined,
+      country: newCountry.trim() || undefined,
       start_date: newStartDate,
       end_date: newEndDate,
     }
-    console.log('Submitting tournament data:', tournamentData)
 
     try {
+      let result
+
       if (editingTournamentId) {
-        // Update existing tournament
-        const { data, error } = await supabase
-          .from('tournaments')
-          .update(tournamentData)
-          .eq('id', editingTournamentId)
-          .select()
-
-        if (error) {
-          console.error('Supabase update error:', error)
-          console.error('Error details:', JSON.stringify(error, null, 2))
-          throw error
-        }
-        console.log('Tournament updated successfully:', data)
-        toast.success('Tournament updated successfully')
+        // Update existing tournament via Server Action
+        result = await updateTournament(editingTournamentId, tournamentData)
       } else {
-        // Create new tournament
-        const { data, error } = await supabase
-          .from('tournaments')
-          .insert(tournamentData)
-          .select()
-
-        if (error) {
-          console.error('Supabase insert error:', error)
-          console.error('Error details:', JSON.stringify(error, null, 2))
-          console.error('Error code:', error.code)
-          console.error('Error message:', error.message)
-          console.error('Error hint:', error.hint)
-          console.error('Error details:', error.details)
-          throw error
-        }
-        console.log('Tournament created successfully:', data)
-        toast.success('Tournament created successfully')
+        // Create new tournament via Server Action
+        result = await createTournament(tournamentData)
       }
+
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown error')
+      }
+
+      toast.success(editingTournamentId ? 'Tournament updated successfully' : 'Tournament created successfully')
 
       // Call success callback
       onSave()
     } catch (error: any) {
-      console.error('Error saving tournament:', error)
-      const errorMessage = error?.message || error?.hint || 'Unknown error'
-      toast.error(`Failed to save tournament: ${errorMessage}`)
+      console.error('[TournamentDialog] Error saving tournament:', error)
+      toast.error(error.message || 'Failed to save tournament')
     } finally {
       setSaving(false)
     }

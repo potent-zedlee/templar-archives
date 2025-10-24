@@ -8,9 +8,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
-import type { FolderItem } from "./rename-dialog"
+import type { FolderItem } from "@/lib/types/archive"
+import { deleteTournament, deleteSubEvent, deleteDay } from "@/app/actions/archive"
 
 interface DeleteDialogProps {
   isOpen: boolean
@@ -32,23 +32,27 @@ export function DeleteDialog({
 
     setIsDeleting(true)
     try {
-      const table = item.type === 'tournament' ? 'tournaments'
-        : item.type === 'subevent' ? 'sub_events'
-        : 'days'
+      let result
 
-      const { error } = await supabase
-        .from(table)
-        .delete()
-        .eq('id', item.id)
+      // Call appropriate Server Action based on item type
+      if (item.type === 'tournament') {
+        result = await deleteTournament(item.id)
+      } else if (item.type === 'subevent') {
+        result = await deleteSubEvent(item.id)
+      } else {
+        result = await deleteDay(item.id)
+      }
 
-      if (error) throw error
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown error')
+      }
 
       toast.success('Deleted successfully')
       onOpenChange(false)
       onSuccess?.()
-    } catch (error) {
-      console.error('Error deleting:', error)
-      toast.error('Failed to delete')
+    } catch (error: any) {
+      console.error('[DeleteDialog] Error deleting:', error)
+      toast.error(error.message || 'Failed to delete')
     } finally {
       setIsDeleting(false)
     }
