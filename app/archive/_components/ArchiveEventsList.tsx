@@ -51,9 +51,9 @@ export function ArchiveEventsList() {
 
   const isUserAdmin = isAdmin(userEmail)
 
-  // Wrapper function to match expected type signature
+  // Wrapper function with toggle functionality
   const handleSelectDay = useCallback((dayId: string) => {
-    setSelectedDay(dayId)
+    setSelectedDay(prev => prev === dayId ? null : dayId)
   }, [setSelectedDay])
 
   // Build folder items in tree structure (with expansion)
