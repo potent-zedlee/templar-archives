@@ -12,7 +12,6 @@ import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/components/auth-provider"
 import { Header } from "@/components/header"
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { Button } from "@/components/ui/button"
@@ -124,15 +123,14 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
       <div className="min-h-screen bg-muted/30">
         <Header />
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
-          <ResizablePanelGroup direction="horizontal" className="gap-6">
-            <ResizablePanel defaultSize={25} minSize={15} maxSize={40}>
+          <div className="flex gap-6">
+            <div className="w-[35%]">
               <CardSkeleton count={1} variant="compact" />
-            </ResizablePanel>
-            <ResizableHandle />
-            <ResizablePanel defaultSize={75} minSize={60}>
+            </div>
+            <div className="flex-1">
               <CardSkeleton count={2} variant="detailed" />
-            </ResizablePanel>
-          </ResizablePanelGroup>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -213,16 +211,14 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
                     <ArchiveEventsList />
                   ) : (
                     // Split view: Events list (35%) + Hand History (65%)
-                    <ResizablePanelGroup direction="horizontal" className="gap-6">
-                      <ResizablePanel defaultSize={35} minSize={20} maxSize={50}>
+                    <div className="flex gap-6">
+                      <div className="w-[35%]">
                         <ArchiveEventsList />
-                      </ResizablePanel>
-
-                      <ResizableHandle />
+                      </div>
 
                       <AnimatePresence mode="wait">
                         {selectedDay && (
-                          <ResizablePanel defaultSize={65} minSize={50}>
+                          <div className="flex-1">
                             <motion.div
                               key="hand-history"
                               initial={{ opacity: 0, x: 100 }}
@@ -233,10 +229,10 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
                             >
                               <ArchiveHandHistory />
                             </motion.div>
-                          </ResizablePanel>
+                          </div>
                         )}
                       </AnimatePresence>
-                    </ResizablePanelGroup>
+                    </div>
                   )}
                 </>
               )}
