@@ -31,10 +31,12 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, Search, Loader2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, Loader2, ChevronRight, ChevronDown } from 'lucide-react'
 import { TournamentDialog } from '@/components/tournament-dialog'
 import { DeleteDialog } from '@/components/archive-dialogs/delete-dialog'
+import { SubEventDialog } from '@/components/archive-dialogs/sub-event-dialog'
 import type { Tournament, FolderItem } from '@/lib/types/archive'
+import type { SubEvent } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 
 export default function AdminArchivePage() {
@@ -52,6 +54,13 @@ export default function AdminArchivePage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [editingTournamentId, setEditingTournamentId] = useState('')
   const [deletingItem, setDeletingItem] = useState<FolderItem | null>(null)
+
+  // SubEvent states
+  const [expandedTournaments, setExpandedTournaments] = useState<Set<string>>(new Set())
+  const [subEvents, setSubEvents] = useState<Map<string, SubEvent[]>>(new Map())
+  const [subEventDialogOpen, setSubEventDialogOpen] = useState(false)
+  const [editingSubEventId, setEditingSubEventId] = useState('')
+  const [selectedTournamentIdForSubEvent, setSelectedTournamentIdForSubEvent] = useState('')
 
   // Tournament form states
   const [newTournamentName, setNewTournamentName] = useState('')
@@ -187,6 +196,81 @@ export default function AdminArchivePage() {
     setDeleteDialogOpen(false)
   }
 
+  // SubEvent functions
+  const toggleTournamentExpand = async (tournamentId: string) => {
+    const newExpanded = new Set(expandedTournaments)
+
+    if (newExpanded.has(tournamentId)) {
+      newExpanded.delete(tournamentId)
+    } else {
+      newExpanded.add(tournamentId)
+      // Load SubEvents if not already loaded
+      if (!subEvents.has(tournamentId)) {
+        await loadSubEvents(tournamentId)
+      }
+    }
+
+    setExpandedTournaments(newExpanded)
+  }
+
+  const loadSubEvents = async (tournamentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('sub_events')
+        .select('*')
+        .eq('tournament_id', tournamentId)
+        .order('date', { ascending: false })
+
+      if (error) throw error
+
+      const newSubEvents = new Map(subEvents)
+      newSubEvents.set(tournamentId, data || [])
+      setSubEvents(newSubEvents)
+    } catch (error) {
+      console.error('Error loading sub events:', error)
+      toast.error('Failed to load events')
+    }
+  }
+
+  const handleAddSubEvent = (tournamentId: string) => {
+    setSelectedTournamentIdForSubEvent(tournamentId)
+    setEditingSubEventId('')
+    setSubEventDialogOpen(true)
+  }
+
+  const handleEditSubEvent = (subEventId: string, tournamentId: string) => {
+    setSelectedTournamentIdForSubEvent(tournamentId)
+    setEditingSubEventId(subEventId)
+    setSubEventDialogOpen(true)
+  }
+
+  const handleDeleteSubEvent = (subEvent: SubEvent, tournamentId: string) => {
+    setDeletingItem({
+      id: subEvent.id,
+      name: subEvent.name,
+      type: 'subevent' as const,
+    })
+    setDeleteDialogOpen(true)
+  }
+
+  const handleSubEventSuccess = () => {
+    // Reload SubEvents for the current tournament
+    if (selectedTournamentIdForSubEvent) {
+      loadSubEvents(selectedTournamentIdForSubEvent)
+    }
+    setSubEventDialogOpen(false)
+    setEditingSubEventId('')
+    setSelectedTournamentIdForSubEvent('')
+  }
+
+  const handleSubEventDeleted = () => {
+    // Reload SubEvents for all expanded tournaments
+    expandedTournaments.forEach(tournamentId => {
+      loadSubEvents(tournamentId)
+    })
+    setDeleteDialogOpen(false)
+  }
+
   if (!isUserAdmin) {
     return (
       <div className="container mx-auto py-12 text-center">
@@ -275,46 +359,142 @@ export default function AdminArchivePage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredTournaments.map((tournament) => (
-                  <TableRow key={tournament.id}>
-                    <TableCell className="font-medium">{tournament.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{tournament.category}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={tournament.game_type === 'tournament' ? 'default' : 'secondary'}>
-                        {tournament.game_type === 'tournament' ? 'Tournament' : 'Cash Game'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {tournament.city && tournament.country
-                        ? `${tournament.city}, ${tournament.country}`
-                        : tournament.location}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {new Date(tournament.start_date).toLocaleDateString()} -{' '}
-                      {new Date(tournament.end_date).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditTournament(tournament)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteTournament(tournament)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                filteredTournaments.map((tournament) => {
+                  const isExpanded = expandedTournaments.has(tournament.id)
+                  const tournamentSubEvents = subEvents.get(tournament.id) || []
+
+                  return (
+                    <>
+                      {/* Tournament Row */}
+                      <TableRow key={tournament.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => toggleTournamentExpand(tournament.id)}
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </Button>
+                            {tournament.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{tournament.category}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={tournament.game_type === 'tournament' ? 'default' : 'secondary'}>
+                            {tournament.game_type === 'tournament' ? 'Tournament' : 'Cash Game'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {tournament.city && tournament.country
+                            ? `${tournament.city}, ${tournament.country}`
+                            : tournament.location}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {new Date(tournament.start_date).toLocaleDateString()} -{' '}
+                          {new Date(tournament.end_date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditTournament(tournament)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteTournament(tournament)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* SubEvents (expanded) */}
+                      {isExpanded && (
+                        <TableRow key={`${tournament.id}-subevents`}>
+                          <TableCell colSpan={6} className="p-0">
+                            <div className="bg-muted/30 p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-sm font-semibold">Events</h4>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleAddSubEvent(tournament.id)}
+                                >
+                                  <Plus className="h-3 w-3 mr-1" />
+                                  Add Event
+                                </Button>
+                              </div>
+
+                              {tournamentSubEvents.length === 0 ? (
+                                <div className="text-center py-6 text-sm text-muted-foreground">
+                                  No events yet. Add one to get started.
+                                </div>
+                              ) : (
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Name</TableHead>
+                                      <TableHead>Event #</TableHead>
+                                      <TableHead>Date</TableHead>
+                                      <TableHead>Buy-in</TableHead>
+                                      <TableHead>Entries</TableHead>
+                                      <TableHead>Winner</TableHead>
+                                      <TableHead className="text-right">Actions</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {tournamentSubEvents.map((subEvent) => (
+                                      <TableRow key={subEvent.id}>
+                                        <TableCell className="font-medium">{subEvent.name}</TableCell>
+                                        <TableCell>{subEvent.event_number || '-'}</TableCell>
+                                        <TableCell className="text-xs">
+                                          {subEvent.date ? new Date(subEvent.date).toLocaleDateString() : '-'}
+                                        </TableCell>
+                                        <TableCell className="text-xs">{subEvent.buy_in || '-'}</TableCell>
+                                        <TableCell>{subEvent.entry_count || '-'}</TableCell>
+                                        <TableCell className="text-xs">{subEvent.winner || '-'}</TableCell>
+                                        <TableCell className="text-right">
+                                          <div className="flex items-center justify-end gap-2">
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => handleEditSubEvent(subEvent.id, tournament.id)}
+                                            >
+                                              <Pencil className="h-3 w-3" />
+                                            </Button>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => handleDeleteSubEvent(subEvent, tournament.id)}
+                                            >
+                                              <Trash2 className="h-3 w-3 text-destructive" />
+                                            </Button>
+                                          </div>
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
+                  )
+                })
               )}
             </TableBody>
           </Table>
@@ -358,7 +538,15 @@ export default function AdminArchivePage() {
         isOpen={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         item={deletingItem}
-        onSuccess={handleTournamentDeleted}
+        onSuccess={deletingItem?.type === 'subevent' ? handleSubEventDeleted : handleTournamentDeleted}
+      />
+
+      <SubEventDialog
+        isOpen={subEventDialogOpen}
+        onOpenChange={setSubEventDialogOpen}
+        selectedTournamentId={selectedTournamentIdForSubEvent}
+        editingSubEventId={editingSubEventId}
+        onSuccess={handleSubEventSuccess}
       />
     </div>
   )

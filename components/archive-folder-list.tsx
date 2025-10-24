@@ -16,6 +16,8 @@ interface ArchiveFolderListProps {
   loading?: boolean
   // Context menu actions
   onShowInfo?: (item: FolderItem) => void
+  onAddSubEvent?: (tournamentId: string) => void
+  isAdmin?: boolean
 }
 
 export const ArchiveFolderList = memo(function ArchiveFolderList({
@@ -24,6 +26,8 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   onSelectDay,
   loading = false,
   onShowInfo,
+  onAddSubEvent,
+  isAdmin = false,
 }: ArchiveFolderListProps) {
   if (loading) {
     return (
@@ -136,6 +140,24 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             {tournament.sub_events.map((subEvent) =>
               renderSubEvent(subEvent, tournament.id)
             )}
+          </div>
+        )}
+
+        {/* Add SubEvent Button (if expanded and no subevents) */}
+        {isExpanded && (!tournament.sub_events || tournament.sub_events.length === 0) && isAdmin && onAddSubEvent && (
+          <div className="pl-24 pr-4 py-4 border-b border-border/20 bg-muted/10">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={(e) => {
+                e.stopPropagation()
+                onAddSubEvent(tournament.id)
+              }}
+            >
+              <ChevronRight className="h-4 w-4 mr-2" />
+              Add Event
+            </Button>
           </div>
         )}
       </div>
