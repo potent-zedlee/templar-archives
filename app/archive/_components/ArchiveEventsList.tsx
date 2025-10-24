@@ -10,7 +10,6 @@
  * - Context 메뉴 액션
  */
 
-import { Plus } from 'lucide-react'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
@@ -286,14 +285,6 @@ export function ArchiveEventsList() {
             {selectedVideoIds.size} video{selectedVideoIds.size > 1 ? 's' : ''} selected
           </span>
           <div className="flex gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setIsMoveToNewEventDialogOpen()}
-            >
-              <Plus className="mr-2 h-3 w-3" />
-              Move to New Event
-            </Button>
             <Button variant="outline" size="sm" onClick={clearSelection}>
               Clear
             </Button>
@@ -307,19 +298,7 @@ export function ArchiveEventsList() {
         onNavigate={handleToggleExpand}
         onSelectDay={handleSelectDay}
         loading={tournamentsLoading}
-        isUnorganized={false}
-        selectedIds={selectedVideoIds}
-        onToggleSelect={toggleVideoSelection}
-        onSelectAll={handleSelectAllVideos}
-        onRename={handleRename}
-        onDelete={handleDelete}
-        onMoveToEvent={handleMoveToEvent}
-        onMoveToNewEvent={handleMoveToNewEventSingle}
-        onAddSubItem={handleAddSubItem}
-        onEditEvent={handleEditEvent}
         onShowInfo={handleShowInfo}
-        onAddTournament={() => openTournamentDialog()}
-        isAdmin={isUserAdmin}
       />
     </Card>
   )
