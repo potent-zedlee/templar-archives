@@ -5,7 +5,13 @@ import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
 import { naturalSearchSchema, validateInput, formatValidationErrors } from '@/lib/validation/api-schemas'
-import { escapeLikePattern, detectSQLInjection, logSecurityEvent } from '@/lib/security'
+import { logSecurityEvent } from '@/lib/security'
+import {
+  NaturalSearchFilterSchema,
+  type NaturalSearchFilter,
+  buildQueryFromFilter,
+  NATURAL_SEARCH_PROMPT_TEMPLATE
+} from '@/lib/natural-search-filter'
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
@@ -19,16 +25,16 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = await applyRateLimit(request, rateLimiters.naturalSearch)
   if (rateLimitResponse) return rateLimitResponse
 
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   try {
     const body = await request.json()
 
-    // Zod 스키마 검증
+    // Zod 스키마 검증 (사용자 쿼리)
     const validation = validateInput(naturalSearchSchema, body)
     if (!validation.success) {
       const errors = formatValidationErrors(validation.errors!)
-      logSecurityEvent('xss_attempt', { errors, body })
+      logSecurityEvent('validation_error', { errors, body })
       return NextResponse.json(
         { error: errors[0] || '입력값이 유효하지 않습니다' },
         { status: 400 }
@@ -38,15 +44,6 @@ export async function POST(request: NextRequest) {
     const { query } = validation.data!
     const trimmedQuery = query.trim()
 
-    // SQL Injection 시도 감지
-    if (detectSQLInjection(trimmedQuery)) {
-      logSecurityEvent('sql_injection', { query: trimmedQuery })
-      return NextResponse.json(
-        { error: '허용되지 않는 문자가 포함되어 있습니다' },
-        { status: 400 }
-      )
-    }
-
     // Check if API key is available
     if (!process.env.CLAUDE_API_KEY) {
       return NextResponse.json(
@@ -55,117 +52,87 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Database schema context for Claude
-    const schemaContext = `
-You are a PostgreSQL query generator for a poker hand database.
-Generate a SQL query based on the user's natural language request.
+    // Call Claude API to generate JSON filter (NOT SQL)
+    const prompt = NATURAL_SEARCH_PROMPT_TEMPLATE.replace('{QUERY}', trimmedQuery)
 
-Available tables and columns:
-- hands: id, day_id, number, description, timestamp, favorite, board_cards, pot_size
-- days: id, sub_event_id, name, video_url, video_file, video_source, video_nas_path
-- sub_events: id, tournament_id, name, date, total_prize, winner
-- tournaments: id, name, category, location, start_date, end_date
-- players: id, name, photo_url, country, total_winnings
-- hand_players: id, hand_id, player_id, position, cards
-
-Relationships:
-- hands.day_id -> days.id
-- days.sub_event_id -> sub_events.id
-- sub_events.tournament_id -> tournaments.id
-- hand_players.hand_id -> hands.id
-- hand_players.player_id -> players.id
-
-Common queries:
-- "Find hands with AA vs KK" -> Look for hands.description containing these cards
-- "Show me Daniel Negreanu's hands" -> Join with players and filter by name
-- "Find hands from WSOP" -> Join with tournaments and filter by category
-- "Show me big pots" -> Filter by pot_size
-- "Find hands with pocket aces" -> Look for 'AA' in description or hand_players.cards
-
-Important:
-1. Return ONLY the SQL query, no explanations
-2. Use proper JOIN statements when filtering by related tables
-3. Always SELECT from hands table and include: id, number, description, timestamp
-4. LIMIT results to 50 maximum
-5. Use ILIKE for case-insensitive text matching
-6. When searching for player names, join with hand_players and players tables
-`
-
-    // Call Claude API to generate SQL query
     const message = await anthropic.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 1024,
       messages: [
         {
           role: 'user',
-          content: `${schemaContext}\n\nUser query: "${trimmedQuery}"\n\nGenerate the SQL query:`
+          content: prompt
         }
       ],
     })
 
-    // Extract SQL query from Claude's response
-    const sqlQuery = message.content[0].type === 'text'
+    // Extract JSON filter from Claude's response
+    const responseText = message.content[0].type === 'text'
       ? message.content[0].text.trim()
-      : ''
+      : '{}'
 
-    // Clean up the SQL query (remove markdown code blocks if present)
-    const cleanedQuery = sqlQuery
-      .replace(/```sql\n?/g, '')
+    // Clean up JSON (remove markdown code blocks if present)
+    const cleanedJson = responseText
+      .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
       .trim()
 
-    logger.debug('Generated SQL query:', cleanedQuery)
+    logger.debug('Generated JSON filter:', cleanedJson)
+
+    // Parse and validate JSON filter
+    let filter: NaturalSearchFilter
+    try {
+      const parsedFilter = JSON.parse(cleanedJson)
+
+      // Zod 검증 (JSON 필터)
+      const filterValidation = NaturalSearchFilterSchema.safeParse(parsedFilter)
+      if (!filterValidation.success) {
+        logger.warn('Invalid JSON filter from Claude:', filterValidation.error)
+
+        // Claude가 잘못된 필터를 생성한 경우, 텍스트 검색으로 fallback
+        filter = {
+          description_contains: trimmedQuery,
+          limit: 50
+        }
+      } else {
+        filter = filterValidation.data
+      }
+    } catch (parseError) {
+      logger.warn('Failed to parse JSON from Claude:', parseError)
+
+      // JSON 파싱 실패 시 텍스트 검색으로 fallback
+      filter = {
+        description_contains: trimmedQuery,
+        limit: 50
+      }
+    }
+
+    logger.debug('Validated filter:', filter)
+
+    // Build query from filter (안전한 Query Builder 사용)
+    const query = await buildQueryFromFilter(filter, supabase)
+
+    if (!query) {
+      // 필터 조건에 일치하는 결과 없음
+      return NextResponse.json({
+        results: [],
+        filter,
+        method: 'json-filter',
+        info: 'No results found matching the filter criteria.'
+      })
+    }
 
     // Execute the query
-    const { data, error } = await supabase.rpc('execute_search_query', {
-      query_text: cleanedQuery
-    })
+    const { data, error } = await query
 
-    // If RPC doesn't work, try direct query (with caution)
-    // NOTE: In production, you should use RPC or prepared statements to prevent SQL injection
     if (error) {
-      logger.warn('RPC failed, attempting direct query:', error)
-
-      // For MVP, we'll use a simple text search as fallback
-      // Sanitize query for ILIKE to prevent pattern injection
-      const sanitizedQuery = escapeLikePattern(trimmedQuery)
-
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from('hands')
-        .select(`
-          id,
-          number,
-          description,
-          timestamp,
-          favorite,
-          pot_size,
-          days (
-            name,
-            sub_events (
-              name,
-              tournaments (
-                name
-              )
-            )
-          )
-        `)
-        .ilike('description', `%${sanitizedQuery}%`)
-        .limit(50)
-
-      if (fallbackError) throw fallbackError
-
-      return NextResponse.json({
-        results: fallbackData,
-        query: cleanedQuery,
-        method: 'fallback',
-        info: 'Using simple text search. For full natural language search, please set up the execute_search_query RPC function.'
-      })
+      throw error
     }
 
     return NextResponse.json({
       results: data,
-      query: cleanedQuery,
-      method: 'claude'
+      filter,
+      method: 'json-filter'
     })
 
   } catch (error: any) {

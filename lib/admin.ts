@@ -1,4 +1,5 @@
 import { createClientSupabaseClient } from './supabase-client'
+import { escapeLikePattern } from './security/sql-sanitizer'
 
 export type AdminRole = 'user' | 'high_templar' | 'admin' | 'reporter'
 
@@ -181,7 +182,8 @@ export async function getUsers(options?: {
   }
 
   if (options?.search) {
-    query = query.or(`nickname.ilike.%${options.search}%,email.ilike.%${options.search}%`)
+    const sanitized = escapeLikePattern(options.search)
+    query = query.or(`nickname.ilike.%${sanitized}%,email.ilike.%${sanitized}%`)
   }
 
   const { data, error, count } = await query

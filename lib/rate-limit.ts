@@ -113,18 +113,37 @@ export async function applyRateLimit(
 
 /**
  * Get unique identifier for rate limiting
- * Uses IP address or user ID from auth header
+ * Prefers user ID (more secure) over IP address
  */
 function getIdentifier(request: NextRequest): string {
-  // Try to get IP address from headers (Vercel automatically sets this)
+  // Try to extract user ID from Supabase Auth token
+  const authHeader = request.headers.get('authorization')
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    try {
+      const token = authHeader.substring(7) // Remove "Bearer " prefix
+
+      // Parse JWT payload (middle part between dots)
+      const parts = token.split('.')
+      if (parts.length === 3) {
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString())
+        const userId = payload.sub || payload.user_id
+
+        if (userId) {
+          return `user:${userId}`
+        }
+      }
+    } catch (error) {
+      // Invalid JWT - fall back to IP
+      console.warn('Failed to parse JWT for rate limiting:', error)
+    }
+  }
+
+  // Fallback to IP address
   const ip =
     request.headers.get('x-forwarded-for') ||
     request.headers.get('x-real-ip') ||
     'unknown'
-
-  // For authenticated requests, we could also use user ID
-  // const userId = request.headers.get('authorization')
-  // return userId ? `user:${userId}` : `ip:${ip}`
 
   return `ip:${ip}`
 }
