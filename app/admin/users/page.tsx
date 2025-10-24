@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Header } from "@/components/header"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -206,20 +205,14 @@ export default function usersClient() {
 
   if (!hasAccess) {
     return (
-      <div className="min-h-screen bg-muted/30">
-        <Header />
-        <div className="container max-w-7xl mx-auto py-8 px-4">
-          <CardSkeleton count={4} />
-        </div>
+      <div className="container max-w-7xl mx-auto py-8 px-4">
+        <CardSkeleton count={4} />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <Header />
-
-      <div className="container max-w-7xl mx-auto py-8 px-4">
+    <div className="container max-w-7xl mx-auto py-8 px-4">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
