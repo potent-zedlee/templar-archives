@@ -11,6 +11,85 @@
 
 ---
 
+## 2025-10-24 (세션 36) - Archive Event Management Enhancement ✅
+
+### 작업 내용
+
+#### 1. SubEvent Event Number 필드 추가 (0.5시간) ✅
+- **DB 마이그레이션**: `20251024000001_add_event_number_to_sub_events.sql`
+  - `event_number TEXT` 컬럼 추가 (optional)
+  - 인덱스 생성: `idx_sub_events_event_number`
+  - 용도: 순차 번호(#1, #2) 및 공식 이벤트 코드(Event #15, 1A) 지원
+- **타입 정의 업데이트**: `lib/types/archive.ts`
+  - SubEvent, SubEventFormData, INITIAL_SUBEVENT_FORM에 event_number 추가
+- **UI 구현**: `components/archive-dialogs/sub-event-dialog.tsx`
+  - Basic Info 탭에 "Event Number" 입력 필드 추가
+  - 생성/수정/로드 로직에 event_number 통합
+
+#### 2. Day Dialog "From Unsorted" 기능 추가 (1.5시간) ✅
+- **새로운 비디오 소스 탭**: "From Unsorted"
+  - YouTube, Upload에 이어 세 번째 탭 추가
+  - FolderOpen 아이콘 사용
+- **Unsorted 비디오 선택 UI**:
+  - ScrollArea 기반 카드 리스트 (h-500px, w-460px)
+  - 각 카드에 비디오 썸네일, 이름, 소스 배지, 생성일, URL 표시
+  - 선택 시 체크마크 표시 및 하이라이트
+  - Empty state (비디오 없을 때)
+- **자동 필드 채우기**:
+  - 선택한 비디오의 published_at을 Stream Date 필드에 자동 입력
+- **비디오 이동 로직**:
+  - `organizeUnsortedVideo()` 함수 구현
+  - `organizeVideo(videoId, subEventId)` 호출로 비디오를 Day로 변환
+  - Unsorted 목록에서 제거 (복사 아님)
+
+#### 3. Stream Date 필드 추가 (0.5시간) ✅
+- **DB 컬럼**: `published_at` (days 테이블, 이미 존재)
+- **타입 정의**: Day, DayFormData에 published_at 추가
+- **UI**: Day Name과 Video Source 사이에 날짜 입력 필드 추가
+  - type="date" input
+  - 설명: "Original stream/upload date (auto-filled from selected video)"
+- **자동 채우기**: Unsorted 비디오 선택 시 자동 입력
+
+#### 4. UX 개선 및 버그 수정 (1시간) ✅
+- **명칭 통일**: "Unorganized" → "Unsorted"
+  - `ArchiveEventsList.tsx` 업데이트
+- **Refetch 버그 수정**:
+  - `ArchiveDialogs.tsx`의 `handleDaySuccess`에 unsortedVideos 쿼리 무효화 추가
+  - Day 추가 후 Unsorted 목록이 자동으로 새로고침되지 않던 문제 해결
+- **Dialog 크기 조정** (여러 차례 반복):
+  - ScrollArea 높이: 350px → 500px
+  - Dialog 너비: 800px → 500px → 1000px (최종)
+  - Unsorted ScrollArea 너비: 460px 설정
+
+#### 5. 커밋 히스토리
+```
+f7664c0 - Add SubEvent Event Number field and Unsorted Video selection to Day Dialog
+e18611f - Improve Day Dialog UX and fix Unsorted video refetch bug
+670abb5 - Adjust Day Dialog ScrollArea height for better card visibility
+0cacdfe - Set Day Dialog width to 800px
+51e82fa - Adjust Day Dialog width to 500px and Unsorted video ScrollArea width to 460px
+e2844ae - Increase Day Dialog width to 1000px for better visibility
+```
+
+### 기술적 세부사항
+- **파일 수정**: 4개
+  - `supabase/migrations/20251024000001_add_event_number_to_sub_events.sql` (생성)
+  - `lib/types/archive.ts` (수정)
+  - `components/archive-dialogs/sub-event-dialog.tsx` (수정)
+  - `components/archive-dialogs/day-dialog.tsx` (수정)
+  - `app/archive/_components/ArchiveDialogs.tsx` (수정)
+  - `app/archive/_components/ArchiveEventsList.tsx` (수정)
+- **사용 기술**: React 19, TypeScript, Tailwind CSS, shadcn/ui (Dialog, ScrollArea, Card, Badge)
+- **상태 관리**: useState (selectedUnsortedId, publishedAt, videoSourceTab)
+- **데이터 페칭**: React Query (queryClient.invalidateQueries)
+
+### 다음 세션 준비
+- ✅ Day Dialog 크기 최적화 완료
+- ✅ Unsorted 비디오 워크플로우 완성
+- 다음 작업: 사용자 피드백 대기
+
+---
+
 ## 2025-10-23 (세션 35) - Phase 29: Admin Category Logo Upload 수정 ✅
 
 ### 작업 내용
