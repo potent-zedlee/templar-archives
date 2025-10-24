@@ -189,6 +189,8 @@ export interface DayFormData {
 
 // ==================== UI State Types ====================
 
+export type NavigationLevel = 'root' | 'tournament' | 'subevent' | 'unorganized'
+
 export interface DialogState {
   isOpen: boolean
   editingId: string | null
