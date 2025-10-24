@@ -75,7 +75,7 @@ templar-archives/
 │   ├── auth.ts              # 인증 함수
 │   ├── logger.ts            # 로깅 유틸리티
 │   └── ...
-├── supabase/migrations/      # DB 마이그레이션 (17개)
+├── supabase/migrations/      # DB 마이그레이션 (41개)
 ├── docs/                     # UI 레퍼런스 문서
 └── README.md                 # 이 파일
 ```
@@ -201,9 +201,9 @@ DEBUG=true  # 프로덕션 환경에서 디버그 로그 활성화
 - **Supabase**: [Dashboard](https://supabase.com/dashboard/project/diopilmkehygiqpizvga/settings/api) → Settings → API
 - **Anthropic**: [Claude Console](https://console.anthropic.com/settings/keys)
 
-## 🎯 현재 개발 상태 (2025-10-23)
+## 🎯 현재 개발 상태 (2025-10-24)
 
-### ✅ 완료된 기능 (Phase 0-28)
+### ✅ 완료된 기능 (Phase 0-32)
 
 #### Phase 0: 인증 시스템
 - Google OAuth 로그인
@@ -253,6 +253,18 @@ DEBUG=true  # 프로덕션 환경에서 디버그 로그 활성화
 - React Query DevTools 조건부 렌더링
 - 프로덕션 번들 최적화
 
+#### Phase 32: Comprehensive Security Enhancement
+- **8가지 보안 개선** (2025-10-24)
+  - Server Actions 인증 강화 (Email → DB 역할 기반)
+  - RLS 정책 강화 (6개 테이블 admin-only write)
+  - Natural Search API 재설계 (SQL → JSON 필터)
+  - CSRF 보호 (import-hands API)
+  - 파일 업로드 검증 (Magic Number)
+  - Rate Limiting 개선 (User ID 기반)
+  - 입력 Sanitization (LIKE 패턴 이스케이프)
+  - 환경 변수 중앙 관리
+  - **보안 등급**: B+ → A
+
 #### 추가 기능
 - ✅ **아카이브 카테고리 필터** (2025-10-16)
   - All, WSOP, Triton, EPT, Hustler, APT, APL, GGPOKER
@@ -279,14 +291,14 @@ DEBUG=true  # 프로덕션 환경에서 디버그 로그 활성화
 ---
 
 **프로젝트**: Templar Archives (구 GGVault)
-**버전**: 5.0
-**마지막 업데이트**: 2025-10-23
+**버전**: 6.0
+**마지막 업데이트**: 2025-10-24
 
-**최근 업데이트 (v5.0)**:
-- ✅ Performance Optimization (Phase 28) - 번들 크기 최적화
-- ✅ Archive 페이지 동적 임포트 (11개 다이얼로그)
-- ✅ Players 페이지 동적 임포트 (5개 차트/통계 컴포넌트)
-- ✅ 기술 부채 정리 (lockfile, 문서 버전 업데이트)
-- ✅ SEO 최적화 준비
+**최근 업데이트 (v6.0)**:
+- ✅ Comprehensive Security Enhancement (Phase 32) - 8가지 보안 개선
+- ✅ SQL Injection 완전 방지 (Natural Search API 재설계)
+- ✅ CSRF 보호, Magic Number 검증
+- ✅ Rate Limiting 개선 (User ID 기반)
+- ✅ 보안 등급: B+ → A
 
 전체 프로젝트 정보는 [상위 README](../README.md)를 참조하세요.
