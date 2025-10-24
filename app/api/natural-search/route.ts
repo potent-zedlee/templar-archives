@@ -110,9 +110,9 @@ export async function POST(request: NextRequest) {
     logger.debug('Validated filter:', filter)
 
     // Build query from filter (안전한 Query Builder 사용)
-    const query = await buildQueryFromFilter(filter, supabase)
+    const supabaseQuery = await buildQueryFromFilter(filter, supabase)
 
-    if (!query) {
+    if (!supabaseQuery) {
       // 필터 조건에 일치하는 결과 없음
       return NextResponse.json({
         results: [],
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Execute the query
-    const { data, error } = await query
+    const { data, error } = await supabaseQuery
 
     if (error) {
       throw error
