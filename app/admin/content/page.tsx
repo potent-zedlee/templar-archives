@@ -956,7 +956,6 @@ export default function contentClient() {
           </DialogContent>
         </Dialog>
       )}
-      </div>
     </div>
   )
 }

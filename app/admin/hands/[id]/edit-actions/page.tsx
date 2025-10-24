@@ -317,6 +317,5 @@ export default function EditHandActionsPage() {
           </Button>
         </div>
       </div>
-    </div>
   )
 }

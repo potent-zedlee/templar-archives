@@ -424,7 +424,6 @@ export default function editrequestsClient() {
           </DialogContent>
         </Dialog>
       )}
-      </div>
     </div>
   )
 }
