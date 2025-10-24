@@ -138,10 +138,42 @@ export function useBanUserMutation(adminId: string) {
   return useMutation({
     mutationFn: async ({ userId, reason }: { userId: string; reason: string }) => {
       await banUser(userId, reason, adminId)
+      return { userId, reason }
+    },
+    onMutate: async ({ userId, reason }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin', 'users'] })
+
+      // Snapshot previous value
+      const previousData = queryClient.getQueriesData({ queryKey: ['admin', 'users'] })
+
+      // Optimistically update all user queries
+      queryClient.setQueriesData<any>(
+        { queryKey: ['admin', 'users'] },
+        (old: any) => {
+          if (!old?.users) return old
+          return {
+            ...old,
+            users: old.users.map((user: any) =>
+              user.id === userId ? { ...user, is_banned: true, ban_reason: reason } : user
+            ),
+          }
+        }
+      )
+
+      return { previousData }
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        context.previousData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data)
+        })
+      }
     },
     onSuccess: () => {
       // Invalidate users queries
-      queryClient.invalidateQueries({ queryKey: adminKeys.users() })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
       queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
     },
   })
@@ -156,9 +188,41 @@ export function useUnbanUserMutation(adminId: string) {
   return useMutation({
     mutationFn: async (userId: string) => {
       await unbanUser(userId, adminId)
+      return { userId }
+    },
+    onMutate: async (userId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin', 'users'] })
+
+      // Snapshot previous value
+      const previousData = queryClient.getQueriesData({ queryKey: ['admin', 'users'] })
+
+      // Optimistically update all user queries
+      queryClient.setQueriesData<any>(
+        { queryKey: ['admin', 'users'] },
+        (old: any) => {
+          if (!old?.users) return old
+          return {
+            ...old,
+            users: old.users.map((user: any) =>
+              user.id === userId ? { ...user, is_banned: false, ban_reason: null } : user
+            ),
+          }
+        }
+      )
+
+      return { previousData }
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        context.previousData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data)
+        })
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.users() })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
       queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
     },
   })
@@ -173,9 +237,42 @@ export function useChangeRoleMutation(adminId: string) {
   return useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AdminRole }) => {
       await changeUserRole(userId, role, adminId)
+      return { userId, role }
+    },
+    onMutate: async ({ userId, role }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['admin', 'users'] })
+
+      // Snapshot previous value
+      const previousData = queryClient.getQueriesData({ queryKey: ['admin', 'users'] })
+
+      // Optimistically update all user queries
+      queryClient.setQueriesData<any>(
+        { queryKey: ['admin', 'users'] },
+        (old: any) => {
+          if (!old?.users) return old
+          return {
+            ...old,
+            users: old.users.map((user: any) =>
+              user.id === userId ? { ...user, role } : user
+            ),
+          }
+        }
+      )
+
+      return { previousData }
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        context.previousData.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data)
+        })
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.users() })
+      // Invalidate all user queries to ensure sync
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
     },
   })
 }
