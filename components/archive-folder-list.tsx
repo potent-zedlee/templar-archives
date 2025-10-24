@@ -64,33 +64,28 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     const tournament = item.data as Tournament
     const isExpanded = item.isExpanded || false
 
+    // Format date as YYYY/MM/DD
+    const formatDate = (dateStr: string) => {
+      const date = new Date(dateStr)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}/${month}/${day}`
+    }
+
     return (
       <div key={item.id} className="space-y-0">
         {/* Tournament Row */}
         <div
           className={cn(
-            "group flex items-center gap-4 px-4 py-3.5 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border/50",
-            isExpanded && "bg-muted/30"
+            "group flex items-center gap-3 px-4 py-2 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20",
+            isExpanded && "bg-muted/20"
           )}
           onClick={() => onNavigate(item)}
         >
           {/* Date */}
-          <div className="w-24 flex-shrink-0 text-sm text-muted-foreground">
-            {new Date(tournament.start_date).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-            })}
-          </div>
-
-          {/* Expand Icon */}
-          <div className="flex-shrink-0">
-            <ChevronRight
-              className={cn(
-                "h-4 w-4 text-muted-foreground transition-transform",
-                isExpanded && "rotate-90"
-              )}
-            />
+          <div className="w-20 flex-shrink-0 text-xs text-muted-foreground">
+            {formatDate(tournament.start_date)}
           </div>
 
           {/* Logo */}
@@ -114,7 +109,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           </div>
 
           {/* Location */}
-          <div className="w-32 flex-shrink-0 text-sm text-muted-foreground">
+          <div className="w-28 flex-shrink-0 text-xs text-muted-foreground">
             {tournament.city && tournament.country ? (
               <>
                 {tournament.city} / {tournament.country}
@@ -125,13 +120,13 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           </div>
 
           {/* Tournament Name */}
-          <div className="flex-1 min-w-0 font-semibold text-base truncate">
+          <div className="flex-1 min-w-0 font-semibold text-lg truncate">
             {tournament.name}
           </div>
 
-          {/* Prize (empty for tournament level) */}
-          <div className="w-32 text-sm text-right text-muted-foreground">
-            -
+          {/* Prize */}
+          <div className="w-40 text-lg font-semibold text-right">
+            {tournament.total_prize || "-"}
           </div>
 
           {/* Info Button */}
@@ -139,7 +134,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-8 w-8 bg-muted/20 hover:bg-muted/40"
               onClick={(e) => {
                 e.stopPropagation()
                 onShowInfo?.(item)
@@ -176,56 +171,44 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
       parentId: tournamentId,
     }
 
+    // Format date as YYYY/MM/DD
+    const formatDate = (dateStr: string) => {
+      const date = new Date(dateStr)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}/${month}/${day}`
+    }
+
     return (
       <div key={subEvent.id} className="space-y-0">
         {/* SubEvent Row */}
         <div
           className={cn(
-            "group flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border/50 border-dashed",
-            isExpanded && "bg-muted/30"
+            "group flex items-center gap-3 pl-24 pr-4 py-2 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20 border-dashed",
+            isExpanded && "bg-muted/20"
           )}
           onClick={() => onNavigate(subEventItem)}
         >
           {/* Date */}
-          <div className="w-24 flex-shrink-0 text-sm text-muted-foreground">
-            {new Date(subEvent.date).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-            })}
+          <div className="w-20 flex-shrink-0 text-xs text-muted-foreground">
+            {formatDate(subEvent.date)}
           </div>
 
-          {/* Expand Icon + Indent */}
-          <div className="flex-shrink-0 pl-4">
-            <ChevronRight
-              className={cn(
-                "h-4 w-4 text-muted-foreground transition-transform",
-                isExpanded && "rotate-90"
-              )}
-            />
-          </div>
-
-          {/* Logo (empty) */}
-          <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
-            {subEvent.event_number && (
-              <div className="text-xs font-semibold text-muted-foreground bg-muted rounded px-2 py-1">
-                #{subEvent.event_number}
-              </div>
-            )}
-          </div>
-
-          {/* Buy-in */}
-          <div className="w-32 flex-shrink-0 text-sm text-muted-foreground">
-            {subEvent.buy_in || "-"}
+          {/* Event Number + Buy-in */}
+          <div className="w-28 flex-shrink-0 text-xs text-muted-foreground">
+            {subEvent.event_number && `#${subEvent.event_number}`}
+            {subEvent.event_number && subEvent.buy_in && ' '}
+            {subEvent.buy_in}
           </div>
 
           {/* SubEvent Name */}
-          <div className="flex-1 min-w-0 text-base truncate">
+          <div className="flex-1 min-w-0 text-lg truncate">
             {subEvent.name}
           </div>
 
           {/* Prize */}
-          <div className="w-32 text-sm text-right font-semibold">
+          <div className="w-40 text-lg font-semibold text-right">
             {subEvent.total_prize || "-"}
           </div>
 
@@ -234,7 +217,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="h-8 w-8 bg-muted/20 hover:bg-muted/40"
               onClick={(e) => {
                 e.stopPropagation()
                 onShowInfo?.(subEventItem)
@@ -265,51 +248,46 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
       parentId: subEventId,
     }
 
+    // Format date as YYYY/MM/DD
+    const formatDate = (dateStr: string) => {
+      const date = new Date(dateStr)
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}/${month}/${day}`
+    }
+
     return (
       <div
         key={day.id}
-        className="group flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border/50 border-dashed"
+        className="group flex items-center gap-3 pl-36 pr-4 py-2 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20 border-dashed"
         onClick={() => onSelectDay?.(day.id)}
       >
         {/* Date */}
-        <div className="w-24 flex-shrink-0 text-sm text-muted-foreground">
-          {day.published_at
-            ? new Date(day.published_at).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-              })
-            : "-"}
-        </div>
-
-        {/* Indent (no expand icon for day) */}
-        <div className="flex-shrink-0 pl-8">
-          {/* Empty space */}
+        <div className="w-20 flex-shrink-0 text-xs text-muted-foreground">
+          {day.published_at ? formatDate(day.published_at) : "-"}
         </div>
 
         {/* Video Icon */}
-        <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
+        <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center">
           {day.video_source === "youtube" && day.video_url ? (
-            <div className="w-10 h-10 bg-red-600 rounded flex items-center justify-center">
+            <div className="w-full h-full bg-red-600 rounded flex items-center justify-center">
               <Play className="h-5 w-5 text-white fill-white" />
             </div>
           ) : (day.video_file || day.video_nas_path) ? (
-            <div className="w-10 h-10 bg-yellow-500 rounded flex items-center justify-center">
+            <div className="w-full h-full bg-yellow-500 rounded flex items-center justify-center">
               <Play className="h-5 w-5 text-white fill-white" />
             </div>
           ) : null}
         </div>
 
-        {/* Empty (location column) */}
-        <div className="w-32 flex-shrink-0" />
-
         {/* Day Name */}
-        <div className="flex-1 min-w-0 text-sm truncate text-muted-foreground">
+        <div className="flex-1 min-w-0 text-base truncate">
           {day.name}
         </div>
 
         {/* Player count */}
-        <div className="w-32 text-sm text-right text-muted-foreground">
+        <div className="w-40 text-xs text-right text-muted-foreground">
           {day.player_count !== undefined && day.player_count > 0
             ? `${day.player_count} players in video`
             : "-"}
@@ -320,7 +298,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="h-8 w-8 bg-muted/20 hover:bg-muted/40"
             onClick={(e) => {
               e.stopPropagation()
               onShowInfo?.(dayItem)
