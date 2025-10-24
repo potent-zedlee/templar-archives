@@ -5,10 +5,10 @@ import { cookies } from 'next/headers'
  * Server Components용 Supabase 클라이언트
  * - 쿠키 기반 세션 관리
  * - Server Components에서만 사용
- * - Next.js 14 App Router 최적화
+ * - Next.js 15 App Router 최적화
  */
-export function createServerSupabaseClient() {
-  const cookieStore = cookies()
+export async function createServerSupabaseClient() {
+  const cookieStore = await cookies()
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
