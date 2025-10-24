@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { createClientSupabaseClient } from '@/lib/supabase-client'
 import { isAdmin } from '@/lib/auth-utils'
 import { Button } from '@/components/ui/button'
@@ -38,6 +39,7 @@ import { SubEventDialog } from '@/components/archive-dialogs/sub-event-dialog'
 import type { Tournament, FolderItem } from '@/lib/types/archive'
 import type { SubEvent } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { getCategoryByAlias } from '@/lib/tournament-categories'
 
 export default function AdminArchivePage() {
   const [loading, setLoading] = useState(true)
@@ -139,7 +141,7 @@ export default function AdminArchivePage() {
       const { data, error } = await supabase
         .from('tournaments')
         .select('*')
-        .order('start_date', { ascending: false })
+        .order('end_date', { ascending: false })
 
       if (error) throw error
       setTournaments(data || [])
@@ -388,6 +390,18 @@ export default function AdminArchivePage() {
                                 <ChevronRight className="h-4 w-4" />
                               )}
                             </Button>
+                            {(() => {
+                              const category = getCategoryByAlias(tournament.category)
+                              return category?.logoUrl ? (
+                                <Image
+                                  src={category.logoUrl}
+                                  alt={tournament.category}
+                                  width={24}
+                                  height={24}
+                                  className="object-contain"
+                                />
+                              ) : null
+                            })()}
                             {tournament.name}
                           </div>
                         </TableCell>
@@ -452,34 +466,12 @@ export default function AdminArchivePage() {
                         <TableRow key={`${tournament.id}-subevents`}>
                           <TableCell colSpan={6} className="p-0">
                             <div className="bg-muted/30 p-4">
-                              <div className="flex items-center justify-between mb-3">
-                                <h4 className="text-sm font-semibold">Events</h4>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleAddSubEvent(tournament.id)}
-                                >
-                                  <Plus className="h-3 w-3 mr-1" />
-                                  Add Event
-                                </Button>
-                              </div>
-
                               {tournamentSubEvents.length === 0 ? (
                                 <div className="text-center py-6 text-sm text-muted-foreground">
                                   No events yet. Add one to get started.
                                 </div>
                               ) : (
                                 <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead>Name</TableHead>
-                                      <TableHead>Event #</TableHead>
-                                      <TableHead>Date</TableHead>
-                                      <TableHead>Buy-in</TableHead>
-                                      <TableHead>Entries</TableHead>
-                                      <TableHead>Winner</TableHead>
-                                      <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
                                   <TableBody>
                                     {tournamentSubEvents.map((subEvent) => (
                                       <TableRow key={subEvent.id}>
