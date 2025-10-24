@@ -67,6 +67,7 @@ export default function AdminArchivePage() {
   // Tournament form states
   const [newTournamentName, setNewTournamentName] = useState('')
   const [newCategory, setNewCategory] = useState<Tournament['category']>('WSOP')
+  const [newCategoryLogo, setNewCategoryLogo] = useState('')
   const [newGameType, setNewGameType] = useState<'tournament' | 'cash-game'>('tournament')
   const [newLocation, setNewLocation] = useState('')
   const [newCity, setNewCity] = useState('')
@@ -157,6 +158,7 @@ export default function AdminArchivePage() {
     setEditingTournamentId('')
     setNewTournamentName('')
     setNewCategory('WSOP')
+    setNewCategoryLogo('')
     setNewGameType('tournament')
     setNewLocation('')
     setNewCity('')
@@ -170,6 +172,7 @@ export default function AdminArchivePage() {
     setEditingTournamentId(tournament.id)
     setNewTournamentName(tournament.name)
     setNewCategory(tournament.category)
+    setNewCategoryLogo(tournament.category_logo || '')
     setNewGameType(tournament.game_type || 'tournament')
     setNewLocation(tournament.location)
     setNewCity(tournament.city || '')
@@ -549,6 +552,8 @@ export default function AdminArchivePage() {
         setNewStartDate={setNewStartDate}
         newEndDate={newEndDate}
         setNewEndDate={setNewEndDate}
+        newCategoryLogo={newCategoryLogo}
+        setNewCategoryLogo={setNewCategoryLogo}
         isUserAdmin={isUserAdmin}
       />
 

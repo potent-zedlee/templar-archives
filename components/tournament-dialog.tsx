@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -17,9 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { X } from "lucide-react"
 import { toast } from "sonner"
 import type { Tournament } from "@/lib/supabase"
 import { createTournament, updateTournament } from "@/app/actions/archive"
+import { LogoPicker } from "@/components/logo-picker"
 
 interface TournamentDialogProps {
   isOpen: boolean
@@ -43,6 +47,8 @@ interface TournamentDialogProps {
   setNewStartDate: (date: string) => void
   newEndDate: string
   setNewEndDate: (date: string) => void
+  newCategoryLogo: string
+  setNewCategoryLogo: (logo: string) => void
   isUserAdmin: boolean
 }
 
@@ -68,9 +74,12 @@ export function TournamentDialog({
   setNewStartDate,
   newEndDate,
   setNewEndDate,
+  newCategoryLogo,
+  setNewCategoryLogo,
   isUserAdmin,
 }: TournamentDialogProps) {
   const [saving, setSaving] = useState(false)
+  const [logoUploadMode, setLogoUploadMode] = useState<"upload" | "select">("select")
 
   if (!isUserAdmin) return null
 
@@ -87,6 +96,7 @@ export function TournamentDialog({
     const tournamentData = {
       name: newTournamentName.trim(),
       category: newCategory,
+      category_logo: newCategoryLogo || undefined,
       game_type: newGameType,
       location: newLocation.trim(),
       city: newCity.trim() || undefined,
@@ -146,6 +156,40 @@ export function TournamentDialog({
                 <SelectItem value="GGPOKER">GGPOKER</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Logo Selection */}
+          <div className="space-y-3 p-4 border rounded-lg">
+            <Label>Tournament Logo (Optional)</Label>
+
+            {/* Logo Preview */}
+            {newCategoryLogo && (
+              <div className="flex items-center gap-4">
+                <div className="relative w-16 h-16 border rounded-lg overflow-hidden bg-muted">
+                  <Image
+                    src={newCategoryLogo}
+                    alt="Logo preview"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setNewCategoryLogo("")}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Remove
+                </Button>
+              </div>
+            )}
+
+            {/* Logo Picker */}
+            <LogoPicker
+              selectedLogo={newCategoryLogo}
+              onSelect={(url) => setNewCategoryLogo(url)}
+            />
           </div>
 
           <div className="space-y-2">
