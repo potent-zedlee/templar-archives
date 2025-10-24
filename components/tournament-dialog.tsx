@@ -37,6 +37,10 @@ interface TournamentDialogProps {
   setNewGameType: (gameType: 'tournament' | 'cash-game') => void
   newLocation: string
   setNewLocation: (location: string) => void
+  newCity: string
+  setNewCity: (city: string) => void
+  newCountry: string
+  setNewCountry: (country: string) => void
   newStartDate: string
   setNewStartDate: (date: string) => void
   newEndDate: string
@@ -58,6 +62,10 @@ export function TournamentDialog({
   setNewGameType,
   newLocation,
   setNewLocation,
+  newCity,
+  setNewCity,
+  newCountry,
+  setNewCountry,
   newStartDate,
   setNewStartDate,
   newEndDate,
@@ -100,6 +108,8 @@ export function TournamentDialog({
       category_id: getCategoryId(newCategory), // New category_id foreign key
       game_type: newGameType,
       location: newLocation.trim(),
+      city: newCity.trim() || null,
+      country: newCountry.trim() || null,
       start_date: newStartDate,
       end_date: newEndDate,
     }
@@ -207,13 +217,37 @@ export function TournamentDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
+            <Label htmlFor="location">Location (Legacy)</Label>
             <Input
               id="location"
               placeholder="e.g., Las Vegas, Seoul, Online"
               value={newLocation}
               onChange={(e) => setNewLocation(e.target.value)}
             />
+            <p className="text-caption text-muted-foreground">
+              Legacy field. Use City and Country below for new tournaments.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                placeholder="e.g., Las Vegas, Macau, Paris"
+                value={newCity}
+                onChange={(e) => setNewCity(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="country">Country</Label>
+              <Input
+                id="country"
+                placeholder="e.g., USA, CHN, FRA"
+                value={newCountry}
+                onChange={(e) => setNewCountry(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

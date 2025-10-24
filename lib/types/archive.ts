@@ -48,6 +48,8 @@ export interface Tournament {
   category: TournamentCategory
   category_logo?: string
   location: string
+  city?: string
+  country?: string
   start_date: string
   end_date: string
   created_at?: string
@@ -154,6 +156,8 @@ export interface TournamentFormData {
   category: TournamentCategory
   game_type: 'tournament' | 'cash-game'
   location: string
+  city: string
+  country: string
   start_date: string
   end_date: string
 }
@@ -360,6 +364,8 @@ export const INITIAL_TOURNAMENT_FORM: TournamentFormData = {
   category: "WSOP",
   game_type: "tournament",
   location: "",
+  city: "",
+  country: "",
   start_date: "",
   end_date: "",
 }
