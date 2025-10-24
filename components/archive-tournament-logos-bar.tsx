@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { CategoryLogo } from '@/components/category-logo'
 import { useActiveCategoriesQuery } from '@/lib/queries/category-queries'
 import type { TournamentCategory as DatabaseCategory, GameType } from '@/lib/tournament-categories-db'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight, LayoutGrid } from 'lucide-react'
 
 interface ArchiveTournamentLogosBarProps {
   selectedCategory: string
@@ -104,13 +104,13 @@ export function ArchiveTournamentLogosBar({
           >
             <div
               className={cn(
-                "w-16 h-16 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-200",
+                "w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200",
                 selectedCategory === 'All'
                   ? "text-white ring-2 ring-primary shadow-lg scale-110"
                   : "text-gray-400"
               )}
             >
-              ALL
+              <LayoutGrid className="w-8 h-8" />
             </div>
             <span
               className={cn(
