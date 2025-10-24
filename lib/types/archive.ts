@@ -87,6 +87,7 @@ export interface Day {
   video_source?: VideoSource
   published_at?: string
   created_at?: string
+  player_count?: number
   // UI state (클라이언트 전용)
   selected?: boolean
 }
