@@ -22,27 +22,41 @@ templar-archives/
 ```
 app/
 ├── page.tsx                           # 홈 (/)
-├── layout.tsx                         # 루트 레이아웃
+├── layout.tsx                         # 루트 레이아웃 (SEO metadata, Phase 28)
 ├── globals.css                        # 전역 CSS
+├── sitemap.ts                         # 자동 sitemap.xml 생성 (Phase 28)
+├── robots.ts                          # 자동 robots.txt 생성 (Phase 28)
 │
 ├── archive/
-│   ├── page.tsx                       # 아카이브 메인 (88줄, Phase 9 리팩토링) ⭐
-│   ├── page.tsx.backup                # 이전 버전 백업 (1,733줄)
+│   ├── page.tsx                       # 아카이브 리다이렉트 (→ /archive/tournament)
+│   ├── tournament/page.tsx            # 토너먼트 아카이브 (Phase 23)
+│   ├── cash-game/page.tsx             # 캐시 게임 아카이브 (Phase 23)
 │   └── _components/                   # Archive 전용 컴포넌트
 │       ├── ArchiveProviders.tsx       # DnD + 키보드 단축키 Provider
 │       ├── ArchiveToolbar.tsx         # 검색/필터/뷰모드 툴바
-│       ├── ArchiveEventsList.tsx      # 이벤트 리스트 (list/grid/timeline)
+│       ├── ArchiveEventsList.tsx      # 이벤트 리스트
 │       ├── ArchiveHandHistory.tsx     # 핸드 히스토리 섹션
-│       └── ArchiveDialogs.tsx         # 모든 다이얼로그 통합
+│       └── ArchiveDialogs.tsx         # 모든 다이얼로그 통합 (동적 임포트, Phase 28)
 │
 ├── search/page.tsx                    # 검색 (/search)
-├── community/page.tsx                 # 커뮤니티 (/community)
+├── community/
+│   ├── page.tsx                       # 커뮤니티 목록 (/community)
+│   └── [id]/page.tsx                  # 포스트 상세
 ├── bookmarks/page.tsx                 # 북마크 (/bookmarks) 🔐
+├── notifications/page.tsx             # 알림 (/notifications) 🔐 (Phase 20)
 ├── my-edit-requests/page.tsx          # 내 수정 제안 (/my-edit-requests) 🔐
+│
+├── news/                              # 뉴스 (Phase 22)
+│   ├── page.tsx                       # 뉴스 목록
+│   └── [id]/page.tsx                  # 뉴스 상세
+│
+├── live-reporting/                    # 라이브 리포팅 (Phase 22)
+│   ├── page.tsx                       # 라이브 리포트 목록
+│   └── [id]/page.tsx                  # 라이브 리포트 상세
 │
 ├── players/
 │   ├── page.tsx                       # 플레이어 목록 (/players)
-│   └── [id]/page.tsx                  # 플레이어 상세 (/players/[id])
+│   └── [id]/page.tsx                  # 플레이어 상세 (동적 임포트, Phase 28)
 │
 ├── profile/
 │   ├── page.tsx                       # 내 프로필 (/profile) 🔐
@@ -52,18 +66,29 @@ app/
 │   ├── login/page.tsx                 # 로그인 (/auth/login)
 │   └── callback/page.tsx              # OAuth 콜백 (/auth/callback)
 │
-├── admin/                             # 관리자 페이지 (관리자 권한 필수)
+├── reporter/                          # Reporter 페이지 (Phase 22) 🔐
+│   ├── news/page.tsx                  # 뉴스 관리
+│   └── live/page.tsx                  # 라이브 리포팅 관리
+│
+├── admin/                             # 관리자 페이지 🔐
 │   ├── dashboard/page.tsx             # 대시보드
-│   ├── users/page.tsx                 # 사용자 관리
+│   ├── users/page.tsx                 # 사용자 관리 (Last Sign-in, Phase 25)
 │   ├── claims/page.tsx                # 플레이어 클레임 승인
 │   ├── edit-requests/page.tsx         # 핸드 수정 요청 관리
-│   └── content/page.tsx               # 콘텐츠 신고 관리
+│   ├── content/page.tsx               # 콘텐츠 신고/뉴스 승인 (Phase 22)
+│   ├── archive/page.tsx               # 아카이브 관리 (Phase 31)
+│   └── hands/[id]/
+│       └── edit-actions/page.tsx      # 핸드 액션 수동 입력 (Phase 18)
+│
+├── actions/                           # Server Actions (Phase 31)
+│   └── archive.ts                     # Archive CRUD Server Actions (670줄)
 │
 └── api/
-    ├── natural-search/route.ts        # Claude AI 자연어 검색
-    ├── import-hands/route.ts          # 외부 핸드 Import
+    ├── natural-search/route.ts        # Claude AI 자연어 검색 (JSON 필터, Phase 32)
+    ├── import-hands/route.ts          # 외부 핸드 Import (CSRF 보호, Phase 32)
     ├── analyze-video/route.ts         # 영상 분석 (Claude Vision)
-    └── extract-youtube-frames/route.ts # YouTube 프레임 추출
+    └── youtube/
+        └── channel-streams/route.ts   # YouTube 채널 스트림 (Phase 27)
 ```
 
 ---
@@ -72,33 +97,54 @@ app/
 
 ```
 components/
-├── header.tsx                         # 네비게이션 바 (로그인 상태별 UI)
+├── header.tsx                         # 네비게이션 바 (Phase 23 구조 변경)
 ├── theme-provider.tsx                 # 다크/라이트 모드 Provider
-├── auth-provider.tsx                  # 인증 상태 Provider (useAuth 훅)
+├── auth-provider.tsx                  # 인증 상태 Provider
+├── providers.tsx                      # React Query Provider (Phase 16)
 │
 ├── video-player.tsx                   # 영상 플레이어 (YouTube/Upload/NAS)
 ├── hand-list-accordion.tsx            # 핸드 목록 (Accordion)
-├── hand-history-detail.tsx            # 핸드 상세 정보 (좋아요, 댓글, 북마크 포함)
-├── hand-comments.tsx                  # 핸드 댓글 시스템
+├── hand-history-detail.tsx            # 핸드 상세 정보
+├── hand-comments.tsx                  # 핸드 댓글 시스템 (Reddit 스타일)
 ├── filter-panel.tsx                   # 고급 검색 필터 패널
 ├── share-hand-dialog.tsx              # 핸드 공유 다이얼로그
 ├── bookmark-dialog.tsx                # 북마크 추가/수정 다이얼로그
 ├── claim-player-dialog.tsx            # 플레이어 클레임 다이얼로그
 ├── analyze-dialog.tsx                 # 영상 분석 다이얼로그
-├── hand-search-dialog.tsx             # 커뮤니티 핸드 첨부 (4단계 선택)
+├── hand-search-dialog.tsx             # 커뮤니티 핸드 첨부
+├── card-selector.tsx                  # 카드 선택기 (52-card deck, Phase 24)
+├── archive-info-dialog.tsx            # Archive 상세 정보 (Phase 24)
 │
-├── archive-breadcrumb.tsx             # 아카이브 Breadcrumb 네비게이션
-├── archive-folder-list.tsx            # 아카이브 폴더/파일 리스트 (Google Drive 스타일)
-├── tournament-dialog.tsx              # Tournament 생성/수정 다이얼로그
+├── archive-breadcrumb.tsx             # 아카이브 Breadcrumb
+├── archive-folder-list.tsx            # 아카이브 폴더/파일 리스트
+├── tournament-dialog.tsx              # Tournament 생성/수정
+├── quick-upload-dialog.tsx            # Quick Upload (Phase 27)
+│
+├── notification-bell.tsx              # 헤더 알림 벨 (Phase 20, 245줄)
+│
+├── hand-actions/                      # 핸드 액션 컴포넌트 (Phase 18)
+│   ├── ActionInput.tsx                # 액션 입력 폼 (178줄)
+│   ├── ActionList.tsx                 # 액션 목록 (141줄)
+│   ├── StreetTabs.tsx                 # Street 탭 (42줄)
+│   └── ActionEditor.tsx               # 메인 에디터 (230줄)
+│
+├── player-stats/                      # 플레이어 통계 컴포넌트 (Phase 21)
+│   ├── AdvancedStatsCard.tsx          # 고급 통계 (VPIP, PFR, 3-Bet)
+│   ├── PositionalStatsCard.tsx        # 포지션별 통계
+│   └── PerformanceChartCard.tsx       # 성과 차트 (Recharts)
+│
+├── reporter/                          # Reporter 컴포넌트 (Phase 22)
+│   └── content-editor.tsx             # 콘텐츠 에디터 (Markdown, 293줄)
+│
+├── admin/                             # 관리자 컴포넌트
+│   └── CategoryDialog.tsx             # 카테고리 다이얼로그 (로고 업로드, Phase 29)
 │
 ├── hero-section.tsx                   # 홈 히어로 섹션
 ├── recent-analyses.tsx                # 최근 분석 섹션
 ├── most-used-videos.tsx               # 인기 영상 섹션
 ├── on-this-day.tsx                    # 오늘의 역사 섹션
 │
-├── player-charts.tsx                  # 플레이어 차트 (Recharts, 동적 임포트)
-│
-└── ui/                                # shadcn/ui 컴포넌트 라이브러리
+└── ui/                                # shadcn/ui 컴포넌트 라이브러리 (50+ 컴포넌트)
     ├── button.tsx
     ├── card.tsx
     ├── dialog.tsx
@@ -111,7 +157,9 @@ components/
     ├── resizable.tsx
     ├── avatar.tsx
     ├── progress.tsx
-    └── [50+ 컴포넌트]
+    ├── scroll-area.tsx
+    ├── calendar.tsx
+    └── [40+ more...]
 ```
 
 ---
@@ -121,7 +169,8 @@ components/
 ```
 lib/
 ├── supabase.ts                        # Supabase 클라이언트 + 타입
-├── auth.ts                            # 인증 함수 (signInWithGoogle, signOut, getUser)
+├── auth.ts                            # 인증 함수
+├── auth-utils.ts                      # 인증 유틸리티 (isAdmin 등)
 ├── supabase-community.ts              # 커뮤니티 관련 Supabase 함수
 ├── queries.ts                         # 복잡한 Supabase 쿼리
 ├── filter-store.ts                    # 고급 필터 상태 관리 (Zustand)
@@ -129,16 +178,46 @@ lib/
 │
 ├── hand-likes.ts                      # 핸드 좋아요/싫어요 API
 ├── hand-bookmarks.ts                  # 북마크 API
+├── hand-actions.ts                    # 핸드 액션 CRUD (Phase 18, 297줄)
 ├── player-claims.ts                   # 플레이어 클레임 API
+├── player-stats.ts                    # 플레이어 통계 계산 (Phase 21, 446줄)
 ├── hand-edit-requests.ts              # 핸드 수정 요청 API
-├── admin.ts                           # 관리자 기능 API
+├── admin.ts                           # 관리자 기능 API (LIKE 패턴 이스케이프, Phase 32)
 ├── content-moderation.ts              # 콘텐츠 신고 API
 ├── user-profile.ts                    # 유저 프로필 API
+├── notifications.ts                   # 알림 API (Phase 20, 253줄)
+├── tournament-categories-db.ts        # 토너먼트 카테고리 DB (로고 업로드)
 │
 ├── hand-boundary-detector.ts          # 핸드 경계 감지 (Claude Vision)
 ├── hand-sequence-analyzer.ts          # 핸드 시퀀스 분석 (Claude Vision)
+├── natural-search-filter.ts           # 자연어 검색 필터 (Phase 32, 277줄)
+├── file-upload-validator.ts           # 파일 업로드 검증 (Phase 32, 212줄)
+├── env.ts                             # 환경 변수 중앙 관리 (Phase 32, 125줄)
+├── rate-limit.ts                      # Rate Limiting (User ID 기반, Phase 32)
 │
-└── types/                             # 타입 정의 (Phase 9 신규) ⭐
+├── security/                          # 보안 유틸리티 (Phase 13)
+│   ├── sql-sanitizer.ts               # SQL Injection 방지 (188줄)
+│   ├── xss-sanitizer.ts               # XSS 방지 (262줄)
+│   ├── csrf.ts                        # CSRF 보호 (224줄)
+│   └── index.ts                       # 통합 보안 모듈 (227줄)
+│
+├── validation/                        # 입력 검증 (Phase 13)
+│   └── api-schemas.ts                 # Zod 스키마 (15개)
+│
+├── queries/                           # React Query 훅 (Phase 16, 총 650줄) ⭐
+│   ├── community-queries.ts           # 포스트 상세, 좋아요 (89줄)
+│   ├── search-queries.ts              # 핸드 검색, 필터 옵션 (68줄)
+│   ├── players-queries.ts             # 플레이어 리스트, 상세 (203줄)
+│   ├── profile-queries.ts             # 프로필, 아바타 (163줄)
+│   ├── bookmarks-queries.ts           # 북마크 CRUD (79줄)
+│   ├── edit-requests-queries.ts       # 수정 제안 목록 (38줄)
+│   ├── hand-actions-queries.ts        # 핸드 액션 (Phase 18, 218줄)
+│   ├── notification-queries.ts        # 알림 (Phase 20, 244줄)
+│   ├── player-stats-queries.ts        # 플레이어 통계 (Phase 21, 218줄)
+│   ├── news-queries.ts                # 뉴스 (Phase 22, 313줄)
+│   └── live-reports-queries.ts        # 라이브 리포트 (Phase 22, 313줄)
+│
+└── types/                             # 타입 정의 (Phase 9) ⭐
     ├── hand-history.ts                # HandHistory 타입
     └── archive.ts                     # Archive 전용 타입 (350줄, 20+ 타입)
 ```
@@ -197,12 +276,9 @@ docs/
 
 ```
 scripts/
-└── delete-all-data.ts                 # 전체 데이터 삭제 (개발/테스트용)
-```
-
-**실행 방법**:
-```bash
-NEXT_PUBLIC_SUPABASE_URL=... NEXT_PUBLIC_SUPABASE_ANON_KEY=... npx tsx scripts/delete-all-data.ts
+├── delete-all-data.ts                 # 전체 데이터 삭제 (개발/테스트용)
+├── update-logo-extensions.ts          # 로고 확장자 자동 감지 (Phase 15, 132줄)
+└── download-pokernews-logos.ts        # 로고 다운로드 (Phase 15, 145줄)
 ```
 
 ---
@@ -212,26 +288,19 @@ NEXT_PUBLIC_SUPABASE_URL=... NEXT_PUBLIC_SUPABASE_ANON_KEY=... npx tsx scripts/d
 ```
 supabase/
 ├── config.toml                        # Supabase CLI 설정
-└── migrations/
-    ├── 000_init_migration_history.sql # 마이그레이션 히스토리 초기화
-    ├── 20241001000001_init_schema.sql # 기본 스키마
-    ├── 20241001000002_add_players.sql # 플레이어 시스템
-    ├── 20241001000003_add_video_sources.sql # 영상 소스
-    ├── 20241001000004_add_community.sql # 커뮤니티
-    ├── 20241001000005_add_users_table.sql # Users 테이블
-    ├── 20241001000006_add_hand_likes.sql # 핸드 좋아요/싫어요
-    ├── 20241001000007_add_payouts_and_matching.sql
-    ├── 20241001000008_add_subevent_details.sql
-    ├── 20241001000009_add_hand_details.sql # POT, 보드 카드, 액션
-    ├── 20241001000010_add_player_notes.sql
-    ├── 20241001000011_add_player_claims.sql # 플레이어 클레임
-    ├── 20241001000012_add_hand_bookmarks.sql # 북마크
-    ├── 20251015000013_add_community_search.sql # Full-Text Search
-    ├── 20251015000014_add_user_profile_fields.sql # 유저 프로필 확장
-    ├── 20251015000015_add_admin_system.sql # 관리자 시스템
-    ├── 20251015000016_add_content_moderation.sql # 콘텐츠 신고
-    ├── 20251015000017_add_hand_edit_requests.sql # 핸드 수정 요청
-    └── 20251016000018_fix_admin_permissions.sql # Admin RLS 정책
+└── migrations/                        # DB 마이그레이션 (총 41개)
+    ├── 000_init_migration_history.sql
+    ├── 20241001000001_init_schema.sql
+    ├── ... (기존 마이그레이션 생략)
+    ├── 20251018000026_add_notifications_system.sql # 알림 시스템 (Phase 20, 434줄)
+    ├── 20251020000030_add_hand_notification_triggers.sql # 핸드 알림 트리거 (Phase 20, 246줄)
+    ├── 20251021000032_add_last_sign_in_tracking.sql # 로그인 추적 (Phase 25)
+    ├── 20251022000001_add_game_type_to_tournaments.sql # game_type 필드 (Phase 23)
+    ├── 20251022000002_add_news_and_live_reports.sql # 뉴스/라이브 리포팅 (Phase 22)
+    ├── 20251023000001_create_tournament_logos_storage.sql # 로고 Storage (Phase 29)
+    ├── 20251024000001_add_event_number_to_sub_events.sql # event_number 필드 (Phase 30)
+    ├── 20251024000001_fix_rls_admin_only.sql # RLS 강화 (Phase 32, 357줄)
+    └── 20251024000002_remove_dangerous_rpc.sql # execute_search_query 삭제 (Phase 32)
 ```
 
 ---
@@ -242,7 +311,11 @@ supabase/
 public/
 ├── favicon.ico
 ├── icon.webp                          # 파비콘 (Protoss Carrier)
-└── [이미지, 아이콘 등]
+└── logos/                             # 토너먼트 로고 (36개)
+    ├── wsop.png                       # 실제 로고 (21 KB)
+    ├── triton.png                     # 실제 로고 (26 KB)
+    ├── ept.png                        # 실제 로고 (8 KB)
+    └── [30+ more logos...]
 ```
 
 ---
@@ -289,25 +362,44 @@ templar-archives/
 
 | 기능 | 파일 경로 |
 |------|-----------|
-| 아카이브 페이지 | `app/archive/page.tsx` (88줄) ⭐ |
+| **Archive 페이지** | `app/archive/tournament/page.tsx` ⭐ |
 | Archive 데이터 Store | `stores/archive-data-store.ts` ⭐ |
 | Archive UI Store | `stores/archive-ui-store.ts` ⭐ |
 | Archive 타입 정의 | `lib/types/archive.ts` ⭐ |
+| **Archive Server Actions** | `app/actions/archive.ts` (Phase 31, 670줄) |
 | 검색 페이지 | `app/search/page.tsx` |
-| 자연어 검색 API | `app/api/natural-search/route.ts` |
-| 핸드 Import API | `app/api/import-hands/route.ts` |
+| **자연어 검색 API** | `app/api/natural-search/route.ts` (Phase 32 재설계) |
+| **자연어 검색 필터** | `lib/natural-search-filter.ts` (Phase 32, 277줄) |
+| 핸드 Import API | `app/api/import-hands/route.ts` (CSRF 보호) |
 | 영상 분석 API | `app/api/analyze-video/route.ts` |
 | Supabase 클라이언트 | `lib/supabase.ts` |
+| **React Query Provider** | `components/providers.tsx` (Phase 16) |
 | 인증 Provider | `components/auth-provider.tsx` |
+| **알림 시스템** | `lib/notifications.ts` (Phase 20, 253줄) |
+| **알림 벨** | `components/notification-bell.tsx` (Phase 20, 245줄) |
+| **핸드 액션 CRUD** | `lib/hand-actions.ts` (Phase 18, 297줄) |
+| **핸드 액션 에디터** | `components/hand-actions/ActionEditor.tsx` (230줄) |
+| **플레이어 통계** | `lib/player-stats.ts` (Phase 21, 446줄) |
 | 핸드 목록 | `components/hand-list-accordion.tsx` |
 | 핸드 상세 | `components/hand-history-detail.tsx` |
 | 영상 플레이어 | `components/video-player.tsx` |
 | 핸드 경계 감지 | `lib/hand-boundary-detector.ts` |
 | 핸드 시퀀스 분석 | `lib/hand-sequence-analyzer.ts` |
+| **보안 모듈** | `lib/security/index.ts` (Phase 13, 227줄) |
+| **파일 검증** | `lib/file-upload-validator.ts` (Phase 32, 212줄) |
+| **환경 변수 관리** | `lib/env.ts` (Phase 32, 125줄) |
 
 ---
 
-**마지막 업데이트**: 2025-10-18
-**버전**: 4.0
-**상태**: Phase 0-9 완료 (코드 품질 및 아키텍처 대규모 개선)
-**주요 변경 (Phase 9)**: page.tsx 1,733줄 → 88줄 (-95%), Zustand stores 도입, 타입 시스템 구축
+**마지막 업데이트**: 2025-10-24
+**버전**: 7.0
+**상태**: Phase 0-32 완료 (모든 핵심 기능 + 보안 강화)
+**주요 변경**:
+- **Phase 32**: Comprehensive Security Enhancement (8가지 보안 개선, 보안 등급 A)
+- **Phase 31**: Archive Security & Admin Management Page (Server Actions)
+- **Phase 30**: Archive Event Management Enhancement
+- **Phase 22**: News & Live Reporting System (Reporter 역할)
+- **Phase 20**: Notification System (8가지 알림 타입)
+- **Phase 18**: Manual Hand Action Input System
+- **Phase 16**: React Query Migration (6개 query 파일, 650줄)
+- **Phase 9**: Archive 페이지 리팩토링 (1,733줄 → 88줄, -95%)

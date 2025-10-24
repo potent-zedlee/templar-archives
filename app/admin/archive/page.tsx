@@ -366,14 +366,21 @@ export default function AdminArchivePage() {
                   return (
                     <>
                       {/* Tournament Row */}
-                      <TableRow key={tournament.id} className="hover:bg-muted/50">
+                      <TableRow
+                        key={tournament.id}
+                        className="hover:bg-muted/50 cursor-pointer"
+                        onClick={() => toggleTournamentExpand(tournament.id)}
+                      >
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-6 w-6 p-0"
-                              onClick={() => toggleTournamentExpand(tournament.id)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                toggleTournamentExpand(tournament.id)
+                              }}
                             >
                               {isExpanded ? (
                                 <ChevronDown className="h-4 w-4" />
@@ -406,14 +413,33 @@ export default function AdminArchivePage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleEditTournament(tournament)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleAddSubEvent(tournament.id)
+                              }}
+                              title="Add SubEvent"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditTournament(tournament)
+                              }}
+                              title="Edit Tournament"
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteTournament(tournament)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleDeleteTournament(tournament)
+                              }}
+                              title="Delete Tournament"
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
