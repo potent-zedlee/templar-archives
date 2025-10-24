@@ -17,6 +17,8 @@ import {
   Play,
   Newspaper,
   Radio,
+  Phone,
+  Mail,
 } from "lucide-react"
 
 export default function AboutPage() {
@@ -100,8 +102,10 @@ export default function AboutPage() {
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
             Templar Archives
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            The ultimate poker hand history archive. Powered by AI, built for players.
+          <p className="text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto mb-8 leading-relaxed">
+            The ultimate poker hand history archive.{" "}
+            <span className="whitespace-nowrap">Powered by AI,</span>{" "}
+            <span className="whitespace-nowrap">built for players.</span>
           </p>
           <div className="flex gap-4 justify-center">
             <Link href="/search">
@@ -249,26 +253,58 @@ export default function AboutPage() {
         </Card>
 
         {/* Contact */}
-        <div className="mt-16 text-center">
-          <h3 className="text-xl font-semibold mb-4">Questions or Feedback?</h3>
-          <p className="text-muted-foreground mb-6">
-            We'd love to hear from you. Get in touch via email or GitHub.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <a href="mailto:hello@templararchives.com">
-              <Button variant="outline" size="sm">
-                Email Us
-              </Button>
-            </a>
-            <a
-              href="https://github.com/anthropics/claude-code"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button variant="outline" size="sm">
-                GitHub
-              </Button>
-            </a>
+        <div className="mt-16">
+          <h2 className="text-3xl font-bold text-center mb-8">Contact Us</h2>
+          <div className="max-w-2xl mx-auto">
+            <Card className="p-8">
+              <div className="space-y-6">
+                {/* Phone */}
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Phone className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-muted-foreground mb-1">Phone</div>
+                    <a
+                      href="tel:+821023007653"
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                    >
+                      +82 010 2300 7653
+                    </a>
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Mail className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-muted-foreground mb-1">Email</div>
+                    <a
+                      href="mailto:jhng.mov@gmail.com"
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                    >
+                      jhng.mov@gmail.com
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="mt-8 pt-6 border-t border-border">
+                <a href="mailto:jhng.mov@gmail.com" className="w-full block">
+                  <Button size="lg" className="w-full gap-2">
+                    <Mail className="h-5 w-5" />
+                    Send us a message
+                  </Button>
+                </a>
+              </div>
+            </Card>
+
+            <p className="text-center text-sm text-muted-foreground mt-6">
+              We typically respond within 24 hours
+            </p>
           </div>
         </div>
       </main>
