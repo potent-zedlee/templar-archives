@@ -365,7 +365,6 @@ export default function claimsClient() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
 
       {/* Action Dialog */}
       <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
