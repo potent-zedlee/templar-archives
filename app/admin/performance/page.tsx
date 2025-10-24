@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
-import { Header } from "@/components/header"
 import { MetricsCard } from "@/components/admin/metrics-card"
 import { Card } from "@/components/ui/card"
 
@@ -99,8 +98,7 @@ export default function PerformancePage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <Header />
+    <>
 
       <div className="container max-w-7xl mx-auto py-8 px-4" key={refreshKey}>
         {/* Header */}
@@ -246,6 +244,6 @@ export default function PerformancePage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </>
   )
 }

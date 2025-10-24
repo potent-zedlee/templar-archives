@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, closestCenter } from "@dnd-kit/core"
 import { arrayMove } from "@/lib/utils/array"
 import { useDebounce } from "@/hooks/useDebounce"
-import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
@@ -173,10 +172,7 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-
-      <div className="container max-w-7xl mx-auto py-8 px-4">
+    <div className="container max-w-7xl mx-auto py-8 px-4">
         {/* Header */}
         <header className="mb-8">
           <h1 className="text-3xl font-bold mb-2">카테고리 관리</h1>

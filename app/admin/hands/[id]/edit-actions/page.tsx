@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -202,31 +201,25 @@ export default function EditHandActionsPage() {
 
   if (!hasAccess || loading) {
     return (
-      <div className="min-h-screen bg-muted/30">
-        <Header />
-        <div className="container max-w-7xl mx-auto py-8 px-4">
-          <CardSkeleton count={3} />
-        </div>
+      <div className="container max-w-7xl mx-auto py-8 px-4">
+        <CardSkeleton count={3} />
       </div>
     )
   }
 
   if (!hand) {
     return (
-      <div className="min-h-screen bg-muted/30">
-        <Header />
-        <div className="container max-w-7xl mx-auto py-16 px-4 text-center">
-          <h2 className="text-title-lg mb-4">Hand not found</h2>
-          <p className="text-body text-muted-foreground mb-6">
-            The hand you are looking for does not exist.
-          </p>
-          <Link href="/archive">
-            <Button>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Archive
-            </Button>
-          </Link>
-        </div>
+      <div className="container max-w-7xl mx-auto py-16 px-4 text-center">
+        <h2 className="text-title-lg mb-4">Hand not found</h2>
+        <p className="text-body text-muted-foreground mb-6">
+          The hand you are looking for does not exist.
+        </p>
+        <Link href="/archive">
+          <Button>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Archive
+          </Button>
+        </Link>
       </div>
     )
   }
@@ -237,10 +230,7 @@ export default function EditHandActionsPage() {
   }))
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <Header />
-
-      <div className="container max-w-6xl mx-auto py-8 px-4">
+    <div className="container max-w-6xl mx-auto py-8 px-4">
         {/* Back Button */}
         <div className="mb-6">
           <Link href="/archive">

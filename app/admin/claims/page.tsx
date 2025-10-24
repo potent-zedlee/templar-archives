@@ -2,7 +2,6 @@
 
 
 import { useState, useEffect } from "react"
-import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -176,20 +175,14 @@ export default function claimsClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-muted/30">
-        <Header />
-        <div className="container max-w-7xl mx-auto py-16 text-center">
-          <p className="text-body-lg text-muted-foreground">Loading...</p>
-        </div>
+      <div className="container max-w-7xl mx-auto py-16 text-center">
+        <p className="text-body-lg text-muted-foreground">Loading...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <Header />
-
-      <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
+    <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="mb-8">
           <h1 className="text-title-lg mb-2">Player Claim Management</h1>
           <p className="text-body text-muted-foreground">

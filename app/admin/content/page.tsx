@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Header } from "@/components/header"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -238,19 +237,14 @@ export default function contentClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen">
-        <Header />
-        <div className="flex items-center justify-center py-20">
-          <div className="text-muted-foreground">Loading...</div>
-        </div>
+      <div className="flex items-center justify-center py-20">
+        <div className="text-muted-foreground">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen">
-      <Header />
-      <div className="container max-w-7xl mx-auto py-8 px-4">
+    <div className="container max-w-7xl mx-auto py-8 px-4">
       <div className="mb-6">
         <h1 className="text-title-lg mb-2">Content Management</h1>
         <p className="text-body text-muted-foreground">
