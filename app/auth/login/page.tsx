@@ -4,15 +4,18 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { signInWithGoogle } from "@/lib/auth"
 import { useAuth } from "@/components/auth-provider"
-import { Loader2 } from "lucide-react"
+import { Loader2, AlertTriangle, ExternalLink } from "lucide-react"
+import { useWebViewDetection, getOpenInBrowserMessage } from "@/lib/utils/webview-detector"
 
 export default function loginClient() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const webViewDetection = useWebViewDetection()
 
   // Redirect logged-in users to home
   useEffect(() => {
@@ -58,9 +61,28 @@ export default function loginClient() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* WebView Warning */}
+          {webViewDetection.isWebView && (
+            <Alert variant="destructive" className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
+              <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+              <AlertTitle className="text-orange-900 dark:text-orange-200 font-semibold">
+                앱 내부 브라우저에서는 로그인이 불가능합니다
+              </AlertTitle>
+              <AlertDescription className="text-orange-800 dark:text-orange-300 space-y-2">
+                <p className="text-sm">
+                  Google 보안 정책상 {webViewDetection.browserName} 내부 브라우저에서는 로그인할 수 없습니다.
+                </p>
+                <p className="text-sm font-medium flex items-center gap-1">
+                  <ExternalLink className="h-3 w-3" />
+                  {getOpenInBrowserMessage(webViewDetection.browserType)}
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Button
             onClick={handleGoogleLogin}
-            disabled={loading}
+            disabled={loading || webViewDetection.isWebView}
             className="w-full"
             size="lg"
           >
