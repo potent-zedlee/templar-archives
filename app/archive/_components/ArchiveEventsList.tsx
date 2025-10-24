@@ -23,7 +23,7 @@ import { useMemo, useCallback } from 'react'
 
 export function ArchiveEventsList() {
   const { tournaments, unsortedVideos, tournamentsLoading } = useArchiveData()
-  const { userEmail, setSelectedDay } = useArchiveDataStore()
+  const { userEmail, selectedDay, setSelectedDay } = useArchiveDataStore()
 
   const {
     expandedTournaments,
@@ -53,8 +53,8 @@ export function ArchiveEventsList() {
 
   // Wrapper function with toggle functionality
   const handleSelectDay = useCallback((dayId: string) => {
-    setSelectedDay(prev => prev === dayId ? null : dayId)
-  }, [setSelectedDay])
+    setSelectedDay(selectedDay === dayId ? null : dayId)
+  }, [selectedDay, setSelectedDay])
 
   // Build folder items in tree structure (with expansion)
   const folderItems = useMemo((): FolderItem[] => {
