@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
-import type { FolderItem } from '@/components/archive-folder-list'
-import type { AdvancedFilters } from '@/components/archive-advanced-filters'
+import type { FolderItem, AdvancedFilters } from '@/lib/types/archive'
 
 type NavigationLevel = 'root' | 'tournament' | 'subevent' | 'unorganized'
 type SortOption = 'name-asc' | 'name-desc' | 'date-asc' | 'date-desc' | 'count-asc' | 'count-desc'
