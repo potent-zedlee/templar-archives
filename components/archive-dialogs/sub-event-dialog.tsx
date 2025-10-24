@@ -22,6 +22,7 @@ import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
 import { Plus, X } from "lucide-react"
 import type { PayoutRow } from "@/hooks/useArchiveState"
+import { createSubEvent, updateSubEvent, saveEventPayouts } from "@/app/actions/archive"
 
 interface SubEventDialogProps {
   isOpen: boolean
@@ -261,93 +262,53 @@ export function SubEventDialog({
     }
 
     try {
-      if (editingSubEventId) {
-        // Update existing event
-        const { error: subEventError } = await supabase
-          .from('sub_events')
-          .update({
-            name: newSubEventName,
-            date: newSubEventDate,
-            event_number: newSubEventEventNumber || null,
-            total_prize: newSubEventPrize || null,
-            winner: newSubEventWinner || null,
-            buy_in: newSubEventBuyIn || null,
-            entry_count: newSubEventEntryCount ? parseInt(newSubEventEntryCount) : null,
-            blind_structure: newSubEventBlindStructure || null,
-            level_duration: newSubEventLevelDuration ? parseInt(newSubEventLevelDuration) : null,
-            starting_stack: newSubEventStartingStack ? parseInt(newSubEventStartingStack) : null,
-            notes: newSubEventNotes || null,
-          })
-          .eq('id', editingSubEventId)
-
-        if (subEventError) throw subEventError
-
-        // Delete old payouts
-        await supabase
-          .from('event_payouts')
-          .delete()
-          .eq('sub_event_id', editingSubEventId)
-
-        // Insert new payouts
-        const validPayouts = payouts.filter(p => p.playerName.trim() && p.prizeAmount.trim())
-        if (validPayouts.length > 0) {
-          const payoutInserts = validPayouts.map(p => ({
-            sub_event_id: editingSubEventId,
-            rank: p.rank,
-            player_name: p.playerName.trim(),
-            prize_amount: parsePrizeAmount(p.prizeAmount),
-            matched_status: 'unmatched' as const,
-          }))
-
-          await supabase.from('event_payouts').insert(payoutInserts)
-        }
-
-        toast.success('Event updated successfully')
-      } else {
-        // Create new event
-        const { data: subEventData, error: subEventError } = await supabase
-          .from('sub_events')
-          .insert({
-            tournament_id: selectedTournamentId,
-            name: newSubEventName,
-            date: newSubEventDate,
-            event_number: newSubEventEventNumber || null,
-            total_prize: newSubEventPrize || null,
-            winner: newSubEventWinner || null,
-            buy_in: newSubEventBuyIn || null,
-            entry_count: newSubEventEntryCount ? parseInt(newSubEventEntryCount) : null,
-            blind_structure: newSubEventBlindStructure || null,
-            level_duration: newSubEventLevelDuration ? parseInt(newSubEventLevelDuration) : null,
-            starting_stack: newSubEventStartingStack ? parseInt(newSubEventStartingStack) : null,
-            notes: newSubEventNotes || null,
-          })
-          .select()
-          .single()
-
-        if (subEventError) throw subEventError
-
-        // Save payouts
-        const validPayouts = payouts.filter(p => p.playerName.trim() && p.prizeAmount.trim())
-        if (validPayouts.length > 0) {
-          const payoutInserts = validPayouts.map(p => ({
-            sub_event_id: subEventData.id,
-            rank: p.rank,
-            player_name: p.playerName.trim(),
-            prize_amount: parsePrizeAmount(p.prizeAmount),
-            matched_status: 'unmatched' as const,
-          }))
-
-          await supabase.from('event_payouts').insert(payoutInserts)
-        }
-
-        toast.success('Event added successfully')
+      const subEventData = {
+        name: newSubEventName.trim(),
+        date: newSubEventDate,
+        event_number: newSubEventEventNumber || undefined,
+        total_prize: newSubEventPrize || undefined,
+        winner: newSubEventWinner || undefined,
+        buy_in: newSubEventBuyIn || undefined,
+        entry_count: newSubEventEntryCount ? parseInt(newSubEventEntryCount) : undefined,
+        blind_structure: newSubEventBlindStructure || undefined,
+        level_duration: newSubEventLevelDuration ? parseInt(newSubEventLevelDuration) : undefined,
+        starting_stack: newSubEventStartingStack ? parseInt(newSubEventStartingStack) : undefined,
+        notes: newSubEventNotes || undefined,
       }
+
+      let result
+      let targetSubEventId = editingSubEventId
+
+      if (editingSubEventId) {
+        // Update existing event via Server Action
+        result = await updateSubEvent(editingSubEventId, subEventData)
+      } else {
+        // Create new event via Server Action
+        result = await createSubEvent(selectedTournamentId, subEventData)
+        if (result.success && result.data) {
+          targetSubEventId = result.data.id
+        }
+      }
+
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown error')
+      }
+
+      // Save payouts via Server Action
+      const payoutResult = await saveEventPayouts(targetSubEventId, payouts)
+
+      if (!payoutResult.success) {
+        console.warn('[SubEventDialog] Payout save failed:', payoutResult.error)
+        // Don't throw - event was saved successfully
+      }
+
+      toast.success(editingSubEventId ? 'Event updated successfully' : 'Event added successfully')
 
       onOpenChange(false)
       onSuccess?.()
-    } catch (error) {
-      console.error('Error saving sub event:', error)
-      toast.error('Failed to save event')
+    } catch (error: any) {
+      console.error('[SubEventDialog] Error saving sub event:', error)
+      toast.error(error.message || 'Failed to save event')
     }
   }
 

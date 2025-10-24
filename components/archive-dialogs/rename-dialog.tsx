@@ -10,9 +10,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import type { FolderItem } from "@/lib/types/archive"
+import { renameItem } from "@/app/actions/archive"
 
 interface RenameDialogProps {
   isOpen: boolean
@@ -43,26 +43,28 @@ export function RenameDialog({
       return
     }
 
+    // Unorganized folder cannot be renamed
+    if (item.type === 'unorganized') {
+      toast.error('Cannot rename unorganized folder')
+      return
+    }
+
     setIsSubmitting(true)
     try {
-      const table = item.type === 'tournament' ? 'tournaments'
-        : item.type === 'subevent' ? 'sub_events'
-        : 'days'
+      // Call Server Action (type is now guaranteed to be 'tournament' | 'subevent' | 'day')
+      const result = await renameItem(item.type, item.id, renameValue.trim())
 
-      const { error } = await supabase
-        .from(table)
-        .update({ name: renameValue.trim() })
-        .eq('id', item.id)
-
-      if (error) throw error
+      if (!result.success) {
+        throw new Error(result.error || 'Unknown error')
+      }
 
       toast.success('Renamed successfully')
       onOpenChange(false)
       setRenameValue("")
       onSuccess?.()
-    } catch (error) {
-      console.error('Error renaming:', error)
-      toast.error('Failed to rename')
+    } catch (error: any) {
+      console.error('[RenameDialog] Error renaming:', error)
+      toast.error(error.message || 'Failed to rename')
     } finally {
       setIsSubmitting(false)
     }
