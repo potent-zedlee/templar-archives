@@ -12,12 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
-
-export interface FolderItem {
-  id: string
-  name: string
-  type: 'tournament' | 'subevent' | 'day'
-}
+import type { FolderItem } from "@/lib/types/archive"
 
 interface RenameDialogProps {
   isOpen: boolean
