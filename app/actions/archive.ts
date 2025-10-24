@@ -9,28 +9,60 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
-import { isAdmin } from '@/lib/auth-utils'
 import type { Tournament, TournamentCategory } from '@/lib/types/archive'
 
 // ==================== Helper Functions ====================
 
 /**
- * 관리자 권한 검증
+ * 관리자 권한 검증 (DB role 기반)
+ *
+ * @returns {Promise<{authorized: boolean, error?: string, userId?: string}>}
  */
-async function verifyAdmin(): Promise<{ authorized: boolean; error?: string }> {
+async function verifyAdmin(): Promise<{
+  authorized: boolean
+  error?: string
+  userId?: string
+}> {
   const supabase = await createServerSupabaseClient()
 
+  // 1. 인증된 사용자 확인
   const { data: { user }, error: authError } = await supabase.auth.getUser()
 
   if (authError || !user) {
     return { authorized: false, error: 'Unauthorized - Please sign in' }
   }
 
-  if (!isAdmin(user.email)) {
-    return { authorized: false, error: 'Forbidden - Admin access required' }
+  // 2. DB에서 사용자 role 조회 (신뢰할 수 있는 source)
+  const { data: dbUser, error: dbError } = await supabase
+    .from('users')
+    .select('role, banned_at')
+    .eq('id', user.id)
+    .single()
+
+  if (dbError || !dbUser) {
+    return {
+      authorized: false,
+      error: 'User not found in database'
+    }
   }
 
-  return { authorized: true }
+  // 3. 밴 상태 확인
+  if (dbUser.banned_at) {
+    return {
+      authorized: false,
+      error: 'Account is banned'
+    }
+  }
+
+  // 4. 관리자 역할 확인 (admin 또는 high_templar)
+  if (!['admin', 'high_templar'].includes(dbUser.role)) {
+    return {
+      authorized: false,
+      error: 'Forbidden - Admin access required'
+    }
+  }
+
+  return { authorized: true, userId: user.id }
 }
 
 // ==================== Tournament Actions ====================

@@ -5,6 +5,7 @@ import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { importHandsSchema, validateInput, formatValidationErrors } from '@/lib/validation/api-schemas'
 import { isValidUUID, sanitizeText, logSecurityEvent } from '@/lib/security'
+import { verifyCSRF } from '@/lib/security/csrf'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,11 +14,15 @@ export const dynamic = 'force-dynamic'
  * 외부에서 분석된 핸드 히스토리를 import
  */
 export async function POST(request: NextRequest) {
+  // CSRF 보호
+  const csrfError = await verifyCSRF(request)
+  if (csrfError) return csrfError
+
   // Apply rate limiting (10 requests per minute)
   const rateLimitResponse = await applyRateLimit(request, rateLimiters.importHands)
   if (rateLimitResponse) return rateLimitResponse
 
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   try {
     const body = await request.json()
