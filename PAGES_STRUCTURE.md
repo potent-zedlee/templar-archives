@@ -3,14 +3,19 @@
 ## 📱 네비게이션 구조
 
 ```
-┌──────────────────────────────────────────────────────────────────────────┐
-│ Templar Archives 로고 │ SEARCH │ ARCHIVE │ PLAYERS │ FORUM │ 🌓 │ LOGIN/PROFILE │
-└──────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│ TA 로고 │ About │ News │ Live │ ARCHIVE ▼ │ Players │ Forum │ 🔔 │ 🌓 │ LOGIN/PROFILE │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+**ARCHIVE 드롭다운** (Phase 23):
+- Tournament
+- Cash Game
+- Search
 
 **로그인 상태에 따른 변화**:
 - **로그인 전**: "LOGIN" 버튼 → `/auth/login`
-- **로그인 후**: 아바타 + 드롭다운 (Profile, Bookmarks, 관리자 메뉴, Logout)
+- **로그인 후**: 🔔 알림 벨 + 아바타 + 드롭다운 (Profile, Bookmarks, Notifications, 관리자 메뉴, Reporter 메뉴, Logout)
 
 ---
 
@@ -43,7 +48,17 @@
 ---
 
 ## 📂 3. 아카이브 페이지 (ARCHIVE)
-**파일**: `app/archive/page.tsx`
+
+### 3.1 토너먼트 아카이브
+**URL**: `/archive/tournament`
+**파일**: `app/archive/tournament/page.tsx`
+
+### 3.2 캐시 게임 아카이브
+**URL**: `/archive/cash-game`
+**파일**: `app/archive/cash-game/page.tsx`
+
+### 3.3 통합 아카이브
+**파일**: `app/archive/page.tsx` (자동 리다이렉트 → `/archive/tournament`)
 
 ### 레이아웃
 좌우 분할 (Resizable Panels)
@@ -110,7 +125,48 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 
 ---
 
-## 💬 5. 커뮤니티 페이지 (FORUM)
+## 📰 5. 뉴스 페이지 (NEWS)
+
+### 5.1 뉴스 목록
+**URL**: `/news`
+**파일**: `app/news/page.tsx`
+
+#### 주요 기능 (Phase 22)
+- 5가지 카테고리 (Tournament News, Player News, Industry, General, Other)
+- 카테고리 필터링, 검색
+- 뉴스 카드 (제목, 요약, 커버 이미지, 작성자, 날짜)
+- 태그 표시
+
+### 5.2 뉴스 상세
+**URL**: `/news/[id]`
+**파일**: `app/news/[id]/page.tsx`
+
+#### 주요 기능
+- Markdown 콘텐츠 렌더링
+- 커버 이미지, 태그, 외부 링크
+- 작성자 프로필
+- 공유 버튼
+
+---
+
+## 📡 6. 라이브 리포팅 페이지 (LIVE REPORTING)
+
+### 6.1 라이브 리포트 목록
+**URL**: `/live-reporting`
+**파일**: `app/live-reporting/page.tsx`
+
+#### 주요 기능 (Phase 22)
+- 5가지 카테고리 (Tournament Update, Chip Counts, Breaking News, Results, Other)
+- LIVE 배지 표시
+- 실시간 업데이트
+
+### 6.2 라이브 리포트 상세
+**URL**: `/live-reporting/[id]`
+**파일**: `app/live-reporting/[id]/page.tsx`
+
+---
+
+## 💬 7. 커뮤니티 페이지 (FORUM)
 
 ### 5.1 커뮤니티 목록
 **URL**: `/community`
@@ -132,7 +188,7 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 - 좋아요 토글
 - 검색 기능 (Full-Text Search)
 
-### 5.2 포스트 상세
+### 7.2 포스트 상세
 **URL**: `/community/[id]`
 **파일**: `app/community/[id]/page.tsx`
 
@@ -155,7 +211,37 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 
 ---
 
-## 📚 6. 북마크 페이지 (BOOKMARKS)
+## 🔔 8. 알림 페이지 (NOTIFICATIONS)
+**URL**: `/notifications`
+**파일**: `app/notifications/page.tsx`
+**인증**: 로그인 필수
+
+### 주요 기능 (Phase 20)
+- **8가지 알림 타입**:
+  - comment - 포스트에 새 댓글
+  - reply - 댓글에 답글
+  - like_post - 포스트 좋아요
+  - like_comment - 댓글 좋아요
+  - edit_approved - 핸드 수정 제안 승인
+  - edit_rejected - 핸드 수정 제안 거부
+  - claim_approved - 플레이어 클레임 승인
+  - claim_rejected - 플레이어 클레임 거부
+- **All/Unread 탭 필터링**
+- **실시간 알림** (Supabase Realtime)
+- **Toast 알림** (새 알림 실시간 표시)
+- **읽음/읽지 않음 관리**
+- **알림 클릭 시 자동 읽음 처리 및 관련 페이지 이동**
+
+### 헤더 알림 벨
+**컴포넌트**: `components/notification-bell.tsx`
+
+- 읽지 않은 알림 개수 배지
+- 드롭다운 미리보기 (최근 10개)
+- 자동 폴링 (1분마다)
+
+---
+
+## 📚 9. 북마크 페이지 (BOOKMARKS)
 **URL**: `/bookmarks`
 **파일**: `app/bookmarks/page.tsx`
 **인증**: 로그인 필수
@@ -181,9 +267,9 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 
 ---
 
-## 👤 7. 프로필 페이지 (PROFILE)
+## 👤 10. 프로필 페이지 (PROFILE)
 
-### 7.1 내 프로필
+### 10.1 내 프로필
 **URL**: `/profile`
 **파일**: `app/profile/page.tsx`
 
@@ -191,7 +277,7 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 - 통계 (포스트 수, 댓글 수, 받은 좋아요)
 - 활동 요약 (포스트, 댓글, 북마크)
 
-### 7.2 다른 유저 프로필
+### 10.2 다른 유저 프로필
 **URL**: `/profile/[id]`
 **파일**: `app/profile/[id]/page.tsx`
 
@@ -200,9 +286,9 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 
 ---
 
-## 🔐 8. 인증 페이지 (AUTH)
+## 🔐 11. 인증 페이지 (AUTH)
 
-### 8.1 로그인 페이지
+### 11.1 로그인 페이지
 **URL**: `/auth/login`
 **파일**: `app/auth/login/page.tsx`
 
@@ -210,7 +296,7 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 - 원클릭 로그인, 자동 계정 생성
 - 로그인 성공 시 → 이전 페이지 또는 홈으로 이동
 
-### 8.2 OAuth 콜백
+### 11.2 OAuth 콜백
 **URL**: `/auth/callback`
 **파일**: `app/auth/callback/page.tsx`
 
@@ -219,42 +305,88 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 
 ---
 
-## 👮 9. 관리자 페이지 (ADMIN)
-**인증**: 관리자 권한 필수
+## 👮 12. 관리자 페이지 (ADMIN)
+**인증**: 관리자 권한 필수 (admin, high_templar)
 
-### 9.1 대시보드
+### 12.1 대시보드
 **URL**: `/admin/dashboard`
+**파일**: `app/admin/dashboard/page.tsx`
 - 통계 요약 (사용자, 포스트, 댓글, 핸드)
 
-### 9.2 사용자 관리
+### 12.2 사용자 관리
 **URL**: `/admin/users`
+**파일**: `app/admin/users/page.tsx`
 - 사용자 목록 (검색, 페이지네이션)
-- 밴/언밴, 역할 변경 (user/moderator/admin)
+- 밴/언밴, 역할 변경 (user/high_templar/reporter/admin)
+- **마지막 로그인 추적** (Phase 25): 색상 코딩 (🟢 7일 이내, ⚫ 30일 이상)
 
-### 9.3 플레이어 클레임
+### 12.3 플레이어 클레임
 **URL**: `/admin/claims`
+**파일**: `app/admin/claims/page.tsx`
 - 클레임 요청 목록
 - 승인/거절 워크플로우
 
-### 9.4 핸드 수정 요청
+### 12.4 핸드 수정 요청
 **URL**: `/admin/edit-requests`
+**파일**: `app/admin/edit-requests/page.tsx`
 - 수정 제안 목록 (Before/After 비교)
 - 승인 시 핸드 데이터 자동 적용
 
-### 9.5 콘텐츠 신고
+### 12.5 콘텐츠 신고 및 승인
 **URL**: `/admin/content`
-- 포스트/댓글 신고 목록
+**파일**: `app/admin/content/page.tsx`
+- **포스트/댓글 신고** 목록
 - 승인 (콘텐츠 숨김) / 거부
+- **뉴스 승인** (Phase 22): News/Live Reports Approval 탭
+- 전체 콘텐츠 미리보기 다이얼로그
+- Approve/Reject 버튼
+
+### 12.6 아카이브 관리
+**URL**: `/admin/archive`
+**파일**: `app/admin/archive/page.tsx`
+- **토너먼트 관리** (Phase 31): 테이블 뷰, 검색/필터 (Category, Game Type)
+- CRUD 작업 통합 (기존 TournamentDialog 재사용)
+- 관리자 전용 접근 제어
+
+### 12.7 핸드 액션 수정
+**URL**: `/admin/hands/[id]/edit-actions`
+**파일**: `app/admin/hands/[id]/edit-actions/page.tsx`
+- **수동 핸드 액션 입력** (Phase 18)
+- Street별 액션 관리 (Preflop, Flop, Turn, River)
+- 6가지 액션 타입 (fold, check, call, bet, raise, all-in)
+- Pending Actions 워크플로우
 
 ---
 
-## 🔧 10. API 엔드포인트
+## 📰 13. Reporter 페이지 (REPORTER)
+**인증**: Reporter 권한 필수 (reporter, admin, high_templar)
 
-### 10.1 자연어 검색 API
+### 13.1 뉴스 관리
+**URL**: `/reporter/news`
+**파일**: `app/reporter/news/page.tsx`
+- **뉴스 작성/수정/삭제** (Phase 22)
+- 5가지 카테고리 (Tournament News, Player News, Industry, General, Other)
+- Markdown 에디터, 이미지 업로드 (Supabase Storage)
+- 상태 워크플로우: draft → pending → published
+- 태그 관리, 외부 링크 지원
+
+### 13.2 라이브 리포팅 관리
+**URL**: `/reporter/live`
+**파일**: `app/reporter/live/page.tsx`
+- **라이브 리포트 작성/수정/삭제** (Phase 22)
+- 5가지 카테고리 (Tournament Update, Chip Counts, Breaking News, Results, Other)
+- LIVE 배지 표시
+- 동일한 승인 워크플로우
+
+---
+
+## 🔧 14. API 엔드포인트
+
+### 14.1 자연어 검색 API
 **Endpoint**: `POST /api/natural-search`
 **파일**: `app/api/natural-search/route.ts`
 
-**기능**: Claude AI로 자연어 질문을 SQL 쿼리로 변환
+**기능**: Claude AI로 자연어 질문을 JSON 필터로 변환 (Phase 32 보안 강화)
 
 **요청**:
 ```json
@@ -266,7 +398,7 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 {"success": true, "hands": [...]}
 ```
 
-### 10.2 핸드 Import API
+### 14.2 핸드 Import API
 **Endpoint**: `POST /api/import-hands`
 **파일**: `app/api/import-hands/route.ts`
 **문서**: `docs/HAND_IMPORT_API.md`
@@ -280,7 +412,7 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 {"success": true, "imported": 5, "failed": 0, "errors": []}
 ```
 
-### 10.3 영상 분석 API
+### 14.3 영상 분석 API
 **Endpoint**: `POST /api/analyze-video`
 **파일**: `app/api/analyze-video/route.ts`
 
@@ -288,7 +420,7 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 
 ---
 
-## 🗄️ 11. 데이터베이스 구조
+## 🗄️ 15. 데이터베이스 구조
 
 ### 테이블 관계도
 ```
@@ -313,10 +445,11 @@ users
 ```
 
 ### 주요 테이블
-- **tournaments**: name, category, location, start_date, end_date
-- **sub_events**: tournament_id, name, date, total_prize, winner
-- **days**: sub_event_id, name, video_url/file/nas_path, video_source
+- **tournaments**: name, category, location, start_date, end_date, game_type (Phase 23)
+- **sub_events**: tournament_id, name, date, total_prize, winner, event_number (Phase 30)
+- **days**: sub_event_id, name, video_url/file/nas_path, video_source, published_at (Phase 30)
 - **hands**: day_id, number, timestamp, description, confidence, summary
+- **hand_actions**: hand_id, player_id, street, action_type, amount, sequence_number (Phase 18)
 - **players**: name, photo_url, country, total_winnings
 - **hand_players**: hand_id, player_id, position, cards
 - **posts**: title, content, category, author_id, hand_id, likes_count, comments_count, views_count
@@ -325,41 +458,58 @@ users
 - **player_claims**: player_id, user_id, status, proof_url, admin_comment
 - **reports**: content_type, content_id, reporter_id, reason, status
 - **hand_edit_requests**: hand_id, user_id, edit_type, proposed_changes, status
+- **notifications**: user_id, type, title, message, link, read_at (Phase 20)
+- **news**: title, content, category, author_id, status, cover_image, tags (Phase 22)
+- **live_reports**: title, content, category, author_id, status, is_live (Phase 22)
 
 ---
 
-## ✨ 12. 구현 상태
+## ✨ 16. 구현 상태
 
-### 완료된 Phase ✅
+### 완료된 Phase ✅ (Phase 0-32)
 
-#### Phase 0: 인증 시스템
-- Google OAuth 로그인, 로그아웃
-- 전역 인증 상태 관리, Row Level Security
+#### Phase 0-7: 핵심 시스템
+- 인증 시스템 (Google OAuth, RLS)
+- 핸드 상호작용 (좋아요, 댓글)
+- 커뮤니티 강화 (포스트, 핸드 첨부, 북마크)
+- 핸드 수정 요청 시스템
+- 관리자 시스템 (역할 관리, 밴)
+- 콘텐츠 신고 시스템
+- 유저 프로필 고도화
+- 커뮤니티 검색 (Full-Text Search)
 
-#### Phase 1: 핸드 상호작용
-- 핸드 좋아요/싫어요, 댓글 시스템
+#### Phase 8-15: 아키텍처 및 UI 개선
+- Archive Folder Navigation (Google Drive 스타일)
+- 코드 품질 및 아키텍처 개선 (1,733줄 → 88줄)
+- 성능 최적화 (React 메모이제이션)
+- UX/UI 개선 (Error Boundary, Toast)
+- 테스팅 전략 (E2E 13개, Unit 40+개)
+- 보안 강화 (SQL/XSS 방지)
+- Archive UI Redesign (수평 로고 바)
+- 로고 관리 시스템
 
-#### Phase 2: 커뮤니티 강화
-- 포스트 작성, 핸드 첨부
-- 북마크 시스템 (폴더, 노트)
+#### Phase 16-21: 현대화 및 고급 기능
+- React Query Migration (6개 query 파일, 650줄)
+- DevTools Optimization
+- Manual Hand Action Input System (수동 액션 입력)
+- Archive UI Enhancement (필터 간소화)
+- Notification System (8가지 알림 타입, 실시간)
+- Player Statistics Enhancement (고급 통계)
 
-#### Phase 3: 핸드 수정 요청
-- 수정 제안 시스템 (백엔드 완성)
-- 관리자 승인 페이지
+#### Phase 22-27: 콘텐츠 확장 및 최적화
+- News & Live Reporting System (Reporter 역할)
+- Navigation Expansion & Archive Split (Tournament/Cash Game)
+- Archive UI Enhancement (Card Selector, Advanced Filters)
+- Last Sign-in Tracking
+- UI Simplification
+- Quick Upload Enhancement & YouTube API Optimization
 
-#### Phase 4: 관리자 시스템
-- 역할 관리 (user/moderator/admin)
-- 밴 시스템, 활동 로그
-
-#### Phase 5: 콘텐츠 신고
-- 포스트/댓글 신고, 관리자 승인/거부
-
-#### Phase 6: 유저 프로필 고도화
-- 소셜 링크, 프로필 가시성
-- 통계 캐싱 (자동 업데이트 트리거)
-
-#### Phase 7: 커뮤니티 검색
-- Full-Text Search (tsvector, GIN 인덱스)
+#### Phase 28-32: 유지보수 및 보안
+- Performance Optimization & Maintenance (SEO, 번들 최적화)
+- Admin Category Logo Upload 수정
+- Archive Event Management Enhancement (Event Number, From Unsorted)
+- Archive Security & Admin Management Page (Server Actions)
+- **Comprehensive Security Enhancement** (8가지 보안 개선, 보안 등급 A)
 
 ### 인증 필수 vs 선택 기능 🔐
 
@@ -371,35 +521,51 @@ users
 
 ---
 
-## 📋 13. 페이지별 파일 매핑
+## 📋 17. 페이지별 파일 매핑
 
-| 페이지 | URL | 파일 경로 |
-|--------|-----|-----------|
-| 홈 | `/` | `app/page.tsx` |
-| 검색 | `/search` | `app/search/page.tsx` |
-| 아카이브 | `/archive` | `app/archive/page.tsx` |
-| 플레이어 목록 | `/players` | `app/players/page.tsx` |
-| 플레이어 상세 | `/players/[id]` | `app/players/[id]/page.tsx` |
-| 커뮤니티 | `/community` | `app/community/page.tsx` |
-| 포스트 상세 | `/community/[id]` | `app/community/[id]/page.tsx` |
-| 북마크 | `/bookmarks` | `app/bookmarks/page.tsx` |
-| 내 프로필 | `/profile` | `app/profile/page.tsx` |
-| 다른 유저 프로필 | `/profile/[id]` | `app/profile/[id]/page.tsx` |
-| 내 수정 제안 | `/my-edit-requests` | `app/my-edit-requests/page.tsx` |
-| 로그인 | `/auth/login` | `app/auth/login/page.tsx` |
-| OAuth 콜백 | `/auth/callback` | `app/auth/callback/page.tsx` |
-| 관리자 대시보드 | `/admin/dashboard` | `app/admin/dashboard/page.tsx` |
-| 관리자 사용자 | `/admin/users` | `app/admin/users/page.tsx` |
-| 관리자 클레임 | `/admin/claims` | `app/admin/claims/page.tsx` |
-| 관리자 수정 요청 | `/admin/edit-requests` | `app/admin/edit-requests/page.tsx` |
-| 관리자 신고 | `/admin/content` | `app/admin/content/page.tsx` |
+| 페이지 | URL | 파일 경로 | 인증 |
+|--------|-----|-----------|------|
+| 홈 | `/` | `app/page.tsx` | - |
+| About | `/about` | `app/about/page.tsx` | - |
+| 검색 | `/search` | `app/search/page.tsx` | - |
+| 토너먼트 아카이브 | `/archive/tournament` | `app/archive/tournament/page.tsx` | - |
+| 캐시 게임 아카이브 | `/archive/cash-game` | `app/archive/cash-game/page.tsx` | - |
+| 플레이어 목록 | `/players` | `app/players/page.tsx` | - |
+| 플레이어 상세 | `/players/[id]` | `app/players/[id]/page.tsx` | - |
+| 뉴스 목록 | `/news` | `app/news/page.tsx` | - |
+| 뉴스 상세 | `/news/[id]` | `app/news/[id]/page.tsx` | - |
+| 라이브 리포팅 목록 | `/live-reporting` | `app/live-reporting/page.tsx` | - |
+| 라이브 리포팅 상세 | `/live-reporting/[id]` | `app/live-reporting/[id]/page.tsx` | - |
+| 커뮤니티 | `/community` | `app/community/page.tsx` | - |
+| 포스트 상세 | `/community/[id]` | `app/community/[id]/page.tsx` | - |
+| 북마크 | `/bookmarks` | `app/bookmarks/page.tsx` | 🔐 |
+| 알림 | `/notifications` | `app/notifications/page.tsx` | 🔐 |
+| 내 프로필 | `/profile` | `app/profile/page.tsx` | 🔐 |
+| 다른 유저 프로필 | `/profile/[id]` | `app/profile/[id]/page.tsx` | - |
+| 내 수정 제안 | `/my-edit-requests` | `app/my-edit-requests/page.tsx` | 🔐 |
+| 로그인 | `/auth/login` | `app/auth/login/page.tsx` | - |
+| OAuth 콜백 | `/auth/callback` | `app/auth/callback/page.tsx` | - |
+| **Reporter 뉴스 관리** | `/reporter/news` | `app/reporter/news/page.tsx` | 🔐 Reporter |
+| **Reporter 라이브 관리** | `/reporter/live` | `app/reporter/live/page.tsx` | 🔐 Reporter |
+| 관리자 대시보드 | `/admin/dashboard` | `app/admin/dashboard/page.tsx` | 🔐 Admin |
+| 관리자 사용자 | `/admin/users` | `app/admin/users/page.tsx` | 🔐 Admin |
+| 관리자 클레임 | `/admin/claims` | `app/admin/claims/page.tsx` | 🔐 Admin |
+| 관리자 수정 요청 | `/admin/edit-requests` | `app/admin/edit-requests/page.tsx` | 🔐 Admin |
+| 관리자 신고/승인 | `/admin/content` | `app/admin/content/page.tsx` | 🔐 Admin |
+| **관리자 아카이브** | `/admin/archive` | `app/admin/archive/page.tsx` | 🔐 Admin |
+| **관리자 핸드 액션** | `/admin/hands/[id]/edit-actions` | `app/admin/hands/[id]/edit-actions/page.tsx` | 🔐 Admin |
 
 ---
 
-**마지막 업데이트**: 2025-10-16
-**버전**: 3.1
-**상태**: Phase 0-8 완료 (모든 핵심 기능)
-**총 페이지**: 22개 (유저 17개, 관리자 5개)
+**마지막 업데이트**: 2025-10-24
+**버전**: 5.0
+**상태**: Phase 0-32 완료 (모든 핵심 기능 + 보안 강화)
+**총 페이지**: 32개 (유저 18개, Reporter 2개, 관리자 7개, 인증 2개, API 3개)
 
-**최근 추가 (세션 12)**:
-- `/community/[id]` - 포스트 상세 페이지 (Reddit 스타일 댓글 시스템)
+**최근 주요 추가**:
+- Phase 32: Comprehensive Security Enhancement (8가지 보안 개선, 보안 등급 A)
+- Phase 31: Archive Security & Admin Management Page (Server Actions)
+- Phase 30: Archive Event Management Enhancement (Event Number, From Unsorted)
+- Phase 22: News & Live Reporting System (Reporter 역할)
+- Phase 20: Notification System (8가지 알림 타입)
+- Phase 18: Manual Hand Action Input System
