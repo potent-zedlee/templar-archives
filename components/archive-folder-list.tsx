@@ -1,46 +1,19 @@
 "use client"
 
 import { memo } from "react"
-import { Folder, FileVideo, ChevronRight, Video, Play, Edit, Trash, FolderPlus, FolderInput, CheckSquare, MoreVertical, Info, Plus } from "lucide-react"
+import { ChevronRight, Play, Info, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import type { Tournament as TournamentType, SubEvent as SubEventType, Day as DayType } from "@/lib/supabase"
-import type { UnsortedVideo } from "@/lib/unsorted-videos"
-import { ArchiveEventCard } from "@/components/archive-event-card"
+import { cn } from "@/lib/utils"
 import type { FolderItem } from "@/lib/types/archive"
+import type { Tournament, SubEvent, Day } from "@/lib/types/archive"
+import Image from "next/image"
 
 interface ArchiveFolderListProps {
   items: FolderItem[]
   onNavigate: (item: FolderItem) => void
   onSelectDay?: (dayId: string) => void
   loading?: boolean
-  // Multi-select props (for unorganized videos)
-  isUnorganized?: boolean
-  selectedIds?: Set<string>
-  onToggleSelect?: (id: string) => void
-  onSelectAll?: () => void
   // Context menu actions
-  onRename?: (item: FolderItem) => void
-  onDelete?: (item: FolderItem) => void
-  onMoveToEvent?: (item: FolderItem) => void
-  onMoveToNewEvent?: (item: FolderItem) => void
-  onAddSubItem?: (item: FolderItem) => void
-  onEditEvent?: (item: FolderItem) => void
   onShowInfo?: (item: FolderItem) => void
   onAddTournament?: () => void
   isAdmin?: boolean
@@ -51,16 +24,6 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   onNavigate,
   onSelectDay,
   loading = false,
-  isUnorganized = false,
-  selectedIds = new Set(),
-  onToggleSelect,
-  onSelectAll,
-  onRename,
-  onDelete,
-  onMoveToEvent,
-  onMoveToNewEvent,
-  onAddSubItem,
-  onEditEvent,
   onShowInfo,
   onAddTournament,
   isAdmin = false,
@@ -68,8 +31,8 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   if (loading) {
     return (
       <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-12 bg-muted animate-pulse rounded-md" />
+        {Array.from({ length: 10 }).map((_, i) => (
+          <div key={i} className="h-14 bg-muted animate-pulse rounded-md" />
         ))}
       </div>
     )
@@ -78,11 +41,9 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   if (items.length === 0) {
     return (
       <div className="text-center py-16 text-muted-foreground">
-        <Folder className="h-16 w-16 mx-auto mb-4 opacity-50" />
         <p className="text-lg font-medium mb-2">No tournaments yet</p>
         <p className="text-sm mb-6">Get started by creating your first tournament</p>
 
-        {/* Add Tournament Button (Admin only) */}
         {isAdmin && onAddTournament && (
           <Button
             variant="default"
@@ -98,539 +59,290 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     )
   }
 
-  const getIcon = (type: FolderItem['type']) => {
-    switch (type) {
-      case 'tournament':
-        return (
-          <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 shadow-md">
-            <Folder className="h-4 w-4 text-white" />
+  const renderTournament = (item: FolderItem) => {
+    const tournament = item.data as Tournament
+    const isExpanded = item.isExpanded || false
+
+    return (
+      <div key={item.id} className="space-y-0">
+        {/* Tournament Row */}
+        <div
+          className={cn(
+            "group flex items-center gap-4 px-4 py-3.5 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border/50",
+            isExpanded && "bg-muted/30"
+          )}
+          onClick={() => onNavigate(item)}
+        >
+          {/* Date */}
+          <div className="w-24 flex-shrink-0 text-sm text-muted-foreground">
+            {new Date(tournament.start_date).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            })}
           </div>
-        )
-      case 'subevent':
-        return (
-          <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 shadow-md">
-            <Folder className="h-4 w-4 text-white" />
-          </div>
-        )
-      case 'day':
-        return (
-          <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-500 to-violet-600 shadow-md">
-            <FileVideo className="h-4 w-4 text-white" />
-          </div>
-        )
-      case 'unorganized':
-        return (
-          <div className="p-1.5 rounded-lg bg-gradient-to-br from-orange-500 to-amber-600 shadow-md">
-            <Video className="h-4 w-4 text-white" />
-          </div>
-        )
-      default:
-        return <Folder className="h-5 w-5" />
-    }
-  }
 
-  const handleItemClick = (item: FolderItem, e?: React.MouseEvent) => {
-    // Don't navigate if clicking checkbox
-    if (e && (e.target as HTMLElement).closest('[data-checkbox]')) {
-      return
-    }
-
-    if (item.type === 'day' && onSelectDay && !isUnorganized) {
-      onSelectDay(item.id)
-    } else if (!isUnorganized) {
-      onNavigate(item)
-    }
-  }
-
-  const renderDropdownMenu = (item: FolderItem) => {
-    // Tournament folder menu
-    if (item.type === 'tournament') {
-      return (
-        <>
-          <DropdownMenuItem onClick={() => onNavigate(item)}>
-            <Folder className="mr-2 h-4 w-4" />
-            Open
-          </DropdownMenuItem>
-          {isAdmin && onAddSubItem && (
-            <DropdownMenuItem onClick={() => onAddSubItem(item)}>
-              <FolderPlus className="mr-2 h-4 w-4" />
-              Add SubEvent
-            </DropdownMenuItem>
-          )}
-          {isAdmin && onRename && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onRename(item)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Rename
-              </DropdownMenuItem>
-            </>
-          )}
-          {isAdmin && onDelete && (
-            <DropdownMenuItem
-              onClick={() => onDelete(item)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          )}
-        </>
-      )
-    }
-
-    // SubEvent folder menu
-    if (item.type === 'subevent') {
-      return (
-        <>
-          <DropdownMenuItem onClick={() => onNavigate(item)}>
-            <Folder className="mr-2 h-4 w-4" />
-            Open
-          </DropdownMenuItem>
-          {isAdmin && onAddSubItem && (
-            <DropdownMenuItem onClick={() => onAddSubItem(item)}>
-              <FolderPlus className="mr-2 h-4 w-4" />
-              Add Day
-            </DropdownMenuItem>
-          )}
-          {isAdmin && onEditEvent && (
-            <DropdownMenuItem onClick={() => onEditEvent(item)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Event Info
-            </DropdownMenuItem>
-          )}
-          {isAdmin && onRename && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onRename(item)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Rename
-              </DropdownMenuItem>
-            </>
-          )}
-          {isAdmin && onDelete && (
-            <DropdownMenuItem
-              onClick={() => onDelete(item)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          )}
-        </>
-      )
-    }
-
-    // Day (video) menu - for organized videos
-    if (item.type === 'day' && !isUnorganized) {
-      return (
-        <>
-          <DropdownMenuItem onClick={() => onSelectDay && onSelectDay(item.id)}>
-            <Play className="mr-2 h-4 w-4" />
-            View Hands
-          </DropdownMenuItem>
-          {isAdmin && (onMoveToEvent || onMoveToNewEvent) && <DropdownMenuSeparator />}
-          {isAdmin && onMoveToEvent && (
-            <DropdownMenuItem onClick={() => onMoveToEvent(item)}>
-              <FolderInput className="mr-2 h-4 w-4" />
-              Move to Event
-            </DropdownMenuItem>
-          )}
-          {isAdmin && onMoveToNewEvent && (
-            <DropdownMenuItem onClick={() => onMoveToNewEvent(item)}>
-              <FolderPlus className="mr-2 h-4 w-4" />
-              Move to New Event
-            </DropdownMenuItem>
-          )}
-          {isAdmin && onRename && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onRename(item)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Rename
-              </DropdownMenuItem>
-            </>
-          )}
-          {isAdmin && onDelete && (
-            <DropdownMenuItem
-              onClick={() => onDelete(item)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          )}
-        </>
-      )
-    }
-
-    // Unorganized video menu
-    if (item.type === 'day' && isUnorganized) {
-      return (
-        <>
-          {onToggleSelect && (
-            <DropdownMenuItem onClick={() => onToggleSelect(item.id)}>
-              <CheckSquare className="mr-2 h-4 w-4" />
-              {selectedIds.has(item.id) ? 'Deselect' : 'Select'}
-            </DropdownMenuItem>
-          )}
-          {(onMoveToEvent || onMoveToNewEvent) && <DropdownMenuSeparator />}
-          {onMoveToEvent && (
-            <DropdownMenuItem onClick={() => onMoveToEvent(item)}>
-              <FolderInput className="mr-2 h-4 w-4" />
-              Move to Event
-            </DropdownMenuItem>
-          )}
-          {onMoveToNewEvent && (
-            <DropdownMenuItem onClick={() => onMoveToNewEvent(item)}>
-              <FolderPlus className="mr-2 h-4 w-4" />
-              Move to New Event
-            </DropdownMenuItem>
-          )}
-          {isAdmin && (onRename || onDelete) && <DropdownMenuSeparator />}
-          {isAdmin && onRename && (
-            <DropdownMenuItem onClick={() => onRename(item)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Rename
-            </DropdownMenuItem>
-          )}
-          {isAdmin && onDelete && (
-            <DropdownMenuItem
-              onClick={() => onDelete(item)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          )}
-        </>
-      )
-    }
-
-    return null
-  }
-
-  const renderContextMenu = (item: FolderItem) => {
-    // Tournament folder menu
-    if (item.type === 'tournament') {
-      return (
-        <>
-          <ContextMenuItem onClick={() => onNavigate(item)}>
-            <Folder className="mr-2 h-4 w-4" />
-            Open
-          </ContextMenuItem>
-          {isAdmin && onAddSubItem && (
-            <ContextMenuItem onClick={() => onAddSubItem(item)}>
-              <FolderPlus className="mr-2 h-4 w-4" />
-              Add SubEvent
-            </ContextMenuItem>
-          )}
-          {isAdmin && onRename && (
-            <>
-              <ContextMenuSeparator />
-              <ContextMenuItem onClick={() => onRename(item)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Rename
-              </ContextMenuItem>
-            </>
-          )}
-          {isAdmin && onDelete && (
-            <ContextMenuItem onClick={() => onDelete(item)} variant="destructive">
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </ContextMenuItem>
-          )}
-        </>
-      )
-    }
-
-    // SubEvent folder menu
-    if (item.type === 'subevent') {
-      return (
-        <>
-          <ContextMenuItem onClick={() => onNavigate(item)}>
-            <Folder className="mr-2 h-4 w-4" />
-            Open
-          </ContextMenuItem>
-          {isAdmin && onEditEvent && (
-            <ContextMenuItem onClick={() => onEditEvent(item)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Event Info
-            </ContextMenuItem>
-          )}
-          {isAdmin && onRename && (
-            <>
-              <ContextMenuSeparator />
-              <ContextMenuItem onClick={() => onRename(item)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Rename
-              </ContextMenuItem>
-            </>
-          )}
-          {isAdmin && onDelete && (
-            <ContextMenuItem onClick={() => onDelete(item)} variant="destructive">
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </ContextMenuItem>
-          )}
-        </>
-      )
-    }
-
-    // Day (video) menu - for organized videos
-    if (item.type === 'day' && !isUnorganized) {
-      return (
-        <>
-          <ContextMenuItem onClick={() => onSelectDay && onSelectDay(item.id)}>
-            <Play className="mr-2 h-4 w-4" />
-            View Hands
-          </ContextMenuItem>
-          {isAdmin && (onMoveToEvent || onMoveToNewEvent) && <ContextMenuSeparator />}
-          {isAdmin && onMoveToEvent && (
-            <ContextMenuItem onClick={() => onMoveToEvent(item)}>
-              <FolderInput className="mr-2 h-4 w-4" />
-              Move to Event
-            </ContextMenuItem>
-          )}
-          {isAdmin && onMoveToNewEvent && (
-            <ContextMenuItem onClick={() => onMoveToNewEvent(item)}>
-              <FolderPlus className="mr-2 h-4 w-4" />
-              Move to New Event
-            </ContextMenuItem>
-          )}
-          {isAdmin && onRename && (
-            <>
-              <ContextMenuSeparator />
-              <ContextMenuItem onClick={() => onRename(item)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Rename
-              </ContextMenuItem>
-            </>
-          )}
-          {isAdmin && onDelete && (
-            <ContextMenuItem onClick={() => onDelete(item)} variant="destructive">
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </ContextMenuItem>
-          )}
-        </>
-      )
-    }
-
-    // Unorganized video menu
-    if (item.type === 'day' && isUnorganized) {
-      return (
-        <>
-          {onToggleSelect && (
-            <ContextMenuItem onClick={() => onToggleSelect(item.id)}>
-              <CheckSquare className="mr-2 h-4 w-4" />
-              {selectedIds.has(item.id) ? 'Deselect' : 'Select'}
-            </ContextMenuItem>
-          )}
-          {(onMoveToEvent || onMoveToNewEvent) && <ContextMenuSeparator />}
-          {onMoveToEvent && (
-            <ContextMenuItem onClick={() => onMoveToEvent(item)}>
-              <FolderInput className="mr-2 h-4 w-4" />
-              Move to Event
-            </ContextMenuItem>
-          )}
-          {onMoveToNewEvent && (
-            <ContextMenuItem onClick={() => onMoveToNewEvent(item)}>
-              <FolderPlus className="mr-2 h-4 w-4" />
-              Move to New Event
-            </ContextMenuItem>
-          )}
-          {isAdmin && (onRename || onDelete) && <ContextMenuSeparator />}
-          {isAdmin && onRename && (
-            <ContextMenuItem onClick={() => onRename(item)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Rename
-            </ContextMenuItem>
-          )}
-          {isAdmin && onDelete && (
-            <ContextMenuItem onClick={() => onDelete(item)} variant="destructive">
-              <Trash className="mr-2 h-4 w-4" />
-              Delete
-            </ContextMenuItem>
-          )}
-        </>
-      )
-    }
-
-    return null
-  }
-
-  // Enhanced List View with ArchiveEventCard
-  return (
-    <ScrollArea className="h-full">
-      <div className="p-2">
-        {/* Select All Header (only for unorganized) */}
-        {isUnorganized && onSelectAll && items.length > 0 && (
-          <div className="flex items-center gap-3 px-3 py-3 mb-3 bg-gradient-to-r from-primary/5 to-purple-500/5 rounded-xl border border-primary/10 shadow-sm">
-            <Checkbox
-              checked={selectedIds.size === items.length && items.length > 0}
-              onCheckedChange={onSelectAll}
-              data-checkbox
+          {/* Expand Icon */}
+          <div className="flex-shrink-0">
+            <ChevronRight
+              className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform",
+                isExpanded && "rotate-90"
+              )}
             />
-            <span className="text-sm font-medium text-foreground">
-              Select All ({selectedIds.size} / {items.length})
-            </span>
+          </div>
+
+          {/* Logo */}
+          <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
+            {tournament.category_logo ? (
+              <Image
+                src={tournament.category_logo}
+                alt={tournament.category}
+                width={48}
+                height={48}
+                className="object-contain"
+              />
+            ) : (
+              <div className="w-full h-full bg-primary/10 rounded flex items-center justify-center text-xs font-bold text-primary">
+                {tournament.category.slice(0, 2)}
+              </div>
+            )}
+          </div>
+
+          {/* Location */}
+          <div className="w-32 flex-shrink-0 text-sm text-muted-foreground">
+            {tournament.city && tournament.country ? (
+              <>
+                {tournament.city} / {tournament.country}
+              </>
+            ) : (
+              tournament.location || "-"
+            )}
+          </div>
+
+          {/* Tournament Name */}
+          <div className="flex-1 min-w-0 font-semibold text-base truncate">
+            {tournament.name}
+          </div>
+
+          {/* Prize (empty for tournament level) */}
+          <div className="w-32 text-sm text-right text-muted-foreground">
+            -
+          </div>
+
+          {/* Info Button */}
+          <div className="flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation()
+                onShowInfo?.(item)
+              }}
+            >
+              <Info className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* SubEvents (if expanded) */}
+        {isExpanded && tournament.sub_events && tournament.sub_events.length > 0 && (
+          <div className="space-y-0">
+            {tournament.sub_events.map((subEvent) =>
+              renderSubEvent(subEvent, tournament.id)
+            )}
           </div>
         )}
+      </div>
+    )
+  }
 
-        <div className="space-y-2">
-          {items.map((item) => {
-            // Use ArchiveEventCard for folders (tournament/subevent)
-            if (item.type === 'tournament' || item.type === 'subevent') {
-              return (
-                <ContextMenu key={item.id}>
-                  <ContextMenuTrigger asChild>
-                    <div className="relative group">
-                      <ArchiveEventCard
-                        item={item}
-                        onClick={() => handleItemClick(item)}
-                        menuItems={renderDropdownMenu(item)}
-                        isAdmin={isAdmin}
-                        variant="list"
-                      />
-                      {/* Quick Action Button (Admin only, visible on hover) */}
-                      {isAdmin && onAddSubItem && (
-                        <div className="absolute right-24 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="h-8 px-3 text-xs font-medium shadow-md hover:shadow-lg transition-all"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onAddSubItem(item)
-                            }}
-                          >
-                            <Plus className="h-3 w-3 mr-1" />
-                            {item.type === 'tournament' ? 'Add SubEvent' : 'Add Day'}
-                          </Button>
-                        </div>
-                      )}
-                      {/* Info Icon Button (visible on hover) */}
-                      {onShowInfo && (
-                        <div className="absolute right-12 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 hover:bg-primary/10"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onShowInfo(item)
-                            }}
-                          >
-                            <Info className="h-4 w-4 text-primary" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </ContextMenuTrigger>
-                  <ContextMenuContent>
-                    {renderContextMenu(item)}
-                  </ContextMenuContent>
-                </ContextMenu>
-              )
-            }
+  const renderSubEvent = (subEvent: SubEvent, tournamentId: string) => {
+    const item = items.find((i) => i.id === subEvent.id)
+    const isExpanded = item?.isExpanded || false
 
-            // Use simplified version for day/video items
-            return (
-              <ContextMenu key={item.id}>
-                <ContextMenuTrigger asChild>
-                  <div className="relative group">
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start h-12 px-3 hover:bg-gradient-to-r hover:from-primary/10 hover:to-purple-500/5 hover:scale-[1.01] hover:shadow-md transition-all duration-200 rounded-xl"
-                      onClick={(e) => handleItemClick(item, e)}
-                    >
-                      <div className="flex items-center gap-2 w-full">
-                        {/* Checkbox (only for unorganized videos) */}
-                        {isUnorganized && onToggleSelect && (
-                          <Checkbox
-                            checked={selectedIds.has(item.id)}
-                            onCheckedChange={() => onToggleSelect(item.id)}
-                            onClick={(e) => e.stopPropagation()}
-                            data-checkbox
-                          />
-                        )}
+    const subEventItem: FolderItem = {
+      id: subEvent.id,
+      name: subEvent.name,
+      type: "subevent",
+      data: subEvent,
+      level: 1,
+      isExpanded,
+      parentId: tournamentId,
+    }
 
-                        {/* Icon */}
-                        <div className="shrink-0">
-                          {getIcon(item.type)}
-                        </div>
+    return (
+      <div key={subEvent.id} className="space-y-0">
+        {/* SubEvent Row */}
+        <div
+          className={cn(
+            "group flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border/50 border-dashed",
+            isExpanded && "bg-muted/30"
+          )}
+          onClick={() => onNavigate(subEventItem)}
+        >
+          {/* Date */}
+          <div className="w-24 flex-shrink-0 text-sm text-muted-foreground">
+            {new Date(subEvent.date).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            })}
+          </div>
 
-                        {/* Name */}
-                        <div className="flex-1 text-left min-w-0">
-                          <p className="text-sm font-semibold truncate text-foreground group-hover:text-primary transition-colors">{item.name}</p>
-                        </div>
+          {/* Expand Icon + Indent */}
+          <div className="flex-shrink-0 pl-4">
+            <ChevronRight
+              className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform",
+                isExpanded && "rotate-90"
+              )}
+            />
+          </div>
 
-                        {/* Date (for unorganized videos with published_at) */}
-                        {item.date && (
-                          <div className="shrink-0 text-xs text-muted-foreground">
-                            {new Date(item.date).toLocaleDateString()}
-                          </div>
-                        )}
+          {/* Logo (empty) */}
+          <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
+            {subEvent.event_number && (
+              <div className="text-xs font-semibold text-muted-foreground bg-muted rounded px-2 py-1">
+                #{subEvent.event_number}
+              </div>
+            )}
+          </div>
 
-                        {/* Item count */}
-                        {item.itemCount !== undefined && item.itemCount > 0 && (
-                          <div className="shrink-0 text-xs text-muted-foreground">
-                            {item.itemCount}
-                          </div>
-                        )}
+          {/* Buy-in */}
+          <div className="w-32 flex-shrink-0 text-sm text-muted-foreground">
+            {subEvent.buy_in || "-"}
+          </div>
 
-                        {/* Navigate arrow (for folders only) */}
-                        {item.type === 'unorganized' && (
-                          <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                        )}
-                      </div>
-                    </Button>
+          {/* SubEvent Name */}
+          <div className="flex-1 min-w-0 text-base truncate">
+            {subEvent.name}
+          </div>
 
-                    {/* Action Buttons (visible on hover) */}
-                    <div className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                      {/* Info Button */}
-                      {onShowInfo && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 hover:bg-primary/10"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onShowInfo(item)
-                          }}
-                        >
-                          <Info className="h-3.5 w-3.5 text-primary" />
-                        </Button>
-                      )}
+          {/* Prize */}
+          <div className="w-32 text-sm text-right font-semibold">
+            {subEvent.total_prize || "-"}
+          </div>
 
-                      {/* Dropdown Menu */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreVertical className="h-3.5 w-3.5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {renderDropdownMenu(item)}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                </ContextMenuTrigger>
-                <ContextMenuContent>
-                  {renderContextMenu(item)}
-                </ContextMenuContent>
-              </ContextMenu>
-            )
-          })}
+          {/* Info Button */}
+          <div className="flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation()
+                onShowInfo?.(subEventItem)
+              }}
+            >
+              <Info className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Days (if expanded) */}
+        {isExpanded && subEvent.days && subEvent.days.length > 0 && (
+          <div className="space-y-0">
+            {subEvent.days.map((day) => renderDay(day, subEvent.id))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const renderDay = (day: Day, subEventId: string) => {
+    const dayItem: FolderItem = {
+      id: day.id,
+      name: day.name,
+      type: "day",
+      data: day,
+      level: 2,
+      parentId: subEventId,
+    }
+
+    return (
+      <div
+        key={day.id}
+        className="group flex items-center gap-4 px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer border-b border-border/50 border-dashed"
+        onClick={() => onSelectDay?.(day.id)}
+      >
+        {/* Date */}
+        <div className="w-24 flex-shrink-0 text-sm text-muted-foreground">
+          {day.published_at
+            ? new Date(day.published_at).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              })
+            : "-"}
+        </div>
+
+        {/* Indent (no expand icon for day) */}
+        <div className="flex-shrink-0 pl-8">
+          {/* Empty space */}
+        </div>
+
+        {/* YouTube Icon */}
+        <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
+          {day.video_source === "youtube" && day.video_url && (
+            <div className="w-10 h-10 bg-red-600 rounded flex items-center justify-center">
+              <Play className="h-5 w-5 text-white fill-white" />
+            </div>
+          )}
+        </div>
+
+        {/* Empty (location column) */}
+        <div className="w-32 flex-shrink-0" />
+
+        {/* Day Name */}
+        <div className="flex-1 min-w-0 text-sm truncate text-muted-foreground">
+          {day.name}
+        </div>
+
+        {/* Player count (placeholder for now) */}
+        <div className="w-32 text-sm text-right text-muted-foreground">
+          {/* TODO: Calculate from hand_players */}
+          - players in video
+        </div>
+
+        {/* Info Button */}
+        <div className="flex-shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={(e) => {
+              e.stopPropagation()
+              onShowInfo?.(dayItem)
+            }}
+          >
+            <Info className="h-4 w-4" />
+          </Button>
         </div>
       </div>
-    </ScrollArea>
+    )
+  }
+
+  return (
+    <div className="border border-border rounded-lg overflow-hidden bg-card">
+      {/* Table Header */}
+      <div className="flex items-center gap-4 px-4 py-3 bg-muted/50 border-b border-border font-semibold text-sm">
+        <div className="w-24 flex-shrink-0">Date</div>
+        <div className="flex-shrink-0 w-4">{/* Expand icon space */}</div>
+        <div className="flex-shrink-0 w-12">{/* Logo space */}</div>
+        <div className="w-32 flex-shrink-0">Location</div>
+        <div className="flex-1 min-w-0">Event Name</div>
+        <div className="w-32 text-right">Prize</div>
+        <div className="flex-shrink-0 w-8">{/* Info button space */}</div>
+      </div>
+
+      {/* Table Body */}
+      <div className="divide-y divide-border/50">
+        {items
+          .filter((item) => item.type === "tournament")
+          .map((item) => renderTournament(item))}
+      </div>
+    </div>
   )
 })
