@@ -10,6 +10,7 @@
 import { useState, useEffect, memo, useCallback, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 import { useAuth } from "@/components/auth-provider"
 import { Header } from "@/components/header"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
@@ -203,38 +204,44 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
                 </>
               ) : (
                 // ============================================================
-                // Desktop Layout
+                // Desktop Layout - Resizable Split Pane
                 // ============================================================
-                <>
-                  {!selectedDay ? (
-                    // Events list only (100% width when no day selected)
+                <PanelGroup direction="horizontal" className="gap-6">
+                  {/* Events List Panel */}
+                  <Panel
+                    defaultSize={selectedDay ? 35 : 100}
+                    minSize={25}
+                    maxSize={75}
+                  >
                     <ArchiveEventsList />
-                  ) : (
-                    // Split view: Events list (35%) + Hand History (65%)
-                    <div className="flex gap-6">
-                      <div className="w-[35%]">
-                        <ArchiveEventsList />
-                      </div>
+                  </Panel>
 
-                      <AnimatePresence mode="wait">
-                        {selectedDay && (
-                          <div className="flex-1">
-                            <motion.div
-                              key="hand-history"
-                              initial={{ opacity: 0, x: 100 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              exit={{ opacity: 0, x: 100 }}
-                              transition={{ duration: 0.3, ease: "easeInOut" }}
-                              className="h-full"
-                            >
-                              <ArchiveHandHistory />
-                            </motion.div>
-                          </div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                  {/* Resizable Handle (only visible when hand history is shown) */}
+                  {selectedDay && (
+                    <>
+                      <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
+
+                      {/* Hand History Panel */}
+                      <Panel
+                        defaultSize={65}
+                        minSize={25}
+                      >
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key="hand-history"
+                            initial={{ opacity: 0, x: 100 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 100 }}
+                            transition={{ duration: 0.3, ease: "easeInOut" }}
+                            className="h-full"
+                          >
+                            <ArchiveHandHistory />
+                          </motion.div>
+                        </AnimatePresence>
+                      </Panel>
+                    </>
                   )}
-                </>
+                </PanelGroup>
               )}
             </div>
 

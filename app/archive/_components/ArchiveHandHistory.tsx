@@ -167,14 +167,18 @@ export function ArchiveHandHistory() {
             )}
           </div>
           <div className="flex gap-2">
-            {selectedDayData && (
+            {selectedDayData && (selectedDayData.day.video_url || selectedDayData.day.video_file || selectedDayData.day.video_nas_path) && (
               <Button
                 variant="default"
-                size="icon"
-                onClick={() => openVideoDialog('')}
-                title="Play Video"
+                size="sm"
+                onClick={() => {
+                  const videoUrl = selectedDayData.day.video_url || selectedDayData.day.video_file || selectedDayData.day.video_nas_path || ''
+                  openVideoDialog(videoUrl)
+                }}
+                className="gap-2"
               >
                 <Play className="h-4 w-4" />
+                Play
               </Button>
             )}
             <Button variant="outline" size="icon" title="Download">

@@ -69,7 +69,8 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
         >
           {/* Date */}
           <div className="w-20 flex-shrink-0 text-xs text-muted-foreground">
-            {formatDate(tournament.start_date)}
+            <div>{formatDate(tournament.start_date)}</div>
+            <div>{formatDate(tournament.end_date)}</div>
           </div>
 
           {/* Logo */}
@@ -253,14 +254,14 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
         </div>
 
         {/* Video Icon */}
-        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+        <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
           {day.video_source === "youtube" && day.video_url ? (
             <div className="w-full h-full bg-red-600 rounded flex items-center justify-center">
-              <Play className="h-4 w-4 text-white fill-white" />
+              <Play className="h-3 w-3 text-white fill-white" />
             </div>
           ) : (day.video_file || day.video_nas_path) ? (
             <div className="w-full h-full bg-yellow-500 rounded flex items-center justify-center">
-              <Play className="h-4 w-4 text-white fill-white" />
+              <Play className="h-3 w-3 text-white fill-white" />
             </div>
           ) : null}
         </div>
