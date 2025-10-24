@@ -161,7 +161,7 @@ export function Header() {
                           animate={{ opacity: 1, width: "auto", x: 0 }}
                           exit={{ opacity: 0, width: 0, x: -10 }}
                           transition={{ duration: 0.3, ease: "easeInOut" }}
-                          className="absolute left-full top-0 ml-2 flex items-center gap-3 bg-background/95 backdrop-blur-sm border border-border/40 rounded-md shadow-lg px-4 py-2 whitespace-nowrap"
+                          className="ml-2 flex items-center gap-3 bg-background/95 backdrop-blur-sm border border-border/40 rounded-md shadow-lg px-4 py-2 whitespace-nowrap"
                         >
                           {link.subItems.map((subItem, idx) => {
                             const subIsActive = pathname === subItem.href ||
