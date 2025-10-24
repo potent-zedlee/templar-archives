@@ -40,6 +40,7 @@ import { uploadCategoryLogo } from "@/lib/tournament-categories-db"
 import Image from "next/image"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
+import { LogoPicker } from "@/components/logo-picker"
 
 // Zod Schema
 const categoryFormSchema = z.object({
@@ -78,6 +79,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(category?.logo_url || null)
   const [isUploading, setIsUploading] = useState(false)
+  const [logoUploadMode, setLogoUploadMode] = useState<"upload" | "select">("upload")
 
   const isEditing = !!category
   const createMutation = useCreateCategoryMutation()
@@ -165,12 +167,16 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
         categoryId = newCategory.id
       }
 
-      // Upload logo if provided (after category creation/update)
-      if (logoFile && categoryId) {
+      // Handle logo (upload or selected)
+      if (logoUploadMode === "upload" && logoFile && categoryId) {
+        // Upload new file
         const publicUrl = await uploadCategoryLogo(categoryId, logoFile)
         // Add cache busting timestamp to force reload
         const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`
         setLogoPreview(urlWithTimestamp)
+      } else if (logoUploadMode === "select" && logoPreview) {
+        // Logo already selected from picker, no need to upload
+        // The logoPreview already contains the selected URL
       }
 
       // Close dialog and reset form
@@ -225,11 +231,13 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {/* Logo Upload */}
-            <div className="space-y-2">
+            {/* Logo Selection */}
+            <div className="space-y-4 p-4 border rounded-lg">
               <FormLabel>로고</FormLabel>
-              <div className="flex items-center gap-4">
-                {logoPreview && (
+
+              {/* Logo Preview */}
+              {logoPreview && (
+                <div className="flex items-center gap-4">
                   <div className="relative w-16 h-16 border rounded-lg overflow-hidden bg-muted">
                     <Image
                       src={logoPreview}
@@ -238,21 +246,6 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
                       className="object-contain"
                     />
                   </div>
-                )}
-                <div className="flex-1">
-                  <Input
-                    type="file"
-                    accept=".svg,.png,.jpg,.jpeg"
-                    onChange={handleLogoChange}
-                    className="cursor-pointer"
-                  />
-                  <FormDescription className="mt-1">
-                    <strong>권장:</strong> 200x200px 이상 정사각형 이미지
-                    <br />
-                    <strong>형식:</strong> SVG/PNG (투명 배경 권장), JPEG (최대 5MB)
-                  </FormDescription>
-                </div>
-                {logoPreview && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -262,10 +255,59 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
                       setLogoPreview(null)
                     }}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4 mr-2" />
+                    제거
                   </Button>
-                )}
-              </div>
+                </div>
+              )}
+
+              {/* Upload Mode Selection */}
+              <RadioGroup
+                value={logoUploadMode}
+                onValueChange={(v) => setLogoUploadMode(v as "upload" | "select")}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="upload" id="upload" />
+                  <Label htmlFor="upload" className="cursor-pointer">
+                    새 파일 업로드
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="select" id="select" />
+                  <Label htmlFor="select" className="cursor-pointer">
+                    기존 로고 선택
+                  </Label>
+                </div>
+              </RadioGroup>
+
+              {/* Upload Mode: File Input */}
+              {logoUploadMode === "upload" && (
+                <div className="space-y-2">
+                  <Input
+                    type="file"
+                    accept=".svg,.png,.jpg,.jpeg"
+                    onChange={handleLogoChange}
+                    className="cursor-pointer"
+                  />
+                  <FormDescription>
+                    <strong>권장:</strong> 200x200px 이상 정사각형 이미지
+                    <br />
+                    <strong>형식:</strong> SVG/PNG (투명 배경 권장), JPEG (최대 5MB)
+                  </FormDescription>
+                </div>
+              )}
+
+              {/* Select Mode: Logo Picker */}
+              {logoUploadMode === "select" && (
+                <LogoPicker
+                  selectedLogo={logoPreview}
+                  onSelect={(url) => {
+                    setLogoPreview(url)
+                    setLogoFile(null) // Clear file if switching from upload
+                  }}
+                />
+              )}
             </div>
 
             {/* ID (disabled when editing) */}

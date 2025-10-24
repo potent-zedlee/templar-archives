@@ -70,6 +70,7 @@ async function verifyAdmin(): Promise<{
 export async function createTournament(data: {
   name: string
   category: TournamentCategory
+  category_logo?: string
   game_type: 'tournament' | 'cash-game'
   location: string
   city?: string
@@ -113,6 +114,7 @@ export async function createTournament(data: {
         name: data.name.trim(),
         category: data.category,
         category_id: getCategoryId(data.category),
+        category_logo: data.category_logo || null,
         game_type: data.game_type,
         location: data.location.trim(),
         city: data.city?.trim() || null,
@@ -142,6 +144,7 @@ export async function createTournament(data: {
 export async function updateTournament(id: string, data: {
   name: string
   category: TournamentCategory
+  category_logo?: string
   game_type: 'tournament' | 'cash-game'
   location: string
   city?: string
@@ -185,6 +188,7 @@ export async function updateTournament(id: string, data: {
         name: data.name.trim(),
         category: data.category,
         category_id: getCategoryId(data.category),
+        category_logo: data.category_logo || null,
         game_type: data.game_type,
         location: data.location.trim(),
         city: data.city?.trim() || null,
