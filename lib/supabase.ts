@@ -12,15 +12,20 @@ export type Tournament = {
   category: 'WSOP' | 'Triton' | 'EPT' | 'APT' | 'APL' | 'Hustler Casino Live' | 'WSOP Classic' | 'GGPOKER'
   category_logo?: string
   location: string
+  city?: string
+  country?: string
   start_date: string
   end_date: string
+  game_type?: 'tournament' | 'cash-game'
   created_at?: string
+  sub_events?: SubEvent[]
 }
 
 export type SubEvent = {
   id: string
   tournament_id: string
   name: string
+  event_number?: string
   date: string
   total_prize?: string
   winner?: string
@@ -31,17 +36,25 @@ export type SubEvent = {
   starting_stack?: number
   notes?: string
   created_at?: string
+  days?: Stream[]
 }
 
-export type Day = {
+export type Stream = {
   id: string
   sub_event_id: string
   name: string
   video_url?: string
   video_file?: string
-  video_source?: 'youtube' | 'upload'
+  video_source?: 'youtube' | 'upload' | 'nas'
+  video_nas_path?: string
+  published_at?: string
   created_at?: string
+  is_organized?: boolean
+  organized_at?: string
 }
+
+// Backward compatibility alias
+export type Day = Stream
 
 export type Hand = {
   id: string

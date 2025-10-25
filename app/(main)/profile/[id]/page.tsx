@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -42,10 +42,16 @@ export default function profileidClient() {
   const isOwnProfile = user?.id === userId
 
   // React Query hooks
-  const { data: profile = null, isLoading: loading, error } = useProfileQuery(userId)
+  const { data: profileData = null, isLoading: loading, error } = useProfileQuery(userId)
+  const [profile, setProfile] = useState(profileData)
   const { data: posts = [] } = useUserPostsQuery(userId)
   const { data: comments = [] } = useUserCommentsQuery(userId)
   const { data: bookmarks = [] } = useUserBookmarksQuery(userId)
+
+  // Sync profile state with query data
+  useEffect(() => {
+    setProfile(profileData)
+  }, [profileData])
 
   // Handle error
   if (error) {
@@ -233,12 +239,12 @@ export default function profileidClient() {
                 <Card key={comment.id} className="p-4 hover:bg-muted/30 transition-colors">
                   <p className="text-body mb-3">{comment.content}</p>
                   <div className="flex items-center gap-4 text-caption text-muted-foreground">
-                    {comment.post?.title && (
+                    {(comment.post as any)?.title && (
                       <Link
-                        href={`/community/${comment.post.id}`}
+                        href={`/community/${(comment.post as any).id}`}
                         className="hover:text-primary hover:underline"
                       >
-                        on: {comment.post.title}
+                        on: {(comment.post as any).title}
                       </Link>
                     )}
                     <span className="flex items-center gap-1">
@@ -265,20 +271,20 @@ export default function profileidClient() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge>#{bookmark.hand?.number}</Badge>
+                          <Badge>#{(bookmark.hand as any)?.number}</Badge>
                           {bookmark.folder_name && (
                             <Badge variant="outline">{bookmark.folder_name}</Badge>
                           )}
                         </div>
-                        {bookmark.hand?.description && (
-                          <p className="text-body mb-2">{bookmark.hand.description}</p>
+                        {(bookmark.hand as any)?.description && (
+                          <p className="text-body mb-2">{(bookmark.hand as any).description}</p>
                         )}
                         {bookmark.notes && (
                           <p className="text-caption text-muted-foreground">{bookmark.notes}</p>
                         )}
                       </div>
                       <Link
-                        href={`/archive?hand=${bookmark.hand?.id}`}
+                        href={`/archive?hand=${(bookmark.hand as any)?.id}`}
                         className={buttonVariants({ variant: "ghost", size: "sm" })}
                       >
                         View

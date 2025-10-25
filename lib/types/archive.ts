@@ -15,7 +15,7 @@ export type TournamentCategory =
   | "WSOP Classic"
   | "GGPOKER"
 
-export type VideoSource = "youtube" | "upload"
+export type VideoSource = "youtube" | "upload" | "nas"
 
 export type ViewMode = "list" | "grid" | "timeline"
 
@@ -50,6 +50,7 @@ export interface Tournament {
   location: string
   city?: string
   country?: string
+  game_type?: 'tournament' | 'cash-game'
   start_date: string
   end_date: string
   total_prize?: string
@@ -76,6 +77,7 @@ export interface SubEvent {
   created_at?: string
   // UI state (클라이언트 전용)
   streams?: Stream[]
+  days?: Stream[]
   expanded?: boolean
 }
 
@@ -165,6 +167,7 @@ export interface Payout {
 export interface TournamentFormData {
   name: string
   category: TournamentCategory
+  category_logo?: string
   game_type: 'tournament' | 'cash-game'
   location: string
   city: string
@@ -395,6 +398,7 @@ export function isDay(item: unknown): item is Stream {
 export const INITIAL_TOURNAMENT_FORM: TournamentFormData = {
   name: "",
   category: "WSOP",
+  category_logo: "",
   game_type: "tournament",
   location: "",
   city: "",

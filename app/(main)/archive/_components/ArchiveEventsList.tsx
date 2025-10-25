@@ -110,7 +110,7 @@ export function ArchiveEventsList() {
           if (expandedSubEvents.has(subEvent.id)) {
             const days = subEvent.days || []
 
-            days.forEach((day) => {
+            days.forEach((day: import('@/lib/supabase').Stream) => {
               items.push({
                 id: day.id,
                 name: day.name,

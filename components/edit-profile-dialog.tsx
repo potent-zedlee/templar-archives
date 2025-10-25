@@ -89,12 +89,12 @@ export function EditProfileDialog({
     try {
       const updatedProfile = await updateProfile(profile.id, {
         nickname: nickname.trim(),
-        bio: bio.trim() || null,
-        location: location.trim() || null,
-        website: website.trim() || null,
-        twitter_handle: twitterHandle.trim() || null,
-        instagram_handle: instagramHandle.trim() || null,
-        avatar_url: avatarUrl || null
+        bio: bio.trim() || undefined,
+        location: location.trim() || undefined,
+        website: website.trim() || undefined,
+        twitter_handle: twitterHandle.trim() || undefined,
+        instagram_handle: instagramHandle.trim() || undefined,
+        avatar_url: avatarUrl || undefined
       })
 
       toast.success('Profile updated successfully')
