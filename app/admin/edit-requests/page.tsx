@@ -33,9 +33,8 @@ import {
   useApproveEditRequestMutation,
   useRejectEditRequestMutation,
 } from "@/lib/queries/admin-queries"
-import { Clock, CheckCircle, XCircle, FileEdit } from "lucide-react"
+import { CheckCircle, XCircle } from "lucide-react"
 import Link from "next/link"
-import { buttonVariants } from "@/components/ui/button"
 
 const EDIT_TYPE_LABELS: Record<string, string> = {
   "basic_info": "Basic Info",
@@ -102,7 +101,7 @@ export default function editrequestsClient() {
       )
     } else {
       rejectEditRequestMutation.mutate(
-        { requestId: selectedRequest.id, adminId: user.id, rejectedReason: adminComment },
+        { requestId: selectedRequest.id, adminId: user.id, adminComment: adminComment },
         {
           onSuccess: () => {
             setSelectedRequest(null)

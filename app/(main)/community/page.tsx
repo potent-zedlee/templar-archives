@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import dynamic from "next/dynamic"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { PageTransition, StaggerContainer, StaggerItem } from "@/components/page-transition"
+import { StaggerContainer, StaggerItem } from "@/components/page-transition"
 import { AnimatedCard, AnimatedButton, AnimatedIconButton } from "@/components/animated-card"
 import { Card } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -11,12 +11,11 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { MessageSquare, TrendingUp, Clock, Star, Users, Award, ThumbsUp, Link2, X } from "lucide-react"
+import { MessageSquare, TrendingUp, Clock, Star, ThumbsUp, Link2, X } from "lucide-react"
 import Link from "next/link"
 import { fetchPosts, togglePostLike, type Post } from "@/lib/supabase-community"
 import { toast } from "sonner"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
-import { EmptyState } from "@/components/empty-state"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -62,7 +61,6 @@ export default function communityClient() {
   const [newTitle, setNewTitle] = useState("")
   const [newContent, setNewContent] = useState("")
   const [newCategory, setNewCategory] = useState<Post['category']>("general")
-  const [newAuthorName, setNewAuthorName] = useState("")
 
   // Hand attachment
   const [selectedHand, setSelectedHand] = useState<{
@@ -127,7 +125,7 @@ export default function communityClient() {
 
       return { previousPosts }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       queryClient.setQueryData(
         ['posts', activeTab, searchQuery, filterCategory, dateFrom, dateTo],
         context?.previousPosts

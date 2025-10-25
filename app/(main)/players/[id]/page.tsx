@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ArrowLeft, TrendingUp, ChevronDown, ChevronRight, BarChart3, PieChart, Activity, Upload } from "lucide-react"
-import type { HandHistory } from "@/lib/types/hand-history"
+import { ArrowLeft, TrendingUp, ChevronDown, ChevronRight, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { isAdmin } from "@/lib/auth-utils"
 import { ClaimPlayerDialog } from "@/components/claim-player-dialog"
@@ -84,17 +83,7 @@ export default function PlayerDetailClient() {
   // React Query hooks
   const { data: player = null, isLoading: loading } = usePlayerQuery(playerId)
   const { data: handsData = [] } = usePlayerHandsQuery(playerId)
-  const { data: playerStats = {
-    vpip: 0,
-    pfr: 0,
-    threeBet: 0,
-    ats: 0,
-    winRate: 0,
-    avgPotSize: 0,
-    showdownWinRate: 0,
-    totalHands: 0,
-    handsWon: 0,
-  } } = usePlayerStatsQuery(playerId)
+  usePlayerStatsQuery(playerId)
   const { data: prizeHistory = [] } = usePlayerPrizesQuery(playerId)
   const { data: claimData } = usePlayerClaimQuery(playerId, user?.id)
 
@@ -147,7 +136,7 @@ export default function PlayerDetailClient() {
         let subEventHandCount = 0
 
         subEvent.days?.forEach((day) => {
-          day.hands?.forEach((hand: any) => {
+          day.hands?.forEach((_hand: any) => {
             subEventHandCount++
             tournamentHandCount++
           })

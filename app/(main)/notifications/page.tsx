@@ -19,7 +19,6 @@ import {
 } from "@/lib/queries/notification-queries"
 import {
   formatNotificationTime,
-  type Notification,
   type NotificationType,
 } from "@/lib/notifications"
 import { useAuth } from "@/components/auth-provider"
