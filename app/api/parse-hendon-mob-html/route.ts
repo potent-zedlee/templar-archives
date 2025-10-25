@@ -283,7 +283,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find table with Hendon Mob class structure (place, prize, name)
-    let resultsTable: cheerio.Cheerio<Element> | null = null
+    let resultsTable: cheerio.Cheerio<any> | null = null
 
     tables.each((_, table) => {
       const hasPlaceClass = $(table).find('td.place').length > 0

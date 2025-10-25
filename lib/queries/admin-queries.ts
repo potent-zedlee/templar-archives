@@ -443,7 +443,7 @@ export function useEditRequestsQuery(status?: EditRequestStatus) {
     queryKey: adminKeys.editRequests(status),
     queryFn: async () => {
       const result = await fetchEditRequests({ status })
-      return result.requests
+      return result
     },
     staleTime: 2 * 60 * 1000, // 2분
     gcTime: 5 * 60 * 1000, // 5분
@@ -476,13 +476,13 @@ export function useRejectEditRequestMutation() {
     mutationFn: async ({
       requestId,
       adminId,
-      rejectedReason,
+      adminComment,
     }: {
       requestId: string
       adminId: string
-      rejectedReason: string
+      adminComment?: string
     }) => {
-      await rejectEditRequest({ requestId, adminId, rejectedReason })
+      await rejectEditRequest({ requestId, adminId, adminComment })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.editRequests() })

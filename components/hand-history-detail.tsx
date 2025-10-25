@@ -358,8 +358,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
                   <TableHead>이름</TableHead>
                   <TableHead>포지션</TableHead>
                   <TableHead>홀카드</TableHead>
-                  <TableHead className="text-right">시작 스택</TableHead>
-                  <TableHead className="text-right">종료 스택</TableHead>
+                  <TableHead className="text-right">칩 스택</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -367,7 +366,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
                   <TableRow key={idx}>
                     <TableCell className="font-medium">{player.name}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{player.position}</Badge>
+                      <Badge variant="secondary">{player.position || "-"}</Badge>
                     </TableCell>
                     <TableCell>
                       {player.cards ? (
@@ -379,10 +378,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {player.startingStack?.toLocaleString() || "-"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {player.endingStack?.toLocaleString() || "-"}
+                      {player.stack?.toLocaleString() || "-"}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -97,11 +97,8 @@ export function usePlayerStatsQuery(playerId: string) {
     queryKey: playersKeys.stats(playerId),
     queryFn: async () => {
       // Get player hands first
-      const hands = await fetchPlayerHandsGrouped(playerId)
-
-      // Calculate statistics from hands
-      // Note: This is a simplified version. You may need to fetch more detailed hand data
-      const stats = calculatePlayerStatistics(playerId, hands)
+      // Calculate statistics
+      const stats = await calculatePlayerStatistics(playerId)
 
       return stats
     },
@@ -139,9 +136,9 @@ export function usePlayerClaimQuery(playerId: string, userId?: string) {
       // If userId provided, check if this user has claimed this player
       let userClaim = null
       if (userId) {
-        const userClaimResult = await checkUserPlayerClaim(playerId, userId)
-        if (userClaimResult.data) {
-          userClaim = userClaimResult.data
+        const userClaimResult = await checkUserPlayerClaim(userId, playerId)
+        if (userClaimResult.claim) {
+          userClaim = userClaimResult.claim
         }
       }
 

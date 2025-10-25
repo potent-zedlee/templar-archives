@@ -12,7 +12,7 @@ export type HandAction = {
   player_id: string
   street: Street
   action_type: ActionType
-  amount: number
+  amount?: number
   sequence: number
   created_at: string
 }

@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const validation = validateInput(naturalSearchSchema, body)
     if (!validation.success) {
       const errors = formatValidationErrors(validation.errors!)
-      logSecurityEvent('validation_error', { errors, body })
+      logSecurityEvent('xss_attempt', { errors, body })
       return NextResponse.json(
         { error: errors[0] || '입력값이 유효하지 않습니다' },
         { status: 400 }
