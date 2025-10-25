@@ -8,7 +8,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -134,11 +136,12 @@ export function TournamentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{editingTournamentId ? "Edit Tournament" : "Add Tournament"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <ScrollArea className="flex-1 -mx-6 px-6">
+          <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select value={newCategory} onValueChange={(value) => setNewCategory(value as Tournament["category"])}>
@@ -269,16 +272,16 @@ export function TournamentDialog({
               />
             </div>
           </div>
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onCancel} disabled={saving}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving...' : editingTournamentId ? "Edit" : "Add"}
-            </Button>
           </div>
-        </div>
+        </ScrollArea>
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel} disabled={saving}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving...' : editingTournamentId ? "Edit" : "Add"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
