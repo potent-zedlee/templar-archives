@@ -27,11 +27,11 @@ export function useArchiveNavigation({
     hasHandsOnly: false
   })
 
-  // Filter tournaments by category
+  // Filter tournaments by category (using category_id for accurate matching)
   const filteredTournaments = useMemo(() => {
     return selectedCategory === "All"
       ? tournaments
-      : tournaments.filter(t => t.category === selectedCategory)
+      : tournaments.filter(t => t.category_id === selectedCategory || t.category === selectedCategory)
   }, [tournaments, selectedCategory])
 
   // Build breadcrumb items
