@@ -212,29 +212,19 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
 }
 
 /**
- * Fetch players with hand counts (optimized)
+ * Fetch players with hand counts (optimized with RPC)
  */
 export async function fetchPlayersWithHandCount() {
   const supabase = createClientSupabaseClient()
 
   try {
+    // Use optimized RPC function - eliminates N+1 query
     const { data, error } = await supabase
-      .from('players')
-      .select(`
-        *,
-        hand_players(count)
-      `)
-      .order('total_winnings', { ascending: false })
+      .rpc('get_players_with_hand_counts')
 
     if (error) throw error
 
-    // Transform data to include hand count
-    const playersWithCount = (data || []).map((player: any) => ({
-      ...player,
-      hand_count: player.hand_players?.length || 0
-    }))
-
-    return playersWithCount
+    return data || []
   } catch (error) {
     console.error('Error fetching players:', error)
     throw error
@@ -243,6 +233,7 @@ export async function fetchPlayersWithHandCount() {
 
 /**
  * Fetch hands for a specific player (formatted for HandListAccordion)
+ * Optimized: Single query with JOIN instead of 2-step process
  */
 export async function fetchPlayerHands(playerId: string): Promise<{
   hands: HandHistory[]
@@ -251,35 +242,24 @@ export async function fetchPlayerHands(playerId: string): Promise<{
   const supabase = createClientSupabaseClient()
 
   try {
-    // Get all hands for this player with full details
-    const { data: handPlayersData, error: handPlayersError } = await supabase
-      .from('hand_players')
-      .select('hand_id')
-      .eq('player_id', playerId)
-
-    if (handPlayersError) throw handPlayersError
-
-    const handIds = (handPlayersData || []).map(hp => hp.hand_id)
-
-    if (handIds.length === 0) {
-      return { hands: [], handIds: [] }
-    }
-
-    // Fetch hands with player details
-    const { data: handsData, error: handsError } = await supabase
+    // Optimized: Single query using INNER JOIN
+    const { data: handsData, error } = await supabase
       .from('hands')
       .select(`
         *,
-        hand_players(
+        hand_players!inner(
           position,
           cards,
+          player_id,
           player:players(name)
         )
       `)
-      .in('id', handIds)
+      .eq('hand_players.player_id', playerId)
       .order('created_at', { ascending: false })
 
-    if (handsError) throw handsError
+    if (error) throw error
+
+    const handIds = (handsData || []).map((h: any) => h.id)
 
     // Transform to HandHistory format
     const hands: HandHistory[] = (handsData || []).map((hand: any) => {
@@ -315,7 +295,7 @@ export async function fetchPlayerHands(playerId: string): Promise<{
 
     return {
       hands,
-      handIds: handIds.filter(id => handsData?.some((h: any) => h.id === id))
+      handIds
     }
   } catch (error) {
     console.error('Error fetching player hands:', error)
@@ -370,101 +350,14 @@ export async function fetchPlayerHandsGrouped(playerId: string) {
   const supabase = createClientSupabaseClient()
 
   try {
-    // Get all hand IDs for this player
-    const { data: handPlayersData, error: handPlayersError } = await supabase
-      .from('hand_players')
-      .select('hand_id')
-      .eq('player_id', playerId)
+    // Use optimized RPC function - single query instead of 2-step process
+    const { data, error } = await supabase
+      .rpc('get_player_hands_grouped', { player_uuid: playerId })
 
-    if (handPlayersError) throw handPlayersError
+    if (error) throw error
 
-    const handIds = (handPlayersData || []).map(hp => hp.hand_id)
-
-    if (handIds.length === 0) {
-      return []
-    }
-
-    // Fetch hands with full tournament/event hierarchy
-    const { data: handsData, error: handsError } = await supabase
-      .from('hands')
-      .select(`
-        *,
-        hand_players(
-          position,
-          cards,
-          player:players(name)
-        ),
-        days!inner(
-          id,
-          name,
-          video_url,
-          video_file,
-          video_source,
-          video_nas_path,
-          sub_events!inner(
-            id,
-            name,
-            date,
-            tournaments!inner(
-              id,
-              name,
-              category,
-              location
-            )
-          )
-        )
-      `)
-      .in('id', handIds)
-      .order('created_at', { ascending: false })
-
-    if (handsError) throw handsError
-
-    // Group by tournament -> sub_event -> day
-    const grouped: any = {}
-
-    handsData?.forEach((hand: any) => {
-      const tournament = hand.streams.sub_events.tournaments
-      const subEvent = hand.streams.sub_events
-      const day = hand.streams
-
-      // Initialize tournament
-      if (!grouped[tournament.id]) {
-        grouped[tournament.id] = {
-          ...tournament,
-          sub_events: {},
-        }
-      }
-
-      // Initialize sub_event
-      if (!grouped[tournament.id].sub_events[subEvent.id]) {
-        grouped[tournament.id].sub_events[subEvent.id] = {
-          ...subEvent,
-          days: {},
-        }
-      }
-
-      // Initialize day
-      if (!grouped[tournament.id].sub_events[subEvent.id].days[day.id]) {
-        grouped[tournament.id].sub_events[subEvent.id].days[day.id] = {
-          ...day,
-          hands: [],
-        }
-      }
-
-      // Add hand to day
-      grouped[tournament.id].sub_events[subEvent.id].days[day.id].hands.push(hand)
-    })
-
-    // Convert to array structure
-    const result = Object.values(grouped).map((tournament: any) => ({
-      ...tournament,
-      sub_events: Object.values(tournament.sub_events).map((subEvent: any) => ({
-        ...subEvent,
-        days: Object.values(subEvent.days),
-      })),
-    }))
-
-    return result
+    // RPC returns JSONB, parse it to array
+    return data || []
   } catch (error) {
     console.error('Error fetching player hands grouped:', error)
     throw error

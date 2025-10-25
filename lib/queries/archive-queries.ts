@@ -27,6 +27,7 @@ export const archiveKeys = {
 
 /**
  * Fetch tournaments with sub_events and days
+ * Optimized: Increased staleTime as tournament hierarchy changes infrequently
  */
 export function useTournamentsQuery(gameType?: 'tournament' | 'cash-game') {
   return useQuery({
@@ -47,8 +48,8 @@ export function useTournamentsQuery(gameType?: 'tournament' | 'cash-game') {
 
       return tournamentsWithUIState as Tournament[]
     },
-    staleTime: 5 * 60 * 1000, // 5분
-    gcTime: 10 * 60 * 1000, // 10분
+    staleTime: 10 * 60 * 1000, // 10분 (토너먼트 계층 구조는 자주 변경되지 않음)
+    gcTime: 30 * 60 * 1000, // 30분 (메모리에 더 오래 유지)
   })
 }
 
@@ -56,6 +57,7 @@ export function useTournamentsQuery(gameType?: 'tournament' | 'cash-game') {
 
 /**
  * Fetch hands for a specific day (regular query)
+ * Optimized: Increased staleTime as hand data changes infrequently
  */
 export function useHandsQuery(dayId: string | null) {
   return useQuery({
@@ -81,13 +83,14 @@ export function useHandsQuery(dayId: string | null) {
       return (data || []).map((hand) => ({ ...hand, checked: false })) as Hand[]
     },
     enabled: !!dayId,
-    staleTime: 2 * 60 * 1000, // 2분
-    gcTime: 5 * 60 * 1000, // 5분
+    staleTime: 5 * 60 * 1000, // 5분 (핸드 데이터는 자주 변경되지 않음)
+    gcTime: 15 * 60 * 1000, // 15분 (메모리에 더 오래 유지)
   })
 }
 
 /**
  * Fetch hands with infinite scroll
+ * Optimized: Increased staleTime as hand data changes infrequently
  */
 const HANDS_PER_PAGE = 50
 
@@ -127,8 +130,8 @@ export function useHandsInfiniteQuery(dayId: string | null) {
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!dayId,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5분 (무한 스크롤 데이터도 자주 변경되지 않음)
+    gcTime: 15 * 60 * 1000, // 15분 (메모리에 더 오래 유지)
     initialPageParam: 0,
   })
 }
@@ -137,6 +140,7 @@ export function useHandsInfiniteQuery(dayId: string | null) {
 
 /**
  * Fetch unsorted videos
+ * Optimized: Increased staleTime for better caching
  */
 export function useUnsortedVideosQuery() {
   return useQuery({
@@ -145,8 +149,8 @@ export function useUnsortedVideosQuery() {
       const videos = await getUnsortedVideos()
       return videos as UnsortedVideo[]
     },
-    staleTime: 60 * 1000, // 1분
-    gcTime: 5 * 60 * 1000, // 5분
+    staleTime: 3 * 60 * 1000, // 3분 (Unsorted 비디오 목록 변경 빈도 고려)
+    gcTime: 10 * 60 * 1000, // 10분 (메모리에 더 오래 유지)
   })
 }
 
