@@ -75,11 +75,11 @@ export interface SubEvent {
   notes?: string
   created_at?: string
   // UI state (클라이언트 전용)
-  days?: Day[]
+  streams?: Stream[]
   expanded?: boolean
 }
 
-export interface Day {
+export interface Stream {
   id: string
   sub_event_id: string
   name: string
@@ -89,14 +89,22 @@ export interface Day {
   video_source?: VideoSource
   published_at?: string
   created_at?: string
+  is_organized?: boolean
+  organized_at?: string
   player_count?: number
   // UI state (클라이언트 전용)
   selected?: boolean
 }
 
+/**
+ * Day type (하위 호환성)
+ * @deprecated Use Stream instead
+ */
+export type Day = Stream
+
 export interface Hand {
   id: string
-  day_id: string
+  stream_id: string
   number: string
   description: string
   summary?: string
@@ -179,13 +187,19 @@ export interface SubEventFormData {
   notes: string
 }
 
-export interface DayFormData {
+export interface StreamFormData {
   name: string
   video_source: VideoSource
   video_url: string
   upload_file: File | null
   published_at: string
 }
+
+/**
+ * DayFormData type (하위 호환성)
+ * @deprecated Use StreamFormData instead
+ */
+export type DayFormData = StreamFormData
 
 // ==================== UI State Types ====================
 
@@ -251,8 +265,8 @@ export interface FolderItem {
   type: FolderItemType
   itemCount?: number
   date?: string
-  data?: Tournament | SubEvent | Day | UnsortedVideo
-  level?: number  // Tree level: 0=tournament, 1=subevent, 2=day
+  data?: Tournament | SubEvent | Stream | UnsortedVideo
+  level?: number  // Tree level: 0=tournament, 1=subevent, 2=stream
   isExpanded?: boolean  // Expansion state
   parentId?: string  // Parent folder ID
 }
@@ -268,7 +282,7 @@ export interface BreadcrumbItem {
 export interface VideoPlayerState {
   isOpen: boolean
   startTime: string
-  day: Day | null
+  stream: Stream | null
 }
 
 // ==================== Upload State Types ====================
@@ -310,12 +324,18 @@ export interface SubEventActions {
   toggle: (tournamentId: string, subEventId: string) => void
 }
 
-export interface DayActions {
-  create: (subEventId: string, data: DayFormData) => Promise<void>
-  update: (id: string, data: DayFormData) => Promise<void>
+export interface StreamActions {
+  create: (subEventId: string, data: StreamFormData) => Promise<void>
+  update: (id: string, data: StreamFormData) => Promise<void>
   delete: (id: string) => Promise<void>
   select: (id: string | null) => void
 }
+
+/**
+ * DayActions type (하위 호환성)
+ * @deprecated Use StreamActions instead
+ */
+export type DayActions = StreamActions
 
 export interface HandActions {
   toggleFavorite: (handId: string) => Promise<void>
@@ -355,10 +375,18 @@ export function isSubEvent(item: unknown): item is SubEvent {
 }
 
 /**
- * 타입 가드: Day 확인
+ * 타입 가드: Stream 확인
  */
-export function isDay(item: unknown): item is Day {
+export function isStream(item: unknown): item is Stream {
   return typeof item === "object" && item !== null && "sub_event_id" in item && "video_source" in item
+}
+
+/**
+ * 타입 가드: Day 확인 (하위 호환성)
+ * @deprecated Use isStream instead
+ */
+export function isDay(item: unknown): item is Stream {
+  return isStream(item)
 }
 
 /**
@@ -393,12 +421,18 @@ export const INITIAL_SUBEVENT_FORM: SubEventFormData = {
 }
 
 /**
- * 초기 Day Form 데이터
+ * 초기 Stream Form 데이터
  */
-export const INITIAL_DAY_FORM: DayFormData = {
+export const INITIAL_STREAM_FORM: StreamFormData = {
   name: "",
   video_source: "youtube",
   video_url: "",
   upload_file: null,
   published_at: "",
 }
+
+/**
+ * 초기 Day Form 데이터 (하위 호환성)
+ * @deprecated Use INITIAL_STREAM_FORM instead
+ */
+export const INITIAL_DAY_FORM: StreamFormData = INITIAL_STREAM_FORM

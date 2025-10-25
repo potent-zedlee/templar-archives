@@ -61,7 +61,7 @@ const ArchiveInfoDialog = dynamic(() => import('@/components/archive-info-dialog
 export function ArchiveDialogs() {
   const queryClient = useQueryClient()
   const { tournaments, unsortedVideos } = useArchiveData()
-  const { userEmail, selectedDay } = useArchiveDataStore()
+  const { userEmail, selectedStream } = useArchiveDataStore()
 
   const {
     selectedCategory,
@@ -154,18 +154,18 @@ export function ArchiveDialogs() {
     closeMoveToNewEventDialog()
   }
 
-  // Get selected day data for video player
-  const selectedDayData = useMemo(() => {
-    if (!selectedDay) return null
+  // Get selected stream data for video player
+  const selectedStreamData = useMemo(() => {
+    if (!selectedStream) return null
 
     for (const tournament of tournaments) {
       for (const subEvent of tournament.sub_events || []) {
-        const day = subEvent.days?.find((d) => d.id === selectedDay)
-        if (day) return day
+        const stream = subEvent.streams?.find((s) => s.id === selectedStream)
+        if (stream) return stream
       }
     }
     return null
-  }, [selectedDay, tournaments])
+  }, [selectedStream, tournaments])
 
   // Get current item for info dialog
   const infoDialogItem = useMemo((): FolderItem | null => {
@@ -269,7 +269,7 @@ export function ArchiveDialogs() {
 
       {/* Video Player Dialog */}
       <VideoPlayerDialog
-        day={selectedDayData}
+        day={selectedStreamData}
         isOpen={videoDialog.isOpen}
         onOpenChange={closeVideoDialog}
         initialTime={videoDialog.startTime}

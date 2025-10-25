@@ -30,7 +30,7 @@ export function RecentAnalyses() {
       const supabase = createClientSupabaseClient()
       // Get recent days that have hands (analyzed videos)
       const { data: daysData, error: daysError } = await supabase
-        .from('days')
+        .from('streams')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(10)

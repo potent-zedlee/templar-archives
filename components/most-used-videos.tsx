@@ -43,7 +43,7 @@ export function MostUsedVideos() {
 
       // Get all days
       const { data: daysData, error: daysError } = await supabase
-        .from('days')
+        .from('streams')
         .select('*')
         .gte('created_at', startDate.toISOString())
         .order('created_at', { ascending: false })

@@ -38,6 +38,8 @@ interface ArchiveUIState {
   tournamentDialog: DialogState
   subEventDialog: DialogState
   subEventInfoDialog: DialogState
+  streamDialog: DialogState
+  /** @deprecated Use streamDialog instead */
   dayDialog: DialogState
   videoDialog: VideoPlayerState
   renameDialog: DialogState
@@ -88,7 +90,11 @@ interface ArchiveUIState {
   closeSubEventDialog: () => void
   openSubEventInfoDialog: (subEventId: string) => void
   closeSubEventInfoDialog: () => void
+  openStreamDialog: (subEventId: string, editingId?: string) => void
+  closeStreamDialog: () => void
+  /** @deprecated Use openStreamDialog instead */
   openDayDialog: (subEventId: string, editingId?: string) => void
+  /** @deprecated Use closeStreamDialog instead */
   closeDayDialog: () => void
   openVideoDialog: (startTime?: string) => void
   closeVideoDialog: () => void
@@ -164,8 +170,9 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         tournamentDialog: { isOpen: false, editingId: null },
         subEventDialog: { isOpen: false, editingId: null },
         subEventInfoDialog: { isOpen: false, editingId: null },
-        dayDialog: { isOpen: false, editingId: null },
-        videoDialog: { isOpen: false, startTime: '', day: null },
+        streamDialog: { isOpen: false, editingId: null },
+        dayDialog: { isOpen: false, editingId: null }, // Backward compatibility
+        videoDialog: { isOpen: false, startTime: '', stream: null },
         renameDialog: { isOpen: false, editingId: null },
         deleteDialog: { isOpen: false, editingId: null },
         editEventDialog: { isOpen: false, editingId: null },
@@ -273,14 +280,30 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
             viewingSubEvent: null,
           }),
 
+        openStreamDialog: (subEventId, editingId) =>
+          set({
+            streamDialog: { isOpen: true, editingId: editingId || null },
+            dayDialog: { isOpen: true, editingId: editingId || null }, // Keep in sync
+            selectedSubEventIdForDialog: subEventId,
+          }),
+        closeStreamDialog: () =>
+          set({
+            streamDialog: { isOpen: false, editingId: null },
+            dayDialog: { isOpen: false, editingId: null }, // Keep in sync
+            selectedSubEventIdForDialog: '',
+          }),
+
+        // Backward compatibility
         openDayDialog: (subEventId, editingId) =>
           set({
             dayDialog: { isOpen: true, editingId: editingId || null },
+            streamDialog: { isOpen: true, editingId: editingId || null }, // Keep in sync
             selectedSubEventIdForDialog: subEventId,
           }),
         closeDayDialog: () =>
           set({
             dayDialog: { isOpen: false, editingId: null },
+            streamDialog: { isOpen: false, editingId: null }, // Keep in sync
             selectedSubEventIdForDialog: '',
           }),
 

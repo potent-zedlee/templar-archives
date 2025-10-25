@@ -105,7 +105,7 @@ export function useArchiveNavigation({
         id: subEvent.id,
         name: subEvent.name,
         type: 'subevent' as const,
-        itemCount: subEvent.days?.length || 0,
+        itemCount: subEvent.streams?.length || 0,
         date: subEvent.date,
         data: subEvent
       }))

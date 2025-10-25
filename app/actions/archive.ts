@@ -408,9 +408,9 @@ export async function deleteSubEvent(id: string) {
   }
 }
 
-// ==================== Day Actions ====================
+// ==================== Stream Actions ====================
 
-export async function createDay(subEventId: string, data: {
+export async function createStream(subEventId: string, data: {
   name?: string
   video_source: 'youtube' | 'upload'
   video_url?: string
@@ -432,21 +432,23 @@ export async function createDay(subEventId: string, data: {
     const supabase = await createServerSupabaseClient()
 
     // 3. DB에 삽입
-    const { data: day, error } = await supabase
-      .from('days')
+    const { data: stream, error } = await supabase
+      .from('streams')
       .insert({
         sub_event_id: subEventId,
-        name: data.name?.trim() || `Day ${new Date().toISOString()}`,
+        name: data.name?.trim() || `Stream ${new Date().toISOString()}`,
         video_source: data.video_source,
         video_url: data.video_url?.trim() || null,
         video_file: data.video_file?.trim() || null,
         published_at: data.published_at || null,
+        is_organized: true,
+        organized_at: new Date().toISOString(),
       })
       .select()
       .single()
 
     if (error) {
-      console.error('[Server Action] Create day error:', error)
+      console.error('[Server Action] Create stream error:', error)
       return { success: false, error: error.message }
     }
 
@@ -454,14 +456,17 @@ export async function createDay(subEventId: string, data: {
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
-    return { success: true, data: day }
+    return { success: true, data: stream }
   } catch (error: any) {
-    console.error('[Server Action] Create day exception:', error)
+    console.error('[Server Action] Create stream exception:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
 
-export async function updateDay(id: string, data: {
+/** @deprecated Use createStream instead */
+export const createDay = createStream
+
+export async function updateStream(id: string, data: {
   name?: string
   video_source: 'youtube' | 'upload'
   video_url?: string
@@ -483,10 +488,10 @@ export async function updateDay(id: string, data: {
     const supabase = await createServerSupabaseClient()
 
     // 3. DB 업데이트
-    const { data: day, error } = await supabase
-      .from('days')
+    const { data: stream, error } = await supabase
+      .from('streams')
       .update({
-        name: data.name?.trim() || `Day ${new Date().toISOString()}`,
+        name: data.name?.trim() || `Stream ${new Date().toISOString()}`,
         video_source: data.video_source,
         video_url: data.video_url?.trim() || null,
         video_file: data.video_file?.trim() || null,
@@ -497,7 +502,7 @@ export async function updateDay(id: string, data: {
       .single()
 
     if (error) {
-      console.error('[Server Action] Update day error:', error)
+      console.error('[Server Action] Update stream error:', error)
       return { success: false, error: error.message }
     }
 
@@ -505,14 +510,17 @@ export async function updateDay(id: string, data: {
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
-    return { success: true, data: day }
+    return { success: true, data: stream }
   } catch (error: any) {
-    console.error('[Server Action] Update day exception:', error)
+    console.error('[Server Action] Update stream exception:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
 
-export async function deleteDay(id: string) {
+/** @deprecated Use updateStream instead */
+export const updateDay = updateStream
+
+export async function deleteStream(id: string) {
   try {
     // 1. 관리자 권한 검증
     const authCheck = await verifyAdmin()
@@ -524,12 +532,12 @@ export async function deleteDay(id: string) {
 
     // 2. DB에서 삭제
     const { error } = await supabase
-      .from('days')
+      .from('streams')
       .delete()
       .eq('id', id)
 
     if (error) {
-      console.error('[Server Action] Delete day error:', error)
+      console.error('[Server Action] Delete stream error:', error)
       return { success: false, error: error.message }
     }
 
@@ -539,10 +547,13 @@ export async function deleteDay(id: string) {
 
     return { success: true }
   } catch (error: any) {
-    console.error('[Server Action] Delete day exception:', error)
+    console.error('[Server Action] Delete stream exception:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
+
+/** @deprecated Use deleteStream instead */
+export const deleteDay = deleteStream
 
 // ==================== Payout Actions ====================
 
@@ -620,7 +631,7 @@ export async function saveEventPayouts(subEventId: string, payouts: Array<{
 // ==================== Rename Action ====================
 
 export async function renameItem(
-  itemType: 'tournament' | 'subevent' | 'day',
+  itemType: 'tournament' | 'subevent' | 'stream' | 'day',
   itemId: string,
   newName: string
 ) {
@@ -638,10 +649,10 @@ export async function renameItem(
 
     const supabase = await createServerSupabaseClient()
 
-    // 3. 테이블 이름 매핑
+    // 3. 테이블 이름 매핑 (backward compatibility: 'day' → 'streams')
     const table = itemType === 'tournament' ? 'tournaments'
       : itemType === 'subevent' ? 'sub_events'
-      : 'days'
+      : 'streams' // Both 'stream' and 'day' map to 'streams'
 
     // 4. DB 업데이트
     const { error } = await supabase

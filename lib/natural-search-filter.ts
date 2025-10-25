@@ -128,7 +128,7 @@ export async function buildQueryFromFilter(filter: NaturalSearchFilter, supabase
         const subEventIds = subEventData.map((se: any) => se.id)
 
         const { data: dayData } = await supabase
-          .from('days')
+          .from('streams')
           .select('id')
           .in('sub_event_id', subEventIds)
 
@@ -165,7 +165,7 @@ export async function buildQueryFromFilter(filter: NaturalSearchFilter, supabase
         const subEventIds = subEventData.map((se: any) => se.id)
 
         const { data: dayData } = await supabase
-          .from('days')
+          .from('streams')
           .select('id')
           .in('sub_event_id', subEventIds)
 

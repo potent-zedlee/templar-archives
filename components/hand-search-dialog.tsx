@@ -120,7 +120,7 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
     const supabase = createClientSupabaseClient()
     try {
       const { data, error } = await supabase
-        .from('days')
+        .from('streams')
         .select('id, name')
         .eq('sub_event_id', subEventId)
         .order('name', { ascending: true })

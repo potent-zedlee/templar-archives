@@ -39,7 +39,7 @@ export function useTournamentsQuery(gameType?: 'tournament' | 'cash-game') {
         ...tournament,
         sub_events: tournament.sub_events?.map((subEvent: any) => ({
           ...subEvent,
-          days: subEvent.days?.map((day: any) => ({ ...day, selected: false })),
+          streams: subEvent.streams?.map((stream: any) => ({ ...stream, selected: false })),
           expanded: false,
         })),
         expanded: true,
