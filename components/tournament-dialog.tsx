@@ -136,12 +136,12 @@ export function TournamentDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{editingTournamentId ? "Edit Tournament" : "Add Tournament"}</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-1 -mx-6 px-6">
-          <div className="space-y-4 py-4">
+        <ScrollArea className="max-h-[calc(90vh-200px)] -mx-6 px-6">
+          <div className="space-y-3 py-3">
           <div className="space-y-2">
             <Label htmlFor="category">Category</Label>
             <Select value={newCategory} onValueChange={(value) => setNewCategory(value as Tournament["category"])}>
@@ -162,7 +162,7 @@ export function TournamentDialog({
           </div>
 
           {/* Logo Selection */}
-          <div className="space-y-3 p-4 border rounded-lg">
+          <div className="space-y-3 p-3 border rounded-lg">
             <Label>Tournament Logo (Optional)</Label>
 
             {/* Logo Preview */}
