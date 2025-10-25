@@ -36,8 +36,9 @@ import { Plus, Pencil, Trash2, Search, Loader2, ChevronRight, ChevronDown } from
 import { TournamentDialog } from '@/components/tournament-dialog'
 import { DeleteDialog } from '@/components/archive-dialogs/delete-dialog'
 import { SubEventDialog } from '@/components/archive-dialogs/sub-event-dialog'
+import { DayDialog } from '@/components/archive-dialogs/day-dialog'
 import type { Tournament, FolderItem } from '@/lib/types/archive'
-import type { SubEvent } from '@/lib/supabase'
+import type { SubEvent, Stream } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { getCategoryByAlias } from '@/lib/tournament-categories'
 
@@ -63,6 +64,13 @@ export default function AdminArchivePage() {
   const [subEventDialogOpen, setSubEventDialogOpen] = useState(false)
   const [editingSubEventId, setEditingSubEventId] = useState('')
   const [selectedTournamentIdForSubEvent, setSelectedTournamentIdForSubEvent] = useState('')
+
+  // Stream/Day states
+  const [expandedSubEvents, setExpandedSubEvents] = useState<Set<string>>(new Set())
+  const [streams, setStreams] = useState<Map<string, (Stream & { hand_count?: number })[]>>(new Map())
+  const [dayDialogOpen, setDayDialogOpen] = useState(false)
+  const [editingDayId, setEditingDayId] = useState('')
+  const [selectedSubEventIdForDay, setSelectedSubEventIdForDay] = useState('')
 
   // Tournament form states
   const [newTournamentName, setNewTournamentName] = useState('')
@@ -276,6 +284,106 @@ export default function AdminArchivePage() {
     setDeleteDialogOpen(false)
   }
 
+  // Stream/Day functions
+  const toggleSubEventExpand = async (subEventId: string) => {
+    const newExpanded = new Set(expandedSubEvents)
+
+    if (newExpanded.has(subEventId)) {
+      newExpanded.delete(subEventId)
+    } else {
+      newExpanded.add(subEventId)
+      // Load Streams if not already loaded
+      if (!streams.has(subEventId)) {
+        await loadStreams(subEventId)
+      }
+    }
+
+    setExpandedSubEvents(newExpanded)
+  }
+
+  const loadStreams = async (subEventId: string) => {
+    try {
+      // Load streams with hand count
+      const { data: streamsData, error } = await supabase
+        .from('streams')
+        .select('*')
+        .eq('sub_event_id', subEventId)
+        .order('published_at', { ascending: false })
+
+      if (error) throw error
+
+      // Get hand counts for these streams
+      const streamIds = (streamsData || []).map(s => s.id)
+      let handCounts: Record<string, number> = {}
+
+      if (streamIds.length > 0) {
+        const { data: handCountData } = await supabase
+          .from('hands')
+          .select('day_id')
+          .in('day_id', streamIds)
+
+        if (handCountData) {
+          handCounts = handCountData.reduce((acc, h) => {
+            acc[h.day_id] = (acc[h.day_id] || 0) + 1
+            return acc
+          }, {} as Record<string, number>)
+        }
+      }
+
+      // Merge hand counts with stream data
+      const streamsWithCounts = (streamsData || []).map(stream => ({
+        ...stream,
+        hand_count: handCounts[stream.id] || 0
+      }))
+
+      const newStreams = new Map(streams)
+      newStreams.set(subEventId, streamsWithCounts)
+      setStreams(newStreams)
+    } catch (error) {
+      console.error('Error loading streams:', error)
+      toast.error('Failed to load streams')
+    }
+  }
+
+  const handleAddStream = (subEventId: string) => {
+    setSelectedSubEventIdForDay(subEventId)
+    setEditingDayId('')
+    setDayDialogOpen(true)
+  }
+
+  const handleEditStream = (streamId: string, subEventId: string) => {
+    setSelectedSubEventIdForDay(subEventId)
+    setEditingDayId(streamId)
+    setDayDialogOpen(true)
+  }
+
+  const handleDeleteStream = (stream: Stream, subEventId: string) => {
+    setDeletingItem({
+      id: stream.id,
+      name: stream.name,
+      type: 'day' as const,
+    })
+    setDeleteDialogOpen(true)
+  }
+
+  const handleStreamSuccess = () => {
+    // Reload Streams for the current SubEvent
+    if (selectedSubEventIdForDay) {
+      loadStreams(selectedSubEventIdForDay)
+    }
+    setDayDialogOpen(false)
+    setEditingDayId('')
+    setSelectedSubEventIdForDay('')
+  }
+
+  const handleStreamDeleted = () => {
+    // Reload Streams for all expanded subevents
+    expandedSubEvents.forEach(subEventId => {
+      loadStreams(subEventId)
+    })
+    setDeleteDialogOpen(false)
+  }
+
   if (!isUserAdmin) {
     return (
       <div className="container mx-auto py-12 text-center">
@@ -476,36 +584,150 @@ export default function AdminArchivePage() {
                               ) : (
                                 <Table>
                                   <TableBody>
-                                    {tournamentSubEvents.map((subEvent) => (
-                                      <TableRow key={subEvent.id}>
-                                        <TableCell className="font-medium">{subEvent.name}</TableCell>
-                                        <TableCell>{subEvent.event_number || '-'}</TableCell>
-                                        <TableCell className="text-xs">
-                                          {subEvent.date ? new Date(subEvent.date).toLocaleDateString() : '-'}
-                                        </TableCell>
-                                        <TableCell className="text-xs">{subEvent.buy_in || '-'}</TableCell>
-                                        <TableCell>{subEvent.entry_count || '-'}</TableCell>
-                                        <TableCell className="text-xs">{subEvent.winner || '-'}</TableCell>
-                                        <TableCell className="text-right">
-                                          <div className="flex items-center justify-end gap-2">
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() => handleEditSubEvent(subEvent.id, tournament.id)}
-                                            >
-                                              <Pencil className="h-3 w-3" />
-                                            </Button>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() => handleDeleteSubEvent(subEvent, tournament.id)}
-                                            >
-                                              <Trash2 className="h-3 w-3 text-destructive" />
-                                            </Button>
-                                          </div>
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
+                                    {tournamentSubEvents.map((subEvent) => {
+                                      const isSubEventExpanded = expandedSubEvents.has(subEvent.id)
+                                      const subEventStreams = streams.get(subEvent.id) || []
+
+                                      return (
+                                        <>
+                                          {/* SubEvent Row */}
+                                          <TableRow
+                                            key={subEvent.id}
+                                            className="hover:bg-muted/30 cursor-pointer"
+                                            onClick={() => toggleSubEventExpand(subEvent.id)}
+                                          >
+                                            <TableCell className="font-medium">
+                                              <div className="flex items-center gap-2">
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="h-5 w-5 p-0"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    toggleSubEventExpand(subEvent.id)
+                                                  }}
+                                                >
+                                                  {isSubEventExpanded ? (
+                                                    <ChevronDown className="h-3 w-3" />
+                                                  ) : (
+                                                    <ChevronRight className="h-3 w-3" />
+                                                  )}
+                                                </Button>
+                                                {subEvent.name}
+                                              </div>
+                                            </TableCell>
+                                            <TableCell>{subEvent.event_number || '-'}</TableCell>
+                                            <TableCell className="text-xs">
+                                              {subEvent.date ? new Date(subEvent.date).toLocaleDateString() : '-'}
+                                            </TableCell>
+                                            <TableCell className="text-xs">{subEvent.buy_in || '-'}</TableCell>
+                                            <TableCell>{subEvent.entry_count || '-'}</TableCell>
+                                            <TableCell className="text-xs">{subEvent.winner || '-'}</TableCell>
+                                            <TableCell className="text-right">
+                                              <div className="flex items-center justify-end gap-2">
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    handleAddStream(subEvent.id)
+                                                  }}
+                                                  title="Add Stream"
+                                                >
+                                                  <Plus className="h-3 w-3" />
+                                                </Button>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    handleEditSubEvent(subEvent.id, tournament.id)
+                                                  }}
+                                                  title="Edit SubEvent"
+                                                >
+                                                  <Pencil className="h-3 w-3" />
+                                                </Button>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    handleDeleteSubEvent(subEvent, tournament.id)
+                                                  }}
+                                                  title="Delete SubEvent"
+                                                >
+                                                  <Trash2 className="h-3 w-3 text-destructive" />
+                                                </Button>
+                                              </div>
+                                            </TableCell>
+                                          </TableRow>
+
+                                          {/* Streams (expanded) */}
+                                          {isSubEventExpanded && (
+                                            <TableRow key={`${subEvent.id}-streams`}>
+                                              <TableCell colSpan={7} className="p-0">
+                                                <div className="bg-muted/20 p-4">
+                                                  {subEventStreams.length === 0 ? (
+                                                    <div className="text-center py-4 text-xs text-muted-foreground">
+                                                      No streams yet. Add one to get started.
+                                                    </div>
+                                                  ) : (
+                                                    <Table>
+                                                      <TableBody>
+                                                        {subEventStreams.map((stream) => (
+                                                          <TableRow key={stream.id}>
+                                                            <TableCell className="font-medium text-xs pl-8">
+                                                              {stream.name}
+                                                            </TableCell>
+                                                            <TableCell className="text-xs">
+                                                              {stream.published_at
+                                                                ? new Date(stream.published_at).toLocaleDateString()
+                                                                : stream.created_at
+                                                                ? new Date(stream.created_at).toLocaleDateString()
+                                                                : '-'}
+                                                            </TableCell>
+                                                            <TableCell className="text-xs">
+                                                              <Badge variant="outline" className="text-xs">
+                                                                {stream.hand_count || 0} hands
+                                                              </Badge>
+                                                            </TableCell>
+                                                            <TableCell className="text-xs">
+                                                              <Badge variant="secondary" className="text-xs">
+                                                                {stream.video_source || 'youtube'}
+                                                              </Badge>
+                                                            </TableCell>
+                                                            <TableCell className="text-right">
+                                                              <div className="flex items-center justify-end gap-2">
+                                                                <Button
+                                                                  variant="ghost"
+                                                                  size="sm"
+                                                                  onClick={() => handleEditStream(stream.id, subEvent.id)}
+                                                                  title="Edit Stream"
+                                                                >
+                                                                  <Pencil className="h-3 w-3" />
+                                                                </Button>
+                                                                <Button
+                                                                  variant="ghost"
+                                                                  size="sm"
+                                                                  onClick={() => handleDeleteStream(stream, subEvent.id)}
+                                                                  title="Delete Stream"
+                                                                >
+                                                                  <Trash2 className="h-3 w-3 text-destructive" />
+                                                                </Button>
+                                                              </div>
+                                                            </TableCell>
+                                                          </TableRow>
+                                                        ))}
+                                                      </TableBody>
+                                                    </Table>
+                                                  )}
+                                                </div>
+                                              </TableCell>
+                                            </TableRow>
+                                          )}
+                                        </>
+                                      )
+                                    })}
                                   </TableBody>
                                 </Table>
                               )}
@@ -561,7 +783,13 @@ export default function AdminArchivePage() {
         isOpen={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         item={deletingItem}
-        onSuccess={deletingItem?.type === 'subevent' ? handleSubEventDeleted : handleTournamentDeleted}
+        onSuccess={
+          deletingItem?.type === 'day'
+            ? handleStreamDeleted
+            : deletingItem?.type === 'subevent'
+            ? handleSubEventDeleted
+            : handleTournamentDeleted
+        }
       />
 
       <SubEventDialog
@@ -570,6 +798,14 @@ export default function AdminArchivePage() {
         selectedTournamentId={selectedTournamentIdForSubEvent}
         editingSubEventId={editingSubEventId}
         onSuccess={handleSubEventSuccess}
+      />
+
+      <DayDialog
+        isOpen={dayDialogOpen}
+        onOpenChange={setDayDialogOpen}
+        selectedSubEventId={selectedSubEventIdForDay}
+        editingDayId={editingDayId}
+        onSuccess={handleStreamSuccess}
       />
     </div>
   )
