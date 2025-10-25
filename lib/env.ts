@@ -69,62 +69,93 @@ function getEnvVar(key: string, fallback?: string): string {
   return value
 }
 
+/**
+ * 환경 변수 가져오기 (안전 모드 - 빌드 타임에도 안전)
+ * 빌드 타임에 환경 변수가 없어도 에러를 던지지 않음
+ */
+function getEnvVarSafe(key: string, fallback: string = ''): string {
+  const value = process.env[key]
+  return value || fallback
+}
+
 // ==================== Exported Environment Variables ====================
 
 /**
- * Supabase 환경 변수
+ * Supabase 환경 변수 (Lazy Evaluation)
+ *
+ * 사용법:
+ * - url: supabaseEnv.url (빌드 타임에 안전)
+ * - serviceRoleKey: supabaseEnv.getServiceRoleKey() (런타임에만 호출)
  */
 export const supabaseEnv = {
-  url: getEnvVar('NEXT_PUBLIC_SUPABASE_URL'),
-  anonKey: getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
-  serviceRoleKey: typeof window === 'undefined'
-    ? getEnvVar('SUPABASE_SERVICE_ROLE_KEY')
-    : '',
-} as const
+  get url() {
+    return getEnvVar('NEXT_PUBLIC_SUPABASE_URL')
+  },
+  get anonKey() {
+    return getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  },
+  // Server-only: 런타임에 호출해야 함
+  getServiceRoleKey(): string {
+    if (typeof window !== 'undefined') {
+      return '' // 클라이언트에서는 빈 문자열
+    }
+    return getEnvVarSafe('SUPABASE_SERVICE_ROLE_KEY')
+  },
+}
 
 /**
- * Claude API 환경 변수
+ * Claude API 환경 변수 (Lazy Evaluation)
  */
 export const claudeEnv = {
-  apiKey: typeof window === 'undefined'
-    ? getEnvVar('CLAUDE_API_KEY')
-    : '',
-} as const
+  // Server-only: 런타임에 호출해야 함
+  getApiKey(): string {
+    if (typeof window !== 'undefined') {
+      return '' // 클라이언트에서는 빈 문자열
+    }
+    return getEnvVarSafe('CLAUDE_API_KEY')
+  },
+}
 
 /**
- * YouTube API 환경 변수
+ * YouTube API 환경 변수 (Lazy Evaluation)
  */
 export const youtubeEnv = {
-  apiKey: getEnvVar('NEXT_PUBLIC_YOUTUBE_API_KEY', ''),
-} as const
+  get apiKey() {
+    return getEnvVarSafe('NEXT_PUBLIC_YOUTUBE_API_KEY', '')
+  },
+}
 
 /**
- * Upstash Redis 환경 변수
+ * Upstash Redis 환경 변수 (Lazy Evaluation)
  */
 export const redisEnv = {
-  url: getEnvVar('UPSTASH_REDIS_REST_URL', ''),
-  token: getEnvVar('UPSTASH_REDIS_REST_TOKEN', ''),
-} as const
+  get url() {
+    return getEnvVarSafe('UPSTASH_REDIS_REST_URL', '')
+  },
+  get token() {
+    return getEnvVarSafe('UPSTASH_REDIS_REST_TOKEN', '')
+  },
+}
 
 /**
  * 환경 정보
  */
 export const appEnv = {
-  nodeEnv: getEnvVar('NODE_ENV', 'development'),
-  isDevelopment: process.env.NODE_ENV === 'development',
-  isProduction: process.env.NODE_ENV === 'production',
-  isTest: process.env.NODE_ENV === 'test',
-} as const
+  get nodeEnv() {
+    return getEnvVarSafe('NODE_ENV', 'development')
+  },
+  get isDevelopment() {
+    return process.env.NODE_ENV === 'development'
+  },
+  get isProduction() {
+    return process.env.NODE_ENV === 'production'
+  },
+  get isTest() {
+    return process.env.NODE_ENV === 'test'
+  },
+}
 
 // ==================== Auto-validation (런타임 시 자동 검증) ====================
 
-// 앱 시작 시 환경 변수 검증 (프로덕션에서만)
-if (appEnv.isProduction && typeof window === 'undefined') {
-  try {
-    validateEnv()
-    console.log('✅ Environment variables validated successfully')
-  } catch (error) {
-    console.error('❌ Environment validation failed:', error)
-    // 프로덕션에서는 에러를 던지지 않고 로그만 출력 (서버가 시작되지 않는 것을 방지)
-  }
-}
+// Note: 자동 검증은 제거되었습니다 (빌드 타임 에러 방지)
+// 필요한 경우 애플리케이션 시작 시 수동으로 validateEnv() 호출
