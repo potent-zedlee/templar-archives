@@ -472,18 +472,19 @@ export default function AdminArchivePage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredTournaments.map((tournament) => {
+                filteredTournaments.flatMap((tournament) => {
                   const isExpanded = expandedTournaments.has(tournament.id)
                   const tournamentSubEvents = subEvents.get(tournament.id) || []
 
-                  return (
-                    <>
-                      {/* Tournament Row */}
-                      <TableRow
-                        key={tournament.id}
-                        className="hover:bg-muted/50 cursor-pointer"
-                        onClick={() => toggleTournamentExpand(tournament.id)}
-                      >
+                  const rows = []
+
+                  // Tournament Row
+                  rows.push(
+                    <TableRow
+                      key={tournament.id}
+                      className="hover:bg-muted/50 cursor-pointer"
+                      onClick={() => toggleTournamentExpand(tournament.id)}
+                    >
                         <TableCell className="font-medium min-w-[200px]">
                           <div className="flex items-center gap-2">
                             <Button
@@ -571,33 +572,32 @@ export default function AdminArchivePage() {
                           </div>
                         </TableCell>
                       </TableRow>
+                  )
 
-                      {/* SubEvents (expanded) */}
-                      {isExpanded && (
-                        <TableRow key={`${tournament.id}-subevents`}>
-                          <TableCell colSpan={6} className="p-0">
-                            <div className="bg-muted/30 p-2">
-                              {tournamentSubEvents.length === 0 ? (
-                                <div className="text-center py-3 text-sm text-muted-foreground">
-                                  No events yet. Add one to get started.
-                                </div>
-                              ) : (
-                                <Table>
-                                  <TableBody>
-                                    {tournamentSubEvents.map((subEvent) => {
-                                      const isSubEventExpanded = expandedSubEvents.has(subEvent.id)
-                                      const subEventStreams = streams.get(subEvent.id) || []
+                  // SubEvent Rows (if tournament is expanded)
+                  if (isExpanded) {
+                    if (tournamentSubEvents.length === 0) {
+                      rows.push(
+                        <TableRow key={`${tournament.id}-no-subevents`}>
+                          <TableCell colSpan={6} className="bg-muted/30 text-center py-3 text-sm text-muted-foreground">
+                            No events yet. Add one to get started.
+                          </TableCell>
+                        </TableRow>
+                      )
+                    } else {
+                      tournamentSubEvents.forEach((subEvent) => {
+                        const isSubEventExpanded = expandedSubEvents.has(subEvent.id)
+                        const subEventStreams = streams.get(subEvent.id) || []
 
-                                      return (
-                                        <>
-                                          {/* SubEvent Row */}
-                                          <TableRow
-                                            key={subEvent.id}
-                                            className="hover:bg-muted/30 cursor-pointer"
-                                            onClick={() => toggleSubEventExpand(subEvent.id)}
-                                          >
-                                            <TableCell className="font-medium min-w-[200px]">
-                                              <div className="flex items-center gap-2 pl-4">
+                        // SubEvent Row
+                        rows.push(
+                          <TableRow
+                            key={subEvent.id}
+                            className="hover:bg-muted/30 cursor-pointer bg-muted/20"
+                            onClick={() => toggleSubEventExpand(subEvent.id)}
+                          >
+                            <TableCell className="font-medium min-w-[200px]">
+                              <div className="flex items-center gap-2 pl-4">
                                                 <Button
                                                   variant="ghost"
                                                   size="sm"
@@ -660,83 +660,73 @@ export default function AdminArchivePage() {
                                               </div>
                                             </TableCell>
                                           </TableRow>
+                        )
 
-                                          {/* Streams (expanded) */}
-                                          {isSubEventExpanded && (
-                                            <TableRow key={`${subEvent.id}-streams`}>
-                                              <TableCell colSpan={6} className="p-0">
-                                                <div className="bg-muted/20 p-2">
-                                                  {subEventStreams.length === 0 ? (
-                                                    <div className="text-center py-2 text-xs text-muted-foreground">
-                                                      No streams yet. Add one to get started.
-                                                    </div>
-                                                  ) : (
-                                                    <Table>
-                                                      <TableBody>
-                                                        {subEventStreams.map((stream) => (
-                                                          <TableRow key={stream.id} className="h-10">
-                                                            <TableCell className="font-medium text-xs min-w-[200px] py-2">
-                                                              <div className="pl-8">{stream.name}</div>
-                                                            </TableCell>
-                                                            <TableCell className="w-32 text-xs py-2">
-                                                              <Badge variant="secondary" className="text-xs">
-                                                                {stream.video_source || 'youtube'}
-                                                              </Badge>
-                                                            </TableCell>
-                                                            <TableCell className="w-32 text-xs py-2">
-                                                              <Badge variant="outline" className="text-xs">
-                                                                {stream.hand_count || 0} hands
-                                                              </Badge>
-                                                            </TableCell>
-                                                            <TableCell className="w-40 py-2" />
-                                                            <TableCell className="w-48 text-xs py-2">
-                                                              {stream.published_at
-                                                                ? new Date(stream.published_at).toLocaleDateString()
-                                                                : stream.created_at
-                                                                ? new Date(stream.created_at).toLocaleDateString()
-                                                                : '-'}
-                                                            </TableCell>
-                                                            <TableCell className="w-36 text-right py-2">
-                                                              <div className="flex items-center justify-end gap-2">
-                                                                <Button
-                                                                  variant="ghost"
-                                                                  size="sm"
-                                                                  onClick={() => handleEditStream(stream.id, subEvent.id)}
-                                                                  title="Edit Stream"
-                                                                >
-                                                                  <Pencil className="h-3 w-3" />
-                                                                </Button>
-                                                                <Button
-                                                                  variant="ghost"
-                                                                  size="sm"
-                                                                  onClick={() => handleDeleteStream(stream, subEvent.id)}
-                                                                  title="Delete Stream"
-                                                                >
-                                                                  <Trash2 className="h-3 w-3 text-destructive" />
-                                                                </Button>
-                                                              </div>
-                                                            </TableCell>
-                                                          </TableRow>
-                                                        ))}
-                                                      </TableBody>
-                                                    </Table>
-                                                  )}
-                                                </div>
-                                              </TableCell>
-                                            </TableRow>
-                                          )}
-                                        </>
-                                      )
-                                    })}
-                                  </TableBody>
-                                </Table>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </>
-                  )
+                        // Stream Rows (if subEvent is expanded)
+                        if (isSubEventExpanded) {
+                          if (subEventStreams.length === 0) {
+                            rows.push(
+                              <TableRow key={`${subEvent.id}-no-streams`}>
+                                <TableCell colSpan={6} className="bg-muted/10 text-center py-2 text-xs text-muted-foreground">
+                                  No streams yet. Add one to get started.
+                                </TableCell>
+                              </TableRow>
+                            )
+                          } else {
+                            subEventStreams.forEach((stream) => {
+                              rows.push(
+                                <TableRow key={stream.id} className="bg-muted/10 hover:bg-muted/20 h-10">
+                                  <TableCell className="font-medium text-xs min-w-[200px] py-2">
+                                    <div className="pl-8">{stream.name}</div>
+                                  </TableCell>
+                                  <TableCell className="w-32 text-xs py-2">
+                                    <Badge variant="secondary" className="text-xs">
+                                      {stream.video_source || 'youtube'}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="w-32 text-xs py-2">
+                                    <Badge variant="outline" className="text-xs">
+                                      {stream.hand_count || 0} hands
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell className="w-40 py-2" />
+                                  <TableCell className="w-48 text-xs py-2">
+                                    {stream.published_at
+                                      ? new Date(stream.published_at).toLocaleDateString()
+                                      : stream.created_at
+                                      ? new Date(stream.created_at).toLocaleDateString()
+                                      : '-'}
+                                  </TableCell>
+                                  <TableCell className="w-36 text-right py-2">
+                                    <div className="flex items-center justify-end gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEditStream(stream.id, subEvent.id)}
+                                        title="Edit Stream"
+                                      >
+                                        <Pencil className="h-3 w-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDeleteStream(stream, subEvent.id)}
+                                        title="Delete Stream"
+                                      >
+                                        <Trash2 className="h-3 w-3 text-destructive" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })
+                          }
+                        }
+                      })
+                    }
+                  }
+
+                  return rows
                 })
               )}
             </TableBody>
