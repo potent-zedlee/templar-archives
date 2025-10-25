@@ -159,7 +159,7 @@ export function ArchiveDialogs() {
 
     for (const tournament of tournaments) {
       for (const subEvent of tournament.sub_events || []) {
-        const stream = subEvent.streams?.find((s) => s.id === selectedStream)
+        const stream = subEvent.days?.find((s) => s.id === selectedStream)
         if (stream) return stream
       }
     }

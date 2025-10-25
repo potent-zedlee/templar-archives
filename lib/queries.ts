@@ -134,7 +134,7 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
         *,
         sub_events(
           *,
-          days(*)
+          streams(*)
         )
       `)
       .order('start_date', { ascending: false })
@@ -154,7 +154,7 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
     const allDayIds: string[] = []
     tournaments.forEach((tournament: any) => {
       tournament.sub_events?.forEach((subEvent: any) => {
-        subEvent.days?.forEach((day: any) => {
+        subEvent.streams?.forEach((day: any) => {
           allDayIds.push(day.id)
         })
       })
@@ -187,16 +187,16 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
         })
 
         tournament.sub_events.forEach((subEvent: any) => {
-          // Sort days by published_at descending
-          if (subEvent.days) {
-            subEvent.days.sort((a: any, b: any) => {
+          // Sort streams by published_at descending
+          if (subEvent.streams) {
+            subEvent.streams.sort((a: any, b: any) => {
               const dateA = a.published_at ? new Date(a.published_at).getTime() : 0
               const dateB = b.published_at ? new Date(b.published_at).getTime() : 0
               return dateB - dateA // Descending order
             })
 
             // Add player counts
-            subEvent.days.forEach((day: any) => {
+            subEvent.streams.forEach((day: any) => {
               day.player_count = playerCountsByDayId[day.id] || 0
             })
           }

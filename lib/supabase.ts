@@ -36,7 +36,8 @@ export type SubEvent = {
   starting_stack?: number
   notes?: string
   created_at?: string
-  days?: Stream[]
+  streams?: Stream[]
+  days?: Stream[] // UI alias for streams (mapped in archive-helpers.ts)
 }
 
 export type Stream = {
