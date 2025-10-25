@@ -33,6 +33,7 @@ export const playersKeys = {
 
 /**
  * Get players list with hand counts
+ * Optimized: Increased staleTime as player data changes infrequently
  */
 export function usePlayersQuery(filters?: {
   search?: string
@@ -46,8 +47,8 @@ export function usePlayersQuery(filters?: {
     queryFn: async () => {
       return await fetchPlayersWithHandCount()
     },
-    staleTime: 5 * 60 * 1000, // 5분 (플레이어 목록은 자주 변경되지 않음)
-    gcTime: 10 * 60 * 1000, // 10분
+    staleTime: 10 * 60 * 1000, // 10분 (플레이어 목록은 자주 변경되지 않음)
+    gcTime: 30 * 60 * 1000, // 30분 (메모리에 더 오래 유지)
   })
 }
 
@@ -76,6 +77,7 @@ export function usePlayerQuery(playerId: string) {
 
 /**
  * Get player hands (grouped by tournament)
+ * Optimized: Increased staleTime as hand data changes infrequently
  */
 export function usePlayerHandsQuery(playerId: string) {
   return useQuery({
@@ -83,14 +85,15 @@ export function usePlayerHandsQuery(playerId: string) {
     queryFn: async () => {
       return await fetchPlayerHandsGrouped(playerId)
     },
-    staleTime: 3 * 60 * 1000, // 3분
-    gcTime: 10 * 60 * 1000, // 10분
+    staleTime: 5 * 60 * 1000, // 5분 (핸드 데이터는 자주 변경되지 않음)
+    gcTime: 15 * 60 * 1000, // 15분 (메모리에 더 오래 유지)
     enabled: !!playerId,
   })
 }
 
 /**
  * Get player statistics
+ * Optimized: Increased staleTime as statistics are computationally expensive and change infrequently
  */
 export function usePlayerStatsQuery(playerId: string) {
   return useQuery({
@@ -102,8 +105,8 @@ export function usePlayerStatsQuery(playerId: string) {
 
       return stats
     },
-    staleTime: 5 * 60 * 1000, // 5분
-    gcTime: 10 * 60 * 1000, // 10분
+    staleTime: 10 * 60 * 1000, // 10분 (통계는 계산 비용이 크고 자주 변경되지 않음)
+    gcTime: 30 * 60 * 1000, // 30분 (메모리에 더 오래 유지)
     enabled: !!playerId,
   })
 }
