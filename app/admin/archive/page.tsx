@@ -49,7 +49,7 @@ export default function AdminArchivePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [gameTypeFilter, setGameTypeFilter] = useState('all')
-  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [_userEmail, setUserEmail] = useState<string | null>(null)
   const [isUserAdmin, setIsUserAdmin] = useState(false)
 
   // Dialog states
@@ -257,7 +257,7 @@ export default function AdminArchivePage() {
     setSubEventDialogOpen(true)
   }
 
-  const handleDeleteSubEvent = (subEvent: SubEvent, tournamentId: string) => {
+  const handleDeleteSubEvent = (subEvent: SubEvent, _tournamentId: string) => {
     setDeletingItem({
       id: subEvent.id,
       name: subEvent.name,
@@ -357,7 +357,7 @@ export default function AdminArchivePage() {
     setDayDialogOpen(true)
   }
 
-  const handleDeleteStream = (stream: Stream, subEventId: string) => {
+  const handleDeleteStream = (stream: Stream, _subEventId: string) => {
     setDeletingItem({
       id: stream.id,
       name: stream.name,

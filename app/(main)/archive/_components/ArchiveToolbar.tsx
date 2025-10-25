@@ -22,7 +22,6 @@ import { ArchiveTournamentLogosBar } from '@/components/archive-tournament-logos
 import { ArchiveUnifiedFilters } from '@/components/archive-unified-filters'
 import { ArchiveSearchSort } from '@/components/archive-search-sort'
 import { QuickUploadDialog } from '@/components/quick-upload-dialog'
-import { TournamentDialog } from '@/components/tournament-dialog'
 import { Button } from '@/components/ui/button'
 import { isAdmin } from '@/lib/auth-utils'
 import { cn } from '@/lib/utils'

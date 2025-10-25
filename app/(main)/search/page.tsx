@@ -35,14 +35,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Search, Filter, Star, Play, X, Sparkles, SearchX, TrendingUp } from "lucide-react"
-import { useSearchHandsQuery, useTournamentsQuery, usePlayersQuery } from "@/lib/queries/search-queries"
+import { Search, Filter, Star, X, Sparkles, SearchX, TrendingUp } from "lucide-react"
+import { useTournamentsQuery, usePlayersQuery } from "@/lib/queries/search-queries"
 import type { Hand, Player } from "@/lib/supabase"
-import Link from "next/link"
 import { toast } from "sonner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { useFilterStore } from "@/lib/filter-store"
-import { applyClientSideFilters, matchesHandRange, analyzeBoardTexture } from "@/lib/filter-utils"
+import { applyClientSideFilters } from "@/lib/filter-utils"
 import { TableSkeleton } from "@/components/skeletons/table-skeleton"
 import { EmptyState } from "@/components/empty-state"
 

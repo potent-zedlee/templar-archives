@@ -9,7 +9,6 @@ import {
   Users,
   Zap,
   Shield,
-  Globe,
   TrendingUp,
   Brain,
   FileText,

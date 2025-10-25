@@ -34,18 +34,9 @@ export function ArchiveEventsList() {
     selectedVideoIds,
     toggleTournamentExpand,
     toggleSubEventExpand,
-    toggleVideoSelection,
     clearSelection,
-    openRenameDialog,
-    openDeleteDialog,
-    openMoveToEventDialog,
-    openMoveToNewEventDialog,
     openSubEventDialog,
-    openEditEventDialog,
     openInfoDialog,
-    openTournamentDialog,
-    selectAllVideos,
-    openMoveToNewEventDialog: setIsMoveToNewEventDialogOpen,
   } = useArchiveUIStore()
 
   const isUserAdmin = isAdmin(userEmail)
@@ -230,51 +221,9 @@ export function ArchiveEventsList() {
   }, [toggleTournamentExpand, toggleSubEventExpand])
 
   // Context menu handlers
-  const handleRename = useCallback((item: FolderItem) => {
-    openRenameDialog(item.id)
-  }, [openRenameDialog])
-
-  const handleDelete = useCallback((item: FolderItem) => {
-    openDeleteDialog(item.id)
-  }, [openDeleteDialog])
-
   const handleShowInfo = useCallback((item: FolderItem) => {
     openInfoDialog(item.id)
   }, [openInfoDialog])
-
-  const handleEditEvent = useCallback((item: FolderItem) => {
-    if (item.type === 'subevent') {
-      openEditEventDialog(item.id)
-    }
-  }, [openEditEventDialog])
-
-  const handleMoveToEvent = useCallback((item: FolderItem) => {
-    useArchiveUIStore.getState().toggleVideoSelection(item.id)
-    openMoveToEventDialog()
-  }, [openMoveToEventDialog])
-
-  const handleMoveToNewEventSingle = useCallback((item: FolderItem) => {
-    useArchiveUIStore.getState().toggleVideoSelection(item.id)
-    setIsMoveToNewEventDialogOpen()
-  }, [setIsMoveToNewEventDialogOpen])
-
-  const handleAddSubItem = useCallback((item: FolderItem) => {
-    if (item.type === 'tournament') {
-      // Add SubEvent to Tournament
-      openSubEventDialog(item.id)
-    } else if (item.type === 'subevent') {
-      // Add Day to SubEvent
-      useArchiveUIStore.getState().openDayDialog(item.id)
-    }
-  }, [openSubEventDialog])
-
-  const handleSelectAllVideos = useCallback(() => {
-    if (selectedVideoIds.size === unsortedVideos.length) {
-      clearSelection()
-    } else {
-      selectAllVideos(unsortedVideos.map((v) => v.id))
-    }
-  }, [selectedVideoIds, unsortedVideos, clearSelection, selectAllVideos])
 
   return (
     <Card className="p-4 bg-card/95 backdrop-blur-md h-full border-2 shadow-lg hover:shadow-xl transition-all duration-300">

@@ -11,7 +11,6 @@ import {
   FileText,
   MessageSquare,
   PlaySquare,
-  UserPlus,
   Ban,
   AlertCircle,
   TrendingUp,

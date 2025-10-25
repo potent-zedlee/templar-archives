@@ -9,7 +9,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { revalidatePath } from 'next/cache'
-import type { Tournament, TournamentCategory } from '@/lib/types/archive'
+import type { TournamentCategory } from '@/lib/types/archive'
 
 // ==================== Helper Functions ====================
 

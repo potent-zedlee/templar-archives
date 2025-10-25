@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useAuth } from "@/components/auth-provider"
-import { type HandEditRequest, type EditRequestStatus } from "@/lib/hand-edit-requests"
+import { type EditRequestStatus } from "@/lib/hand-edit-requests"
 import { Clock, CheckCircle, XCircle } from "lucide-react"
 import Link from "next/link"
 import { buttonVariants } from "@/components/ui/button"
@@ -69,6 +69,8 @@ export default function EditRequestsClient() {
             거부됨
           </Badge>
         )
+      default:
+        return null
     }
   }
 

@@ -50,7 +50,7 @@ import {
   useRejectLiveReportMutation,
   type LiveReport,
 } from "@/lib/queries/live-reports-queries"
-import { Eye, EyeOff, Trash2, CheckCircle, XCircle, AlertTriangle } from "lucide-react"
+import { Eye, EyeOff, Trash2, CheckCircle, XCircle } from "lucide-react"
 
 export default function contentClient() {
   const router = useRouter()

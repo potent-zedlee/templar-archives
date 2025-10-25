@@ -101,8 +101,6 @@ export function ArchiveDialogs() {
 
   const {
     tournamentForm,
-    subEventForm,
-    dayForm,
   } = useArchiveFormStore()
 
   const isUserAdmin = isAdmin(userEmail)
