@@ -50,11 +50,11 @@ export function ArchiveEventsList() {
   const folderItems = useMemo((): FolderItem[] => {
     let items: FolderItem[] = []
 
-    // Filter tournaments by category
+    // Filter tournaments by category (using category_id for accurate matching)
     const filteredTournaments =
       selectedCategory === 'All'
         ? tournaments
-        : tournaments.filter((t) => t.category === selectedCategory)
+        : tournaments.filter((t) => t.category_id === selectedCategory || t.category === selectedCategory)
 
     // Add Unsorted folder
     const unsortedItem: FolderItem = {
