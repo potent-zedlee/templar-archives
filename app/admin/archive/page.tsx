@@ -456,12 +456,12 @@ export default function AdminArchivePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Date Range</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="min-w-[200px]">Name</TableHead>
+                <TableHead className="w-32">Category</TableHead>
+                <TableHead className="w-32">Type</TableHead>
+                <TableHead className="w-40">Location</TableHead>
+                <TableHead className="w-48">Date Range</TableHead>
+                <TableHead className="w-36 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -484,7 +484,7 @@ export default function AdminArchivePage() {
                         className="hover:bg-muted/50 cursor-pointer"
                         onClick={() => toggleTournamentExpand(tournament.id)}
                       >
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium min-w-[200px]">
                           <div className="flex items-center gap-2">
                             <Button
                               variant="ghost"
@@ -516,24 +516,24 @@ export default function AdminArchivePage() {
                             {tournament.name}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="w-32">
                           <Badge variant="outline">{tournament.category}</Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="w-32">
                           <Badge variant={tournament.game_type === 'tournament' ? 'default' : 'secondary'}>
                             {tournament.game_type === 'tournament' ? 'Tournament' : 'Cash Game'}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="w-40">
                           {tournament.city && tournament.country
                             ? `${tournament.city}, ${tournament.country}`
                             : tournament.location}
                         </TableCell>
-                        <TableCell className="text-xs text-muted-foreground">
+                        <TableCell className="w-48 text-xs text-muted-foreground">
                           {new Date(tournament.start_date).toLocaleDateString()} -{' '}
                           {new Date(tournament.end_date).toLocaleDateString()}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="w-36 text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button
                               variant="ghost"
@@ -596,8 +596,8 @@ export default function AdminArchivePage() {
                                             className="hover:bg-muted/30 cursor-pointer"
                                             onClick={() => toggleSubEventExpand(subEvent.id)}
                                           >
-                                            <TableCell className="font-medium">
-                                              <div className="flex items-center gap-2">
+                                            <TableCell className="font-medium min-w-[200px]">
+                                              <div className="flex items-center gap-2 pl-4">
                                                 <Button
                                                   variant="ghost"
                                                   size="sm"
@@ -616,13 +616,13 @@ export default function AdminArchivePage() {
                                                 {subEvent.name}
                                               </div>
                                             </TableCell>
-                                            <TableCell className="text-xs">{subEvent.event_number || '-'}</TableCell>
-                                            <TableCell className="text-xs">{subEvent.buy_in || '-'}</TableCell>
-                                            <TableCell className="text-xs">{subEvent.entry_count || '-'}</TableCell>
-                                            <TableCell className="text-xs">
+                                            <TableCell className="w-32 text-xs">{subEvent.event_number || '-'}</TableCell>
+                                            <TableCell className="w-32 text-xs">{subEvent.buy_in || '-'}</TableCell>
+                                            <TableCell className="w-40 text-xs">{subEvent.entry_count || '-'}</TableCell>
+                                            <TableCell className="w-48 text-xs">
                                               {subEvent.date ? new Date(subEvent.date).toLocaleDateString() : '-'}
                                             </TableCell>
-                                            <TableCell className="text-right">
+                                            <TableCell className="w-36 text-right">
                                               <div className="flex items-center justify-end gap-2">
                                                 <Button
                                                   variant="ghost"
@@ -675,28 +675,28 @@ export default function AdminArchivePage() {
                                                       <TableBody>
                                                         {subEventStreams.map((stream) => (
                                                           <TableRow key={stream.id} className="h-10">
-                                                            <TableCell className="font-medium text-xs pl-8 py-2">
-                                                              {stream.name}
+                                                            <TableCell className="font-medium text-xs min-w-[200px] py-2">
+                                                              <div className="pl-8">{stream.name}</div>
                                                             </TableCell>
-                                                            <TableCell className="text-xs py-2">
+                                                            <TableCell className="w-32 text-xs py-2">
                                                               <Badge variant="secondary" className="text-xs">
                                                                 {stream.video_source || 'youtube'}
                                                               </Badge>
                                                             </TableCell>
-                                                            <TableCell className="text-xs py-2">
+                                                            <TableCell className="w-32 text-xs py-2">
                                                               <Badge variant="outline" className="text-xs">
                                                                 {stream.hand_count || 0} hands
                                                               </Badge>
                                                             </TableCell>
-                                                            <TableCell className="py-2" />
-                                                            <TableCell className="text-xs py-2">
+                                                            <TableCell className="w-40 py-2" />
+                                                            <TableCell className="w-48 text-xs py-2">
                                                               {stream.published_at
                                                                 ? new Date(stream.published_at).toLocaleDateString()
                                                                 : stream.created_at
                                                                 ? new Date(stream.created_at).toLocaleDateString()
                                                                 : '-'}
                                                             </TableCell>
-                                                            <TableCell className="text-right py-2">
+                                                            <TableCell className="w-36 text-right py-2">
                                                               <div className="flex items-center justify-end gap-2">
                                                                 <Button
                                                                   variant="ghost"
