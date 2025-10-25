@@ -18,7 +18,7 @@ import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
 import { organizeVideo } from "@/lib/unsorted-videos"
 import type { UnsortedVideo } from "@/lib/types/archive"
-import { createDay, updateDay as updateDayAction } from "@/app/actions/archive"
+import { createStream, updateStream as updateStreamAction } from "@/app/actions/archive"
 
 interface DayDialogProps {
   isOpen: boolean
@@ -72,7 +72,7 @@ export function DayDialog({
 
     try {
       const { data, error } = await supabase
-        .from('days')
+        .from('streams')
         .select('*')
         .eq('id', editingDayId)
         .single()
@@ -84,8 +84,8 @@ export function DayDialog({
       setNewDayVideoUrl(data.video_url || "")
       setPublishedAt(data.published_at ? new Date(data.published_at).toISOString().split('T')[0] : "")
     } catch (error) {
-      console.error('Error loading day:', error)
-      toast.error('Failed to load day data')
+      console.error('Error loading stream:', error)
+      toast.error('Failed to load stream data')
     }
   }
 
@@ -95,7 +95,7 @@ export function DayDialog({
     try {
       // Unsorted tab is not allowed for editing
       if (videoSourceTab === 'unsorted') {
-        toast.error('Cannot update day with unsorted video source')
+        toast.error('Cannot update stream with unsorted video source')
         return
       }
 
@@ -105,7 +105,7 @@ export function DayDialog({
         return
       }
 
-      const dayData = {
+      const streamData = {
         name: newDayName.trim() || undefined,
         video_source: videoSourceTab as 'youtube' | 'upload',
         video_url: videoSourceTab === 'youtube' ? newDayVideoUrl.trim() : undefined,
@@ -114,18 +114,18 @@ export function DayDialog({
       }
 
       // Call Server Action
-      const result = await updateDayAction(editingDayId, dayData)
+      const result = await updateStreamAction(editingDayId, streamData)
 
       if (!result.success) {
         throw new Error(result.error || 'Unknown error')
       }
 
-      toast.success('Day updated successfully')
+      toast.success('Stream updated successfully')
       onOpenChange(false)
       onSuccess?.()
     } catch (error: any) {
-      console.error('[DayDialog] Error updating day:', error)
-      toast.error(error.message || 'Failed to update day')
+      console.error('[DayDialog] Error updating stream:', error)
+      toast.error(error.message || 'Failed to update stream')
     }
   }
 
@@ -220,8 +220,8 @@ export function DayDialog({
         setUploading(false)
       }
 
-      // Create Day via Server Action
-      const dayData = {
+      // Create Stream via Server Action
+      const streamData = {
         name: newDayName.trim() || undefined,
         video_source: videoSourceTab as 'youtube' | 'upload',
         video_url: videoSourceTab === 'youtube' ? newDayVideoUrl.trim() : undefined,
@@ -229,18 +229,18 @@ export function DayDialog({
         published_at: publishedAt || undefined,
       }
 
-      const result = await createDay(selectedSubEventId, dayData)
+      const result = await createStream(selectedSubEventId, streamData)
 
       if (!result.success) {
         throw new Error(result.error || 'Unknown error')
       }
 
-      toast.success('Day added successfully')
+      toast.success('Stream added successfully')
       onOpenChange(false)
       onSuccess?.()
     } catch (error: any) {
-      console.error('[DayDialog] Error adding day:', error)
-      toast.error(error.message || 'Failed to add day')
+      console.error('[DayDialog] Error adding stream:', error)
+      toast.error(error.message || 'Failed to add stream')
       setUploading(false)
     }
   }

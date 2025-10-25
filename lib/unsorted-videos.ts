@@ -52,7 +52,7 @@ export async function getUnsortedVideos(): Promise<UnsortedVideo[]> {
   const supabase = createClientSupabaseClient()
 
   const { data, error } = await supabase
-    .from('days')
+    .from('streams')
     .select('id, name, video_url, video_file, video_source, created_at, published_at')
     .is('sub_event_id', null)
     .eq('is_organized', false)
@@ -86,7 +86,7 @@ export async function createUnsortedVideo(params: {
   }
 
   const { data, error } = await supabase
-    .from('days')
+    .from('streams')
     .insert({
       name: params.name,
       video_url: normalizedUrl,
@@ -117,7 +117,7 @@ export async function organizeVideo(
   const supabase = createClientSupabaseClient()
 
   const { error } = await supabase
-    .from('days')
+    .from('streams')
     .update({
       sub_event_id: subEventId,
       is_organized: true,
@@ -142,7 +142,7 @@ export async function deleteUnsortedVideo(
   const supabase = createClientSupabaseClient()
 
   const { error } = await supabase
-    .from('days')
+    .from('streams')
     .delete()
     .eq('id', dayId)
 
@@ -164,7 +164,7 @@ export async function organizeVideos(
   const supabase = createClientSupabaseClient()
 
   const { error } = await supabase
-    .from('days')
+    .from('streams')
     .update({
       sub_event_id: subEventId,
       is_organized: true,
@@ -228,7 +228,7 @@ export async function createUnsortedVideosBatch(
 
     // Insert batch
     const { data, error } = await supabase
-      .from('days')
+      .from('streams')
       .insert(insertData)
       .select('id')
 

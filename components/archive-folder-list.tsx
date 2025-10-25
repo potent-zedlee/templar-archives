@@ -236,9 +236,9 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
         </div>
 
         {/* Days (if expanded) */}
-        {isExpanded && subEvent.days && subEvent.days.length > 0 && (
+        {isExpanded && subEvent.streams && subEvent.streams.length > 0 && (
           <div className="space-y-0">
-            {subEvent.days.map((day) => renderDay(day, subEvent.id))}
+            {subEvent.streams.map((day) => renderDay(day, subEvent.id))}
           </div>
         )}
       </div>

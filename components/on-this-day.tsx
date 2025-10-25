@@ -55,7 +55,7 @@ export function OnThisDay() {
           if (subEvents) {
             for (const subEvent of subEvents) {
               const { data: days } = await supabase
-                .from('days')
+                .from('streams')
                 .select('id')
                 .eq('sub_event_id', subEvent.id)
 

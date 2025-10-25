@@ -80,7 +80,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
   const selectedTournament = tournaments.find(t => t.id === selectedTournamentId)
   const selectedSubEvent = selectedTournament?.sub_events?.find(se => se.id === selectedSubEventId)
   const subEvents = selectedTournament?.sub_events || []
-  const days = selectedSubEvent?.days || []
+  const days = selectedSubEvent?.streams || []
 
   const handleYoutubeUpload = async () => {
     if (!youtubeUrl || !youtubeName) {
@@ -125,7 +125,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
           }
 
           const { data: newDay, error: dayError } = await supabase
-            .from('days')
+            .from('streams')
             .insert({
               sub_event_id: selectedSubEventId,
               name: newDayName,
@@ -152,7 +152,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
           }
 
           const { error: updateError } = await supabase
-            .from('days')
+            .from('streams')
             .update({ video_url: youtubeUrl })
             .eq('id', targetDayId)
 
@@ -220,7 +220,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
           }
 
           const { data: newDay, error: dayError } = await supabase
-            .from('days')
+            .from('streams')
             .insert({
               sub_event_id: selectedSubEventId,
               name: newDayName,
@@ -247,7 +247,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
           }
 
           const { error: updateError } = await supabase
-            .from('days')
+            .from('streams')
             .update({ video_file: localFile.name })
             .eq('id', targetDayId)
 
@@ -473,7 +473,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
           // Insert videos (days)
           for (const video of subEvent.videos) {
             const { error: dayError } = await supabase
-              .from('days')
+              .from('streams')
               .insert({
                 sub_event_id: subEventData.id,
                 name: video.title,

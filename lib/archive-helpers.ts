@@ -200,7 +200,7 @@ export async function deleteDayHelper(
   setTournaments: (fn: (prev: any[]) => any[]) => void
 ) {
   try {
-    const { error } = await supabase.from('days').delete().eq('id', dayId)
+    const { error } = await supabase.from('streams').delete().eq('id', dayId)
 
     if (error) throw error
 

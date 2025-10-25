@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     // Day가 존재하는지 확인
     const { data: day, error: dayError } = await supabase
-      .from('days')
+      .from('streams')
       .select('id')
       .eq('id', dayId)
       .single()

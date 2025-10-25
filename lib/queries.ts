@@ -63,10 +63,10 @@ export async function fetchHandsWithDetails(options: {
     // Transform data
     const enrichedHands = (handsData || []).map((hand: any) => ({
       ...hand,
-      tournament_name: hand.days?.sub_events?.tournaments?.name,
-      tournament_category: hand.days?.sub_events?.tournaments?.category,
-      sub_event_name: hand.days?.sub_events?.name,
-      day_name: hand.days?.name,
+      tournament_name: hand.streams?.sub_events?.tournaments?.name,
+      tournament_category: hand.streams?.sub_events?.tournaments?.category,
+      sub_event_name: hand.streams?.sub_events?.name,
+      day_name: hand.streams?.name,
       player_names: playersMap[hand.id] || [],
       player_count: playersMap[hand.id]?.length || 0
     }))
@@ -423,9 +423,9 @@ export async function fetchPlayerHandsGrouped(playerId: string) {
     const grouped: any = {}
 
     handsData?.forEach((hand: any) => {
-      const tournament = hand.days.sub_events.tournaments
-      const subEvent = hand.days.sub_events
-      const day = hand.days
+      const tournament = hand.streams.sub_events.tournaments
+      const subEvent = hand.streams.sub_events
+      const day = hand.streams
 
       // Initialize tournament
       if (!grouped[tournament.id]) {
