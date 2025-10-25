@@ -222,6 +222,10 @@ export function logSecurityEvent(
 ): void {
   console.warn(`[SECURITY] ${event}:`, details)
 
-  // TODO: 프로덕션에서는 보안 이벤트를 별도 로그 시스템에 기록
-  // 예: Sentry, LogRocket, CloudWatch Logs 등
+  // Production: Log security events to monitoring system
+  // For structured logging, use lib/monitoring/security-logger.ts
+  // Future integrations:
+  // - Sentry.captureMessage(event, { level: 'warning', extra: details })
+  // - LogRocket.track(event, details)
+  // - CloudWatch.putLogEvents({ message: event, ...details })
 }

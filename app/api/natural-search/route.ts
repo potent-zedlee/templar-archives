@@ -6,6 +6,7 @@ import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
 import { naturalSearchSchema, validateInput, formatValidationErrors } from '@/lib/validation/api-schemas'
 import { logSecurityEvent } from '@/lib/security'
+import { claudeEnv } from '@/lib/env'
 import {
   NaturalSearchFilterSchema,
   type NaturalSearchFilter,
@@ -15,7 +16,7 @@ import {
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
-  apiKey: process.env.CLAUDE_API_KEY || '',
+  apiKey: claudeEnv.apiKey,
 })
 
 export const dynamic = 'force-dynamic'
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     const trimmedQuery = query.trim()
 
     // Check if API key is available
-    if (!process.env.CLAUDE_API_KEY) {
+    if (!claudeEnv.apiKey) {
       return NextResponse.json(
         { error: 'Claude API key is not configured. Please add CLAUDE_API_KEY to your environment variables.' },
         { status: 500 }

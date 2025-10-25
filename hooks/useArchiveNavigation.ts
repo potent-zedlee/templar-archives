@@ -1,9 +1,17 @@
 import { useState, useMemo } from 'react'
-import type { FolderItem, AdvancedFilters, NavigationLevel, SortOption } from '@/lib/types/archive'
+import type {
+  FolderItem,
+  AdvancedFilters,
+  NavigationLevel,
+  SortOption,
+  Tournament,
+  SubEvent,
+  Stream
+} from '@/lib/types/archive'
 
 interface UseArchiveNavigationProps {
-  tournaments: any[]
-  unsortedVideos: any[]
+  tournaments: Tournament[]
+  unsortedVideos: Stream[]
   selectedCategory: string
 }
 
@@ -51,7 +59,7 @@ export function useArchiveNavigation({
 
     if (navigationLevel === 'subevent') {
       const tournament = tournaments.find(t => t.id === currentTournamentId)
-      const subEvent = tournament?.sub_events?.find((se: any) => se.id === currentSubEventId)
+      const subEvent = tournament?.sub_events?.find((se: SubEvent) => se.id === currentSubEventId)
       if (subEvent) {
         items.push({
           id: subEvent.id,
@@ -101,7 +109,7 @@ export function useArchiveNavigation({
       const tournament = tournaments.find(t => t.id === currentTournamentId)
       const subEvents = tournament?.sub_events || []
 
-      items = subEvents.map((subEvent: any) => ({
+      items = subEvents.map((subEvent: SubEvent) => ({
         id: subEvent.id,
         name: subEvent.name,
         type: 'subevent' as const,
@@ -112,8 +120,8 @@ export function useArchiveNavigation({
     } else if (navigationLevel === 'subevent') {
       // Show days of current sub-event
       const tournament = tournaments.find(t => t.id === currentTournamentId)
-      const subEvent = tournament?.sub_events?.find((se: any) => se.id === currentSubEventId)
-      items = subEvent?.days?.map((day: any) => ({
+      const subEvent = tournament?.sub_events?.find((se: SubEvent) => se.id === currentSubEventId)
+      items = subEvent?.days?.map((day: Stream) => ({
         id: day.id,
         name: day.name,
         type: 'day' as const,
@@ -154,7 +162,7 @@ export function useArchiveNavigation({
 
       if (selectedSources.length > 0 && selectedSources.length < 2) {
         items = items.filter(item => {
-          const video = item.data as any
+          const video = item.data as Stream
           return selectedSources.includes(video?.video_source || 'youtube')
         })
       }

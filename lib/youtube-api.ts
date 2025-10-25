@@ -3,6 +3,42 @@
  * Fetch live streams from YouTube channels
  */
 
+// YouTube API Response Types
+interface YouTubeSearchItem {
+  id: {
+    videoId?: string
+    channelId?: string
+  }
+  snippet: {
+    title: string
+    channelId: string
+    channelTitle: string
+    publishedAt: string
+    thumbnails: {
+      high: { url: string }
+      medium?: { url: string }
+      default?: { url: string }
+    }
+    description?: string
+  }
+}
+
+interface YouTubePlaylistItem {
+  contentDetails: {
+    videoId: string
+  }
+  snippet: {
+    title: string
+    publishedAt: string
+    thumbnails: {
+      high: { url: string }
+      medium?: { url: string }
+      default?: { url: string }
+    }
+    description?: string
+  }
+}
+
 export interface YouTubeVideo {
   id: string
   title: string
@@ -134,7 +170,7 @@ export async function getChannelIdFromIdentifier(
 
     if (data.items && data.items.length > 0) {
       // Log all found channels for debugging
-      console.log('Search results:', data.items.map((item: any) => ({
+      console.log('Search results:', data.items.map((item: YouTubeSearchItem) => ({
         title: item.snippet.title,
         channelId: item.snippet.channelId
       })))
@@ -196,7 +232,7 @@ export async function getChannelLiveStreams(
       }
 
       // Transform and add to collection
-      const videos: YouTubeVideo[] = data.items.map((item: any) => ({
+      const videos: YouTubeVideo[] = data.items.map((item: YouTubeSearchItem) => ({
         id: item.id.videoId,
         title: item.snippet.title,
         url: `https://www.youtube.com/watch?v=${item.id.videoId}`,
