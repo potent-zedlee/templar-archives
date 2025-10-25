@@ -576,9 +576,9 @@ export default function AdminArchivePage() {
                       {isExpanded && (
                         <TableRow key={`${tournament.id}-subevents`}>
                           <TableCell colSpan={6} className="p-0">
-                            <div className="bg-muted/30 p-4">
+                            <div className="bg-muted/30 p-2">
                               {tournamentSubEvents.length === 0 ? (
-                                <div className="text-center py-6 text-sm text-muted-foreground">
+                                <div className="text-center py-3 text-sm text-muted-foreground">
                                   No events yet. Add one to get started.
                                 </div>
                               ) : (
@@ -616,13 +616,12 @@ export default function AdminArchivePage() {
                                                 {subEvent.name}
                                               </div>
                                             </TableCell>
-                                            <TableCell>{subEvent.event_number || '-'}</TableCell>
+                                            <TableCell className="text-xs">{subEvent.event_number || '-'}</TableCell>
+                                            <TableCell className="text-xs">{subEvent.buy_in || '-'}</TableCell>
+                                            <TableCell className="text-xs">{subEvent.entry_count || '-'}</TableCell>
                                             <TableCell className="text-xs">
                                               {subEvent.date ? new Date(subEvent.date).toLocaleDateString() : '-'}
                                             </TableCell>
-                                            <TableCell className="text-xs">{subEvent.buy_in || '-'}</TableCell>
-                                            <TableCell>{subEvent.entry_count || '-'}</TableCell>
-                                            <TableCell className="text-xs">{subEvent.winner || '-'}</TableCell>
                                             <TableCell className="text-right">
                                               <div className="flex items-center justify-end gap-2">
                                                 <Button
@@ -665,38 +664,39 @@ export default function AdminArchivePage() {
                                           {/* Streams (expanded) */}
                                           {isSubEventExpanded && (
                                             <TableRow key={`${subEvent.id}-streams`}>
-                                              <TableCell colSpan={7} className="p-0">
-                                                <div className="bg-muted/20 p-4">
+                                              <TableCell colSpan={6} className="p-0">
+                                                <div className="bg-muted/20 p-2">
                                                   {subEventStreams.length === 0 ? (
-                                                    <div className="text-center py-4 text-xs text-muted-foreground">
+                                                    <div className="text-center py-2 text-xs text-muted-foreground">
                                                       No streams yet. Add one to get started.
                                                     </div>
                                                   ) : (
                                                     <Table>
                                                       <TableBody>
                                                         {subEventStreams.map((stream) => (
-                                                          <TableRow key={stream.id}>
-                                                            <TableCell className="font-medium text-xs pl-8">
+                                                          <TableRow key={stream.id} className="h-10">
+                                                            <TableCell className="font-medium text-xs pl-8 py-2">
                                                               {stream.name}
                                                             </TableCell>
-                                                            <TableCell className="text-xs">
+                                                            <TableCell className="text-xs py-2">
+                                                              <Badge variant="secondary" className="text-xs">
+                                                                {stream.video_source || 'youtube'}
+                                                              </Badge>
+                                                            </TableCell>
+                                                            <TableCell className="text-xs py-2">
+                                                              <Badge variant="outline" className="text-xs">
+                                                                {stream.hand_count || 0} hands
+                                                              </Badge>
+                                                            </TableCell>
+                                                            <TableCell className="py-2" />
+                                                            <TableCell className="text-xs py-2">
                                                               {stream.published_at
                                                                 ? new Date(stream.published_at).toLocaleDateString()
                                                                 : stream.created_at
                                                                 ? new Date(stream.created_at).toLocaleDateString()
                                                                 : '-'}
                                                             </TableCell>
-                                                            <TableCell className="text-xs">
-                                                              <Badge variant="outline" className="text-xs">
-                                                                {stream.hand_count || 0} hands
-                                                              </Badge>
-                                                            </TableCell>
-                                                            <TableCell className="text-xs">
-                                                              <Badge variant="secondary" className="text-xs">
-                                                                {stream.video_source || 'youtube'}
-                                                              </Badge>
-                                                            </TableCell>
-                                                            <TableCell className="text-right">
+                                                            <TableCell className="text-right py-2">
                                                               <div className="flex items-center justify-end gap-2">
                                                                 <Button
                                                                   variant="ghost"
