@@ -137,7 +137,7 @@ export function LogoPicker({ selectedLogo, onSelect }: LogoPickerProps) {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+            <ScrollArea className="h-[250px] w-full rounded-md border p-4">
               {renderLogoGrid(filteredStaticLogos)}
             </ScrollArea>
           )}
@@ -150,7 +150,7 @@ export function LogoPicker({ selectedLogo, onSelect }: LogoPickerProps) {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+            <ScrollArea className="h-[250px] w-full rounded-md border p-4">
               {renderLogoGrid(filteredUploadedLogos)}
             </ScrollArea>
           )}
