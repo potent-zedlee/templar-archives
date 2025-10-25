@@ -163,14 +163,14 @@ export async function validateFile(
   type: FileType
 ): Promise<FileValidationResult> {
   // 1. 파일 타입 검증
-  const allowedTypes =
+  const allowedTypes: string[] =
     type === 'video'
       ? ALLOWED_VIDEO_TYPES
       : type === 'avatar'
       ? ['image/jpeg', 'image/png', 'image/webp']
       : ALLOWED_IMAGE_TYPES
 
-  if (!allowedTypes.includes(file.type as any)) {
+  if (!allowedTypes.includes(file.type)) {
     return {
       valid: false,
       error: `지원하지 않는 파일 형식입니다. 허용된 형식: ${allowedTypes.join(', ')}`

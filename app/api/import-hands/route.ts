@@ -78,9 +78,12 @@ export async function POST(request: NextRequest) {
           .from('hands')
           .insert({
             day_id: dayId,
-            number: hand.handNumber,
-            description: hand.summary || `Hand #${hand.handNumber}`,
-            timestamp: `${hand.startTime}-${hand.endTime}`,
+            number: hand.number,
+            description: hand.description,
+            summary: hand.summary,
+            timestamp: hand.timestamp,
+            pot_size: hand.pot_size,
+            board_cards: hand.board_cards,
             favorite: false
           })
           .select()
@@ -91,7 +94,9 @@ export async function POST(request: NextRequest) {
           throw new Error('핸드 저장에 실패했습니다')
         }
 
-        // 2. 플레이어 정보 저장
+        // 2. 플레이어 정보 저장 (현재 스키마에는 플레이어 정보 없음)
+        // TODO: 플레이어 정보가 스키마에 추가되면 활성화
+        /*
         for (const player of hand.players) {
           // 플레이어 이름 sanitize (XSS 방지)
           const sanitizedPlayerName = sanitizeText(player.name, 100)
@@ -135,13 +140,14 @@ export async function POST(request: NextRequest) {
               cards: player.cards || ''
             })
         }
+        */
 
         imported++
       } catch (error: any) {
         failed++
-        logError(`import-hands-hand-${hand.handNumber}`, error)
+        logError(`import-hands-hand-${hand.number}`, error)
         const errorMsg = sanitizeErrorMessage(error, '핸드 처리 중 오류가 발생했습니다')
-        errors.push(`Hand #${hand.handNumber}: ${errorMsg}`)
+        errors.push(`Hand #${hand.number}: ${errorMsg}`)
       }
     }
 

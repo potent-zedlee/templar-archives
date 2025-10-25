@@ -410,7 +410,7 @@ export async function uploadCategoryLogo(
   }
 
   // 파일 타입 확인
-  if (!CATEGORY_VALIDATIONS.ALLOWED_FILE_TYPES.includes(file.type)) {
+  if (!CATEGORY_VALIDATIONS.ALLOWED_FILE_TYPES.includes(file.type as any)) {
     throw new Error(CATEGORY_ERRORS.INVALID_FILE_TYPE)
   }
 
@@ -475,7 +475,7 @@ export async function deleteCategoryLogo(categoryId: string): Promise<void> {
   }
 
   // 카테고리의 logo_url NULL로 설정
-  await updateCategory(categoryId, { logo_url: null })
+  await updateCategory(categoryId, { logo_url: undefined })
 }
 
 /**
@@ -511,7 +511,7 @@ export async function searchCategories(query: string): Promise<TournamentCategor
 
     const lowerQuery = query.toLowerCase()
     return (allData || []).filter((cat) =>
-      cat.aliases.some((alias) => alias.toLowerCase().includes(lowerQuery))
+      cat.aliases.some((alias: string) => alias.toLowerCase().includes(lowerQuery))
     )
   }
 

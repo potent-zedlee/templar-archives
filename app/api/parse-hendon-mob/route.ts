@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Try multiple selectors to find the results table
     const tables = $('table')
 
-    let resultsTable: cheerio.Cheerio<Element> | null = null
+    let resultsTable: cheerio.Cheerio<any> | null = null
 
     // Find table with "Place" or "Pos" or "Rank" header
     tables.each((_, table) => {
