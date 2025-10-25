@@ -361,7 +361,7 @@ export function FilterPanel({ isOpen, onClose, onApply, className }: FilterPanel
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold">보드 텍스처</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    {(['monotone', 'rainbow', 'paired', 'two-tone', 'connected', 'dry'] as const).map((texture) => (
+                    {(['monotone', 'rainbow', 'paired', 'twoTone', 'connected', 'dry'] as const).map((texture) => (
                       <Button
                         key={texture}
                         variant={selectedBoardTextures.includes(texture) ? "default" : "outline"}
@@ -372,7 +372,7 @@ export function FilterPanel({ isOpen, onClose, onApply, className }: FilterPanel
                         {texture === 'monotone' ? '모노톤' :
                          texture === 'rainbow' ? '레인보우' :
                          texture === 'paired' ? '페어' :
-                         texture === 'two-tone' ? '투톤' :
+                         texture === 'twoTone' ? '투톤' :
                          texture === 'connected' ? '커넥티드' :
                          '드라이'}
                       </Button>

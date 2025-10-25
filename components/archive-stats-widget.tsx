@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Trophy, Video, Target, PlaySquare, ChevronDown, ChevronUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Tournament } from "@/lib/supabase"
-import type { FolderItem } from "@/components/archive-folder-list"
+import type { FolderItem } from "@/lib/types/archive"
 
 interface ArchiveStatsWidgetProps {
   tournaments: Tournament[]

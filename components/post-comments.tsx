@@ -263,7 +263,7 @@ export function PostComments({ postId, onCommentsCountChange }: PostCommentsProp
                 >
                   <MessageCircle className="h-3 w-3" />
                   <span>Reply</span>
-                  {showReplies && <span>({comment.replies.length})</span>}
+                  {showReplies && <span>({comment.replies?.length || 0})</span>}
                 </Button>
               )}
             </div>
@@ -306,7 +306,7 @@ export function PostComments({ postId, onCommentsCountChange }: PostCommentsProp
             {/* Replies list */}
             {showReplies && (
               <div className="mt-3 space-y-3">
-                {comment.replies.map((reply) => renderComment(reply, true))}
+                {comment.replies?.map((reply) => renderComment(reply, true))}
               </div>
             )}
 

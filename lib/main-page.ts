@@ -32,7 +32,7 @@ export type TopPlayer = {
  * 플랫폼 전체 통계 조회
  */
 export async function getPlatformStats(): Promise<PlatformStats> {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
 
   const [
     { count: totalHands },
@@ -58,7 +58,7 @@ export async function getPlatformStats(): Promise<PlatformStats> {
  * 주간 하이라이트 핸드 조회 (최근 7일간 좋아요 많이 받은 핸드)
  */
 export async function getWeeklyHighlights(limit: number = 3): Promise<WeeklyHighlight[]> {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
@@ -107,7 +107,7 @@ export async function getWeeklyHighlights(limit: number = 3): Promise<WeeklyHigh
  * 최신 커뮤니티 포스트 조회
  */
 export async function getLatestPosts(limit: number = 5) {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('posts')
     .select(`
@@ -142,7 +142,7 @@ export async function getLatestPosts(limit: number = 5) {
  * Top 플레이어 조회 (총 상금 기준)
  */
 export async function getTopPlayers(limit: number = 5): Promise<TopPlayer[]> {
-  const supabase = createServerSupabaseClient()
+  const supabase = await createServerSupabaseClient()
   const { data, error } = await supabase
     .from('players')
     .select(`
@@ -163,7 +163,7 @@ export async function getTopPlayers(limit: number = 5): Promise<TopPlayer[]> {
   // 각 플레이어의 토너먼트 수 계산
   const playersWithStats = await Promise.all(
     (data || []).map(async (player: any) => {
-      const supabaseInner = createServerSupabaseClient()
+      const supabaseInner = await createServerSupabaseClient()
       const { count: tournamentCount } = await supabaseInner
         .from('hand_players')
         .select('hand:hand_id(day:day_id(sub_event:sub_event_id(tournament_id)))', { count: 'exact', head: true })

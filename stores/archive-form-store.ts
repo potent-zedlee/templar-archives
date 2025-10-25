@@ -167,7 +167,11 @@ export const useArchiveFormStore = create<ArchiveFormState>()(
           tournamentForm: {
             name: '',
             category: 'WSOP',
+            category_logo: '',
+            game_type: 'tournament',
             location: '',
+            city: '',
+            country: '',
             start_date: '',
             end_date: '',
           },
@@ -189,6 +193,7 @@ export const useArchiveFormStore = create<ArchiveFormState>()(
           subEventForm: {
             name: '',
             date: '',
+            event_number: '',
             total_prize: '',
             winner: '',
             buy_in: '',

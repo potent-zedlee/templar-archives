@@ -30,7 +30,7 @@ export type FilterState = {
   selectedStakes: ('low' | 'mid' | 'high' | 'nosebleed')[]
 
   // Board texture filters
-  selectedBoardTextures: ('monotone' | 'rainbow' | 'paired' | 'two-tone' | 'connected' | 'dry')[]
+  selectedBoardTextures: ('monotone' | 'rainbow' | 'paired' | 'twoTone' | 'connected' | 'dry')[]
 
   // Stack size filters (SPR - Stack to Pot Ratio)
   sprMin: number | null

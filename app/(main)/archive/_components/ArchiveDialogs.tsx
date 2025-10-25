@@ -19,6 +19,7 @@ import { useArchiveData } from './ArchiveDataContext'
 import { archiveKeys } from '@/lib/queries/archive-queries'
 import { isAdmin } from '@/lib/auth-utils'
 import type { FolderItem } from '@/lib/types/archive'
+import type { Stream, SubEvent } from '@/lib/supabase'
 
 // Dynamic imports for all dialogs (only load when needed)
 const TournamentDialog = dynamic(() => import('@/components/tournament-dialog').then(mod => ({ default: mod.TournamentDialog })), {
@@ -195,7 +196,7 @@ export function ArchiveDialogs() {
       }
 
       for (const subEvent of tournament.sub_events || []) {
-        const day = subEvent.days?.find((d) => d.id === infoDialog.editingId)
+        const day = subEvent.days?.find((d: Stream) => d.id === infoDialog.editingId)
         if (day) {
           return {
             id: day.id,
@@ -235,6 +236,8 @@ export function ArchiveDialogs() {
         setNewStartDate={(date) => useArchiveFormStore.getState().setTournamentFormField('start_date', date)}
         newEndDate={tournamentForm.end_date}
         setNewEndDate={(date) => useArchiveFormStore.getState().setTournamentFormField('end_date', date)}
+        newCategoryLogo={tournamentForm.category_logo || ''}
+        setNewCategoryLogo={(logo) => useArchiveFormStore.getState().setTournamentFormField('category_logo', logo)}
         isUserAdmin={isUserAdmin}
       />
 
@@ -338,10 +341,10 @@ export function ArchiveDialogs() {
           } else if (item.type === 'day') {
             // Find parent subevent
             const tournament = tournaments.find(t =>
-              t.sub_events?.some(se => se.days?.some(d => d.id === item.id))
+              t.sub_events?.some((se: SubEvent) => se.days?.some((d: Stream) => d.id === item.id))
             )
-            const subEvent = tournament?.sub_events?.find(se =>
-              se.days?.some(d => d.id === item.id)
+            const subEvent = tournament?.sub_events?.find((se: SubEvent) =>
+              se.days?.some((d: Stream) => d.id === item.id)
             )
             if (subEvent) {
               useArchiveUIStore.getState().openDayDialog(subEvent.id, item.id)

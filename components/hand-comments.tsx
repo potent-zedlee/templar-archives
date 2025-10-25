@@ -263,7 +263,7 @@ export function HandComments({ handId, onCommentsCountChange }: HandCommentsProp
                 >
                   <MessageCircle className="h-3 w-3" />
                   <span>답글</span>
-                  {showReplies && <span>({comment.replies.length})</span>}
+                  {showReplies && <span>({comment.replies?.length || 0})</span>}
                 </Button>
               )}
             </div>
@@ -306,7 +306,7 @@ export function HandComments({ handId, onCommentsCountChange }: HandCommentsProp
             {/* 답글 목록 */}
             {showReplies && (
               <div className="mt-3 space-y-3">
-                {comment.replies.map((reply) => renderComment(reply, true))}
+                {comment.replies?.map((reply) => renderComment(reply, true))}
               </div>
             )}
 
