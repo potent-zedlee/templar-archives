@@ -11,6 +11,89 @@
 
 ---
 
+## 2025-10-26 (세션 38) - Archive Page Bug Fix: days → streams 테이블 매핑 수정 ✅
+
+### 문제 발견
+- **증상**: Admin Archive 페이지에는 토너먼트가 표시되지만, 실제 Archive 페이지(/archive/tournament)에는 아무것도 표시되지 않음
+- **원인**: `lib/queries.ts`의 `fetchTournamentsTree` 함수가 `days` 테이블을 조회하지만, 실제 데이터는 `streams` 테이블에 저장되어 있음
+- **데이터베이스 확인**:
+  - `days` 테이블: 0개 rows (비어있음)
+  - `streams` 테이블: 268개 rows (실제 데이터)
+  - `tournaments`: 19개, 모두 `game_type = 'tournament'`로 정상 설정
+
+### 작업 내용
+
+#### 1. 데이터베이스 조사 스크립트 작성 (0.5시간) ✅
+- **`scripts/check-game-type.ts`** (신규 생성, 123줄):
+  - tournaments 테이블의 game_type 값 확인
+  - sub_events 및 streams 개수 계산
+  - 계층 구조 분석 (Tournament → SubEvent → Stream)
+- **`scripts/check-tables.ts`** (신규 생성, 52줄):
+  - days vs streams 테이블 존재 및 row count 확인
+  - 결과: days (0개), streams (268개)
+
+#### 2. fetchTournamentsTree 함수 수정 (0.5시간) ✅
+- **`lib/queries.ts`** (수정):
+  - Line 137: `days(*)` → `streams(*)` (Supabase 조회)
+  - Line 157: `subEvent.days` → `subEvent.streams` (day IDs 수집)
+  - Line 191-201: `subEvent.days` → `subEvent.streams` (정렬 및 플레이어 수 추가)
+- **`lib/supabase.ts`** (타입 수정):
+  - SubEvent 타입에 `streams?: Stream[]` 추가
+  - UI 호환성을 위해 `days?: Stream[]` 필드도 유지 (주석 추가)
+
+#### 3. UI 컴포넌트 수정 (0.5시간) ✅
+- **`lib/archive-helpers.ts`**:
+  - Line 23: `subEvent.days` → `subEvent.streams` (UI 상태 변환 시)
+- **`app/(main)/archive/_components/ArchiveDialogs.tsx`**:
+  - Line 162: `subEvent.streams` → `subEvent.days` (버그 수정)
+  - UI에서는 `days` 필드 사용 (helper에서 리네이밍)
+
+#### 4. 타입 체크 및 빌드 테스트 (0.5시간) ✅
+- **TypeScript 타입 에러 해결**:
+  - SubEvent 타입에 `days`와 `streams` 둘 다 포함하여 호환성 유지
+  - DB에서는 `streams` 조회, UI에서는 `days` 필드 사용
+- **빌드 성공**: `npm run build` 정상 완료
+  - Archive 페이지: 355 kB (tournament, cash-game 동일)
+  - 타입 에러 해결 완료
+
+### 핵심 파일
+- `lib/queries.ts` (수정) - fetchTournamentsTree 함수
+- `lib/supabase.ts` (수정) - SubEvent 타입 정의
+- `lib/archive-helpers.ts` (수정) - UI 상태 변환
+- `app/(main)/archive/_components/ArchiveDialogs.tsx` (수정) - 버그 수정
+- `scripts/check-game-type.ts` (신규, 123줄)
+- `scripts/check-tables.ts` (신규, 52줄)
+
+### 기술적 세부사항
+
+**데이터 흐름:**
+1. **DB 조회**: `fetchTournamentsTree`가 `streams` 테이블에서 데이터 가져옴
+2. **UI 변환**: `archive-helpers.ts`에서 `subEvent.streams`를 `subEvent.days`로 리네이밍
+3. **UI 사용**: 컴포넌트에서 `subEvent.days` 필드 사용
+
+**왜 `days` 필드를 유지하는가?**
+- 기존 UI 코드가 모두 `days` 필드 사용
+- 대규모 리팩토링 대신, DB 조회만 수정하고 UI는 그대로 유지
+- `days`와 `streams`는 동일한 타입(`Stream[]`)
+
+### 다음 세션 준비
+1. **Archive 페이지 실제 동작 확인**
+   - http://localhost:3000/archive/tournament 접속
+   - 토너먼트 리스트가 정상 표시되는지 확인
+2. **커밋 및 배포**
+   - 변경사항 커밋
+   - Vercel 배포
+
+### 성과
+- ✅ Archive 페이지 표시 문제 근본 원인 파악 (days vs streams 테이블)
+- ✅ `fetchTournamentsTree` 함수 수정 (streams 테이블 조회)
+- ✅ 타입 시스템 호환성 유지 (days/streams 필드 공존)
+- ✅ 빌드 성공 및 타입 에러 해결
+- ✅ 데이터 조사 스크립트 작성 (2개, 175줄)
+- ✅ 소요 시간: 약 2시간
+
+---
+
 ## 2025-10-24 (세션 37) - Phase 32: Comprehensive Security Enhancement ✅
 
 ### 작업 내용

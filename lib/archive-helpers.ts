@@ -20,7 +20,7 @@ export async function loadTournamentsHelper(
       ...tournament,
       sub_events: tournament.sub_events?.map((subEvent: any) => ({
         ...subEvent,
-        days: subEvent.days?.map((day: any) => ({ ...day, selected: false })),
+        days: subEvent.streams?.map((day: any) => ({ ...day, selected: false })),
         expanded: false,
       })),
       expanded: true,
