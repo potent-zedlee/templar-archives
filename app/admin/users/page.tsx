@@ -33,7 +33,8 @@ import {
   Shield,
   MoreVertical,
   UserX,
-  UserCheck
+  UserCheck,
+  Download
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -51,6 +52,7 @@ import {
 } from "@/lib/queries/admin-queries"
 import { toast } from "sonner"
 import Link from "next/link"
+import { exportUsers } from "@/lib/export-utils"
 
 type User = {
   id: string
@@ -278,6 +280,33 @@ export default function usersClient() {
                 <SelectItem value="banned">Banned</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="md:col-span-4 flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (users.length === 0) {
+                  toast.error('내보낼 데이터가 없습니다')
+                  return
+                }
+                const exportData = users.map(u => ({
+                  id: u.id,
+                  email: u.email,
+                  name: u.nickname,
+                  role: u.role,
+                  created_at: u.created_at,
+                  last_sign_in_at: u.last_sign_in_at || null,
+                  banned_at: u.is_banned ? new Date().toISOString() : null,
+                }))
+                exportUsers(exportData as any, 'csv')
+                toast.success('CSV 파일이 다운로드되었습니다')
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
           </div>
         </Card>
 

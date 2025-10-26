@@ -226,7 +226,7 @@ export function logSecurityEvent(
   if (process.env.NEXT_PUBLIC_ENVIRONMENT !== 'development') {
     try {
       // Import Sentry utils dynamically to avoid circular dependencies
-      import('./sentry-utils').then(({ captureSentryMessage }) => {
+      import('../sentry-utils').then(({ captureSentryMessage }) => {
         captureSentryMessage(
           `Security Event: ${event}`,
           'warning',
