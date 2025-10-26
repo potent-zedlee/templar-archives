@@ -138,18 +138,6 @@ export const TOURNAMENT_CATEGORIES: TournamentCategory[] = [
   // REGIONAL TOURS (지역별 주요 투어)
   // ============================================
   {
-    id: 'apt',
-    name: 'Asian Poker Tour',
-    displayName: 'APT',
-    shortName: 'APT',
-    aliases: ['APT', 'Asian Poker Tour'],
-    logoUrl: '/logos/apt.svg',
-    region: 'regional',
-    priority: 10,
-    website: 'https://www.asianpokertour.com',
-    isActive: true,
-  },
-  {
     id: 'appt',
     name: 'Asia Pacific Poker Tour',
     displayName: 'APPT',
@@ -169,18 +157,6 @@ export const TOURNAMENT_CATEGORIES: TournamentCategory[] = [
     logoUrl: '/logos/apl.svg',
     region: 'regional',
     priority: 12,
-    isActive: true,
-  },
-  {
-    id: 'aussie-millions',
-    name: 'Aussie Millions',
-    displayName: 'Aussie Millions',
-    shortName: 'Aussie Millions',
-    aliases: ['Aussie Millions', 'Australian Millions'],
-    logoUrl: '/logos/aussie-millions.svg',
-    region: 'regional',
-    priority: 13,
-    website: 'https://www.aussiemillions.com',
     isActive: true,
   },
   {
@@ -216,28 +192,6 @@ export const TOURNAMENT_CATEGORIES: TournamentCategory[] = [
     priority: 16,
     isActive: true,
   },
-  {
-    id: 'irish-poker-tour',
-    name: 'Irish Poker Tour',
-    displayName: 'Irish Poker Tour',
-    shortName: 'IPT',
-    aliases: ['Irish Poker Tour', 'IPT'],
-    logoUrl: '/logos/irish-poker-tour.svg',
-    region: 'regional',
-    priority: 17,
-    isActive: true,
-  },
-  {
-    id: 'unibet-open',
-    name: 'Unibet Open',
-    displayName: 'Unibet Open',
-    shortName: 'Unibet',
-    aliases: ['Unibet Open', 'Unibet'],
-    logoUrl: '/logos/unibet-open.svg',
-    region: 'regional',
-    priority: 18,
-    isActive: true,
-  },
 
   // ============================================
   // LIVE POKER SERIES (라이브 스트림 및 캐쉬 게임)
@@ -252,18 +206,6 @@ export const TOURNAMENT_CATEGORIES: TournamentCategory[] = [
     region: 'specialty',
     priority: 20,
     website: 'https://www.hustlercasinolive.com',
-    isActive: true,
-  },
-  {
-    id: 'ggpoker',
-    name: 'GGPoker',
-    displayName: 'GGPoker',
-    shortName: 'GGPoker',
-    aliases: ['GGPOKER', 'GGPoker', 'GG Poker'],
-    logoUrl: '/logos/ggpoker.svg',
-    region: 'online',
-    priority: 21,
-    website: 'https://www.ggpoker.com',
     isActive: true,
   },
   {
@@ -456,17 +398,6 @@ export const TOURNAMENT_CATEGORIES: TournamentCategory[] = [
     logoUrl: '/logos/hendon-mob.svg',
     region: 'specialty',
     priority: 54,
-    isActive: true,
-  },
-  {
-    id: 'partypoker-live',
-    name: 'partypoker LIVE',
-    displayName: 'partypoker LIVE',
-    shortName: 'PP LIVE',
-    aliases: ['partypoker LIVE', 'PP LIVE'],
-    logoUrl: '/logos/partypoker-live.svg',
-    region: 'regional',
-    priority: 55,
     isActive: true,
   },
   {
