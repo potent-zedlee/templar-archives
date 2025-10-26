@@ -24,6 +24,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -38,7 +44,7 @@ import {
   useDeleteCategoryMutation,
   useToggleActiveMutation,
 } from "@/lib/queries/category-queries"
-import type { TournamentCategory } from "@/lib/tournament-categories-db"
+import type { TournamentCategory } from "@/lib/tournament-categories"
 
 interface CategoryRowProps {
   category: TournamentCategory
@@ -119,18 +125,37 @@ function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) 
         </TableCell>
 
         {/* Logo */}
-        <TableCell className="w-16">
+        <TableCell className="w-20">
           {category.logo_url ? (
-            <div className="relative w-12 h-12 border rounded bg-muted">
-              <Image
-                src={category.logo_url}
-                alt={category.display_name}
-                fill
-                className="object-contain p-1"
-              />
-            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative w-16 h-16 border rounded-lg bg-muted hover:border-primary transition-colors cursor-pointer">
+                    <Image
+                      src={category.logo_url}
+                      alt={category.display_name}
+                      fill
+                      className="object-contain p-2"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="p-2">
+                  <div className="relative w-32 h-32 bg-muted rounded-lg">
+                    <Image
+                      src={category.logo_url}
+                      alt={category.display_name}
+                      fill
+                      className="object-contain p-4"
+                    />
+                  </div>
+                  <p className="mt-2 text-xs font-medium text-center">
+                    {category.display_name}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ) : (
-            <div className="w-12 h-12 border rounded bg-muted flex items-center justify-center text-xs text-muted-foreground">
+            <div className="w-16 h-16 border rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground">
               No Logo
             </div>
           )}

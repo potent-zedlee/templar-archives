@@ -1,549 +1,519 @@
 /**
- * 포커 투어 카테고리 통합 관리
+ * Tournament Categories Database Operations
  *
- * pokernews.com/tours 및 주요 포커 투어 정보를 중앙집중식으로 관리
+ * 토너먼트 카테고리 CRUD 및 로고 업로드 함수
  */
 
+import { createClientSupabaseClient } from './supabase-client'
+import { CATEGORY_ERRORS, CATEGORY_VALIDATIONS } from './constants/category-errors'
+
+export type GameType = 'tournament' | 'cash_game' | 'both'
+
 export interface TournamentCategory {
-  id: string              // 고유 ID (URL-safe, 로고 파일명과 동일)
-  name: string            // 정식 명칭
-  displayName: string     // UI 표시명 (짧은 버전)
-  shortName?: string      // 약칭 (WSOP, EPT 등)
-  aliases: string[]       // 별칭 배열 (기존 데이터 호환용)
-  logoUrl: string         // 로고 경로
-  region: 'premier' | 'regional' | 'online' | 'specialty'  // 카테고리 그룹
-  priority: number        // 인기순 정렬 (낮을수록 우선, 0-100)
-  website?: string        // 공식 웹사이트
-  isActive: boolean       // 활성 투어 여부
-  theme?: {               // 3D 배너 테마 색상
-    gradient: string      // 배경 그라데이션 (Tailwind 클래스)
-    text: string          // 텍스트 색상
-    shadow: string        // 그림자 색상
+  id: string
+  name: string
+  display_name: string
+  short_name?: string | null
+  aliases: string[]
+  logo_url?: string | null
+  region: 'premier' | 'regional' | 'online' | 'specialty'
+  priority: number
+  website?: string | null
+  is_active: boolean
+  game_type: GameType
+  parent_id?: string | null
+  theme_gradient?: string | null
+  theme_text?: string | null
+  theme_shadow?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CategoryInput {
+  id: string
+  name: string
+  display_name: string
+  short_name?: string
+  aliases?: string[]
+  logo_url?: string
+  region: 'premier' | 'regional' | 'online' | 'specialty'
+  priority?: number
+  website?: string
+  is_active?: boolean
+  game_type?: GameType
+  parent_id?: string | null
+  theme_gradient?: string
+  theme_text?: string
+  theme_shadow?: string
+}
+
+export interface CategoryUpdateInput extends Partial<Omit<CategoryInput, 'id'>> {}
+
+/**
+ * 모든 카테고리 조회 (Admin용)
+ */
+export async function getAllCategories(
+  includeInactive = false,
+  gameType?: GameType
+): Promise<TournamentCategory[]> {
+  const supabase = createClientSupabaseClient()
+
+  let query = supabase
+    .from('tournament_categories')
+    .select('*')
+    .order('priority', { ascending: true })
+
+  if (!includeInactive) {
+    query = query.eq('is_active', true)
+  }
+
+  if (gameType) {
+    query = query.or(`game_type.eq.${gameType},game_type.eq.both`)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.FETCH_FAILED(error.message))
+  }
+
+  return data || []
+}
+
+/**
+ * 활성화된 카테고리만 조회 (Public)
+ */
+export async function getActiveCategories(gameType?: GameType): Promise<TournamentCategory[]> {
+  return getAllCategories(false, gameType)
+}
+
+/**
+ * 최상위 카테고리만 조회 (parent_id가 null인 카테고리)
+ */
+export async function getRootCategories(gameType?: GameType): Promise<TournamentCategory[]> {
+  const supabase = createClientSupabaseClient()
+
+  let query = supabase
+    .from('tournament_categories')
+    .select('*')
+    .is('parent_id', null)
+    .eq('is_active', true)
+    .order('priority', { ascending: true })
+
+  if (gameType) {
+    query = query.or(`game_type.eq.${gameType},game_type.eq.both`)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.FETCH_FAILED(error.message))
+  }
+
+  return data || []
+}
+
+/**
+ * 하위 카테고리 조회 (특정 parent_id의 자식들)
+ */
+export async function getChildCategories(
+  parentId: string,
+  gameType?: GameType
+): Promise<TournamentCategory[]> {
+  const supabase = createClientSupabaseClient()
+
+  let query = supabase
+    .from('tournament_categories')
+    .select('*')
+    .eq('parent_id', parentId)
+    .eq('is_active', true)
+    .order('priority', { ascending: true })
+
+  if (gameType) {
+    query = query.or(`game_type.eq.${gameType},game_type.eq.both`)
+  }
+
+  const { data, error } = await query
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.FETCH_FAILED(error.message))
+  }
+
+  return data || []
+}
+
+/**
+ * Region별 카테고리 조회
+ */
+export async function getCategoriesByRegion(
+  region: 'premier' | 'regional' | 'online' | 'specialty'
+): Promise<TournamentCategory[]> {
+  const supabase = createClientSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('tournament_categories')
+    .select('*')
+    .eq('region', region)
+    .eq('is_active', true)
+    .order('priority', { ascending: true })
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.FETCH_BY_REGION_FAILED(error.message))
+  }
+
+  return data || []
+}
+
+/**
+ * ID로 카테고리 조회
+ */
+export async function getCategoryById(id: string): Promise<TournamentCategory | null> {
+  const supabase = createClientSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('tournament_categories')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null // Not found
+    }
+    throw new Error(CATEGORY_ERRORS.FETCH_BY_ID_FAILED(error.message))
+  }
+
+  return data
+}
+
+/**
+ * 별칭으로 카테고리 조회
+ */
+export async function getCategoryByAlias(alias: string): Promise<TournamentCategory | null> {
+  const supabase = createClientSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('tournament_categories')
+    .select('*')
+    .contains('aliases', [alias])
+    .eq('is_active', true)
+    .limit(1)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null // Not found
+    }
+    throw new Error(CATEGORY_ERRORS.FETCH_BY_ALIAS_FAILED(error.message))
+  }
+
+  return data
+}
+
+/**
+ * 카테고리 생성
+ */
+export async function createCategory(input: CategoryInput): Promise<TournamentCategory> {
+  const supabase = createClientSupabaseClient()
+
+  // ID 중복 확인
+  const existing = await getCategoryById(input.id)
+  if (existing) {
+    throw new Error(CATEGORY_ERRORS.DUPLICATE_ID(input.id))
+  }
+
+  const { data, error } = await supabase
+    .from('tournament_categories')
+    .insert({
+      id: input.id,
+      name: input.name,
+      display_name: input.display_name,
+      short_name: input.short_name || null,
+      aliases: input.aliases || [],
+      logo_url: input.logo_url || null,
+      region: input.region,
+      priority: input.priority ?? 50,
+      website: input.website || null,
+      is_active: input.is_active ?? true,
+      game_type: input.game_type || 'both',
+      parent_id: input.parent_id || null,
+      theme_gradient: input.theme_gradient || null,
+      theme_text: input.theme_text || null,
+      theme_shadow: input.theme_shadow || null,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.CREATE_FAILED(error.message))
+  }
+
+  return data
+}
+
+/**
+ * 카테고리 수정
+ */
+export async function updateCategory(
+  id: string,
+  input: CategoryUpdateInput
+): Promise<TournamentCategory> {
+  const supabase = createClientSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('tournament_categories')
+    .update({
+      ...(input.name !== undefined && { name: input.name }),
+      ...(input.display_name !== undefined && { display_name: input.display_name }),
+      ...(input.short_name !== undefined && { short_name: input.short_name || null }),
+      ...(input.aliases !== undefined && { aliases: input.aliases }),
+      ...(input.logo_url !== undefined && { logo_url: input.logo_url || null }),
+      ...(input.region !== undefined && { region: input.region }),
+      ...(input.priority !== undefined && { priority: input.priority }),
+      ...(input.website !== undefined && { website: input.website || null }),
+      ...(input.is_active !== undefined && { is_active: input.is_active }),
+      ...(input.game_type !== undefined && { game_type: input.game_type }),
+      ...(input.parent_id !== undefined && { parent_id: input.parent_id }),
+      ...(input.theme_gradient !== undefined && { theme_gradient: input.theme_gradient || null }),
+      ...(input.theme_text !== undefined && { theme_text: input.theme_text || null }),
+      ...(input.theme_shadow !== undefined && { theme_shadow: input.theme_shadow || null }),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.UPDATE_FAILED(error.message))
+  }
+
+  return data
+}
+
+/**
+ * 카테고리 삭제
+ * (사용 중인 토너먼트가 있으면 트리거에서 에러 발생)
+ */
+export async function deleteCategory(id: string): Promise<void> {
+  const supabase = createClientSupabaseClient()
+
+  // 사용 여부 확인
+  const usageCount = await getCategoryUsageCount(id)
+  if (usageCount > 0) {
+    throw new Error(CATEGORY_ERRORS.DELETE_IN_USE(usageCount))
+  }
+
+  const { error } = await supabase
+    .from('tournament_categories')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.DELETE_FAILED(error.message))
   }
 }
 
 /**
- * 모든 포커 투어 카테고리 목록
- * pokernews.com/tours 및 주요 투어 포함
+ * 카테고리 사용 개수 확인
  */
-export const TOURNAMENT_CATEGORIES: TournamentCategory[] = [
-  // ============================================
-  // PREMIER TOURS (전 세계적으로 인정받는 메이저 투어)
-  // ============================================
-  {
-    id: 'wsop',
-    name: 'World Series of Poker',
-    displayName: 'WSOP',
-    shortName: 'WSOP',
-    aliases: ['WSOP', 'World Series of Poker', 'WSOP Classic'],
-    logoUrl: '/logos/wsop.svg',
-    region: 'premier',
-    priority: 1,
-    website: 'https://www.wsop.com',
-    isActive: true,
-    theme: {
-      gradient: 'from-amber-900 via-amber-800 to-amber-700',
-      text: 'text-white',
-      shadow: 'shadow-amber-900/50',
-    },
-  },
-  {
-    id: 'wpt',
-    name: 'World Poker Tour',
-    displayName: 'WPT',
-    shortName: 'WPT',
-    aliases: ['WPT', 'World Poker Tour'],
-    logoUrl: '/logos/wpt.svg',
-    region: 'premier',
-    priority: 2,
-    website: 'https://www.wpt.com',
-    isActive: true,
-    theme: {
-      gradient: 'from-purple-900 via-purple-800 to-purple-700',
-      text: 'text-white',
-      shadow: 'shadow-purple-900/50',
-    },
-  },
-  {
-    id: 'ept',
-    name: 'European Poker Tour',
-    displayName: 'EPT',
-    shortName: 'EPT',
-    aliases: ['EPT', 'European Poker Tour', 'PokerStars EPT'],
-    logoUrl: '/logos/ept.svg',
-    region: 'premier',
-    priority: 3,
-    website: 'https://www.pokerstars.com/ept',
-    isActive: true,
-    theme: {
-      gradient: 'from-blue-900 via-blue-800 to-blue-700',
-      text: 'text-white',
-      shadow: 'shadow-blue-900/50',
-    },
-  },
-  {
-    id: 'triton',
-    name: 'Triton Poker Series',
-    displayName: 'Triton',
-    shortName: 'Triton',
-    aliases: ['Triton', 'Triton Poker', 'Triton Series'],
-    logoUrl: '/logos/triton.png',
-    region: 'premier',
-    priority: 4,
-    website: 'https://www.triton-series.com',
-    isActive: true,
-    theme: {
-      gradient: 'from-yellow-600 via-yellow-500 to-yellow-400',
-      text: 'text-black',
-      shadow: 'shadow-yellow-600/50',
-    },
-  },
-  {
-    id: 'wsope',
-    name: 'World Series of Poker Europe',
-    displayName: 'WSOPE',
-    shortName: 'WSOPE',
-    aliases: ['WSOPE', 'World Series of Poker Europe'],
-    logoUrl: '/logos/wsope.svg',
-    region: 'premier',
-    priority: 5,
-    website: 'https://www.wsop.com/europe',
-    isActive: true,
-  },
-  {
-    id: 'napt',
-    name: 'North American Poker Tour',
-    displayName: 'NAPT',
-    shortName: 'NAPT',
-    aliases: ['NAPT', 'North American Poker Tour'],
-    logoUrl: '/logos/napt.svg',
-    region: 'premier',
-    priority: 6,
-    website: 'https://www.pokerstars.com/napt',
-    isActive: true,
-  },
-  {
-    id: 'pokerstars-open',
-    name: 'PokerStars Open',
-    displayName: 'PokerStars Open',
-    shortName: 'PS Open',
-    aliases: ['PokerStars Open', 'PS Open'],
-    logoUrl: '/logos/pokerstars-open.png',
-    region: 'premier',
-    priority: 7,
-    isActive: true,
-  },
+export async function getCategoryUsageCount(categoryId: string): Promise<number> {
+  const supabase = createClientSupabaseClient()
 
-  // ============================================
-  // REGIONAL TOURS (지역별 주요 투어)
-  // ============================================
-  {
-    id: 'apt',
-    name: 'Asian Poker Tour',
-    displayName: 'APT',
-    shortName: 'APT',
-    aliases: ['APT', 'Asian Poker Tour'],
-    logoUrl: '/logos/apt.svg',
-    region: 'regional',
-    priority: 10,
-    website: 'https://www.asianpokertour.com',
-    isActive: true,
-  },
-  {
-    id: 'appt',
-    name: 'Asia Pacific Poker Tour',
-    displayName: 'APPT',
-    shortName: 'APPT',
-    aliases: ['APPT', 'Asia Pacific Poker Tour', 'PokerStars APPT'],
-    logoUrl: '/logos/appt.svg',
-    region: 'regional',
-    priority: 11,
-    isActive: true,
-  },
-  {
-    id: 'apl',
-    name: 'Asian Poker League',
-    displayName: 'APL',
-    shortName: 'APL',
-    aliases: ['APL', 'Asian Poker League'],
-    logoUrl: '/logos/apl.svg',
-    region: 'regional',
-    priority: 12,
-    isActive: true,
-  },
-  {
-    id: 'aussie-millions',
-    name: 'Aussie Millions',
-    displayName: 'Aussie Millions',
-    shortName: 'Aussie Millions',
-    aliases: ['Aussie Millions', 'Australian Millions'],
-    logoUrl: '/logos/aussie-millions.svg',
-    region: 'regional',
-    priority: 13,
-    website: 'https://www.aussiemillions.com',
-    isActive: true,
-  },
-  {
-    id: 'australian-poker-open',
-    name: 'Australian Poker Open',
-    displayName: 'Aus Poker Open',
-    shortName: 'APO',
-    aliases: ['Australian Poker Open', 'APO'],
-    logoUrl: '/logos/australian-poker-open.svg',
-    region: 'regional',
-    priority: 14,
-    isActive: true,
-  },
-  {
-    id: 'lapt',
-    name: 'Latin American Poker Tour',
-    displayName: 'LAPT',
-    shortName: 'LAPT',
-    aliases: ['LAPT', 'Latin American Poker Tour', 'PokerStars LAPT'],
-    logoUrl: '/logos/lapt.svg',
-    region: 'regional',
-    priority: 15,
-    isActive: true,
-  },
-  {
-    id: 'bsop',
-    name: 'Brazilian Series of Poker',
-    displayName: 'BSOP',
-    shortName: 'BSOP',
-    aliases: ['BSOP', 'Brazilian Series of Poker'],
-    logoUrl: '/logos/bsop.svg',
-    region: 'regional',
-    priority: 16,
-    isActive: true,
-  },
-  {
-    id: 'irish-poker-tour',
-    name: 'Irish Poker Tour',
-    displayName: 'Irish Poker Tour',
-    shortName: 'IPT',
-    aliases: ['Irish Poker Tour', 'IPT'],
-    logoUrl: '/logos/irish-poker-tour.svg',
-    region: 'regional',
-    priority: 17,
-    isActive: true,
-  },
-  {
-    id: 'unibet-open',
-    name: 'Unibet Open',
-    displayName: 'Unibet Open',
-    shortName: 'Unibet',
-    aliases: ['Unibet Open', 'Unibet'],
-    logoUrl: '/logos/unibet-open.svg',
-    region: 'regional',
-    priority: 18,
-    isActive: true,
-  },
+  const { count, error } = await supabase
+    .from('tournaments')
+    .select('*', { count: 'exact', head: true })
+    .eq('category_id', categoryId)
 
-  // ============================================
-  // LIVE POKER SERIES (라이브 스트림 및 캐쉬 게임)
-  // ============================================
-  {
-    id: 'hustler',
-    name: 'Hustler Casino Live',
-    displayName: 'Hustler',
-    shortName: 'HCL',
-    aliases: ['Hustler Casino Live', 'Hustler', 'HCL'],
-    logoUrl: '/logos/hustler.svg',
-    region: 'specialty',
-    priority: 20,
-    website: 'https://www.hustlercasinolive.com',
-    isActive: true,
-  },
-  {
-    id: 'ggpoker',
-    name: 'GGPoker',
-    displayName: 'GGPoker',
-    shortName: 'GGPoker',
-    aliases: ['GGPOKER', 'GGPoker', 'GG Poker'],
-    logoUrl: '/logos/ggpoker.svg',
-    region: 'online',
-    priority: 21,
-    website: 'https://www.ggpoker.com',
-    isActive: true,
-  },
-  {
-    id: 'ggpoker-uk',
-    name: 'GGPoker UK Poker Championships',
-    displayName: 'GGPoker UK',
-    shortName: 'GGP UK',
-    aliases: ['GGPoker UK', 'GGPoker UK Poker Championships'],
-    logoUrl: '/logos/ggpoker-uk.png',
-    region: 'regional',
-    priority: 22,
-    isActive: true,
-  },
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.USAGE_COUNT_FAILED(error.message))
+  }
 
-  // ============================================
-  // ONLINE SERIES (온라인 포커 시리즈)
-  // ============================================
-  {
-    id: 'wcoop',
-    name: 'PokerStars WCOOP',
-    displayName: 'WCOOP',
-    shortName: 'WCOOP',
-    aliases: ['WCOOP', 'World Championship of Online Poker', 'PokerStars WCOOP'],
-    logoUrl: '/logos/wcoop.svg',
-    region: 'online',
-    priority: 30,
-    website: 'https://www.pokerstars.com/wcoop',
-    isActive: true,
-  },
-  {
-    id: 'scoop',
-    name: 'PokerStars SCOOP',
-    displayName: 'SCOOP',
-    shortName: 'SCOOP',
-    aliases: ['SCOOP', 'Spring Championship of Online Poker', 'PokerStars SCOOP'],
-    logoUrl: '/logos/scoop.svg',
-    region: 'online',
-    priority: 31,
-    website: 'https://www.pokerstars.com/scoop',
-    isActive: true,
-  },
-  {
-    id: 'uscoop',
-    name: 'PokerStars USCOOP',
-    displayName: 'USCOOP',
-    shortName: 'USCOOP',
-    aliases: ['USCOOP', 'PokerStars USCOOP'],
-    logoUrl: '/logos/uscoop.svg',
-    region: 'online',
-    priority: 32,
-    isActive: true,
-  },
-  {
-    id: 'pacoop',
-    name: 'PokerStars PACOOP',
-    displayName: 'PACOOP',
-    shortName: 'PACOOP',
-    aliases: ['PACOOP', 'PokerStars PACOOP'],
-    logoUrl: '/logos/pacoop.svg',
-    region: 'online',
-    priority: 33,
-    isActive: true,
-  },
-  {
-    id: 'oncoop',
-    name: 'PokerStars ONCOOP',
-    displayName: 'ONCOOP',
-    shortName: 'ONCOOP',
-    aliases: ['ONCOOP', 'PokerStars ONCOOP'],
-    logoUrl: '/logos/oncoop.svg',
-    region: 'online',
-    priority: 34,
-    isActive: true,
-  },
-
-  // ============================================
-  // SPECIALTY & HIGH ROLLER SERIES
-  // ============================================
-  {
-    id: 'super-high-roller-bowl',
-    name: 'Super High Roller Bowl',
-    displayName: 'Super High Roller Bowl',
-    shortName: 'SHRB',
-    aliases: ['Super High Roller Bowl', 'SHRB'],
-    logoUrl: '/logos/super-high-roller-bowl.svg',
-    region: 'specialty',
-    priority: 40,
-    isActive: true,
-  },
-  {
-    id: 'poker-masters',
-    name: 'Poker Masters',
-    displayName: 'Poker Masters',
-    shortName: 'Poker Masters',
-    aliases: ['Poker Masters'],
-    logoUrl: '/logos/poker-masters.svg',
-    region: 'specialty',
-    priority: 41,
-    isActive: true,
-  },
-  {
-    id: 'us-poker-open',
-    name: 'US Poker Open',
-    displayName: 'US Poker Open',
-    shortName: 'USPO',
-    aliases: ['US Poker Open', 'USPO'],
-    logoUrl: '/logos/us-poker-open.svg',
-    region: 'specialty',
-    priority: 42,
-    isActive: true,
-  },
-  {
-    id: 'pokergo-tour',
-    name: 'PokerGO Tour',
-    displayName: 'PokerGO Tour',
-    shortName: 'PGT',
-    aliases: ['PokerGO Tour', 'PGT'],
-    logoUrl: '/logos/pokergo-tour.svg',
-    region: 'specialty',
-    priority: 43,
-    website: 'https://www.pokergo.com',
-    isActive: true,
-  },
-  {
-    id: 'wsop-paradise',
-    name: 'World Series of Poker Paradise',
-    displayName: 'WSOP Paradise',
-    shortName: 'WSOP Paradise',
-    aliases: ['WSOP Paradise', 'World Series of Poker Paradise'],
-    logoUrl: '/logos/wsop-paradise.svg',
-    region: 'specialty',
-    priority: 44,
-    isActive: true,
-  },
-
-  // ============================================
-  // OTHER NOTABLE TOURS
-  // ============================================
-  {
-    id: '888poker',
-    name: '888poker',
-    displayName: '888poker',
-    shortName: '888',
-    aliases: ['888poker', '888'],
-    logoUrl: '/logos/888poker.svg',
-    region: 'online',
-    priority: 50,
-    website: 'https://www.888poker.com',
-    isActive: true,
-  },
-  {
-    id: '888poker-live',
-    name: '888poker LIVE',
-    displayName: '888poker LIVE',
-    shortName: '888 LIVE',
-    aliases: ['888poker LIVE', '888 LIVE'],
-    logoUrl: '/logos/888poker-live.svg',
-    region: 'regional',
-    priority: 51,
-    isActive: true,
-  },
-  {
-    id: 'rungood',
-    name: 'RunGood Poker Series',
-    displayName: 'RunGood',
-    shortName: 'RGPS',
-    aliases: ['RunGood Poker Series', 'RunGood', 'RGPS'],
-    logoUrl: '/logos/rungood.svg',
-    region: 'regional',
-    priority: 52,
-    isActive: true,
-  },
-  {
-    id: 'merit-poker',
-    name: 'Merit Poker',
-    displayName: 'Merit Poker',
-    shortName: 'Merit',
-    aliases: ['Merit Poker', 'Merit'],
-    logoUrl: '/logos/merit-poker.svg',
-    region: 'regional',
-    priority: 53,
-    isActive: true,
-  },
-  {
-    id: 'hendon-mob',
-    name: 'The Hendon Mob Championship',
-    displayName: 'Hendon Mob',
-    shortName: 'THM',
-    aliases: ['The Hendon Mob Championship', 'Hendon Mob', 'THM'],
-    logoUrl: '/logos/hendon-mob.svg',
-    region: 'specialty',
-    priority: 54,
-    isActive: true,
-  },
-  {
-    id: 'partypoker-live',
-    name: 'partypoker LIVE',
-    displayName: 'partypoker LIVE',
-    shortName: 'PP LIVE',
-    aliases: ['partypoker LIVE', 'PP LIVE'],
-    logoUrl: '/logos/partypoker-live.svg',
-    region: 'regional',
-    priority: 55,
-    isActive: true,
-  },
-  {
-    id: 'global-poker',
-    name: 'Global Poker',
-    displayName: 'Global Poker',
-    shortName: 'Global',
-    aliases: ['Global Poker', 'Global'],
-    logoUrl: '/logos/global-poker.svg',
-    region: 'online',
-    priority: 56,
-    isActive: true,
-  },
-]
-
-/**
- * 인기 투어 목록 (priority 25 이하)
- */
-export const POPULAR_CATEGORIES = TOURNAMENT_CATEGORIES.filter(
-  (cat) => cat.priority <= 25 && cat.isActive
-)
-
-/**
- * 지역별로 그룹화된 카테고리
- */
-export const CATEGORIES_BY_REGION = {
-  premier: TOURNAMENT_CATEGORIES.filter((cat) => cat.region === 'premier' && cat.isActive),
-  regional: TOURNAMENT_CATEGORIES.filter((cat) => cat.region === 'regional' && cat.isActive),
-  online: TOURNAMENT_CATEGORIES.filter((cat) => cat.region === 'online' && cat.isActive),
-  specialty: TOURNAMENT_CATEGORIES.filter((cat) => cat.region === 'specialty' && cat.isActive),
+  return count || 0
 }
 
 /**
- * ID로 카테고리 찾기
+ * 모든 카테고리의 사용 개수를 한 번에 조회 (N+1 쿼리 방지)
  */
-export function getCategoryById(id: string): TournamentCategory | undefined {
-  return TOURNAMENT_CATEGORIES.find((cat) => cat.id === id)
+export async function getAllCategoryUsageCounts(): Promise<Record<string, number>> {
+  const supabase = createClientSupabaseClient()
+
+  const { data, error } = await supabase
+    .from('tournaments')
+    .select('category_id')
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.USAGE_COUNTS_FAILED(error.message))
+  }
+
+  // Count by category_id
+  const counts: Record<string, number> = {}
+  data?.forEach((tournament) => {
+    if (tournament.category_id) {
+      counts[tournament.category_id] = (counts[tournament.category_id] || 0) + 1
+    }
+  })
+
+  return counts
 }
 
 /**
- * 별칭으로 카테고리 찾기 (기존 데이터 호환)
+ * 카테고리 활성화/비활성화 토글
  */
-export function getCategoryByAlias(alias: string): TournamentCategory | undefined {
-  return TOURNAMENT_CATEGORIES.find((cat) =>
-    cat.aliases.some(a => a.toLowerCase() === alias.toLowerCase())
-  )
+export async function toggleCategoryActive(id: string): Promise<TournamentCategory> {
+  const supabase = createClientSupabaseClient()
+
+  // 현재 상태 조회
+  const category = await getCategoryById(id)
+  if (!category) {
+    throw new Error(CATEGORY_ERRORS.NOT_FOUND(id))
+  }
+
+  // 토글
+  return updateCategory(id, { is_active: !category.is_active })
 }
 
 /**
- * 카테고리 정규화 (별칭을 정식 ID로 변환)
+ * 카테고리 우선순위 일괄 업데이트
  */
-export function normalizeCategoryName(input: string): string {
-  if (!input || input === 'All') return input
+export async function reorderCategories(
+  categoryIds: string[]
+): Promise<TournamentCategory[]> {
+  const supabase = createClientSupabaseClient()
 
-  const category = getCategoryByAlias(input)
-  return category ? category.id : input.toLowerCase().replace(/\s+/g, '-')
+  // 순차 실행으로 Race Condition 방지
+  for (let i = 0; i < categoryIds.length; i++) {
+    const { error } = await supabase
+      .from('tournament_categories')
+      .update({ priority: i + 1 })
+      .eq('id', categoryIds[i])
+
+    if (error) {
+      throw new Error(CATEGORY_ERRORS.REORDER_FAILED(categoryIds[i], error.message))
+    }
+  }
+
+  // 업데이트된 카테고리 목록 반환
+  return getAllCategories(true)
 }
 
 /**
- * UI 표시용 카테고리 이름 가져오기
+ * 로고 업로드
  */
-export function getDisplayName(categoryIdOrAlias: string): string {
-  const category = getCategoryById(categoryIdOrAlias) || getCategoryByAlias(categoryIdOrAlias)
-  return category ? category.displayName : categoryIdOrAlias
+export async function uploadCategoryLogo(
+  categoryId: string,
+  file: File
+): Promise<string> {
+  const supabase = createClientSupabaseClient()
+
+  // 파일 크기 확인 (5MB)
+  if (file.size > CATEGORY_VALIDATIONS.MAX_FILE_SIZE) {
+    throw new Error(CATEGORY_ERRORS.FILE_TOO_LARGE)
+  }
+
+  // 파일 타입 확인
+  if (!CATEGORY_VALIDATIONS.ALLOWED_FILE_TYPES.includes(file.type as any)) {
+    throw new Error(CATEGORY_ERRORS.INVALID_FILE_TYPE)
+  }
+
+  // 파일 확장자
+  const fileExt = file.name.split('.').pop() || 'png'
+  const fileName = `${categoryId}.${fileExt}`
+  const filePath = `${fileName}`
+
+  // 기존 로고 삭제 (있으면)
+  const category = await getCategoryById(categoryId)
+  if (category?.logo_url && category.logo_url.includes('tournament-logos')) {
+    const oldFileName = category.logo_url.split('/').pop()
+    if (oldFileName) {
+      await supabase.storage
+        .from('tournament-logos')
+        .remove([oldFileName])
+    }
+  }
+
+  // 새 로고 업로드
+  const { error: uploadError } = await supabase.storage
+    .from('tournament-logos')
+    .upload(filePath, file, {
+      cacheControl: '604800', // 7일 (로고는 자주 변경되지 않음)
+      upsert: true, // 같은 이름이면 덮어쓰기
+    })
+
+  if (uploadError) {
+    throw new Error(CATEGORY_ERRORS.UPLOAD_FAILED(uploadError.message))
+  }
+
+  // Public URL 가져오기
+  const { data: { publicUrl } } = supabase.storage
+    .from('tournament-logos')
+    .getPublicUrl(filePath)
+
+  // 카테고리의 logo_url 업데이트
+  await updateCategory(categoryId, { logo_url: publicUrl })
+
+  return publicUrl
 }
 
 /**
- * 카테고리 검색 (이름, 별칭으로 필터링)
+ * 로고 삭제
  */
-export function searchCategories(query: string): TournamentCategory[] {
-  const lowerQuery = query.toLowerCase()
-  return TOURNAMENT_CATEGORIES.filter((cat) =>
-    cat.isActive && (
-      cat.name.toLowerCase().includes(lowerQuery) ||
-      cat.displayName.toLowerCase().includes(lowerQuery) ||
-      cat.shortName?.toLowerCase().includes(lowerQuery) ||
-      cat.aliases.some(alias => alias.toLowerCase().includes(lowerQuery))
+export async function deleteCategoryLogo(categoryId: string): Promise<void> {
+  const supabase = createClientSupabaseClient()
+
+  const category = await getCategoryById(categoryId)
+  if (!category || !category.logo_url) {
+    return // 로고가 없으면 아무것도 하지 않음
+  }
+
+  // Storage에서 삭제 (Supabase Storage URL인 경우만)
+  if (category.logo_url.includes('tournament-logos')) {
+    const fileName = category.logo_url.split('/').pop()
+    if (fileName) {
+      await supabase.storage
+        .from('tournament-logos')
+        .remove([fileName])
+    }
+  }
+
+  // 카테고리의 logo_url NULL로 설정
+  await updateCategory(categoryId, { logo_url: undefined })
+}
+
+/**
+ * 검색 (이름, display_name, aliases로 검색) - DB 쿼리로 최적화
+ */
+export async function searchCategories(query: string): Promise<TournamentCategory[]> {
+  const supabase = createClientSupabaseClient()
+
+  const searchPattern = `%${query}%`
+
+  const { data, error } = await supabase
+    .from('tournament_categories')
+    .select('*')
+    .eq('is_active', true)
+    .or(`name.ilike.${searchPattern},display_name.ilike.${searchPattern},short_name.ilike.${searchPattern}`)
+    .order('priority', { ascending: true })
+
+  if (error) {
+    throw new Error(CATEGORY_ERRORS.SEARCH_FAILED(error.message))
+  }
+
+  // Also check aliases (DB query doesn't cover aliases)
+  if (!data || data.length === 0) {
+    // If no results from DB, search all categories for alias matches
+    const { data: allData, error: allError } = await supabase
+      .from('tournament_categories')
+      .select('*')
+      .eq('is_active', true)
+
+    if (allError) {
+      throw new Error(CATEGORY_ERRORS.SEARCH_FAILED(allError.message))
+    }
+
+    const lowerQuery = query.toLowerCase()
+    return (allData || []).filter((cat) =>
+      cat.aliases.some((alias: string) => alias.toLowerCase().includes(lowerQuery))
     )
-  )
+  }
+
+  return data
 }

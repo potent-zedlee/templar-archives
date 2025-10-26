@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Plus, Upload, X, Loader2 } from "lucide-react"
+import { Plus, Upload, X, Loader2, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -34,13 +34,16 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import { useCreateCategoryMutation, useUpdateCategoryMutation, useCategoriesQuery } from "@/lib/queries/category-queries"
-import type { TournamentCategory } from "@/lib/tournament-categories-db"
-import { uploadCategoryLogo } from "@/lib/tournament-categories-db"
+import type { TournamentCategory } from "@/lib/tournament-categories"
+import { uploadCategoryLogo } from "@/lib/tournament-categories"
 import Image from "next/image"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { LogoPicker } from "@/components/logo-picker"
+import { useDropzone } from "react-dropzone"
+import { cn } from "@/lib/utils"
 
 // Zod Schema
 const categoryFormSchema = z.object({
@@ -108,25 +111,42 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
     },
   })
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleLogoChange = useCallback(
+    (files: File[]) => {
+      const file = files[0]
+      if (!file) return
 
-    // Validate file type
-    if (!["image/svg+xml", "image/png", "image/jpeg"].includes(file.type)) {
-      form.setError("root", { message: "SVG, PNG, JPEG 파일만 업로드 가능합니다" })
-      return
-    }
+      // Validate file type
+      if (!["image/svg+xml", "image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+        form.setError("root", { message: "SVG, PNG, JPEG, WebP 파일만 업로드 가능합니다" })
+        return
+      }
 
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      form.setError("root", { message: "파일 크기는 5MB 이하여야 합니다" })
-      return
-    }
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        form.setError("root", { message: "파일 크기는 5MB 이하여야 합니다" })
+        return
+      }
 
-    setLogoFile(file)
-    setLogoPreview(URL.createObjectURL(file))
-  }
+      setLogoFile(file)
+      setLogoPreview(URL.createObjectURL(file))
+    },
+    [form]
+  )
+
+  // Dropzone configuration
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop: handleLogoChange,
+    accept: {
+      "image/svg+xml": [".svg"],
+      "image/png": [".png"],
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/webp": [".webp"],
+    },
+    maxFiles: 1,
+    maxSize: 5 * 1024 * 1024, // 5MB
+    disabled: logoUploadMode !== "upload",
+  })
 
   const handleSubmit = async (values: CategoryFormValues) => {
     try {
@@ -233,18 +253,36 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* Logo Selection */}
             <div className="space-y-4 p-4 border rounded-lg">
-              <FormLabel>로고</FormLabel>
+              <div className="flex items-center justify-between">
+                <FormLabel>로고</FormLabel>
+                {isUploading && (
+                  <Badge variant="secondary" className="gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    업로드 중...
+                  </Badge>
+                )}
+              </div>
 
-              {/* Logo Preview */}
+              {/* Logo Preview (Enhanced) */}
               {logoPreview && (
                 <div className="flex items-center gap-4">
-                  <div className="relative w-16 h-16 border rounded-lg overflow-hidden bg-muted">
+                  <div className="relative w-24 h-24 border-2 rounded-lg overflow-hidden bg-muted shadow-sm">
                     <Image
                       src={logoPreview}
                       alt="Logo preview"
                       fill
-                      className="object-contain"
+                      className="object-contain p-2"
                     />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium">
+                      {logoFile ? logoFile.name : "기존 로고"}
+                    </p>
+                    {logoFile && (
+                      <p className="text-xs text-muted-foreground">
+                        크기: {(logoFile.size / 1024).toFixed(1)} KB
+                      </p>
+                    )}
                   </div>
                   <Button
                     type="button"
@@ -258,6 +296,16 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
                     <X className="h-4 w-4 mr-2" />
                     제거
                   </Button>
+                </div>
+              )}
+
+              {/* Upload Progress Bar */}
+              {isUploading && (
+                <div className="space-y-2">
+                  <Progress value={undefined} className="h-2" />
+                  <p className="text-xs text-muted-foreground text-center">
+                    로고를 업로드하는 중입니다...
+                  </p>
                 </div>
               )}
 
@@ -281,19 +329,41 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
                 </div>
               </RadioGroup>
 
-              {/* Upload Mode: File Input */}
+              {/* Upload Mode: Drag & Drop Zone */}
               {logoUploadMode === "upload" && (
                 <div className="space-y-2">
-                  <Input
-                    type="file"
-                    accept=".svg,.png,.jpg,.jpeg"
-                    onChange={handleLogoChange}
-                    className="cursor-pointer"
-                  />
+                  <div
+                    {...getRootProps()}
+                    className={cn(
+                      "border-2 border-dashed rounded-lg p-8 transition-colors cursor-pointer",
+                      "hover:border-primary hover:bg-muted/50",
+                      isDragActive && "border-primary bg-primary/10",
+                      "flex flex-col items-center justify-center gap-3"
+                    )}
+                  >
+                    <input {...getInputProps()} />
+                    <div className="p-3 rounded-full bg-muted">
+                      {isDragActive ? (
+                        <Upload className="h-6 w-6 text-primary" />
+                      ) : (
+                        <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium">
+                        {isDragActive
+                          ? "파일을 여기에 놓으세요"
+                          : "파일을 드래그하거나 클릭하여 업로드"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        SVG, PNG, JPEG, WebP (최대 5MB)
+                      </p>
+                    </div>
+                  </div>
                   <FormDescription>
                     <strong>권장:</strong> 200x200px 이상 정사각형 이미지
                     <br />
-                    <strong>형식:</strong> SVG/PNG (투명 배경 권장), JPEG (최대 5MB)
+                    <strong>형식:</strong> SVG/PNG (투명 배경 권장), JPEG, WebP (최대 5MB)
                   </FormDescription>
                 </div>
               )}

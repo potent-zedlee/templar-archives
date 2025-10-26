@@ -27,7 +27,7 @@ import {
 import { useAuth } from "@/components/auth-provider"
 import { isAdmin } from "@/lib/admin"
 import { toast } from "sonner"
-import type { TournamentCategory } from "@/lib/tournament-categories-db"
+import type { TournamentCategory } from "@/lib/tournament-categories"
 
 export default function CategoriesPage() {
   const router = useRouter()

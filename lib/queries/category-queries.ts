@@ -23,7 +23,7 @@ import {
   type TournamentCategory,
   type CategoryInput,
   type CategoryUpdateInput,
-} from '@/lib/tournament-categories-db'
+} from '@/lib/tournament-categories'
 import { toast } from 'sonner'
 
 // ==================== Query Keys ====================
