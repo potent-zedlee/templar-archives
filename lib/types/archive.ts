@@ -206,7 +206,7 @@ export type DayFormData = StreamFormData
 
 // ==================== UI State Types ====================
 
-export type NavigationLevel = 'root' | 'tournament' | 'subevent' | 'unorganized'
+export type NavigationLevel = 'root' | 'tournament' | 'subevent'
 
 export interface DialogState {
   isOpen: boolean
@@ -260,7 +260,7 @@ export interface AdvancedFilters {
 
 // ==================== Folder Navigation Types ====================
 
-export type FolderItemType = "tournament" | "subevent" | "day" | "unorganized"
+export type FolderItemType = "tournament" | "subevent" | "day"
 
 export interface FolderItem {
   id: string

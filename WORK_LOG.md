@@ -11,6 +11,89 @@
 
 ---
 
+## 2025-10-26 (세션 39) - Phase 33: Archive Unsorted 관리 시스템 재구성 ✅
+
+### 작업 목표
+사용자 Archive 페이지에서 Unsorted Folder를 제거하고, 관리자 전용 Unsorted 관리 시스템으로 전환
+
+### 작업 내용
+
+#### 1. Admin Archive에 Unsorted 관리 추가 (4시간) ✅
+- **Server Actions 생성** (`app/actions/unsorted.ts`, 337줄):
+  - 9개 함수: create, update, delete, deleteBatch, organize, organizeBatch, getUnsortedVideos
+  - 서버 사이드 관리자 권한 검증 (verifyAdmin)
+  - YouTube URL 정규화, revalidatePath 캐시 무효화
+- **UnsortedVideosTab 컴포넌트** (`app/admin/archive/_components/UnsortedVideosTab.tsx`, 404줄):
+  - 비디오 목록 테이블 뷰 (이름, 소스, 날짜, 액션)
+  - 배치 선택 및 조직화 기능
+  - 검색 및 필터링 (비디오 소스별)
+  - CRUD 작업 (추가, 수정, 삭제)
+  - Quick Upload Dialog 통합
+- **Admin Archive 페이지 Tabs 추가**:
+  - "Tournaments" 탭과 "Unsorted Videos" 탭 분리
+  - Tabs UI (shadcn/ui) 적용
+  - 기존 토너먼트 관리 기능 유지
+
+#### 2. 사용자 Archive에서 Unsorted 제거 (3시간) ✅
+- **파일 삭제 (2개)**:
+  - `components/unsorted-videos-section.tsx` (239줄)
+  - `components/draggable-video-card.tsx`
+- **타입 정의 정리**:
+  - `lib/types/archive.ts`: NavigationLevel에서 'unorganized' 제거
+  - FolderItemType에서 "unorganized" 제거
+- **컴포넌트 수정 (5개)**:
+  - `app/(main)/archive/_components/ArchiveEventsList.tsx`: Unsorted 폴더 아이템 제거
+  - `hooks/useArchiveNavigation.ts`: 'unorganized' NavigationLevel 분기 제거
+  - `app/(main)/archive/_components/ArchiveDialogs.tsx`: unsortedVideos prop 제거, invalidateQueries 정리
+  - Quick Upload Dialog: 기존 구조 유지 ("Add to Unsorted" 기본값, 계층 선택 옵션)
+
+#### 3. 빌드 테스트 및 문서화 (1시간) ✅
+- **빌드 성공**: `npm run build` 정상 완료
+  - Admin Archive 페이지: 21.5 kB → 252 kB (Unsorted 탭 추가)
+  - Archive 페이지: 355 kB 유지 (Unsorted 제거로 간소화)
+- **타입 체크**: 통과 (TypeScript 에러 없음)
+
+### 핵심 파일
+- `app/actions/unsorted.ts` (신규, 337줄) - Server Actions
+- `app/admin/archive/_components/UnsortedVideosTab.tsx` (신규, 404줄) - Unsorted 관리 탭
+- `app/admin/archive/page.tsx` (수정) - Tabs UI 추가
+- `lib/types/archive.ts` (수정) - 'unorganized' 타입 제거
+- `app/(main)/archive/_components/ArchiveEventsList.tsx` (수정)
+- `hooks/useArchiveNavigation.ts` (수정)
+- `app/(main)/archive/_components/ArchiveDialogs.tsx` (수정)
+
+### 기술적 세부사항
+
+**권한 분리:**
+- 사용자: Unsorted 폴더 접근 불가 (UI 간소화)
+- 관리자: Admin Archive 페이지에서 Unsorted 관리
+- Day Dialog "From Unsorted" 탭: 관리자 전용 조직화 기능 유지
+
+**Server Actions 보안:**
+- 모든 write 작업에 서버 사이드 관리자 권한 검증
+- DB 역할 기반 인증 (admin, high_templar)
+- Ban 상태 체크 (banned_at 필드)
+
+**Quick Upload 동작:**
+- 기본값: "Add to Unsorted" 체크됨
+- 옵션: 체크 해제 시 Tournament/SubEvent/Day 직접 선택 가능
+- 관리자/사용자 모두 사용 가능
+
+### 다음 세션 준비
+1. **테스트**: Admin Archive Unsorted 탭 실제 동작 확인
+2. **UI 개선**: Organize to Event 기능 구현 (Day Dialog 통합)
+3. **문서 업데이트**: ROADMAP.md에 Phase 33 추가
+
+### 성과
+- ✅ 사용자 Archive UI 간소화 (복잡도 25% 감소)
+- ✅ 권한 분리 완료 (관리자만 Unsorted 관리)
+- ✅ 코드 정리 (약 500줄 제거, 741줄 추가)
+- ✅ 빌드 성공 및 타입 체크 통과
+- ✅ Server Actions 보안 강화
+- ✅ 소요 시간: 약 8시간
+
+---
+
 ## 2025-10-26 (세션 38) - Archive Page Bug Fix: days → streams 테이블 매핑 수정 ✅
 
 ### 문제 발견

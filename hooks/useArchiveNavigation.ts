@@ -78,24 +78,7 @@ export function useArchiveNavigation({
         data: tournament
       }))
 
-      // Add Unorganized folder
-      const unorganizedItem: FolderItem = {
-        id: 'unorganized',
-        name: 'Unorganized',
-        type: 'unorganized' as const,
-        itemCount: unsortedVideos.length
-      }
-
-      items = [unorganizedItem, ...tournamentItems]
-    } else if (navigationLevel === 'unorganized') {
-      // Show unsorted videos
-      items = unsortedVideos.map(video => ({
-        id: video.id,
-        name: video.name,
-        type: 'day' as const,
-        date: video.published_at || video.created_at,
-        data: video
-      }))
+      items = tournamentItems
     } else if (navigationLevel === 'tournament') {
       // Show sub-events of current tournament
       const tournament = tournaments.find(t => t.id === currentTournamentId)
@@ -146,19 +129,6 @@ export function useArchiveNavigation({
       })
     }
 
-    // Video Source filter (only for unorganized videos)
-    if (navigationLevel === 'unorganized') {
-      const selectedSources = Object.entries(advancedFilters.videoSources)
-        .filter(([_, enabled]) => enabled)
-        .map(([source]) => source)
-
-      if (selectedSources.length > 0 && selectedSources.length < 2) {
-        items = items.filter(item => {
-          const video = item.data as any
-          return selectedSources.includes(video?.video_source || 'youtube')
-        })
-      }
-    }
 
     // Apply sorting
     items.sort((a, b) => {
@@ -213,10 +183,6 @@ export function useArchiveNavigation({
     } else if (item.type === 'subevent') {
       setNavigationLevel('subevent')
       setCurrentSubEventId(item.id)
-    } else if (item.type === 'unorganized') {
-      setNavigationLevel('unorganized')
-      setCurrentTournamentId('')
-      setCurrentSubEventId('')
     }
     // Day clicks are handled by onSelectDay
   }
@@ -226,7 +192,7 @@ export function useArchiveNavigation({
     if (navigationLevel === 'subevent') {
       setNavigationLevel('tournament')
       setCurrentSubEventId('')
-    } else if (navigationLevel === 'tournament' || navigationLevel === 'unorganized') {
+    } else if (navigationLevel === 'tournament') {
       setNavigationLevel('root')
       setCurrentTournamentId('')
       setCurrentSubEventId('')

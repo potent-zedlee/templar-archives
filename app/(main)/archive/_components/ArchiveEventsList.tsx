@@ -56,16 +56,6 @@ export function ArchiveEventsList() {
         ? tournaments
         : tournaments.filter((t) => t.category_id === selectedCategory || t.category === selectedCategory)
 
-    // Add Unsorted folder
-    const unsortedItem: FolderItem = {
-      id: 'unorganized',
-      name: 'Unsorted',
-      type: 'unorganized' as const,
-      itemCount: unsortedVideos.length,
-      level: 0,
-    }
-    items.push(unsortedItem)
-
     // Build tree structure for tournaments
     filteredTournaments.forEach((tournament) => {
       // Add tournament
@@ -214,9 +204,6 @@ export function ArchiveEventsList() {
       toggleTournamentExpand(item.id)
     } else if (item.type === 'subevent') {
       toggleSubEventExpand(item.id)
-    } else if (item.type === 'unorganized') {
-      // Unsorted folder doesn't expand - just navigate
-      // TODO: Implement unsorted folder view
     }
   }, [toggleTournamentExpand, toggleSubEventExpand])
 
