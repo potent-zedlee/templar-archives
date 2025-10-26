@@ -4,6 +4,7 @@
  */
 
 import { logger } from './logger'
+import { captureSentryException } from './sentry-utils'
 
 const isProduction = process.env.NODE_ENV === 'production'
 
@@ -85,14 +86,36 @@ export function sanitizeErrorMessage(error: unknown, fallbackMessage: string): s
 
 /**
  * Log error to console (always logs regardless of environment)
- * In production, also sends to error tracking service (if configured)
+ * In production, also sends to error tracking service (Sentry)
  */
 export function logError(context: string, error: unknown): void {
   logger.error(`[${context}]`, error)
 
-  // TODO: In production, send to error tracking service (e.g., Sentry)
-  if (isProduction) {
-    // Example: Sentry.captureException(error)
+  // Send to Sentry in production and staging
+  if (process.env.NEXT_PUBLIC_ENVIRONMENT !== 'development') {
+    try {
+      if (error instanceof Error) {
+        captureSentryException(error, {
+          tags: {
+            context,
+          },
+          level: 'error',
+        })
+      } else {
+        captureSentryException(new Error(String(error)), {
+          tags: {
+            context,
+          },
+          level: 'error',
+          extra: {
+            originalError: error,
+          },
+        })
+      }
+    } catch (sentryError) {
+      // Fallback: log Sentry errors to console
+      console.error('Failed to send error to Sentry:', sentryError)
+    }
   }
 }
 

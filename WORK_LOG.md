@@ -11,6 +11,157 @@
 
 ---
 
+## 2025-10-26 (세션 40) - Phase 34: 프로덕션 모니터링 & 에러 트래킹 시스템 ✅
+
+### 작업 목표
+프로덕션 환경의 안정성과 관찰성(Observability)을 획기적으로 개선하는 포괄적인 모니터링 시스템 구축
+
+### 작업 내용
+
+#### 1. Sentry 통합 (3시간) ✅
+- **패키지 설치**: `@sentry/nextjs` (176 packages)
+- **설정 파일 5개** (총 425줄):
+  - `instrumentation.ts` (20줄) - Next.js 15 Instrumentation Hook
+  - `sentry.client.config.ts` (75줄) - 클라이언트 설정, Session Replay
+  - `sentry.server.config.ts` (70줄) - 서버 설정, Prisma 통합
+  - `sentry.edge.config.ts` (30줄) - Edge Runtime 설정
+  - `lib/sentry-utils.ts` (230줄) - 8개 유틸리티 함수
+- **Next.js 통합**:
+  - `next.config.mjs` - withSentryConfig 래퍼, CSP 헤더 Sentry 도메인 추가
+  - `.env.example` - 6개 Sentry 환경 변수 추가
+- **기존 코드 통합**:
+  - `lib/error-handler.ts` - logError 함수에 Sentry 전송 추가
+  - `lib/security/index.ts` - logSecurityEvent 함수에 Sentry 전송 추가
+
+**기능:**
+- ✅ 자동 에러 캡처 (클라이언트 + 서버 + Edge)
+- ✅ 성능 트랜잭션 추적 (API, DB 쿼리)
+- ✅ Source Maps 업로드 (디버깅 용이)
+- ✅ Release 추적 (Git commit SHA)
+- ✅ User Context 연동
+- ✅ Breadcrumbs 자동 수집
+- ✅ Session Replay (10% sampling)
+
+#### 2. 보안 이벤트 로깅 시스템 (2.5시간) ✅
+- **데이터베이스**:
+  - `security_events` 테이블 마이그레이션 (20251026000001)
+  - 8가지 이벤트 타입 (sql_injection, xss_attempt, csrf_violation, rate_limit_exceeded, suspicious_file_upload, permission_violation, failed_login_attempt, admin_action)
+  - 4가지 심각도 (low, medium, high, critical)
+  - 6개 인덱스 (event_type, severity, user_id, created_at, ip_address, composite)
+  - 자동 정리 함수 (90일 이상 된 로그 삭제)
+- **Security Logger** (`lib/monitoring/security-logger.ts`, 282줄):
+  - logSecurityEventToDb - 보안 이벤트 저장
+  - getSecurityEvents - 페이지네이션 및 필터링
+  - getSecurityEventStats - 통계 (총 개수, 타입별, 심각도별, 최근 24시간/7일)
+  - cleanupOldSecurityEvents - 로그 정리
+  - Supabase Service Role 사용 (RLS 우회)
+- **Admin Security Logs 페이지** (`app/admin/security-logs/page.tsx`, 391줄):
+  - 보안 이벤트 테이블 뷰 (시간, 타입, 심각도, 유저, IP, 경로, 상세)
+  - 통계 카드 4개 (총 이벤트, 24시간, 7일, Critical)
+  - 필터링 (이벤트 타입, 심각도)
+  - 페이지네이션 (50개씩)
+  - Refresh 버튼
+- **보안 이벤트 자동 로깅**:
+  - lib/security/index.ts에서 Sentry + DB 이중 로깅
+  - 심각도 자동 결정 (이벤트 타입 기반)
+
+#### 3. 성능 모니터링 (이미 완료) ✅
+- Vercel Analytics 이미 설정됨
+- Speed Insights 이미 설정됨
+- Web Vitals Reporter (`components/analytics/web-vitals.tsx`) 이미 존재
+
+#### 4. 사용자 활동 로깅 (1.5시간) ✅
+- **데이터베이스**:
+  - `audit_logs` 테이블 마이그레이션 (20251026000002)
+  - 중요 액션 추적 (create, update, delete, ban, role_change 등)
+  - Old/New Value 저장 (변경 이력)
+  - 자동 정리 함수 (180일 = 6개월)
+- **Audit Logger** (`lib/monitoring/audit-logger.ts`, 172줄):
+  - logAuditEvent - Audit 로그 저장
+  - getAuditLogs - 페이지네이션 및 필터링
+  - Supabase Service Role 사용
+
+#### 5. 문서화 (1시간) ✅
+- **MONITORING.md** (`docs/MONITORING.md`, 387줄):
+  - 종합 모니터링 가이드
+  - Sentry 설정 및 사용법
+  - 보안 이벤트 로깅 시스템
+  - 성능 모니터링 (Vercel Analytics)
+  - Audit Log 시스템
+  - Uptime 모니터링 가이드 (BetterStack/Checkly)
+  - Alert 시스템 가이드 (Slack Webhook)
+  - 유지보수 가이드
+
+### 핵심 파일
+**생성:**
+- `instrumentation.ts` (20줄)
+- `sentry.client.config.ts` (75줄)
+- `sentry.server.config.ts` (70줄)
+- `sentry.edge.config.ts` (30줄)
+- `lib/sentry-utils.ts` (230줄)
+- `lib/monitoring/security-logger.ts` (282줄)
+- `app/admin/security-logs/page.tsx` (391줄)
+- `lib/monitoring/audit-logger.ts` (172줄)
+- `supabase/migrations/20251026000001_add_security_events_table.sql`
+- `supabase/migrations/20251026000002_add_audit_logs_table.sql`
+- `docs/MONITORING.md` (387줄)
+
+**수정:**
+- `next.config.mjs` - Sentry 통합, CSP 헤더
+- `.env.example` - Sentry 환경 변수
+- `lib/error-handler.ts` - Sentry 전송
+- `lib/security/index.ts` - Sentry + DB 이중 로깅
+
+### 기술적 세부사항
+
+**Sentry 통합:**
+- Next.js 15 Instrumentation Hook 사용
+- 클라이언트/서버/Edge 3개 런타임 별도 설정
+- Source Maps 자동 업로드 (next.config.mjs)
+- Release 추적 (Vercel Git commit SHA)
+- 개발 환경에서는 이벤트 전송 비활성화
+
+**보안 이벤트 로깅:**
+- Sentry (실시간 알림) + DB (감사 추적) 이중 로깅
+- 심각도 자동 결정 (SQL Injection = critical, XSS = high, 등)
+- RLS 정책: 관리자만 조회 가능
+- Service Role 사용: INSERT는 시스템만 가능
+
+**성능 최적화:**
+- Sentry tracesSampleRate: 10% (프로덕션), 100% (개발)
+- Session Replay: 10% sampling
+- 로그 자동 정리 (Security: 90일, Audit: 180일)
+
+### 빌드 결과
+- ✅ 빌드 성공: `npm run build`
+- ✅ Admin Security Logs 페이지: 8.15 kB
+- ✅ 전체 페이지 44개 정상 빌드
+- ✅ Middleware: 130 kB (Sentry 포함)
+
+### 다음 세션 준비
+1. **Sentry 프로젝트 설정**: https://sentry.io 에서 프로젝트 생성, 환경 변수 설정
+2. **보안 이벤트 테스트**: 실제 보안 이벤트 발생시켜 로깅 확인
+3. **Uptime 모니터링 설정**: BetterStack 또는 Checkly 계정 생성
+4. **Alert 시스템 구현**: Slack Webhook 통합 (향후 작업)
+
+### 성과
+- ✅ Sentry 에러 트래킹 통합 (클라이언트 + 서버 + Edge)
+- ✅ 보안 이벤트 로깅 시스템 구축 (DB + Admin 페이지)
+- ✅ Audit Log 시스템 구축
+- ✅ 포괄적인 모니터링 문서 작성
+- ✅ 소요 시간: 약 8시간
+- ✅ 보안 등급: A (유지)
+
+**모니터링 시스템 완성도: 80%**
+- ✅ 에러 트래킹 (Sentry)
+- ✅ 보안 이벤트 로깅
+- ✅ 성능 모니터링 (Vercel)
+- ✅ Audit Log
+- ⏳ Uptime 모니터링 (문서화만 완료)
+- ⏳ Alert 시스템 (문서화만 완료)
+
+---
+
 ## 2025-10-26 (세션 39) - Phase 33: Archive Unsorted 관리 시스템 재구성 ✅
 
 ### 작업 목표

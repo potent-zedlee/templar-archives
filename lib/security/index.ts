@@ -217,11 +217,57 @@ export async function securityChecklist(
  * 보안 로깅
  */
 export function logSecurityEvent(
-  event: "sql_injection" | "xss_attempt" | "csrf_violation" | "rate_limit_exceeded",
+  event: "sql_injection" | "xss_attempt" | "csrf_violation" | "rate_limit_exceeded" | "suspicious_file_upload" | "permission_violation" | "failed_login_attempt" | "admin_action",
   details: Record<string, unknown>
 ): void {
   console.warn(`[SECURITY] ${event}:`, details)
 
-  // TODO: 프로덕션에서는 보안 이벤트를 별도 로그 시스템에 기록
-  // 예: Sentry, LogRocket, CloudWatch Logs 등
+  // Send to Sentry in production and staging
+  if (process.env.NEXT_PUBLIC_ENVIRONMENT !== 'development') {
+    try {
+      // Import Sentry utils dynamically to avoid circular dependencies
+      import('./sentry-utils').then(({ captureSentryMessage }) => {
+        captureSentryMessage(
+          `Security Event: ${event}`,
+          'warning',
+          {
+            tags: {
+              security_event: event,
+              type: 'security',
+            },
+            extra: details,
+          }
+        )
+      })
+    } catch (error) {
+      // Fallback: log Sentry errors to console
+      console.error('Failed to send security event to Sentry:', error)
+    }
+
+    // Also log to database for admin monitoring
+    try {
+      import('../monitoring/security-logger').then(({ logSecurityEventToDb }) => {
+        // Determine severity based on event type
+        const severity =
+          event === 'sql_injection' || event === 'permission_violation' ? 'critical' :
+          event === 'xss_attempt' || event === 'csrf_violation' ? 'high' :
+          event === 'failed_login_attempt' || event === 'suspicious_file_upload' ? 'medium' :
+          'low'
+
+        logSecurityEventToDb({
+          event_type: event,
+          severity,
+          user_id: (details.userId as string) || null,
+          ip_address: (details.ipAddress as string) || null,
+          user_agent: (details.userAgent as string) || null,
+          request_method: (details.method as string) || null,
+          request_path: (details.path as string) || null,
+          details: details as Record<string, any>,
+        })
+      })
+    } catch (error) {
+      // Fallback: log DB errors to console
+      console.error('Failed to log security event to database:', error)
+    }
+  }
 }
