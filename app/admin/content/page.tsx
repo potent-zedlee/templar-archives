@@ -50,7 +50,8 @@ import {
   useRejectLiveReportMutation,
   type LiveReport,
 } from "@/lib/queries/live-reports-queries"
-import { Eye, EyeOff, Trash2, CheckCircle, XCircle } from "lucide-react"
+import { Eye, EyeOff, Trash2, CheckCircle, XCircle, Download } from "lucide-react"
+import { exportContentReports } from "@/lib/export-utils"
 
 export default function contentClient() {
   const router = useRouter()
@@ -284,6 +285,34 @@ export default function contentClient() {
 
         {/* Reports Tab */}
         <TabsContent value="reports">
+          <div className="flex justify-end mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (reports.length === 0) {
+                  toast.error('내보낼 데이터가 없습니다')
+                  return
+                }
+                const exportData = reports.map((r: any) => ({
+                  id: r.id,
+                  reported_item_type: r.post_id ? 'post' : 'comment',
+                  reported_item_id: r.post_id || r.comment_id,
+                  reporter_id: r.reporter_id,
+                  reason: r.reason,
+                  description: r.description,
+                  status: r.status,
+                  created_at: r.created_at,
+                  reviewed_at: r.reviewed_at,
+                }))
+                exportContentReports(exportData as any, 'csv')
+                toast.success('CSV 파일이 다운로드되었습니다')
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
           <Card className="p-6">
             <Table>
               <TableHeader>

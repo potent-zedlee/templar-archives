@@ -27,10 +27,11 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Shield, AlertTriangle, Info, XCircle, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
+import { Shield, AlertTriangle, Info, XCircle, ChevronLeft, ChevronRight, RefreshCw, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { createBrowserSupabaseClient } from '@/lib/supabase'
 import { isAdmin } from '@/lib/auth-utils'
+import { exportSecurityLogs } from '@/lib/export-utils'
 
 type SecurityEvent = {
   id: string
@@ -299,6 +300,39 @@ export default function SecurityLogsPage() {
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
+
+          <div className="flex gap-2 ml-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (events.length === 0) {
+                  toast.error('내보낼 데이터가 없습니다')
+                  return
+                }
+                exportSecurityLogs(events as any, 'csv')
+                toast.success('CSV 파일이 다운로드되었습니다')
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (events.length === 0) {
+                  toast.error('내보낼 데이터가 없습니다')
+                  return
+                }
+                exportSecurityLogs(events as any, 'json')
+                toast.success('JSON 파일이 다운로드되었습니다')
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export JSON
+            </Button>
+          </div>
         </div>
       </Card>
 

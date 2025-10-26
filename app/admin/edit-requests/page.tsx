@@ -33,8 +33,9 @@ import {
   useApproveEditRequestMutation,
   useRejectEditRequestMutation,
 } from "@/lib/queries/admin-queries"
-import { CheckCircle, XCircle } from "lucide-react"
+import { CheckCircle, XCircle, Download } from "lucide-react"
 import Link from "next/link"
+import { exportHandEditRequests } from "@/lib/export-utils"
 
 const EDIT_TYPE_LABELS: Record<string, string> = {
   "basic_info": "Basic Info",
@@ -218,6 +219,34 @@ export default function editrequestsClient() {
 
         {/* Pending Requests */}
         <TabsContent value="pending">
+          <div className="flex justify-end mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (pendingRequests.length === 0) {
+                  toast.error('내보낼 데이터가 없습니다')
+                  return
+                }
+                const exportData = pendingRequests.map((r: any) => ({
+                  id: r.id,
+                  hand_id: r.hand_id,
+                  requester_id: r.requester_id,
+                  edit_type: r.edit_type,
+                  status: r.status,
+                  suggested_changes: r.proposed_data,
+                  reason: r.reason,
+                  created_at: r.created_at,
+                  reviewed_at: r.reviewed_at,
+                }))
+                exportHandEditRequests(exportData as any, 'csv')
+                toast.success('CSV 파일이 다운로드되었습니다')
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
           <Card className="p-6">
             {pendingRequests.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
@@ -286,6 +315,34 @@ export default function editrequestsClient() {
 
         {/* Reviewed Requests */}
         <TabsContent value="reviewed">
+          <div className="flex justify-end mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (reviewedRequests.length === 0) {
+                  toast.error('내보낼 데이터가 없습니다')
+                  return
+                }
+                const exportData = reviewedRequests.map((r: any) => ({
+                  id: r.id,
+                  hand_id: r.hand_id,
+                  requester_id: r.requester_id,
+                  edit_type: r.edit_type,
+                  status: r.status,
+                  suggested_changes: r.proposed_data,
+                  reason: r.reason,
+                  created_at: r.created_at,
+                  reviewed_at: r.reviewed_at,
+                }))
+                exportHandEditRequests(exportData as any, 'csv')
+                toast.success('CSV 파일이 다운로드되었습니다')
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
           <Card className="p-6">
             {reviewedRequests.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
