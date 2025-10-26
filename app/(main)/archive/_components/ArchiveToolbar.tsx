@@ -25,7 +25,7 @@ import { QuickUploadDialog } from '@/components/quick-upload-dialog'
 import { Button } from '@/components/ui/button'
 import { isAdmin } from '@/lib/auth-utils'
 import { cn } from '@/lib/utils'
-import type { GameType } from '@/lib/tournament-categories-db'
+import type { GameType } from '@/lib/tournament-categories'
 
 export function ArchiveToolbar() {
   const { userEmail } = useArchiveDataStore()

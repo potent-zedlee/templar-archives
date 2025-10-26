@@ -21,9 +21,9 @@ import {
   TOURNAMENT_CATEGORIES,
   POPULAR_CATEGORIES,
   CATEGORIES_BY_REGION,
-  searchCategories,
   type TournamentCategory
-} from "@/lib/tournament-categories"
+} from "@/lib/tournament-categories-static"
+import { searchCategories } from "@/lib/tournament-categories"
 
 interface ArchiveUnifiedFiltersProps {
   selectedCategory: string
