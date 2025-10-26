@@ -66,7 +66,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
         {/* Tournament Row */}
         <div
           className={cn(
-            "group flex items-center gap-3 px-4 py-2 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20",
+            "group flex items-center gap-3 px-4 py-2 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20 border-l-4 border-blue-500",
             isExpanded && "bg-muted/20"
           )}
           onClick={() => onNavigate(item)}
@@ -145,7 +145,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
 
         {/* Add SubEvent Button (if expanded and no subevents) */}
         {isExpanded && (!tournament.sub_events || tournament.sub_events.length === 0) && isAdmin && onAddSubEvent && (
-          <div className="pl-24 pr-4 py-4 border-b border-border/20 bg-muted/10">
+          <div className="px-4 py-4 border-b border-border/20 bg-muted/5 border-l-4 border-purple-500">
             <Button
               variant="outline"
               size="sm"
@@ -192,7 +192,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
         {/* SubEvent Row */}
         <div
           className={cn(
-            "group flex items-center gap-3 pl-24 pr-4 py-2 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20 border-dashed",
+            "group flex items-center gap-3 px-4 py-2 bg-muted/5 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20 border-dashed border-l-4 border-purple-500",
             isExpanded && "bg-muted/20"
           )}
           onClick={() => onNavigate(subEventItem)}
@@ -267,7 +267,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     return (
       <div
         key={day.id}
-        className="group flex items-center gap-3 pl-36 pr-4 py-2 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20 border-dashed"
+        className="group flex items-center gap-3 px-4 py-2 bg-muted/10 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20 border-dashed border-l-4 border-green-500"
         onClick={() => onSelectDay?.(day.id)}
       >
         {/* Date */}
