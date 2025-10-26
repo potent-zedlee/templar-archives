@@ -33,10 +33,12 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, Search, Loader2, ChevronRight, ChevronDown } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TournamentDialog } from '@/components/tournament-dialog'
 import { DeleteDialog } from '@/components/archive-dialogs/delete-dialog'
 import { SubEventDialog } from '@/components/archive-dialogs/sub-event-dialog'
 import { DayDialog } from '@/components/archive-dialogs/day-dialog'
+import { UnsortedVideosTab } from './_components/UnsortedVideosTab'
 import type { Tournament, FolderItem } from '@/lib/types/archive'
 import type { SubEvent, Stream } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -400,11 +402,23 @@ export default function AdminArchivePage() {
           <h1 className="text-3xl font-bold">Archive Management</h1>
           <p className="text-muted-foreground mt-1">Manage tournaments, events, and videos</p>
         </div>
-        <Button onClick={handleCreateTournament}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Tournament
-        </Button>
       </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="tournaments" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
+          <TabsTrigger value="unsorted">Unsorted Videos</TabsTrigger>
+        </TabsList>
+
+        {/* Tournaments Tab */}
+        <TabsContent value="tournaments" className="space-y-6">
+          <div className="flex items-center justify-end">
+            <Button onClick={handleCreateTournament}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Tournament
+            </Button>
+          </div>
 
       {/* Filters */}
       <div className="flex gap-4">
@@ -734,12 +748,19 @@ export default function AdminArchivePage() {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-        <span>Total: {tournaments.length} tournaments</span>
-        <span>•</span>
-        <span>Showing: {filteredTournaments.length} tournaments</span>
-      </div>
+          {/* Stats */}
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <span>Total: {tournaments.length} tournaments</span>
+            <span>•</span>
+            <span>Showing: {filteredTournaments.length} tournaments</span>
+          </div>
+        </TabsContent>
+
+        {/* Unsorted Videos Tab */}
+        <TabsContent value="unsorted">
+          <UnsortedVideosTab onRefresh={loadTournaments} />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialogs */}
       <TournamentDialog

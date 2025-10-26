@@ -61,7 +61,7 @@ const ArchiveInfoDialog = dynamic(() => import('@/components/archive-info-dialog
 
 export function ArchiveDialogs() {
   const queryClient = useQueryClient()
-  const { tournaments, unsortedVideos } = useArchiveData()
+  const { tournaments } = useArchiveData()
   const { userEmail, selectedStream } = useArchiveDataStore()
 
   const {
@@ -124,19 +124,16 @@ export function ArchiveDialogs() {
 
   const handleDaySuccess = () => {
     queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
-    queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
     closeDayDialog()
   }
 
   const handleRenameSuccess = () => {
     queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
-    queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
     closeRenameDialog()
   }
 
   const handleDeleteSuccess = () => {
     queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
-    queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
     closeDeleteDialog()
   }
 
@@ -147,7 +144,6 @@ export function ArchiveDialogs() {
 
   const handleMoveSuccess = () => {
     queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
-    queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
     clearSelection()
     closeMoveToEventDialog()
     closeMoveToNewEventDialog()
@@ -264,7 +260,6 @@ export function ArchiveDialogs() {
         onOpenChange={closeDayDialog}
         selectedSubEventId={selectedSubEventIdForDialog}
         editingDayId={dayDialog.editingId || ''}
-        unsortedVideos={unsortedVideos}
         onSuccess={handleDaySuccess}
       />
 
