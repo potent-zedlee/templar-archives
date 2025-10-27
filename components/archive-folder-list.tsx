@@ -3,6 +3,7 @@
 import { memo } from "react"
 import { ChevronRight, Play, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { BackgroundGradient } from "@/components/ui/background-gradient"
 import { cn } from "@/lib/utils"
 import { getCategoryByAlias } from "@/lib/tournament-categories"
 import { FOLDER_COLORS } from "@/lib/constants/archive-colors"
@@ -75,16 +76,17 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     }
 
     return (
-      <div key={item.id} className="space-y-0">
-        {/* Tournament Row */}
-        <div
-          className={cn(
-            "group flex items-center gap-6 px-6 py-4 backdrop-blur-md bg-white/5 dark:bg-black/5 hover:bg-white/10 dark:hover:bg-black/10 hover:scale-[1.02] active:scale-[0.98] rounded-xl border border-white/10 shadow-xl hover:shadow-2xl transition-all duration-300 ease-out cursor-pointer relative overflow-hidden mb-3",
-            "before:absolute before:inset-0 before:bg-gradient-to-r before:from-blue-500/20 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none",
-            isExpanded && "bg-white/10 dark:bg-black/10 shadow-2xl ring-2 ring-blue-500/30"
-          )}
-          onClick={() => onNavigate(item)}
-        >
+      <div key={item.id} className="space-y-0 mb-3">
+        <BackgroundGradient className="rounded-[22px]" animate={false}>
+          {/* Tournament Row */}
+          <div
+            className={cn(
+              "group flex items-center gap-6 px-6 py-4 backdrop-blur-md bg-slate-950 hover:scale-[1.01] active:scale-[0.99] rounded-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 ease-out cursor-pointer relative overflow-hidden",
+              "before:absolute before:inset-0 before:bg-gradient-to-r before:from-blue-500/20 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none",
+              isExpanded && "shadow-2xl ring-2 ring-blue-500/30"
+            )}
+            onClick={() => onNavigate(item)}
+          >
           {/* Date */}
           <div className="w-24 flex-shrink-0 text-sm font-medium text-foreground/70 relative z-10">
             <div className="font-mono">{formatDate(tournament.start_date)}</div>
@@ -148,7 +150,8 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
               <Info className="h-4 w-4 text-foreground/80" />
             </Button>
           </div>
-        </div>
+          </div>
+        </BackgroundGradient>
 
         {/* SubEvents (if expanded) */}
         {isExpanded && tournament.sub_events && tournament.sub_events.length > 0 && (
@@ -282,11 +285,12 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     }
 
     return (
-      <div
-        key={day.id}
-        className="group flex items-center gap-4 px-4 py-2.5 ml-12 mr-6 mb-1.5 backdrop-blur-md bg-emerald-500/5 dark:bg-emerald-500/5 hover:bg-emerald-500/10 dark:hover:bg-emerald-500/10 hover:scale-[1.01] active:scale-[0.99] rounded-md border border-emerald-500/20 shadow-md hover:shadow-lg transition-all duration-300 ease-out cursor-pointer relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-emerald-500/15 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none"
-        onClick={() => onSelectDay?.(day.id)}
-      >
+      <div key={day.id} className="ml-12 mr-6 mb-1.5">
+        <BackgroundGradient className="rounded-[16px]" animate={false}>
+          <div
+            className="group flex items-center gap-4 px-4 py-2.5 backdrop-blur-md bg-slate-950 hover:scale-[1.005] active:scale-[0.99] rounded-lg border-0 shadow-md hover:shadow-lg transition-all duration-300 ease-out cursor-pointer relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-emerald-500/15 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none"
+            onClick={() => onSelectDay?.(day.id)}
+          >
         {/* Date */}
         <div className="w-20 flex-shrink-0 text-xs font-medium text-foreground/60 relative z-10">
           <div className="font-mono">{day.published_at ? formatDate(day.published_at) : "-"}</div>
@@ -331,6 +335,8 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             <Info className="h-3 w-3 text-foreground/60" />
           </Button>
         </div>
+          </div>
+        </BackgroundGradient>
       </div>
     )
   }
