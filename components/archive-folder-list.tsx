@@ -336,13 +336,10 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   }
 
   return (
-    <div className="backdrop-blur-xl bg-white/5 dark:bg-black/5 rounded-2xl border border-white/10 shadow-2xl p-4 overflow-hidden">
-      {/* Table Body */}
-      <div className="space-y-0">
-        {items
-          .filter((item) => item.type === "tournament")
-          .map((item) => renderTournament(item))}
-      </div>
+    <div className="space-y-0">
+      {items
+        .filter((item) => item.type === "tournament")
+        .map((item) => renderTournament(item))}
     </div>
   )
 })
