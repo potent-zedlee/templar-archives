@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { useArchiveKeyboard } from '@/hooks/useArchiveKeyboard'
+import { useArchiveData } from './ArchiveDataContext'
 import { archiveKeys } from '@/lib/queries/archive-queries'
 import { organizeVideo, organizeVideos } from '@/lib/unsorted-videos'
 import { toast } from 'sonner'
@@ -24,6 +25,7 @@ interface ArchiveProvidersProps {
 
 export function ArchiveProviders({ children }: ArchiveProvidersProps) {
   const queryClient = useQueryClient()
+  const { tournaments } = useArchiveData()
   const { setSelectedDay } = useArchiveDataStore()
   const {
     selectedVideoIds,
@@ -97,9 +99,21 @@ export function ArchiveProviders({ children }: ArchiveProvidersProps) {
       setSelectedDay(null)
     },
     onSpace: () => {
-      const selectedDay = useArchiveDataStore.getState().selectedDay
-      if (selectedDay) {
-        openVideoDialog('')
+      const selectedDayId = useArchiveDataStore.getState().selectedDay
+      if (selectedDayId) {
+        // Find the stream object from tournaments
+        let streamObj = null
+        for (const tournament of tournaments) {
+          for (const subEvent of tournament.sub_events || []) {
+            const stream = subEvent.days?.find((s) => s.id === selectedDayId)
+            if (stream) {
+              streamObj = stream
+              break
+            }
+          }
+          if (streamObj) break
+        }
+        openVideoDialog(streamObj, '')
       }
     },
     onSelectAll: () => {

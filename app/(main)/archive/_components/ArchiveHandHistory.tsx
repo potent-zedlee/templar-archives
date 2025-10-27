@@ -174,8 +174,7 @@ export function ArchiveHandHistory() {
                 variant="default"
                 size="sm"
                 onClick={() => {
-                  const videoUrl = selectedDayData.day.video_url || selectedDayData.day.video_file || selectedDayData.day.video_nas_path || ''
-                  openVideoDialog(videoUrl)
+                  openVideoDialog(selectedDayData.day, '')
                 }}
                 className="gap-2 backdrop-blur-md bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
@@ -213,7 +212,7 @@ export function ArchiveHandHistory() {
               handIds={hands.map((hand) => hand.id)}
               hands={transformedHands}
               onPlayHand={(startTime) => {
-                openVideoDialog(startTime)
+                openVideoDialog(selectedDayData?.day || null, startTime)
               }}
             />
           ) : (
