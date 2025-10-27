@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { getCategoryById, getCategoryByAlias } from '@/lib/tournament-categories'
 
 interface CategoryLogoProps {
-  category: string
+  category: string | { id: string; logo_url?: string | null; name?: string }
   size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
   fallback?: 'icon' | 'text' | 'none'
@@ -32,9 +32,25 @@ export function CategoryLogo({
   className,
   fallback = 'text',
 }: CategoryLogoProps) {
-  // 카테고리 정보 가져오기 (ID 또는 별칭으로)
-  const categoryData = getCategoryById(category) || getCategoryByAlias(category)
-  let logoPath = categoryData?.logoUrl
+  // 카테고리 정보 가져오기
+  let categoryData
+  let logoPath: string | undefined
+
+  if (typeof category === 'string') {
+    // ID 또는 별칭으로 정적 데이터에서 찾기
+    categoryData = getCategoryById(category) || getCategoryByAlias(category)
+    logoPath = categoryData?.logoUrl
+  } else {
+    // DB에서 가져온 객체인 경우 logo_url 우선 사용
+    if (category.logo_url) {
+      logoPath = category.logo_url
+    }
+    // 폴백: 정적 데이터에서 찾기
+    if (!logoPath) {
+      categoryData = getCategoryById(category.id) || getCategoryByAlias(category.id)
+      logoPath = categoryData?.logoUrl
+    }
+  }
 
   // 심볼 버전이 있으면 우선 사용
   if (logoPath && SYMBOL_LOGO_MAPPING[logoPath]) {
@@ -44,8 +60,12 @@ export function CategoryLogo({
   // If no logo exists for this category
   if (!logoPath) {
     if (fallback === 'none') return null
+
+    const displayName = typeof category === 'string'
+      ? (categoryData?.displayName || category)
+      : (category.name || categoryData?.displayName || category.id)
+
     if (fallback === 'text') {
-      const displayName = categoryData?.displayName || category
       return (
         <span className={cn('font-semibold', className)}>
           {displayName}
@@ -53,6 +73,10 @@ export function CategoryLogo({
       )
     }
     // fallback === 'icon'
+    const firstChar = typeof category === 'string'
+      ? category.charAt(0).toUpperCase()
+      : (category.name?.[0] || category.id.charAt(0)).toUpperCase()
+
     return (
       <div
         className={cn(
@@ -62,13 +86,15 @@ export function CategoryLogo({
         )}
       >
         <span className="text-xs font-bold text-muted-foreground">
-          {category.charAt(0).toUpperCase()}
+          {firstChar}
         </span>
       </div>
     )
   }
 
-  const displayName = categoryData?.name || category
+  const displayName = typeof category === 'string'
+    ? (categoryData?.name || category)
+    : (category.name || categoryData?.name || category.id)
   const isPng = logoPath.endsWith('.png')
 
   // PNG 파일은 Next.js Image 사용 (최적화된 이미지 로딩)
