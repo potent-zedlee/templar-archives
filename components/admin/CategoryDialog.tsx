@@ -184,10 +184,13 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
         const publicUrl = await uploadCategoryLogo(categoryId, logoFile)
         // Add cache busting timestamp to force reload
         const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`
+
+        // Save cache-busted URL to DB
+        await updateMutation.mutateAsync({ logo_url: urlWithTimestamp })
         setLogoPreview(urlWithTimestamp)
-      } else if (logoUploadMode === "select" && logoPreview) {
-        // Logo already selected from picker, no need to upload
-        // The logoPreview already contains the selected URL
+      } else if (logoUploadMode === "select" && logoPreview && categoryId) {
+        // Save selected logo URL to DB
+        await updateMutation.mutateAsync({ logo_url: logoPreview })
       }
 
       // Close dialog and reset form
