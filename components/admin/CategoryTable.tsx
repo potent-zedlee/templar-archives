@@ -196,26 +196,6 @@ function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) 
         {/* Game Type */}
         <TableCell>{getGameTypeBadge(category.game_type)}</TableCell>
 
-        {/* Region */}
-        <TableCell>
-          <Badge
-            variant={
-              category.region === "premier"
-                ? "default"
-                : category.region === "regional"
-                ? "secondary"
-                : category.region === "online"
-                ? "outline"
-                : "destructive"
-            }
-          >
-            {category.region}
-          </Badge>
-        </TableCell>
-
-        {/* Priority */}
-        <TableCell className="text-center">{category.priority}</TableCell>
-
         {/* Usage Count */}
         <TableCell className="text-center">
           <Badge variant="secondary">{usageCount || 0}</Badge>
@@ -235,17 +215,6 @@ function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) 
               <EyeOff className="h-4 w-4 text-muted-foreground" />
             )}
           </Button>
-        </TableCell>
-
-        {/* Website */}
-        <TableCell>
-          {category.website && (
-            <Button variant="ghost" size="sm" asChild>
-              <a href={category.website} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </Button>
-          )}
         </TableCell>
 
         {/* Actions */}
@@ -322,11 +291,8 @@ export function CategoryTable({ categories, usageCounts }: CategoryTableProps) {
             <TableHead>이름</TableHead>
             <TableHead>상위 카테고리</TableHead>
             <TableHead>게임 타입</TableHead>
-            <TableHead>지역</TableHead>
-            <TableHead className="text-center">우선순위</TableHead>
             <TableHead className="text-center">사용 개수</TableHead>
             <TableHead>활성</TableHead>
-            <TableHead>웹사이트</TableHead>
             <TableHead>작업</TableHead>
           </TableRow>
         </TableHeader>
