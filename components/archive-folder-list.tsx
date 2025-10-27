@@ -5,6 +5,7 @@ import { ChevronRight, Play, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { getCategoryByAlias } from "@/lib/tournament-categories"
+import { FOLDER_COLORS } from "@/lib/constants/archive-colors"
 import type { FolderItem } from "@/lib/types/archive"
 import type { Tournament, SubEvent, Day } from "@/lib/types/archive"
 import Image from "next/image"
@@ -66,6 +67,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
         {/* Tournament Row */}
         <div
           className={cn(
+            // Tournament border color: FOLDER_COLORS.tournament (bg-blue-600/70)
             "group flex items-center gap-4 px-4 py-3 hover:bg-accent/10 hover:scale-[1.005] active:scale-[0.998] hover:shadow-sm transition-all duration-200 ease-in-out cursor-pointer border-b border-border/30 border-l-4 border-blue-600/70",
             isExpanded && "bg-accent/15 border-l-8"
           )}

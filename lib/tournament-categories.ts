@@ -16,9 +16,6 @@ export interface TournamentCategory {
   short_name?: string | null
   aliases: string[]
   logo_url?: string | null
-  region: 'premier' | 'regional' | 'online' | 'specialty'
-  priority: number
-  website?: string | null
   is_active: boolean
   game_type: GameType
   parent_id?: string | null
@@ -36,9 +33,6 @@ export interface CategoryInput {
   short_name?: string
   aliases?: string[]
   logo_url?: string
-  region: 'premier' | 'regional' | 'online' | 'specialty'
-  priority?: number
-  website?: string
   is_active?: boolean
   game_type?: GameType
   parent_id?: string | null

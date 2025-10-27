@@ -7,6 +7,7 @@
  * - 토너먼트 목록 (테이블 뷰)
  * - CRUD 다이얼로그
  * - 검색 및 필터링
+ * Phase 33: Enhanced with type-safe sorting and ARIA attributes
  */
 
 import { useEffect, useState } from 'react'
@@ -41,6 +42,8 @@ import { DayDialog } from '@/components/archive-dialogs/day-dialog'
 import { UnsortedVideosTab } from './_components/UnsortedVideosTab'
 import type { Tournament, FolderItem } from '@/lib/types/archive'
 import type { SubEvent, Stream } from '@/lib/supabase'
+import type { AdminArchiveSortField, SortDirection } from '@/lib/types/sorting'
+import { getSortAriaProps } from '@/hooks/useSorting'
 import { useRouter } from 'next/navigation'
 import { getCategoryByAlias } from '@/lib/tournament-categories'
 
@@ -51,8 +54,8 @@ export default function AdminArchivePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [gameTypeFilter, setGameTypeFilter] = useState('all')
-  const [sortField, setSortField] = useState<'name' | 'category' | 'type' | 'location' | 'date'>('date')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [sortField, setSortField] = useState<AdminArchiveSortField>('date')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [_userEmail, setUserEmail] = useState<string | null>(null)
   const [isUserAdmin, setIsUserAdmin] = useState(false)
 
@@ -193,7 +196,7 @@ export default function AdminArchivePage() {
     }
   }
 
-  const handleSort = (field: 'name' | 'category' | 'type' | 'location' | 'date') => {
+  const handleSort = (field: AdminArchiveSortField) => {
     if (sortField === field) {
       // 같은 필드 클릭 시 방향 토글
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
@@ -513,6 +516,7 @@ export default function AdminArchivePage() {
                 <TableHead
                   className="min-w-[200px] cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('name')}
+                  {...getSortAriaProps('name', sortField, sortDirection)}
                 >
                   <div className="flex items-center gap-2">
                     Name
@@ -526,6 +530,7 @@ export default function AdminArchivePage() {
                 <TableHead
                   className="w-32 cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('category')}
+                  {...getSortAriaProps('category', sortField, sortDirection)}
                 >
                   <div className="flex items-center gap-2">
                     Category
@@ -539,6 +544,7 @@ export default function AdminArchivePage() {
                 <TableHead
                   className="w-32 cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('type')}
+                  {...getSortAriaProps('type', sortField, sortDirection)}
                 >
                   <div className="flex items-center gap-2">
                     Type
@@ -552,6 +558,7 @@ export default function AdminArchivePage() {
                 <TableHead
                   className="w-40 cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('location')}
+                  {...getSortAriaProps('location', sortField, sortDirection)}
                 >
                   <div className="flex items-center gap-2">
                     Location
@@ -565,6 +572,7 @@ export default function AdminArchivePage() {
                 <TableHead
                   className="w-48 cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('date')}
+                  {...getSortAriaProps('date', sortField, sortDirection)}
                 >
                   <div className="flex items-center gap-2">
                     Date Range
