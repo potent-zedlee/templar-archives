@@ -77,11 +77,15 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
 
     return (
       <div key={item.id} className="space-y-0 mb-3">
-        <BackgroundGradient className="rounded-[22px]" animate={false}>
+        <BackgroundGradient
+          className="rounded-[22px]"
+          containerClassName="p-[1px]"
+          animate={false}
+        >
           {/* Tournament Row */}
           <div
             className={cn(
-              "group flex items-center gap-6 px-6 py-4 backdrop-blur-md bg-slate-950 hover:scale-[1.01] active:scale-[0.99] rounded-xl border-0 shadow-xl hover:shadow-2xl transition-all duration-300 ease-out cursor-pointer relative overflow-hidden",
+              "group flex items-center gap-6 px-6 py-4 backdrop-blur-md bg-slate-950 rounded-[21px] border-0 shadow-xl hover:shadow-2xl transition-all duration-300 ease-out cursor-pointer relative overflow-hidden",
               "before:absolute before:inset-0 before:bg-gradient-to-r before:from-blue-500/20 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none",
               isExpanded && "shadow-2xl ring-2 ring-blue-500/30"
             )}
@@ -286,9 +290,13 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
 
     return (
       <div key={day.id} className="ml-12 mr-6 mb-1.5">
-        <BackgroundGradient className="rounded-[16px]" animate={false}>
+        <BackgroundGradient
+          className="rounded-[16px]"
+          containerClassName="p-[1px]"
+          animate={false}
+        >
           <div
-            className="group flex items-center gap-4 px-4 py-2.5 backdrop-blur-md bg-slate-950 hover:scale-[1.005] active:scale-[0.99] rounded-lg border-0 shadow-md hover:shadow-lg transition-all duration-300 ease-out cursor-pointer relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-emerald-500/15 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none"
+            className="group flex items-center gap-4 px-4 py-2.5 backdrop-blur-md bg-slate-950 rounded-[15px] border-0 shadow-md hover:shadow-lg transition-all duration-300 ease-out cursor-pointer relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-emerald-500/15 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none"
             onClick={() => onSelectDay?.(day.id)}
           >
         {/* Date */}
