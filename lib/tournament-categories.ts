@@ -55,7 +55,7 @@ export async function getAllCategories(
   let query = supabase
     .from('tournament_categories')
     .select('*')
-    .order('priority', { ascending: true })
+    .order('name', { ascending: true })
 
   if (!includeInactive) {
     query = query.eq('is_active', true)
@@ -92,7 +92,7 @@ export async function getRootCategories(gameType?: GameType): Promise<Tournament
     .select('*')
     .is('parent_id', null)
     .eq('is_active', true)
-    .order('priority', { ascending: true })
+    .order('name', { ascending: true })
 
   if (gameType) {
     query = query.or(`game_type.eq.${gameType},game_type.eq.both`)
@@ -121,7 +121,7 @@ export async function getChildCategories(
     .select('*')
     .eq('parent_id', parentId)
     .eq('is_active', true)
-    .order('priority', { ascending: true })
+    .order('name', { ascending: true })
 
   if (gameType) {
     query = query.or(`game_type.eq.${gameType},game_type.eq.both`)
@@ -138,24 +138,14 @@ export async function getChildCategories(
 
 /**
  * Region별 카테고리 조회
+ * @deprecated Region 필드가 제거되어 더 이상 사용되지 않습니다. getAllCategories()를 사용하세요.
  */
 export async function getCategoriesByRegion(
   region: 'premier' | 'regional' | 'online' | 'specialty'
 ): Promise<TournamentCategory[]> {
-  const supabase = createClientSupabaseClient()
-
-  const { data, error } = await supabase
-    .from('tournament_categories')
-    .select('*')
-    .eq('region', region)
-    .eq('is_active', true)
-    .order('priority', { ascending: true })
-
-  if (error) {
-    throw new Error(CATEGORY_ERRORS.FETCH_BY_REGION_FAILED(error.message))
-  }
-
-  return data || []
+  // Region 필드가 DB에서 제거되었으므로 빈 배열 반환
+  console.warn('getCategoriesByRegion is deprecated. Use getAllCategories() instead.')
+  return []
 }
 
 /**
@@ -225,9 +215,6 @@ export async function createCategory(input: CategoryInput): Promise<TournamentCa
       short_name: input.short_name || null,
       aliases: input.aliases || [],
       logo_url: input.logo_url || null,
-      region: input.region,
-      priority: input.priority ?? 50,
-      website: input.website || null,
       is_active: input.is_active ?? true,
       game_type: input.game_type || 'both',
       parent_id: input.parent_id || null,
@@ -262,9 +249,6 @@ export async function updateCategory(
       ...(input.short_name !== undefined && { short_name: input.short_name || null }),
       ...(input.aliases !== undefined && { aliases: input.aliases }),
       ...(input.logo_url !== undefined && { logo_url: input.logo_url || null }),
-      ...(input.region !== undefined && { region: input.region }),
-      ...(input.priority !== undefined && { priority: input.priority }),
-      ...(input.website !== undefined && { website: input.website || null }),
       ...(input.is_active !== undefined && { is_active: input.is_active }),
       ...(input.game_type !== undefined && { game_type: input.game_type }),
       ...(input.parent_id !== undefined && { parent_id: input.parent_id }),
@@ -367,25 +351,13 @@ export async function toggleCategoryActive(id: string): Promise<TournamentCatego
 
 /**
  * 카테고리 우선순위 일괄 업데이트
+ * @deprecated Priority 필드가 제거되어 더 이상 사용되지 않습니다. 카테고리는 이름 순으로 자동 정렬됩니다.
  */
 export async function reorderCategories(
   categoryIds: string[]
 ): Promise<TournamentCategory[]> {
-  const supabase = createClientSupabaseClient()
-
-  // 순차 실행으로 Race Condition 방지
-  for (let i = 0; i < categoryIds.length; i++) {
-    const { error } = await supabase
-      .from('tournament_categories')
-      .update({ priority: i + 1 })
-      .eq('id', categoryIds[i])
-
-    if (error) {
-      throw new Error(CATEGORY_ERRORS.REORDER_FAILED(categoryIds[i], error.message))
-    }
-  }
-
-  // 업데이트된 카테고리 목록 반환
+  // Priority 필드가 DB에서 제거되었으므로 현재 카테고리 목록만 반환
+  console.warn('reorderCategories is deprecated. Categories are now sorted by name automatically.')
   return getAllCategories(true)
 }
 
@@ -485,7 +457,7 @@ export async function searchCategories(query: string): Promise<TournamentCategor
     .select('*')
     .eq('is_active', true)
     .or(`name.ilike.${searchPattern},display_name.ilike.${searchPattern},short_name.ilike.${searchPattern}`)
-    .order('priority', { ascending: true })
+    .order('name', { ascending: true })
 
   if (error) {
     throw new Error(CATEGORY_ERRORS.SEARCH_FAILED(error.message))

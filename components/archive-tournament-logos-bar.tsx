@@ -46,8 +46,8 @@ export function ArchiveTournamentLogosBar({
       filtered = filtered.filter(cat => cat.game_type === gameType || cat.game_type === 'both')
     }
 
-    // Sort by priority
-    return filtered.sort((a, b) => a.priority - b.priority)
+    // Sort by name (alphabetical)
+    return filtered.sort((a, b) => a.name.localeCompare(b.name))
   }, [allCategories, gameType])
 
   // Get children for a parent category
