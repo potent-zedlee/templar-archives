@@ -213,7 +213,7 @@ export function ArchiveEventsList() {
   }, [openInfoDialog])
 
   return (
-    <Card className="p-4 bg-card/95 backdrop-blur-md h-full border-2 shadow-lg hover:shadow-xl transition-all duration-300">
+    <>
       {/* Selection Actions for videos */}
       {selectedVideoIds.size > 0 && (
         <div className="mb-3 p-2 bg-primary/10 rounded-md flex items-center justify-between">
@@ -238,6 +238,6 @@ export function ArchiveEventsList() {
         onAddSubEvent={(tournamentId) => openSubEventDialog(tournamentId)}
         isAdmin={isUserAdmin}
       />
-    </Card>
+    </>
   )
 }

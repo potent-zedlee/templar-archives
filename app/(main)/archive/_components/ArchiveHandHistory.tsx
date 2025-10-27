@@ -71,7 +71,7 @@ export function ArchiveHandHistory() {
 
     for (const tournament of tournaments) {
       for (const subEvent of tournament.sub_events || []) {
-        const day = subEvent.days?.find((d: import('@/lib/supabase').Stream) => d.id === selectedDay)
+        const day = subEvent.streams?.find((d: import('@/lib/supabase').Stream) => d.id === selectedDay)
         if (day) {
           return {
             day,
