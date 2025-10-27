@@ -66,27 +66,27 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
         {/* Tournament Row */}
         <div
           className={cn(
-            "group flex items-center gap-3 px-4 py-2 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20 border-l-4 border-blue-500",
-            isExpanded && "bg-muted/20"
+            "group flex items-center gap-4 px-4 py-3 hover:bg-accent/10 hover:scale-[1.005] active:scale-[0.998] hover:shadow-sm transition-all duration-200 ease-in-out cursor-pointer border-b border-border/30 border-l-4 border-blue-600/70",
+            isExpanded && "bg-accent/15 border-l-8"
           )}
           onClick={() => onNavigate(item)}
         >
           {/* Date */}
-          <div className="w-20 flex-shrink-0 text-xs text-muted-foreground">
+          <div className="w-20 flex-shrink-0 text-sm text-muted-foreground/80">
             <div>{formatDate(tournament.start_date)}</div>
             <div>{formatDate(tournament.end_date)}</div>
           </div>
 
           {/* Logo */}
-          <div className="flex-shrink-0 w-12 h-12 flex items-center justify-center">
+          <div className="flex-shrink-0 w-14 h-14 flex items-center justify-center">
             {(() => {
               const logoUrl = tournament.category_logo || getCategoryByAlias(tournament.category)?.logoUrl
               return logoUrl ? (
                 <Image
                   src={logoUrl}
                   alt={tournament.category}
-                  width={48}
-                  height={48}
+                  width={56}
+                  height={56}
                   className="object-contain"
                 />
               ) : (
@@ -98,7 +98,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           </div>
 
           {/* Location */}
-          <div className="w-28 flex-shrink-0 text-xs text-muted-foreground">
+          <div className="w-28 flex-shrink-0 text-sm text-muted-foreground/80">
             {tournament.city && tournament.country ? (
               <>
                 {tournament.city} / {tournament.country}
@@ -114,7 +114,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           </div>
 
           {/* Prize */}
-          <div className="w-40 text-lg font-semibold text-right">
+          <div className="w-40 text-lg font-bold text-foreground text-right">
             {tournament.total_prize || "-"}
           </div>
 
@@ -123,7 +123,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 bg-muted/20 hover:bg-muted/40"
+              className="h-9 w-9 bg-muted/20 hover:bg-muted/40 hover:rotate-12 transition-transform"
               onClick={(e) => {
                 e.stopPropagation()
                 onShowInfo?.(item)
@@ -145,7 +145,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
 
         {/* Add SubEvent Button (if expanded and no subevents) */}
         {isExpanded && (!tournament.sub_events || tournament.sub_events.length === 0) && isAdmin && onAddSubEvent && (
-          <div className="px-4 py-4 border-b border-border/20 bg-muted/5 border-l-4 border-purple-500">
+          <div className="px-4 py-3 border-b border-border/30 bg-muted/8 border-l-4 border-purple-600/70">
             <Button
               variant="outline"
               size="sm"
@@ -192,30 +192,30 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
         {/* SubEvent Row */}
         <div
           className={cn(
-            "group flex items-center gap-3 px-4 py-2 bg-muted/5 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20 border-dashed border-l-4 border-purple-500",
-            isExpanded && "bg-muted/20"
+            "group flex items-center gap-4 px-4 py-3 bg-muted/8 hover:bg-accent/10 hover:scale-[1.005] active:scale-[0.998] hover:shadow-sm transition-all duration-200 ease-in-out cursor-pointer border-b border-border/30 border-dashed border-l-4 border-purple-600/70",
+            isExpanded && "bg-accent/15 border-l-8"
           )}
           onClick={() => onNavigate(subEventItem)}
         >
           {/* Date */}
-          <div className="w-20 flex-shrink-0 text-xs text-muted-foreground">
+          <div className="w-20 flex-shrink-0 text-sm text-muted-foreground/80">
             {formatDate(subEvent.date)}
           </div>
 
           {/* Event Number + Buy-in */}
-          <div className="w-28 flex-shrink-0 text-xs text-muted-foreground">
+          <div className="w-28 flex-shrink-0 text-sm text-muted-foreground/80">
             {subEvent.event_number && `#${subEvent.event_number}`}
             {subEvent.event_number && subEvent.buy_in && ' '}
             {subEvent.buy_in}
           </div>
 
           {/* SubEvent Name */}
-          <div className="flex-1 min-w-0 text-lg truncate">
+          <div className="flex-1 min-w-0 text-lg font-medium truncate">
             {subEvent.name}
           </div>
 
           {/* Prize */}
-          <div className="w-40 text-lg font-semibold text-right">
+          <div className="w-40 text-lg font-bold text-foreground text-right">
             {subEvent.total_prize || "-"}
           </div>
 
@@ -224,7 +224,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 bg-muted/20 hover:bg-muted/40"
+              className="h-9 w-9 bg-muted/20 hover:bg-muted/40 hover:rotate-12 transition-transform"
               onClick={(e) => {
                 e.stopPropagation()
                 onShowInfo?.(subEventItem)
@@ -267,34 +267,34 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     return (
       <div
         key={day.id}
-        className="group flex items-center gap-3 px-4 py-2 bg-muted/10 hover:bg-muted/30 transition-colors cursor-pointer border-b border-border/20 border-dashed border-l-4 border-green-500"
+        className="group flex items-center gap-4 px-4 py-3 bg-muted/15 hover:bg-accent/10 hover:scale-[1.005] active:scale-[0.998] hover:shadow-sm transition-all duration-200 ease-in-out cursor-pointer border-b border-border/30 border-dashed border-l-4 border-emerald-600/70"
         onClick={() => onSelectDay?.(day.id)}
       >
         {/* Date */}
-        <div className="w-20 flex-shrink-0 text-xs text-muted-foreground">
+        <div className="w-20 flex-shrink-0 text-sm text-muted-foreground/80">
           {day.published_at ? formatDate(day.published_at) : "-"}
         </div>
 
         {/* Video Icon */}
-        <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
+        <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
           {day.video_source === "youtube" && day.video_url ? (
-            <div className="w-full h-full bg-red-600 rounded flex items-center justify-center">
+            <div className="w-full h-full bg-red-500/90 rounded flex items-center justify-center">
               <Play className="h-3 w-3 text-white fill-white" />
             </div>
           ) : (day.video_file || day.video_nas_path) ? (
-            <div className="w-full h-full bg-yellow-500 rounded flex items-center justify-center">
+            <div className="w-full h-full bg-amber-500/90 rounded flex items-center justify-center">
               <Play className="h-3 w-3 text-white fill-white" />
             </div>
           ) : null}
         </div>
 
         {/* Day Name */}
-        <div className="flex-1 min-w-0 text-base truncate">
+        <div className="flex-1 min-w-0 text-base font-medium truncate">
           {day.name}
         </div>
 
         {/* Player count */}
-        <div className="w-40 text-xs text-right text-muted-foreground">
+        <div className="w-40 text-sm text-right text-muted-foreground/80">
           {day.player_count !== undefined && day.player_count > 0
             ? `${day.player_count} players in video`
             : "-"}
@@ -305,7 +305,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 bg-muted/20 hover:bg-muted/40"
+            className="h-9 w-9 bg-muted/20 hover:bg-muted/40 hover:rotate-12 transition-transform"
             onClick={(e) => {
               e.stopPropagation()
               onShowInfo?.(dayItem)
