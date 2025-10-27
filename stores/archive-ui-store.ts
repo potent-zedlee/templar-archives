@@ -17,6 +17,7 @@ import type {
   DialogState,
   VideoPlayerState,
   UploadState,
+  Stream,
 } from '@/lib/types/archive'
 
 interface ArchiveUIState {
@@ -96,7 +97,7 @@ interface ArchiveUIState {
   openDayDialog: (subEventId: string, editingId?: string) => void
   /** @deprecated Use closeStreamDialog instead */
   closeDayDialog: () => void
-  openVideoDialog: (startTime?: string) => void
+  openVideoDialog: (stream: Stream | null, startTime?: string) => void
   closeVideoDialog: () => void
   openRenameDialog: (itemId: string) => void
   closeRenameDialog: () => void
@@ -307,9 +308,9 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
             selectedSubEventIdForDialog: '',
           }),
 
-        openVideoDialog: (startTime = '') =>
+        openVideoDialog: (stream, startTime = '') =>
           set((state) => ({
-            videoDialog: { ...state.videoDialog, isOpen: true, startTime },
+            videoDialog: { ...state.videoDialog, isOpen: true, stream, startTime },
           })),
         closeVideoDialog: () =>
           set((state) => ({
