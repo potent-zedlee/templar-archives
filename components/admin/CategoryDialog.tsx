@@ -59,9 +59,6 @@ const categoryFormSchema = z.object({
     .max(100, "표시 이름은 최대 100자까지 가능합니다"),
   short_name: z.string().max(20, "약칭은 최대 20자까지 가능합니다").optional(),
   aliases: z.string().optional(), // Comma-separated
-  region: z.enum(["premier", "regional", "online", "specialty"]),
-  priority: z.coerce.number().int().min(0).max(100).default(50),
-  website: z.string().url("올바른 URL을 입력해주세요").optional().or(z.literal("")),
   is_active: z.boolean().default(true),
   game_type: z.enum(["tournament", "cash_game", "both"]).default("both"),
   parent_id: z.string().optional(),
@@ -99,9 +96,6 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
       display_name: category?.display_name || "",
       short_name: category?.short_name || "",
       aliases: category?.aliases?.join(", ") || "",
-      region: category?.region || "regional",
-      priority: category?.priority || 50,
-      website: category?.website || "",
       is_active: category?.is_active ?? true,
       game_type: category?.game_type || "both",
       parent_id: category?.parent_id || "none",
@@ -163,9 +157,6 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
         display_name: values.display_name,
         short_name: values.short_name || undefined,
         aliases: aliasesArray,
-        region: values.region,
-        priority: values.priority,
-        website: values.website || undefined,
         is_active: values.is_active,
         game_type: values.game_type,
         parent_id: values.parent_id === "none" || !values.parent_id ? null : values.parent_id,
@@ -472,49 +463,6 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
               )}
             />
 
-            {/* Region & Priority */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="region"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>지역 *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="지역 선택" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="premier">Premier</SelectItem>
-                        <SelectItem value="regional">Regional</SelectItem>
-                        <SelectItem value="online">Online</SelectItem>
-                        <SelectItem value="specialty">Specialty</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="priority"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>우선순위 *</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={0} max={100} {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      0-100 (낮을수록 우선)
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
             {/* Game Type */}
             <FormField
               control={form.control}
@@ -583,21 +531,6 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
                   <FormDescription>
                     상위 카테고리를 선택하면 하위 카테고리로 설정됩니다
                   </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Website */}
-            <FormField
-              control={form.control}
-              name="website"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>웹사이트</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://www.wsop.com" {...field} />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

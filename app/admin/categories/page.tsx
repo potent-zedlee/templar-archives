@@ -37,7 +37,6 @@ export default function CategoriesPage() {
   // Filters
   const [searchQuery, setSearchQuery] = useState("")
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
-  const [regionFilter, setRegionFilter] = useState<string>("all")
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all")
   const [gameTypeFilter, setGameTypeFilter] = useState<string>("all")
   const [includeInactive, setIncludeInactive] = useState(true)
@@ -103,10 +102,6 @@ export default function CategoriesPage() {
           alias.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
         )
 
-      // Region filter
-      const regionMatch =
-        regionFilter === "all" || category.region === regionFilter
-
       // Active filter
       const activeMatch =
         activeFilter === "all" ||
@@ -117,9 +112,9 @@ export default function CategoriesPage() {
       const gameTypeMatch =
         gameTypeFilter === "all" || category.game_type === gameTypeFilter
 
-      return searchMatch && regionMatch && activeMatch && gameTypeMatch
+      return searchMatch && activeMatch && gameTypeMatch
     })
-  }, [localCategories, debouncedSearchQuery, regionFilter, activeFilter, gameTypeFilter])
+  }, [localCategories, debouncedSearchQuery, activeFilter, gameTypeFilter])
 
   // Drag handlers
   function handleDragStart(event: DragStartEvent) {
@@ -195,20 +190,6 @@ export default function CategoriesPage() {
                 aria-label="카테고리 검색"
               />
             </div>
-
-            {/* Region Filter */}
-            <Select value={regionFilter} onValueChange={setRegionFilter}>
-              <SelectTrigger className="w-[180px]" aria-label="지역 필터">
-                <SelectValue placeholder="지역 필터" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">모든 지역</SelectItem>
-                <SelectItem value="premier">Premier</SelectItem>
-                <SelectItem value="regional">Regional</SelectItem>
-                <SelectItem value="online">Online</SelectItem>
-                <SelectItem value="specialty">Specialty</SelectItem>
-              </SelectContent>
-            </Select>
 
             {/* Active Filter */}
             <Select
