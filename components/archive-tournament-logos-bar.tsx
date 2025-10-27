@@ -218,7 +218,7 @@ function TournamentLogoButton({
           </div>
         )}
         <CategoryLogo
-          category={category.id}
+          category={category}
           size={isChildCategory ? "md" : "lg"}
           className={isChildCategory ? "w-10 h-10" : "w-12 h-12"}
           fallback="text"
