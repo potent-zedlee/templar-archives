@@ -11,6 +11,71 @@
 
 ---
 
+## 2025-10-27 (세션 41) - Phase 32 연장: UI/Admin Enhancement ✅
+
+### 작업 목표
+Archive 및 Admin 페이지의 사용성 개선
+
+### 작업 내용
+
+#### 1. Archive 페이지 UX/UI 개선 (1시간) ✅
+- **색상 체계 개선**: 투명도 70% 적용 (blue-600/70, purple-600/70, emerald-600/70)
+- **간격 및 레이아웃**: py-2 → py-3, gap-3 → gap-4
+- **로고 크기 증가**: 48x48 → 56x56
+- **타이포그래피 강화**: text-xs → text-sm, font-medium/bold 추가
+- **애니메이션 추가**:
+  - transition-all, hover:scale-[1.005], active:scale-[0.998]
+  - hover:shadow-sm, hover:rotate-12 (Info 버튼)
+- **파일**: `components/archive-folder-list.tsx` 수정
+- **커밋**: cd0df3b (indentation 제거), a9fe3aa (UX/UI 개선)
+
+#### 2. Admin Archive 정렬 기능 (1시간) ✅
+- **정렬 가능 컬럼**: Name, Category, Type, Location, Date (5개)
+- **정렬 상태 표시**: ArrowUp (asc), ArrowDown (desc), ArrowUpDown (unsorted)
+- **정렬 로직**:
+  - 같은 필드 클릭 시 방향 토글 (asc ↔ desc)
+  - 다른 필드 클릭 시 해당 필드로 변경, 기본 asc
+- **파일**: `app/admin/archive/page.tsx` 수정
+- **커밋**: 35ed27d
+
+#### 3. Unsorted Videos 정렬 기능 (0.5시간) ✅
+- **정렬 가능 컬럼**: Name, Source, Created, Published (4개)
+- **Null 값 처리**: published_at null 값을 정렬 시 마지막으로 배치
+- **파일**: `app/admin/archive/_components/UnsortedVideosTab.tsx` 수정
+- **커밋**: 08b38b6
+
+#### 4. Admin Category 간소화 (0.5시간) ✅
+- **제거된 필드**: Region, Priority, Website (3개)
+- **수정된 파일** (3개):
+  - `components/admin/CategoryDialog.tsx` - Zod schema, defaultValues, input 객체, Form UI
+  - `components/admin/CategoryTable.tsx` - TableHeader, CategoryRow 컬럼
+  - `app/admin/categories/page.tsx` - regionFilter state 및 UI
+- **코드 감소**: 122줄 삭제, 2줄 추가
+- **커밋**: 7e7a1a6
+
+### 커밋 히스토리
+- `cd0df3b` - Remove indentation from archive list and add color differentiation
+- `a9fe3aa` - Enhance Archive page UX/UI with modern design improvements
+- `35ed27d` - Add sortable columns to Admin Archive management page
+- `08b38b6` - Add sortable columns to Unsorted Videos tab
+- `7e7a1a6` - Remove region, priority, and website fields from Admin Category management
+
+### 기술 스택
+- **UI 개선**: Tailwind CSS, Lucide React Icons
+- **상태 관리**: useState, useEffect, useMemo
+- **정렬 알고리즘**: localeCompare (문자열), Date.getTime() (날짜)
+
+### 성과
+- ✅ Archive 페이지 시각적 계층 구조 개선
+- ✅ Admin 페이지 데이터 정렬 기능 추가
+- ✅ Category 관리 인터페이스 간소화
+- ✅ 코드 품질 개선 (122줄 제거)
+
+### 다음 작업
+- TBD
+
+---
+
 ## 2025-10-26 (세션 40) - Phase 34: 프로덕션 모니터링 & 에러 트래킹 시스템 ✅
 
 ### 작업 목표
