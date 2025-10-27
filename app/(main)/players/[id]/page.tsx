@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { BackgroundGradient } from "@/components/ui/background-gradient"
 import { ArrowLeft, TrendingUp, ChevronDown, ChevronRight, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { isAdmin } from "@/lib/auth-utils"
@@ -269,96 +270,98 @@ export default function PlayerDetailClient() {
         </div>
 
         {/* Player Info Card */}
-        <Card className="p-6 mb-6">
-          <div className="flex items-start gap-6">
-            <div className="relative">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={player.photo_url} alt={player.name} />
-                <AvatarFallback className="text-2xl font-bold">
-                  {player.name.split(' ').map(n => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
-              {isAdmin(user?.email) && (
-                <>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handlePhotoUpload}
-                  />
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-8 px-2"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={updatePhotoMutation.isPending}
-                  >
-                    <Upload className="h-3 w-3" />
-                  </Button>
-                </>
-              )}
-            </div>
-
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  {player.country && (
-                    <span className="text-3xl">{getCountryFlag(player.country)}</span>
-                  )}
-                  <h1 className="text-title-lg">{player.name}</h1>
-
-                  {/* Claim Status Badges */}
-                  {isClaimed && playerClaim && (
-                    <Badge variant="default" className="ml-2">
-                      Claimed by {playerClaim.user.nickname}
-                    </Badge>
-                  )}
-                  {userClaim && userClaim.status === 'pending' && (
-                    <Badge variant="secondary" className="ml-2">
-                      Claim Pending
-                    </Badge>
-                  )}
-                  {user && userClaim && userClaim.status === 'approved' && (
-                    <Badge variant="default" className="ml-2 bg-green-600">
-                      Your Profile
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Claim Button */}
-                {user && !isClaimed && !userClaim && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setClaimDialogOpen(true)}
-                  >
-                    Claim This Profile
-                  </Button>
+        <BackgroundGradient className="rounded-[22px] mb-6">
+          <Card className="p-6 border-0 bg-slate-950">
+            <div className="flex items-start gap-6">
+              <div className="relative">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={player.photo_url} alt={player.name} />
+                  <AvatarFallback className="text-2xl font-bold">
+                    {player.name.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                {isAdmin(user?.email) && (
+                  <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handlePhotoUpload}
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-8 px-2"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={updatePhotoMutation.isPending}
+                    >
+                      <Upload className="h-3 w-3" />
+                    </Button>
+                  </>
                 )}
               </div>
-              {player.country && (
-                <Badge variant="secondary" className="text-caption mb-4">
-                  {player.country}
-                </Badge>
-              )}
 
-              <div className="grid grid-cols-2 gap-4 max-w-md">
-                <div>
-                  <p className="text-caption text-muted-foreground mb-1">Total Winnings</p>
-                  <div className="flex items-center gap-1 text-title">
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                    <span className="font-bold">{formatWinnings(player.total_winnings)}</span>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {player.country && (
+                      <span className="text-3xl">{getCountryFlag(player.country)}</span>
+                    )}
+                    <h1 className="text-title-lg">{player.name}</h1>
+
+                    {/* Claim Status Badges */}
+                    {isClaimed && playerClaim && (
+                      <Badge variant="default" className="ml-2">
+                        Claimed by {playerClaim.user.nickname}
+                      </Badge>
+                    )}
+                    {userClaim && userClaim.status === 'pending' && (
+                      <Badge variant="secondary" className="ml-2">
+                        Claim Pending
+                      </Badge>
+                    )}
+                    {user && userClaim && userClaim.status === 'approved' && (
+                      <Badge variant="default" className="ml-2 bg-green-600">
+                        Your Profile
+                      </Badge>
+                    )}
                   </div>
+
+                  {/* Claim Button */}
+                  {user && !isClaimed && !userClaim && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setClaimDialogOpen(true)}
+                    >
+                      Claim This Profile
+                    </Button>
+                  )}
                 </div>
-                <div>
-                  <p className="text-caption text-muted-foreground mb-1">Hands in Archive</p>
-                  <p className="text-title font-bold">{totalHandsCount}</p>
+                {player.country && (
+                  <Badge variant="secondary" className="text-caption mb-4">
+                    {player.country}
+                  </Badge>
+                )}
+
+                <div className="grid grid-cols-2 gap-4 max-w-md">
+                  <div>
+                    <p className="text-caption text-muted-foreground mb-1">Total Winnings</p>
+                    <div className="flex items-center gap-1 text-title">
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                      <span className="font-bold">{formatWinnings(player.total_winnings)}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-caption text-muted-foreground mb-1">Hands in Archive</p>
+                    <p className="text-title font-bold">{totalHandsCount}</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </BackgroundGradient>
 
         {/* Statistics Dashboard */}
         <div className="space-y-6">

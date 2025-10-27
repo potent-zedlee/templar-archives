@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { PageTransition } from "@/components/page-transition"
 import { OnThisDay } from "@/components/on-this-day"
 import { StatsCounter } from "@/components/main/stats-counter"
@@ -8,6 +9,8 @@ import { WeeklyHighlights } from "@/components/main/weekly-highlights"
 import { LatestPosts } from "@/components/main/latest-posts"
 import { TopPlayers } from "@/components/main/top-players"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
+import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect"
+import { Button } from "@/components/ui/button"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
 import type { PlatformStats, WeeklyHighlight, TopPlayer } from "@/lib/main-page"
 
@@ -160,9 +163,50 @@ export default function homeClient() {
     )
   }
 
+  const words = [
+    { text: "Templar", className: "text-blue-500 dark:text-blue-500" },
+    { text: "Archives:", className: "text-purple-500 dark:text-purple-500" },
+    { text: "Your", className: "text-foreground" },
+    { text: "Poker", className: "text-foreground" },
+    { text: "Knowledge", className: "text-pink-500 dark:text-pink-500" },
+    { text: "Base", className: "text-foreground" },
+  ]
+
   return (
     <PageTransition variant="fade">
       <main id="main-content" role="main">
+        {/* Hero Section */}
+        <section className="relative py-20 md:py-32 overflow-hidden">
+          {/* Background gradient effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5" />
+
+          <div className="container max-w-7xl mx-auto px-4 md:px-6 relative z-10">
+            <div className="flex flex-col items-center text-center space-y-8">
+              {/* Typewriter title */}
+              <TypewriterEffectSmooth words={words} />
+
+              {/* Subtitle */}
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
+                프로 포커 토너먼트의 모든 핸드 히스토리를 분석하고 학습하세요
+              </p>
+
+              {/* CTA Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Link href="/archive/tournament">
+                  <Button size="lg" className="min-w-[200px]">
+                    Archive 둘러보기
+                  </Button>
+                </Link>
+                <Link href="/search">
+                  <Button size="lg" variant="outline" className="min-w-[200px]">
+                    핸드 검색하기
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
           {/* Platform Statistics */}
           {data.stats && (
             <section className="py-12 md:py-16">
