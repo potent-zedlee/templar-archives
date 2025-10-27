@@ -120,13 +120,19 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
   // ============================================================
   if (tournamentsLoading) {
     return (
-      <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
-        <div className="flex gap-6">
-          <div className="w-[35%]">
-            <CardSkeleton count={1} variant="compact" />
-          </div>
-          <div className="flex-1">
-            <CardSkeleton count={2} variant="detailed" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+        {/* Animated background effect */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent animate-pulse" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent animate-pulse delay-1000" />
+
+        <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6 relative z-10">
+          <div className="flex gap-6">
+            <div className="w-[35%]">
+              <CardSkeleton count={1} variant="compact" />
+            </div>
+            <div className="flex-1">
+              <CardSkeleton count={2} variant="detailed" />
+            </div>
           </div>
         </div>
       </div>
@@ -138,20 +144,26 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
   // ============================================================
   return (
     <ErrorBoundary>
-      <ArchiveDataProvider
-        tournaments={tournaments}
-        hands={hands}
-        unsortedVideos={unsortedVideos}
-        tournamentsLoading={tournamentsLoading}
-        handsLoading={handsLoading}
-      >
-        <ArchiveProviders>
-          <>
-            {/* Toolbar */}
-            <ArchiveToolbar />
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+        {/* Animated background effects */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent animate-pulse" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent animate-pulse delay-1000" />
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
 
-            {/* Main Content */}
-            <div className="container max-w-7xl mx-auto py-4 md:py-6 px-4 md:px-6">
+        <ArchiveDataProvider
+          tournaments={tournaments}
+          hands={hands}
+          unsortedVideos={unsortedVideos}
+          tournamentsLoading={tournamentsLoading}
+          handsLoading={handsLoading}
+        >
+          <ArchiveProviders>
+            <>
+              {/* Toolbar */}
+              <ArchiveToolbar />
+
+              {/* Main Content */}
+              <div className="container max-w-7xl mx-auto py-4 md:py-6 px-4 md:px-6 relative z-10">
               {isMobile ? (
                 // ============================================================
                 // Mobile Layout
@@ -213,7 +225,7 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
                   {/* Resizable Handle (only visible when hand history is shown) */}
                   {selectedDay && (
                     <>
-                      <PanelResizeHandle className="w-1 bg-border hover:bg-primary transition-colors" />
+                      <PanelResizeHandle className="w-2 backdrop-blur-md bg-white/10 dark:bg-white/5 hover:bg-gradient-to-b hover:from-blue-500/50 hover:via-purple-500/50 hover:to-pink-500/50 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:w-3" />
 
                       {/* Hand History Panel */}
                       <Panel
@@ -239,11 +251,12 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
               )}
             </div>
 
-            {/* All Dialogs */}
-            <ArchiveDialogs />
-          </>
-        </ArchiveProviders>
-      </ArchiveDataProvider>
+              {/* All Dialogs */}
+              <ArchiveDialogs />
+            </>
+          </ArchiveProviders>
+        </ArchiveDataProvider>
+      </div>
     </ErrorBoundary>
   )
 })
