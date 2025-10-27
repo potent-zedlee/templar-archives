@@ -9,20 +9,20 @@
  * - 빈 상태 표시
  */
 
-import { CheckCircle, X, Play, Download, Folder } from 'lucide-react'
-import { useArchiveDataStore } from '@/stores/archive-data-store'
+import { Folder } from 'lucide-react'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { HandListAccordion } from '@/components/hand-list-accordion'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { EmptyState } from '@/components/empty-state'
 import { useMemo } from 'react'
 
-export function ArchiveHandHistory() {
-  const { tournaments, hands } = useArchiveData()
-  const { selectedDay, setSelectedDay } = useArchiveDataStore()
-  const { openVideoDialog, advancedFilters } = useArchiveUIStore()
+interface ArchiveHandHistoryProps {
+  onSeekToTime?: (timeString: string) => void
+}
+
+export function ArchiveHandHistory({ onSeekToTime }: ArchiveHandHistoryProps) {
+  const { hands } = useArchiveData()
+  const { advancedFilters } = useArchiveUIStore()
 
   // Filter hands based on advanced filters
   const filteredHands = useMemo(() => {
@@ -64,37 +64,6 @@ export function ArchiveHandHistory() {
 
     return filtered
   }, [hands, advancedFilters])
-
-  // Get selected day data
-  const selectedDayData = useMemo(() => {
-    if (!selectedDay) return null
-
-    for (const tournament of tournaments) {
-      for (const subEvent of tournament.sub_events || []) {
-        const day = subEvent.streams?.find((d: import('@/lib/supabase').Stream) => d.id === selectedDay)
-        if (day) {
-          return {
-            day,
-            subEvent,
-            tournament,
-          }
-        }
-      }
-    }
-    return null
-  }, [tournaments, selectedDay])
-
-  // Build breadcrumb title
-  const title = useMemo(() => {
-    if (!selectedDayData) return 'Select a day'
-
-    const parts = []
-    if (selectedDayData.tournament.name) parts.push(selectedDayData.tournament.name)
-    if (selectedDayData.subEvent.name) parts.push(selectedDayData.subEvent.name)
-    if (selectedDayData.day.name) parts.push(selectedDayData.day.name)
-
-    return parts.join(' › ') || 'Select a day'
-  }, [selectedDayData])
 
   // Transform hands for HandListAccordion
   const transformedHands = useMemo(() => {
@@ -147,62 +116,8 @@ export function ArchiveHandHistory() {
     })
   }, [filteredHands])
 
-  const handleCloseHandHistory = () => {
-    setSelectedDay(null)
-    // React Query가 hands를 자동으로 관리
-  }
-
   return (
-    <div className="space-y-5">
-      {/* Video Header */}
-      <Card className="p-6 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-blue-500/10 before:via-purple-500/10 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity">
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-4">
-            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
-              {title}
-            </h2>
-            {selectedDayData && hands.length > 0 && (
-              <div className="flex items-center gap-2 px-3 py-1.5 backdrop-blur-md bg-emerald-500/10 border border-emerald-500/30 rounded-full">
-                <CheckCircle className="h-4 w-4 text-emerald-400" />
-                <span className="text-sm font-semibold text-emerald-300">{hands.length} hands</span>
-              </div>
-            )}
-          </div>
-          <div className="flex gap-2">
-            {selectedDayData && (selectedDayData.day.video_url || selectedDayData.day.video_file || selectedDayData.day.video_nas_path) && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => {
-                  openVideoDialog(selectedDayData.day, '')
-                }}
-                className="gap-2 backdrop-blur-md bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-              >
-                <Play className="h-4 w-4" />
-                Play
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="icon"
-              title="Download"
-              className="backdrop-blur-md bg-white/10 dark:bg-black/10 hover:bg-white/20 dark:hover:bg-black/20 border-white/20 hover:border-white/30 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
-            >
-              <Download className="h-4 w-4 text-foreground/80" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleCloseHandHistory}
-              title="Close Hand History"
-              className="backdrop-blur-md bg-white/10 dark:bg-black/10 hover:bg-red-500/20 border border-white/10 hover:border-red-500/40 text-foreground/80 hover:text-red-400 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </Card>
-
+    <div className="space-y-0">
       {/* Hand List */}
       <Card className="p-7 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 relative overflow-hidden">
         <h2 className="text-2xl font-extrabold mb-7 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">Hand History</h2>
@@ -212,7 +127,7 @@ export function ArchiveHandHistory() {
               handIds={hands.map((hand) => hand.id)}
               hands={transformedHands}
               onPlayHand={(startTime) => {
-                openVideoDialog(selectedDayData?.day || null, startTime)
+                onSeekToTime?.(startTime)
               }}
             />
           ) : (
