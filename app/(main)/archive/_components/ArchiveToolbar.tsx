@@ -61,7 +61,7 @@ export function ArchiveToolbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 space-y-0" aria-label="Archive toolbar">
+    <nav className="sticky top-0 z-40 space-y-0" aria-label="Archive toolbar">
       {/* Tournament Logos Bar */}
       <div className="backdrop-blur-xl bg-slate-900/80 border-b border-white/10 shadow-xl">
         <ArchiveTournamentLogosBar
