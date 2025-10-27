@@ -8,6 +8,7 @@
  * - CRUD 작업 (추가, 수정, 삭제)
  * - 배치 선택 및 조직화
  * - 검색 및 필터링
+ * Phase 33: Enhanced with type-safe sorting and ARIA attributes
  */
 
 import { useEffect, useState } from 'react'
@@ -40,6 +41,8 @@ import {
   organizeUnsortedVideosBatch,
 } from '@/app/actions/unsorted'
 import type { UnsortedVideo } from '@/lib/unsorted-videos'
+import type { UnsortedVideosSortField, SortDirection } from '@/lib/types/sorting'
+import { getSortAriaProps } from '@/hooks/useSorting'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -70,8 +73,8 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [sourceFilter, setSourceFilter] = useState('all')
-  const [sortField, setSortField] = useState<'name' | 'source' | 'created' | 'published'>('created')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [sortField, setSortField] = useState<UnsortedVideosSortField>('created')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [videoToDelete, setVideoToDelete] = useState<string | null>(null)
   const [organizeDialogOpen, setOrganizeDialogOpen] = useState(false)
@@ -148,7 +151,7 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
     }
   }
 
-  const handleSort = (field: 'name' | 'source' | 'created' | 'published') => {
+  const handleSort = (field: UnsortedVideosSortField) => {
     if (sortField === field) {
       // 같은 필드 클릭 시 방향 토글
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
@@ -315,6 +318,7 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
                   <TableHead
                     className="min-w-[300px] cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('name')}
+                    {...getSortAriaProps('name', sortField, sortDirection)}
                   >
                     <div className="flex items-center gap-2">
                       Name
@@ -328,6 +332,7 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
                   <TableHead
                     className="w-32 cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('source')}
+                    {...getSortAriaProps('source', sortField, sortDirection)}
                   >
                     <div className="flex items-center gap-2">
                       Source
@@ -341,6 +346,7 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
                   <TableHead
                     className="w-48 cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('created')}
+                    {...getSortAriaProps('created', sortField, sortDirection)}
                   >
                     <div className="flex items-center gap-2">
                       Created At
@@ -354,6 +360,7 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
                   <TableHead
                     className="w-48 cursor-pointer hover:bg-muted/50"
                     onClick={() => handleSort('published')}
+                    {...getSortAriaProps('published', sortField, sortDirection)}
                   >
                     <div className="flex items-center gap-2">
                       Published At
