@@ -31,7 +31,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
-import { Plus, Trash2, Search, Loader2, ExternalLink, FolderInput } from 'lucide-react'
+import { Plus, Trash2, Search, Loader2, ExternalLink, FolderInput, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { QuickUploadDialog } from '@/components/quick-upload-dialog'
 import {
   getUnsortedVideos,
@@ -70,6 +70,8 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
   const [selectedVideos, setSelectedVideos] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
   const [sourceFilter, setSourceFilter] = useState('all')
+  const [sortField, setSortField] = useState<'name' | 'source' | 'created' | 'published'>('created')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [videoToDelete, setVideoToDelete] = useState<string | null>(null)
   const [organizeDialogOpen, setOrganizeDialogOpen] = useState(false)
@@ -79,7 +81,7 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
     loadVideos()
   }, [])
 
-  // Filter videos
+  // Filter and sort videos
   useEffect(() => {
     let filtered = videos
 
@@ -98,8 +100,36 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
       )
     }
 
-    setFilteredVideos(filtered)
-  }, [videos, sourceFilter, searchQuery])
+    // Sort
+    const sorted = [...filtered].sort((a, b) => {
+      let compareResult = 0
+
+      switch (sortField) {
+        case 'name':
+          compareResult = a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+          break
+        case 'source':
+          const sourceA = a.video_source || 'youtube'
+          const sourceB = b.video_source || 'youtube'
+          compareResult = sourceA.localeCompare(sourceB)
+          break
+        case 'created':
+          compareResult = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          break
+        case 'published':
+          // Handle null published_at (put nulls at the end)
+          if (!a.published_at && !b.published_at) compareResult = 0
+          else if (!a.published_at) compareResult = 1
+          else if (!b.published_at) compareResult = -1
+          else compareResult = new Date(a.published_at).getTime() - new Date(b.published_at).getTime()
+          break
+      }
+
+      return sortDirection === 'asc' ? compareResult : -compareResult
+    })
+
+    setFilteredVideos(sorted)
+  }, [videos, sourceFilter, searchQuery, sortField, sortDirection])
 
   const loadVideos = async () => {
     setLoading(true)
@@ -115,6 +145,17 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
       toast.error('Failed to load unsorted videos')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSort = (field: 'name' | 'source' | 'created' | 'published') => {
+    if (sortField === field) {
+      // 같은 필드 클릭 시 방향 토글
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      // 다른 필드 클릭 시 해당 필드로 변경, 기본 asc
+      setSortField(field)
+      setSortDirection('asc')
     }
   }
 
@@ -271,10 +312,58 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
-                  <TableHead className="min-w-[300px]">Name</TableHead>
-                  <TableHead className="w-32">Source</TableHead>
-                  <TableHead className="w-48">Created At</TableHead>
-                  <TableHead className="w-48">Published At</TableHead>
+                  <TableHead
+                    className="min-w-[300px] cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Name
+                      {sortField === 'name' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="w-32 cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('source')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Source
+                      {sortField === 'source' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="w-48 cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('created')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Created At
+                      {sortField === 'created' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead
+                    className="w-48 cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('published')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Published At
+                      {sortField === 'published' ? (
+                        sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableHead>
                   <TableHead className="w-32 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
