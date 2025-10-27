@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, Search, Loader2, ChevronRight, ChevronDown } from 'lucide-react'
+import { Plus, Pencil, Trash2, Search, Loader2, ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TournamentDialog } from '@/components/tournament-dialog'
 import { DeleteDialog } from '@/components/archive-dialogs/delete-dialog'
@@ -51,6 +51,8 @@ export default function AdminArchivePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [gameTypeFilter, setGameTypeFilter] = useState('all')
+  const [sortField, setSortField] = useState<'name' | 'category' | 'type' | 'location' | 'date'>('date')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [_userEmail, setUserEmail] = useState<string | null>(null)
   const [isUserAdmin, setIsUserAdmin] = useState(false)
 
@@ -118,7 +120,7 @@ export default function AdminArchivePage() {
     loadTournaments()
   }, [isUserAdmin])
 
-  // Filter tournaments
+  // Filter and sort tournaments
   useEffect(() => {
     let filtered = tournaments
 
@@ -143,8 +145,35 @@ export default function AdminArchivePage() {
       )
     }
 
-    setFilteredTournaments(filtered)
-  }, [tournaments, categoryFilter, gameTypeFilter, searchQuery])
+    // Sort
+    const sorted = [...filtered].sort((a, b) => {
+      let compareResult = 0
+
+      switch (sortField) {
+        case 'name':
+          compareResult = a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+          break
+        case 'category':
+          compareResult = a.category.localeCompare(b.category)
+          break
+        case 'type':
+          compareResult = (a.game_type || 'tournament').localeCompare(b.game_type || 'tournament')
+          break
+        case 'location':
+          const locationA = a.city && a.country ? `${a.city}, ${a.country}` : a.location
+          const locationB = b.city && b.country ? `${b.city}, ${b.country}` : b.location
+          compareResult = locationA.toLowerCase().localeCompare(locationB.toLowerCase())
+          break
+        case 'date':
+          compareResult = new Date(a.end_date).getTime() - new Date(b.end_date).getTime()
+          break
+      }
+
+      return sortDirection === 'asc' ? compareResult : -compareResult
+    })
+
+    setFilteredTournaments(sorted)
+  }, [tournaments, categoryFilter, gameTypeFilter, searchQuery, sortField, sortDirection])
 
   const loadTournaments = async () => {
     setLoading(true)
@@ -161,6 +190,17 @@ export default function AdminArchivePage() {
       toast.error('Failed to load tournaments')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSort = (field: 'name' | 'category' | 'type' | 'location' | 'date') => {
+    if (sortField === field) {
+      // 같은 필드 클릭 시 방향 토글
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      // 다른 필드 클릭 시 해당 필드로 변경, 기본 asc
+      setSortField(field)
+      setSortDirection('asc')
     }
   }
 
@@ -470,11 +510,71 @@ export default function AdminArchivePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[200px]">Name</TableHead>
-                <TableHead className="w-32">Category</TableHead>
-                <TableHead className="w-32">Type</TableHead>
-                <TableHead className="w-40">Location</TableHead>
-                <TableHead className="w-48">Date Range</TableHead>
+                <TableHead
+                  className="min-w-[200px] cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center gap-2">
+                    Name
+                    {sortField === 'name' ? (
+                      sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                    ) : (
+                      <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead
+                  className="w-32 cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('category')}
+                >
+                  <div className="flex items-center gap-2">
+                    Category
+                    {sortField === 'category' ? (
+                      sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                    ) : (
+                      <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead
+                  className="w-32 cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('type')}
+                >
+                  <div className="flex items-center gap-2">
+                    Type
+                    {sortField === 'type' ? (
+                      sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                    ) : (
+                      <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead
+                  className="w-40 cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('location')}
+                >
+                  <div className="flex items-center gap-2">
+                    Location
+                    {sortField === 'location' ? (
+                      sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                    ) : (
+                      <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead
+                  className="w-48 cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('date')}
+                >
+                  <div className="flex items-center gap-2">
+                    Date Range
+                    {sortField === 'date' ? (
+                      sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                    ) : (
+                      <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </TableHead>
                 <TableHead className="w-36 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
