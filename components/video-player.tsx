@@ -6,9 +6,10 @@ import type { Day } from "@/lib/supabase"
 interface VideoPlayerProps {
   day: Day | null
   onTimeUpdate?: (time: number) => void
+  seekTime?: number | null
 }
 
-export function VideoPlayer({ day, onTimeUpdate }: VideoPlayerProps) {
+export function VideoPlayer({ day, onTimeUpdate, seekTime }: VideoPlayerProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const playerRef = useRef<any>(null)
@@ -69,6 +70,22 @@ export function VideoPlayer({ day, onTimeUpdate }: VideoPlayerProps) {
     video.addEventListener('timeupdate', handleTimeUpdate)
     return () => video.removeEventListener('timeupdate', handleTimeUpdate)
   }, [day, onTimeUpdate])
+
+  // Seek to specific time when seekTime changes
+  useEffect(() => {
+    if (seekTime === null || seekTime === undefined) return
+
+    // YouTube video
+    if (day?.video_source === 'youtube' && playerRef.current && playerRef.current.seekTo) {
+      playerRef.current.seekTo(seekTime, true)
+    }
+
+    // Upload/NAS video
+    if ((day?.video_source === 'upload' || day?.video_source === 'nas') && videoRef.current) {
+      videoRef.current.currentTime = seekTime
+      videoRef.current.play()
+    }
+  }, [seekTime, day])
 
   // Early return은 모든 hooks 다음에
   if (!day) {

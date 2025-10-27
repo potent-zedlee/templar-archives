@@ -10,7 +10,6 @@
 import { useState, useEffect, memo, useCallback, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { motion, AnimatePresence } from "framer-motion"
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 import { useAuth } from "@/components/auth-provider"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { ErrorBoundary } from "@/components/error-boundary"
@@ -23,6 +22,9 @@ import { useIsMobile } from "@/hooks/use-media-query"
 import { ArchiveDataProvider } from "./ArchiveDataContext"
 import { ArchiveProviders } from "./ArchiveProviders"
 import { ArchiveToolbar } from "./ArchiveToolbar"
+import { ArchiveDayHeader } from "./ArchiveDayHeader"
+import { VideoPlayer } from "@/components/video-player"
+import { parseTimeToSeconds } from "@/lib/utils/time-parser"
 
 // Dynamic imports for heavy components
 const ArchiveEventsList = dynamic(
@@ -90,10 +92,30 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
   const { data: hands = [], isLoading: handsLoading } = useHandsQuery(selectedDay)
 
   // ============================================================
+  // 4.5. Selected Day Data (for VideoPlayer)
+  // ============================================================
+  const selectedDayData = useMemo(() => {
+    if (!selectedDay) return null
+
+    for (const tournament of tournaments) {
+      for (const subEvent of tournament.sub_events || []) {
+        const day = subEvent.streams?.find((d: any) => d.id === selectedDay)
+        if (day) return day
+      }
+    }
+    return null
+  }, [tournaments, selectedDay])
+
+  // ============================================================
   // 5. Mobile Responsive
   // ============================================================
   const isMobile = useIsMobile()
   const [drawerOpen, setDrawerOpen] = useState(false)
+
+  // ============================================================
+  // 5.5. Video Player Seek State
+  // ============================================================
+  const [seekTime, setSeekTime] = useState<number | null>(null)
 
   // ============================================================
   // 6. Dynamic Text (based on gameType)
@@ -210,44 +232,45 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
                 </>
               ) : (
                 // ============================================================
-                // Desktop Layout - Resizable Split Pane
+                // Desktop Layout - Vertical Stack
                 // ============================================================
-                <PanelGroup direction="horizontal" className="gap-6">
-                  {/* Events List Panel */}
-                  <Panel
-                    defaultSize={selectedDay ? 35 : 100}
-                    minSize={25}
-                    maxSize={75}
-                  >
+                <div className="space-y-0">
+                  {!selectedDay ? (
+                    // Only Events List
                     <ArchiveEventsList />
-                  </Panel>
-
-                  {/* Resizable Handle (only visible when hand history is shown) */}
-                  {selectedDay && (
-                    <>
-                      <PanelResizeHandle className="w-2 backdrop-blur-md bg-white/10 dark:bg-white/5 hover:bg-gradient-to-b hover:from-blue-500/50 hover:via-purple-500/50 hover:to-pink-500/50 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:w-3" />
-
-                      {/* Hand History Panel */}
-                      <Panel
-                        defaultSize={65}
-                        minSize={25}
+                  ) : (
+                    // Day selected: Day Header + Video Player + Hand History
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key="day-content"
+                        initial={{ opacity: 0, y: -100 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -100 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="space-y-4"
                       >
-                        <AnimatePresence mode="wait">
-                          <motion.div
-                            key="hand-history"
-                            initial={{ opacity: 0, x: 100 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 100 }}
-                            transition={{ duration: 0.3, ease: "easeInOut" }}
-                            className="h-full"
-                          >
-                            <ArchiveHandHistory />
-                          </motion.div>
-                        </AnimatePresence>
-                      </Panel>
-                    </>
+                        {/* Day Header - Sticky */}
+                        <ArchiveDayHeader />
+
+                        {/* Video Player - Sticky */}
+                        <div className="sticky top-[72px] z-10 mb-4">
+                          <VideoPlayer
+                            day={selectedDayData}
+                            seekTime={seekTime}
+                          />
+                        </div>
+
+                        {/* Hand History - Scrollable */}
+                        <ArchiveHandHistory
+                          onSeekToTime={(timeString) => {
+                            const seconds = parseTimeToSeconds(timeString)
+                            setSeekTime(seconds)
+                          }}
+                        />
+                      </motion.div>
+                    </AnimatePresence>
                   )}
-                </PanelGroup>
+                </div>
               )}
             </div>
 
