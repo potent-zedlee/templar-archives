@@ -436,8 +436,14 @@ export function SingleHandInputPanel({
                     autoFocus
                   />
                 </div>
-                {filteredPlayers.length > 0 ? (
-                  <ScrollArea className="h-40 border rounded-md">
+
+                {/* 플레이어 목록 - 항상 표시 */}
+                <ScrollArea className="h-40 border rounded-md">
+                  {loadingPlayers ? (
+                    <div className="p-4 text-sm text-muted-foreground text-center">
+                      Loading...
+                    </div>
+                  ) : filteredPlayers.length > 0 ? (
                     <div className="p-2 space-y-1">
                       {filteredPlayers.slice(0, 20).map((player) => (
                         <button
@@ -449,26 +455,26 @@ export function SingleHandInputPanel({
                         </button>
                       ))}
                     </div>
-                  </ScrollArea>
-                ) : (
-                  <div className="space-y-3 py-4">
-                    <div className="text-sm text-muted-foreground text-center">
-                      {loadingPlayers ? 'Loading...' : 'No players found'}
+                  ) : (
+                    <div className="p-4 text-sm text-muted-foreground text-center">
+                      No players found
                     </div>
-                    {!loadingPlayers && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setAddPlayerDialogOpen(true)}
-                        className="w-full"
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create New Player
-                      </Button>
-                    )}
-                  </div>
-                )}
+                  )}
+                </ScrollArea>
+
+                {/* Create New Player - 항상 표시 */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAddPlayerDialogOpen(true)}
+                  className="w-full"
+                  disabled={loadingPlayers}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create New Player
+                </Button>
+
                 <Button
                   type="button"
                   variant="outline"
@@ -560,6 +566,7 @@ export function SingleHandInputPanel({
         open={addPlayerDialogOpen}
         onOpenChange={setAddPlayerDialogOpen}
         onPlayerCreated={handlePlayerCreated}
+        suggestedName={searchQuery}
       />
     </div>
   )
