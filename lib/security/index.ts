@@ -222,29 +222,8 @@ export function logSecurityEvent(
 ): void {
   console.warn(`[SECURITY] ${event}:`, details)
 
-  // Send to Sentry in production and staging
+  // Log to database for admin monitoring
   if (process.env.NEXT_PUBLIC_ENVIRONMENT !== 'development') {
-    try {
-      // Import Sentry utils dynamically to avoid circular dependencies
-      import('../sentry-utils').then(({ captureSentryMessage }) => {
-        captureSentryMessage(
-          `Security Event: ${event}`,
-          'warning',
-          {
-            tags: {
-              security_event: event,
-              type: 'security',
-            },
-            extra: details,
-          }
-        )
-      })
-    } catch (error) {
-      // Fallback: log Sentry errors to console
-      console.error('Failed to send security event to Sentry:', error)
-    }
-
-    // Also log to database for admin monitoring
     try {
       import('../monitoring/security-logger').then(({ logSecurityEventToDb }) => {
         // Determine severity based on event type
