@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     // 사용자 정보 조회
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, username, banned_at')
+      .select('id, nickname, banned_at')
       .eq('id', user.id)
       .single()
 
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       .insert({
         stream_id: streamId,
         submitter_id: userData.id,
-        submitter_name: userData.username,
+        submitter_name: userData.nickname || user.email || 'Unknown',
         start_time: startTime,
         end_time: endTime || null,
         hand_number: handNumber || null,
