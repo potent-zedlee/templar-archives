@@ -31,15 +31,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
     }
 
-    // 관리자 권한 확인
+    // High Templar 이상 권한 확인
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('id, role, banned_at')
       .eq('id', user.id)
       .single()
 
-    if (userError || !userData || userData.role !== 'admin' || userData.banned_at) {
-      return NextResponse.json({ error: '관리자 권한이 필요합니다' }, { status: 403 })
+    const allowedRoles = ['high_templar', 'admin']
+    if (userError || !userData || userData.banned_at || !allowedRoles.includes(userData.role)) {
+      return NextResponse.json({ error: 'High Templar 이상의 권한이 필요합니다' }, { status: 403 })
     }
 
     // 요청 본문 파싱
@@ -205,15 +206,16 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: '인증이 필요합니다' }, { status: 401 })
     }
 
-    // 관리자 권한 확인
+    // High Templar 이상 권한 확인
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('id, role, banned_at')
       .eq('id', user.id)
       .single()
 
-    if (userError || !userData || userData.role !== 'admin' || userData.banned_at) {
-      return NextResponse.json({ error: '관리자 권한이 필요합니다' }, { status: 403 })
+    const allowedRoles = ['high_templar', 'admin']
+    if (userError || !userData || userData.banned_at || !allowedRoles.includes(userData.role)) {
+      return NextResponse.json({ error: 'High Templar 이상의 권한이 필요합니다' }, { status: 403 })
     }
 
     // 요청 본문 파싱
