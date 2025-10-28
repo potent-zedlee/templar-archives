@@ -201,9 +201,9 @@ DEBUG=true  # 프로덕션 환경에서 디버그 로그 활성화
 - **Supabase**: [Dashboard](https://supabase.com/dashboard/project/diopilmkehygiqpizvga/settings/api) → Settings → API
 - **Anthropic**: [Claude Console](https://console.anthropic.com/settings/keys)
 
-## 🎯 현재 개발 상태 (2025-10-24)
+## 🎯 현재 개발 상태 (2025-10-28)
 
-### ✅ 완료된 기능 (Phase 0-32)
+### ✅ 완료된 기능 (Phase 0-33)
 
 #### Phase 0: 인증 시스템
 - Google OAuth 로그인
@@ -265,6 +265,16 @@ DEBUG=true  # 프로덕션 환경에서 디버그 로그 활성화
   - 환경 변수 중앙 관리
   - **보안 등급**: B+ → A
 
+#### Phase 33: Archive Single Mode Accordion
+- **Accordion Single Mode** (2025-10-28)
+  - Multiple → Single Mode 전환
+  - 한 번에 하나의 Tournament/SubEvent만 열림
+  - Tournament 변경 시 SubEvent 자동 닫힘
+  - Framer Motion 애니메이션 추가 (0.3초, easeInOut)
+  - Zustand Store 수정: `Set<string>` → `string | null`
+  - 3개 파일 수정 (+54줄, -68줄)
+  - 더 깔끔한 UI, 모바일 친화적
+
 #### 추가 기능
 - ✅ **아카이브 카테고리 필터** (2025-10-16)
   - All, WSOP, Triton, EPT, Hustler, APT, APL, GGPOKER
@@ -291,14 +301,14 @@ DEBUG=true  # 프로덕션 환경에서 디버그 로그 활성화
 ---
 
 **프로젝트**: Templar Archives (구 GGVault)
-**버전**: 6.0
-**마지막 업데이트**: 2025-10-24
+**버전**: 6.1
+**마지막 업데이트**: 2025-10-28
 
-**최근 업데이트 (v6.0)**:
-- ✅ Comprehensive Security Enhancement (Phase 32) - 8가지 보안 개선
-- ✅ SQL Injection 완전 방지 (Natural Search API 재설계)
-- ✅ CSRF 보호, Magic Number 검증
-- ✅ Rate Limiting 개선 (User ID 기반)
-- ✅ 보안 등급: B+ → A
+**최근 업데이트 (v6.1)**:
+- ✅ Archive Single Mode Accordion (Phase 33) - UX 개선
+- ✅ Multiple → Single Mode 전환 (한 번에 하나만 열림)
+- ✅ Framer Motion 애니메이션 추가 (0.3초 전환)
+- ✅ Zustand Store 최적화 (Set → string | null)
+- ✅ 모바일 친화적 UI (스크롤 감소)
 
 전체 프로젝트 정보는 [상위 README](../README.md)를 참조하세요.
