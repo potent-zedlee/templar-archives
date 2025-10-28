@@ -7,6 +7,7 @@
 import { createWorker } from 'tesseract.js'
 import type { CroppedFrame } from '@/lib/frame-cropper'
 import type { OcrData, OcrPlayerData, OcrBoardData } from '@/lib/types/ocr'
+import { CleanupContext } from '@/lib/cleanup-utils'
 
 /**
  * Tesseract Worker 생성 및 초기화
@@ -184,10 +185,17 @@ export function parseBoardOcr(text: string): OcrBoardData {
  */
 export async function extractOcrDataFromFrames(
   playerFrames: CroppedFrame[],
-  boardFrames: CroppedFrame[]
+  boardFrames: CroppedFrame[],
+  cleanupContext?: CleanupContext
 ): Promise<OcrData[]> {
   // Worker 생성
   const worker = await createOcrWorker()
+
+  // cleanupContext에 등록 (있으면)
+  if (cleanupContext) {
+    cleanupContext.registerOcrWorker(worker)
+  }
+
   const ocrDataList: OcrData[] = []
 
   try {
@@ -213,11 +221,14 @@ export async function extractOcrDataFromFrames(
         board: boardData,
       })
     }
-  } finally {
-    await worker.terminate()
-  }
 
-  return ocrDataList
+    return ocrDataList
+  } finally {
+    // cleanupContext가 없으면 즉시 정리
+    if (!cleanupContext) {
+      await worker.terminate()
+    }
+  }
 }
 
 /**
