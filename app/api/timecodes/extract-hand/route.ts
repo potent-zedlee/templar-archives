@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import Anthropic from '@anthropic-ai/sdk'
 import { logError, createErrorResponse } from '@/lib/error-handler'
 import { parseTimecode } from '@/lib/timecode-utils'
@@ -22,7 +22,7 @@ export const maxDuration = 60 // 60초 타임아웃
 export async function POST(request: NextRequest) {
   try {
     // Supabase 클라이언트 생성
-    const supabase = await createClient()
+    const supabase = await createServerSupabaseClient()
 
     // 인증 확인
     const {
