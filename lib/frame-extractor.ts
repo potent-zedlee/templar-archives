@@ -9,6 +9,7 @@ import ffmpegInstaller from '@ffmpeg-installer/ffmpeg'
 import path from 'path'
 import fs from 'fs/promises'
 import type { Frame } from '@/lib/types/ocr'
+import { CleanupContext } from '@/lib/cleanup-utils'
 
 // FFmpeg 경로 설정
 ffmpeg.setFfmpegPath(ffmpegInstaller.path)
@@ -24,6 +25,8 @@ export interface FrameExtractionOptions {
   width?: number
   /** 출력 해상도 높이 (기본값: 720) */
   height?: number
+  /** Cleanup context (optional) */
+  cleanupContext?: CleanupContext
 }
 
 /**
@@ -69,11 +72,17 @@ export async function extractFrames(
     interval = 2,
     width = 1280,
     height = 720,
+    cleanupContext,
   } = options
 
   // 임시 디렉토리 생성
   const tempDir = path.join('/tmp', `frames_${Date.now()}`)
   await fs.mkdir(tempDir, { recursive: true })
+
+  // cleanupContext에 등록 (있으면)
+  if (cleanupContext) {
+    cleanupContext.registerTempDir(tempDir)
+  }
 
   try {
     // FFmpeg 명령어 구성
@@ -112,6 +121,10 @@ export async function extractFrames(
       .filter((f) => f.startsWith('frame_') && f.endsWith('.jpg'))
       .sort()
 
+    if (frameFiles.length === 0) {
+      throw new Error('No frames extracted from video')
+    }
+
     // Frame 객체 생성
     const frames: Frame[] = await Promise.all(
       frameFiles.map(async (file, index) => {
@@ -133,14 +146,35 @@ export async function extractFrames(
       })
     )
 
-    return frames
-  } finally {
-    // 임시 파일 정리
-    try {
-      await fs.rm(tempDir, { recursive: true, force: true })
-    } catch (error) {
-      console.error('Failed to clean up temp directory:', error)
+    // cleanupContext가 없으면 즉시 정리
+    if (!cleanupContext) {
+      try {
+        await fs.rm(tempDir, { recursive: true, force: true })
+      } catch (error) {
+        console.error('[frame-extractor] Failed to clean up temp directory:', error)
+      }
+    } else {
+      // cleanupContext가 있으면 등록 해제 (나중에 정리됨)
+      cleanupContext.unregisterTempDir(tempDir)
+      // 수동 정리 (프레임은 메모리에 있으므로 파일 삭제 가능)
+      try {
+        await fs.rm(tempDir, { recursive: true, force: true })
+      } catch (error) {
+        console.error('[frame-extractor] Failed to clean up temp directory:', error)
+      }
     }
+
+    return frames
+  } catch (error) {
+    // 에러 발생 시 cleanupContext가 있으면 나중에 정리, 없으면 즉시 정리
+    if (!cleanupContext) {
+      try {
+        await fs.rm(tempDir, { recursive: true, force: true })
+      } catch (cleanupError) {
+        console.error('[frame-extractor] Failed to clean up temp directory after error:', cleanupError)
+      }
+    }
+    throw error
   }
 }
 
