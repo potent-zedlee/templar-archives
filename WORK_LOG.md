@@ -11,6 +11,78 @@
 
 ---
 
+## 2025-10-28 (세션 42) - Phase 33: Archive Single Mode Accordion ✅
+
+### 작업 목표
+Archive 페이지 Accordion을 Single Mode로 변경하여 UX 개선 및 애니메이션 추가
+
+### 작업 내용
+
+#### 1. Zustand Store 수정 (0.5시간) ✅
+- **상태 구조 변경**: Multiple → Single Mode
+  - `expandedTournaments: Set<string>` → `expandedTournament: string | null`
+  - `expandedSubEvents: Set<string>` → `expandedSubEvent: string | null`
+- **토글 로직 수정**:
+  - 같은 ID 클릭 → 닫기 (null)
+  - 다른 ID 클릭 → 현재 항목 닫고 새 항목 열기
+  - Tournament 변경 시 SubEvent 자동 닫힘
+- **함수 제거**: `expandAll`, `collapseAll` (Single mode에서 불필요)
+- **파일**: `stores/archive-ui-store.ts`
+- **코드 변경**: 인터페이스, 초기 상태, 토글 함수 3곳 수정
+
+#### 2. 컴포넌트 업데이트 (0.3시간) ✅
+- **ArchiveEventsList 컴포넌트**:
+  - `expandedTournaments.has(id)` → `expandedTournament === id` 비교로 변경
+  - `expandedSubEvents.has(id)` → `expandedSubEvent === id` 비교로 변경
+  - useMemo 의존성 배열 업데이트 (Set → string | null)
+  - isExpanded 계산 로직 단순화
+- **ArchiveFolderList 컴포넌트**:
+  - 수정 불필요 (item.isExpanded 값을 그대로 사용)
+- **파일**: `app/(main)/archive/_components/ArchiveEventsList.tsx`
+
+#### 3. 애니메이션 추가 (0.2시간) ✅
+- **Framer Motion 적용**:
+  - Tournament 레벨: AnimatePresence + motion.div
+  - SubEvent 레벨: AnimatePresence + motion.div
+- **전환 효과**:
+  - initial: `{ opacity: 0, height: 0 }`
+  - animate: `{ opacity: 1, height: "auto" }`
+  - exit: `{ opacity: 0, height: 0 }`
+  - transition: `{ duration: 0.3, ease: "easeInOut" }`
+- **파일**: `components/archive-folder-list.tsx`
+
+#### 4. 빌드 및 배포 ✅
+- **빌드**: 11.6초, 경고만 있고 에러 없음 (Sentry 관련 경고)
+- **커밋**: 1753fd9
+- **배포**: Vercel 자동 배포, 3분 소요
+- **프로덕션 URL**: https://templar-archives.vercel.app
+
+### 커밋 히스토리
+- `1753fd9` - Implement single-mode accordion for Archive with smooth animations
+
+### 기술 스택
+- **상태 관리**: Zustand (devtools, persist)
+- **애니메이션**: Framer Motion (AnimatePresence, motion)
+- **타입**: TypeScript (string | null)
+
+### 성과
+- ✅ Multiple → Single Mode 전환 완료
+- ✅ 한 번에 하나의 Tournament/SubEvent만 열림
+- ✅ 부드러운 애니메이션 (0.3초 전환)
+- ✅ Tournament 변경 시 SubEvent 자동 닫힘
+- ✅ 더 깔끔한 UI (스크롤 감소)
+- ✅ 모바일 친화적
+- ✅ 코드 개선: +54줄, -68줄 (총 -14줄)
+
+### 결과 비교
+**이전**: 여러 토너먼트/이벤트가 동시에 열림 (Multiple selection)
+**현재**: 한 번에 하나만 열림 (Single selection + 애니메이션)
+
+### 다음 작업
+- TBD
+
+---
+
 ## 2025-10-27 (세션 41) - Phase 32 연장: UI/Admin Enhancement ✅
 
 ### 작업 목표
