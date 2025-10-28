@@ -11,11 +11,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ChevronLeft, ChevronRight, Plus, X, AlertCircle, Search } from 'lucide-react'
 import { useBatchSubmitTimecodeMutation } from '@/lib/queries/timecode-queries'
 import { validateHHMMSS, parseHHMMSS } from '@/lib/timecode-utils'
-import { POSITIONS, fetchAllPlayers, type Player } from '@/lib/hand-players'
+import { fetchAllPlayers, type Player } from '@/lib/hand-players'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -23,7 +22,6 @@ interface PlayerInput {
   id: string // 로컬 ID (UI용)
   playerId: string // DB Player ID
   playerName: string
-  position: string
   cards?: string
 }
 
@@ -99,7 +97,6 @@ export function SingleHandInputPanel({
       id: crypto.randomUUID(),
       playerId: player.id,
       playerName: player.name,
-      position: 'BB',
       cards: '',
     }
     updateHandField('players', [...currentHand.players, newPlayer])
@@ -198,7 +195,13 @@ export function SingleHandInputPanel({
       return
     }
 
-    setSavedHands([...savedHands, currentHand])
+    const newSavedHands = [...savedHands, currentHand]
+    setSavedHands(newSavedHands)
+
+    // currentHandIndex를 새 핸드 위치로 이동
+    const newIndex = newSavedHands.length
+    setCurrentHandIndex(newIndex)
+
     const nextHandNumber = parseInt(currentHand.handNumber, 10) + 1
     setCurrentHand(getInitialHandState(nextHandNumber))
     setIsModified(false)
@@ -210,10 +213,11 @@ export function SingleHandInputPanel({
     if (isModified && !hasErrors) {
       const confirm = window.confirm('현재 핸드를 저장하시겠습니까?')
       if (confirm) {
-        handleSave()
+        handleSave() // handleSave가 currentHandIndex를 업데이트함
       } else {
         const nextHandNumber = parseInt(currentHand.handNumber, 10) + 1
         setCurrentHand(getInitialHandState(nextHandNumber))
+        setCurrentHandIndex(savedHands.length)
         setIsModified(false)
       }
     } else if (isModified && hasErrors) {
@@ -221,6 +225,7 @@ export function SingleHandInputPanel({
     } else {
       const nextHandNumber = parseInt(currentHand.handNumber, 10) + 1
       setCurrentHand(getInitialHandState(nextHandNumber))
+      setCurrentHandIndex(savedHands.length)
     }
   }
 
@@ -236,13 +241,19 @@ export function SingleHandInputPanel({
 
   // 다음 핸드로 이동
   const handleNextHandNav = () => {
-    if (currentHandIndex < savedHands.length) {
+    if (currentHandIndex < savedHands.length - 1) {
+      // Saved 핸드 내에서 다음으로 이동
       const nextIndex = currentHandIndex + 1
       setCurrentHandIndex(nextIndex)
-      if (nextIndex < savedHands.length) {
-        setCurrentHand({ ...savedHands[nextIndex] })
-        setIsModified(false)
-      }
+      setCurrentHand({ ...savedHands[nextIndex] })
+      setIsModified(false)
+    } else if (currentHandIndex === savedHands.length - 1) {
+      // 마지막 saved 핸드에서 새 핸드로 이동
+      const nextIndex = savedHands.length
+      setCurrentHandIndex(nextIndex)
+      const nextHandNumber = parseInt(currentHand.handNumber, 10) + 1
+      setCurrentHand(getInitialHandState(nextHandNumber))
+      setIsModified(false)
     }
   }
 
@@ -272,7 +283,7 @@ export function SingleHandInputPanel({
       handNumber: hand.handNumber.trim(),
       startTime: hand.startTime.trim(),
       endTime: hand.endTime.trim(),
-      description: `Players: ${hand.players.map((p) => `${p.playerName} (${p.position}${p.cards ? `, ${p.cards}` : ''})`).join(', ')}` || null,
+      description: `Players: ${hand.players.map((p) => `${p.playerName}${p.cards ? ` (${p.cards})` : ''}`).join(', ')}` || null,
     }))
 
     try {
@@ -329,12 +340,6 @@ export function SingleHandInputPanel({
               <X className="h-5 w-5" />
             </Button>
           )}
-        </div>
-
-        {/* 정보 표시 */}
-        <div className="text-sm">
-          <span className="text-muted-foreground">Stream:</span>{' '}
-          <span className="font-medium">{streamName || 'Unknown'}</span>
         </div>
       </div>
 
@@ -403,30 +408,13 @@ export function SingleHandInputPanel({
               >
                 <div className="flex-1 space-y-2">
                   <div className="font-medium text-sm">{player.playerName}</div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Select
-                      value={player.position}
-                      onValueChange={(value) => updatePlayer(player.id, 'position', value)}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Position" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {POSITIONS.map((pos) => (
-                          <SelectItem key={pos} value={pos} className="text-xs">
-                            {pos}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      value={player.cards || ''}
-                      onChange={(e) => updatePlayer(player.id, 'cards', e.target.value)}
-                      placeholder="Cards"
-                      maxLength={10}
-                      className="h-8 text-xs"
-                    />
-                  </div>
+                  <Input
+                    value={player.cards || ''}
+                    onChange={(e) => updatePlayer(player.id, 'cards', e.target.value)}
+                    placeholder="Cards"
+                    maxLength={10}
+                    className="h-8 text-xs"
+                  />
                 </div>
                 <Button
                   type="button"
