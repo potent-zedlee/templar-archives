@@ -48,7 +48,6 @@ interface ArchiveUIState {
   editEventDialog: DialogState
   moveToEventDialog: DialogState
   moveToNewEventDialog: DialogState
-  keyboardShortcutsDialog: DialogState
   infoDialog: DialogState
 
   // Upload State
@@ -105,8 +104,6 @@ interface ArchiveUIState {
   closeMoveToEventDialog: () => void
   openMoveToNewEventDialog: () => void
   closeMoveToNewEventDialog: () => void
-  openKeyboardShortcutsDialog: () => void
-  closeKeyboardShortcutsDialog: () => void
   openInfoDialog: (itemId: string) => void
   closeInfoDialog: () => void
 
@@ -175,7 +172,6 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         editEventDialog: { isOpen: false, editingId: null },
         moveToEventDialog: { isOpen: false, editingId: null },
         moveToNewEventDialog: { isOpen: false, editingId: null },
-        keyboardShortcutsDialog: { isOpen: false, editingId: null },
         infoDialog: { isOpen: false, editingId: null },
 
         // Initial State - Upload
@@ -317,11 +313,6 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
           set({ moveToNewEventDialog: { isOpen: true, editingId: null } }),
         closeMoveToNewEventDialog: () =>
           set({ moveToNewEventDialog: { isOpen: false, editingId: null } }),
-
-        openKeyboardShortcutsDialog: () =>
-          set({ keyboardShortcutsDialog: { isOpen: true, editingId: null } }),
-        closeKeyboardShortcutsDialog: () =>
-          set({ keyboardShortcutsDialog: { isOpen: false, editingId: null } }),
 
         openInfoDialog: (itemId) =>
           set({ infoDialog: { isOpen: true, editingId: itemId } }),
