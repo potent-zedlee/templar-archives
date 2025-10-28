@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     // 유저 정보 조회 (role, banned_at 체크)
     const { data: userData, error: userError } = await supabase
       .from('users')
-      .select('id, username, role, banned_at')
+      .select('id, nickname, role, banned_at')
       .eq('id', user.id)
       .single()
 
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
     const submissionsToInsert = timecodes.map((tc) => ({
       stream_id: streamId,
       submitter_id: userData.id,
-      submitter_name: userData.username || user.email || 'Unknown',
+      submitter_name: userData.nickname || user.email || 'Unknown',
       start_time: tc.startTime,
       end_time: tc.endTime,
       hand_number: tc.handNumber,

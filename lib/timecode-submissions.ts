@@ -35,7 +35,7 @@ export interface TimecodeSubmission {
   }
   reviewer?: {
     id: string
-    username: string
+    nickname: string
   }
 }
 
@@ -134,7 +134,7 @@ export async function getAllSubmissions(
         ),
         reviewer:users!timecode_submissions_reviewed_by_fkey (
           id,
-          username
+          nickname
         )
       `
       )
@@ -197,7 +197,7 @@ export async function getSubmissionById(
         ),
         reviewer:users!timecode_submissions_reviewed_by_fkey (
           id,
-          username
+          nickname
         )
       `
       )
