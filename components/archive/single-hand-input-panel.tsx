@@ -11,7 +11,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ChevronLeft, ChevronRight, Plus, X, AlertCircle, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Search } from 'lucide-react'
 import { useBatchSubmitTimecodeMutation } from '@/lib/queries/timecode-queries'
 import { validateHHMMSS, parseHHMMSS } from '@/lib/timecode-utils'
 import { fetchAllPlayers, type Player } from '@/lib/hand-players'
@@ -22,7 +22,6 @@ interface PlayerInput {
   id: string // 로컬 ID (UI용)
   playerId: string // DB Player ID
   playerName: string
-  cards?: string
 }
 
 interface HandInput {
@@ -76,12 +75,17 @@ export function SingleHandInputPanel({
   }, [])
 
   // 초기 핸드 상태 생성
-  function getInitialHandState(handNumber: number): HandInput {
+  function getInitialHandState(handNumber: number, copyPlayers?: PlayerInput[]): HandInput {
     return {
       handNumber: String(handNumber).padStart(3, '0'),
       startTime: '',
       endTime: '',
-      players: [],
+      players: copyPlayers
+        ? copyPlayers.map((p) => ({
+            ...p,
+            id: crypto.randomUUID(), // 새로운 로컬 ID 생성
+          }))
+        : [],
     }
   }
 
@@ -97,7 +101,6 @@ export function SingleHandInputPanel({
       id: crypto.randomUUID(),
       playerId: player.id,
       playerName: player.name,
-      cards: '',
     }
     updateHandField('players', [...currentHand.players, newPlayer])
     setSearchQuery('')
@@ -203,7 +206,7 @@ export function SingleHandInputPanel({
     setCurrentHandIndex(newIndex)
 
     const nextHandNumber = parseInt(currentHand.handNumber, 10) + 1
-    setCurrentHand(getInitialHandState(nextHandNumber))
+    setCurrentHand(getInitialHandState(nextHandNumber, currentHand.players))
     setIsModified(false)
     toast.success('저장되었습니다')
   }
@@ -216,7 +219,7 @@ export function SingleHandInputPanel({
         handleSave() // handleSave가 currentHandIndex를 업데이트함
       } else {
         const nextHandNumber = parseInt(currentHand.handNumber, 10) + 1
-        setCurrentHand(getInitialHandState(nextHandNumber))
+        setCurrentHand(getInitialHandState(nextHandNumber, currentHand.players))
         setCurrentHandIndex(savedHands.length)
         setIsModified(false)
       }
@@ -224,7 +227,7 @@ export function SingleHandInputPanel({
       toast.error('입력 오류를 수정해주세요')
     } else {
       const nextHandNumber = parseInt(currentHand.handNumber, 10) + 1
-      setCurrentHand(getInitialHandState(nextHandNumber))
+      setCurrentHand(getInitialHandState(nextHandNumber, currentHand.players))
       setCurrentHandIndex(savedHands.length)
     }
   }
@@ -252,7 +255,7 @@ export function SingleHandInputPanel({
       const nextIndex = savedHands.length
       setCurrentHandIndex(nextIndex)
       const nextHandNumber = parseInt(currentHand.handNumber, 10) + 1
-      setCurrentHand(getInitialHandState(nextHandNumber))
+      setCurrentHand(getInitialHandState(nextHandNumber, currentHand.players))
       setIsModified(false)
     }
   }
@@ -283,7 +286,7 @@ export function SingleHandInputPanel({
       handNumber: hand.handNumber.trim(),
       startTime: hand.startTime.trim(),
       endTime: hand.endTime.trim(),
-      description: `Players: ${hand.players.map((p) => `${p.playerName}${p.cards ? ` (${p.cards})` : ''}`).join(', ')}` || null,
+      description: `Players: ${hand.players.map((p) => p.playerName).join(', ')}` || null,
     }))
 
     try {
@@ -343,17 +346,6 @@ export function SingleHandInputPanel({
         </div>
       </div>
 
-      {/* 안내 메시지 */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
-          <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-xs text-blue-900 dark:text-blue-100 space-y-1">
-            <p className="font-medium">HH:MM:SS 형식 (예: 01:23:45)</p>
-            <p>플레이어는 최소 1명 이상 필요합니다</p>
-          </div>
-        </div>
-      </div>
-
       {/* 스크롤 영역 */}
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
@@ -404,17 +396,10 @@ export function SingleHandInputPanel({
             {currentHand.players.map((player) => (
               <div
                 key={player.id}
-                className="flex items-start gap-2 p-3 bg-muted rounded-md border border-border"
+                className="flex items-center gap-2 p-3 bg-muted rounded-md border border-border"
               >
-                <div className="flex-1 space-y-2">
+                <div className="flex-1">
                   <div className="font-medium text-sm">{player.playerName}</div>
-                  <Input
-                    value={player.cards || ''}
-                    onChange={(e) => updatePlayer(player.id, 'cards', e.target.value)}
-                    placeholder="Cards"
-                    maxLength={10}
-                    className="h-8 text-xs"
-                  />
                 </div>
                 <Button
                   type="button"
