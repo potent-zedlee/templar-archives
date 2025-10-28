@@ -31,8 +31,8 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
   const { userEmail, selectedDay, setSelectedDay } = useArchiveDataStore()
 
   const {
-    expandedTournaments,
-    expandedSubEvents,
+    expandedTournament,
+    expandedSubEvent,
     selectedCategory,
     searchQuery,
     sortBy,
@@ -78,11 +78,11 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
         itemCount: tournament.sub_events?.length || 0,
         data: tournament,
         level: 0,
-        isExpanded: expandedTournaments.has(tournament.id),
+        isExpanded: expandedTournament === tournament.id,
       })
 
       // If tournament is expanded, add sub-events
-      if (expandedTournaments.has(tournament.id)) {
+      if (expandedTournament === tournament.id) {
         const subEvents = tournament.sub_events || []
 
         subEvents.forEach((subEvent) => {
@@ -95,12 +95,12 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
             date: subEvent.date,
             data: subEvent,
             level: 1,
-            isExpanded: expandedSubEvents.has(subEvent.id),
+            isExpanded: expandedSubEvent === subEvent.id,
             parentId: tournament.id,
           })
 
           // If sub-event is expanded, add days
-          if (expandedSubEvents.has(subEvent.id)) {
+          if (expandedSubEvent === subEvent.id) {
             const days = subEvent.days || []
 
             days.forEach((day: import('@/lib/supabase').Stream) => {
@@ -202,8 +202,8 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
   }, [
     tournaments,
     unsortedVideos,
-    expandedTournaments,
-    expandedSubEvents,
+    expandedTournament,
+    expandedSubEvent,
     selectedCategory,
     searchQuery,
     sortBy,
