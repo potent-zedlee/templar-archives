@@ -378,21 +378,13 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             >
               <div className="p-6 space-y-6 backdrop-blur-xl bg-slate-950/95 rounded-xl border border-white/20 shadow-2xl">
                 {/* Video Player */}
-                <div className="space-y-2">
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    Video Player
-                  </h3>
+                <div>
                   <VideoPlayer day={day} seekTime={seekTime} />
                 </div>
 
                 {/* Hand History */}
-                <div className="space-y-2">
-                  <h3 className="text-lg font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    Hand History
-                  </h3>
-                  <div className="max-h-[600px] overflow-y-auto">
-                    <ArchiveHandHistory onSeekToTime={onSeekToTime} />
-                  </div>
+                <div className="max-h-[600px] overflow-y-auto">
+                  <ArchiveHandHistory onSeekToTime={onSeekToTime} />
                 </div>
 
                 {/* Close Button */}
