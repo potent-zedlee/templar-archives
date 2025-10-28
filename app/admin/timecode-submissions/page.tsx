@@ -28,6 +28,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TimecodeReviewDialog } from '@/components/admin/timecode-review-dialog'
 import { OcrSetupDialog } from '@/components/admin/ocr-setup-dialog'
+import { ExtractionProgressDialog } from '@/components/admin/extraction-progress-dialog'
+import { BatchStatusDialog } from '@/components/admin/batch-status-dialog'
 import {
   Clock,
   Video,
@@ -39,6 +41,7 @@ import {
   Users,
   FileCheck,
   Settings,
+  Eye,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -51,7 +54,9 @@ export default function AdminTimecodeSubmissionsPage() {
   const [selectedSubmission, setSelectedSubmission] = useState<TimecodeSubmission | null>(null)
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
   const [ocrSetupDialogOpen, setOcrSetupDialogOpen] = useState(false)
-  const [processingId, setProcessingId] = useState<string | null>(null)
+  const [extractionProgressDialogOpen, setExtractionProgressDialogOpen] = useState(false)
+  const [batchStatusDialogOpen, setBatchStatusDialogOpen] = useState(false)
+  const [processingSubmissionId, setProcessingSubmissionId] = useState<string | null>(null)
 
   // 데이터 조회
   const filters = statusFilter === 'all' ? {} : { status: statusFilter }
@@ -76,36 +81,45 @@ export default function AdminTimecodeSubmissionsPage() {
   }
 
   // AI 추출 시작 (approved → ai_processing)
-  const handleStartAIExtraction = async (submissionId: string) => {
+  const handleStartAIExtraction = (submission: TimecodeSubmission) => {
+    if (!submission.ocr_regions) {
+      toast.error('먼저 OCR 영역을 설정해주세요')
+      return
+    }
+
     if (!confirm('AI 핸드 추출을 시작하시겠습니까?')) {
       return
     }
 
-    setProcessingId(submissionId)
+    setSelectedSubmission(submission)
+    setProcessingSubmissionId(submission.id)
+    setExtractionProgressDialogOpen(true)
+  }
 
-    try {
-      const response = await fetch('/api/timecodes/extract-hand', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ submissionId }),
-      })
+  // AI 추출 완료 콜백
+  const handleExtractionComplete = (result: any) => {
+    toast.success('핸드 추출이 완료되었습니다!')
+    refetch()
+    setProcessingSubmissionId(null)
+  }
 
-      const data = await response.json()
+  // AI 추출 에러 콜백
+  const handleExtractionError = (error: string) => {
+    toast.error(`추출 실패: ${error}`)
+    refetch()
+    setProcessingSubmissionId(null)
+  }
 
-      if (!response.ok) {
-        throw new Error(data.error || 'AI 추출에 실패했습니다')
-      }
+  // Batch 상태 확인
+  const handleCheckBatchStatus = (submission: TimecodeSubmission) => {
+    setSelectedSubmission(submission)
+    setBatchStatusDialogOpen(true)
+  }
 
-      toast.success('AI 핸드 추출이 완료되었습니다')
-      refetch()
-    } catch (error) {
-      console.error('AI extraction error:', error)
-      toast.error(error instanceof Error ? error.message : 'AI 추출에 실패했습니다')
-    } finally {
-      setProcessingId(null)
-    }
+  // Batch 다운로드 완료 콜백
+  const handleBatchDownloadComplete = () => {
+    toast.success('Batch 결과가 다운로드되었습니다!')
+    refetch()
   }
 
   // 검수 다이얼로그 열기 (review)
@@ -323,7 +337,7 @@ export default function AdminTimecodeSubmissionsPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleOpenOcrSetup(submission)}
-                          disabled={processingId === submission.id}
+                          disabled={processingSubmissionId === submission.id}
                         >
                           {submission.ocr_regions ? (
                             <>
@@ -340,10 +354,10 @@ export default function AdminTimecodeSubmissionsPage() {
                         <Button
                           variant="default"
                           size="sm"
-                          onClick={() => handleStartAIExtraction(submission.id)}
-                          disabled={processingId === submission.id}
+                          onClick={() => handleStartAIExtraction(submission)}
+                          disabled={processingSubmissionId === submission.id || !submission.ocr_regions}
                         >
-                          {processingId === submission.id ? (
+                          {processingSubmissionId === submission.id ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                               처리 중...
@@ -356,6 +370,17 @@ export default function AdminTimecodeSubmissionsPage() {
                           )}
                         </Button>
                       </div>
+                    )}
+
+                    {submission.status === 'ai_processing' && submission.ai_extracted_data?.vision_batch_id && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCheckBatchStatus(submission)}
+                      >
+                        <Eye className="mr-2 h-4 w-4" />
+                        Batch 상태 확인
+                      </Button>
                     )}
 
                     {submission.status === 'review' && (
@@ -417,6 +442,28 @@ export default function AdminTimecodeSubmissionsPage() {
             refetch()
             setSelectedSubmission(null)
           }}
+        />
+      )}
+
+      {/* 추출 진행 상황 다이얼로그 */}
+      {processingSubmissionId && (
+        <ExtractionProgressDialog
+          submissionId={processingSubmissionId}
+          open={extractionProgressDialogOpen}
+          onOpenChange={setExtractionProgressDialogOpen}
+          onComplete={handleExtractionComplete}
+          onError={handleExtractionError}
+        />
+      )}
+
+      {/* Batch 상태 다이얼로그 */}
+      {selectedSubmission && (
+        <BatchStatusDialog
+          submissionId={selectedSubmission.id}
+          batchId={selectedSubmission.ai_extracted_data?.vision_batch_id || null}
+          open={batchStatusDialogOpen}
+          onOpenChange={setBatchStatusDialogOpen}
+          onDownloadComplete={handleBatchDownloadComplete}
         />
       )}
     </div>
