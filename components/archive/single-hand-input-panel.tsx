@@ -17,6 +17,7 @@ import { validateHHMMSS, parseHHMMSS } from '@/lib/timecode-utils'
 import { fetchAllPlayers, type Player } from '@/lib/hand-players'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { AddPlayerDialog } from '@/components/admin/add-player-dialog'
 
 interface PlayerInput {
   id: string // 로컬 ID (UI용)
@@ -53,6 +54,7 @@ export function SingleHandInputPanel({
   const [isModified, setIsModified] = useState(false)
   const [allPlayers, setAllPlayers] = useState<Player[]>([])
   const [loadingPlayers, setLoadingPlayers] = useState(false)
+  const [addPlayerDialogOpen, setAddPlayerDialogOpen] = useState(false)
 
   // Queries
   const batchSubmitMutation = useBatchSubmitTimecodeMutation()
@@ -105,6 +107,14 @@ export function SingleHandInputPanel({
     updateHandField('players', [...currentHand.players, newPlayer])
     setSearchQuery('')
     setShowPlayerSearch(false)
+  }
+
+  // 새 플레이어 생성 후 콜백
+  const handlePlayerCreated = (player: Player) => {
+    // 전체 플레이어 목록에 추가
+    setAllPlayers((prev) => [...prev, player])
+    // 자동으로 현재 핸드에 추가
+    addPlayer({ id: player.id, name: player.name })
   }
 
   // 플레이어 제거
@@ -441,8 +451,22 @@ export function SingleHandInputPanel({
                     </div>
                   </ScrollArea>
                 ) : (
-                  <div className="text-sm text-muted-foreground text-center py-4">
-                    {loadingPlayers ? 'Loading...' : 'No players found'}
+                  <div className="space-y-3 py-4">
+                    <div className="text-sm text-muted-foreground text-center">
+                      {loadingPlayers ? 'Loading...' : 'No players found'}
+                    </div>
+                    {!loadingPlayers && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setAddPlayerDialogOpen(true)}
+                        className="w-full"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create New Player
+                      </Button>
+                    )}
                   </div>
                 )}
                 <Button
@@ -530,6 +554,13 @@ export function SingleHandInputPanel({
           </Button>
         </div>
       </div>
+
+      {/* Add Player Dialog */}
+      <AddPlayerDialog
+        open={addPlayerDialogOpen}
+        onOpenChange={setAddPlayerDialogOpen}
+        onPlayerCreated={handlePlayerCreated}
+      />
     </div>
   )
 }
