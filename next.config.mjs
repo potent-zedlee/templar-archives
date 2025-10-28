@@ -15,6 +15,17 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // FFmpeg 바이너리를 번들에서 제외
+      config.externals = config.externals || []
+      config.externals.push({
+        'fluent-ffmpeg': 'commonjs fluent-ffmpeg',
+        '@ffmpeg-installer/ffmpeg': 'commonjs @ffmpeg-installer/ffmpeg',
+      })
+    }
+    return config
+  },
   images: {
     remotePatterns: [
       {

@@ -1,14 +1,15 @@
 /**
- * Frame Extraction API
+ * OCR Extraction API
  *
- * Timecode submission에서 프레임 추출
+ * 프레임 추출 + OCR 텍스트 추출 통합 API
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { extractFrames, timeStringToSeconds } from '@/lib/frame-extractor'
-import { cropFrames, getTotalFramesSize, getFrameSummary } from '@/lib/frame-cropper'
+import { cropFrames } from '@/lib/frame-cropper'
 import { getVideoStreamUrl } from '@/lib/youtube-downloader'
+import { extractOcrDataFromFrames, calculateOcrAccuracy } from '@/lib/ocr-extractor'
 import { isOcrRegions } from '@/lib/types/ocr'
 
 // Supabase 클라이언트 생성
@@ -18,7 +19,7 @@ function createServerSupabaseClient() {
   return createClient(supabaseUrl, supabaseKey)
 }
 
-export const runtime = 'nodejs' // Node.js runtime (FFmpeg 바이너리 사용)
+export const runtime = 'nodejs' // Node.js runtime (FFmpeg, Tesseract 바이너리 사용)
 export const maxDuration = 60 // Vercel Pro plan: 60초 타임아웃
 
 export async function POST(request: NextRequest) {
@@ -28,10 +29,7 @@ export async function POST(request: NextRequest) {
     const { submissionId } = body
 
     if (!submissionId) {
-      return NextResponse.json(
-        { error: 'submissionId is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'submissionId is required' }, { status: 400 })
     }
 
     // Supabase에서 submission 조회
@@ -56,28 +54,19 @@ export async function POST(request: NextRequest) {
       .single() as any
 
     if (submissionError || !submission) {
-      return NextResponse.json(
-        { error: 'Submission not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Submission not found' }, { status: 404 })
     }
 
-    // stream은 배열일 수 있으므로 처리
+    // stream 처리
     const stream = Array.isArray(submission.stream) ? submission.stream[0] : submission.stream
 
     // 검증
     if (!stream?.video_url) {
-      return NextResponse.json(
-        { error: 'No video URL found' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'No video URL found' }, { status: 400 })
     }
 
     if (stream.video_source !== 'youtube') {
-      return NextResponse.json(
-        { error: 'Only YouTube videos are supported' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Only YouTube videos are supported' }, { status: 400 })
     }
 
     if (!submission.ocr_regions) {
@@ -88,10 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isOcrRegions(submission.ocr_regions)) {
-      return NextResponse.json(
-        { error: 'Invalid OCR regions format' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid OCR regions format' }, { status: 400 })
     }
 
     // 시간 변환
@@ -107,14 +93,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(`[extract-frames] Starting extraction for submission ${submissionId}`)
-    console.log(`[extract-frames] Start: ${startTime}s, End: ${endTime}s, Duration: ${duration}s`)
+    console.log(`[extract-ocr] Starting OCR extraction for submission ${submissionId}`)
+    console.log(`[extract-ocr] Start: ${startTime}s, End: ${endTime}s, Duration: ${duration}s`)
 
-    // YouTube 비디오 스트림 URL 가져오기
+    // 1. YouTube 비디오 스트림 URL 가져오기
     const { streamUrl, videoInfo } = await getVideoStreamUrl(stream.video_url)
-    console.log(`[extract-frames] Video: ${videoInfo.title} (${videoInfo.duration}s)`)
+    console.log(`[extract-ocr] Video: ${videoInfo.title} (${videoInfo.duration}s)`)
 
-    // 프레임 추출 (2초 간격)
+    // 2. 프레임 추출 (2초 간격)
+    console.log(`[extract-ocr] Extracting frames...`)
     const frames = await extractFrames(streamUrl, {
       startTime,
       endTime,
@@ -122,31 +109,40 @@ export async function POST(request: NextRequest) {
       width: 1280,
       height: 720,
     })
+    console.log(`[extract-ocr] Extracted ${frames.length} frames`)
 
-    console.log(`[extract-frames] Extracted ${frames.length} frames`)
+    // 3. OCR 영역으로 크롭
+    console.log(`[extract-ocr] Cropping frames...`)
+    const { playerFrames, boardFrames } = await cropFrames(frames, submission.ocr_regions)
+    console.log(`[extract-ocr] Cropped ${playerFrames.length} player frames`)
+    console.log(`[extract-ocr] Cropped ${boardFrames.length} board frames`)
 
-    // OCR 영역으로 크롭
-    const { playerFrames, boardFrames } = await cropFrames(
-      frames,
-      submission.ocr_regions
-    )
+    // 4. OCR 텍스트 추출 및 파싱
+    console.log(`[extract-ocr] Running OCR...`)
+    const ocrData = await extractOcrDataFromFrames(playerFrames, boardFrames)
+    console.log(`[extract-ocr] OCR completed for ${ocrData.length} frames`)
 
-    console.log(`[extract-frames] Cropped ${playerFrames.length} player frames`)
-    console.log(`[extract-frames] Cropped ${boardFrames.length} board frames`)
+    // 5. OCR 정확도 계산
+    const accuracy = calculateOcrAccuracy(ocrData)
+    console.log(`[extract-ocr] OCR Accuracy: ${(accuracy * 100).toFixed(1)}%`)
 
-    // 크기 정보
-    const playerSize = getTotalFramesSize(playerFrames)
-    const boardSize = getTotalFramesSize(boardFrames)
-    const totalSize = playerSize + boardSize
+    // 6. Supabase에 임시 저장 (ai_extracted_data에 OCR 데이터 저장)
+    const { error: updateError } = await supabase
+      .from('timecode_submissions')
+      .update({
+        status: 'ai_processing',
+        ai_extracted_data: {
+          ocr_data: ocrData,
+          ocr_accuracy: accuracy,
+          extracted_at: new Date().toISOString(),
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', submissionId)
 
-    console.log(`[extract-frames] Total size: ${totalSize.toFixed(2)} MB`)
-
-    // 프레임 요약 (디버깅용)
-    const frameSummaries = frames.map((frame) => ({
-      number: frame.number,
-      timestamp: frame.timestamp,
-      timestampSeconds: frame.timestampSeconds,
-    }))
+    if (updateError) {
+      console.error('[extract-ocr] Failed to update submission:', updateError)
+    }
 
     // Response
     return NextResponse.json({
@@ -164,21 +160,19 @@ export async function POST(request: NextRequest) {
         interval: 2,
         frameCount: frames.length,
       },
-      frames: frameSummaries,
-      playerFrames: playerFrames.map(getFrameSummary),
-      boardFrames: boardFrames.map(getFrameSummary),
-      size: {
-        player: `${playerSize.toFixed(2)} MB`,
-        board: `${boardSize.toFixed(2)} MB`,
-        total: `${totalSize.toFixed(2)} MB`,
+      ocr: {
+        dataCount: ocrData.length,
+        accuracy: `${(accuracy * 100).toFixed(1)}%`,
       },
+      // OCR 데이터 샘플 (처음 3개만)
+      sampleData: ocrData.slice(0, 3),
     })
   } catch (error) {
-    console.error('[extract-frames] Error:', error)
+    console.error('[extract-ocr] Error:', error)
 
     return NextResponse.json(
       {
-        error: 'Frame extraction failed',
+        error: 'OCR extraction failed',
         message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
