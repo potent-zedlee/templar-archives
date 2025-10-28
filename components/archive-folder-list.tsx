@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { BackgroundGradient } from "@/components/ui/background-gradient"
 import { VideoPlayer } from "@/components/video-player"
 import { cn } from "@/lib/utils"
-import { getCategoryByAlias } from "@/lib/tournament-categories"
 import { FOLDER_COLORS } from "@/lib/constants/archive-colors"
 import type { FolderItem } from "@/lib/types/archive"
 import type { Tournament, SubEvent, Day } from "@/lib/types/archive"
@@ -115,7 +114,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           {/* Logo */}
           <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center relative z-10">
             {(() => {
-              const logoUrl = tournament.category_logo || getCategoryByAlias(tournament.category)?.logoUrl
+              const logoUrl = tournament.category_logo_url || tournament.category_logo
               return logoUrl ? (
                 <div className="w-full h-full backdrop-blur-sm bg-white/10 dark:bg-black/10 rounded-lg p-2 border border-white/10 shadow-lg">
                   <Image

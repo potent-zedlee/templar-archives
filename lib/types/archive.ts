@@ -47,6 +47,7 @@ export interface Tournament {
   name: string
   category: TournamentCategory
   category_logo?: string
+  category_logo_url?: string // Joined from tournament_categories table
   location: string
   city?: string
   country?: string

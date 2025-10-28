@@ -132,6 +132,7 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
       .from('tournaments')
       .select(`
         *,
+        tournament_categories!category_id(logo_url),
         sub_events(
           *,
           streams(*)
@@ -178,6 +179,12 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
 
     // Add player counts to days and sort nested arrays
     tournaments.forEach((tournament: any) => {
+      // Flatten category logo data
+      if (tournament.tournament_categories?.logo_url) {
+        tournament.category_logo_url = tournament.tournament_categories.logo_url
+        delete tournament.tournament_categories
+      }
+
       // Sort sub_events by date descending
       if (tournament.sub_events) {
         tournament.sub_events.sort((a: any, b: any) => {
