@@ -11,6 +11,99 @@
 
 ---
 
+## 2025-10-28 (세션 43) - 성능 최적화 및 모니터링 설정 ✅
+
+### 작업 목표
+옵션 2 (성능 최적화 및 개선) + 옵션 3 (모니터링 설정) 진행
+
+### 작업 내용
+
+#### 1. 환경 변수 설정 가이드 제공 (10분) ✅
+- **.env.example 업데이트**:
+  - SUPABASE_SERVICE_ROLE_KEY 설명 추가 (서버 사이드 작업용)
+  - 보안 경고 및 용도 명시
+- **.env.local 업데이트**:
+  - Sentry 관련 환경 변수 템플릿 추가 (6개)
+  - 단계별 설정 가이드 주석 추가
+  - NEXT_PUBLIC_ENVIRONMENT 추가
+- **확인 사항**:
+  - SUPABASE_SERVICE_ROLE_KEY는 이미 .env.local에 설정되어 있음 (보안 로그 시스템 작동 가능)
+
+#### 2. Phase 33 애니메이션 검증 (30분) ✅
+- **검증 결과**: 이미 완벽하게 구현되어 있음
+  - Framer Motion import 확인 ✅
+  - Tournament 레벨 AnimatePresence ✅ (라인 175-189)
+  - SubEvent 레벨 AnimatePresence ✅ (라인 285-297)
+  - 애니메이션 설정: duration 0.3s, easeInOut ✅
+  - opacity: 0 → 1, height: 0 → auto ✅
+- **파일**: `components/archive-folder-list.tsx`
+- **결론**: Phase 33은 이미 100% 완료 상태
+
+#### 3. 성능 분석 실행 (40분) ✅
+- **번들 분석**: `npm run analyze` 실행 완료 (33.8초)
+- **생성된 리포트** (`.next/analyze/`):
+  - client.html (1.1MB) - 클라이언트 번들
+  - edge.html (425KB) - Edge Runtime 번들
+  - nodejs.html (1.5MB) - Node.js 서버 번들
+- **주요 페이지 크기**:
+  - 메인 페이지 (/): 10.8 kB (First Load: 322 kB)
+  - Admin Archive (/admin/archive): 25.8 kB (First Load: 371 kB)
+  - Admin Categories (/admin/categories): 57.2 kB (First Load: 416 kB)
+- **Sentry deprecated API 수정**:
+  - `startTransaction()` → `Sentry.startSpan()` 업데이트
+  - `withSentryTransaction()` 함수 리팩토링
+  - 최신 Sentry SDK v8+ 호환
+- **파일**: `lib/sentry-utils.ts`
+
+#### 4. Health Check API 엔드포인트 추가 (15분) ✅
+- **엔드포인트**: `/api/health`
+- **응답 형식**:
+  ```json
+  {
+    "status": "ok",
+    "timestamp": "2025-10-28T...",
+    "service": "templar-archives",
+    "version": "0.1.0",
+    "environment": "development"
+  }
+  ```
+- **런타임**: Edge Runtime (빠른 응답)
+- **용도**: Uptime 모니터링 서비스 (BetterStack, Checkly 등)
+- **파일**: `app/api/health/route.ts` (신규 생성)
+
+### 커밋 히스토리
+- TBD (문서 업데이트 후 커밋 예정)
+
+### 기술 스택
+- **번들 분석**: @next/bundle-analyzer
+- **성능 모니터링**: Vercel Analytics, Speed Insights
+- **에러 트래킹**: Sentry (@sentry/nextjs v10.22.0)
+- **Health Check**: Next.js Edge Runtime
+
+### 성과
+- ✅ 환경 변수 설정 가이드 완성
+- ✅ Phase 33 애니메이션 100% 완료 확인
+- ✅ 번들 크기 분석 리포트 생성
+- ✅ Sentry SDK v8+ 호환 (deprecated API 제거)
+- ✅ Health Check API 엔드포인트 추가
+- ✅ 보안 로그 시스템 작동 준비 완료 (SUPABASE_SERVICE_ROLE_KEY 설정됨)
+
+### 다음 단계
+1. **Sentry 프로젝트 설정** (30분):
+   - https://sentry.io/signup/ 가입
+   - Next.js 프로젝트 생성
+   - DSN, Auth Token 발급
+   - 환경 변수 6개 설정
+2. **Uptime 모니터링 설정** (30분):
+   - BetterStack 또는 Checkly 가입
+   - /api/health 엔드포인트 모니터링 추가
+3. **번들 최적화** (2시간):
+   - 1.1MB 클라이언트 번들 분석
+   - 큰 패키지 식별 및 최적화
+   - 추가 동적 임포트 적용
+
+---
+
 ## 2025-10-28 (세션 42) - Phase 33: Archive Single Mode Accordion ✅
 
 ### 작업 목표
