@@ -69,14 +69,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '정지된 사용자입니다' }, { status: 403 })
     }
 
-    // High Templar 이상 권한 체크
-    const allowedRoles = ['high_templar', 'reporter', 'admin']
-    if (!allowedRoles.includes(userData.role)) {
-      return NextResponse.json(
-        { error: 'High Templar 이상의 권한이 필요합니다' },
-        { status: 403 }
-      )
-    }
+    // 모든 인증된 사용자가 타임코드 제출 가능 (역할 제한 없음)
 
     // 요청 본문 파싱
     const body = await request.json()
