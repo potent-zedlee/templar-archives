@@ -9,12 +9,16 @@
  * - 빈 상태 표시
  */
 
-import { Folder } from 'lucide-react'
+import { Folder, FileText } from 'lucide-react'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
+import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { HandListAccordion } from '@/components/hand-list-accordion'
 import { Card } from '@/components/ui/card'
-import { useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import { BatchTimecodeDialog } from '@/components/archive/batch-timecode-dialog'
+import { isAdmin } from '@/lib/admin'
+import { useMemo, useState, useEffect } from 'react'
 
 interface ArchiveHandHistoryProps {
   onSeekToTime?: (timeString: string) => void
@@ -23,6 +27,30 @@ interface ArchiveHandHistoryProps {
 export function ArchiveHandHistory({ onSeekToTime }: ArchiveHandHistoryProps) {
   const { hands } = useArchiveData()
   const { advancedFilters } = useArchiveUIStore()
+  const { selectedStream } = useArchiveDataStore()
+  const [showBatchDialog, setShowBatchDialog] = useState(false)
+  const [isHighTemplar, setIsHighTemplar] = useState(false)
+  const [streamName, setStreamName] = useState<string>('')
+
+  // Check if user is High Templar or higher
+  useEffect(() => {
+    const checkRole = async () => {
+      const highTemplar = await isAdmin()
+      setIsHighTemplar(highTemplar)
+    }
+    checkRole()
+  }, [])
+
+  // Get stream name from selected stream
+  useEffect(() => {
+    if (selectedStream && hands.length > 0) {
+      // Extract stream name from first hand's day information
+      const firstHand = hands[0]
+      setStreamName(firstHand.day?.name || 'Unknown Stream')
+    } else {
+      setStreamName('')
+    }
+  }, [selectedStream, hands])
 
   // Filter hands based on advanced filters
   const filteredHands = useMemo(() => {
@@ -120,7 +148,24 @@ export function ArchiveHandHistory({ onSeekToTime }: ArchiveHandHistoryProps) {
     <div className="space-y-0">
       {/* Hand List */}
       <Card className="p-7 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 relative overflow-hidden">
-        <h2 className="text-2xl font-extrabold mb-7 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">Hand History</h2>
+        {/* 타이틀 행에 [분석] 버튼 추가 */}
+        <div className="flex items-center justify-between mb-7">
+          <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
+            Hand History
+          </h2>
+
+          {/* High Templar 이상만 표시 */}
+          {isHighTemplar && selectedStream && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setShowBatchDialog(true)}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              분석
+            </Button>
+          )}
+        </div>
         <div>
           {hands.length > 0 ? (
             <HandListAccordion
@@ -145,6 +190,19 @@ export function ArchiveHandHistory({ onSeekToTime }: ArchiveHandHistoryProps) {
           )}
         </div>
       </Card>
+
+      {/* Batch Timecode Dialog */}
+      <BatchTimecodeDialog
+        isOpen={showBatchDialog}
+        onOpenChange={setShowBatchDialog}
+        streamId={selectedStream}
+        streamName={streamName}
+        existingHandsCount={hands.length}
+        onSuccess={() => {
+          setShowBatchDialog(false)
+          // hands will be refetched automatically via React Query
+        }}
+      />
     </div>
   )
 }
