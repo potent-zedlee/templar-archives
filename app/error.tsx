@@ -14,7 +14,7 @@ export default function Error({
   reset: () => void
 }) {
   useEffect(() => {
-    // 에러 로깅 (프로덕션에서는 Sentry 등 사용)
+    // 에러 로깅
     console.error('전역 에러 발생:', error)
   }, [error])
 
