@@ -6,7 +6,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -26,17 +26,26 @@ interface AddPlayerDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onPlayerCreated: (player: Player) => void
+  suggestedName?: string
 }
 
 export function AddPlayerDialog({
   open,
   onOpenChange,
   onPlayerCreated,
+  suggestedName,
 }: AddPlayerDialogProps) {
   const [name, setName] = useState('')
   const [country, setCountry] = useState('')
   const [photoUrl, setPhotoUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // 다이얼로그 열릴 때 suggestedName으로 초기화
+  useEffect(() => {
+    if (open && suggestedName) {
+      setName(suggestedName)
+    }
+  }, [open, suggestedName])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
