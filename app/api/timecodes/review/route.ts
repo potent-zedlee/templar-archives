@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { reviewHandSchema } from '@/lib/validation/timecode-schemas'
 import { logError, createErrorResponse } from '@/lib/error-handler'
 
@@ -19,7 +19,7 @@ export const runtime = 'edge'
 export async function POST(request: NextRequest) {
   try {
     // Supabase 클라이언트 생성
-    const supabase = await createClient()
+    const supabase = await createServerSupabaseClient()
 
     // 인증 확인
     const {
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Supabase 클라이언트 생성
-    const supabase = await createClient()
+    const supabase = await createServerSupabaseClient()
 
     // 인증 확인
     const {

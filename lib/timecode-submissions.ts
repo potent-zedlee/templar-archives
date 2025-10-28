@@ -4,7 +4,7 @@
  * 타임코드 제출 관련 CRUD 함수
  */
 
-import { createClient } from '@/lib/supabase/client'
+import { createBrowserSupabaseClient } from '@/lib/supabase'
 
 export interface TimecodeSubmission {
   id: string
@@ -53,7 +53,7 @@ export async function getMySubmissions(
   filters: TimecodeSubmissionFilters = {}
 ): Promise<{ data: TimecodeSubmission[] | null; error: Error | null }> {
   try {
-    const supabase = createClient()
+    const supabase = createBrowserSupabaseClient()
 
     // 현재 유저 확인
     const {
@@ -118,7 +118,7 @@ export async function getAllSubmissions(
   filters: TimecodeSubmissionFilters = {}
 ): Promise<{ data: TimecodeSubmission[] | null; error: Error | null }> {
   try {
-    const supabase = createClient()
+    const supabase = createBrowserSupabaseClient()
 
     let query = supabase
       .from('timecode_submissions')
@@ -181,7 +181,7 @@ export async function getSubmissionById(
   submissionId: string
 ): Promise<{ data: TimecodeSubmission | null; error: Error | null }> {
   try {
-    const supabase = createClient()
+    const supabase = createBrowserSupabaseClient()
 
     const { data, error } = await supabase
       .from('timecode_submissions')
@@ -220,7 +220,7 @@ export async function approveSubmission(
   submissionId: string
 ): Promise<{ success: boolean; error: Error | null }> {
   try {
-    const supabase = createClient()
+    const supabase = createBrowserSupabaseClient()
 
     // 현재 유저 확인
     const {
@@ -260,7 +260,7 @@ export async function rejectSubmission(
   adminComment: string
 ): Promise<{ success: boolean; error: Error | null }> {
   try {
-    const supabase = createClient()
+    const supabase = createBrowserSupabaseClient()
 
     // 현재 유저 확인
     const {
@@ -300,7 +300,7 @@ export async function deleteSubmission(
   submissionId: string
 ): Promise<{ success: boolean; error: Error | null }> {
   try {
-    const supabase = createClient()
+    const supabase = createBrowserSupabaseClient()
 
     const { error } = await supabase.from('timecode_submissions').delete().eq('id', submissionId)
 
@@ -333,7 +333,7 @@ export async function getSubmissionStats(): Promise<{
   error: Error | null
 }> {
   try {
-    const supabase = createClient()
+    const supabase = createBrowserSupabaseClient()
 
     const { data, error } = await supabase.rpc('get_timecode_submission_stats')
 

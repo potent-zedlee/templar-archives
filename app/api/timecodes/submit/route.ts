@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { timecodeSubmissionSchema } from '@/lib/validation/timecode-schemas'
 import { parseTimecode, calculateDuration } from '@/lib/timecode-utils'
 import { logError, createErrorResponse } from '@/lib/error-handler'
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Supabase 클라이언트 생성
-    const supabase = await createClient()
+    const supabase = await createServerSupabaseClient()
 
     // 인증 확인
     const {
