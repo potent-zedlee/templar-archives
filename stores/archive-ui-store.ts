@@ -21,9 +21,9 @@ import type {
 } from '@/lib/types/archive'
 
 interface ArchiveUIState {
-  // Expansion State (Tree View)
-  expandedTournaments: Set<string>
-  expandedSubEvents: Set<string>
+  // Expansion State (Tree View) - Single Mode
+  expandedTournament: string | null
+  expandedSubEvent: string | null
 
   // Search & Sort
   searchQuery: string
@@ -70,13 +70,9 @@ interface ArchiveUIState {
   loadingViewingPayouts: boolean
   isEditingViewingPayouts: boolean
 
-  // Actions - Expansion (Tree View)
+  // Actions - Expansion (Tree View) - Single Mode
   toggleTournamentExpand: (id: string) => void
   toggleSubEventExpand: (id: string) => void
-  expandAllTournaments: () => void
-  collapseAllTournaments: () => void
-  expandAllSubEvents: () => void
-  collapseAllSubEvents: () => void
 
   // Actions - Search & Sort
   setSearchQuery: (query: string) => void
@@ -157,9 +153,9 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
   devtools(
     persist(
       (set, get) => ({
-        // Initial State - Expansion (Tree View)
-        expandedTournaments: new Set<string>(),
-        expandedSubEvents: new Set<string>(),
+        // Initial State - Expansion (Tree View) - Single Mode
+        expandedTournament: null,
+        expandedSubEvent: null,
 
         // Initial State - Search & Sort
         searchQuery: '',
@@ -205,46 +201,20 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         loadingViewingPayouts: false,
         isEditingViewingPayouts: false,
 
-        // Actions - Expansion (Tree View)
+        // Actions - Expansion (Tree View) - Single Mode
         toggleTournamentExpand: (id) =>
-          set((state) => {
-            const newSet = new Set(state.expandedTournaments)
-            if (newSet.has(id)) {
-              newSet.delete(id)
-            } else {
-              newSet.add(id)
-            }
-            return { expandedTournaments: newSet }
-          }),
+          set((state) => ({
+            // Toggle: same ID → close (null), different ID → open new one
+            expandedTournament: state.expandedTournament === id ? null : id,
+            // Close SubEvent when Tournament changes
+            expandedSubEvent: state.expandedTournament === id ? state.expandedSubEvent : null,
+          })),
 
         toggleSubEventExpand: (id) =>
-          set((state) => {
-            const newSet = new Set(state.expandedSubEvents)
-            if (newSet.has(id)) {
-              newSet.delete(id)
-            } else {
-              newSet.add(id)
-            }
-            return { expandedSubEvents: newSet }
-          }),
-
-        expandAllTournaments: () =>
-          set((state) => {
-            // This will be populated with all tournament IDs by the component
-            return { expandedTournaments: new Set<string>() }
-          }),
-
-        collapseAllTournaments: () =>
-          set({ expandedTournaments: new Set<string>() }),
-
-        expandAllSubEvents: () =>
-          set((state) => {
-            // This will be populated with all subevent IDs by the component
-            return { expandedSubEvents: new Set<string>() }
-          }),
-
-        collapseAllSubEvents: () =>
-          set({ expandedSubEvents: new Set<string>() }),
+          set((state) => ({
+            // Toggle: same ID → close (null), different ID → open new one
+            expandedSubEvent: state.expandedSubEvent === id ? null : id,
+          })),
 
         // Actions - Search & Sort
         setSearchQuery: (query) => set({ searchQuery: query }),

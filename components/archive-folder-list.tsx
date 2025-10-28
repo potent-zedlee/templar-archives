@@ -172,13 +172,21 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
         </BackgroundGradient>
 
         {/* SubEvents (if expanded) */}
-        {isExpanded && tournament.sub_events && tournament.sub_events.length > 0 && (
-          <div className="space-y-0">
-            {tournament.sub_events.map((subEvent) =>
-              renderSubEvent(subEvent, tournament.id)
-            )}
-          </div>
-        )}
+        <AnimatePresence>
+          {isExpanded && tournament.sub_events && tournament.sub_events.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="space-y-0 overflow-hidden"
+            >
+              {tournament.sub_events.map((subEvent) =>
+                renderSubEvent(subEvent, tournament.id)
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Add SubEvent Button (if expanded and no subevents) */}
         {isExpanded && (!tournament.sub_events || tournament.sub_events.length === 0) && isAdmin && onAddSubEvent && (
@@ -274,11 +282,19 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
         </div>
 
         {/* Days (if expanded) */}
-        {isExpanded && subEvent.streams && subEvent.streams.length > 0 && (
-          <div className="space-y-0">
-            {subEvent.streams.map((day) => renderDay(day, subEvent.id))}
-          </div>
-        )}
+        <AnimatePresence>
+          {isExpanded && subEvent.streams && subEvent.streams.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="space-y-0 overflow-hidden"
+            >
+              {subEvent.streams.map((day) => renderDay(day, subEvent.id))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     )
   }
