@@ -10,8 +10,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { timecodeSubmissionSchema } from '@/lib/validation/timecode-schemas'
 import { parseTimecode, calculateDuration } from '@/lib/timecode-utils'
 import { logError, createErrorResponse } from '@/lib/error-handler'
-import { applyRateLimit } from '@/lib/rate-limit'
-import { rateLimiters } from '@/lib/rate-limit-config'
+import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 
 export const runtime = 'edge'
 
