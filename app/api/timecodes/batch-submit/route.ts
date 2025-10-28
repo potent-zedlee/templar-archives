@@ -47,7 +47,21 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (userError || !userData) {
-      return NextResponse.json({ error: '유저 정보를 찾을 수 없습니다' }, { status: 404 })
+      // 디버깅을 위한 로깅
+      console.error('[batch-submit] User info not found:', {
+        userId: user.id,
+        userEmail: user.email,
+        error: userError?.message,
+        errorCode: userError?.code,
+      })
+
+      return NextResponse.json(
+        {
+          error: '제출자 계정 정보를 찾을 수 없습니다. 관리자에게 문의하세요.',
+          details: process.env.NODE_ENV === 'development' ? `User ID: ${user.id}` : undefined
+        },
+        { status: 404 }
+      )
     }
 
     // Banned 체크

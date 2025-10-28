@@ -223,3 +223,46 @@ export async function searchPlayers(query: string): Promise<Player[]> {
     return []
   }
 }
+
+/**
+ * 새 플레이어 생성
+ */
+export async function createPlayer(data: {
+  name: string
+  country?: string
+  photo_url?: string
+}): Promise<{ success: boolean; player?: Player; error?: string }> {
+  const supabase = createClientSupabaseClient()
+
+  try {
+    // 이름 중복 체크
+    const { data: existing } = await supabase
+      .from('players')
+      .select('id')
+      .eq('name', data.name)
+      .single()
+
+    if (existing) {
+      return { success: false, error: 'Player with this name already exists' }
+    }
+
+    // 플레이어 생성
+    const { data: newPlayer, error } = await supabase
+      .from('players')
+      .insert({
+        name: data.name,
+        country: data.country || null,
+        photo_url: data.photo_url || null,
+        total_winnings: 0,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return { success: true, player: newPlayer as Player }
+  } catch (error: any) {
+    console.error('플레이어 생성 실패:', error)
+    return { success: false, error: error.message || 'Failed to create player' }
+  }
+}
