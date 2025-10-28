@@ -130,24 +130,31 @@ export function captureSentryMessage(
 }
 
 /**
- * Start a Sentry transaction for performance monitoring
+ * Start a Sentry span for performance monitoring (Updated for Sentry SDK v8+)
  *
- * @param name Transaction name
+ * @param name Span name
  * @param op Operation type (e.g., 'http.server', 'db.query')
- * @returns Transaction object
+ * @param fn Function to execute within the span
+ * @returns Result of the function
  */
-export function startSentryTransaction(
+export async function startSentrySpan<T>(
   name: string,
-  op: string
-): Sentry.Transaction | undefined {
-  return Sentry.startTransaction({
-    name,
-    op,
-  })
+  op: string,
+  fn: () => Promise<T>
+): Promise<T> {
+  return Sentry.startSpan(
+    {
+      name,
+      op,
+    },
+    async () => {
+      return await fn()
+    }
+  )
 }
 
 /**
- * Wrap async function with Sentry transaction
+ * Wrap async function with Sentry transaction (Updated for Sentry SDK v8+)
  *
  * @param name Transaction name
  * @param op Operation type
@@ -159,21 +166,23 @@ export async function withSentryTransaction<T>(
   op: string,
   fn: () => Promise<T>
 ): Promise<T> {
-  const transaction = startSentryTransaction(name, op)
-
-  try {
-    const result = await fn()
-    transaction?.setStatus('ok')
-    return result
-  } catch (error) {
-    transaction?.setStatus('internal_error')
-    captureSentryException(error, {
-      tags: { transaction: name },
-    })
-    throw error
-  } finally {
-    transaction?.finish()
-  }
+  return Sentry.startSpan(
+    {
+      name,
+      op,
+    },
+    async () => {
+      try {
+        const result = await fn()
+        return result
+      } catch (error) {
+        captureSentryException(error, {
+          tags: { transaction: name },
+        })
+        throw error
+      }
+    }
+  )
 }
 
 /**
