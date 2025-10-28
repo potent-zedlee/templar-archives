@@ -1,7 +1,7 @@
 "use client"
 
 import { memo, useState } from "react"
-import { ChevronRight, Play, Info, X } from "lucide-react"
+import { ChevronRight, Play, Info, X, FileText } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { BackgroundGradient } from "@/components/ui/background-gradient"
@@ -374,6 +374,28 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             : <span className="text-foreground/40">-</span>}
         </div>
 
+        {/* Analyze Button - High Templar only, shown when day is selected */}
+        {isAdmin && isExpanded && (
+          <div className="flex-shrink-0 relative z-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-8 w-8 backdrop-blur-md border hover:rotate-12 hover:scale-110 transition-all duration-300 shadow-sm",
+                showBatchPanel
+                  ? "bg-emerald-500/20 dark:bg-emerald-500/20 hover:bg-emerald-500/30 dark:hover:bg-emerald-500/30 border-emerald-500/30 hover:border-emerald-500/50"
+                  : "bg-white/10 dark:bg-black/10 hover:bg-white/20 dark:hover:bg-black/20 border-white/10 hover:border-white/20"
+              )}
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowBatchPanel(!showBatchPanel)
+              }}
+            >
+              <FileText className="h-3 w-3 text-foreground/60" />
+            </Button>
+          </div>
+        )}
+
         {/* Info Button */}
         <div className="flex-shrink-0 relative z-10">
           <Button
@@ -429,8 +451,6 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                 <div className="max-h-[600px] overflow-y-auto">
                   <ArchiveHandHistory
                     onSeekToTime={onSeekToTime}
-                    onToggleBatchPanel={() => setShowBatchPanel(!showBatchPanel)}
-                    showBatchPanel={showBatchPanel}
                   />
                 </div>
 

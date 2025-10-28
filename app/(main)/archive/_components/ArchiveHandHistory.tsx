@@ -9,40 +9,22 @@
  * - 빈 상태 표시
  */
 
-import { Folder, FileText } from 'lucide-react'
+import { Folder } from 'lucide-react'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
-import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { HandListAccordion } from '@/components/hand-list-accordion'
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { isAdmin } from '@/lib/admin'
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo } from 'react'
 
 interface ArchiveHandHistoryProps {
   onSeekToTime?: (timeString: string) => void
-  onToggleBatchPanel?: () => void
-  showBatchPanel?: boolean
 }
 
 export function ArchiveHandHistory({
   onSeekToTime,
-  onToggleBatchPanel,
-  showBatchPanel = false
 }: ArchiveHandHistoryProps) {
   const { hands } = useArchiveData()
   const { advancedFilters } = useArchiveUIStore()
-  const { selectedStream } = useArchiveDataStore()
-  const [isHighTemplar, setIsHighTemplar] = useState(false)
-
-  // Check if user is High Templar or higher
-  useEffect(() => {
-    const checkRole = async () => {
-      const highTemplar = await isAdmin()
-      setIsHighTemplar(highTemplar)
-    }
-    checkRole()
-  }, [])
 
   // Filter hands based on advanced filters
   const filteredHands = useMemo(() => {
@@ -140,24 +122,9 @@ export function ArchiveHandHistory({
     <div className="space-y-0">
       {/* Hand List */}
       <Card className="p-7 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 relative overflow-hidden">
-        {/* 타이틀 행에 [분석] 버튼 추가 */}
-        <div className="flex items-center justify-between mb-7">
-          <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
-            Hand History
-          </h2>
-
-          {/* High Templar 이상만 표시 */}
-          {isHighTemplar && selectedStream && onToggleBatchPanel && (
-            <Button
-              variant={showBatchPanel ? "secondary" : "default"}
-              size="sm"
-              onClick={onToggleBatchPanel}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              {showBatchPanel ? '닫기' : '분석'}
-            </Button>
-          )}
-        </div>
+        <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight mb-7">
+          Hand History
+        </h2>
         <div>
           {hands.length > 0 ? (
             <HandListAccordion
