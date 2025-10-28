@@ -257,3 +257,49 @@ export function useInvalidateTimecodeQueries() {
     queryClient.invalidateQueries({ queryKey: timecodeKeys.stats() })
   }
 }
+
+/**
+ * Batch 타임코드 제출 (High Templar 이상)
+ */
+export function useBatchSubmitTimecodeMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: {
+      streamId: string
+      timecodes: Array<{
+        handNumber: string
+        startTime: string
+        endTime: string
+        description?: string | null
+      }>
+    }) => {
+      const response = await fetch('/api/timecodes/batch-submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Batch 제출에 실패했습니다')
+      }
+
+      return response.json()
+    },
+    onSuccess: (data) => {
+      toast.success(`${data.submittedCount}개 타임코드가 제출되었습니다`)
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Batch 제출에 실패했습니다')
+      console.error('Batch submit error:', error)
+    },
+    onSettled: () => {
+      // 관련 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: timecodeKeys.all })
+      queryClient.invalidateQueries({ queryKey: timecodeKeys.stats() })
+    },
+  })
+}

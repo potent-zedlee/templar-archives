@@ -5,7 +5,7 @@
  */
 
 import { z } from 'zod'
-import { validateTimecode } from '@/lib/timecode-utils'
+import { validateTimecode, validateHHMMSS } from '@/lib/timecode-utils'
 
 /**
  * 타임코드 문자열 스키마
@@ -115,3 +115,42 @@ export const reviewHandSchema = z.object({
 })
 
 export type ReviewHandInput = z.infer<typeof reviewHandSchema>
+
+/**
+ * HH:MM:SS 형식 타임코드 스키마 (정확히 2자리 시간)
+ * 00:00:00 ~ 23:59:59
+ */
+export const timecodeHHMMSSSchema = z
+  .string()
+  .length(8, 'HH:MM:SS 형식이어야 합니다 (예: 01:23:45)')
+  .refine((val) => validateHHMMSS(val), {
+    message: 'HH:MM:SS 형식이어야 합니다 (00:00:00 ~ 23:59:59)',
+  })
+
+/**
+ * 단일 타임코드 데이터 (Batch 제출용)
+ */
+export const singleTimecodeDataSchema = z.object({
+  handNumber: z
+    .string()
+    .min(1, '핸드 번호는 필수입니다')
+    .max(50, '핸드 번호는 최대 50자까지 입력 가능합니다'),
+  startTime: timecodeHHMMSSSchema,
+  endTime: timecodeHHMMSSSchema,
+  description: z.string().max(500, '설명은 최대 500자까지 입력 가능합니다').optional().nullable(),
+})
+
+export type SingleTimecodeData = z.infer<typeof singleTimecodeDataSchema>
+
+/**
+ * Batch 타임코드 제출 스키마
+ */
+export const batchTimecodeSubmissionSchema = z.object({
+  streamId: z.string().uuid('유효하지 않은 스트림 ID입니다'),
+  timecodes: z
+    .array(singleTimecodeDataSchema)
+    .min(1, '최소 1개 이상의 타임코드가 필요합니다')
+    .max(50, '한 번에 최대 50개까지 제출 가능합니다'),
+})
+
+export type BatchTimecodeSubmissionInput = z.infer<typeof batchTimecodeSubmissionSchema>

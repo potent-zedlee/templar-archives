@@ -243,3 +243,99 @@ export function formatDurationHumanReadable(seconds: number): string {
 
   return parts.join(' ')
 }
+
+/**
+ * HH:MM:SS 형식의 타임코드를 초 단위로 변환 (정확히 2자리 시간)
+ * @param timecode - "HH:MM:SS" (예: "01:05:30", "12:34:56")
+ * @returns 초 단위 숫자
+ * @example
+ * parseHHMMSS("01:05:30") // 3930
+ * parseHHMMSS("12:34:56") // 45296
+ */
+export function parseHHMMSS(timecode: string): number {
+  if (!timecode || typeof timecode !== 'string') {
+    throw new Error('Invalid timecode: must be a non-empty string')
+  }
+
+  const parts = timecode.trim().split(':')
+
+  if (parts.length !== 3) {
+    throw new Error('Invalid timecode format: must be HH:MM:SS')
+  }
+
+  const numbers = parts.map((part, index) => {
+    // 시간은 2자리, 분/초는 2자리 검증
+    if (index === 0 && part.length !== 2) {
+      throw new Error('Hours must be exactly 2 digits (00-23)')
+    }
+    if ((index === 1 || index === 2) && part.length !== 2) {
+      throw new Error('Minutes and seconds must be exactly 2 digits (00-59)')
+    }
+
+    const num = parseInt(part, 10)
+    if (isNaN(num) || num < 0) {
+      throw new Error(`Invalid timecode part: ${part}`)
+    }
+    return num
+  })
+
+  const [hours, minutes, seconds] = numbers
+
+  if (hours >= 24) {
+    throw new Error('Invalid hours: must be 00-23')
+  }
+  if (minutes >= 60) {
+    throw new Error('Invalid minutes: must be 00-59')
+  }
+  if (seconds >= 60) {
+    throw new Error('Invalid seconds: must be 00-59')
+  }
+
+  return hours * 3600 + minutes * 60 + seconds
+}
+
+/**
+ * 초 단위 숫자를 HH:MM:SS 형식으로 변환 (항상 2자리 시간)
+ * @param seconds - 초 단위 숫자
+ * @returns "HH:MM:SS" format (예: "01:05:30", "12:34:56")
+ * @example
+ * formatHHMMSS(3930) // "01:05:30"
+ * formatHHMMSS(45296) // "12:34:56"
+ */
+export function formatHHMMSS(seconds: number): string {
+  if (typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) {
+    throw new Error('Invalid seconds: must be a non-negative number')
+  }
+
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const secs = Math.floor(seconds % 60)
+
+  // 항상 HH:MM:SS 형식 (2자리 시간)
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+}
+
+/**
+ * HH:MM:SS 형식 검증 (정확히 2자리 시간)
+ * @param timecode - "HH:MM:SS"
+ * @returns 유효 여부
+ * @example
+ * validateHHMMSS("01:05:30") // true
+ * validateHHMMSS("1:05:30") // false (시간이 1자리)
+ * validateHHMMSS("25:00:00") // false (시간이 24 이상)
+ */
+export function validateHHMMSS(timecode: string): boolean {
+  // Regex 검증: HH:MM:SS (00:00:00 ~ 23:59:59)
+  const hhmmssRegex = /^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/
+
+  if (!hhmmssRegex.test(timecode)) {
+    return false
+  }
+
+  try {
+    parseHHMMSS(timecode)
+    return true
+  } catch {
+    return false
+  }
+}
