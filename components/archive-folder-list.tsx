@@ -20,9 +20,9 @@ const ArchiveHandHistory = dynamic(
   { ssr: false }
 )
 
-// Dynamic import for BatchTimecodePanel
-const BatchTimecodePanel = dynamic(
-  () => import("@/components/archive/batch-timecode-panel").then(mod => ({ default: mod.BatchTimecodePanel })),
+// Dynamic import for SingleHandInputPanel
+const SingleHandInputPanel = dynamic(
+  () => import("@/components/archive/single-hand-input-panel").then(mod => ({ default: mod.SingleHandInputPanel })),
   { ssr: false }
 )
 
@@ -412,12 +412,11 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                     <VideoPlayer day={day} seekTime={seekTime} />
                   </div>
 
-                  {/* Batch Timecode Panel (conditionally shown) */}
+                  {/* Single Hand Input Panel (conditionally shown) */}
                   {showBatchPanel && (
-                    <BatchTimecodePanel
+                    <SingleHandInputPanel
                       streamId={day.id}
                       streamName={day.name}
-                      existingHandsCount={hands.length}
                       onSuccess={() => {
                         setShowBatchPanel(false)
                       }}
