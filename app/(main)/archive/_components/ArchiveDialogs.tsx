@@ -6,7 +6,6 @@
  * 모든 다이얼로그를 통합 관리하는 컴포넌트 (Dynamic Import 최적화)
  * - Tournament, SubEvent, Day, Video 다이얼로그
  * - 컨텍스트 메뉴 다이얼로그 (Rename, Delete, Edit, Move)
- * - 키보드 단축키 다이얼로그
  */
 
 import { useMemo } from 'react'
@@ -52,9 +51,6 @@ const MoveToExistingEventDialog = dynamic(() => import('@/components/archive-dia
 const MoveToNewEventDialog = dynamic(() => import('@/components/archive-dialogs/move-to-new-event-dialog').then(mod => ({ default: mod.MoveToNewEventDialog })), {
   ssr: false,
 })
-const KeyboardShortcutsDialog = dynamic(() => import('@/components/keyboard-shortcuts-dialog').then(mod => ({ default: mod.KeyboardShortcutsDialog })), {
-  ssr: false,
-})
 const ArchiveInfoDialog = dynamic(() => import('@/components/archive-info-dialog').then(mod => ({ default: mod.ArchiveInfoDialog })), {
   ssr: false,
 })
@@ -76,7 +72,6 @@ export function ArchiveDialogs() {
     editEventDialog,
     moveToEventDialog,
     moveToNewEventDialog,
-    keyboardShortcutsDialog,
     infoDialog,
     selectedVideoIds,
     selectedTournamentIdForDialog,
@@ -94,7 +89,6 @@ export function ArchiveDialogs() {
     closeEditEventDialog,
     closeMoveToEventDialog,
     closeMoveToNewEventDialog,
-    closeKeyboardShortcutsDialog,
     closeInfoDialog,
     clearSelection,
   } = useArchiveUIStore()
@@ -298,12 +292,6 @@ export function ArchiveDialogs() {
         tournaments={filteredTournaments}
         selectedVideoIds={selectedVideoIds}
         onSuccess={handleMoveSuccess}
-      />
-
-      {/* Keyboard Shortcuts Dialog */}
-      <KeyboardShortcutsDialog
-        isOpen={keyboardShortcutsDialog.isOpen}
-        onOpenChange={closeKeyboardShortcutsDialog}
       />
 
       {/* Archive Info Dialog */}

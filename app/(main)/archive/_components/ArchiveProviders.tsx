@@ -5,15 +5,11 @@
  *
  * Archive 페이지에 필요한 모든 Provider를 통합
  * - DndContext (드래그 앤 드롭)
- * - 키보드 단축키
  */
 
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import { useQueryClient } from '@tanstack/react-query'
-import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
-import { useArchiveKeyboard } from '@/hooks/useArchiveKeyboard'
-import { useArchiveData } from './ArchiveDataContext'
 import { archiveKeys } from '@/lib/queries/archive-queries'
 import { organizeVideo, organizeVideos } from '@/lib/unsorted-videos'
 import { toast } from 'sonner'
@@ -25,17 +21,9 @@ interface ArchiveProvidersProps {
 
 export function ArchiveProviders({ children }: ArchiveProvidersProps) {
   const queryClient = useQueryClient()
-  const { tournaments } = useArchiveData()
-  const { setSelectedDay } = useArchiveDataStore()
   const {
     selectedVideoIds,
     clearSelection,
-    openKeyboardShortcutsDialog,
-    openVideoDialog,
-    tournamentDialog,
-    subEventDialog,
-    dayDialog,
-    videoDialog,
   } = useArchiveUIStore()
 
   // Drag and drop handler
@@ -85,61 +73,6 @@ export function ArchiveProviders({ children }: ArchiveProvidersProps) {
       }
     }
   }
-
-  // Keyboard shortcuts
-  const anyDialogOpen =
-    tournamentDialog.isOpen ||
-    subEventDialog.isOpen ||
-    dayDialog.isOpen ||
-    videoDialog.isOpen
-
-  useArchiveKeyboard({
-    onBackspace: () => {
-      // Clear selected day (no navigation in tree view)
-      setSelectedDay(null)
-    },
-    onSpace: () => {
-      const selectedDayId = useArchiveDataStore.getState().selectedDay
-      if (selectedDayId) {
-        // Find the stream object from tournaments
-        let streamObj = null
-        for (const tournament of tournaments) {
-          for (const subEvent of tournament.sub_events || []) {
-            const stream = subEvent.days?.find((s) => s.id === selectedDayId)
-            if (stream) {
-              streamObj = stream
-              break
-            }
-          }
-          if (streamObj) break
-        }
-        openVideoDialog(streamObj, '')
-      }
-    },
-    onSelectAll: () => {
-      // Select all videos (if any are visible)
-      const unsortedVideos = queryClient.getQueryData(archiveKeys.unsortedVideos()) as any[] || []
-      const videoIds = unsortedVideos.map((v) => v.id)
-      if (videoIds.length > 0) {
-        useArchiveUIStore.getState().selectAllVideos(videoIds)
-      }
-    },
-    onEscape: () => {
-      if (selectedVideoIds.size > 0) {
-        clearSelection()
-      }
-    },
-    onFocusSearch: () => {
-      const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement
-      if (searchInput) {
-        searchInput.focus()
-      }
-    },
-    onShowHelp: () => {
-      openKeyboardShortcutsDialog()
-    },
-    enabled: !anyDialogOpen,
-  })
 
   return <DndContext onDragEnd={handleDragEnd}>{children}</DndContext>
 }
