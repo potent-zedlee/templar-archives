@@ -27,6 +27,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TimecodeReviewDialog } from '@/components/admin/timecode-review-dialog'
+import { OcrSetupDialog } from '@/components/admin/ocr-setup-dialog'
 import {
   Clock,
   Video,
@@ -37,6 +38,7 @@ import {
   TrendingUp,
   Users,
   FileCheck,
+  Settings,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ko } from 'date-fns/locale'
@@ -48,6 +50,7 @@ export default function AdminTimecodeSubmissionsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [selectedSubmission, setSelectedSubmission] = useState<TimecodeSubmission | null>(null)
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
+  const [ocrSetupDialogOpen, setOcrSetupDialogOpen] = useState(false)
   const [processingId, setProcessingId] = useState<string | null>(null)
 
   // 데이터 조회
@@ -109,6 +112,12 @@ export default function AdminTimecodeSubmissionsPage() {
   const handleOpenReview = (submission: TimecodeSubmission) => {
     setSelectedSubmission(submission)
     setReviewDialogOpen(true)
+  }
+
+  // OCR 설정 다이얼로그 열기
+  const handleOpenOcrSetup = (submission: TimecodeSubmission) => {
+    setSelectedSubmission(submission)
+    setOcrSetupDialogOpen(true)
   }
 
   // 로딩 상태
@@ -309,24 +318,44 @@ export default function AdminTimecodeSubmissionsPage() {
                     )}
 
                     {submission.status === 'approved' && (
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => handleStartAIExtraction(submission.id)}
-                        disabled={processingId === submission.id}
-                      >
-                        {processingId === submission.id ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            처리 중...
-                          </>
-                        ) : (
-                          <>
-                            <Play className="mr-2 h-4 w-4" />
-                            AI 추출 시작
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenOcrSetup(submission)}
+                          disabled={processingId === submission.id}
+                        >
+                          {submission.ocr_regions ? (
+                            <>
+                              <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
+                              OCR 영역 수정
+                            </>
+                          ) : (
+                            <>
+                              <Settings className="mr-2 h-4 w-4" />
+                              OCR 영역 설정
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleStartAIExtraction(submission.id)}
+                          disabled={processingId === submission.id}
+                        >
+                          {processingId === submission.id ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              처리 중...
+                            </>
+                          ) : (
+                            <>
+                              <Play className="mr-2 h-4 w-4" />
+                              AI 추출 시작
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     )}
 
                     {submission.status === 'review' && (
@@ -375,6 +404,21 @@ export default function AdminTimecodeSubmissionsPage() {
           setSelectedSubmission(null)
         }}
       />
+
+      {/* OCR 설정 다이얼로그 */}
+      {selectedSubmission && selectedSubmission.stream?.video_url && (
+        <OcrSetupDialog
+          open={ocrSetupDialogOpen}
+          onOpenChange={setOcrSetupDialogOpen}
+          submissionId={selectedSubmission.id}
+          videoUrl={selectedSubmission.stream.video_url}
+          initialRegions={selectedSubmission.ocr_regions}
+          onSuccess={() => {
+            refetch()
+            setSelectedSubmission(null)
+          }}
+        />
+      )}
     </div>
   )
 }

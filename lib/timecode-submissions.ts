@@ -23,6 +23,7 @@ export interface TimecodeSubmission {
   ai_processing_error: string | null
   ai_processed_at: string | null
   final_hand_id: string | null
+  ocr_regions: any | null
   created_at: string
   updated_at: string
   // Relations
