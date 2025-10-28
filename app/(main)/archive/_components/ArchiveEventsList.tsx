@@ -17,10 +17,16 @@ import { ArchiveFolderList } from '@/components/archive-folder-list'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { isAdmin } from '@/lib/auth-utils'
+import { parseTimeToSeconds } from '@/lib/utils/time-parser'
 import type { FolderItem } from '@/lib/types/archive'
 import { useMemo, useCallback } from 'react'
 
-export function ArchiveEventsList() {
+interface ArchiveEventsListProps {
+  seekTime: number | null
+  onSeekToTime: (seconds: number) => void
+}
+
+export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListProps) {
   const { tournaments, unsortedVideos, tournamentsLoading } = useArchiveData()
   const { userEmail, selectedDay, setSelectedDay } = useArchiveDataStore()
 
@@ -45,6 +51,12 @@ export function ArchiveEventsList() {
   const handleSelectDay = useCallback((dayId: string) => {
     setSelectedDay(selectedDay === dayId ? null : dayId)
   }, [selectedDay, setSelectedDay])
+
+  // Handle seek to time (from hand timestamp to video player)
+  const handleSeekToTime = useCallback((timeString: string) => {
+    const seconds = parseTimeToSeconds(timeString)
+    onSeekToTime(seconds)
+  }, [onSeekToTime])
 
   // Build folder items in tree structure (with expansion)
   const folderItems = useMemo((): FolderItem[] => {
@@ -233,6 +245,9 @@ export function ArchiveEventsList() {
         items={folderItems}
         onNavigate={handleToggleExpand}
         onSelectDay={handleSelectDay}
+        expandedDayId={selectedDay}
+        seekTime={seekTime}
+        onSeekToTime={handleSeekToTime}
         loading={tournamentsLoading}
         onShowInfo={handleShowInfo}
         onAddSubEvent={(tournamentId) => openSubEventDialog(tournamentId)}
