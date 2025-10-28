@@ -16,21 +16,24 @@ import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { HandListAccordion } from '@/components/hand-list-accordion'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { BatchTimecodeDialog } from '@/components/archive/batch-timecode-dialog'
 import { isAdmin } from '@/lib/admin'
 import { useMemo, useState, useEffect } from 'react'
 
 interface ArchiveHandHistoryProps {
   onSeekToTime?: (timeString: string) => void
+  onToggleBatchPanel?: () => void
+  showBatchPanel?: boolean
 }
 
-export function ArchiveHandHistory({ onSeekToTime }: ArchiveHandHistoryProps) {
+export function ArchiveHandHistory({
+  onSeekToTime,
+  onToggleBatchPanel,
+  showBatchPanel = false
+}: ArchiveHandHistoryProps) {
   const { hands } = useArchiveData()
   const { advancedFilters } = useArchiveUIStore()
   const { selectedStream } = useArchiveDataStore()
-  const [showBatchDialog, setShowBatchDialog] = useState(false)
   const [isHighTemplar, setIsHighTemplar] = useState(false)
-  const [streamName, setStreamName] = useState<string>('')
 
   // Check if user is High Templar or higher
   useEffect(() => {
@@ -40,17 +43,6 @@ export function ArchiveHandHistory({ onSeekToTime }: ArchiveHandHistoryProps) {
     }
     checkRole()
   }, [])
-
-  // Get stream name from selected stream
-  useEffect(() => {
-    if (selectedStream && hands.length > 0) {
-      // Extract stream name from first hand's day information
-      const firstHand = hands[0]
-      setStreamName(firstHand.day?.name || 'Unknown Stream')
-    } else {
-      setStreamName('')
-    }
-  }, [selectedStream, hands])
 
   // Filter hands based on advanced filters
   const filteredHands = useMemo(() => {
@@ -155,14 +147,14 @@ export function ArchiveHandHistory({ onSeekToTime }: ArchiveHandHistoryProps) {
           </h2>
 
           {/* High Templar 이상만 표시 */}
-          {isHighTemplar && selectedStream && (
+          {isHighTemplar && selectedStream && onToggleBatchPanel && (
             <Button
-              variant="default"
+              variant={showBatchPanel ? "secondary" : "default"}
               size="sm"
-              onClick={() => setShowBatchDialog(true)}
+              onClick={onToggleBatchPanel}
             >
               <FileText className="mr-2 h-4 w-4" />
-              분석
+              {showBatchPanel ? '닫기' : '분석'}
             </Button>
           )}
         </div>
@@ -190,19 +182,6 @@ export function ArchiveHandHistory({ onSeekToTime }: ArchiveHandHistoryProps) {
           )}
         </div>
       </Card>
-
-      {/* Batch Timecode Dialog */}
-      <BatchTimecodeDialog
-        isOpen={showBatchDialog}
-        onOpenChange={setShowBatchDialog}
-        streamId={selectedStream}
-        streamName={streamName}
-        existingHandsCount={hands.length}
-        onSuccess={() => {
-          setShowBatchDialog(false)
-          // hands will be refetched automatically via React Query
-        }}
-      />
     </div>
   )
 }
