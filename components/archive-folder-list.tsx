@@ -405,7 +405,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                 {/* Video Player + Batch Panel Grid */}
                 <div className={cn(
                   "grid gap-4",
-                  showBatchPanel ? "grid-cols-[60%_40%]" : "grid-cols-1"
+                  showBatchPanel ? "grid-cols-[70%_30%]" : "grid-cols-1"
                 )}>
                   {/* Video Player */}
                   <div>
