@@ -1,20 +1,32 @@
 "use client"
 
 import { memo } from "react"
-import { ChevronRight, Play, Info } from "lucide-react"
+import { ChevronRight, Play, Info, X } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { BackgroundGradient } from "@/components/ui/background-gradient"
+import { VideoPlayer } from "@/components/video-player"
 import { cn } from "@/lib/utils"
 import { getCategoryByAlias } from "@/lib/tournament-categories"
 import { FOLDER_COLORS } from "@/lib/constants/archive-colors"
 import type { FolderItem } from "@/lib/types/archive"
 import type { Tournament, SubEvent, Day } from "@/lib/types/archive"
 import Image from "next/image"
+import dynamic from "next/dynamic"
+
+// Dynamic import for ArchiveHandHistory
+const ArchiveHandHistory = dynamic(
+  () => import("@/app/(main)/archive/_components/ArchiveHandHistory").then(mod => ({ default: mod.ArchiveHandHistory })),
+  { ssr: false }
+)
 
 interface ArchiveFolderListProps {
   items: FolderItem[]
   onNavigate: (item: FolderItem) => void
   onSelectDay?: (dayId: string) => void
+  expandedDayId: string | null
+  seekTime: number | null
+  onSeekToTime: (timeString: string) => void
   loading?: boolean
   // Context menu actions
   onShowInfo?: (item: FolderItem) => void
@@ -26,6 +38,9 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   items,
   onNavigate,
   onSelectDay,
+  expandedDayId,
+  seekTime,
+  onSeekToTime,
   loading = false,
   onShowInfo,
   onAddSubEvent,
@@ -288,15 +303,21 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
       return `${year}/${month}/${day}`
     }
 
+    const isExpanded = expandedDayId === day.id
+
     return (
-      <div key={day.id} className="ml-12 mr-6 mb-1.5">
+      <div key={day.id} className="ml-12 mr-6 mb-1.5 space-y-2">
+        {/* Day Card */}
         <BackgroundGradient
           className="rounded-[16px]"
           containerClassName="p-[1px]"
           animate={false}
         >
           <div
-            className="group flex items-center gap-4 px-4 py-2.5 backdrop-blur-md bg-slate-950 rounded-[15px] border-0 shadow-md hover:shadow-lg transition-all duration-300 ease-out cursor-pointer relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-emerald-500/15 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none"
+            className={cn(
+              "group flex items-center gap-4 px-4 py-2.5 backdrop-blur-md bg-slate-950 rounded-[15px] border-0 shadow-md hover:shadow-lg transition-all duration-300 ease-out cursor-pointer relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-emerald-500/15 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none",
+              isExpanded && "ring-2 ring-emerald-500/30"
+            )}
             onClick={() => onSelectDay?.(day.id)}
           >
         {/* Date */}
@@ -345,6 +366,54 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
         </div>
           </div>
         </BackgroundGradient>
+
+        {/* Expanded Content - Video Player + Hand History */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.4, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="p-6 space-y-6 backdrop-blur-xl bg-slate-950/95 rounded-xl border border-white/20 shadow-2xl">
+                {/* Video Player */}
+                <div className="space-y-2">
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    Video Player
+                  </h3>
+                  <VideoPlayer day={day} seekTime={seekTime} />
+                </div>
+
+                {/* Hand History */}
+                <div className="space-y-2">
+                  <h3 className="text-lg font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    Hand History
+                  </h3>
+                  <div className="max-h-[600px] overflow-y-auto">
+                    <ArchiveHandHistory onSeekToTime={onSeekToTime} />
+                  </div>
+                </div>
+
+                {/* Close Button */}
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onSelectDay?.(day.id)
+                    }}
+                    className="backdrop-blur-md bg-white/10 dark:bg-black/10 hover:bg-red-500/20 border-white/20 hover:border-red-500/40 text-foreground hover:text-red-400 shadow-lg transition-all duration-300"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Close
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     )
   }
