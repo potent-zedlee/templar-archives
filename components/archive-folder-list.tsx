@@ -1,6 +1,6 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useState } from "react"
 import { ChevronRight, Play, Info, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -12,10 +12,17 @@ import type { FolderItem } from "@/lib/types/archive"
 import type { Tournament, SubEvent, Day } from "@/lib/types/archive"
 import Image from "next/image"
 import dynamic from "next/dynamic"
+import { useArchiveData } from "@/app/(main)/archive/_components/ArchiveDataContext"
 
 // Dynamic import for ArchiveHandHistory
 const ArchiveHandHistory = dynamic(
   () => import("@/app/(main)/archive/_components/ArchiveHandHistory").then(mod => ({ default: mod.ArchiveHandHistory })),
+  { ssr: false }
+)
+
+// Dynamic import for BatchTimecodePanel
+const BatchTimecodePanel = dynamic(
+  () => import("@/components/archive/batch-timecode-panel").then(mod => ({ default: mod.BatchTimecodePanel })),
   { ssr: false }
 )
 
@@ -45,6 +52,8 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   onAddSubEvent,
   isAdmin = false,
 }: ArchiveFolderListProps) {
+  const [showBatchPanel, setShowBatchPanel] = useState(false)
+  const { hands } = useArchiveData()
   if (loading) {
     return (
       <div className="space-y-3">
@@ -393,14 +402,37 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
               className="overflow-hidden"
             >
               <div className="p-6 space-y-6 backdrop-blur-xl bg-slate-950/95 rounded-xl border border-white/20 shadow-2xl">
-                {/* Video Player */}
-                <div>
-                  <VideoPlayer day={day} seekTime={seekTime} />
+                {/* Video Player + Batch Panel Grid */}
+                <div className={cn(
+                  "grid gap-4",
+                  showBatchPanel ? "grid-cols-[60%_40%]" : "grid-cols-1"
+                )}>
+                  {/* Video Player */}
+                  <div>
+                    <VideoPlayer day={day} seekTime={seekTime} />
+                  </div>
+
+                  {/* Batch Timecode Panel (conditionally shown) */}
+                  {showBatchPanel && (
+                    <BatchTimecodePanel
+                      streamId={day.id}
+                      streamName={day.name}
+                      existingHandsCount={hands.length}
+                      onSuccess={() => {
+                        setShowBatchPanel(false)
+                      }}
+                      onClose={() => setShowBatchPanel(false)}
+                    />
+                  )}
                 </div>
 
                 {/* Hand History */}
                 <div className="max-h-[600px] overflow-y-auto">
-                  <ArchiveHandHistory onSeekToTime={onSeekToTime} />
+                  <ArchiveHandHistory
+                    onSeekToTime={onSeekToTime}
+                    onToggleBatchPanel={() => setShowBatchPanel(!showBatchPanel)}
+                    showBatchPanel={showBatchPanel}
+                  />
                 </div>
 
                 {/* Close Button */}
@@ -409,6 +441,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation()
+                      setShowBatchPanel(false)
                       onSelectDay?.(day.id)
                     }}
                     className="backdrop-blur-md bg-white/10 dark:bg-black/10 hover:bg-red-500/20 border-white/20 hover:border-red-500/40 text-foreground hover:text-red-400 shadow-lg transition-all duration-300"
