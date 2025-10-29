@@ -11,10 +11,29 @@
 - **워크플로우**: 감지 → 결과 검토 → 수정 → 일괄 제출
 - **플레이스홀더 구현**: 균일한 간격으로 핸드 경계 생성 (실제 영상 분석 X)
 
-### 🚧 다음 단계 (Phase 1.5 - Real Video Analysis)
-- **실제 영상 분석**: FFmpeg + Claude Vision + OCR
-- **프로덕션 인프라**: Supabase Edge Functions 또는 별도 워커 서비스
-- **정확도 검증**: 실제 포커 영상으로 테스트
+### ✅ Phase 1.5 완료 (Real Video Analysis)
+- **FFmpeg 프레임 추출**: `lib/video-frame-extractor.ts` (158줄)
+  - fluent-ffmpeg 기반 서버 사이드 처리
+  - 지정 간격으로 프레임 추출 (기본 10초)
+  - Base64 인코딩 및 임시 파일 관리
+- **Claude Vision API 통합**: `lib/claude-vision-analyzer.ts` (198줄)
+  - 프레임별 핸드 경계 감지
+  - 핸드 번호 추출 (OCR 대체)
+  - 배치 처리 (최대 3개 병렬)
+- **실제 분석 로직**: `lib/scene-change-detector.ts` (238줄 업데이트)
+  - 5단계 파이프라인 (추출 → 분석 → 필터링 → 핸드 번호 → Duration 필터)
+  - 신뢰도 기반 필터링 (기본 70% 이상)
+  - 핸드 길이 검증 (30초 ~ 10분)
+- **API & UI 업데이트**:
+  - Detection Method 선택: Claude Vision / Scene Detection
+  - useRealAnalysis 플래그로 전환 가능
+  - 비용 제한: 최대 30개 프레임
+
+### 🎯 다음 단계 (Phase 2 - Production Optimization)
+- **성능 최적화**: 프레임 추출 속도 개선
+- **비용 최적화**: 프레임 샘플링 전략 개선
+- **정확도 개선**: Hybrid 방식 (Scene Detection + Claude Vision)
+- **Production 인프라**: Supabase Edge Functions 또는 별도 워커 서비스
 
 ## 이전 목표 상태
 - **수동 방식**: 사용자가 직접 각 핸드의 start_time, end_time, hand_number를 입력

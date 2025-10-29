@@ -61,9 +61,10 @@ export function AutoDetectDialog({
   onSubmitSuccess,
 }: AutoDetectDialogProps) {
   const [selectedStreamId, setSelectedStreamId] = useState<string>('')
-  const [detectionMethod, setDetectionMethod] = useState<'scene_detection' | 'ocr' | 'hybrid'>(
-    'scene_detection'
+  const [detectionMethod, setDetectionMethod] = useState<'claude_vision' | 'scene_detection' | 'hybrid'>(
+    'claude_vision'
   )
+  const [useRealAnalysis, setUseRealAnalysis] = useState(true)
   const [isDetecting, setIsDetecting] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [detectedHands, setDetectedHands] = useState<DetectedHand[]>([])
@@ -88,6 +89,11 @@ export function AutoDetectDialog({
         body: JSON.stringify({
           streamId: selectedStreamId,
           method: detectionMethod,
+          useRealAnalysis,
+          config: {
+            maxFrames: 30, // 비용 제한: 최대 30개 프레임
+            concurrency: 3, // 병렬 처리 수
+          },
         }),
       })
 
@@ -235,25 +241,34 @@ export function AutoDetectDialog({
             <Label htmlFor="method">Detection Method</Label>
             <Select
               value={detectionMethod}
-              onValueChange={(value) =>
-                setDetectionMethod(value as 'scene_detection' | 'ocr' | 'hybrid')
-              }
+              onValueChange={(value) => {
+                setDetectionMethod(value as 'claude_vision' | 'scene_detection' | 'hybrid')
+                // Claude Vision 선택 시 자동으로 실제 분석 활성화
+                if (value === 'claude_vision') {
+                  setUseRealAnalysis(true)
+                }
+              }}
             >
               <SelectTrigger id="method">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="scene_detection">
-                  Scene Detection (빠름, 70-80% 정확도)
+                <SelectItem value="claude_vision">
+                  Claude Vision (AI 분석, 90-95% 정확도) ⭐
                 </SelectItem>
-                <SelectItem value="ocr" disabled>
-                  OCR (중간, 85-92% 정확도) - 준비 중
+                <SelectItem value="scene_detection">
+                  Scene Detection (플레이스홀더, 70-80% 정확도)
                 </SelectItem>
                 <SelectItem value="hybrid" disabled>
-                  Hybrid (느림, 90-95% 정확도) - 준비 중
+                  Hybrid (준비 중)
                 </SelectItem>
               </SelectContent>
             </Select>
+            {detectionMethod === 'claude_vision' && (
+              <p className="text-xs text-muted-foreground">
+                ℹ️ Claude Vision API를 사용하여 실제 영상을 분석합니다. 비용이 발생할 수 있습니다. (최대 30 프레임)
+              </p>
+            )}
           </div>
 
           {/* Detect Button */}

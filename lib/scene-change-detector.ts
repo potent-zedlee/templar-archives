@@ -1,83 +1,52 @@
 /**
  * Scene Change Detection for Hand Boundary Detection
  *
- * MVP: 균일한 간격으로 핸드 경계를 생성하는 플레이스홀더 구현
- * TODO: 실제 영상 분석 (FFmpeg, Claude Vision, OCR) 구현 필요
- *
- * 실제 구현 시 고려사항:
- * 1. Server-side FFmpeg (fluent-ffmpeg) 사용
- * 2. Claude Vision API로 프레임 분석
- * 3. Tesseract.js로 핸드 번호 OCR
- * 4. Supabase Edge Functions 또는 별도 워커 서비스
+ * Real Implementation: FFmpeg + Claude Vision API
  */
+
+import { extractFrames, type ExtractedFrame } from './video-frame-extractor'
+import {
+  analyzeFrameForHandBoundary,
+  filterHandBoundaries,
+  extractHandNumber,
+  type HandBoundaryAnalysis,
+} from './claude-vision-analyzer'
 
 export interface SceneChange {
   timestamp: number // seconds
   confidence: number // 0-1
   frameIndex: number
+  handNumber?: string
 }
 
 export interface DetectionConfig {
   /** 프레임 추출 간격 (초) */
   sampleInterval: number
-  /** 장면 전환 감지 임계값 (0-1, 높을수록 큰 변화만 감지) */
+  /** Claude Vision 신뢰도 임계값 (0-1) */
   threshold: number
   /** 최소 핸드 길이 (초) */
   minHandDuration: number
   /** 최대 핸드 길이 (초) */
   maxHandDuration: number
+  /** 최대 프레임 수 (비용 제한) */
+  maxFrames?: number
+  /** Claude Vision 병렬 처리 수 */
+  concurrency?: number
 }
 
 const DEFAULT_CONFIG: DetectionConfig = {
-  sampleInterval: 120, // 2분마다 핸드 생성 (MVP 플레이스홀더)
-  threshold: 0.35, // 사용하지 않음 (MVP)
-  minHandDuration: 90, // 최소 1.5분
-  maxHandDuration: 180, // 최대 3분
-}
-
-/**
- * MVP: 균일한 간격으로 핸드 경계 생성 (플레이스홀더)
- *
- * 실제 구현 시 다음 방식 사용:
- * 1. FFmpeg로 프레임 추출 (fluent-ffmpeg)
- * 2. 프레임 간 픽셀 차이 계산
- * 3. Claude Vision API로 핸드 경계 검증
- * 4. OCR로 핸드 번호 확인
- */
-function generatePlaceholderBoundaries(
-  duration: number,
-  config: DetectionConfig
-): SceneChange[] {
-  const boundaries: SceneChange[] = []
-  const avgHandDuration = (config.minHandDuration + config.maxHandDuration) / 2
-
-  // 시작 시간 (30초부터)
-  let currentTime = 30
-
-  let handIndex = 0
-  while (currentTime < duration - avgHandDuration) {
-    // 약간의 랜덤성 추가 (±20초)
-    const randomOffset = Math.floor(Math.random() * 40) - 20
-    const nextDuration = avgHandDuration + randomOffset
-
-    boundaries.push({
-      timestamp: currentTime,
-      confidence: 0.75 + Math.random() * 0.2, // 0.75-0.95 신뢰도
-      frameIndex: handIndex,
-    })
-
-    currentTime += nextDuration
-    handIndex++
-  }
-
-  return boundaries
+  sampleInterval: 10, // 10초마다 프레임 추출
+  threshold: 0.7, // 70% 이상 신뢰도
+  minHandDuration: 30, // 최소 30초
+  maxHandDuration: 600, // 최대 10분
+  maxFrames: 50, // 최대 50개 프레임 (비용 제한)
+  concurrency: 3, // 3개씩 병렬 처리
 }
 
 /**
  * 자동 핸드 경계 감지 (메인 함수)
  *
- * MVP: 플레이스홀더 구현 (균일한 간격으로 핸드 생성)
- * 실제 영상 분석은 Phase 1.5에서 구현 예정
+ * Real Implementation: FFmpeg + Claude Vision API
  */
 export async function detectHandBoundaries(
   videoUrl: string,
@@ -86,21 +55,133 @@ export async function detectHandBoundaries(
 ): Promise<SceneChange[]> {
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
 
-  console.log('[Scene Detector] Starting detection (MVP placeholder)...', {
-    videoUrl,
+  console.log('[Scene Detector] Starting real video analysis...', {
+    videoUrl: videoUrl.substring(0, 50),
     duration,
     config: finalConfig,
   })
 
-  // Simulate processing delay (1-2 seconds)
-  await new Promise((resolve) => setTimeout(resolve, 1000 + Math.random() * 1000))
+  try {
+    // 1. FFmpeg로 프레임 추출
+    console.log('[Scene Detector] Step 1: Extracting frames...')
+    const frames = await extractFrames(videoUrl, duration, {
+      interval: finalConfig.sampleInterval,
+      quality: 2,
+      scale: '640:360',
+      maxFrames: finalConfig.maxFrames,
+    })
 
-  // Generate placeholder boundaries
-  const boundaries = generatePlaceholderBoundaries(duration, finalConfig)
+    console.log(`[Scene Detector] Extracted ${frames.length} frames`)
 
-  console.log(`[Scene Detector] Generated ${boundaries.length} placeholder boundaries`)
+    if (frames.length === 0) {
+      console.warn('[Scene Detector] No frames extracted')
+      return []
+    }
 
-  return boundaries
+    // 2. Claude Vision으로 프레임 분석
+    console.log('[Scene Detector] Step 2: Analyzing frames with Claude Vision...')
+    const analyses: HandBoundaryAnalysis[] = []
+
+    // Concurrency 제한으로 순차 배치 처리
+    const { concurrency = 3 } = finalConfig
+    for (let i = 0; i < frames.length; i += concurrency) {
+      const batch = frames.slice(i, Math.min(i + concurrency, frames.length))
+      console.log(
+        `[Scene Detector] Analyzing batch ${Math.floor(i / concurrency) + 1}/${Math.ceil(frames.length / concurrency)}`
+      )
+
+      const batchResults = await Promise.all(
+        batch.map((frame, idx) =>
+          analyzeFrameForHandBoundary(
+            frame.base64,
+            analyses.length > 0 ? analyses[analyses.length - 1] : undefined
+          )
+        )
+      )
+
+      analyses.push(...batchResults)
+    }
+
+    console.log(`[Scene Detector] Completed analysis of ${analyses.length} frames`)
+
+    // 3. 핸드 경계 필터링
+    console.log('[Scene Detector] Step 3: Filtering hand boundaries...')
+    const timestamps = frames.map((f) => f.timestamp)
+    const rawBoundaries = filterHandBoundaries(
+      analyses,
+      timestamps,
+      finalConfig.threshold
+    )
+
+    console.log(`[Scene Detector] Found ${rawBoundaries.length} potential boundaries`)
+
+    // 4. 핸드 번호 추출 (선택적)
+    console.log('[Scene Detector] Step 4: Extracting hand numbers...')
+    const boundariesWithNumbers = await Promise.all(
+      rawBoundaries.map(async (boundary, idx) => {
+        const frameIndex = timestamps.indexOf(boundary.timestamp)
+        if (frameIndex === -1) return boundary
+
+        // 핸드 번호가 이미 감지된 경우 스킵
+        if (boundary.handNumber) return boundary
+
+        // Claude Vision으로 핸드 번호 추출 시도
+        try {
+          const frame = frames[frameIndex]
+          const handNumber = await extractHandNumber(frame.base64)
+          return {
+            ...boundary,
+            handNumber: handNumber || undefined,
+          }
+        } catch (error) {
+          console.error(`[Scene Detector] Hand number extraction failed for boundary ${idx}:`, error)
+          return boundary
+        }
+      })
+    )
+
+    // 5. 최소/최대 핸드 길이 필터링
+    console.log('[Scene Detector] Step 5: Applying duration filters...')
+    const filteredBoundaries: SceneChange[] = []
+
+    for (let i = 0; i < boundariesWithNumbers.length - 1; i++) {
+      const current = boundariesWithNumbers[i]
+      const next = boundariesWithNumbers[i + 1]
+      const duration = next.timestamp - current.timestamp
+
+      if (
+        duration >= finalConfig.minHandDuration &&
+        duration <= finalConfig.maxHandDuration
+      ) {
+        const frameIndex = timestamps.indexOf(current.timestamp)
+        filteredBoundaries.push({
+          timestamp: current.timestamp,
+          confidence: current.confidence,
+          frameIndex,
+          handNumber: current.handNumber,
+        })
+      }
+    }
+
+    // 마지막 경계도 추가 (종료 타임스탬프 생성용)
+    if (boundariesWithNumbers.length > 0) {
+      const last = boundariesWithNumbers[boundariesWithNumbers.length - 1]
+      const frameIndex = timestamps.indexOf(last.timestamp)
+      filteredBoundaries.push({
+        timestamp: last.timestamp,
+        confidence: last.confidence,
+        frameIndex,
+        handNumber: last.handNumber,
+      })
+    }
+
+    console.log(`[Scene Detector] Final result: ${filteredBoundaries.length} hand boundaries`)
+
+    return filteredBoundaries
+  } catch (error) {
+    console.error('[Scene Detector] Detection failed:', error)
+    throw error
+  }
 }
 
 /**
@@ -135,8 +216,17 @@ export function boundariesToTimecodes(
     const current = boundaries[i]
     const next = boundaries[i + 1]
 
+    // 핸드 번호 결정 (감지된 것 우선, 없으면 순차 번호)
+    let handNumber = i + 1
+    if (current.handNumber) {
+      const parsed = parseInt(current.handNumber, 10)
+      if (!isNaN(parsed)) {
+        handNumber = parsed
+      }
+    }
+
     timecodes.push({
-      handNumber: i + 1,
+      handNumber,
       startTime: formatTimestamp(current.timestamp),
       endTime: formatTimestamp(next.timestamp),
       confidence: current.confidence,

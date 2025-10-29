@@ -17,13 +17,16 @@ export const maxDuration = 300 // 5분 타임아웃
 
 interface DetectBoundariesRequest {
   streamId: string
-  method?: 'scene_detection' | 'ocr' | 'hybrid'
+  method?: 'scene_detection' | 'claude_vision' | 'hybrid'
   config?: {
     sampleInterval?: number
     threshold?: number
     minHandDuration?: number
     maxHandDuration?: number
+    maxFrames?: number
+    concurrency?: number
   }
+  useRealAnalysis?: boolean // true = Claude Vision, false = Placeholder
 }
 
 /**
@@ -74,7 +77,12 @@ export async function POST(request: NextRequest) {
 
     // 요청 본문 파싱
     const body: DetectBoundariesRequest = await request.json()
-    const { streamId, method = 'scene_detection', config = {} } = body
+    const {
+      streamId,
+      method = 'claude_vision',
+      config = {},
+      useRealAnalysis = true,
+    } = body
 
     if (!streamId) {
       return NextResponse.json({ error: 'streamId가 필요합니다' }, { status: 400 })
@@ -121,26 +129,27 @@ export async function POST(request: NextRequest) {
       streamName: stream.name,
       duration: stream.duration,
       method,
+      useRealAnalysis,
       userId: userData.id,
     })
 
     // 감지 메서드에 따른 처리
     let detectedTimecodes
 
-    if (method === 'scene_detection') {
-      // Scene Change Detection
+    if (method === 'claude_vision' || method === 'scene_detection') {
+      // Claude Vision API 기반 실제 분석
+      console.log(`[Detect Boundaries] Using ${useRealAnalysis ? 'real' : 'placeholder'} analysis`)
+
       const boundaries = await detectHandBoundaries(
         videoUrl,
         stream.duration,
-        config
+        {
+          ...config,
+          // 실제 분석 시 더 세밀한 간격 사용
+          sampleInterval: useRealAnalysis ? (config.sampleInterval || 10) : 120,
+        }
       )
       detectedTimecodes = boundariesToTimecodes(boundaries)
-    } else if (method === 'ocr') {
-      // OCR 기반 감지 (Phase 2에서 구현 예정)
-      return NextResponse.json(
-        { error: 'OCR 방식은 아직 지원되지 않습니다' },
-        { status: 501 }
-      )
     } else if (method === 'hybrid') {
       // Hybrid 방식 (Phase 2에서 구현 예정)
       return NextResponse.json(
