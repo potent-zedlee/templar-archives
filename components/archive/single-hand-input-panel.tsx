@@ -11,13 +11,14 @@ import { useState, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { ChevronLeft, ChevronRight, Plus, X, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Search, Sparkles } from 'lucide-react'
 import { useBatchSubmitTimecodeMutation } from '@/lib/queries/timecode-queries'
 import { validateHHMMSS, parseHHMMSS } from '@/lib/timecode-utils'
 import { fetchAllPlayers, type Player } from '@/lib/hand-players'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { AddPlayerDialog } from '@/components/admin/add-player-dialog'
+import { AutoDetectDialog } from '@/components/archive/auto-detect-dialog'
 
 interface PlayerInput {
   id: string // 로컬 ID (UI용)
@@ -55,6 +56,7 @@ export function SingleHandInputPanel({
   const [allPlayers, setAllPlayers] = useState<Player[]>([])
   const [loadingPlayers, setLoadingPlayers] = useState(false)
   const [addPlayerDialogOpen, setAddPlayerDialogOpen] = useState(false)
+  const [autoDetectDialogOpen, setAutoDetectDialogOpen] = useState(false)
 
   // Queries
   const batchSubmitMutation = useBatchSubmitTimecodeMutation()
@@ -354,6 +356,20 @@ export function SingleHandInputPanel({
             </Button>
           )}
         </div>
+
+        {/* Auto Detect Button */}
+        {streamId && streamName && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setAutoDetectDialogOpen(true)}
+            disabled={isSubmitting}
+            className="w-full"
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            Auto Detect Hands
+          </Button>
+        )}
       </div>
 
       {/* 스크롤 영역 */}
@@ -568,6 +584,27 @@ export function SingleHandInputPanel({
         onPlayerCreated={handlePlayerCreated}
         suggestedName={searchQuery}
       />
+
+      {/* Auto Detect Dialog */}
+      {streamId && streamName && (
+        <AutoDetectDialog
+          open={autoDetectDialogOpen}
+          onOpenChange={setAutoDetectDialogOpen}
+          streams={[
+            {
+              id: streamId,
+              name: streamName,
+              duration: 0, // TODO: Get actual duration from stream data
+            },
+          ]}
+          onSubmitSuccess={() => {
+            setAutoDetectDialogOpen(false)
+            if (onSuccess) {
+              onSuccess()
+            }
+          }}
+        />
+      )}
     </div>
   )
 }
