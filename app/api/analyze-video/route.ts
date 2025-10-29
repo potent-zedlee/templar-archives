@@ -30,10 +30,10 @@ interface ProgressEvent {
 }
 
 /**
- * POST /api/analyze-video
- * 영상 분석 시작
+ * GET /api/analyze-video
+ * 영상 분석 시작 (SSE 스트리밍)
  */
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const supabase = await createServerSupabaseClient()
 
   try {
@@ -61,9 +61,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 3. 요청 파싱
-    const body: AnalyzeVideoRequest = await request.json()
-    const { dayId, layout, maxIterations = 3 } = body
+    // 3. 요청 파싱 (쿼리 파라미터)
+    const searchParams = request.nextUrl.searchParams
+    const dayId = searchParams.get('dayId')
+    const layout = (searchParams.get('layout') || 'triton') as 'triton' | 'hustler' | 'wsop' | 'apt'
+    const maxIterations = parseInt(searchParams.get('maxIterations') || '3')
 
     if (!dayId) {
       return NextResponse.json(
