@@ -1,13 +1,16 @@
 "use client"
 
 import { memo, useState } from "react"
-import { ChevronRight, Play, Info, X, FileText } from "lucide-react"
+import { ChevronRight, Play, Info, X, FileText, Sparkles } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { BackgroundGradient } from "@/components/ui/background-gradient"
 import { VideoPlayer } from "@/components/video-player"
+import { VideoAnalysisDialog } from "@/components/archive/video-analysis-dialog"
 import { cn } from "@/lib/utils"
 import { FOLDER_COLORS } from "@/lib/constants/archive-colors"
+import { canAnalyzeVideoByRole } from "@/lib/auth-utils"
+import { useAuth } from "@/components/auth-provider"
 import type { FolderItem } from "@/lib/types/archive"
 import type { Tournament, SubEvent, Day } from "@/lib/types/archive"
 import Image from "next/image"
@@ -47,6 +50,22 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   isAdmin = false,
 }: ArchiveFolderListProps) {
   const { hands } = useArchiveData()
+  const { profile } = useAuth()
+  const [analysisDialogOpen, setAnalysisDialogOpen] = useState(false)
+  const [selectedDayForAnalysis, setSelectedDayForAnalysis] = useState<Day | null>(null)
+
+  // Check if user can analyze videos
+  const canAnalyze = canAnalyzeVideoByRole(profile?.role)
+
+  const handleOpenAnalysisDialog = (day: Day) => {
+    setSelectedDayForAnalysis(day)
+    setAnalysisDialogOpen(true)
+  }
+
+  const handleAnalysisComplete = () => {
+    // Refresh the page or refetch data
+    window.location.reload()
+  }
   if (loading) {
     return (
       <div className="space-y-3">
@@ -367,6 +386,24 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             : <span className="text-foreground/40">-</span>}
         </div>
 
+        {/* Analyze Button (High Templar+) */}
+        {canAnalyze && (day.video_url || day.video_file || day.video_nas_path) && (
+          <div className="flex-shrink-0 relative z-10">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 backdrop-blur-md bg-gradient-to-br from-purple-500/20 to-blue-500/20 hover:from-purple-500/30 hover:to-blue-500/30 border border-purple-500/30 hover:border-purple-500/50 hover:scale-110 transition-all duration-300 shadow-sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleOpenAnalysisDialog(day)
+              }}
+              title="Analyze Video with AI"
+            >
+              <Sparkles className="h-3 w-3 text-purple-400" />
+            </Button>
+          </div>
+        )}
+
         {/* Info Button */}
         <div className="flex-shrink-0 relative z-10">
           <Button
@@ -430,10 +467,20 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
   }
 
   return (
-    <div className="space-y-0">
-      {items
-        .filter((item) => item.type === "tournament")
-        .map((item) => renderTournament(item))}
-    </div>
+    <>
+      <div className="space-y-0">
+        {items
+          .filter((item) => item.type === "tournament")
+          .map((item) => renderTournament(item))}
+      </div>
+
+      {/* Video Analysis Dialog */}
+      <VideoAnalysisDialog
+        open={analysisDialogOpen}
+        onOpenChange={setAnalysisDialogOpen}
+        day={selectedDayForAnalysis}
+        onComplete={handleAnalysisComplete}
+      />
+    </>
   )
 })

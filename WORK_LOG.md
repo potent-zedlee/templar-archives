@@ -11,6 +11,115 @@
 
 ---
 
+## 2025-10-30 (세션 44) - Hand Analysis Engine 웹사이트 통합 완료 ✅
+
+### 작업 목표
+Hand Analysis Engine npm 패키지를 Templar Archives 웹사이트에 통합하여 자동 영상 분석 기능 추가
+
+### 작업 내용
+
+#### Phase 1: 타임코드 시스템 제거 (1시간) ✅
+- **삭제된 파일**:
+  - `app/admin/timecode-submissions/` - 관리자 승인 페이지
+  - `app/my-timecode-submissions/` - 사용자 제출 페이지
+  - `app/api/analyze-vision/` - 빈 디렉토리
+- **수정된 파일**:
+  - `lib/retry-utils.ts` - timecode 관련 함수 제거 (rollbackSubmissionStatus)
+- **데이터베이스 마이그레이션**:
+  - `20251029999999_drop_timecode_system.sql` 생성 및 적용
+  - timecode_submissions 테이블, 7개 인덱스, 5개 함수, 3개 트리거, 6개 RLS 정책 삭제
+
+#### Phase 2: Hand Analysis Engine API 구축 (2시간) ✅
+- **lib/auth-utils.ts** (62줄):
+  - `isHighTemplar()` 함수 추가 (high_templar, reporter, admin 체크)
+  - `canAnalyzeVideo()` 함수 추가 (서버 사이드)
+  - `canAnalyzeVideoByRole()` 함수 추가 (클라이언트 사이드)
+- **app/api/analyze-video/route.ts** (326줄, 신규 생성):
+  - POST 엔드포인트: 영상 분석 시작
+  - High Templar 이상 권한 체크
+  - SSE (Server-Sent Events) 스트리밍으로 실시간 진행률 전송
+  - HandAnalyzer 초기화 및 실행
+  - 자동 저장: hands, hand_players, hand_actions 테이블
+  - 5가지 이벤트 타입: progress, boundary, hand, complete, error
+  - Node.js Runtime, 5분 timeout
+
+#### Phase 3: Archive UI 개선 (2시간) ✅
+- **lib/user-profile.ts** (수정):
+  - UserProfile 타입에 `role` 필드 추가 ('user' | 'high_templar' | 'reporter' | 'admin')
+- **components/archive/video-analysis-dialog.tsx** (487줄, 신규 생성):
+  - 3개 탭: Settings, Progress, Results
+  - Settings: Layout 선택 (Triton, Hustler, WSOP, APT), Max Iterations (1-3)
+  - Progress: 실시간 진행률 표시, 감지된 핸드 목록, SSE 연결
+  - Results: 통계 (총 핸드, 저장된 핸드, 성공률, 처리 시간, 평균 신뢰도)
+- **components/archive-folder-list.tsx** (수정):
+  - Day 카드에 "Analyze Video" 버튼 추가 (High Templar 이상만 표시)
+  - Sparkles 아이콘, 보라색 그라데이션 스타일
+  - video_url, video_file, video_nas_path 체크
+  - VideoAnalysisDialog 통합
+
+#### Phase 4: 핸드 수정 기능 통합 (1시간) ✅
+- **supabase/migrations/20251030000001_add_analysis_metadata.sql** (신규 생성):
+  - hands 테이블에 3개 컬럼 추가:
+    - `analyzed_by TEXT` - 'manual' 또는 'auto'
+    - `analysis_confidence FLOAT` - 0-1 범위
+    - `analysis_metadata JSONB` - 메타데이터 (iterations, layout, engine_version 등)
+  - 체크 제약 조건 2개 추가
+  - 인덱스 2개 추가
+- **lib/types/archive.ts** (수정):
+  - Hand 인터페이스에 analysis 필드 추가
+- **lib/types/hand-history.ts** (수정):
+  - HandHistory 타입에 `analyzed_by` 필드 추가
+- **app/(main)/archive/_components/ArchiveHandHistory.tsx** (수정):
+  - Hand → HandHistory 변환 시 `analyzed_by` 필드 전달
+- **components/hand-list-accordion.tsx** (수정):
+  - "AI 분석" 배지 추가 (analyzed_by === 'auto'일 때)
+  - 보라색 배지 스타일
+
+#### Phase 5: 문서화 (30분) ✅
+- WORK_LOG.md 업데이트 (이 항목)
+- CLAUDE.md 업데이트 예정
+
+### 기술 스택
+- **Hand Analysis Engine**: npm 패키지 1.0.0
+- **Claude Vision API**: Gemini API 사용
+- **SSE**: Server-Sent Events for real-time progress
+- **Supabase**: PostgreSQL 데이터베이스
+
+### 주요 파일
+- **신규 생성** (3개, 1,139줄):
+  - `app/api/analyze-video/route.ts` (326줄)
+  - `components/archive/video-analysis-dialog.tsx` (487줄)
+  - `supabase/migrations/20251030000001_add_analysis_metadata.sql` (32줄)
+  - `supabase/migrations/20251029999999_drop_timecode_system.sql` (294줄)
+- **수정** (6개):
+  - `lib/auth-utils.ts`
+  - `lib/user-profile.ts`
+  - `lib/types/archive.ts`
+  - `lib/types/hand-history.ts`
+  - `app/(main)/archive/_components/ArchiveHandHistory.tsx`
+  - `components/hand-list-accordion.tsx`
+  - `components/archive-folder-list.tsx`
+- **삭제** (3개 디렉토리):
+  - `app/admin/timecode-submissions/`
+  - `app/my-timecode-submissions/`
+  - `app/api/analyze-vision/`
+
+### 성과
+- ✅ 타임코드 시스템 완전 제거
+- ✅ Hand Analysis Engine 완전 통합
+- ✅ High Templar 이상 자동 분석 가능
+- ✅ 실시간 진행률 표시 (SSE)
+- ✅ AI 분석 배지 표시
+- ✅ 빌드 성공 (0 에러)
+
+### 다음 세션 작업
+- [ ] 실제 영상으로 분석 테스트
+- [ ] 성능 측정 (처리 시간, API 비용)
+- [ ] CLAUDE.md 업데이트
+- [ ] 배포 및 프로덕션 테스트
+
+---
+
 ## 2025-10-28 (세션 43) - 성능 최적화 및 모니터링 설정 ✅
 
 ### 작업 목표
