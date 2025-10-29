@@ -13,6 +13,7 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { canAnalyzeVideo } from '@/lib/auth-utils'
 import { HandAnalyzer } from 'hand-analysis-engine'
 import type { AnalysisResult } from 'hand-analysis-engine'
+import path from 'path'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -127,7 +128,12 @@ export async function GET(request: NextRequest) {
             throw new Error('GEMINI_API_KEY가 설정되지 않았습니다')
           }
 
-          const analyzer = new HandAnalyzer(apiKey)
+          // 프로젝트 내부 assets 사용 (Vercel 환경 호환)
+          const analyzer = new HandAnalyzer({
+            apiKey,
+            promptsDir: path.join(process.cwd(), 'lib/hand-analysis-engine-assets/prompts'),
+            layoutsDataPath: path.join(process.cwd(), 'lib/hand-analysis-engine-assets/data/layouts.json'),
+          })
 
           sendEvent({ type: 'progress', data: { stage: 'analyzing', percent: 10 } })
 
