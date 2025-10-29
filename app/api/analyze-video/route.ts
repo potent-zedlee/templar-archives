@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
 
     // 5. 영상 URL 확인
     const videoUrl =
-      day.youtube_url || day.local_video_path || day.nas_video_path
+      day.video_url || day.video_file || day.video_nas_path
 
     if (!videoUrl) {
       return NextResponse.json(
