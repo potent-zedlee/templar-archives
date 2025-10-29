@@ -3,13 +3,9 @@
 import { useEffect, useRef, useState } from "react"
 import { Rnd } from "react-rnd"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { X, RotateCcw, PictureInPicture2, Clock, ChevronDown, ChevronUp } from "lucide-react"
+import { X, RotateCcw, PictureInPicture2 } from "lucide-react"
 import type { Day } from "@/lib/supabase"
 import { parseTimeToSeconds } from "@/lib/utils/time-parser"
-import { formatTimecode } from "@/lib/timecode-utils"
 import { toast } from "sonner"
 
 const DEFAULT_WIDTH = 1200
@@ -36,14 +32,6 @@ export function VideoPlayerDialog({
   const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isPipMode, setIsPipMode] = useState(false)
-
-  // 타임코드 입력 상태
-  const [showTimecodePanel, setShowTimecodePanel] = useState(false)
-  const [startTime, setStartTime] = useState("")
-  const [endTime, setEndTime] = useState("")
-  const [handNumber, setHandNumber] = useState("")
-  const [handDescription, setHandDescription] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const PIP_WIDTH = 480
   const PIP_HEIGHT = 270
@@ -85,85 +73,6 @@ export function VideoPlayerDialog({
       })
       setIsPipMode(true)
       toast.success('PIP 모드로 전환되었습니다')
-    }
-  }
-
-  // 현재 재생 시간 가져오기
-  const getCurrentTime = (): number => {
-    if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
-      // YouTube player
-      return Math.floor(playerRef.current.getCurrentTime())
-    } else if (videoRef.current) {
-      // HTML5 video
-      return Math.floor(videoRef.current.currentTime)
-    }
-    return 0
-  }
-
-  // 현재 시간을 시작 타임코드로 캡처
-  const captureStartTime = () => {
-    const currentSeconds = getCurrentTime()
-    const formatted = formatTimecode(currentSeconds)
-    setStartTime(formatted)
-    toast.success(`시작 타임코드: ${formatted}`)
-  }
-
-  // 현재 시간을 종료 타임코드로 캡처
-  const captureEndTime = () => {
-    const currentSeconds = getCurrentTime()
-    const formatted = formatTimecode(currentSeconds)
-    setEndTime(formatted)
-    toast.success(`종료 타임코드: ${formatted}`)
-  }
-
-  // 타임코드 제출
-  const handleSubmitTimecode = async () => {
-    if (!day?.id) {
-      toast.error('영상 정보를 찾을 수 없습니다')
-      return
-    }
-
-    if (!startTime.trim()) {
-      toast.error('시작 타임코드를 입력해주세요')
-      return
-    }
-
-    setIsSubmitting(true)
-
-    try {
-      const response = await fetch('/api/timecodes/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          streamId: day.id,
-          startTime: startTime.trim(),
-          endTime: endTime.trim() || null,
-          handNumber: handNumber.trim() || null,
-          description: handDescription.trim() || null,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || '타임코드 제출에 실패했습니다')
-      }
-
-      toast.success('타임코드가 제출되었습니다! 관리자 승인 후 처리됩니다.')
-
-      // 입력 필드 초기화
-      setStartTime('')
-      setEndTime('')
-      setHandNumber('')
-      setHandDescription('')
-      setShowTimecodePanel(false)
-    } catch (error) {
-      console.error('Timecode submission error:', error)
-      toast.error(error instanceof Error ? error.message : '타임코드 제출에 실패했습니다')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -415,148 +324,6 @@ export function VideoPlayerDialog({
               </div>
             )}
           </div>
-
-          {/* 타임코드 입력 패널 (PIP 모드가 아닐 때만 표시) */}
-          {!isPipMode && (
-            <div className="border-t bg-muted/30">
-              <button
-                onClick={() => setShowTimecodePanel(!showTimecodePanel)}
-                className="w-full px-4 py-2 flex items-center justify-between hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm font-medium">핸드 타임코드 입력</span>
-                </div>
-                {showTimecodePanel ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </button>
-
-              {showTimecodePanel && (
-                <div className="px-4 pb-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* 시작 타임코드 */}
-                    <div className="space-y-1.5">
-                      <Label htmlFor="start-time" className="text-xs">
-                        시작 시간 <span className="text-destructive">*</span>
-                      </Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="start-time"
-                          value={startTime}
-                          onChange={(e) => setStartTime(e.target.value)}
-                          placeholder="00:00"
-                          className="text-sm"
-                        />
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={captureStartTime}
-                          title="현재 시간 캡처"
-                        >
-                          <Clock className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* 종료 타임코드 */}
-                    <div className="space-y-1.5">
-                      <Label htmlFor="end-time" className="text-xs">
-                        종료 시간 (선택)
-                      </Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="end-time"
-                          value={endTime}
-                          onChange={(e) => setEndTime(e.target.value)}
-                          placeholder="00:00"
-                          className="text-sm"
-                        />
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={captureEndTime}
-                          title="현재 시간 캡처"
-                        >
-                          <Clock className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 핸드 번호 */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="hand-number" className="text-xs">
-                      핸드 번호 (선택)
-                    </Label>
-                    <Input
-                      id="hand-number"
-                      value={handNumber}
-                      onChange={(e) => setHandNumber(e.target.value)}
-                      placeholder="예: #45"
-                      maxLength={50}
-                      className="text-sm"
-                    />
-                  </div>
-
-                  {/* 설명 */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor="hand-description" className="text-xs">
-                      설명 (선택)
-                    </Label>
-                    <Textarea
-                      id="hand-description"
-                      value={handDescription}
-                      onChange={(e) => setHandDescription(e.target.value)}
-                      placeholder="예: AA vs KK all-in preflop"
-                      rows={2}
-                      maxLength={500}
-                      className="text-sm resize-none"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {handDescription.length}/500
-                    </p>
-                  </div>
-
-                  {/* 제출 버튼 */}
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      type="button"
-                      onClick={handleSubmitTimecode}
-                      disabled={isSubmitting || !startTime.trim()}
-                      className="flex-1"
-                      size="sm"
-                    >
-                      {isSubmitting ? '제출 중...' : '타임코드 제출'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setStartTime('')
-                        setEndTime('')
-                        setHandNumber('')
-                        setHandDescription('')
-                      }}
-                      disabled={isSubmitting}
-                      size="sm"
-                    >
-                      초기화
-                    </Button>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    💡 현재 재생 중인 시간을 캡처하려면{' '}
-                    <Clock className="inline h-3 w-3" /> 버튼을 클릭하세요.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </Rnd>
     </>
