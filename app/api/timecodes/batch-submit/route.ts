@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
       end_time: tc.endTime,
       hand_number: tc.handNumber,
       description: tc.description || null,
+      ocr_regions: null, // OCR 영역은 관리자가 나중에 설정
       status: 'pending',
     }))
 
@@ -144,9 +145,24 @@ export async function POST(request: NextRequest) {
       .select()
 
     if (insertError) {
+      // 상세한 에러 로깅
+      console.error('[batch-submit] Insert failed:', {
+        error: insertError,
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+        code: insertError.code,
+        streamId,
+        submissionCount: timecodes.length,
+        userId: userData.id,
+      })
       logError('Batch Submit API - Insert failed', { error: insertError, streamId })
       return NextResponse.json(
-        { error: '타임코드 제출에 실패했습니다', details: insertError.message },
+        {
+          error: '타임코드 제출에 실패했습니다',
+          details: insertError.message,
+          code: insertError.code
+        },
         { status: 500 }
       )
     }
