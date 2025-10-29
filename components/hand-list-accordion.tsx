@@ -102,6 +102,11 @@ export function HandListAccordion({
                     {hand.startTime} - {hand.endTime}
                   </span>
                   <Badge variant="outline">{hand.duration}초</Badge>
+                  {hand.analyzed_by === 'auto' && (
+                    <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+                      AI 분석
+                    </Badge>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3">

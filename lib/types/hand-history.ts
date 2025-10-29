@@ -10,6 +10,7 @@ export type HandHistory = {
   duration: number // 초 단위
   confidence?: number // 0-100 (신뢰도 점수)
   summary?: string // 한 줄 요약 (예: "타카자와 오픈레이즈, 모두 폴드")
+  analyzed_by?: 'manual' | 'auto' // 분석 방법
 
   // 플레이어 정보
   players: {
