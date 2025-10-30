@@ -60,6 +60,7 @@ export function isValidYouTubeUrl(url: string): boolean {
 
 /**
  * YouTube 비디오 정보 가져오기
+ * Includes anti-bot measures (Cookie, User-Agent)
  */
 export async function getVideoInfo(url: string): Promise<VideoInfo> {
   try {
@@ -67,7 +68,20 @@ export async function getVideoInfo(url: string): Promise<VideoInfo> {
       throw new Error('Invalid YouTube URL')
     }
 
-    const info = await ytdl.getInfo(url)
+    const info = await ytdl.getInfo(url, {
+      requestOptions: {
+        headers: {
+          // Cookie from environment variable (helps bypass bot detection)
+          ...(process.env.YOUTUBE_COOKIE && {
+            cookie: process.env.YOUTUBE_COOKIE,
+          }),
+          // Spoof User-Agent to appear as Chrome browser
+          'User-Agent':
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+      },
+    })
 
     // 비디오 포맷 정보 추출
     const formats: VideoFormat[] = info.formats
@@ -152,6 +166,7 @@ export async function getVideoStreamUrl(url: string): Promise<{
 
 /**
  * YouTube 비디오 다운로드 (실제 다운로드는 하지 않고 스트림 반환)
+ * Includes anti-bot measures (Cookie, User-Agent)
  */
 export async function createYouTubeStream(url: string) {
   if (!isValidYouTubeUrl(url)) {
@@ -162,5 +177,17 @@ export async function createYouTubeStream(url: string) {
   return ytdl(url, {
     quality: 'highestvideo',
     filter: (format) => format.container === 'mp4' && format.hasVideo && !format.hasAudio,
+    requestOptions: {
+      headers: {
+        // Cookie from environment variable (helps bypass bot detection)
+        ...(process.env.YOUTUBE_COOKIE && {
+          cookie: process.env.YOUTUBE_COOKIE,
+        }),
+        // Spoof User-Agent to appear as Chrome browser
+        'User-Agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    },
   })
 }
