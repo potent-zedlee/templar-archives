@@ -331,10 +331,25 @@ export type PositionStats = {
 }
 
 /**
- * 포지션별 통계 계산
+ * 포지션별 통계 계산 (캐시 우선)
  */
 export async function calculatePositionStats(playerId: string): Promise<PositionStats[]> {
+  const supabase = createClientSupabaseClient()
+
   try {
+    // 1. 캐시에서 조회 시도
+    const { data: cached, error: cacheError } = await supabase
+      .from('player_stats_cache')
+      .select('positional_stats')
+      .eq('player_id', playerId)
+      .single()
+
+    // 캐시가 있으면 반환
+    if (cached && !cacheError && cached.positional_stats) {
+      return cached.positional_stats as PositionStats[]
+    }
+
+    // 2. 캐시가 없으면 실시간 계산
     const [actions, handPlayersData] = await Promise.all([
       fetchPlayerActions(playerId),
       fetchPlayerHandsInfo(playerId),
@@ -392,11 +407,35 @@ export async function calculatePositionStats(playerId: string): Promise<Position
 }
 
 /**
- * 플레이어 전체 통계 계산
+ * 플레이어 전체 통계 계산 (캐시 우선)
  */
 export async function calculatePlayerStatistics(playerId: string): Promise<PlayerStatistics> {
+  const supabase = createClientSupabaseClient()
+
   try {
-    // 데이터 가져오기
+    // 1. 캐시에서 조회 시도
+    const { data: cached, error: cacheError } = await supabase
+      .from('player_stats_cache')
+      .select('*')
+      .eq('player_id', playerId)
+      .single()
+
+    // 캐시가 있으면 반환 (camelCase 변환)
+    if (cached && !cacheError) {
+      return {
+        vpip: cached.vpip || 0,
+        pfr: cached.pfr || 0,
+        threeBet: cached.three_bet || 0,
+        ats: cached.ats || 0,
+        winRate: cached.win_rate || 0,
+        avgPotSize: cached.avg_pot_size || 0,
+        showdownWinRate: cached.showdown_win_rate || 0,
+        totalHands: cached.total_hands || 0,
+        handsWon: cached.hands_won || 0,
+      }
+    }
+
+    // 2. 캐시가 없으면 실시간 계산
     const [actions, handPlayersData] = await Promise.all([
       fetchPlayerActions(playerId),
       fetchPlayerHandsInfo(playerId),
@@ -409,11 +448,14 @@ export async function calculatePlayerStatistics(playerId: string): Promise<Playe
     const ats = calculateATS(actions, handPlayersData)
     const winRate = calculateWinRate(handPlayersData)
     const avgPotSize = calculateAvgPotSize(handPlayersData)
-
-    // Showdown Win Rate (간단한 근사값 - 실제로는 더 복잡함)
     const showdownWinRate = winRate // 임시로 winRate 사용
+    const totalHands = handPlayersData.length
+    const handsWon = handPlayersData.filter(hp => {
+      const stackChange = (hp.ending_stack || 0) - (hp.starting_stack || 0)
+      return stackChange > 0
+    }).length
 
-    return {
+    const stats: PlayerStatistics = {
       vpip,
       pfr,
       threeBet,
@@ -421,12 +463,33 @@ export async function calculatePlayerStatistics(playerId: string): Promise<Playe
       winRate,
       avgPotSize,
       showdownWinRate,
-      totalHands: handPlayersData.length,
-      handsWon: handPlayersData.filter(hp => {
-        const stackChange = (hp.ending_stack || 0) - (hp.starting_stack || 0)
-        return stackChange > 0
-      }).length,
+      totalHands,
+      handsWon,
     }
+
+    // 3. 캐시에 저장 (포지션별 통계는 별도로 계산)
+    const positionStats = await calculatePositionStats(playerId)
+    const playStyle = classifyPlayStyle(vpip, pfr, totalHands)
+
+    await supabase
+      .from('player_stats_cache')
+      .upsert({
+        player_id: playerId,
+        vpip,
+        pfr,
+        three_bet: threeBet,
+        ats,
+        win_rate: winRate,
+        avg_pot_size: avgPotSize,
+        showdown_win_rate: showdownWinRate,
+        total_hands: totalHands,
+        hands_won: handsWon,
+        positional_stats: positionStats,
+        play_style: playStyle,
+        last_updated: new Date().toISOString(),
+      })
+
+    return stats
   } catch (error) {
     console.error('플레이어 통계 계산 실패:', error)
     // 기본값 반환
