@@ -76,7 +76,7 @@ Templar Archive는 포커 핸드 데이터의 자동 추출, 보관, 분석을 �
 
 ### Phase 1-33: 핵심 개발 완료 (2025-10-16 ~ 2025-10-28)
 
-**모든 Phase 상세 내역은 [Phase 1-33 Archive](./templar-archives/work-logs/phase-1-to-33-archive.md)를 참고하세요.**
+**모든 Phase 상세 내역은 [Phase 1-33 Archive](./work-logs/phase-1-to-33-archive.md)를 참고하세요.**
 
 **주요 완료 기능**:
 - **Phase 1-8**: 핵심 시스템 (인증, DB, 영상 분석, 커뮤니티, Archive, 폴더 네비게이션)
