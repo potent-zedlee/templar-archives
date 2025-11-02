@@ -103,7 +103,7 @@ export function ArchiveDialogs() {
   const filteredTournaments =
     selectedCategory === 'All'
       ? tournaments
-      : tournaments.filter((t) => t.category_id === selectedCategory || t.category === selectedCategory)
+      : tournaments.filter((t) => t.category === selectedCategory)
 
   // Handle success callbacks (React Query invalidation)
   const handleTournamentSuccess = () => {

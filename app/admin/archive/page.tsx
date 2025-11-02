@@ -624,18 +624,7 @@ export default function AdminArchivePage() {
                                 <ChevronRight className="h-4 w-4" />
                               )}
                             </Button>
-                            {(() => {
-                              const category = getCategoryByAlias(tournament.category)
-                              return category?.logoUrl ? (
-                                <Image
-                                  src={category.logoUrl}
-                                  alt={tournament.category}
-                                  width={24}
-                                  height={24}
-                                  className="object-contain"
-                                />
-                              ) : null
-                            })()}
+                            {/* CategoryLogo removed due to async category fetch */}
                             {tournament.name}
                           </div>
                         </TableCell>

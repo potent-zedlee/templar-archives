@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
-import { getCategoryById, getCategoryByAlias } from '@/lib/tournament-categories'
 
 interface CategoryLogoProps {
   category: string | { id: string; logo_url?: string | null; name?: string }
@@ -37,19 +36,14 @@ export function CategoryLogo({
   let logoPath: string | undefined
 
   if (typeof category === 'string') {
-    // ID 또는 별칭으로 정적 데이터에서 찾기
-    categoryData = getCategoryById(category) || getCategoryByAlias(category)
-    logoPath = categoryData?.logoUrl
+    // String인 경우 처리할 수 없으므로 undefined로 설정
+    logoPath = undefined
   } else {
-    // DB에서 가져온 객체인 경우 logo_url 우선 사용
+    // DB에서 가져온 객체인 경우 logo_url 사용
     if (category.logo_url) {
       logoPath = category.logo_url
     }
-    // 폴백: 정적 데이터에서 찾기
-    if (!logoPath) {
-      categoryData = getCategoryById(category.id) || getCategoryByAlias(category.id)
-      logoPath = categoryData?.logoUrl
-    }
+    categoryData = category
   }
 
   // 심볼 버전이 있으면 우선 사용

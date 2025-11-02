@@ -60,6 +60,7 @@ export default function communityClient() {
   // New post form
   const [newTitle, setNewTitle] = useState("")
   const [newContent, setNewContent] = useState("")
+  const [newAuthorName, setNewAuthorName] = useState("")
   const [newCategory, setNewCategory] = useState<Post['category']>("general")
 
   // Hand attachment

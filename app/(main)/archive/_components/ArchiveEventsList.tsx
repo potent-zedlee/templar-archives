@@ -62,11 +62,11 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
   const folderItems = useMemo((): FolderItem[] => {
     let items: FolderItem[] = []
 
-    // Filter tournaments by category (using category_id for accurate matching)
+    // Filter tournaments by category
     const filteredTournaments =
       selectedCategory === 'All'
         ? tournaments
-        : tournaments.filter((t) => t.category_id === selectedCategory || t.category === selectedCategory)
+        : tournaments.filter((t) => t.category === selectedCategory)
 
     // Build tree structure for tournaments
     filteredTournaments.forEach((tournament) => {

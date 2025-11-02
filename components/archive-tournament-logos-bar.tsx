@@ -59,7 +59,7 @@ export function ArchiveTournamentLogosBar({
       children = children.filter(cat => cat.game_type === gameType || cat.game_type === 'both')
     }
 
-    return children.sort((a, b) => a.priority - b.priority)
+    return children.sort((a, b) => a.name.localeCompare(b.name))
   }
 
   // Auto-scroll to selected tournament
