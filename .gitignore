@@ -31,3 +31,6 @@ next-env.d.ts
 
 # Build logs
 build*.log
+
+# Backup files
+*.backup
