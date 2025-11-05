@@ -26,12 +26,24 @@ export interface PlayerInfo {
 }
 
 /**
+ * Video segment (from video-segments.ts)
+ */
+export interface VideoSegment {
+  id: string
+  type: 'countdown' | 'opening' | 'gameplay' | 'break' | 'ending'
+  startTime: string
+  endTime: string
+  label?: string
+}
+
+/**
  * Configuration for video analysis
  */
 export interface AnalysisConfig {
   platform: Platform
   videoUrl: string
   players?: PlayerInfo[]
+  segments?: VideoSegment[]
   dayId?: string
 }
 
@@ -54,14 +66,42 @@ async function loadPrompt(platform: Platform): Promise<string> {
 }
 
 /**
- * Build the complete prompt with player list if provided
+ * Build the complete prompt with player list and segments if provided
  */
-function buildPrompt(basePrompt: string, players?: PlayerInfo[]): string {
+function buildPrompt(
+  basePrompt: string,
+  players?: PlayerInfo[],
+  segments?: VideoSegment[]
+): string {
   let fullPrompt = basePrompt
 
+  // Add video segments instruction
+  if (segments && segments.length > 0) {
+    const gameplaySegments = segments.filter((s) => s.type === 'gameplay')
+
+    if (gameplaySegments.length > 0) {
+      fullPrompt += '\n\n## Video Segments (IMPORTANT)\n\n'
+      fullPrompt +=
+        'ONLY analyze the GAMEPLAY segments listed below. Ignore all other parts of the video:\n\n'
+
+      gameplaySegments.forEach((segment, index) => {
+        fullPrompt += `${index + 1}. Gameplay segment: ${segment.startTime} - ${segment.endTime}`
+        if (segment.label) {
+          fullPrompt += ` (${segment.label})`
+        }
+        fullPrompt += '\n'
+      })
+
+      fullPrompt +=
+        '\nFocus your analysis ONLY on these gameplay segments. Skip countdown, opening, breaks, and ending sequences.\n'
+    }
+  }
+
+  // Add player list
   if (players && players.length > 0) {
     fullPrompt += '\n\n## Expected Players\n\n'
-    fullPrompt += 'The following players are expected to appear in this video. Use these names when matching players:\n\n'
+    fullPrompt +=
+      'The following players are expected to appear in this video. Use these names when matching players:\n\n'
 
     players.forEach((player) => {
       fullPrompt += `- ${player.name}`
@@ -71,7 +111,8 @@ function buildPrompt(basePrompt: string, players?: PlayerInfo[]): string {
       fullPrompt += '\n'
     })
 
-    fullPrompt += '\nIf you see a name that is similar but not exact, use the closest match from this list.\n'
+    fullPrompt +=
+      '\nIf you see a name that is similar but not exact, use the closest match from this list.\n'
   }
 
   return fullPrompt
@@ -89,7 +130,7 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
 
     // Load platform-specific prompt
     const basePrompt = await loadPrompt(config.platform)
-    const fullPrompt = buildPrompt(basePrompt, config.players)
+    const fullPrompt = buildPrompt(basePrompt, config.players, config.segments)
 
     // Initialize Gemini model with video understanding
     const model = genAI.getGenerativeModel({

@@ -134,8 +134,11 @@ export function ArchiveHandHistory({
               <p className="text-xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent text-center">
                 No Hands Available
               </p>
-              <p className="text-sm text-muted-foreground/70 text-center max-w-md">
-                Select a day to view hands, or import hands from external systems.
+              <p className="text-sm text-muted-foreground/70 text-center max-w-md mb-4">
+                이 영상은 아직 AI 분석이 완료되지 않았습니다.
+              </p>
+              <p className="text-xs text-muted-foreground/50 text-center max-w-md">
+                위의 "AI 분석" 버튼을 클릭하여 핸드 히스토리를 자동으로 추출할 수 있습니다.
               </p>
             </div>
           </div>

@@ -17,6 +17,9 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sparkles, Loader2, CheckCircle2, AlertCircle, Video, Users, Plus, X } from "lucide-react"
 import type { Stream } from "@/lib/supabase"
+import { VideoSegmentInput } from "@/components/video-segment-input"
+import type { VideoSegment } from "@/lib/types/video-segments"
+import { gameplaySegmentsToString } from "@/lib/types/video-segments"
 
 interface AnalyzeVideoDialogProps {
   isOpen: boolean
@@ -42,6 +45,7 @@ export function AnalyzeVideoDialog({
 }: AnalyzeVideoDialogProps) {
   const [platform, setPlatform] = useState<Platform>("triton")
   const [players, setPlayers] = useState<PlayerInput[]>([])
+  const [segments, setSegments] = useState<VideoSegment[]>([])
   const [status, setStatus] = useState<AnalysisStatus>("idle")
   const [progress, setProgress] = useState("")
   const [error, setError] = useState("")
@@ -100,7 +104,8 @@ export function AnalyzeVideoDialog({
           videoUrl: day.video_url,
           platform,
           dayId: day.id,
-          players: validPlayers.length > 0 ? validPlayers : undefined
+          players: validPlayers.length > 0 ? validPlayers : undefined,
+          segments: segments.length > 0 ? segments : undefined
         })
       })
 
@@ -277,6 +282,12 @@ export function AnalyzeVideoDialog({
                 </ScrollArea>
               )}
             </div>
+
+            {/* Video Segments */}
+            <VideoSegmentInput
+              segments={segments}
+              onChange={setSegments}
+            />
 
             {/* Info Card */}
             <Card className="p-4 bg-blue-500/10 border-blue-500/20">
