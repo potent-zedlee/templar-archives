@@ -134,8 +134,17 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
     const basePrompt = await loadPrompt(config.platform)
     const fullPrompt = buildPrompt(basePrompt, config.players, config.segments)
 
-    // YouTube URL을 프롬프트에 포함
-    const promptWithVideo = `Analyze this poker video: ${config.videoUrl}\n\n${fullPrompt}`
+    // YouTube URL을 프롬프트에 포함 (JSON 출력 강제)
+    const promptWithVideo = `Analyze this poker video: ${config.videoUrl}
+
+CRITICAL OUTPUT REQUIREMENTS:
+- You MUST respond with ONLY a valid JSON array
+- Start your response with [ and end with ]
+- Do NOT include any text before or after the JSON
+- Do NOT use markdown code blocks (no \`\`\`json)
+- Follow the exact JSON schema provided below
+
+${fullPrompt}`
 
     // Generate content with video and prompt using new SDK
     const response = await genAI.models.generateContent({
@@ -176,18 +185,36 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
     // Get response text (async property in new SDK)
     const text = await response.text
 
-    // Parse JSON response
+    // Parse JSON response with aggressive extraction
     let hands
+    let cleanedText = text.trim()
+
+    // Step 1: Remove markdown code blocks if present
+    const codeBlockMatch = cleanedText.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/)
+    if (codeBlockMatch) {
+      cleanedText = codeBlockMatch[1]
+    }
+
+    // Step 2: Extract JSON array (handle text before/after)
+    const arrayMatch = cleanedText.match(/\[[\s\S]*\]/)
+    if (arrayMatch) {
+      cleanedText = arrayMatch[0]
+    }
+
+    // Step 3: Parse JSON
     try {
-      hands = JSON.parse(text)
+      hands = JSON.parse(cleanedText)
     } catch (parseError) {
-      // If response is not valid JSON, try to extract JSON from markdown code blocks
-      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/)
-      if (jsonMatch) {
-        hands = JSON.parse(jsonMatch[1])
-      } else {
-        throw new Error('Failed to parse Gemini response as JSON')
-      }
+      // Enhanced error logging
+      console.error('=== Gemini Response Parsing Error ===')
+      console.error('Raw response length:', text.length)
+      console.error('First 500 chars:', text.substring(0, 500))
+      console.error('Last 500 chars:', text.substring(text.length - 500))
+      console.error('Cleaned text:', cleanedText.substring(0, 500))
+      console.error('Parse error:', parseError)
+      throw new Error(
+        `Failed to parse Gemini response as JSON: ${parseError instanceof Error ? parseError.message : 'Unknown error'}`
+      )
     }
 
     // Validate response structure
