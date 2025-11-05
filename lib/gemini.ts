@@ -134,6 +134,9 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
     const basePrompt = await loadPrompt(config.platform)
     const fullPrompt = buildPrompt(basePrompt, config.players, config.segments)
 
+    // YouTube URL을 프롬프트에 포함
+    const promptWithVideo = `Analyze this poker video: ${config.videoUrl}\n\n${fullPrompt}`
+
     // Generate content with video and prompt using new SDK
     const response = await genAI.models.generateContent({
       model: 'gemini-2.5-flash', // Fast and cost-effective for video analysis
@@ -142,17 +145,18 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
           role: 'user',
           parts: [
             {
-              fileData: {
-                fileUri: config.videoUrl, // YouTube URL directly supported
-                mimeType: 'video/mp4',
-              },
-            },
-            {
-              text: fullPrompt,
+              text: promptWithVideo,
             },
           ],
         },
       ],
+      config: {
+        tools: [
+          {
+            urlContext: {}, // URL Context Tool for YouTube video processing
+          },
+        ],
+      },
       generationConfig: {
         temperature: 0.1, // Low temperature for consistent, factual extraction
         topP: 0.95,
@@ -160,6 +164,14 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
         maxOutputTokens: 8192,
       },
     })
+
+    // URL context metadata 로깅 (디버깅용)
+    if (response.candidates?.[0]?.urlContextMetadata) {
+      console.log(
+        'URL Context Metadata:',
+        JSON.stringify(response.candidates[0].urlContextMetadata, null, 2)
+      )
+    }
 
     // Get response text (async property in new SDK)
     const text = await response.text
