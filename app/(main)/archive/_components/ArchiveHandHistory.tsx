@@ -83,7 +83,6 @@ export function ArchiveHandHistory({
         startTime,
         endTime,
         duration: 0,
-        analyzed_by: hand.analyzed_by, // Pass analyzed_by field
         winner:
           hand.hand_players?.find((hp) => hp.position === 'BTN')?.player?.name || 'Unknown',
         potSize: hand.pot_size || 0,

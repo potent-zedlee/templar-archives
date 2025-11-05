@@ -117,15 +117,6 @@ export interface Hand {
   confidence?: number
   favorite?: boolean
   created_at?: string
-  // Analysis metadata
-  analyzed_by?: 'manual' | 'auto'
-  analysis_confidence?: number // 0-1
-  analysis_metadata?: {
-    iterations?: number
-    layout?: string
-    engine_version?: string
-    [key: string]: any
-  }
   // Relations
   hand_players?: HandPlayer[]
   // UI state (클라이언트 전용)

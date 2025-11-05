@@ -173,12 +173,6 @@ export function logError(
   if (process.env.NODE_ENV === 'development') {
     console.error(`${prefix} Stack:`, error.stack)
   }
-
-  // 프로덕션: 외부 로깅 서비스로 전송 (Sentry, DataDog 등)
-  if (process.env.NODE_ENV === 'production') {
-    // TODO: Send to external logging service
-    // Example: Sentry.captureException(error, { contexts: { custom: context } })
-  }
 }
 
 /**

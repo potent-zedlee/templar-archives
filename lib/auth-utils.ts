@@ -39,23 +39,3 @@ export async function isHighTemplar(
   }
 }
 
-/**
- * Check if the user can analyze videos
- * (alias for isHighTemplar)
- */
-export async function canAnalyzeVideo(
-  supabase: SupabaseClient,
-  userId: string
-): Promise<boolean> {
-  return isHighTemplar(supabase, userId)
-}
-
-/**
- * Client-side: Check if user role can analyze videos
- * (high_templar, reporter, admin)
- */
-export function canAnalyzeVideoByRole(role: string | null | undefined): boolean {
-  if (!role) return false
-  const highRoles = ['high_templar', 'reporter', 'admin']
-  return highRoles.includes(role)
-}

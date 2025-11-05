@@ -12,8 +12,8 @@ Templar Archive는 포커 핸드 데이터의 자동 추출, 보관, 분석을 �
 
 ### Templar Archives (통합 웹 플랫폼) ⭐ 현재 개발 중
 **위치**: `templar-archives/`
-**역할**: 영상 분석 + 데이터 저장 + 검색/분석 통합 플랫폼
-**기술**: Next.js 15.5.5, React 19.2, TypeScript 5.9.3, Tailwind CSS 4, Supabase, Hand Analysis Engine
+**역할**: 포커 핸드 데이터 저장 + 검색/분석 통합 플랫폼
+**기술**: Next.js 15.5.5, React 19.2, TypeScript 5.9.3, Tailwind CSS 4, Supabase
 **개발 서버**: http://localhost:3000
 **프로덕션**: https://templar-archives.vercel.app
 
@@ -21,26 +21,19 @@ Templar Archive는 포커 핸드 데이터의 자동 추출, 보관, 분석을 �
 
 ## 핵심 기능
 
-### 1. 영상 분석 ✅
-- **YouTube URL** 또는 **로컬 파일 업로드**
-- **Hand Analysis Engine v1.0.6** (npm 패키지):
-  - Gemini Vision API 기반 핸드 추출
-  - SSE 스트리밍 방식 실시간 진행률
-  - 타임코드 입력 → 관리자 승인 → AI 추출 → 검수 워크플로우
-
-### 2. 데이터 관리 ✅
+### 1. 데이터 관리 ✅
 - 핸드 히스토리 + 영상 클립 동기화 저장
 - 3가지 영상 소스 (YouTube, 로컬 파일, NAS)
 - Archive 이벤트 관리 (Tournament/SubEvent/Day CRUD)
 - Google Drive 스타일 폴더 네비게이션 (4단계 계층)
 
-### 3. 검색 및 분석 ✅
+### 2. 검색 및 분석 ✅
 - 30+ 검색 조건 필터링
 - **AI 자연어 검색** (Claude 3.5 Sonnet)
 - 통계 대시보드
 - Full-Text Search (tsvector, GIN 인덱스)
 
-### 4. 커뮤니티 ✅
+### 3. 커뮤니티 ✅
 - 포스트 작성 및 카테고리 (Analysis, Strategy, Hand Review, General)
 - **Reddit 스타일 댓글/답글 시스템** (무한 중첩, 시각적 계층)
 - 좋아요 기능 (포스트, 댓글)
@@ -48,13 +41,13 @@ Templar Archive는 포커 핸드 데이터의 자동 추출, 보관, 분석을 �
 - 북마크 시스템
 - 포스트 상세 페이지 (`/community/[id]`)
 
-### 5. 인증 및 권한 ✅
+### 4. 인증 및 권한 ✅
 - Google OAuth 로그인
 - Row Level Security (RLS)
 - 역할 관리 (user/high_templar/reporter/admin)
 - 밴 시스템 및 활동 로그
 
-### 6. 플레이어 프로필 클레임 ✅
+### 5. 플레이어 프로필 클레임 ✅
 - 유저가 자신의 플레이어 프로필 클레임 요청
 - 소셜 미디어, 이메일 등 다양한 인증 방법
 - 관리자 승인/거절 워크플로우
@@ -68,8 +61,7 @@ Templar Archive는 포커 핸드 데이터의 자동 추출, 보관, 분석을 �
 
 #### 핵심 시스템 (Phase 0-8)
 - **인증**: Google OAuth, RLS
-- **DB**: 72개 마이그레이션 완료 (RLS 정책, 알림 시스템, 플레이어 통계, 보안 강화 등)
-- **영상 분석**: Hand Analysis Engine v1.0.6 (Gemini Vision API, 타임코드 기반 워크플로우)
+- **DB**: 73개 마이그레이션 완료 (RLS 정책, 알림 시스템, 플레이어 통계, 보안 강화 등)
 - **커뮤니티**: Reddit 스타일 댓글, 북마크, 핸드 공유
 - **관리자**: 역할 관리, 밴 시스템, 콘텐츠 신고, 핸드 수정 요청
 - **Archive**: Google Drive 스타일 4단계 폴더 네비게이션
@@ -79,7 +71,7 @@ Templar Archive는 포커 핸드 데이터의 자동 추출, 보관, 분석을 �
 **모든 Phase 상세 내역은 [Phase 1-33 Archive](./work-logs/phase-1-to-33-archive.md)를 참고하세요.**
 
 **주요 완료 기능**:
-- **Phase 1-8**: 핵심 시스템 (인증, DB, 영상 분석, 커뮤니티, Archive, 폴더 네비게이션)
+- **Phase 1-8**: 핵심 시스템 (인증, DB, 커뮤니티, Archive, 폴더 네비게이션)
 - **Phase 9-11**: 코드 품질 및 아키텍처 개선, 성능 최적화, UX/UI 개선
 - **Phase 12-13**: 테스팅 전략 수립, 보안 강화
 - **Phase 14-19**: Archive UI Redesign, 로고 관리, React Query Migration, Archive UI Enhancement
@@ -89,7 +81,7 @@ Templar Archive는 포커 핸드 데이터의 자동 추출, 보관, 분석을 �
 - **Phase 30-33**: Event Management Enhancement, Archive Security Enhancement, UI/Admin Enhancement, Single Mode Accordion
 
 **핵심 성과**:
-- 72개 마이그레이션 완료 (RLS 정책, 알림 시스템, 플레이어 통계, 보안 강화)
+- 73개 마이그레이션 완료 (RLS 정책, 알림 시스템, 플레이어 통계, 보안 강화, Hand Analysis Engine 제거)
 - Archive 페이지 리팩토링: 1,733줄 → 88줄 (-95%)
 - 114개 `any` 타입 완전 제거, 타입 안전성 확보
 - 보안 등급: B+ → A (포괄적 보안 강화)
@@ -140,10 +132,6 @@ Templar Archive는 포커 핸드 데이터의 자동 추출, 보관, 분석을 �
 - **API**: REST (Next.js API Routes)
 
 ### AI/ML
-- **영상 분석**:
-  - Hand Analysis Engine v1.0.6 (npm 패키지)
-  - Gemini Vision API (Google) - 핸드 추출
-  - 타임코드 기반 워크플로우
 - **자연어 검색**: Claude 3.5 Sonnet
 
 ### 배포
