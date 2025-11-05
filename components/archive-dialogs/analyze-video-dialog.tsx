@@ -176,7 +176,7 @@ export function AnalyzeVideoDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="!max-w-[95vw] !max-h-[95vh] w-[95vw] h-[95vh] flex flex-col p-3">
+      <DialogContent className="!max-w-[80vw] !max-h-[95vh] w-[80vw] h-[95vh] flex flex-col p-3">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-500" />

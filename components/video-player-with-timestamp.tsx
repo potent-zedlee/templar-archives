@@ -93,6 +93,8 @@ export function VideoPlayerWithTimestamp({
       try {
         playerRef.current = new (window as any).YT.Player(`youtube-player-${videoId}`, {
           videoId: videoId,
+          width: '100%',
+          height: '100%',
           playerVars: {
             modestbranding: 1,
             rel: 0,
@@ -182,10 +184,10 @@ export function VideoPlayerWithTimestamp({
     <div className={`space-y-3 ${className}`}>
       {/* Video Player */}
       <Card className="overflow-hidden bg-black">
-        <div className="aspect-video w-full relative">
+        <div className="aspect-video w-full relative min-h-[400px]">
           <div
             id={`youtube-player-${videoId}`}
-            className="absolute inset-0"
+            className="absolute inset-0 w-full h-full"
           />
           {!isReady && (
             <div className="absolute inset-0 flex items-center justify-center bg-black">
