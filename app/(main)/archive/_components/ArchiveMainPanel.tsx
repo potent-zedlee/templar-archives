@@ -1,17 +1,20 @@
 "use client"
 
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { VideoPlayer } from "@/components/video-player"
 import { ArchiveHandHistory } from "./ArchiveHandHistory"
 import { useArchiveDataStore } from "@/stores/archive-data-store"
 import { useArchiveUIStore } from "@/stores/archive-ui-store"
 import { useArchiveData } from "./ArchiveDataContext"
-import { useMemo } from "react"
+import { useStreamPlayersQuery } from "@/lib/queries/archive-queries"
+import { PlayerCardList } from "@/components/player-card"
+import { useMemo, useState } from "react"
 import { Play, Calendar, Users, Sparkles } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { Stream } from "@/lib/supabase"
+import type { MomentFilter } from "@/lib/hand-filters"
+import { filterHandsByMoment } from "@/lib/hand-filters"
 
 interface ArchiveMainPanelProps {
   seekTime: number | null
@@ -21,7 +24,10 @@ interface ArchiveMainPanelProps {
 export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelProps) {
   const { selectedDay } = useArchiveDataStore()
   const { openAnalyzeDialog } = useArchiveUIStore()
-  const { tournaments } = useArchiveData()
+  const { tournaments, hands } = useArchiveData()
+
+  // Moments filter state
+  const [momentFilter, setMomentFilter] = useState<MomentFilter>('all')
 
   // Find selected day data
   const selectedDayData = useMemo((): Stream | null => {
@@ -46,6 +52,14 @@ export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelPro
     console.log('[ArchiveMainPanel] Day not found!')
     return null
   }, [selectedDay, tournaments])
+
+  // Fetch players for selected day
+  const { data: players = [], isLoading: playersLoading } = useStreamPlayersQuery(selectedDay)
+
+  // Filter hands by moment
+  const filteredHands = useMemo(() => {
+    return filterHandsByMoment(hands, momentFilter)
+  }, [hands, momentFilter])
 
   const handleSeekToTime = (timeString: string) => {
     // Parse time string "MM:SS" to seconds
@@ -158,13 +172,62 @@ export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelPro
                 </div>
               </Card>
 
-              {/* Video Player */}
-              <div className="rounded-xl overflow-hidden border border-white/20 shadow-2xl">
-                <VideoPlayer day={selectedDayData} seekTime={seekTime} />
-              </div>
+              {/* People Section */}
+              <Card className="p-7 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
+                    People
+                  </h2>
+                  {players.length > 0 && (
+                    <Badge variant="secondary">{players.length} players</Badge>
+                  )}
+                </div>
+                {playersLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading players...</div>
+                ) : (
+                  <PlayerCardList players={players} />
+                )}
+              </Card>
 
-              {/* Hand History */}
-              <ArchiveHandHistory onSeekToTime={handleSeekToTime} />
+              {/* Moments Section */}
+              <Card className="p-7 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
+                    Moments
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant={momentFilter === 'all' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setMomentFilter('all')}
+                    >
+                      All
+                    </Button>
+                    <Button
+                      variant={momentFilter === 'highlighted' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setMomentFilter('highlighted')}
+                    >
+                      Highlighted
+                    </Button>
+                    <Button
+                      variant={momentFilter === 'big-pot' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setMomentFilter('big-pot')}
+                    >
+                      Big Pot
+                    </Button>
+                    <Button
+                      variant={momentFilter === 'all-in' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setMomentFilter('all-in')}
+                    >
+                      All-in
+                    </Button>
+                  </div>
+                </div>
+                <ArchiveHandHistory onSeekToTime={handleSeekToTime} overrideHands={filteredHands} />
+              </Card>
             </>
           )}
         </div>

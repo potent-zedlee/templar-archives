@@ -27,6 +27,7 @@ export const archiveKeys = {
   handsInfinite: (dayId: string) => [...archiveKeys.all, 'hands-infinite', dayId] as const,
   unsortedVideos: (sortParams?: Partial<ServerSortParams>) =>
     [...archiveKeys.all, 'unsorted-videos', sortParams] as const,
+  streamPlayers: (streamId: string) => [...archiveKeys.all, 'stream-players', streamId] as const,
 }
 
 // ==================== Tournaments Query ====================
@@ -335,5 +336,88 @@ export function useCheckHandMutation(dayId: string | null) {
 
       return { previousHands }
     },
+  })
+}
+
+// ==================== Stream Players Query ====================
+
+/**
+ * Fetch players for a specific stream (day)
+ * Returns unique players who participated in any hand in the stream
+ */
+export function useStreamPlayersQuery(streamId: string | null) {
+  return useQuery({
+    queryKey: archiveKeys.streamPlayers(streamId || ''),
+    queryFn: async () => {
+      if (!streamId) return []
+
+      // Raw SQL을 사용하여 중복 제거 및 핸드 수 계산
+      const { data, error } = await supabase.rpc('get_stream_players', {
+        p_stream_id: streamId,
+      })
+
+      if (error) {
+        // RPC 함수가 없으면 일반 쿼리 사용
+        console.warn('RPC function not found, using fallback query')
+
+        const { data: handsData, error: handsError } = await supabase
+          .from('hands')
+          .select(`
+            id,
+            hand_players(
+              player_id,
+              player:players(
+                id,
+                name,
+                photo_url,
+                country
+              )
+            )
+          `)
+          .eq('stream_id', streamId)
+
+        if (handsError) throw handsError
+
+        // 플레이어 중복 제거 및 핸드 수 계산
+        const playerMap = new Map<
+          string,
+          {
+            id: string
+            name: string
+            photo_url: string | null
+            country: string | null
+            hand_count: number
+          }
+        >()
+
+        handsData.forEach((hand) => {
+          hand.hand_players?.forEach((hp: any) => {
+            const player = hp.player
+            if (player) {
+              const existing = playerMap.get(player.id)
+              if (existing) {
+                existing.hand_count++
+              } else {
+                playerMap.set(player.id, {
+                  id: player.id,
+                  name: player.name,
+                  photo_url: player.photo_url,
+                  country: player.country,
+                  hand_count: 1,
+                })
+              }
+            }
+          })
+        })
+
+        // 핸드 수 내림차순 정렬
+        return Array.from(playerMap.values()).sort((a, b) => b.hand_count - a.hand_count)
+      }
+
+      return data || []
+    },
+    enabled: !!streamId,
+    staleTime: 10 * 60 * 1000, // 10분 (플레이어 목록은 자주 변경되지 않음)
+    gcTime: 30 * 60 * 1000, // 30분
   })
 }

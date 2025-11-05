@@ -20,12 +20,17 @@ import { Card } from '@/components/ui/card'
 
 interface ArchiveHandHistoryProps {
   onSeekToTime?: (timeString: string) => void
+  overrideHands?: Hand[]
 }
 
 export function ArchiveHandHistory({
   onSeekToTime,
+  overrideHands,
 }: ArchiveHandHistoryProps) {
-  const { hands, tournaments } = useArchiveData()
+  const { hands: contextHands, tournaments } = useArchiveData()
+
+  // Use overrideHands if provided, otherwise use context hands
+  const hands = overrideHands !== undefined ? overrideHands : contextHands
   const { selectedDay } = useArchiveDataStore()
   const { advancedFilters } = useArchiveUIStore()
 
