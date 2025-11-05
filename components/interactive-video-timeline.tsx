@@ -10,6 +10,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { VideoSegment, SegmentType } from '@/lib/types/video-segments'
 import {
@@ -77,6 +78,11 @@ export function InteractiveTimeline({
     return Math.floor(percent * maxSeconds)
   }, [maxSeconds])
 
+  // 10초 단위 스냅
+  const snapToGrid = useCallback((time: number, gridSize: number = 10): number => {
+    return Math.round(time / gridSize) * gridSize
+  }, [])
+
   // 드래그 시작
   const handleMouseDown = (
     e: React.MouseEvent,
@@ -108,7 +114,8 @@ export function InteractiveTimeline({
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!dragState) return
 
-    const newTime = getTimeFromX(e.clientX)
+    const rawTime = getTimeFromX(e.clientX)
+    const snappedTime = snapToGrid(rawTime, 10) // 10초 단위 스냅
     const segment = segments.find((s) => s.id === dragState.segmentId)
     if (!segment) return
 
@@ -119,24 +126,25 @@ export function InteractiveTimeline({
 
     if (dragState.handle === 'start') {
       // 시작 시간 조절 (종료 시간보다 작아야 함)
-      const clampedTime = Math.max(0, Math.min(newTime, endSeconds - 10))
+      const clampedTime = Math.max(0, Math.min(snappedTime, endSeconds - 10))
       updatedSegment.startTime = secondsToTimeString(clampedTime, maxSeconds > 3600)
     } else if (dragState.handle === 'end') {
       // 종료 시간 조절 (시작 시간보다 커야 함)
-      const clampedTime = Math.max(startSeconds + 10, Math.min(newTime, maxSeconds))
+      const clampedTime = Math.max(startSeconds + 10, Math.min(snappedTime, maxSeconds))
       updatedSegment.endTime = secondsToTimeString(clampedTime, maxSeconds > 3600)
     } else if (dragState.handle === 'move') {
       // 전체 이동
-      const delta = newTime - dragState.initialTime
+      const delta = snappedTime - dragState.initialTime
       const duration = endSeconds - startSeconds
       const newStart = Math.max(0, Math.min(startSeconds + delta, maxSeconds - duration))
-      const newEnd = newStart + duration
-      updatedSegment.startTime = secondsToTimeString(newStart, maxSeconds > 3600)
+      const snappedStart = snapToGrid(newStart, 10)
+      const newEnd = snappedStart + duration
+      updatedSegment.startTime = secondsToTimeString(snappedStart, maxSeconds > 3600)
       updatedSegment.endTime = secondsToTimeString(newEnd, maxSeconds > 3600)
     }
 
     onChange(segments.map((s) => (s.id === dragState.segmentId ? updatedSegment : s)))
-  }, [dragState, segments, onChange, getTimeFromX, maxSeconds])
+  }, [dragState, segments, onChange, getTimeFromX, snapToGrid, maxSeconds])
 
   // 드래그 종료
   const handleMouseUp = useCallback(() => {
@@ -185,6 +193,17 @@ export function InteractiveTimeline({
   const handleTypeChange = (type: SegmentType) => {
     if (!selectedId) return
     onChange(segments.map((s) => (s.id === selectedId ? { ...s, type } : s)))
+  }
+
+  // 시간 입력 처리
+  const handleTimeInput = (field: 'startTime' | 'endTime', value: string) => {
+    if (!selectedId) return
+
+    // 유효성 검사: HH:MM:SS 또는 MM:SS 형식
+    const timeRegex = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/
+    if (!timeRegex.test(value) && value !== '') return
+
+    onChange(segments.map((s) => (s.id === selectedId ? { ...s, [field]: value } : s)))
   }
 
   // 템플릿 불러오기
@@ -292,14 +311,26 @@ export function InteractiveTimeline({
         {/* Selected Segment Info */}
         {selectedSegment && (
           <div className="flex items-center gap-4 p-3 bg-primary/5 rounded-lg">
-            <div className="flex-1 grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <span className="text-muted-foreground">시작:</span>{' '}
-                <span className="font-mono">{selectedSegment.startTime}</span>
+            <div className="flex-1 grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">시작</label>
+                <Input
+                  type="text"
+                  value={selectedSegment.startTime}
+                  onChange={(e) => handleTimeInput('startTime', e.target.value)}
+                  placeholder="HH:MM:SS"
+                  className="h-8 font-mono text-sm"
+                />
               </div>
-              <div>
-                <span className="text-muted-foreground">종료:</span>{' '}
-                <span className="font-mono">{selectedSegment.endTime}</span>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">종료</label>
+                <Input
+                  type="text"
+                  value={selectedSegment.endTime}
+                  onChange={(e) => handleTimeInput('endTime', e.target.value)}
+                  placeholder="HH:MM:SS"
+                  className="h-8 font-mono text-sm"
+                />
               </div>
             </div>
             <Select

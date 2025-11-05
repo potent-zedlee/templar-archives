@@ -62,6 +62,7 @@ export function AnalyzeVideoDialog({
   const [extractedCount, setExtractedCount] = useState(0)
   const [matchResults, setMatchResults] = useState<PlayerMatchResult[]>([])
   const [currentVideoTime, setCurrentVideoTime] = useState(0)
+  const [videoDuration, setVideoDuration] = useState(0)
 
   // Add player
   const handleAddPlayer = () => {
@@ -194,13 +195,14 @@ export function AnalyzeVideoDialog({
                   videoFile={day?.video_file}
                   videoNasPath={day?.video_nas_path}
                   onTimeUpdate={setCurrentVideoTime}
+                  onDurationUpdate={setVideoDuration}
                 />
 
                 {/* Interactive Timeline */}
                 <InteractiveTimeline
                   segments={segments}
                   onChange={setSegments}
-                  totalDuration={currentVideoTime > 0 ? Math.max(currentVideoTime * 2, 3600) : 3600}
+                  totalDuration={videoDuration || 3600}
                 />
               </div>
             </div>

@@ -19,6 +19,7 @@ interface VideoPlayerWithTimestampProps {
   videoFile?: string
   videoNasPath?: string
   onTimeUpdate?: (currentTime: number) => void
+  onDurationUpdate?: (duration: number) => void
   className?: string
 }
 
@@ -45,6 +46,7 @@ export function VideoPlayerWithTimestamp({
   videoFile,
   videoNasPath,
   onTimeUpdate,
+  onDurationUpdate,
   className,
 }: VideoPlayerWithTimestampProps) {
   const [currentTime, setCurrentTime] = useState(0)
@@ -106,6 +108,11 @@ export function VideoPlayerWithTimestamp({
               setError('')
               const duration = event.target.getDuration()
               setDuration(duration)
+
+              // Pass duration to parent component
+              if (onDurationUpdate) {
+                onDurationUpdate(duration)
+              }
 
               // 타임코드 추적 시작
               if (intervalRef.current) clearInterval(intervalRef.current)
