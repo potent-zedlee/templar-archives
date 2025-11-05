@@ -20,6 +20,7 @@ import type { Stream } from "@/lib/supabase"
 import { VideoSegmentInput } from "@/components/video-segment-input"
 import type { VideoSegment } from "@/lib/types/video-segments"
 import { gameplaySegmentsToString } from "@/lib/types/video-segments"
+import { PlayerMatchResults } from "@/components/player-match-results"
 
 interface AnalyzeVideoDialogProps {
   isOpen: boolean
@@ -37,6 +38,15 @@ interface PlayerInput {
 type Platform = "triton" | "pokerstars" | "wsop" | "hustler"
 type AnalysisStatus = "idle" | "analyzing" | "success" | "error"
 
+interface PlayerMatchResult {
+  inputName: string
+  matchedName: string
+  playerId: string
+  similarity: number
+  confidence: 'high' | 'medium' | 'low'
+  isPartialMatch: boolean
+}
+
 export function AnalyzeVideoDialog({
   isOpen,
   onOpenChange,
@@ -50,6 +60,7 @@ export function AnalyzeVideoDialog({
   const [progress, setProgress] = useState("")
   const [error, setError] = useState("")
   const [extractedCount, setExtractedCount] = useState(0)
+  const [matchResults, setMatchResults] = useState<PlayerMatchResult[]>([])
 
   // Add player
   const handleAddPlayer = () => {
@@ -120,16 +131,23 @@ export function AnalyzeVideoDialog({
       setExtractedCount(data.handsExtracted)
       setProgress(`${data.handsExtracted}개의 핸드가 추출되어 데이터베이스에 저장되었습니다`)
 
+      // 매칭 결과 저장
+      if (data.matchResults && data.matchResults.length > 0) {
+        setMatchResults(data.matchResults)
+      }
+
       // Callback
       if (onSuccess && data.hands) {
         onSuccess(data.hands)
       }
 
-      // Auto close after 2 seconds
-      setTimeout(() => {
-        onOpenChange(false)
-        resetDialog()
-      }, 2000)
+      // 매칭 결과가 있으면 수동 닫기, 없으면 자동 닫기
+      if (!data.matchResults || data.matchResults.length === 0) {
+        setTimeout(() => {
+          onOpenChange(false)
+          resetDialog()
+        }, 2000)
+      }
 
     } catch (err) {
       setStatus("error")
@@ -143,6 +161,7 @@ export function AnalyzeVideoDialog({
     setProgress("")
     setError("")
     setExtractedCount(0)
+    setMatchResults([])
   }
 
   // Handle close
@@ -362,6 +381,18 @@ export function AnalyzeVideoDialog({
                 <p className="text-sm text-muted-foreground">핸드가 추출되었습니다</p>
               </div>
             </Card>
+
+            {/* Match Results */}
+            {matchResults.length > 0 && (
+              <PlayerMatchResults results={matchResults} />
+            )}
+
+            {/* Close Button */}
+            <div className="flex justify-center">
+              <Button onClick={handleClose}>
+                확인
+              </Button>
+            </div>
           </div>
         )}
 

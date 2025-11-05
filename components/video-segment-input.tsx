@@ -26,6 +26,7 @@ import {
   validateSegment,
   secondsToTimeString,
 } from '@/lib/types/video-segments'
+import { VideoSegmentTimeline } from '@/components/video-segment-timeline'
 
 interface VideoSegmentInputProps {
   segments: VideoSegment[]
@@ -138,6 +139,11 @@ export function VideoSegmentInput({ segments, onChange, className }: VideoSegmen
       <p className="text-xs text-muted-foreground mb-4">
         게임플레이 구간만 AI 분석됩니다. 시간 형식: MM:SS 또는 HH:MM:SS
       </p>
+
+      {/* Timeline Visualization */}
+      {segments.length > 0 && (
+        <VideoSegmentTimeline segments={segments} className="mb-4" />
+      )}
 
       {segments.length === 0 ? (
         <Card className="p-6 bg-muted/30">

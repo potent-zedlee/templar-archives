@@ -6,9 +6,19 @@ import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { importHandsSchema, validateInput, formatValidationErrors } from '@/lib/validation/api-schemas'
 import { isValidUUID, sanitizeText, logSecurityEvent } from '@/lib/security'
 import { verifyCSRF } from '@/lib/security/csrf'
-import { findBestMatch, normalizeName } from '@/lib/name-matching'
+import { findBestMatch, normalizeName, type MatchResult } from '@/lib/name-matching'
 
 export const dynamic = 'force-dynamic'
+
+// 매칭 결과 저장용 타입
+interface PlayerMatchResult {
+  inputName: string
+  matchedName: string
+  playerId: string
+  similarity: number
+  confidence: 'high' | 'medium' | 'low'
+  isPartialMatch: boolean
+}
 
 /**
  * POST /api/import-hands
@@ -68,6 +78,7 @@ export async function POST(request: NextRequest) {
     let imported = 0
     let failed = 0
     const errors: string[] = []
+    const matchResults: PlayerMatchResult[] = []
 
     // 각 핸드를 처리
     for (let i = 0; i < hands.length; i++) {
@@ -130,6 +141,18 @@ export async function POST(request: NextRequest) {
                 console.log(
                   `Fuzzy match: "${sanitizedPlayerName}" → "${bestMatch.name}" (${bestMatch.similarity}%)`
                 )
+
+                // 매칭 결과 저장
+                if (existingPlayer) {
+                  matchResults.push({
+                    inputName: sanitizedPlayerName,
+                    matchedName: bestMatch.name,
+                    playerId: existingPlayer.id,
+                    similarity: bestMatch.similarity,
+                    confidence: bestMatch.confidence,
+                    isPartialMatch: bestMatch.isPartialMatch,
+                  })
+                }
               }
             }
 
@@ -311,8 +334,9 @@ export async function POST(request: NextRequest) {
       success: imported > 0,
       imported,
       failed,
-      errors: errors.length > 0 ? errors : undefined
-    } as ImportHandsResponse)
+      errors: errors.length > 0 ? errors : undefined,
+      matchResults: matchResults.length > 0 ? matchResults : undefined
+    } as ImportHandsResponse & { matchResults?: PlayerMatchResult[] })
 
   } catch (error: any) {
     logError('import-hands', error)
