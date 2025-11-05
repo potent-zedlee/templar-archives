@@ -156,7 +156,7 @@ export async function GET() {
         response: {
           success: true,
           platform: 'triton',
-          model: 'gemini-1.5-pro',
+          model: 'gemini-2.0-pro-exp',
           handsExtracted: 12,
           hands: '[ ...array of hand objects... ]',
           dayId: 'day-123',

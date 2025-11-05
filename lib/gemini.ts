@@ -134,7 +134,7 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
 
     // Initialize Gemini model with video understanding
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-pro',
+      model: 'gemini-2.0-pro-exp',
       generationConfig: {
         temperature: 0.1, // Low temperature for consistent, factual extraction
         topP: 0.95,
@@ -150,6 +150,9 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
       fileData: {
         fileUri: config.videoUrl,
         mimeType: 'video/*',
+      },
+      videoMetadata: {
+        mediaResolution: 'low', // Low resolution for 6-hour video processing with 2M context window
       },
     }
 
@@ -184,7 +187,7 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
     return {
       success: true,
       hands,
-      model: 'gemini-1.5-pro',
+      model: 'gemini-2.0-pro-exp',
       platform: config.platform,
     }
   } catch (error) {
@@ -202,7 +205,7 @@ export async function testGeminiConnection(): Promise<boolean> {
       return false
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-pro-exp' })
     const result = await model.generateContent('Hello')
     const response = result.response
 
