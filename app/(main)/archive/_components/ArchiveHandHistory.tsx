@@ -7,14 +7,19 @@
  * - 비디오 헤더 (재생, 다운로드, 닫기)
  * - 핸드 리스트 (Accordion)
  * - 빈 상태 표시
+ * - Hand History Dialog 통합
  */
 
+import { useState, useMemo } from 'react'
 import { Folder } from 'lucide-react'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
+import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { HandListAccordion } from '@/components/hand-list-accordion'
+import { HandHistoryDialog } from '@/components/hand-history-dialog'
 import { Card } from '@/components/ui/card'
-import { useMemo } from 'react'
+import { Button } from '@/components/ui/button'
+import { Eye } from 'lucide-react'
 
 interface ArchiveHandHistoryProps {
   onSeekToTime?: (timeString: string) => void
@@ -23,8 +28,26 @@ interface ArchiveHandHistoryProps {
 export function ArchiveHandHistory({
   onSeekToTime,
 }: ArchiveHandHistoryProps) {
-  const { hands } = useArchiveData()
+  const { hands, tournaments } = useArchiveData()
+  const { selectedDay } = useArchiveDataStore()
   const { advancedFilters } = useArchiveUIStore()
+
+  // Dialog state
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [selectedHandIndex, setSelectedHandIndex] = useState(0)
+
+  // Find selected day data
+  const selectedDayData = useMemo(() => {
+    if (!selectedDay) return null
+
+    for (const tournament of tournaments) {
+      for (const subEvent of tournament.sub_events || []) {
+        const day = subEvent.days?.find((d: any) => d.id === selectedDay)
+        if (day) return { day, tournament }
+      }
+    }
+    return null
+  }, [selectedDay, tournaments])
 
   // Filter hands based on advanced filters
   const filteredHands = useMemo(() => {
@@ -118,13 +141,31 @@ export function ArchiveHandHistory({
     })
   }, [filteredHands])
 
+  // Open hand detail dialog
+  const handleOpenHandDetail = (index: number) => {
+    setSelectedHandIndex(index)
+    setDialogOpen(true)
+  }
+
   return (
     <div className="space-y-0">
       {/* Hand List */}
       <Card className="p-7 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 relative overflow-hidden">
-        <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight mb-7">
-          Hand History
-        </h2>
+        <div className="flex items-center justify-between mb-7">
+          <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
+            Hand History
+          </h2>
+          {filteredHands.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleOpenHandDetail(0)}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              View Detail
+            </Button>
+          )}
+        </div>
         <div>
           {hands.length > 0 ? (
             <HandListAccordion
@@ -149,6 +190,20 @@ export function ArchiveHandHistory({
           )}
         </div>
       </Card>
+
+      {/* Hand History Dialog */}
+      {selectedDayData && filteredHands.length > 0 && (
+        <HandHistoryDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          hand={filteredHands[selectedHandIndex]}
+          day={selectedDayData.day}
+          tournament={selectedDayData.tournament}
+          allHands={filteredHands}
+          currentHandIndex={selectedHandIndex}
+          onHandChange={setSelectedHandIndex}
+        />
+      )}
     </div>
   )
 }
