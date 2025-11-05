@@ -114,7 +114,7 @@ curl -X POST http://localhost:3000/api/analyze \
 {
   "success": true,
   "platform": "triton",
-  "model": "gemini-2.0-pro-exp",
+  "model": "gemini-2.5-pro",
   "handsExtracted": 12,
   "hands": [
     {
