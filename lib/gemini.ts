@@ -5,12 +5,14 @@
  * using Google's Gemini 1.5 Pro model with video understanding capabilities.
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenAI } from '@google/genai'
 import fs from 'fs/promises'
 import path from 'path'
 
 // Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+const genAI = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || '',
+})
 
 /**
  * Platform types for poker video analysis
@@ -132,35 +134,28 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
     const basePrompt = await loadPrompt(config.platform)
     const fullPrompt = buildPrompt(basePrompt, config.players, config.segments)
 
-    // Initialize Gemini model with video understanding
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-pro',
+    // Generate content with video and prompt using new SDK
+    const response = await genAI.models.generateContent({
+      model: 'gemini-2.5-flash', // Fast and cost-effective for video analysis
+      contents: [
+        {
+          fileData: {
+            fileUri: config.videoUrl, // YouTube URL directly supported
+            mimeType: 'video/mp4',
+          },
+        },
+        fullPrompt,
+      ],
       generationConfig: {
         temperature: 0.1, // Low temperature for consistent, factual extraction
         topP: 0.95,
         topK: 40,
         maxOutputTokens: 8192,
-        responseMimeType: 'application/json', // Request JSON response
       },
     })
 
-    // Prepare video file part
-    // For YouTube videos, Gemini can directly process the URL
-    // Note: mimeType is not required for YouTube URLs
-    const videoPart = {
-      fileData: {
-        fileUri: config.videoUrl,
-      },
-    }
-
-    // Generate content with video and prompt
-    const result = await model.generateContent([
-      fullPrompt,
-      videoPart,
-    ])
-
-    const response = result.response
-    const text = response.text()
+    // Get response text (async property in new SDK)
+    const text = await response.text
 
     // Parse JSON response
     let hands
@@ -184,7 +179,7 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
     return {
       success: true,
       hands,
-      model: 'gemini-2.5-pro',
+      model: 'gemini-2.5-flash',
       platform: config.platform,
     }
   } catch (error) {
@@ -202,11 +197,13 @@ export async function testGeminiConnection(): Promise<boolean> {
       return false
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' })
-    const result = await model.generateContent('Hello')
-    const response = result.response
+    const response = await genAI.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: 'Hello',
+    })
 
-    return response.text().length > 0
+    const text = await response.text
+    return text.length > 0
   } catch (error) {
     console.error('Gemini connection test failed:', error)
     return false
