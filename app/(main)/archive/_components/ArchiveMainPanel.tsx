@@ -25,14 +25,25 @@ export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelPro
 
   // Find selected day data
   const selectedDayData = useMemo((): Stream | null => {
-    if (!selectedDay) return null
+    if (!selectedDay) {
+      console.log('[ArchiveMainPanel] No selectedDay')
+      return null
+    }
+
+    console.log('[ArchiveMainPanel] Looking for day:', selectedDay)
+    console.log('[ArchiveMainPanel] Tournaments count:', tournaments.length)
 
     for (const tournament of tournaments) {
       for (const subEvent of tournament.sub_events || []) {
         const day = subEvent.days?.find((d: Stream) => d.id === selectedDay)
-        if (day) return day as Stream
+        if (day) {
+          console.log('[ArchiveMainPanel] Found day:', day.name, 'video_url:', day.video_url)
+          return day as Stream
+        }
       }
     }
+
+    console.log('[ArchiveMainPanel] Day not found!')
     return null
   }, [selectedDay, tournaments])
 
@@ -128,17 +139,17 @@ export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelPro
                     </div>
 
                     {/* Analyze Button */}
-                    {selectedDayData.video_url && (
-                      <Button
-                        variant="default"
-                        size="lg"
-                        onClick={() => openAnalyzeDialog(selectedDayData)}
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg"
-                      >
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        AI 분석
-                      </Button>
-                    )}
+                    <Button
+                      variant="default"
+                      size="lg"
+                      onClick={() => selectedDayData.video_url && openAnalyzeDialog(selectedDayData)}
+                      disabled={!selectedDayData.video_url}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={!selectedDayData.video_url ? "영상 URL이 필요합니다" : ""}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      AI 분석
+                    </Button>
                   </div>
 
                   {selectedDayData.description && (
