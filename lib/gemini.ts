@@ -141,7 +141,6 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
         topK: 40,
         maxOutputTokens: 8192,
         responseMimeType: 'application/json', // Request JSON response
-        mediaResolution: 'MEDIA_RESOLUTION_LOW', // Low resolution for 6-hour video processing
       },
     })
 
