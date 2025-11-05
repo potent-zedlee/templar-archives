@@ -139,12 +139,19 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
       model: 'gemini-2.5-flash', // Fast and cost-effective for video analysis
       contents: [
         {
-          fileData: {
-            fileUri: config.videoUrl, // YouTube URL directly supported
-            mimeType: 'video/mp4',
-          },
+          role: 'user',
+          parts: [
+            {
+              fileData: {
+                fileUri: config.videoUrl, // YouTube URL directly supported
+                mimeType: 'video/mp4',
+              },
+            },
+            {
+              text: fullPrompt,
+            },
+          ],
         },
-        fullPrompt,
       ],
       generationConfig: {
         temperature: 0.1, // Low temperature for consistent, factual extraction
@@ -199,7 +206,12 @@ export async function testGeminiConnection(): Promise<boolean> {
 
     const response = await genAI.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: 'Hello',
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: 'Hello' }],
+        },
+      ],
     })
 
     const text = await response.text
