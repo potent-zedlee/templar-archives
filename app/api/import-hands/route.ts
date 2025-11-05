@@ -6,6 +6,7 @@ import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { importHandsSchema, validateInput, formatValidationErrors } from '@/lib/validation/api-schemas'
 import { isValidUUID, sanitizeText, logSecurityEvent } from '@/lib/security'
 import { verifyCSRF } from '@/lib/security/csrf'
+import { findBestMatch, normalizeName } from '@/lib/name-matching'
 
 export const dynamic = 'force-dynamic'
 
@@ -95,19 +96,42 @@ export async function POST(request: NextRequest) {
         }
 
         // 2. 플레이어 정보 저장
+        // 먼저 모든 플레이어 목록을 가져와서 fuzzy matching에 사용
+        const { data: allPlayers } = await supabase
+          .from('players')
+          .select('id, name')
+
+        const playerNameMap = new Map<string, string>() // 입력 이름 → DB 플레이어 ID
+
         if (hand.players && hand.players.length > 0) {
           for (const player of hand.players) {
             // 플레이어 이름 sanitize (XSS 방지)
             const sanitizedPlayerName = sanitizeText(player.name, 100)
 
-            // 플레이어가 DB에 있는지 확인
+            // 1. 정확히 일치하는 플레이어 찾기
             let { data: existingPlayer } = await supabase
               .from('players')
-              .select('id')
+              .select('id, name')
               .eq('name', sanitizedPlayerName)
               .maybeSingle()
 
             let playerId: string
+            let matchedName = sanitizedPlayerName
+
+            // 2. 정확한 일치가 없으면 fuzzy matching 시도
+            if (!existingPlayer && allPlayers && allPlayers.length > 0) {
+              const candidateNames = allPlayers.map((p) => p.name)
+              const bestMatch = findBestMatch(sanitizedPlayerName, candidateNames, 70)
+
+              if (bestMatch && bestMatch.confidence !== 'low') {
+                // 신뢰도가 높거나 중간이면 기존 플레이어 사용
+                existingPlayer = allPlayers.find((p) => p.name === bestMatch.name)
+                matchedName = bestMatch.name
+                console.log(
+                  `Fuzzy match: "${sanitizedPlayerName}" → "${bestMatch.name}" (${bestMatch.similarity}%)`
+                )
+              }
+            }
 
             if (!existingPlayer) {
               // 플레이어 생성 (자동 등록)
@@ -129,6 +153,9 @@ export async function POST(request: NextRequest) {
               playerId = existingPlayer.id
             }
 
+            // 매핑 저장 (액션 저장 시 사용)
+            playerNameMap.set(sanitizedPlayerName, playerId)
+
             // hand_players 연결
             const { error: handPlayerError } = await supabase
               .from('hand_players')
@@ -141,6 +168,132 @@ export async function POST(request: NextRequest) {
 
             if (handPlayerError) {
               console.error('hand_players 저장 실패:', handPlayerError)
+            }
+          }
+        }
+
+        // 3. 액션 정보 저장
+        const actions: Array<{
+          playerId: string
+          actionType: string
+          street: string
+          amount: number
+          order: number
+          description?: string
+        }> = []
+
+        let actionOrder = 1
+
+        // 액션 추출 함수
+        const extractActions = (street: string, actionsData: any) => {
+          if (!actionsData) return
+
+          // 문자열 배열 형식 (간단한 형식)
+          if (Array.isArray(actionsData) && typeof actionsData[0] === 'string') {
+            actionsData.forEach((actionStr: string) => {
+              // 예: "Tom Dwan raises to 1500"
+              const parts = actionStr.split(' ')
+              if (parts.length >= 2) {
+                const playerName = parts.slice(0, -2).join(' ')
+                const actionType = parts[parts.length - 2]
+                const amount = parseInt(parts[parts.length - 1]) || 0
+
+                actions.push({
+                  playerId: playerName, // 나중에 매핑
+                  actionType: actionType.toLowerCase(),
+                  street,
+                  amount,
+                  order: actionOrder++,
+                })
+              }
+            })
+          }
+          // 객체 배열 형식 (상세 형식)
+          else if (Array.isArray(actionsData)) {
+            actionsData.forEach((action: any) => {
+              actions.push({
+                playerId: action.player || action.playerName,
+                actionType: action.action || action.actionType,
+                street,
+                amount: action.amount || 0,
+                order: actionOrder++,
+                description: action.description,
+              })
+            })
+          }
+        }
+
+        // streets 객체에서 액션 추출 (우선순위)
+        if (hand.streets) {
+          if (hand.streets.preflop?.actions) {
+            extractActions('preflop', hand.streets.preflop.actions)
+          }
+          if (hand.streets.flop?.actions) {
+            extractActions('flop', hand.streets.flop.actions)
+          }
+          if (hand.streets.turn?.actions) {
+            extractActions('turn', hand.streets.turn.actions)
+          }
+          if (hand.streets.river?.actions) {
+            extractActions('river', hand.streets.river.actions)
+          }
+        }
+        // 간단한 형식에서 액션 추출 (폴백)
+        else {
+          if (hand.preflop) extractActions('preflop', hand.preflop)
+          if (hand.flop) extractActions('flop', hand.flop)
+          if (hand.turn) extractActions('turn', hand.turn)
+          if (hand.river) extractActions('river', hand.river)
+        }
+
+        // 액션 저장
+        for (const action of actions) {
+          // 플레이어 ID 찾기 (매핑 사용)
+          const sanitizedPlayerName = sanitizeText(action.playerId, 100)
+          let playerId = playerNameMap.get(sanitizedPlayerName)
+
+          // 매핑에 없으면 DB에서 직접 찾기
+          if (!playerId) {
+            const { data: player } = await supabase
+              .from('players')
+              .select('id')
+              .eq('name', sanitizedPlayerName)
+              .maybeSingle()
+
+            if (player) {
+              playerId = player.id
+            } else if (allPlayers) {
+              // Fuzzy matching 시도
+              const candidateNames = allPlayers.map((p) => p.name)
+              const bestMatch = findBestMatch(sanitizedPlayerName, candidateNames, 70)
+
+              if (bestMatch && bestMatch.confidence !== 'low') {
+                const matchedPlayer = allPlayers.find((p) => p.name === bestMatch.name)
+                if (matchedPlayer) {
+                  playerId = matchedPlayer.id
+                  console.log(
+                    `Action fuzzy match: "${sanitizedPlayerName}" → "${bestMatch.name}"`
+                  )
+                }
+              }
+            }
+          }
+
+          if (playerId) {
+            const { error: actionError } = await supabase
+              .from('hand_actions')
+              .insert({
+                hand_id: handData.id,
+                player_id: playerId,
+                action_type: action.actionType,
+                street: action.street,
+                amount: action.amount,
+                action_order: action.order,
+                description: action.description,
+              })
+
+            if (actionError) {
+              console.error('hand_actions 저장 실패:', actionError)
             }
           }
         }
