@@ -43,6 +43,7 @@ interface ArchiveUIState {
   /** @deprecated Use streamDialog instead */
   dayDialog: DialogState
   videoDialog: VideoPlayerState
+  analyzeDialog: DialogState
   renameDialog: DialogState
   deleteDialog: DialogState
   editEventDialog: DialogState
@@ -58,6 +59,7 @@ interface ArchiveUIState {
   selectedTournamentIdForDialog: string
   selectedSubEventIdForDialog: string
   selectedEventIdForEdit: string | null
+  analyzeDayForDialog: Stream | null
 
   // Menu State
   openMenuId: string
@@ -95,6 +97,8 @@ interface ArchiveUIState {
   closeDayDialog: () => void
   openVideoDialog: (stream: Stream | null, startTime?: string) => void
   closeVideoDialog: () => void
+  openAnalyzeDialog: (day: Stream | null) => void
+  closeAnalyzeDialog: () => void
   openRenameDialog: (itemId: string) => void
   closeRenameDialog: () => void
   openDeleteDialog: (itemId: string) => void
@@ -168,6 +172,7 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         streamDialog: { isOpen: false, editingId: null },
         dayDialog: { isOpen: false, editingId: null }, // Backward compatibility
         videoDialog: { isOpen: false, startTime: '', stream: null },
+        analyzeDialog: { isOpen: false, editingId: null },
         renameDialog: { isOpen: false, editingId: null },
         deleteDialog: { isOpen: false, editingId: null },
         editEventDialog: { isOpen: false, editingId: null },
@@ -187,6 +192,7 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         selectedTournamentIdForDialog: '',
         selectedSubEventIdForDialog: '',
         selectedEventIdForEdit: null,
+        analyzeDayForDialog: null,
 
         // Initial State - Menu
         openMenuId: '',
@@ -291,6 +297,17 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
           set((state) => ({
             videoDialog: { ...state.videoDialog, isOpen: false, startTime: '' },
           })),
+
+        openAnalyzeDialog: (day) =>
+          set({
+            analyzeDialog: { isOpen: true, editingId: null },
+            analyzeDayForDialog: day,
+          }),
+        closeAnalyzeDialog: () =>
+          set({
+            analyzeDialog: { isOpen: false, editingId: null },
+            analyzeDayForDialog: null,
+          }),
 
         openRenameDialog: (itemId) =>
           set({ renameDialog: { isOpen: true, editingId: itemId } }),

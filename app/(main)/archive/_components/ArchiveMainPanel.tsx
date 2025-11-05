@@ -4,11 +4,13 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { VideoPlayer } from "@/components/video-player"
 import { ArchiveHandHistory } from "./ArchiveHandHistory"
 import { useArchiveDataStore } from "@/stores/archive-data-store"
+import { useArchiveUIStore } from "@/stores/archive-ui-store"
 import { useArchiveData } from "./ArchiveDataContext"
 import { useMemo } from "react"
-import { Play, Calendar, Users } from "lucide-react"
+import { Play, Calendar, Users, Sparkles } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import type { Stream } from "@/lib/supabase"
 
 interface ArchiveMainPanelProps {
@@ -18,6 +20,7 @@ interface ArchiveMainPanelProps {
 
 export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelProps) {
   const { selectedDay } = useArchiveDataStore()
+  const { openAnalyzeDialog } = useArchiveUIStore()
   const { tournaments } = useArchiveData()
 
   // Find selected day data
@@ -93,9 +96,10 @@ export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelPro
               {/* Day Info Card */}
               <Card className="p-6 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
                 <div className="space-y-4">
-                  <div>
-                    <h1 className="text-2xl font-bold mb-2">{selectedDayData.name}</h1>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h1 className="text-2xl font-bold mb-2">{selectedDayData.name}</h1>
+                      <div className="flex flex-wrap gap-2">
                       {selectedDayData.published_at && (
                         <Badge variant="secondary" className="gap-1">
                           <Calendar className="h-3 w-3" />
@@ -121,6 +125,20 @@ export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelPro
                         </Badge>
                       )}
                     </div>
+                    </div>
+
+                    {/* Analyze Button */}
+                    {selectedDayData.video_url && (
+                      <Button
+                        variant="default"
+                        size="lg"
+                        onClick={() => openAnalyzeDialog(selectedDayData)}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg"
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        AI 분석
+                      </Button>
+                    )}
                   </div>
 
                   {selectedDayData.description && (

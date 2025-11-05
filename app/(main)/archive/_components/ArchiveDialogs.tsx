@@ -54,6 +54,9 @@ const MoveToNewEventDialog = dynamic(() => import('@/components/archive-dialogs/
 const ArchiveInfoDialog = dynamic(() => import('@/components/archive-info-dialog').then(mod => ({ default: mod.ArchiveInfoDialog })), {
   ssr: false,
 })
+const AnalyzeVideoDialog = dynamic(() => import('@/components/archive-dialogs/analyze-video-dialog').then(mod => ({ default: mod.AnalyzeVideoDialog })), {
+  ssr: false,
+})
 
 export function ArchiveDialogs() {
   const queryClient = useQueryClient()
@@ -67,6 +70,8 @@ export function ArchiveDialogs() {
     subEventInfoDialog,
     dayDialog,
     videoDialog,
+    analyzeDialog,
+    analyzeDayForDialog,
     renameDialog,
     deleteDialog,
     editEventDialog,
@@ -84,6 +89,7 @@ export function ArchiveDialogs() {
     closeSubEventInfoDialog,
     closeDayDialog,
     closeVideoDialog,
+    closeAnalyzeDialog,
     closeRenameDialog,
     closeDeleteDialog,
     closeEditEventDialog,
@@ -141,6 +147,12 @@ export function ArchiveDialogs() {
     clearSelection()
     closeMoveToEventDialog()
     closeMoveToNewEventDialog()
+  }
+
+  const handleAnalyzeSuccess = () => {
+    // Invalidate hands query to show newly extracted hands
+    queryClient.invalidateQueries({ queryKey: archiveKeys.hands() })
+    closeAnalyzeDialog()
   }
 
   // Get current item for info dialog
@@ -322,6 +334,14 @@ export function ArchiveDialogs() {
         onDelete={(item) => {
           useArchiveUIStore.getState().openDeleteDialog(item.id)
         }}
+      />
+
+      {/* Analyze Video Dialog */}
+      <AnalyzeVideoDialog
+        isOpen={analyzeDialog.isOpen}
+        onOpenChange={closeAnalyzeDialog}
+        day={analyzeDayForDialog}
+        onSuccess={handleAnalyzeSuccess}
       />
     </>
   )
