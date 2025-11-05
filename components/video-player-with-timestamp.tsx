@@ -44,6 +44,7 @@ export function VideoPlayerWithTimestamp({
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isReady, setIsReady] = useState(false)
+  const [error, setError] = useState<string>('')
   const playerRef = useRef<ReactPlayer>(null)
 
   // 비디오 URL 결정
@@ -75,10 +76,19 @@ export function VideoPlayerWithTimestamp({
   // 비디오 준비 완료
   const handleReady = () => {
     setIsReady(true)
+    setError('')
     const player = playerRef.current
     if (player) {
       setDuration(player.getDuration())
     }
+  }
+
+  // 에러 핸들러
+  const handleError = (e: any) => {
+    console.error('ReactPlayer error:', e)
+    console.log('Failed URL:', url)
+    console.log('Video source:', videoSource)
+    setError('영상을 불러올 수 없습니다. URL을 확인해주세요.')
   }
 
   // 비디오가 없을 때
@@ -111,20 +121,43 @@ export function VideoPlayerWithTimestamp({
             controls
             width="100%"
             height="100%"
+            playing={false}
+            light={true}
             onReady={handleReady}
             onProgress={handleProgress}
+            onError={handleError}
             progressInterval={500} // 0.5초마다 업데이트
             config={{
               youtube: {
                 playerVars: {
                   modestbranding: 1,
                   rel: 0,
+                  origin: typeof window !== 'undefined' ? window.location.origin : '',
                 },
               },
             }}
           />
         </div>
       </Card>
+
+      {/* Error Display */}
+      {error && (
+        <Card className="p-3 bg-red-500/10 border-red-500/20">
+          <div className="flex items-start gap-2">
+            <span className="text-red-500 text-sm">{error}</span>
+          </div>
+        </Card>
+      )}
+
+      {/* Debug Info (Development Only) */}
+      {process.env.NODE_ENV === 'development' && url && (
+        <Card className="p-2 bg-muted/50">
+          <div className="text-xs text-muted-foreground space-y-1">
+            <div>Source: {videoSource || 'unknown'}</div>
+            <div className="break-all">URL: {url}</div>
+          </div>
+        </Card>
+      )}
 
       {/* Timestamp Display */}
       {isReady && (
