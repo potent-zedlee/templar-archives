@@ -174,7 +174,7 @@ export function AnalyzeVideoDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-500" />
@@ -185,6 +185,7 @@ export function AnalyzeVideoDialog({
           </DialogDescription>
         </DialogHeader>
 
+        <div className="overflow-y-auto flex-1 px-6">
         {status === "idle" && (
           <div className="space-y-6">
             {/* Video Info */}
@@ -421,6 +422,7 @@ export function AnalyzeVideoDialog({
             </div>
           </div>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   )
