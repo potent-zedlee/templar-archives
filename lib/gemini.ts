@@ -146,10 +146,10 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
 
     // Prepare video file part
     // For YouTube videos, Gemini can directly process the URL
+    // Note: mimeType is not required for YouTube URLs
     const videoPart = {
       fileData: {
         fileUri: config.videoUrl,
-        mimeType: 'video/*',
       },
     }
 
