@@ -31,10 +31,11 @@ import { VideoSegmentTimeline } from '@/components/video-segment-timeline'
 interface VideoSegmentInputProps {
   segments: VideoSegment[]
   onChange: (segments: VideoSegment[]) => void
+  currentTime?: number
   className?: string
 }
 
-export function VideoSegmentInput({ segments, onChange, className }: VideoSegmentInputProps) {
+export function VideoSegmentInput({ segments, onChange, currentTime, className }: VideoSegmentInputProps) {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Add segment
@@ -237,25 +238,65 @@ export function VideoSegmentInput({ segments, onChange, className }: VideoSegmen
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <Label className="text-xs">시작</Label>
-                      <Input
-                        value={segment.startTime}
-                        onChange={(e) =>
-                          handleUpdateSegment(segment.id, 'startTime', e.target.value)
-                        }
-                        placeholder="MM:SS"
-                        className="h-8 font-mono"
-                      />
+                      <div className="flex gap-1">
+                        <Input
+                          value={segment.startTime}
+                          onChange={(e) =>
+                            handleUpdateSegment(segment.id, 'startTime', e.target.value)
+                          }
+                          placeholder="MM:SS"
+                          className="h-8 font-mono"
+                        />
+                        {currentTime !== undefined && currentTime > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 flex-shrink-0"
+                            onClick={() =>
+                              handleUpdateSegment(
+                                segment.id,
+                                'startTime',
+                                secondsToTimeString(currentTime, currentTime >= 3600)
+                              )
+                            }
+                            title="현재 영상 시간으로 설정"
+                          >
+                            ⏱️
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <Label className="text-xs">종료</Label>
-                      <Input
-                        value={segment.endTime}
-                        onChange={(e) =>
-                          handleUpdateSegment(segment.id, 'endTime', e.target.value)
-                        }
-                        placeholder="MM:SS"
-                        className="h-8 font-mono"
-                      />
+                      <div className="flex gap-1">
+                        <Input
+                          value={segment.endTime}
+                          onChange={(e) =>
+                            handleUpdateSegment(segment.id, 'endTime', e.target.value)
+                          }
+                          placeholder="MM:SS"
+                          className="h-8 font-mono"
+                        />
+                        {currentTime !== undefined && currentTime > 0 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 flex-shrink-0"
+                            onClick={() =>
+                              handleUpdateSegment(
+                                segment.id,
+                                'endTime',
+                                secondsToTimeString(currentTime, currentTime >= 3600)
+                              )
+                            }
+                            title="현재 영상 시간으로 설정"
+                          >
+                            ⏱️
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
 

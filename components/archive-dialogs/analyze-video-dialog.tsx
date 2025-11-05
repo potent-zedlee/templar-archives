@@ -21,6 +21,7 @@ import { VideoSegmentInput } from "@/components/video-segment-input"
 import type { VideoSegment } from "@/lib/types/video-segments"
 import { gameplaySegmentsToString } from "@/lib/types/video-segments"
 import { PlayerMatchResults } from "@/components/player-match-results"
+import { VideoPlayerWithTimestamp } from "@/components/video-player-with-timestamp"
 
 interface AnalyzeVideoDialogProps {
   isOpen: boolean
@@ -61,6 +62,7 @@ export function AnalyzeVideoDialog({
   const [error, setError] = useState("")
   const [extractedCount, setExtractedCount] = useState(0)
   const [matchResults, setMatchResults] = useState<PlayerMatchResult[]>([])
+  const [currentVideoTime, setCurrentVideoTime] = useState(0)
 
   // Add player
   const handleAddPlayer = () => {
@@ -187,20 +189,22 @@ export function AnalyzeVideoDialog({
 
         <div className="overflow-y-auto flex-1 px-6">
         {status === "idle" && (
-          <div className="space-y-6">
-            {/* Video Info */}
-            {day && (
-              <Card className="p-4 bg-muted/50">
-                <div className="flex items-start gap-3">
-                  <Video className="h-5 w-5 text-muted-foreground mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{day.name}</p>
-                    <p className="text-sm text-muted-foreground truncate">{day.video_url}</p>
-                  </div>
-                </div>
-              </Card>
-            )}
+          <div className="grid md:grid-cols-5 gap-6">
+            {/* Left Column: Video Player */}
+            <div className="md:col-span-2">
+              <div className="md:sticky md:top-0">
+                <VideoPlayerWithTimestamp
+                  videoUrl={day?.video_url}
+                  videoSource={day?.video_source}
+                  videoFile={day?.video_file}
+                  videoNasPath={day?.video_nas_path}
+                  onTimeUpdate={setCurrentVideoTime}
+                />
+              </div>
+            </div>
 
+            {/* Right Column: Form */}
+            <div className="md:col-span-3 space-y-6">
             {/* Platform Selection */}
             <div className="space-y-2">
               <Label>플랫폼 선택</Label>
@@ -307,6 +311,7 @@ export function AnalyzeVideoDialog({
             <VideoSegmentInput
               segments={segments}
               onChange={setSegments}
+              currentTime={currentVideoTime}
             />
 
             {/* Info Card */}
@@ -336,6 +341,9 @@ export function AnalyzeVideoDialog({
                 분석 시작
               </Button>
             </div>
+            {/* End Right Column */}
+            </div>
+          {/* End Grid */}
           </div>
         )}
 
