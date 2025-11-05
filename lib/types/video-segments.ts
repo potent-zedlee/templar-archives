@@ -24,7 +24,6 @@ export interface VideoSegment {
   startTime: string // "HH:MM:SS" 또는 "MM:SS"
   endTime: string // "HH:MM:SS" 또는 "MM:SS"
   duration?: number // 자동 계산 (초 단위)
-  label?: string // 사용자 정의 라벨 (예: "Game 1", "Game 2")
 }
 
 /**
@@ -168,42 +167,36 @@ export function getDefaultSegments(): VideoSegment[] {
       type: 'countdown',
       startTime: '00:00',
       endTime: '00:30',
-      label: 'Countdown',
     },
     {
       id: '2',
       type: 'opening',
       startTime: '00:30',
       endTime: '03:00',
-      label: 'Opening',
     },
     {
       id: '3',
       type: 'gameplay',
       startTime: '03:00',
-      endTime: '45:00',
-      label: 'Game 1',
+      endTime: '30:00',
     },
     {
       id: '4',
       type: 'break',
-      startTime: '45:00',
-      endTime: '50:00',
-      label: 'Break 1',
+      startTime: '30:00',
+      endTime: '35:00',
     },
     {
       id: '5',
       type: 'gameplay',
-      startTime: '50:00',
-      endTime: '1:30:00',
-      label: 'Game 2',
+      startTime: '35:00',
+      endTime: '1:00:00',
     },
     {
       id: '6',
       type: 'ending',
-      startTime: '1:30:00',
-      endTime: '1:35:00',
-      label: 'Ending',
+      startTime: '1:00:00',
+      endTime: '1:03:00',
     },
   ]
 }

@@ -17,9 +17,9 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sparkles, Loader2, CheckCircle2, AlertCircle, Video, Users, Plus, X } from "lucide-react"
 import type { Stream } from "@/lib/supabase"
-import { VideoSegmentInput } from "@/components/video-segment-input"
+import { InteractiveTimeline } from "@/components/interactive-video-timeline"
 import type { VideoSegment } from "@/lib/types/video-segments"
-import { gameplaySegmentsToString } from "@/lib/types/video-segments"
+import { gameplaySegmentsToString, timeStringToSeconds } from "@/lib/types/video-segments"
 import { PlayerMatchResults } from "@/components/player-match-results"
 import { VideoPlayerWithTimestamp } from "@/components/video-player-with-timestamp"
 
@@ -185,15 +185,22 @@ export function AnalyzeVideoDialog({
         <div className="overflow-y-auto flex-1 px-3">
         {status === "idle" && (
           <div className="grid md:grid-cols-5 gap-6">
-            {/* Left Column: Video Player */}
-            <div className="md:col-span-3">
-              <div className="md:sticky md:top-0">
+            {/* Left Column: Video Player + Timeline */}
+            <div className="md:col-span-3 space-y-4">
+              <div className="md:sticky md:top-0 space-y-4">
                 <VideoPlayerWithTimestamp
                   videoUrl={day?.video_url}
                   videoSource={day?.video_source}
                   videoFile={day?.video_file}
                   videoNasPath={day?.video_nas_path}
                   onTimeUpdate={setCurrentVideoTime}
+                />
+
+                {/* Interactive Timeline */}
+                <InteractiveTimeline
+                  segments={segments}
+                  onChange={setSegments}
+                  totalDuration={currentVideoTime > 0 ? Math.max(currentVideoTime * 2, 3600) : 3600}
                 />
               </div>
             </div>
@@ -285,13 +292,6 @@ export function AnalyzeVideoDialog({
                 </ScrollArea>
               )}
             </div>
-
-            {/* Video Segments */}
-            <VideoSegmentInput
-              segments={segments}
-              onChange={setSegments}
-              currentTime={currentVideoTime}
-            />
 
             {/* Info Card */}
             <Card className="p-4 bg-blue-500/10 border-blue-500/20">

@@ -90,21 +90,36 @@ export function VideoSegmentInput({ segments, onChange, currentTime, className }
         type: 'countdown',
         startTime: '00:00',
         endTime: '00:30',
-        label: 'Countdown',
       },
       {
         id: '2',
         type: 'opening',
         startTime: '00:30',
         endTime: '03:00',
-        label: 'Opening',
       },
       {
         id: '3',
         type: 'gameplay',
         startTime: '03:00',
-        endTime: '45:00',
-        label: 'Game 1',
+        endTime: '30:00',
+      },
+      {
+        id: '4',
+        type: 'break',
+        startTime: '30:00',
+        endTime: '35:00',
+      },
+      {
+        id: '5',
+        type: 'gameplay',
+        startTime: '35:00',
+        endTime: '1:00:00',
+      },
+      {
+        id: '6',
+        type: 'ending',
+        startTime: '1:00:00',
+        endTime: '1:03:00',
       },
     ]
     onChange(template)
@@ -199,39 +214,26 @@ export function VideoSegmentInput({ segments, onChange, currentTime, className }
                     </Button>
                   </div>
 
-                  {/* Type & Label */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-xs">타입</Label>
-                      <Select
-                        value={segment.type}
-                        onValueChange={(value) =>
-                          handleUpdateSegment(segment.id, 'type', value)
-                        }
-                      >
-                        <SelectTrigger className="h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="countdown">카운트다운</SelectItem>
-                          <SelectItem value="opening">오프닝</SelectItem>
-                          <SelectItem value="gameplay">게임플레이</SelectItem>
-                          <SelectItem value="break">브레이크</SelectItem>
-                          <SelectItem value="ending">엔딩</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs">라벨 (선택)</Label>
-                      <Input
-                        value={segment.label || ''}
-                        onChange={(e) =>
-                          handleUpdateSegment(segment.id, 'label', e.target.value)
-                        }
-                        placeholder="예: Game 1"
-                        className="h-8"
-                      />
-                    </div>
+                  {/* Type */}
+                  <div>
+                    <Label className="text-xs">타입</Label>
+                    <Select
+                      value={segment.type}
+                      onValueChange={(value) =>
+                        handleUpdateSegment(segment.id, 'type', value)
+                      }
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="countdown">카운트다운</SelectItem>
+                        <SelectItem value="opening">오프닝시퀀스</SelectItem>
+                        <SelectItem value="gameplay">게임플레이</SelectItem>
+                        <SelectItem value="break">브레이크</SelectItem>
+                        <SelectItem value="ending">엔딩시퀀스</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Time Range */}
