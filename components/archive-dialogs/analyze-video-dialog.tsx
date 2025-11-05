@@ -33,7 +33,6 @@ interface AnalyzeVideoDialogProps {
 interface PlayerInput {
   id: string
   name: string
-  position: string
 }
 
 type Platform = "triton" | "pokerstars" | "wsop" | "hustler"
@@ -70,8 +69,7 @@ export function AnalyzeVideoDialog({
       ...players,
       {
         id: Date.now().toString(),
-        name: "",
-        position: ""
+        name: ""
       }
     ])
   }
@@ -82,9 +80,9 @@ export function AnalyzeVideoDialog({
   }
 
   // Update player
-  const handleUpdatePlayer = (id: string, field: "name" | "position", value: string) => {
+  const handleUpdatePlayer = (id: string, value: string) => {
     setPlayers(players.map(p =>
-      p.id === id ? { ...p, [field]: value } : p
+      p.id === id ? { ...p, name: value } : p
     ))
   }
 
@@ -103,10 +101,7 @@ export function AnalyzeVideoDialog({
       // Filter out empty players
       const validPlayers = players
         .filter(p => p.name.trim())
-        .map(p => ({
-          name: p.name,
-          position: p.position || undefined
-        }))
+        .map(p => ({ name: p.name }))
 
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -274,25 +269,9 @@ export function AnalyzeVideoDialog({
                         <Input
                           placeholder="플레이어 이름"
                           value={player.name}
-                          onChange={(e) => handleUpdatePlayer(player.id, "name", e.target.value)}
+                          onChange={(e) => handleUpdatePlayer(player.id, e.target.value)}
+                          className="flex-1"
                         />
-                        <Select
-                          value={player.position}
-                          onValueChange={(v) => handleUpdatePlayer(player.id, "position", v)}
-                        >
-                          <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="포지션" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="BTN">BTN</SelectItem>
-                            <SelectItem value="SB">SB</SelectItem>
-                            <SelectItem value="BB">BB</SelectItem>
-                            <SelectItem value="UTG">UTG</SelectItem>
-                            <SelectItem value="MP">MP</SelectItem>
-                            <SelectItem value="CO">CO</SelectItem>
-                            <SelectItem value="HJ">HJ</SelectItem>
-                          </SelectContent>
-                        </Select>
                         <Button
                           variant="ghost"
                           size="icon"
