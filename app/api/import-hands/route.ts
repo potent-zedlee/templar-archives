@@ -94,53 +94,56 @@ export async function POST(request: NextRequest) {
           throw new Error('핸드 저장에 실패했습니다')
         }
 
-        // 2. 플레이어 정보 저장 (현재 스키마에는 플레이어 정보 없음)
-        // TODO: 플레이어 정보가 스키마에 추가되면 활성화
-        /*
-        for (const player of hand.players) {
-          // 플레이어 이름 sanitize (XSS 방지)
-          const sanitizedPlayerName = sanitizeText(player.name, 100)
+        // 2. 플레이어 정보 저장
+        if (hand.players && hand.players.length > 0) {
+          for (const player of hand.players) {
+            // 플레이어 이름 sanitize (XSS 방지)
+            const sanitizedPlayerName = sanitizeText(player.name, 100)
 
-          // 플레이어가 DB에 있는지 확인
-          let { data: existingPlayer } = await supabase
-            .from('players')
-            .select('id')
-            .eq('name', sanitizedPlayerName)
-            .single()
-
-          let playerId: string
-
-          if (!existingPlayer) {
-            // 플레이어 생성
-            const { data: newPlayer, error: playerError } = await supabase
+            // 플레이어가 DB에 있는지 확인
+            let { data: existingPlayer } = await supabase
               .from('players')
-              .insert({
-                name: sanitizedPlayerName,
-                country: 'Unknown'
-              })
-              .select()
-              .single()
+              .select('id')
+              .eq('name', sanitizedPlayerName)
+              .maybeSingle()
 
-            if (playerError || !newPlayer) {
-              console.error('플레이어 생성 실패:', playerError)
-              continue
+            let playerId: string
+
+            if (!existingPlayer) {
+              // 플레이어 생성 (자동 등록)
+              const { data: newPlayer, error: playerError } = await supabase
+                .from('players')
+                .insert({
+                  name: sanitizedPlayerName,
+                  country: null, // 나중에 업데이트 가능
+                })
+                .select()
+                .single()
+
+              if (playerError || !newPlayer) {
+                console.error('플레이어 생성 실패:', playerError)
+                continue
+              }
+              playerId = newPlayer.id
+            } else {
+              playerId = existingPlayer.id
             }
-            playerId = newPlayer.id
-          } else {
-            playerId = existingPlayer.id
-          }
 
-          // hand_players 연결
-          await supabase
-            .from('hand_players')
-            .insert({
-              hand_id: handData.id,
-              player_id: playerId,
-              position: player.position || '',
-              cards: player.cards || ''
-            })
+            // hand_players 연결
+            const { error: handPlayerError } = await supabase
+              .from('hand_players')
+              .insert({
+                hand_id: handData.id,
+                player_id: playerId,
+                position: player.position || null,
+                cards: player.cards ? player.cards.split('').map(c => c).join('') : null,
+              })
+
+            if (handPlayerError) {
+              console.error('hand_players 저장 실패:', handPlayerError)
+            }
+          }
         }
-        */
 
         imported++
       } catch (error: any) {

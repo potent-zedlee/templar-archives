@@ -231,7 +231,6 @@ export function AnalyzeVideoDialog({
                   variant="outline"
                   size="sm"
                   onClick={handleAddPlayer}
-                  disabled={players.length >= 9}
                 >
                   <Plus className="h-4 w-4 mr-1" />
                   추가
@@ -288,8 +287,8 @@ export function AnalyzeVideoDialog({
                     Gemini 1.5 Pro AI 사용
                   </p>
                   <ul className="text-muted-foreground space-y-1">
-                    <li>• 영상 길이: 최대 1시간</li>
-                    <li>• 처리 시간: 약 1-3분</li>
+                    <li>• 영상 길이: 2-6시간 (게임플레이 구간만 분석)</li>
+                    <li>• 처리 시간: 약 2-5분</li>
                     <li>• 자동 핸드 구분 및 추출</li>
                   </ul>
                 </div>
