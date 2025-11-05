@@ -50,7 +50,9 @@ export function useTournamentsQuery(
         ...tournament,
         sub_events: tournament.sub_events?.map((subEvent: any) => ({
           ...subEvent,
+          // 하위 호환성: streams와 days 모두 제공
           streams: subEvent.streams?.map((stream: any) => ({ ...stream, selected: false })),
+          days: subEvent.streams?.map((stream: any) => ({ ...stream, selected: false })),
           expanded: false,
         })),
         expanded: true,
