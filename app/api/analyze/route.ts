@@ -28,6 +28,17 @@ const analyzeSchema = z.object({
       })
     )
     .optional(),
+  segments: z
+    .array(
+      z.object({
+        id: z.string(),
+        type: z.enum(['countdown', 'opening', 'gameplay', 'break', 'ending']),
+        startTime: z.string(),
+        endTime: z.string(),
+        label: z.string().optional(),
+      })
+    )
+    .optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -61,7 +72,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { videoUrl, platform, dayId, players } = validation.data
+    const { videoUrl, platform, dayId, players, segments } = validation.data
 
     // Analyze video with Gemini
     console.log(`Starting Gemini analysis: ${platform} - ${videoUrl}`)
@@ -71,6 +82,7 @@ export async function POST(request: NextRequest) {
       platform: platform as Platform,
       dayId,
       players,
+      segments,
     })
 
     console.log(`Gemini analysis complete: ${result.hands.length} hands extracted`)

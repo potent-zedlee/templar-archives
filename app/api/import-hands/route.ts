@@ -25,9 +25,14 @@ interface PlayerMatchResult {
  * 외부에서 분석된 핸드 히스토리를 import
  */
 export async function POST(request: NextRequest) {
-  // CSRF 보호
-  const csrfError = await verifyCSRF(request)
-  if (csrfError) return csrfError
+  // 서버 간 호출 확인 (Origin과 Referer 둘 다 없음)
+  const isServerToServer = !request.headers.get('origin') && !request.headers.get('referer')
+
+  // 클라이언트 요청만 CSRF 검증
+  if (!isServerToServer) {
+    const csrfError = await verifyCSRF(request)
+    if (csrfError) return csrfError
+  }
 
   // Apply rate limiting (10 requests per minute)
   const rateLimitResponse = await applyRateLimit(request, rateLimiters.importHands)
