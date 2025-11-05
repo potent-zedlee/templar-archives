@@ -3,9 +3,8 @@
 /**
  * Archive Hand History
  *
- * 핸드 히스토리 섹션 컴포넌트
- * - 비디오 헤더 (재생, 다운로드, 닫기)
- * - 핸드 리스트 (Accordion)
+ * 핸드 히스토리 섹션 컴포넌트 (카드 그리드 뷰)
+ * - 핸드 카드 그리드 레이아웃
  * - 빈 상태 표시
  * - Hand History Dialog 통합
  */
@@ -15,11 +14,9 @@ import { Folder } from 'lucide-react'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
-import { HandListAccordion } from '@/components/hand-list-accordion'
+import { HandCard } from '@/components/hand-card'
 import { HandHistoryDialog } from '@/components/hand-history-dialog'
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Eye } from 'lucide-react'
 
 interface ArchiveHandHistoryProps {
   onSeekToTime?: (timeString: string) => void
@@ -90,57 +87,6 @@ export function ArchiveHandHistory({
     return filtered
   }, [hands, advancedFilters])
 
-  // Transform hands for HandListAccordion
-  const transformedHands = useMemo(() => {
-    return filteredHands.map((hand) => {
-      // Parse timestamp: Supports "MM:SS-MM:SS" or "MM:SS" format
-      const timestamp = hand.timestamp || ''
-      const parts = timestamp.split('-')
-      const startTime = parts[0] || '00:00'
-      const endTime = parts[1] || parts[0] || '00:00'
-
-      return {
-        handNumber: hand.number || '???',
-        summary: hand.description || 'Hand Info',
-        timestamp: 0,
-        startTime,
-        endTime,
-        duration: 0,
-        winner:
-          hand.hand_players?.find((hp) => hp.position === 'BTN')?.player?.name || 'Unknown',
-        potSize: hand.pot_size || 0,
-        players:
-          hand.hand_players?.map((hp) => ({
-            name: hp.player?.name || 'Unknown',
-            position: hp.position || 'Unknown',
-            cards: hp.cards?.join('') || '',
-            stackBefore: 0,
-            stackAfter: 0,
-            stackChange: 0,
-          })) || [],
-        communityCards: {
-          preflop: [],
-          flop: hand.board_cards?.slice(0, 3) || [],
-          turn: hand.board_cards?.slice(3, 4) || [],
-          river: hand.board_cards?.slice(4, 5) || [],
-        },
-        actions: {
-          preflop: [],
-          flop: [],
-          turn: [],
-          river: [],
-        },
-        streets: {
-          preflop: { actions: [], pot: 0 },
-          flop: { actions: [], pot: 0 },
-          turn: { actions: [], pot: 0 },
-          river: { actions: [], pot: 0 },
-        },
-        confidence: 0.8,
-      }
-    })
-  }, [filteredHands])
-
   // Open hand detail dialog
   const handleOpenHandDetail = (index: number) => {
     setSelectedHandIndex(index)
@@ -152,43 +98,43 @@ export function ArchiveHandHistory({
       {/* Hand List */}
       <Card className="p-7 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 relative overflow-hidden">
         <div className="flex items-center justify-between mb-7">
-          <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
-            Hand History
-          </h2>
-          {filteredHands.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleOpenHandDetail(0)}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              View Detail
-            </Button>
-          )}
+          <div>
+            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
+              Hand History
+            </h2>
+            {filteredHands.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {filteredHands.length} {filteredHands.length === 1 ? 'hand' : 'hands'} found
+              </p>
+            )}
+          </div>
         </div>
-        <div>
-          {hands.length > 0 ? (
-            <HandListAccordion
-              handIds={hands.map((hand) => hand.id)}
-              hands={transformedHands}
-              onPlayHand={(startTime) => {
-                onSeekToTime?.(startTime)
-              }}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center py-16 px-6">
-              <div className="inline-block p-8 rounded-2xl backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
-                <Folder className="h-16 w-16 text-muted-foreground/40 mb-4 mx-auto" />
-                <p className="text-xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent text-center">
-                  No Hands Available
-                </p>
-                <p className="text-sm text-muted-foreground/70 text-center max-w-md">
-                  Import hands from external systems. API: POST /api/import-hands
-                </p>
-              </div>
+
+        {/* 그리드 레이아웃 */}
+        {filteredHands.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredHands.map((hand, index) => (
+              <HandCard
+                key={hand.id}
+                hand={hand}
+                onClick={() => handleOpenHandDetail(index)}
+                onPlayHand={(timestamp) => onSeekToTime?.(timestamp)}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 px-6">
+            <div className="inline-block p-8 rounded-2xl backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
+              <Folder className="h-16 w-16 text-muted-foreground/40 mb-4 mx-auto" />
+              <p className="text-xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent text-center">
+                No Hands Available
+              </p>
+              <p className="text-sm text-muted-foreground/70 text-center max-w-md">
+                Select a day to view hands, or import hands from external systems.
+              </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </Card>
 
       {/* Hand History Dialog */}

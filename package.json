@@ -21,7 +21,9 @@
     "logo:fetch": "tsx scripts/logo-management.ts fetch",
     "logo:upload": "tsx scripts/logo-management.ts upload",
     "logo:delete": "tsx scripts/logo-management.ts delete",
-    "logo:validate": "tsx scripts/logo-management.ts validate"
+    "logo:validate": "tsx scripts/logo-management.ts validate",
+    "thumbnails:generate": "tsx scripts/generate-hand-thumbnails.ts",
+    "thumbnails:generate:day": "tsx scripts/generate-hand-thumbnails.ts --day-id="
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",

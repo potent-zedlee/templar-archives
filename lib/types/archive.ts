@@ -116,6 +116,9 @@ export interface Hand {
   pot_size?: number
   confidence?: number
   favorite?: boolean
+  thumbnail_url?: string
+  likes_count?: number
+  dislikes_count?: number
   created_at?: string
   // Relations
   hand_players?: HandPlayer[]
