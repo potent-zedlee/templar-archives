@@ -78,6 +78,7 @@ interface ArchiveUIState {
   setSortBy: (sort: SortOption) => void
   setSelectedCategory: (category: string) => void
   setAdvancedFilters: (filters: AdvancedFilters) => void
+  resetAllFilters: () => void
 
   // Actions - Dialogs
   openTournamentDialog: (editingId?: string) => void
@@ -217,6 +218,14 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         setSortBy: (sort) => set({ sortBy: sort }),
         setSelectedCategory: (category) => set({ selectedCategory: category }),
         setAdvancedFilters: (filters) => set({ advancedFilters: filters }),
+        resetAllFilters: () =>
+          set({
+            searchQuery: '',
+            sortBy: 'date-desc',
+            advancedFilters: INITIAL_ADVANCED_FILTERS,
+            expandedTournament: null,
+            expandedSubEvent: null,
+          }),
 
         // Actions - Dialogs
         openTournamentDialog: (editingId) =>

@@ -1,0 +1,117 @@
+"use client"
+
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { Plus, RotateCcw } from "lucide-react"
+import { ArchiveTournamentLogosBar } from "@/components/archive-tournament-logos-bar"
+import { ArchiveUnifiedFilters } from "@/components/archive-unified-filters"
+import { QuickUploadDialog } from "@/components/quick-upload-dialog"
+import { useQueryClient } from "@tanstack/react-query"
+import { useArchiveUIStore } from "@/stores/archive-ui-store"
+import { useArchiveDataStore } from "@/stores/archive-data-store"
+import { archiveKeys } from "@/lib/queries/archive-queries"
+import { isAdmin } from "@/lib/auth-utils"
+import type { GameType } from "@/lib/tournament-categories"
+
+interface ArchiveSidebarProps {
+  gameType?: GameType
+}
+
+export function ArchiveSidebar({ gameType }: ArchiveSidebarProps) {
+  const queryClient = useQueryClient()
+  const { userEmail } = useArchiveDataStore()
+  const {
+    selectedCategory,
+    setSelectedCategory,
+    advancedFilters,
+    setAdvancedFilters,
+    openTournamentDialog,
+    resetAllFilters,
+  } = useArchiveUIStore()
+
+  const isUserAdmin = isAdmin(userEmail)
+
+  const handleReset = () => {
+    resetAllFilters()
+    setSelectedCategory("All")
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b">
+        <h2 className="font-semibold text-lg">Archive</h2>
+        <p className="text-sm text-muted-foreground">
+          Filter tournaments and events
+        </p>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-6">
+          {/* Tournament Categories */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Categories</h3>
+            <div className="space-y-2">
+              <ArchiveTournamentLogosBar
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
+                gameType={gameType}
+                className="flex-col items-stretch"
+              />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Advanced Filters */}
+          <div>
+            <h3 className="text-sm font-medium mb-3">Filters</h3>
+            <ArchiveUnifiedFilters
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              advancedFilters={advancedFilters as any}
+              onAdvancedFiltersChange={setAdvancedFilters as any}
+              showCategoryFilter={false}
+              showToggleButton={false}
+            />
+          </div>
+        </div>
+      </ScrollArea>
+
+      <Separator />
+
+      <div className="p-4 space-y-2">
+        {/* Quick Upload */}
+        <div className="w-full">
+          <QuickUploadDialog
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: archiveKeys.unsortedVideos() })
+            }}
+          />
+        </div>
+
+        {/* Add Tournament (Admin Only) */}
+        {isUserAdmin && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => openTournamentDialog()}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Tournament
+          </Button>
+        )}
+
+        {/* Reset All */}
+        <Button
+          variant="ghost"
+          className="w-full"
+          onClick={handleReset}
+        >
+          <RotateCcw className="h-4 w-4 mr-2" />
+          Reset All
+        </Button>
+      </div>
+    </div>
+  )
+}

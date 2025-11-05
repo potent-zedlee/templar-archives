@@ -1,0 +1,145 @@
+"use client"
+
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { VideoPlayer } from "@/components/video-player"
+import { ArchiveHandHistory } from "./ArchiveHandHistory"
+import { useArchiveDataStore } from "@/stores/archive-data-store"
+import { useArchiveData } from "./ArchiveDataContext"
+import { useMemo } from "react"
+import { Play, Calendar, Users } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
+import type { Stream } from "@/lib/supabase"
+
+interface ArchiveMainPanelProps {
+  seekTime: number | null
+  onSeekToTime: (seconds: number) => void
+}
+
+export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelProps) {
+  const { selectedDay } = useArchiveDataStore()
+  const { tournaments } = useArchiveData()
+
+  // Find selected day data
+  const selectedDayData = useMemo((): Stream | null => {
+    if (!selectedDay) return null
+
+    for (const tournament of tournaments) {
+      for (const subEvent of tournament.sub_events || []) {
+        const day = subEvent.days?.find((d: Stream) => d.id === selectedDay)
+        if (day) return day as Stream
+      }
+    }
+    return null
+  }, [selectedDay, tournaments])
+
+  const handleSeekToTime = (timeString: string) => {
+    // Parse time string "MM:SS" to seconds
+    const parts = timeString.split(':')
+    if (parts.length === 2) {
+      const minutes = parseInt(parts[0], 10)
+      const seconds = parseInt(parts[1], 10)
+      onSeekToTime(minutes * 60 + seconds)
+    }
+  }
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  return (
+    <div className="flex flex-col h-full">
+      <ScrollArea className="flex-1">
+        <div className="p-6 space-y-6">
+          {!selectedDayData ? (
+            <div className="flex flex-col items-center justify-center h-full min-h-[600px]">
+              <div className="relative mb-8">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-3xl rounded-full" />
+                <div className="relative bg-gradient-to-br from-blue-500 to-purple-500 p-6 rounded-full">
+                  <Play className="h-12 w-12 text-white" />
+                </div>
+              </div>
+
+              <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Select a Day
+              </h1>
+
+              <p className="text-muted-foreground text-center max-w-md mb-8">
+                Choose a tournament day from the list to view its video and hand history
+              </p>
+
+              <div className="w-full max-w-2xl space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <p>Browse tournaments by category in the left sidebar</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-purple-400">•</span>
+                  <p>Expand tournaments and events to see available days</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-blue-400">•</span>
+                  <p>Click on a day to watch the video and explore hand history</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Day Info Card */}
+              <Card className="p-6 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
+                <div className="space-y-4">
+                  <div>
+                    <h1 className="text-2xl font-bold mb-2">{selectedDayData.name}</h1>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedDayData.published_at && (
+                        <Badge variant="secondary" className="gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {formatDate(selectedDayData.published_at)}
+                        </Badge>
+                      )}
+                      {selectedDayData.player_count !== undefined && selectedDayData.player_count > 0 && (
+                        <Badge variant="secondary" className="gap-1">
+                          <Users className="h-3 w-3" />
+                          {selectedDayData.player_count} players
+                        </Badge>
+                      )}
+                      {selectedDayData.video_source === "youtube" && selectedDayData.video_url && (
+                        <Badge variant="destructive" className="gap-1">
+                          <Play className="h-3 w-3" />
+                          YouTube
+                        </Badge>
+                      )}
+                      {(selectedDayData.video_file || selectedDayData.video_nas_path) && (
+                        <Badge className="gap-1 bg-amber-500">
+                          <Play className="h-3 w-3" />
+                          Local
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedDayData.description && (
+                    <p className="text-muted-foreground">{selectedDayData.description}</p>
+                  )}
+                </div>
+              </Card>
+
+              {/* Video Player */}
+              <div className="rounded-xl overflow-hidden border border-white/20 shadow-2xl">
+                <VideoPlayer day={selectedDayData} seekTime={seekTime} />
+              </div>
+
+              {/* Hand History */}
+              <ArchiveHandHistory onSeekToTime={handleSeekToTime} />
+            </>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
+  )
+}

@@ -4,7 +4,7 @@
  * Archive Page Layout
  *
  * Shared layout component for Tournament and Cash Game archive pages
- * Eliminates 99% code duplication between the two pages
+ * Uses Discovery Layout pattern with 3-column structure
  */
 
 import { useState, useEffect, memo, useCallback } from "react"
@@ -12,21 +12,17 @@ import dynamic from "next/dynamic"
 import { useAuth } from "@/components/auth-provider"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { ErrorBoundary } from "@/components/error-boundary"
+import { PageTransition } from "@/components/page-transition"
+import { DiscoveryLayout } from "@/components/discovery-layout"
 import { useArchiveDataStore } from "@/stores/archive-data-store"
 import { useTournamentsQuery, useUnsortedVideosQuery, useHandsQuery } from "@/lib/queries/archive-queries"
 import { ArchiveDataProvider } from "./ArchiveDataContext"
 import { ArchiveProviders } from "./ArchiveProviders"
-import { ArchiveToolbar } from "./ArchiveToolbar"
+import { ArchiveSidebar } from "./ArchiveSidebar"
+import { ArchiveMiddlePanel } from "./ArchiveMiddlePanel"
+import { ArchiveMainPanel } from "./ArchiveMainPanel"
 
 // Dynamic imports for heavy components
-const ArchiveEventsList = dynamic(
-  () => import("./ArchiveEventsList").then(mod => ({ default: mod.ArchiveEventsList })),
-  {
-    ssr: false,
-    loading: () => <CardSkeleton count={3} variant="compact" />
-  }
-)
-
 const ArchiveDialogs = dynamic(
   () => import("./ArchiveDialogs").then(mod => ({ default: mod.ArchiveDialogs })),
   {
@@ -92,21 +88,8 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
   // ============================================================
   if (tournamentsLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
-        {/* Animated background effect */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent animate-pulse" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent animate-pulse delay-1000" />
-
-        <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6 relative z-10">
-          <div className="flex gap-6">
-            <div className="w-[35%]">
-              <CardSkeleton count={1} variant="compact" />
-            </div>
-            <div className="flex-1">
-              <CardSkeleton count={2} variant="detailed" />
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <CardSkeleton count={3} variant="compact" />
       </div>
     )
   }
@@ -116,12 +99,7 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
   // ============================================================
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
-        {/* Animated background effects */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent animate-pulse" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent animate-pulse delay-1000" />
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
-
+      <PageTransition variant="slideUp">
         <ArchiveDataProvider
           tournaments={tournaments}
           hands={hands}
@@ -131,23 +109,23 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
         >
           <ArchiveProviders>
             <>
-              {/* Toolbar */}
-              <ArchiveToolbar />
-
-              {/* Main Content */}
-              <div className="container max-w-7xl mx-auto py-4 md:py-6 px-4 md:px-6 relative z-10">
-                <ArchiveEventsList
-                  seekTime={seekTime}
-                  onSeekToTime={handleSeekToTime}
-                />
-              </div>
+              <DiscoveryLayout
+                sidebar={<ArchiveSidebar gameType={gameType === 'tournament' ? 'tournament' : 'cash_game'} />}
+                middlePanel={<ArchiveMiddlePanel />}
+                mainPanel={
+                  <ArchiveMainPanel
+                    seekTime={seekTime}
+                    onSeekToTime={handleSeekToTime}
+                  />
+                }
+              />
 
               {/* All Dialogs */}
               <ArchiveDialogs />
             </>
           </ArchiveProviders>
         </ArchiveDataProvider>
-      </div>
+      </PageTransition>
     </ErrorBoundary>
   )
 })
