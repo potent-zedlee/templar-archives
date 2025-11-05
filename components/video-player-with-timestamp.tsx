@@ -8,11 +8,21 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import ReactPlayer from 'react-player'
+import dynamic from 'next/dynamic'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Clock, Play } from 'lucide-react'
+import { Clock, Play, Loader2 } from 'lucide-react'
 import { secondsToTimeString } from '@/lib/types/video-segments'
+
+// SSR 방지를 위한 dynamic import
+const ReactPlayer = dynamic(() => import('react-player'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full bg-black">
+      <Loader2 className="h-8 w-8 animate-spin text-white" />
+    </div>
+  ),
+})
 
 interface VideoPlayerWithTimestampProps {
   videoUrl?: string

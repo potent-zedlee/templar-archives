@@ -191,7 +191,7 @@ export function AnalyzeVideoDialog({
         {status === "idle" && (
           <div className="grid md:grid-cols-5 gap-6">
             {/* Left Column: Video Player */}
-            <div className="md:col-span-2">
+            <div className="md:col-span-3">
               <div className="md:sticky md:top-0">
                 <VideoPlayerWithTimestamp
                   videoUrl={day?.video_url}
@@ -204,7 +204,7 @@ export function AnalyzeVideoDialog({
             </div>
 
             {/* Right Column: Form */}
-            <div className="md:col-span-3 space-y-6">
+            <div className="md:col-span-2 space-y-6">
             {/* Platform Selection */}
             <div className="space-y-2">
               <Label>플랫폼 선택</Label>
