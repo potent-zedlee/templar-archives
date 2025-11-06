@@ -166,7 +166,7 @@ ${fullPrompt}`
       temperature: 0.1, // Low temperature for consistent, factual extraction
       topP: 0.95,
       topK: 40,
-      maxOutputTokens: 8192,
+      maxOutputTokens: 65536, // Gemini 2.5 Flash maximum output tokens
     },
   })
 
