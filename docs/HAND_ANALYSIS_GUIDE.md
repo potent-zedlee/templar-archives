@@ -55,7 +55,7 @@ YouTube URL → Gemini AI → Structured JSON → Database
 `.env.local` 파일에 API Key 추가:
 
 ```bash
-GEMINI_API_KEY=your_gemini_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
 ```
 
 ### 3. 할당량 확인
@@ -273,11 +273,11 @@ const importRes = await fetch('/api/import-hands', {
 
 ## 문제 해결
 
-### Error: "GEMINI_API_KEY not configured"
+### Error: "GOOGLE_API_KEY not configured"
 
 **해결**:
 1. `.env.local` 파일 확인
-2. `GEMINI_API_KEY=your_key_here` 추가
+2. `GOOGLE_API_KEY=your_key_here` 추가
 3. 개발 서버 재시작: `npm run dev`
 
 ### Error: "Rate limit exceeded"

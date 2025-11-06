@@ -856,7 +856,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://diopilmkehygiqpizvga.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key  # 관리자 전용
 CLAUDE_API_KEY=sk-ant-...  # AI 검색
-GEMINI_API_KEY=your-key    # 영상 분석
+GOOGLE_API_KEY=your-key    # 영상 분석
 
 # 선택 (5개)
 GOOGLE_CLIENT_ID=your-id

@@ -48,11 +48,11 @@ export async function POST(request: NextRequest) {
     if (rateLimitResponse) return rateLimitResponse
 
     // Validate API key
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.GOOGLE_API_KEY) {
       return NextResponse.json(
         {
-          error: 'GEMINI_API_KEY not configured',
-          message: 'Please add your Gemini API key to environment variables',
+          error: 'GOOGLE_API_KEY not configured',
+          message: 'Please add your Google API key to environment variables',
         },
         { status: 500 }
       )

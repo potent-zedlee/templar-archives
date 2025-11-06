@@ -12,7 +12,7 @@ import { timeStringToSeconds } from './types/video-segments'
 
 // Initialize Gemini API
 const genAI = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY || '',
+  apiKey: process.env.GOOGLE_API_KEY || '',
 })
 
 /**
@@ -195,14 +195,36 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
     console.log('Segment:', `${segment.startTime} - ${segment.endTime}`)
   }
 
+  // Build videoMetadata for segment clipping
+  const fileDataPart: any = {
+    fileData: {
+      fileUri: videoUrl,
+      mimeType: 'video/*',
+    },
+  }
+
+  // Add videoMetadata if segment is provided
+  if (segment) {
+    const startSeconds = timeStringToSeconds(segment.startTime)
+    const endSeconds = timeStringToSeconds(segment.endTime)
+    fileDataPart.videoMetadata = {
+      startOffset: `${startSeconds}s`,
+      endOffset: `${endSeconds}s`,
+    }
+    console.log(`[videoMetadata] ${segment.startTime} (${startSeconds}s) - ${segment.endTime} (${endSeconds}s)`)
+  }
+
   const requestConfig = {
     model: 'gemini-2.5-flash', // Fast and cost-effective for video analysis
     contents: [
-      promptText, // Text prompt first (official pattern)
       {
-        fileData: {
-          fileUri: videoUrl, // YouTube URL - mimeType auto-detected
-        },
+        role: 'user',
+        parts: [
+          fileDataPart,
+          {
+            text: promptText,
+          },
+        ],
       },
     ],
     generationConfig: {
@@ -293,8 +315,8 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
 export async function analyzePokerVideo(config: AnalysisConfig) {
   try {
     // Validate API key
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is not configured')
+    if (!process.env.GOOGLE_API_KEY) {
+      throw new Error('GOOGLE_API_KEY is not configured')
     }
 
     // Load platform-specific prompt
@@ -364,7 +386,7 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
  */
 export async function testGeminiConnection(): Promise<boolean> {
   try {
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.GOOGLE_API_KEY) {
       return false
     }
 
