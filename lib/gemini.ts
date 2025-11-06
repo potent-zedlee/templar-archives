@@ -198,15 +198,15 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
   const requestConfig = {
     model: 'gemini-2.5-flash', // Fast and cost-effective for video analysis
     contents: [
-      promptText, // Prompt first (as per official docs)
       {
         fileData: {
           fileUri: videoUrl, // YouTube URL directly
-          // mimeType omitted - optional for YouTube URLs
+          mimeType: 'video/*', // Required for video files
         },
       },
+      promptText, // Text prompt after fileData
     ],
-    config: {
+    generationConfig: {
       temperature: 0.1, // Low temperature for consistent, factual extraction
       topP: 0.95,
       topK: 40,
@@ -217,7 +217,7 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
   console.log('Request config:', JSON.stringify({
     model: requestConfig.model,
     contentsCount: requestConfig.contents.length,
-    config: requestConfig.config,
+    generationConfig: requestConfig.generationConfig,
   }, null, 2))
 
   let response
