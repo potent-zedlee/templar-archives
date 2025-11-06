@@ -196,10 +196,10 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
   }
 
   // Build file data part without videoMetadata (using prompt-based segment instructions instead)
+  // YouTube URLs don't need mimeType - Gemini auto-detects the format
   const fileDataPart = {
     fileData: {
       fileUri: videoUrl,
-      mimeType: 'video/*',
     },
   }
 
