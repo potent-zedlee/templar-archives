@@ -195,23 +195,12 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
     console.log('Segment:', `${segment.startTime} - ${segment.endTime}`)
   }
 
-  // Build videoMetadata for segment clipping
-  const fileDataPart: any = {
+  // Build file data part without videoMetadata (using prompt-based segment instructions instead)
+  const fileDataPart = {
     fileData: {
       fileUri: videoUrl,
       mimeType: 'video/*',
     },
-  }
-
-  // Add videoMetadata if segment is provided
-  if (segment) {
-    const startSeconds = timeStringToSeconds(segment.startTime)
-    const endSeconds = timeStringToSeconds(segment.endTime)
-    fileDataPart.videoMetadata = {
-      startOffset: `${startSeconds}s`,
-      endOffset: `${endSeconds}s`,
-    }
-    console.log(`[videoMetadata] ${segment.startTime} (${startSeconds}s) - ${segment.endTime} (${endSeconds}s)`)
   }
 
   const requestConfig = {
