@@ -195,44 +195,33 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
     console.log('Segment:', `${segment.startTime} - ${segment.endTime}`)
   }
 
-  // Build file data part without videoMetadata (using prompt-based segment instructions instead)
-  // YouTube URLs don't need mimeType - Gemini auto-detects the format
-  const fileDataPart = {
-    fileData: {
-      fileUri: videoUrl,
-    },
-  }
-
-  const requestConfig = {
-    model: 'gemini-2.5-flash', // Fast and cost-effective for video analysis
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          fileDataPart,
-          {
-            text: promptText,
-          },
-        ],
-      },
-    ],
+  // Use official JavaScript SDK format (getGenerativeModel + simple array)
+  // Documentation: https://ai.google.dev/gemini-api/docs/video-understanding
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.5-flash',
     generationConfig: {
       temperature: 0.1, // Low temperature for consistent, factual extraction
       topP: 0.95,
       topK: 40,
       maxOutputTokens: 65536, // Gemini 2.5 Flash maximum output tokens
     },
-  }
+  })
 
-  console.log('Request config:', JSON.stringify({
-    model: requestConfig.model,
-    contentsCount: requestConfig.contents.length,
-    generationConfig: requestConfig.generationConfig,
-  }, null, 2))
+  console.log('Using official SDK format: getGenerativeModel + array')
 
-  let response
+  let result
   try {
-    response = await genAI.models.generateContent(requestConfig)
+    // Official format: simple array with fileData and text
+    result = await model.generateContent([
+      {
+        fileData: {
+          fileUri: videoUrl,
+        },
+      },
+      {
+        text: promptText,
+      },
+    ])
   } catch (apiError) {
     console.error('=== Gemini API Error ===')
     console.error('Error:', apiError)
@@ -244,8 +233,8 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
     throw apiError
   }
 
-  // Get response text (async property in new SDK)
-  const text = await response.text
+  // Get response text
+  const text = result.response.text()
 
   // Detailed logging for debugging
   console.log('=== Gemini Video Analysis Response ===')
@@ -254,8 +243,8 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
   if (text.length > 1000) {
     console.log('Last 1000 chars:', text.substring(text.length - 1000))
   }
-  if (response.candidates?.[0]?.finishReason) {
-    console.log('Finish reason:', response.candidates[0].finishReason)
+  if (result.response.candidates?.[0]?.finishReason) {
+    console.log('Finish reason:', result.response.candidates[0].finishReason)
   }
 
   // Parse JSON response with aggressive extraction
@@ -379,17 +368,11 @@ export async function testGeminiConnection(): Promise<boolean> {
       return false
     }
 
-    const response = await genAI.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: 'Hello' }],
-        },
-      ],
-    })
+    // Use official SDK format
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const result = await model.generateContent(['Hello'])
 
-    const text = await response.text
+    const text = result.response.text()
     return text.length > 0
   } catch (error) {
     console.error('Gemini connection test failed:', error)
