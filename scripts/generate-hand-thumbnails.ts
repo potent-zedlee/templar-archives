@@ -83,8 +83,8 @@ async function generateThumbnailsForDay(dayId: string) {
   // 2. 해당 Day의 모든 핸드 조회
   const { data: hands, error: handsError } = await supabase
     .from('hands')
-    .select('id, stream_id, number, timestamp, thumbnail_url')
-    .eq('stream_id', dayId)
+    .select('id, day_id, number, timestamp, thumbnail_url')
+    .eq('day_id', dayId)
     .order('number', { ascending: true })
 
   if (handsError || !hands) {

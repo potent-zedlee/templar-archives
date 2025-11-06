@@ -351,70 +351,59 @@ export function useStreamPlayersQuery(streamId: string | null) {
     queryFn: async () => {
       if (!streamId) return []
 
-      // Raw SQL을 사용하여 중복 제거 및 핸드 수 계산
-      const { data, error } = await supabase.rpc('get_stream_players', {
-        p_stream_id: streamId,
+      // 핸드 데이터와 플레이어 정보를 조회
+      const { data: handsData, error: handsError } = await supabase
+        .from('hands')
+        .select(`
+          id,
+          hand_players(
+            player_id,
+            player:players(
+              id,
+              name,
+              photo_url,
+              country
+            )
+          )
+        `)
+        .eq('day_id', streamId)
+
+      if (handsError) throw handsError
+
+      // 플레이어 중복 제거 및 핸드 수 계산
+      const playerMap = new Map<
+        string,
+        {
+          id: string
+          name: string
+          photo_url: string | null
+          country: string | null
+          hand_count: number
+        }
+      >()
+
+      handsData.forEach((hand) => {
+        hand.hand_players?.forEach((hp: any) => {
+          const player = hp.player
+          if (player) {
+            const existing = playerMap.get(player.id)
+            if (existing) {
+              existing.hand_count++
+            } else {
+              playerMap.set(player.id, {
+                id: player.id,
+                name: player.name,
+                photo_url: player.photo_url,
+                country: player.country,
+                hand_count: 1,
+              })
+            }
+          }
+        })
       })
 
-      if (error) {
-        // RPC 함수가 없으면 일반 쿼리 사용
-        console.warn('RPC function not found, using fallback query')
-
-        const { data: handsData, error: handsError } = await supabase
-          .from('hands')
-          .select(`
-            id,
-            hand_players(
-              player_id,
-              player:players(
-                id,
-                name,
-                photo_url,
-                country
-              )
-            )
-          `)
-          .eq('stream_id', streamId)
-
-        if (handsError) throw handsError
-
-        // 플레이어 중복 제거 및 핸드 수 계산
-        const playerMap = new Map<
-          string,
-          {
-            id: string
-            name: string
-            photo_url: string | null
-            country: string | null
-            hand_count: number
-          }
-        >()
-
-        handsData.forEach((hand) => {
-          hand.hand_players?.forEach((hp: any) => {
-            const player = hp.player
-            if (player) {
-              const existing = playerMap.get(player.id)
-              if (existing) {
-                existing.hand_count++
-              } else {
-                playerMap.set(player.id, {
-                  id: player.id,
-                  name: player.name,
-                  photo_url: player.photo_url,
-                  country: player.country,
-                  hand_count: 1,
-                })
-              }
-            }
-          })
-        })
-
-        // 핸드 수 내림차순 정렬
-        return Array.from(playerMap.values()).sort((a, b) => b.hand_count - a.hand_count)
-      }
-
-      return data || []
+      // 핸드 수 내림차순 정렬
+      return Array.from(playerMap.values()).sort((a, b) => b.hand_count - a.hand_count)
     },
     enabled: !!streamId,
     staleTime: 10 * 60 * 1000, // 10분 (플레이어 목록은 자주 변경되지 않음)
