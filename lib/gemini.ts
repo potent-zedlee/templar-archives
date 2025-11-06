@@ -5,15 +5,59 @@
  * using Google's Gemini 1.5 Pro model with video understanding capabilities.
  */
 
-import { GoogleGenAI } from '@google/genai'
+// SDK 제거 - REST API 직접 사용
 import fs from 'fs/promises'
 import path from 'path'
 import { timeStringToSeconds } from './types/video-segments'
 
-// Initialize Gemini API
-const genAI = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_API_KEY || '',
-})
+// Gemini REST API 타입 정의 (snake_case 사용!)
+interface GeminiPart {
+  text?: string
+  file_data?: {
+    file_uri: string
+    mime_type?: string
+  }
+}
+
+interface GeminiContent {
+  parts: GeminiPart[]
+  role?: string
+}
+
+interface GeminiRequest {
+  contents: GeminiContent[]
+  generationConfig?: {
+    temperature?: number
+    topK?: number
+    topP?: number
+    maxOutputTokens?: number
+  }
+}
+
+interface GeminiResponse {
+  candidates: Array<{
+    content: {
+      parts: Array<{ text: string }>
+      role: string
+    }
+    finishReason: string
+    index: number
+  }>
+  usageMetadata?: {
+    promptTokenCount: number
+    candidatesTokenCount: number
+    totalTokenCount: number
+  }
+}
+
+interface GeminiErrorResponse {
+  error: {
+    code: number
+    message: string
+    status: string
+    details?: any[]
+  }
+}
 
 /**
  * Platform types for poker video analysis
@@ -195,34 +239,58 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
     console.log('Segment:', `${segment.startTime} - ${segment.endTime}`)
   }
 
-  // Use official @google/genai SDK format with role/parts structure
-  // Reference: https://cloud.google.com/vertex-ai/generative-ai/docs/samples/googlegenaisdk-textgen-with-youtube-video
-  console.log('Using official SDK format: ai.models.generateContent()')
+  // Use Gemini REST API directly (fetch)
+  // Reference: https://ai.google.dev/api/generate-content
+  console.log('Using Gemini REST API: fetch with snake_case')
 
-  let response
-  try {
-    response = await genAI.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [
-        {
-          fileData: {
-            fileUri: videoUrl,
-            mimeType: 'video/mp4',
+  const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+
+  const requestBody: GeminiRequest = {
+    contents: [
+      {
+        parts: [
+          { text: promptText },
+          {
+            file_data: {  // snake_case!
+              file_uri: videoUrl,  // snake_case!
+            }
           }
-        },
-        promptText  // 문자열 직접 전달
-      ],
-      generationConfig: {
-        temperature: 0.1, // Low temperature for consistent, factual extraction
-        topP: 0.95,
-        topK: 40,
-        maxOutputTokens: 65536, // Gemini 2.5 Flash maximum output tokens
+        ]
+      }
+    ],
+    generationConfig: {
+      temperature: 0.1, // Low temperature for consistent, factual extraction
+      topP: 0.95,
+      topK: 40,
+      maxOutputTokens: 65536, // Gemini 2.5 Flash maximum output tokens
+    },
+  }
+
+  let data: GeminiResponse
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': process.env.GOOGLE_API_KEY || '',
       },
+      body: JSON.stringify(requestBody),
     })
+
+    if (!response.ok) {
+      const errorData: GeminiErrorResponse = await response.json()
+      console.error('=== Gemini REST API Error ===')
+      console.error('Status:', response.status)
+      console.error('Error:', errorData)
+      throw new Error(
+        `Gemini API Error ${errorData.error?.code}: ${errorData.error?.message} (${errorData.error?.status})`
+      )
+    }
+
+    data = await response.json()
   } catch (apiError) {
-    console.error('=== Gemini API Error ===')
+    console.error('=== Gemini API Request Failed ===')
     console.error('Error:', apiError)
-    console.error('Error type:', apiError instanceof Error ? apiError.constructor.name : typeof apiError)
     if (apiError instanceof Error) {
       console.error('Error message:', apiError.message)
       console.error('Error stack:', apiError.stack)
@@ -230,8 +298,13 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
     throw apiError
   }
 
-  // Get response text (property, not function)
-  const text = response.text
+  // Extract text from response
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+
+  if (!text) {
+    console.error('No text in response:', data)
+    throw new Error('No content in Gemini API response')
+  }
 
   // Detailed logging for debugging
   console.log('=== Gemini Video Analysis Response ===')
@@ -240,8 +313,8 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
   if (text.length > 1000) {
     console.log('Last 1000 chars:', text.substring(text.length - 1000))
   }
-  if (response.candidates?.[0]?.finishReason) {
-    console.log('Finish reason:', response.candidates[0].finishReason)
+  if (data.candidates?.[0]?.finishReason) {
+    console.log('Finish reason:', data.candidates[0].finishReason)
   }
 
   // Parse JSON response with aggressive extraction
@@ -365,13 +438,30 @@ export async function testGeminiConnection(): Promise<boolean> {
       return false
     }
 
-    // Use official SDK format with simplified structure
-    const response = await genAI.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: ['Hello'],  // 단순 문자열 배열
+    // Test Gemini REST API connection
+    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': process.env.GOOGLE_API_KEY || '',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: 'Hello' }]
+          }
+        ]
+      }),
     })
 
-    const text = response.text
+    if (!response.ok) {
+      return false
+    }
+
+    const data: GeminiResponse = await response.json()
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
     return text.length > 0
   } catch (error) {
     console.error('Gemini connection test failed:', error)
