@@ -198,19 +198,11 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
   const requestConfig = {
     model: 'gemini-2.5-flash', // Fast and cost-effective for video analysis
     contents: [
+      promptText, // Text prompt first (official pattern)
       {
-        role: 'user', // Required by @google/genai SDK
-        parts: [
-          {
-            fileData: {
-              fileUri: videoUrl, // YouTube URL directly
-              mimeType: 'video/*', // Required for video files
-            },
-          },
-          {
-            text: promptText, // Text must be in object format
-          },
-        ],
+        fileData: {
+          fileUri: videoUrl, // YouTube URL - mimeType auto-detected
+        },
       },
     ],
     generationConfig: {
