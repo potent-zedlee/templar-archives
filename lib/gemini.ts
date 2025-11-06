@@ -195,23 +195,31 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
     console.log('Segment:', `${segment.startTime} - ${segment.endTime}`)
   }
 
-  // Use official @google/genai SDK format
+  // Use official @google/genai SDK format with role/parts structure
   // Reference: https://cloud.google.com/vertex-ai/generative-ai/docs/samples/googlegenaisdk-textgen-with-youtube-video
   console.log('Using official SDK format: ai.models.generateContent()')
-
-  const ytVideo = {
-    fileData: {
-      fileUri: videoUrl,
-      mimeType: 'video/mp4',
-    },
-  }
 
   let response
   try {
     response = await genAI.models.generateContent({
       model: 'gemini-2.5-pro',
-      contents: [ytVideo, promptText],
-      config: {
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              fileData: {
+                fileUri: videoUrl,
+                mimeType: 'video/*',
+              }
+            },
+            {
+              text: promptText
+            }
+          ]
+        }
+      ],
+      generationConfig: {
         temperature: 0.1, // Low temperature for consistent, factual extraction
         topP: 0.95,
         topK: 40,
@@ -364,10 +372,15 @@ export async function testGeminiConnection(): Promise<boolean> {
       return false
     }
 
-    // Use official SDK format
+    // Use official SDK format with role/parts structure
     const response = await genAI.models.generateContent({
       model: 'gemini-2.5-pro',
-      contents: ['Hello'],
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: 'Hello' }]
+        }
+      ],
     })
 
     const text = response.text
