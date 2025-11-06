@@ -127,18 +127,37 @@ function buildPrompt(
 async function analyzeSingleVideo(
   videoUrl: string,
   fullPrompt: string,
-  segmentInfo?: string
+  segment?: VideoSegment
 ): Promise<any[]> {
-  // YouTube URL을 프롬프트에 포함 (JSON 출력 강제)
-  let promptWithVideo = `Analyze this poker video: ${videoUrl}`
+  const parts: any[] = []
 
-  if (segmentInfo) {
-    promptWithVideo += `\n\n${segmentInfo}`
+  // Part 1: Video with metadata (fileData + videoMetadata)
+  const videoPart: any = {
+    fileData: {
+      fileUri: videoUrl,
+      mimeType: 'video/*',
+    },
   }
 
-  promptWithVideo += `
+  // Add videoMetadata if segment provided (API-level time constraint)
+  if (segment) {
+    const startSeconds = timeStringToSeconds(segment.startTime)
+    const endSeconds = timeStringToSeconds(segment.endTime)
 
-CRITICAL OUTPUT REQUIREMENTS:
+    videoPart.videoMetadata = {
+      startOffset: `${startSeconds}s`,
+      endOffset: `${endSeconds}s`,
+    }
+
+    console.log(
+      `[Video Metadata] Analyzing ${segment.startTime} - ${segment.endTime} (${startSeconds}s - ${endSeconds}s)`
+    )
+  }
+
+  parts.push(videoPart)
+
+  // Part 2: Analysis prompt
+  let promptText = `CRITICAL OUTPUT REQUIREMENTS:
 - You MUST respond with ONLY a valid JSON array
 - Start your response with [ and end with ]
 - Do NOT include any text before or after the JSON
@@ -147,22 +166,31 @@ CRITICAL OUTPUT REQUIREMENTS:
 
 ${fullPrompt}`
 
+  // Add time range instruction if segment provided
+  if (segment) {
+    promptText += `
+
+CRITICAL TIME RANGE INSTRUCTION:
+- This analysis is LIMITED to ${segment.startTime} - ${segment.endTime}
+- The videoMetadata ensures you only see this timeframe
+- Extract ONLY hands that start AND end within this range
+- Use actual video timestamps (not segment-relative)
+- If no complete hands exist in this segment, return []
+`
+  }
+
+  parts.push({ text: promptText })
+
   // Generate content with video and prompt using new SDK
-  // Note: Removed URL Context Tool - it doesn't support video/audio files
-  // Gemini will automatically use Video Understanding API for YouTube URLs
   const response = await genAI.models.generateContent({
     model: 'gemini-2.5-flash', // Fast and cost-effective for video analysis
     contents: [
       {
         role: 'user',
-        parts: [
-          {
-            text: promptWithVideo,
-          },
-        ],
+        parts,
       },
     ],
-    generationConfig: {
+    config: {
       temperature: 0.1, // Low temperature for consistent, factual extraction
       topP: 0.95,
       topK: 40,
@@ -252,23 +280,20 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
       for (let i = 0; i < gameplaySegments.length; i++) {
         const segment = gameplaySegments[i]
         console.log(
-          `\nProcessing segment ${i + 1}/${gameplaySegments.length}: ${segment.startTime} - ${segment.endTime}`
+          `[Segment ${i + 1}/${gameplaySegments.length}] ${segment.startTime} - ${segment.endTime}`
         )
 
         try {
-          const segmentInfo = `IMPORTANT: Analyze ONLY the gameplay segment from ${segment.startTime} to ${segment.endTime}.
-Do NOT analyze any other parts of the video.`
-
           const segmentHands = await analyzeSingleVideo(
             config.videoUrl,
             fullPrompt,
-            segmentInfo
+            segment
           )
 
-          console.log(`Segment ${i + 1} extracted ${segmentHands.length} hands`)
+          console.log(`[Segment ${i + 1}] Extracted ${segmentHands.length} hands`)
           hands.push(...segmentHands)
         } catch (error) {
-          console.error(`Failed to process segment ${i + 1}:`, error)
+          console.error(`[Segment ${i + 1}] Failed:`, error)
           // Continue with next segment even if one fails
         }
       }

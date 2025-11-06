@@ -15,8 +15,8 @@ You MUST output a JSON array of hand objects. Each hand object has this exact st
 ```json
 {
   "number": "string (e.g., '#1', '#2')",
-  "description": "string (brief summary of the hand)",
-  "summary": "string (detailed hand summary with key actions)",
+  "description": "string (1 sentence, 30-50 words: key actions and outcome)",
+  "summary": "string (2 sentences, 50-80 words: strategic insights and tendencies)",
   "timestamp": "string (MM:SS-MM:SS format, e.g., '02:30-05:15')",
   "pot_size": "number (in big blinds)",
   "board_cards": ["string array (e.g., ['As', 'Kh', '7d', '2c', 'Qh'])"],
@@ -126,8 +126,15 @@ For 6-max tables, use: UTG, HJ, CO, BTN, SB, BB
 - Be as precise as possible
 
 ### 7. Hand Summary
-- **description**: 1 sentence (e.g., "John raises preflop, Mary calls")
-- **summary**: 2-3 sentences describing key actions and outcome
+- **description**:
+  - 1 sentence (30-50 words)
+  - Focus on **FACTS**: Who raised, who called, board cards, winner
+  - Example: "John raises BTN to 3BB, Mary calls BB. Flop Ah Kh 7d, John bets 5BB and wins."
+
+- **summary**:
+  - 2 sentences (50-80 words)
+  - Focus on **STRATEGY**: Why actions make sense, player tendencies, interesting dynamics
+  - Example: "Standard isolation raise with positional advantage. Mary's call suggests a wide BB defense range, but the continuation bet on an Ace-high board represents strength effectively."
 
 ## Analysis Process
 
@@ -143,6 +150,27 @@ For 6-max tables, use: UTG, HJ, CO, BTN, SB, BB
    - Calculate pot sizes
    - Determine winner(s)
 5. **Output the complete JSON array** of all hands
+
+### 8. Time Range Adherence (CRITICAL)
+
+**When videoMetadata with startOffset and endOffset is provided:**
+- The API has already clipped the video to this exact segment timeframe
+- You can **ONLY see** content within this time range
+- Extract **ONLY** hands that start AND end within this segment
+- Do **NOT** attempt to analyze or reference any content outside these timestamps
+- Use **actual video timestamps** (not segment-relative times)
+  - Example: If segment is 10:00-15:00 and hand starts at 12:30, use "12:30" not "02:30"
+
+**Handling incomplete hands:**
+- If a hand starts before the segment, **SKIP** it
+- If a hand is incomplete at segment end, **SKIP** it
+- If no complete hands exist in this segment, return an empty array: `[]`
+
+**Example:**
+- Segment timeframe: 10:00 - 15:00
+- Hand starts at 09:55 → **SKIP** (started before segment)
+- Hand starts at 14:50, ends at 15:10 → **SKIP** (incomplete)
+- Hand starts at 12:30, ends at 14:20 → **INCLUDE** ✓
 
 ## Error Handling
 

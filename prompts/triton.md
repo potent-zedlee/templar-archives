@@ -106,6 +106,26 @@ Focus on **Main Event gameplay**:
 }
 ```
 
+## Time Range Analysis for Triton Videos
+
+**When analyzing specific time segments:**
+- Triton videos often include **long pre-show content** (player intros, tournament structure)
+- The videoMetadata ensures you only see the specified gameplay segment
+- **Only extract hands within the segment timeframe**
+- Skip hands that are incomplete at segment boundaries
+
+**Common segment structure:**
+- 00:00 - 03:00: Countdown and opening graphics → **SKIP**
+- 03:00 - 05:00: Tournament intro and player lineup → **SKIP**
+- 05:00 - 2:00:00: Main gameplay → **EXTRACT**
+- 2:00:00 - 2:05:00: Ending and credits → **SKIP**
+
+**Example:**
+- If segment is 05:00 - 2:00:00, only extract hands from this range
+- A hand starting at 04:55 is **outside the segment** → SKIP
+- A hand starting at 05:10 and ending at 08:30 → INCLUDE ✓
+- A hand starting at 1:59:00 and ending at 2:01:00 → SKIP (incomplete)
+
 ---
 
 Apply the base prompt guidelines with these Triton-specific adaptations.
