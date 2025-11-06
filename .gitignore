@@ -33,4 +33,4 @@ next-env.d.ts
 build*.log
 
 # Backup files
-*.backup
+*.backup*-*.json

@@ -96,25 +96,81 @@ export interface AnalysisConfig {
 }
 
 /**
+ * Process Private Key to handle various formats from environment variables
+ * Supports:
+ * 1. Direct PEM format with \n
+ * 2. Base64-encoded PEM (set GOOGLE_PRIVATE_KEY_BASE64=true)
+ */
+function processPrivateKey(key: string | undefined): string {
+  if (!key) {
+    throw new Error('GOOGLE_PRIVATE_KEY is not set')
+  }
+
+  let processedKey = key.trim()
+
+  // Check if the key is base64-encoded
+  if (process.env.GOOGLE_PRIVATE_KEY_BASE64 === 'true') {
+    try {
+      processedKey = Buffer.from(processedKey, 'base64').toString('utf-8')
+      console.log('[Vertex AI] Decoded Private Key from base64')
+    } catch (error) {
+      throw new Error('Failed to decode base64-encoded Private Key')
+    }
+  } else {
+    // Remove quotes if present (some platforms add quotes automatically)
+    processedKey = processedKey.replace(/^["']|["']$/g, '')
+
+    // Handle escaped newlines: convert \n to actual newlines
+    // This handles cases where the env var is stored as a literal string with \n
+    processedKey = processedKey.replace(/\\n/g, '\n')
+  }
+
+  // Ensure proper PEM format
+  if (!processedKey.includes('-----BEGIN PRIVATE KEY-----')) {
+    throw new Error('Invalid Private Key format: missing BEGIN marker')
+  }
+  if (!processedKey.includes('-----END PRIVATE KEY-----')) {
+    throw new Error('Invalid Private Key format: missing END marker')
+  }
+
+  return processedKey
+}
+
+/**
  * Get OAuth 2.0 access token for Vertex AI
  */
 async function getAccessToken(): Promise<string> {
-  const auth = new GoogleAuth({
-    credentials: {
-      client_email: process.env.GOOGLE_CLIENT_EMAIL,
-      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-    },
-    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-  })
+  try {
+    const privateKey = processPrivateKey(process.env.GOOGLE_PRIVATE_KEY)
 
-  const client = await auth.getClient()
-  const accessToken = await client.getAccessToken()
+    const auth = new GoogleAuth({
+      credentials: {
+        client_email: process.env.GOOGLE_CLIENT_EMAIL,
+        private_key: privateKey,
+      },
+      scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+    })
 
-  if (!accessToken.token) {
-    throw new Error('Failed to get access token for Vertex AI')
+    const client = await auth.getClient()
+    const accessToken = await client.getAccessToken()
+
+    if (!accessToken.token) {
+      throw new Error('Failed to get access token for Vertex AI')
+    }
+
+    return accessToken.token
+  } catch (error) {
+    console.error('=== Access Token Generation Failed ===')
+    console.error('Error:', error)
+    if (error instanceof Error) {
+      console.error('Error message:', error.message)
+      // Don't log the full private key, but log its length and format
+      console.error('Private key length:', process.env.GOOGLE_PRIVATE_KEY?.length)
+      console.error('Private key starts with quotes:', process.env.GOOGLE_PRIVATE_KEY?.startsWith('"'))
+      console.error('Private key includes BEGIN marker:', process.env.GOOGLE_PRIVATE_KEY?.includes('BEGIN PRIVATE KEY'))
+    }
+    throw error
   }
-
-  return accessToken.token
 }
 
 /**
