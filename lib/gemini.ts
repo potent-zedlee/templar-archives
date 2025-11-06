@@ -183,17 +183,28 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
 `
   }
 
-  // Generate content using simple array structure (SDK auto-converts)
-  const response = await genAI.models.generateContent({
+  // Generate content using YouTube video (official SDK format)
+  // Documentation: https://ai.google.dev/gemini-api/docs/video-understanding
+
+  // Log request details for debugging
+  console.log('=== Gemini API Request Details ===')
+  console.log('Model:', 'gemini-2.5-flash')
+  console.log('Video URL:', videoUrl)
+  console.log('Prompt length:', promptText.length, 'chars')
+  if (segment) {
+    console.log('Segment:', `${segment.startTime} - ${segment.endTime}`)
+  }
+
+  const requestConfig = {
     model: 'gemini-2.5-flash', // Fast and cost-effective for video analysis
     contents: [
+      promptText, // Prompt first (as per official docs)
       {
         fileData: {
-          fileUri: videoUrl,
-          mimeType: 'video/mp4',
+          fileUri: videoUrl, // YouTube URL directly
+          // mimeType omitted - optional for YouTube URLs
         },
       },
-      promptText,
     ],
     config: {
       temperature: 0.1, // Low temperature for consistent, factual extraction
@@ -201,7 +212,27 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
       topK: 40,
       maxOutputTokens: 65536, // Gemini 2.5 Flash maximum output tokens
     },
-  })
+  }
+
+  console.log('Request config:', JSON.stringify({
+    model: requestConfig.model,
+    contentsCount: requestConfig.contents.length,
+    config: requestConfig.config,
+  }, null, 2))
+
+  let response
+  try {
+    response = await genAI.models.generateContent(requestConfig)
+  } catch (apiError) {
+    console.error('=== Gemini API Error ===')
+    console.error('Error:', apiError)
+    console.error('Error type:', apiError instanceof Error ? apiError.constructor.name : typeof apiError)
+    if (apiError instanceof Error) {
+      console.error('Error message:', apiError.message)
+      console.error('Error stack:', apiError.stack)
+    }
+    throw apiError
+  }
 
   // Get response text (async property in new SDK)
   const text = await response.text
