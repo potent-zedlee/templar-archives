@@ -129,23 +129,13 @@ async function analyzeSingleVideo(
   fullPrompt: string,
   segment?: VideoSegment
 ): Promise<any[]> {
-  const parts: any[] = []
-
-  // Part 1: Video (fileData only - videoMetadata not supported in JS SDK)
-  parts.push({
-    fileData: {
-      fileUri: videoUrl,
-      mimeType: 'video/*',
-    },
-  })
-
   if (segment) {
     console.log(
       `[Segment] Analyzing ${segment.startTime} - ${segment.endTime}`
     )
   }
 
-  // Part 2: Analysis prompt
+  // Build analysis prompt
   let promptText = `CRITICAL OUTPUT REQUIREMENTS:
 - You MUST respond with ONLY a valid JSON array
 - Start your response with [ and end with ]
@@ -193,16 +183,17 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
 `
   }
 
-  parts.push({ text: promptText })
-
-  // Generate content with video and prompt using new SDK
+  // Generate content using simple array structure (SDK auto-converts)
   const response = await genAI.models.generateContent({
     model: 'gemini-2.5-flash', // Fast and cost-effective for video analysis
     contents: [
       {
-        role: 'user',
-        parts,
+        fileData: {
+          fileUri: videoUrl,
+          mimeType: 'video/mp4',
+        },
       },
+      promptText,
     ],
     config: {
       temperature: 0.1, // Low temperature for consistent, factual extraction
