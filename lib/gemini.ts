@@ -131,30 +131,19 @@ async function analyzeSingleVideo(
 ): Promise<any[]> {
   const parts: any[] = []
 
-  // Part 1: Video with metadata (fileData + videoMetadata)
-  const videoPart: any = {
+  // Part 1: Video (fileData only - videoMetadata not supported in JS SDK)
+  parts.push({
     fileData: {
       fileUri: videoUrl,
       mimeType: 'video/*',
     },
-  }
+  })
 
-  // Add videoMetadata if segment provided (API-level time constraint)
   if (segment) {
-    const startSeconds = timeStringToSeconds(segment.startTime)
-    const endSeconds = timeStringToSeconds(segment.endTime)
-
-    videoPart.videoMetadata = {
-      startOffset: `${startSeconds}s`,
-      endOffset: `${endSeconds}s`,
-    }
-
     console.log(
-      `[Video Metadata] Analyzing ${segment.startTime} - ${segment.endTime} (${startSeconds}s - ${endSeconds}s)`
+      `[Segment] Analyzing ${segment.startTime} - ${segment.endTime}`
     )
   }
-
-  parts.push(videoPart)
 
   // Part 2: Analysis prompt
   let promptText = `CRITICAL OUTPUT REQUIREMENTS:
@@ -168,14 +157,39 @@ ${fullPrompt}`
 
   // Add time range instruction if segment provided
   if (segment) {
+    const startSeconds = timeStringToSeconds(segment.startTime)
+    const endSeconds = timeStringToSeconds(segment.endTime)
+
     promptText += `
 
-CRITICAL TIME RANGE INSTRUCTION:
-- This analysis is LIMITED to ${segment.startTime} - ${segment.endTime}
-- The videoMetadata ensures you only see this timeframe
-- Extract ONLY hands that start AND end within this range
-- Use actual video timestamps (not segment-relative)
-- If no complete hands exist in this segment, return []
+⚠️ CRITICAL TIME RANGE RESTRICTION ⚠️
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ANALYZE ONLY THE FOLLOWING TIME RANGE:
+START: ${segment.startTime} (${startSeconds} seconds)
+END: ${segment.endTime} (${endSeconds} seconds)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ABSOLUTE REQUIREMENTS:
+1. ✓ ONLY extract hands that BEGIN and END within ${segment.startTime} - ${segment.endTime}
+2. ✗ COMPLETELY IGNORE all gameplay before ${segment.startTime}
+3. ✗ COMPLETELY IGNORE all gameplay after ${segment.endTime}
+4. ✓ Use actual video timestamps (e.g., "${segment.startTime}", NOT "00:00")
+5. ✓ If a hand starts before ${segment.startTime}, DO NOT INCLUDE IT
+6. ✓ If a hand ends after ${segment.endTime}, DO NOT INCLUDE IT
+7. ✓ If NO complete hands exist in this segment, return an empty array: []
+
+VALID EXAMPLE:
+- Hand starts at timestamp ${Math.floor(startSeconds + (endSeconds - startSeconds) * 0.2)}s → within range ✓
+- Hand ends at timestamp ${Math.floor(startSeconds + (endSeconds - startSeconds) * 0.8)}s → within range ✓
+- INCLUDE THIS HAND ✓
+
+INVALID EXAMPLES:
+- Hand starts at ${startSeconds - 30}s → before ${segment.startTime} ✗ SKIP
+- Hand ends at ${endSeconds + 30}s → after ${segment.endTime} ✗ SKIP
+- Hand starts at ${startSeconds - 10}s, ends at ${startSeconds + 120}s → starts before range ✗ SKIP
+
+THIS IS NOT A SUGGESTION - THIS IS A MANDATORY CONSTRAINT.
+YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endTime}.
 `
   }
 
