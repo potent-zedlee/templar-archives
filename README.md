@@ -134,7 +134,7 @@ templar-archives/
 ### 백엔드
 - **Supabase**: PostgreSQL + Storage + Auth + Realtime
 - **Anthropic Claude**: 자연어 검색
-- **Google Gemini**: 영상 분석
+- **Google Gemini 2.5 Pro**: 영상 분석 및 핸드 히스토리 자동 추출
 - **Upstash Redis**: Rate Limiting
 
 ### 테스팅

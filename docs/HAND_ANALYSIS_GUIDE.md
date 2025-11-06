@@ -17,10 +17,11 @@
 
 ### 구성 요소
 
-1. **Gemini 1.5 Pro** - Google의 멀티모달 AI 모델
+1. **Gemini 2.5 Pro** - Google의 멀티모달 AI 모델
    - Video Understanding 기능
    - Long Context (2M tokens)
    - Structured Output (JSON)
+   - 향상된 추론 능력 및 정확도
 
 2. **플랫폼별 프롬프트**
    - Triton Poker
@@ -61,7 +62,7 @@ GOOGLE_API_KEY=your_google_api_key_here
 ### 3. 할당량 확인
 
 - **무료**: 60 requests/minute
-- **Gemini 1.5 Pro**: Video Understanding 지원
+- **Gemini 2.5 Pro**: Video Understanding 지원
 - **Long Context**: 최대 2M tokens (약 1시간 영상)
 
 ---

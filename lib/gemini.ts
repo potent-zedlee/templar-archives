@@ -209,13 +209,13 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
   let response
   try {
     response = await genAI.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-pro',
       contents: [ytVideo, promptText],
       config: {
         temperature: 0.1, // Low temperature for consistent, factual extraction
         topP: 0.95,
         topK: 40,
-        maxOutputTokens: 65536, // Gemini 2.5 Flash maximum output tokens
+        maxOutputTokens: 65536, // Gemini 2.5 Pro maximum output tokens
       },
     })
   } catch (apiError) {
@@ -366,7 +366,7 @@ export async function testGeminiConnection(): Promise<boolean> {
 
     // Use official SDK format
     const response = await genAI.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-pro',
       contents: ['Hello'],
     })
 
