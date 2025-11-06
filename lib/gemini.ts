@@ -202,28 +202,21 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
   let response
   try {
     response = await genAI.models.generateContent({
-      model: 'gemini-2.5-pro',
+      model: 'gemini-2.5-flash',
       contents: [
         {
-          role: 'user',
-          parts: [
-            {
-              fileData: {
-                fileUri: videoUrl,
-                mimeType: 'video/*',
-              }
-            },
-            {
-              text: promptText
-            }
-          ]
-        }
+          fileData: {
+            fileUri: videoUrl,
+            mimeType: 'video/mp4',
+          }
+        },
+        promptText  // 문자열 직접 전달
       ],
       generationConfig: {
         temperature: 0.1, // Low temperature for consistent, factual extraction
         topP: 0.95,
         topK: 40,
-        maxOutputTokens: 65536, // Gemini 2.5 Pro maximum output tokens
+        maxOutputTokens: 65536, // Gemini 2.5 Flash maximum output tokens
       },
     })
   } catch (apiError) {
@@ -372,15 +365,10 @@ export async function testGeminiConnection(): Promise<boolean> {
       return false
     }
 
-    // Use official SDK format with role/parts structure
+    // Use official SDK format with simplified structure
     const response = await genAI.models.generateContent({
-      model: 'gemini-2.5-pro',
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: 'Hello' }]
-        }
-      ],
+      model: 'gemini-2.5-flash',
+      contents: ['Hello'],  // 단순 문자열 배열
     })
 
     const text = response.text
