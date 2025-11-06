@@ -199,12 +199,19 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
     model: 'gemini-2.5-flash', // Fast and cost-effective for video analysis
     contents: [
       {
-        fileData: {
-          fileUri: videoUrl, // YouTube URL directly
-          mimeType: 'video/*', // Required for video files
-        },
+        role: 'user', // Required by @google/genai SDK
+        parts: [
+          {
+            fileData: {
+              fileUri: videoUrl, // YouTube URL directly
+              mimeType: 'video/*', // Required for video files
+            },
+          },
+          {
+            text: promptText, // Text must be in object format
+          },
+        ],
       },
-      promptText, // Text prompt after fileData
     ],
     generationConfig: {
       temperature: 0.1, // Low temperature for consistent, factual extraction
