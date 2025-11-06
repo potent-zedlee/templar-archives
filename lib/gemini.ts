@@ -5,9 +5,10 @@
  * using Google's Gemini 1.5 Pro model with video understanding capabilities.
  */
 
-// SDK 제거 - REST API 직접 사용
+// Vertex AI REST API 직접 사용
 import fs from 'fs/promises'
 import path from 'path'
+import { GoogleAuth } from 'google-auth-library'
 import { timeStringToSeconds } from './types/video-segments'
 
 // Gemini REST API 타입 정의 (snake_case 사용!)
@@ -92,6 +93,28 @@ export interface AnalysisConfig {
   players?: PlayerInfo[]
   segments?: VideoSegment[]
   dayId?: string
+}
+
+/**
+ * Get OAuth 2.0 access token for Vertex AI
+ */
+async function getAccessToken(): Promise<string> {
+  const auth = new GoogleAuth({
+    credentials: {
+      client_email: process.env.GOOGLE_CLIENT_EMAIL,
+      private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    },
+    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+  })
+
+  const client = await auth.getClient()
+  const accessToken = await client.getAccessToken()
+
+  if (!accessToken.token) {
+    throw new Error('Failed to get access token for Vertex AI')
+  }
+
+  return accessToken.token
 }
 
 /**
@@ -230,20 +253,30 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
   // Generate content using YouTube video (official SDK format)
   // Documentation: https://ai.google.dev/gemini-api/docs/video-understanding
 
+  // Validate Vertex AI credentials
+  const projectId = process.env.GOOGLE_VERTEX_PROJECT
+  const location = process.env.GOOGLE_VERTEX_LOCATION || 'us-central1'
+
+  if (!projectId || !process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+    throw new Error('Vertex AI credentials not configured. Please set GOOGLE_VERTEX_PROJECT, GOOGLE_CLIENT_EMAIL, and GOOGLE_PRIVATE_KEY')
+  }
+
   // Log request details for debugging
-  console.log('=== Gemini API Request Details ===')
+  console.log('=== Vertex AI Request Details ===')
   console.log('Model:', 'gemini-2.5-flash')
+  console.log('Project:', projectId)
+  console.log('Location:', location)
   console.log('Video URL:', videoUrl)
   console.log('Prompt length:', promptText.length, 'chars')
   if (segment) {
     console.log('Segment:', `${segment.startTime} - ${segment.endTime}`)
   }
 
-  // Use Gemini REST API directly (fetch)
-  // Reference: https://ai.google.dev/api/generate-content
-  console.log('Using Gemini REST API: fetch with snake_case')
+  // Use Vertex AI REST API directly (fetch)
+  // Reference: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.publishers.models/generateContent
+  console.log('Using Vertex AI REST API with OAuth 2.0')
 
-  const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+  const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-2.5-flash:generateContent`
 
   const requestBody: GeminiRequest = {
     contents: [
@@ -266,30 +299,33 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
     },
   }
 
+  // Get OAuth 2.0 access token
+  const accessToken = await getAccessToken()
+
   let data: GeminiResponse
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': process.env.GOOGLE_API_KEY || '',
+        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify(requestBody),
     })
 
     if (!response.ok) {
       const errorData: GeminiErrorResponse = await response.json()
-      console.error('=== Gemini REST API Error ===')
+      console.error('=== Vertex AI REST API Error ===')
       console.error('Status:', response.status)
       console.error('Error:', errorData)
       throw new Error(
-        `Gemini API Error ${errorData.error?.code}: ${errorData.error?.message} (${errorData.error?.status})`
+        `Vertex AI API Error ${errorData.error?.code}: ${errorData.error?.message} (${errorData.error?.status})`
       )
     }
 
     data = await response.json()
   } catch (apiError) {
-    console.error('=== Gemini API Request Failed ===')
+    console.error('=== Vertex AI API Request Failed ===')
     console.error('Error:', apiError)
     if (apiError instanceof Error) {
       console.error('Error message:', apiError.message)
@@ -303,7 +339,7 @@ YOU MUST STRICTLY ADHERE TO THE TIME RANGE ${segment.startTime} - ${segment.endT
 
   if (!text) {
     console.error('No text in response:', data)
-    throw new Error('No content in Gemini API response')
+    throw new Error('No content in Vertex AI response')
   }
 
   // Detailed logging for debugging
@@ -430,22 +466,29 @@ export async function analyzePokerVideo(config: AnalysisConfig) {
 }
 
 /**
- * Test Gemini API connection
+ * Test Vertex AI Gemini API connection
  */
 export async function testGeminiConnection(): Promise<boolean> {
   try {
-    if (!process.env.GOOGLE_API_KEY) {
+    const projectId = process.env.GOOGLE_VERTEX_PROJECT
+    const location = process.env.GOOGLE_VERTEX_LOCATION || 'us-central1'
+
+    if (!projectId || !process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+      console.warn('Vertex AI credentials not configured')
       return false
     }
 
-    // Test Gemini REST API connection
-    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent'
+    // Get OAuth 2.0 access token
+    const accessToken = await getAccessToken()
+
+    // Test Vertex AI REST API connection
+    const endpoint = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/gemini-2.5-flash:generateContent`
 
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-goog-api-key': process.env.GOOGLE_API_KEY || '',
+        'Authorization': `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         contents: [
@@ -457,6 +500,7 @@ export async function testGeminiConnection(): Promise<boolean> {
     })
 
     if (!response.ok) {
+      console.error('Vertex AI connection test failed:', response.status)
       return false
     }
 
@@ -464,7 +508,7 @@ export async function testGeminiConnection(): Promise<boolean> {
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
     return text.length > 0
   } catch (error) {
-    console.error('Gemini connection test failed:', error)
+    console.error('Vertex AI connection test failed:', error)
     return false
   }
 }

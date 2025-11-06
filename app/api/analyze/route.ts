@@ -47,12 +47,14 @@ export async function POST(request: NextRequest) {
     const rateLimitResponse = await applyRateLimit(request, rateLimiters.naturalSearch)
     if (rateLimitResponse) return rateLimitResponse
 
-    // Validate API key
-    if (!process.env.GOOGLE_API_KEY) {
+    // Validate Vertex AI credentials
+    if (!process.env.GOOGLE_VERTEX_PROJECT ||
+        !process.env.GOOGLE_CLIENT_EMAIL ||
+        !process.env.GOOGLE_PRIVATE_KEY) {
       return NextResponse.json(
         {
-          error: 'GOOGLE_API_KEY not configured',
-          message: 'Please add your Google API key to environment variables',
+          error: 'Vertex AI credentials not configured',
+          message: 'Please set GOOGLE_VERTEX_PROJECT, GOOGLE_CLIENT_EMAIL, and GOOGLE_PRIVATE_KEY in environment variables',
         },
         { status: 500 }
       )
