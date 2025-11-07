@@ -46,6 +46,7 @@ export interface Tournament {
   id: string
   name: string
   category: TournamentCategory
+  category_id?: string // New category system (FK to tournament_categories.id)
   category_logo?: string
   category_logo_url?: string // Joined from tournament_categories table
   location: string

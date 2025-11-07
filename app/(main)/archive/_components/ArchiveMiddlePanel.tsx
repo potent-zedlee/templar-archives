@@ -40,7 +40,7 @@ export function ArchiveMiddlePanel() {
     const filteredTournaments =
       selectedCategory === 'All'
         ? tournaments
-        : tournaments.filter((t) => t.category === selectedCategory)
+        : tournaments.filter((t) => t.category_id === selectedCategory)
 
     // Build tree structure
     filteredTournaments.forEach((tournament) => {
