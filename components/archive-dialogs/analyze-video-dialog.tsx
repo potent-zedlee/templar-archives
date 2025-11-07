@@ -22,6 +22,8 @@ import type { VideoSegment } from "@/lib/types/video-segments"
 import { gameplaySegmentsToString, timeStringToSeconds } from "@/lib/types/video-segments"
 import { PlayerMatchResults } from "@/components/player-match-results"
 import { VideoPlayerWithTimestamp } from "@/components/video-player-with-timestamp"
+import { startHaeAnalysis } from "@/app/actions/hae-analysis"
+import type { TimeSegment } from "@/types/segments"
 
 interface AnalyzeVideoDialogProps {
   isOpen: boolean
@@ -35,7 +37,7 @@ interface PlayerInput {
   name: string
 }
 
-type Platform = "triton" | "pokerstars" | "wsop" | "hustler"
+type Platform = "ept" | "triton" | "pokerstars" | "wsop" | "hustler"
 type AnalysisStatus = "idle" | "analyzing" | "success" | "error"
 
 interface PlayerMatchResult {
@@ -53,7 +55,7 @@ export function AnalyzeVideoDialog({
   day,
   onSuccess
 }: AnalyzeVideoDialogProps) {
-  const [platform, setPlatform] = useState<Platform>("triton")
+  const [platform, setPlatform] = useState<Platform>("ept")
   const [players, setPlayers] = useState<PlayerInput[]>([])
   const [segments, setSegments] = useState<VideoSegment[]>([])
   const [status, setStatus] = useState<AnalysisStatus>("idle")
@@ -102,50 +104,37 @@ export function AnalyzeVideoDialog({
       // Filter out empty players
       const validPlayers = players
         .filter(p => p.name.trim())
-        .map(p => ({ name: p.name }))
+        .map(p => p.name)
 
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          videoUrl: day.video_url,
-          platform,
-          dayId: day.id,
-          players: validPlayers.length > 0 ? validPlayers : undefined,
-          segments: segments.length > 0 ? segments : undefined
-        })
+      // Convert VideoSegment[] to TimeSegment[]
+      const timeSegments: TimeSegment[] = segments.map(seg => ({
+        id: seg.id,
+        type: seg.type,
+        start: timeStringToSeconds(seg.startTime),
+        end: timeStringToSeconds(seg.endTime),
+        label: seg.type
+      }))
+
+      // Use HAE analysis system
+      const result = await startHaeAnalysis({
+        videoUrl: day.video_url,
+        segments: timeSegments,
+        players: validPlayers.length > 0 ? validPlayers : undefined
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || data.error || "분석에 실패했습니다")
+      if (!result.success) {
+        throw new Error(result.error || "분석에 실패했습니다")
       }
 
       // Success
       setStatus("success")
-      setExtractedCount(data.handsExtracted)
-      setProgress(`${data.handsExtracted}개의 핸드가 추출되어 데이터베이스에 저장되었습니다`)
+      setProgress("분석이 완료되었습니다. 핸드가 추출되어 데이터베이스에 저장되었습니다.")
 
-      // 매칭 결과 저장
-      if (data.matchResults && data.matchResults.length > 0) {
-        setMatchResults(data.matchResults)
-      }
-
-      // Callback
-      if (onSuccess && data.hands) {
-        onSuccess(data.hands)
-      }
-
-      // 매칭 결과가 있으면 수동 닫기, 없으면 자동 닫기
-      if (!data.matchResults || data.matchResults.length === 0) {
-        setTimeout(() => {
-          onOpenChange(false)
-          resetDialog()
-        }, 2000)
-      }
+      // Auto-close after 2 seconds
+      setTimeout(() => {
+        onOpenChange(false)
+        resetDialog()
+      }, 2000)
 
     } catch (err) {
       setStatus("error")
@@ -217,6 +206,12 @@ export function AnalyzeVideoDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="ept">
+                    <div className="flex items-center gap-2">
+                      <span>EPT (European Poker Tour)</span>
+                      <Badge variant="secondary" className="text-xs">권장</Badge>
+                    </div>
+                  </SelectItem>
                   <SelectItem value="triton">
                     <div className="flex items-center gap-2">
                       <span>Triton Poker</span>
@@ -226,7 +221,7 @@ export function AnalyzeVideoDialog({
                   <SelectItem value="pokerstars">
                     <div className="flex items-center gap-2">
                       <span>PokerStars</span>
-                      <Badge variant="secondary" className="text-xs">EPT, APPT, UKIPT</Badge>
+                      <Badge variant="secondary" className="text-xs">일반 토너먼트</Badge>
                     </div>
                   </SelectItem>
                   <SelectItem value="wsop">
