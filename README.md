@@ -110,7 +110,7 @@ templar-archives/
 | 기능 | 파일 경로 | 설명 |
 |------|-----------|------|
 | **Archive 메인** | `app/archive/tournament/page.tsx` | 4단계 계층 UI (88줄, 리팩토링 완료) |
-| **영상 분석 API** | `app/api/analyze-video/route.ts` | Hand Analysis Engine (SSE 스트리밍) |
+| **영상 분석 API** | `app/api/analyze-video/route.ts` | HAE (Hand Analysis Engine) - SSE 스트리밍 |
 | **AI 검색 API** | `app/api/natural-search/route.ts` | Claude 3.5 Sonnet 통합 |
 | **플레이어 통계** | `queries/players-queries.ts` | React Query + 캐싱 |
 | **댓글 시스템** | `components/community/CommentTree.tsx` | Reddit 스타일 무한 중첩 |
@@ -282,7 +282,7 @@ curl -X POST http://localhost:3000/api/import-hands \
 ### 2. 영상 분석 API (SSE)
 ```typescript
 // GET /api/analyze-video?videoUrl=...&streamId=...
-// Hand Analysis Engine 통합 (Server-Sent Events)
+// HAE (Hand Analysis Engine) 통합 (Server-Sent Events)
 
 // 실시간 진행률 스트리밍
 event: progress
@@ -297,7 +297,7 @@ data: {"handsExtracted": 150}
 
 **실제 사용**:
 - 파일: `app/api/analyze-video/route.ts`
-- Hand Analysis Engine v1.0.6 (로컬 npm 패키지)
+- HAE v1.0.6 (Hand Analysis Engine, 로컬 npm 패키지)
 - Gemini Vision API 통합
 
 ### 3. AI 자연어 검색 API
@@ -331,7 +331,7 @@ interface SearchRequest {
 | `/api/parse-payout-csv` | POST | CSV 페이아웃 파싱 |
 | `/api/youtube/channel-streams` | GET | YouTube 라이브 스트림 조회 |
 | `/api/health` | GET | 헬스체크 |
-| `/api/test-analysis-engine` | POST | Analysis Engine 테스트 |
+| `/api/test-analysis-engine` | POST | HAE 테스트 |
 
 **보안**:
 - ✅ CSRF 보호 (모든 POST)

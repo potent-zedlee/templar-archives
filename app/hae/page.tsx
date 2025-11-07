@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { YouTubePlayer } from "@/components/video/youtube-player"
 import { SegmentManager } from "@/components/video/segment-manager"
 import { TimeSegment, calculateTotalAnalysisTime, formatTime } from "@/types/segments"
-import { JobStatus } from "@/components/analysis/job-status"
+import { JobStatus } from "@/components/hae/job-status"
 import { ArrowLeft } from "lucide-react"
 
 export default function AnalyzePage() {
@@ -31,8 +31,8 @@ export default function AnalyzePage() {
 
     setIsLoading(true)
 
-    const { startAnalysis } = await import('@/app/actions/hae-analysis')
-    const result = await startAnalysis({
+    const { startHaeAnalysis } = await import('@/app/actions/hae-analysis')
+    const result = await startHaeAnalysis({
       videoUrl,
       segments,
     })

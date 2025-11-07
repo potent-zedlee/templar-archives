@@ -1,16 +1,16 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { analyzeVideoSegments } from '@/lib/ai/gemini'
+import { haeAnalyzeSegments } from '@/lib/ai/gemini'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
 
-export interface StartAnalysisInput {
+export interface HaeStartInput {
   videoUrl: string
   segments: TimeSegment[]
 }
 
-export interface StartAnalysisResult {
+export interface HaeStartResult {
   success: boolean
   jobId?: string
   error?: string
@@ -77,11 +77,11 @@ async function findOrCreatePlayer(supabase: any, name: string): Promise<string> 
 }
 
 /**
- * Start video analysis job
+ * Start HAE video analysis job
  */
-export async function startAnalysis(
-  input: StartAnalysisInput
-): Promise<StartAnalysisResult> {
+export async function startHaeAnalysis(
+  input: HaeStartInput
+): Promise<HaeStartResult> {
   try {
     const supabase = await createServerSupabaseClient()
 
@@ -156,18 +156,18 @@ export async function startAnalysis(
     }
 
     // Start background processing (in production, this would be a queue)
-    processAnalysisJob(job.id, dbVideoId, videoId, gameplaySegments).catch(
+    processHaeJob(job.id, dbVideoId, videoId, gameplaySegments).catch(
       console.error
     )
 
-    revalidatePath('/analyze')
+    revalidatePath('/hae')
 
     return {
       success: true,
       jobId: job.id,
     }
   } catch (error) {
-    console.error('Start analysis error:', error)
+    console.error('Start HAE error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -176,10 +176,10 @@ export async function startAnalysis(
 }
 
 /**
- * Process analysis job in the background
+ * Process HAE job in the background
  * In production, this should be moved to a queue worker
  */
-async function processAnalysisJob(
+async function processHaeJob(
   jobId: string,
   dbVideoId: string,
   youtubeId: string,
@@ -204,9 +204,9 @@ async function processAnalysisJob(
       label: s.label,
     }))
 
-    // Pass full YouTube URL to Gemini
+    // Pass full YouTube URL to HAE (Gemini)
     const fullYoutubeUrl = `https://www.youtube.com/watch?v=${youtubeId}`
-    const results = await analyzeVideoSegments(fullYoutubeUrl, segmentsForAnalysis)
+    const results = await haeAnalyzeSegments(fullYoutubeUrl, segmentsForAnalysis)
 
     // Process results and store in database
     let totalHands = 0
@@ -319,7 +319,7 @@ async function processAnalysisJob(
       })
       .eq('id', jobId)
   } catch (error) {
-    console.error('Analysis job processing error:', error)
+    console.error('HAE job processing error:', error)
 
     // Mark job as failed
     await supabase
@@ -334,9 +334,9 @@ async function processAnalysisJob(
 }
 
 /**
- * Get analysis job status
+ * Get HAE job status
  */
-export async function getAnalysisJob(jobId: string) {
+export async function getHaeJob(jobId: string) {
   const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase

@@ -5,13 +5,13 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_AI_API_KEY || '',
 })
 
-export interface AnalysisSegment {
+export interface HaeSegment {
   start: number // seconds
   end: number // seconds
   label?: string
 }
 
-export interface AnalysisResult {
+export interface HaeResult {
   hands: any[]
   rawResponse: string
   error?: string
@@ -40,13 +40,13 @@ function formatTimeOffset(seconds: number): string {
 /**
  * Split long segment into chunks (max 1 hour each)
  */
-function splitSegment(segment: AnalysisSegment): AnalysisSegment[] {
+function splitSegment(segment: HaeSegment): HaeSegment[] {
   const duration = segment.end - segment.start
   if (duration <= MAX_SEGMENT_DURATION) {
     return [segment]
   }
 
-  const chunks: AnalysisSegment[] = []
+  const chunks: HaeSegment[] = []
   let currentStart = segment.start
 
   while (currentStart < segment.end) {
@@ -63,13 +63,13 @@ function splitSegment(segment: AnalysisSegment): AnalysisSegment[] {
 }
 
 /**
- * Analyze a video segment using Gemini 2.0 Flash with YouTube URL
+ * Analyze a video segment using HAE (Gemini 2.0 Flash) with YouTube URL
  * Supports direct YouTube URL processing with videoMetadata
  */
-export async function analyzeVideoSegment(
+export async function haeAnalyzeSegment(
   youtubeUrl: string,
-  segment: AnalysisSegment
-): Promise<AnalysisResult> {
+  segment: HaeSegment
+): Promise<HaeResult> {
   try {
     // Validate YouTube URL
     if (!isValidYouTubeUrl(youtubeUrl)) {
@@ -97,7 +97,7 @@ export async function analyzeVideoSegment(
 
       // Analyze each chunk and merge results
       const results = await Promise.all(
-        chunks.map(chunk => analyzeSingleSegment(youtubeUrl, chunk))
+        chunks.map(chunk => haeAnalyzeSingleSegment(youtubeUrl, chunk))
       )
 
       // Merge all hands from chunks
@@ -112,7 +112,7 @@ export async function analyzeVideoSegment(
       }
     }
 
-    return await analyzeSingleSegment(youtubeUrl, segment)
+    return await haeAnalyzeSingleSegment(youtubeUrl, segment)
   } catch (error) {
     console.error('Gemini API error:', error)
     return {
@@ -124,12 +124,12 @@ export async function analyzeVideoSegment(
 }
 
 /**
- * Analyze a single segment (must be <= 1 hour)
+ * Analyze a single segment using HAE (must be <= 1 hour)
  */
-async function analyzeSingleSegment(
+async function haeAnalyzeSingleSegment(
   youtubeUrl: string,
-  segment: AnalysisSegment
-): Promise<AnalysisResult> {
+  segment: HaeSegment
+): Promise<HaeResult> {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash-exp',
@@ -222,15 +222,15 @@ Please analyze this poker video segment and extract all hand histories in the sp
 }
 
 /**
- * Analyze multiple segments in parallel for better performance
+ * Analyze multiple segments in parallel using HAE for better performance
  */
-export async function analyzeVideoSegments(
+export async function haeAnalyzeSegments(
   youtubeUrl: string,
-  segments: AnalysisSegment[]
-): Promise<AnalysisResult[]> {
+  segments: HaeSegment[]
+): Promise<HaeResult[]> {
   // Parallel processing for speed
   const results = await Promise.all(
-    segments.map(segment => analyzeVideoSegment(youtubeUrl, segment))
+    segments.map(segment => haeAnalyzeSegment(youtubeUrl, segment))
   )
 
   return results

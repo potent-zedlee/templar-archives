@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
-import { getAnalysisJob } from '@/app/actions/hae-analysis'
+import { getHaeJob } from '@/app/actions/hae-analysis'
 
 interface JobStatusProps {
   jobId: string
@@ -20,7 +20,7 @@ export function JobStatus({ jobId, onComplete }: JobStatusProps) {
 
   useEffect(() => {
     const pollJob = async () => {
-      const data = await getAnalysisJob(jobId)
+      const data = await getHaeJob(jobId)
       setJob(data)
 
       if (data && (data.status === 'completed' || data.status === 'failed')) {

@@ -11,10 +11,10 @@
 
 ---
 
-## 2025-10-30 (세션 44) - Hand Analysis Engine 웹사이트 통합 완료 ✅
+## 2025-10-30 (세션 44) - HAE (Hand Analysis Engine) 웹사이트 통합 완료 ✅
 
 ### 작업 목표
-Hand Analysis Engine npm 패키지를 Templar Archives 웹사이트에 통합하여 자동 영상 분석 기능 추가
+HAE (Hand Analysis Engine) npm 패키지를 Templar Archives 웹사이트에 통합하여 자동 영상 분석 기능 추가
 
 ### 작업 내용
 
@@ -29,7 +29,7 @@ Hand Analysis Engine npm 패키지를 Templar Archives 웹사이트에 통합하
   - `20251029999999_drop_timecode_system.sql` 생성 및 적용
   - timecode_submissions 테이블, 7개 인덱스, 5개 함수, 3개 트리거, 6개 RLS 정책 삭제
 
-#### Phase 2: Hand Analysis Engine API 구축 (2시간) ✅
+#### Phase 2: HAE API 구축 (2시간) ✅
 - **lib/auth-utils.ts** (62줄):
   - `isHighTemplar()` 함수 추가 (high_templar, reporter, admin 체크)
   - `canAnalyzeVideo()` 함수 추가 (서버 사이드)
@@ -80,7 +80,7 @@ Hand Analysis Engine npm 패키지를 Templar Archives 웹사이트에 통합하
 - CLAUDE.md 업데이트 예정
 
 ### 기술 스택
-- **Hand Analysis Engine**: npm 패키지 1.0.0
+- **HAE**: npm 패키지 1.0.0 (Hand Analysis Engine)
 - **Claude Vision API**: Gemini API 사용
 - **SSE**: Server-Sent Events for real-time progress
 - **Supabase**: PostgreSQL 데이터베이스
@@ -106,7 +106,7 @@ Hand Analysis Engine npm 패키지를 Templar Archives 웹사이트에 통합하
 
 ### 성과
 - ✅ 타임코드 시스템 완전 제거
-- ✅ Hand Analysis Engine 완전 통합
+- ✅ HAE (Hand Analysis Engine) 완전 통합
 - ✅ High Templar 이상 자동 분석 가능
 - ✅ 실시간 진행률 표시 (SSE)
 - ✅ AI 분석 배지 표시

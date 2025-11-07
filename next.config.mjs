@@ -110,6 +110,20 @@ const nextConfig = {
       },
     ]
   },
+  async redirects() {
+    return [
+      {
+        source: '/analyze',
+        destination: '/hae',
+        permanent: true,
+      },
+      {
+        source: '/analyze/:path*',
+        destination: '/hae/:path*',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default bundleAnalyzer(nextConfig)

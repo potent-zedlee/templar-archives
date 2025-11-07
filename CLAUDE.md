@@ -81,7 +81,7 @@ Templar Archive는 포커 핸드 데이터의 자동 추출, 보관, 분석을 �
 - **Phase 30-33**: Event Management Enhancement, Archive Security Enhancement, UI/Admin Enhancement, Single Mode Accordion
 
 **핵심 성과**:
-- 73개 마이그레이션 완료 (RLS 정책, 알림 시스템, 플레이어 통계, 보안 강화, Hand Analysis Engine 제거)
+- 73개 마이그레이션 완료 (RLS 정책, 알림 시스템, 플레이어 통계, 보안 강화, HAE 제거)
 - Archive 페이지 리팩토링: 1,733줄 → 88줄 (-95%)
 - 114개 `any` 타입 완전 제거, 타입 안전성 확보
 - 보안 등급: B+ → A (포괄적 보안 강화)
