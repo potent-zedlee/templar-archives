@@ -104,7 +104,7 @@ export function DiscoveryLayout({
           {/* Desktop: Middle Panel */}
           <div
             className={cn(
-              "hidden lg:flex flex-col border-r bg-card transition-all duration-300",
+              "hidden lg:flex flex-col h-full border-r bg-card transition-all duration-300",
               middlePanelCollapsed ? "w-0" : `w-[${middlePanelWidth}]`
             )}
           >
