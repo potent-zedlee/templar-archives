@@ -7,6 +7,8 @@ interface YouTubePlayerProps {
   videoId: string
   onTimeUpdate?: (currentTime: number) => void
   onDurationChange?: (duration: number) => void
+  startTime?: number // Start playback from this time (in seconds)
+  className?: string
 }
 
 declare global {
@@ -16,7 +18,7 @@ declare global {
   }
 }
 
-export function YouTubePlayer({ videoId, onTimeUpdate, onDurationChange }: YouTubePlayerProps) {
+export function YouTubePlayer({ videoId, onTimeUpdate, onDurationChange, startTime, className }: YouTubePlayerProps) {
   const playerRef = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
@@ -74,6 +76,11 @@ export function YouTubePlayer({ videoId, onTimeUpdate, onDurationChange }: YouTu
           const dur = event.target.getDuration()
           setDuration(dur)
           onDurationChange?.(dur)
+
+          // Seek to startTime if provided
+          if (startTime && startTime > 0) {
+            event.target.seekTo(startTime, true)
+          }
         },
       },
     })
@@ -86,7 +93,7 @@ export function YouTubePlayer({ videoId, onTimeUpdate, onDurationChange }: YouTu
   }
 
   return (
-    <div className="space-y-4">
+    <div className={className}>
       <div className="aspect-video bg-black rounded-lg overflow-hidden">
         <div ref={containerRef} className="w-full h-full" />
       </div>
