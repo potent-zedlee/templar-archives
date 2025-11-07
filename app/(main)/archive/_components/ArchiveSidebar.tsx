@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Plus, RotateCcw } from "lucide-react"
-import { ArchiveTournamentLogosBar } from "@/components/archive-tournament-logos-bar"
+import { ArchiveSidebarCategories } from "./ArchiveSidebarCategories"
 import { ArchiveUnifiedFilters } from "@/components/archive-unified-filters"
 import { QuickUploadDialog } from "@/components/quick-upload-dialog"
 import { useQueryClient } from "@tanstack/react-query"
@@ -51,14 +51,11 @@ export function ArchiveSidebar({ gameType }: ArchiveSidebarProps) {
           {/* Tournament Categories */}
           <div>
             <h3 className="text-sm font-medium mb-3">Categories</h3>
-            <div className="space-y-2">
-              <ArchiveTournamentLogosBar
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
-                gameType={gameType}
-                className="flex-col items-stretch"
-              />
-            </div>
+            <ArchiveSidebarCategories
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              gameType={gameType}
+            />
           </div>
 
           <Separator />

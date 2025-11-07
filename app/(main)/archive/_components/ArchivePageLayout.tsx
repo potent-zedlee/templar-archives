@@ -111,6 +111,7 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
             <>
               <DiscoveryLayout
                 sidebar={<ArchiveSidebar gameType={gameType === 'tournament' ? 'tournament' : 'cash_game'} />}
+                sidebarWidth="280px"
                 middlePanel={<ArchiveMiddlePanel />}
                 mainPanel={
                   <ArchiveMainPanel
