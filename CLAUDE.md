@@ -215,19 +215,28 @@ npm run dev
 - **[Phase 1-33 Archive](./work-logs/phase-1-to-33-archive.md)** - Phase 1~33 상세 개발 내역 (2025-10-16 ~ 2025-10-28)
 - **[Recent Development History](./work-logs/recent-development-history.md)** - 최근 세션 및 Phase 완료 내역 (2025-10-16 ~ 2025-10-30)
 
-### 최신 상태 (2025-11-02)
+### 최신 상태 (2025-11-08)
 
 - ✅ **프로덕션 배포**: https://templar-archives.vercel.app
 - ✅ **빌드 상태**: 46 페이지 생성, 정상 동작
 - ✅ **버전**: React 19.2.0, TypeScript 5.9.3, Next.js 15.5.5
 - ✅ **보안 등급**: A
-- ✅ **총 마이그레이션**: 72개 완료
+- ✅ **총 마이그레이션**: 73개 완료 (HAE Phase 3 Summary & Comments 포함)
+- ✅ **Phase 3.3 완료**: Archive AI 분석 시스템 통합
+
+### Phase 3.3 주요 내용 (2025-11-08)
+- **EPT 플랫폼 통합**: AnalyzeVideoDialog에 EPT 추가 및 기본값 설정
+- **HAE 시스템 통합**: startHaeAnalysis() 서버 액션 연결
+- **시스템 통합**: /api/analyze 삭제, /hae 페이지 삭제
+- **단일 진입점**: Archive에서 직접 AI 분석 가능
+- **자동 변환**: VideoSegment → TimeSegment 변환 로직
 
 ---
 
-**마지막 업데이트**: 2025-11-02
-**문서 버전**: 27.0
+**마지막 업데이트**: 2025-11-08
+**문서 버전**: 27.1
 **주요 변경**:
-- 문서 간소화: 상세 개발 내역을 work-logs로 이동
-- Phase 1-33 및 최근 개발 내역 아카이브화
-- CLAUDE.md 크기 감소: 372줄 → ~230줄 (-38%)
+- Phase 3.3 완료: Archive AI 분석 시스템 통합
+- /hae 페이지 삭제, /api/analyze 엔드포인트 삭제
+- EPT 플랫폼 추가 및 기본값으로 설정
+- HAE 분석 시스템 단일 진입점으로 통합

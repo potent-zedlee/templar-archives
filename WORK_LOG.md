@@ -11,6 +11,65 @@
 
 ---
 
+## 2025-11-08 (세션 45) - Phase 3.3: Archive AI 분석 시스템 통합 완료 ✅
+
+### 작업 목표
+Archive 페이지에서 직접 AI 분석이 가능하도록 시스템 통합 및 HAE 페이지 삭제
+
+### 작업 내용
+
+#### Phase 3.3: 분석 시스템 통합 (1.5시간) ✅
+- **AnalyzeVideoDialog EPT 통합**:
+  - EPT (European Poker Tour) 플랫폼 추가 및 기본값으로 설정
+  - startHaeAnalysis() 서버 액션과 통합
+  - VideoSegment → TimeSegment 자동 변환 로직 추가
+  - /api/analyze 엔드포인트 제거 (HAE 시스템으로 통합)
+
+- **시스템 정리**:
+  - `/hae` 페이지 완전 삭제 (별도 페이지 불필요)
+  - `/api/analyze` 엔드포인트 삭제
+  - 단일 분석 시스템으로 통합 (Archive에서 직접 실행)
+
+- **수정된 파일** (1개):
+  - `components/archive-dialogs/analyze-video-dialog.tsx`
+    - Platform 타입에 'ept' 추가
+    - 기본 플랫폼을 'ept'로 변경
+    - /api/analyze → startHaeAnalysis() 변경
+    - VideoSegment[] → TimeSegment[] 변환 로직 추가
+    - 플레이어 매칭 결과 로직 제거 (HAE 시스템에서 자동 처리)
+
+- **삭제된 파일** (2개):
+  - `app/api/analyze/route.ts` - 구 분석 API 엔드포인트
+  - `app/hae/page.tsx` - HAE 전용 페이지
+
+### 주요 개선사항
+- **단일 진입점**: Archive → Day → AI 분석 버튼으로 통합
+- **EPT 최우선**: EPT 플랫폼이 기본값으로 설정
+- **자동 변환**: 세그먼트 타입 자동 변환 (VideoSegment → TimeSegment)
+- **간소화된 UX**: 2초 후 자동 닫기, 매칭 결과 화면 제거
+
+### 사용 방법
+1. Archive 페이지 → Tournament 선택
+2. Event → Day 선택
+3. **AI 분석** 버튼 클릭 (관리자만 표시)
+4. EPT 플랫폼 선택 (기본값)
+5. 플레이어 이름 입력 (선택)
+6. 영상 세그먼트 설정
+7. 분석 시작 → HAE 시스템이 자동으로 핸드 추출 및 AI 요약 생성
+
+### 기술 스택
+- **HAE Analysis**: startHaeAnalysis() 서버 액션
+- **Gemini 2.0 Flash**: EPT_PROMPT 기반 AI 분석
+- **TimeSegment**: 초 단위 세그먼트 시스템
+- **VideoSegment**: HH:MM:SS 형식 UI 입력
+
+### 배포
+- ✅ 빌드 성공 (46개 페이지)
+- ✅ 커밋: e866945
+- ✅ Vercel 배포 완료
+
+---
+
 ## 2025-10-30 (세션 44) - HAE (Hand Analysis Engine) 웹사이트 통합 완료 ✅
 
 ### 작업 목표

@@ -2,8 +2,8 @@
 
 > 단계별 기능 구현 계획 및 우선순위
 
-**마지막 업데이트**: 2025-10-24
-**현재 Phase**: Phase 0-32 완료 🎉
+**마지막 업데이트**: 2025-11-08
+**현재 Phase**: Phase 0-33 완료 🎉
 
 ---
 
@@ -849,6 +849,87 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 
 ---
 
+### Phase 33: HAE (Hand Analysis Engine) 통합 (2025-10-30 ~ 2025-11-08) ✅
+**소요 시간**: 12시간
+
+#### 완료 기능
+- **Phase 1: 타임코드 시스템 제거** (1시간, 2025-10-30):
+  - `app/admin/timecode-submissions/`, `app/my-timecode-submissions/` 페이지 삭제
+  - `timecode_submissions` 테이블 및 관련 RLS 정책, 함수, 트리거 삭제
+  - 마이그레이션: `20251029999999_drop_timecode_system.sql`
+
+- **Phase 2: HAE API 구축** (2시간, 2025-10-30):
+  - `app/api/analyze-video/route.ts` (326줄) - SSE 스트리밍 분석 API
+  - `lib/auth-utils.ts` - High Templar 권한 체크 함수
+  - 실시간 진행률 전송 (progress, boundary, hand, complete, error)
+  - 자동 저장: hands, hand_players, hand_actions 테이블
+
+- **Phase 3: Archive UI 개선** (2시간, 2025-10-30):
+  - `components/archive/video-analysis-dialog.tsx` (487줄) - 3탭 분석 다이얼로그
+  - Settings: Layout 선택, Max Iterations
+  - Progress: 실시간 진행률, 감지된 핸드 목록
+  - Results: 통계 표시 (총 핸드, 성공률, 처리 시간 등)
+  - Day 카드에 "Analyze Video" 버튼 추가 (High Templar 이상만 표시)
+
+- **Phase 3.1: AI Summary 시스템** (1.5시간, 2025-11-08):
+  - `lib/ai/gemini.ts` - generateHandSummary() 함수 추가
+  - hands 테이블에 ai_summary 컬럼 추가
+  - Gemini Flash로 2-3 문장 자동 요약 생성
+  - 마이그레이션: `20251107000002_hae_phase3_summary_comments.sql`
+
+- **Phase 3.2: Hand History 레이아웃 재구성** (2시간, 2025-11-08):
+  - `app/(main)/hands/[id]/page.tsx` - 2-column 레이아웃
+  - 왼쪽: 영상 플레이어 (aspect-square) + AI Summary + Comments
+  - 오른쪽: Poker Table (aspect-square) + Action Timeline
+  - YouTube Player에 startTime 파라미터 지원
+  - CommentSection 통합 (hand_id 지원)
+
+- **Phase 3.3: Archive AI 분석 시스템 통합** (1.5시간, 2025-11-08):
+  - `components/archive-dialogs/analyze-video-dialog.tsx` 개선
+  - EPT (European Poker Tour) 플랫폼 추가 및 기본값 설정
+  - startHaeAnalysis() 서버 액션 통합
+  - VideoSegment → TimeSegment 자동 변환
+  - `/api/analyze` 엔드포인트 삭제
+  - `/hae` 페이지 완전 삭제
+  - 단일 분석 시스템으로 통합 (Archive에서 직접 실행)
+
+- **Phase 4: 핸드 수정 기능 통합** (1시간, 2025-10-30):
+  - hands 테이블에 분석 메타데이터 추가:
+    - `analyzed_by` (manual/auto)
+    - `analysis_confidence` (0-1 신뢰도)
+    - `analysis_metadata` (JSONB)
+  - "AI 분석" 배지 추가 (analyzed_by === 'auto'일 때)
+  - 마이그레이션: `20251030000001_add_analysis_metadata.sql`
+
+**핵심 파일**:
+- `app/actions/hae-analysis.ts` (신규, 380줄) - HAE 분석 서버 액션
+- `lib/ai/prompts.ts` (신규) - EPT_PROMPT 추가
+- `lib/ai/gemini.ts` (수정) - generateHandSummary() 추가
+- `components/archive-dialogs/analyze-video-dialog.tsx` (수정) - EPT 통합
+- `components/community/comment-section.tsx` (신규) - 통합 댓글 래퍼
+- `app/(main)/hands/[id]/page.tsx` (수정) - 2-column 레이아웃
+- `supabase/migrations/20251107000002_hae_phase3_summary_comments.sql` (신규)
+- `supabase/migrations/20251030000001_add_analysis_metadata.sql` (신규)
+
+**주요 개선사항**:
+- **단일 진입점**: Archive → Day → AI 분석 버튼으로 통합
+- **EPT 최우선**: EPT 플랫폼이 기본값으로 설정
+- **자동 AI 요약**: Gemini Flash로 핸드 요약 자동 생성
+- **개선된 레이아웃**: 영상과 포커 테이블이 동일한 크기 (aspect-square)
+- **통합 댓글 시스템**: 포스트와 핸드 모두 동일한 댓글 컴포넌트 사용
+
+**기술 스택**:
+- **HAE Analysis**: startHaeAnalysis() 서버 액션
+- **Gemini 2.0 Flash**: EPT_PROMPT 기반 AI 분석
+- **TimeSegment**: 초 단위 세그먼트 시스템
+- **VideoSegment**: HH:MM:SS 형식 UI 입력
+
+**커밋**:
+- bd647a2 (Phase 3.1, 3.2)
+- e866945 (Phase 3.3)
+
+---
+
 ## 📊 우선순위 요약
 
 | Phase | 기능 | 우선순위 | 상태 | 완료일 |
@@ -886,6 +967,7 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | Phase 30 | Archive Event Management Enhancement | ⭐⭐⭐ | ✅ | 2025-10-24 |
 | Phase 31 | Archive Security & Admin Page | ⭐⭐⭐⭐ | ✅ | 2025-10-24 |
 | Phase 32 | Comprehensive Security Enhancement | ⭐⭐⭐⭐⭐ | ✅ | 2025-10-24 |
+| Phase 33 | HAE (Hand Analysis Engine) 통합 | ⭐⭐⭐⭐⭐ | ✅ | 2025-11-08 |
 
 ---
 
@@ -927,13 +1009,16 @@ Templar Archives는 포커 핸드 아카이브와 커뮤니티 플랫폼입니�
 | 2025-10-24 (세션 1) | Phase 30 완료 (Archive Event Management Enhancement) |
 | 2025-10-24 (세션 2) | Phase 31 완료 (Archive Security & Admin Management Page) |
 | 2025-10-24 (세션 3) | Phase 32 완료 (Comprehensive Security Enhancement) |
+| 2025-10-30 (세션 44) | Phase 33 시작 (HAE 통합 Phase 1-4) |
+| 2025-11-08 (세션 45) | Phase 33 완료 (Phase 3.1-3.3: AI Summary, 레이아웃 재구성, 시스템 통합) |
 
 ---
 
 **다음 작업** (선택적):
-- 영상 분석 자동화 개선 (YouTube API 캐싱, Claude Vision 최적화, 배치 처리)
+- 영상 분석 자동화 개선 (배치 처리, 진행률 UI 개선)
 - 핸드 태그 시스템 (태그 생성/관리, 태그 기반 검색, 태그 추천)
 - 소셜 공유 기능 강화
+- 추가 플랫폼 지원 (Triton, PokerStars, WSOP, Hustler)
 
-**현재 상태**: Phase 0-32 완료, 포괄적 보안 강화 완료 (보안 등급 A) 🎉
+**현재 상태**: Phase 0-33 완료, HAE 통합 및 EPT 분석 시스템 완성 🎉
 **상세 정보**: `../CLAUDE.md` 참조
