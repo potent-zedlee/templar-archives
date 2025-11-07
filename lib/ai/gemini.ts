@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai'
-import { TRITON_POKER_PROMPT } from './prompts'
+import { EPT_PROMPT, TRITON_POKER_PROMPT } from './prompts'
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_AI_API_KEY || '',
@@ -68,7 +68,8 @@ function splitSegment(segment: HaeSegment): HaeSegment[] {
  */
 export async function haeAnalyzeSegment(
   youtubeUrl: string,
-  segment: HaeSegment
+  segment: HaeSegment,
+  platform: 'ept' | 'triton' = 'ept'
 ): Promise<HaeResult> {
   try {
     // Validate YouTube URL
@@ -97,7 +98,7 @@ export async function haeAnalyzeSegment(
 
       // Analyze each chunk and merge results
       const results = await Promise.all(
-        chunks.map(chunk => haeAnalyzeSingleSegment(youtubeUrl, chunk))
+        chunks.map(chunk => haeAnalyzeSingleSegment(youtubeUrl, chunk, platform))
       )
 
       // Merge all hands from chunks
@@ -112,7 +113,7 @@ export async function haeAnalyzeSegment(
       }
     }
 
-    return await haeAnalyzeSingleSegment(youtubeUrl, segment)
+    return await haeAnalyzeSingleSegment(youtubeUrl, segment, platform)
   } catch (error) {
     console.error('Gemini API error:', error)
     return {
@@ -128,7 +129,8 @@ export async function haeAnalyzeSegment(
  */
 async function haeAnalyzeSingleSegment(
   youtubeUrl: string,
-  segment: HaeSegment
+  segment: HaeSegment,
+  platform: 'ept' | 'triton' = 'ept'
 ): Promise<HaeResult> {
   try {
     const response = await ai.models.generateContent({
@@ -148,7 +150,7 @@ async function haeAnalyzeSingleSegment(
               },
             },
             {
-              text: `${TRITON_POKER_PROMPT}
+              text: `${platform === 'ept' ? EPT_PROMPT : TRITON_POKER_PROMPT}
 
 Segment: ${segment.start}s - ${segment.end}s (${Math.floor((segment.end - segment.start) / 60)} minutes)
 Label: ${segment.label || 'Gameplay'}
@@ -226,11 +228,12 @@ Please analyze this poker video segment and extract all hand histories in the sp
  */
 export async function haeAnalyzeSegments(
   youtubeUrl: string,
-  segments: HaeSegment[]
+  segments: HaeSegment[],
+  platform: 'ept' | 'triton' = 'ept'
 ): Promise<HaeResult[]> {
   // Parallel processing for speed
   const results = await Promise.all(
-    segments.map(segment => haeAnalyzeSegment(youtubeUrl, segment))
+    segments.map(segment => haeAnalyzeSegment(youtubeUrl, segment, platform))
   )
 
   return results

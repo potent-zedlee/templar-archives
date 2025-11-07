@@ -8,6 +8,7 @@ import { revalidatePath } from 'next/cache'
 export interface HaeStartInput {
   videoUrl: string
   segments: TimeSegment[]
+  players?: string[]
 }
 
 export interface HaeStartResult {
@@ -144,6 +145,8 @@ export async function startHaeAnalysis(
         status: 'pending',
         segments: gameplaySegments,
         progress: 0,
+        ai_provider: 'ept',
+        submitted_players: input.players || null,
       })
       .select('id')
       .single()
@@ -156,7 +159,7 @@ export async function startHaeAnalysis(
     }
 
     // Start background processing (in production, this would be a queue)
-    processHaeJob(job.id, dbVideoId, videoId, gameplaySegments).catch(
+    processHaeJob(job.id, dbVideoId, videoId, gameplaySegments, input.players).catch(
       console.error
     )
 
@@ -183,7 +186,8 @@ async function processHaeJob(
   jobId: string,
   dbVideoId: string,
   youtubeId: string,
-  segments: TimeSegment[]
+  segments: TimeSegment[],
+  submittedPlayers?: string[]
 ) {
   const supabase = await createServerSupabaseClient()
 
@@ -204,9 +208,9 @@ async function processHaeJob(
       label: s.label,
     }))
 
-    // Pass full YouTube URL to HAE (Gemini)
+    // Pass full YouTube URL to HAE (Gemini) with EPT platform
     const fullYoutubeUrl = `https://www.youtube.com/watch?v=${youtubeId}`
-    const results = await haeAnalyzeSegments(fullYoutubeUrl, segmentsForAnalysis)
+    const results = await haeAnalyzeSegments(fullYoutubeUrl, segmentsForAnalysis, 'ept')
 
     // Process results and store in database
     let totalHands = 0

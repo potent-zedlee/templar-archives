@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { YouTubePlayer } from "@/components/video/youtube-player"
 import { SegmentManager } from "@/components/video/segment-manager"
+import { PlayerInputManager } from "@/components/hae/PlayerInputManager"
 import { TimeSegment, calculateTotalAnalysisTime, formatTime } from "@/types/segments"
 import { JobStatus } from "@/components/hae/job-status"
 import { ArrowLeft } from "lucide-react"
@@ -15,6 +16,7 @@ import { ArrowLeft } from "lucide-react"
 export default function AnalyzePage() {
   const [videoUrl, setVideoUrl] = useState("")
   const [segments, setSegments] = useState<TimeSegment[]>([])
+  const [players, setPlayers] = useState<string[]>([])
   const [currentTime, setCurrentTime] = useState(0)
   const [videoDuration, setVideoDuration] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -35,6 +37,7 @@ export default function AnalyzePage() {
     const result = await startHaeAnalysis({
       videoUrl,
       segments,
+      players: players.length > 0 ? players : undefined,
     })
 
     setIsLoading(false)
@@ -83,7 +86,7 @@ export default function AnalyzePage() {
             <CardHeader>
               <CardTitle>YouTube 영상 URL</CardTitle>
               <CardDescription>
-                Triton Poker 영상 URL을 입력하세요
+                EPT (European Poker Tour) 영상 URL을 입력하세요
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -125,6 +128,12 @@ export default function AnalyzePage() {
                   />
                 </CardContent>
               </Card>
+
+              {/* 플레이어 입력 */}
+              <PlayerInputManager
+                players={players}
+                onChange={setPlayers}
+              />
 
               {/* 구간 관리 */}
               <SegmentManager

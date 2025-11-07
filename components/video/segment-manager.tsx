@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { TimeSegment, formatTime, parseTimestamp, calculateTotalAnalysisTime } from "@/types/segments"
-import { Trash2, Plus } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { TimeSegment, SegmentType, formatTime, parseTimestamp, calculateTotalAnalysisTime } from "@/types/segments"
+import { Trash2, Plus, Clock, Video, Gamepad2, Coffee, Film } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface SegmentManagerProps {
   segments: TimeSegment[]
@@ -15,10 +17,45 @@ interface SegmentManagerProps {
   videoDuration?: number
 }
 
+// Segment type configuration
+const SEGMENT_TYPES: Record<SegmentType, { label: string; icon: any; color: string; bgColor: string }> = {
+  countdown: {
+    label: '카운트다운',
+    icon: Clock,
+    color: 'text-gray-600 dark:text-gray-400',
+    bgColor: 'bg-gray-100 dark:bg-gray-800'
+  },
+  opening: {
+    label: '오프닝',
+    icon: Video,
+    color: 'text-blue-600 dark:text-blue-400',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/30'
+  },
+  gameplay: {
+    label: '게임플레이',
+    icon: Gamepad2,
+    color: 'text-green-600 dark:text-green-400',
+    bgColor: 'bg-green-100 dark:bg-green-900/30'
+  },
+  break: {
+    label: '브레이크',
+    icon: Coffee,
+    color: 'text-yellow-600 dark:text-yellow-400',
+    bgColor: 'bg-yellow-100 dark:bg-yellow-900/30'
+  },
+  ending: {
+    label: '엔딩',
+    icon: Film,
+    color: 'text-purple-600 dark:text-purple-400',
+    bgColor: 'bg-purple-100 dark:bg-purple-900/30'
+  },
+}
+
 export function SegmentManager({ segments, onChange, currentTime, videoDuration }: SegmentManagerProps) {
   const [startInput, setStartInput] = useState("")
   const [endInput, setEndInput] = useState("")
   const [label, setLabel] = useState("")
+  const [selectedType, setSelectedType] = useState<SegmentType>('gameplay')
 
   const addSegment = () => {
     const start = startInput ? parseTimestamp(startInput) : 0
@@ -31,7 +68,7 @@ export function SegmentManager({ segments, onChange, currentTime, videoDuration 
 
     const newSegment: TimeSegment = {
       id: crypto.randomUUID(),
-      type: 'gameplay',
+      type: selectedType,
       start,
       end,
       label: label || undefined
@@ -41,6 +78,7 @@ export function SegmentManager({ segments, onChange, currentTime, videoDuration 
     setStartInput("")
     setEndInput("")
     setLabel("")
+    setSelectedType('gameplay') // Reset to gameplay
   }
 
   const removeSegment = (id: string) => {
@@ -68,6 +106,32 @@ export function SegmentManager({ segments, onChange, currentTime, videoDuration 
       <CardContent className="space-y-6">
         {/* 구간 추가 폼 */}
         <div className="space-y-4">
+          {/* Segment Type Selector */}
+          <div className="space-y-2">
+            <Label htmlFor="type">세그먼트 타입</Label>
+            <Select value={selectedType} onValueChange={(value) => setSelectedType(value as SegmentType)}>
+              <SelectTrigger id="type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(SEGMENT_TYPES).map(([type, config]) => {
+                  const Icon = config.icon
+                  return (
+                    <SelectItem key={type} value={type}>
+                      <div className="flex items-center gap-2">
+                        <Icon className={cn("w-4 h-4", config.color)} />
+                        <span>{config.label}</span>
+                        {type === 'gameplay' && (
+                          <span className="text-xs text-muted-foreground">(분석 대상)</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="start">시작 시간 (HH:MM:SS)</Label>
@@ -137,39 +201,53 @@ export function SegmentManager({ segments, onChange, currentTime, videoDuration 
             </div>
 
             <div className="space-y-2">
-              {segments.map((segment, index) => (
-                <div
-                  key={segment.id}
-                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">
-                        구간 {index + 1}
-                      </span>
-                      {segment.label && (
-                        <span className="text-xs text-muted-foreground">
-                          - {segment.label}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {formatTime(segment.start)} ~ {formatTime(segment.end)}
-                      <span className="ml-2">
-                        (길이: {formatTime(segment.end - segment.start)})
-                      </span>
-                    </p>
-                  </div>
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeSegment(segment.id)}
+              {segments.map((segment, index) => {
+                const typeConfig = SEGMENT_TYPES[segment.type]
+                const Icon = typeConfig.icon
+                return (
+                  <div
+                    key={segment.id}
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-lg border-2",
+                      typeConfig.bgColor,
+                      segment.type === 'gameplay' && 'border-green-500'
+                    )}
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Icon className={cn("w-4 h-4", typeConfig.color)} />
+                        <span className={cn("text-sm font-medium", typeConfig.color)}>
+                          {typeConfig.label}
+                        </span>
+                        {segment.type === 'gameplay' && (
+                          <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded">
+                            분석 대상
+                          </span>
+                        )}
+                        {segment.label && (
+                          <span className="text-xs text-muted-foreground">
+                            - {segment.label}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {formatTime(segment.start)} ~ {formatTime(segment.end)}
+                        <span className="ml-2">
+                          (길이: {formatTime(segment.end - segment.start)})
+                        </span>
+                      </p>
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeSegment(segment.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )
+              })}
             </div>
 
             {videoDuration && (
