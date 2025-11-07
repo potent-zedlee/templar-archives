@@ -1,5 +1,14 @@
 /**
- * Gemini API Client
+ * @deprecated This file is deprecated. Use @/lib/ai/gemini.ts instead.
+ *
+ * Gemini API Client (Legacy)
+ *
+ * This is the old Gemini client using Vertex AI REST API.
+ * For new code, please use @/lib/ai/gemini.ts which uses the latest Gemini SDK.
+ *
+ * Migration guide:
+ * - Old: import { analyzeVideo } from '@/lib/gemini'
+ * - New: import { analyzeVideoSegments } from '@/lib/ai/gemini'
  *
  * Provides functionality for video analysis and hand history extraction
  * using Google's Gemini 1.5 Pro model with video understanding capabilities.

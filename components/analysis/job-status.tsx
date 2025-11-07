@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
-import { getAnalysisJob } from '@/app/actions/analysis'
+import { getAnalysisJob } from '@/app/actions/hae-analysis'
 
 interface JobStatusProps {
   jobId: string

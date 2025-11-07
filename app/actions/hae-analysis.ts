@@ -1,6 +1,6 @@
 'use server'
 
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { analyzeVideoSegments } from '@/lib/ai/gemini'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
@@ -83,7 +83,7 @@ export async function startAnalysis(
   input: StartAnalysisInput
 ): Promise<StartAnalysisResult> {
   try {
-    const supabase = await createServiceClient()
+    const supabase = await createServerSupabaseClient()
 
     // Extract video ID
     const videoId = extractVideoId(input.videoUrl)
@@ -185,7 +185,7 @@ async function processAnalysisJob(
   youtubeId: string,
   segments: TimeSegment[]
 ) {
-  const supabase = await createServiceClient()
+  const supabase = await createServerSupabaseClient()
 
   try {
     // Update job status to processing
@@ -337,7 +337,7 @@ async function processAnalysisJob(
  * Get analysis job status
  */
 export async function getAnalysisJob(jobId: string) {
-  const supabase = await createServiceClient()
+  const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase
     .from('analysis_jobs')
