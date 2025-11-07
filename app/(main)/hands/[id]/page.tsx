@@ -4,13 +4,14 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ArrowLeft, ChevronLeft, ChevronRight, Download, BookmarkPlus } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Download, BookmarkPlus, Sparkles, MessageSquare } from 'lucide-react'
 import { PokerTable } from '@/components/poker/PokerTable'
 import { ActionTimeline, type HandAction } from '@/components/poker/ActionTimeline'
 import { YouTubePlayer } from '@/components/video/youtube-player'
+import { CommentSection } from '@/components/community/comment-section'
 import type { PlayerSeatData } from '@/components/poker/PlayerSeat'
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
@@ -36,6 +37,7 @@ async function getHandDetails(handId: string) {
       board_river,
       video_timestamp_start,
       video_timestamp_end,
+      ai_summary,
       created_at,
       job_id,
       day_id,
@@ -243,39 +245,63 @@ async function HandDetailContent({ handId }: { handId: string }) {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
-        <div className="space-y-6">
-          {/* Video + Table Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left: Video Player */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* LEFT COLUMN */}
+          <div className="space-y-6">
+            {/* 1. Video Player (Large Square) */}
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-0">
                 {videoId ? (
-                  <div className="space-y-4">
+                  <div className="aspect-square bg-black">
                     <YouTubePlayer
                       videoId={videoId}
                       startTime={hand.video_timestamp_start || 0}
-                      className="aspect-video"
                     />
-                    <div className="text-sm text-muted-foreground">
-                      Timestamp: {Math.floor((hand.video_timestamp_start || 0) / 60)}:
-                      {String((hand.video_timestamp_start || 0) % 60).padStart(2, '0')} -{' '}
-                      {Math.floor((hand.video_timestamp_end || 0) / 60)}:
-                      {String((hand.video_timestamp_end || 0) % 60).padStart(2, '0')}
-                    </div>
                   </div>
                 ) : (
-                  <div className="aspect-video flex items-center justify-center bg-muted rounded-lg">
+                  <div className="aspect-square flex items-center justify-center bg-muted">
                     <p className="text-muted-foreground">No video available</p>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Right: Poker Table */}
+            {/* 2. Hand Summary (AI Generated) */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-yellow-500" />
+                  Sample - Summary of this hand
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  {hand.ai_summary || 'Hand summary will be generated automatically after analysis...'}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* 3. Comments Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5" />
+                  COMMENT
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CommentSection entityType="hand" entityId={hand.id} />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="space-y-6">
+            {/* 1. Poker Table (Large Square) */}
             <Card>
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  {/* Stakes */}
+                  {/* Stakes Badge */}
                   {hand.stakes && (
                     <div className="flex items-center justify-center">
                       <Badge variant="outline" className="text-lg py-1 px-4">
@@ -284,27 +310,30 @@ async function HandDetailContent({ handId }: { handId: string }) {
                     </div>
                   )}
 
-                  {/* Table */}
-                  <PokerTable
-                    players={players}
-                    flop={hand.board_flop}
-                    turn={hand.board_turn}
-                    river={hand.board_river}
-                    potSize={hand.pot_size}
-                    showCards={true}
-                  />
+                  {/* Poker Table in Square Container */}
+                  <div className="aspect-square flex items-center justify-center">
+                    <div className="w-full h-full">
+                      <PokerTable
+                        players={players}
+                        flop={hand.board_flop}
+                        turn={hand.board_turn}
+                        river={hand.board_river}
+                        potSize={hand.pot_size}
+                        showCards={true}
+                      />
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Action Timeline */}
-          <Card>
-            <CardContent className="p-6">
-              <h2 className="text-lg font-bold mb-4">Action Timeline</h2>
-              <ActionTimeline actions={handActions} />
-            </CardContent>
-          </Card>
+            {/* 2. Action Timeline */}
+            <Card>
+              <CardContent className="p-0">
+                <ActionTimeline actions={handActions} />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     </div>

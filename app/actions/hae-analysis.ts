@@ -1,7 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { haeAnalyzeSegments } from '@/lib/ai/gemini'
+import { haeAnalyzeSegments, generateHandSummary } from '@/lib/ai/gemini'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
 
@@ -247,6 +247,28 @@ async function processHaeJob(
         if (handError || !hand) {
           console.error('Failed to create hand:', handError)
           continue
+        }
+
+        // Generate AI summary for the hand
+        try {
+          const summary = await generateHandSummary({
+            handNumber: handData.handNumber,
+            stakes: handData.stakes,
+            players: handData.players || [],
+            board: handData.board,
+            pot: handData.pot,
+            winners: handData.winners,
+            actions: handData.actions,
+          })
+
+          // Update hand with summary
+          await supabase
+            .from('hands')
+            .update({ ai_summary: summary })
+            .eq('id', hand.id)
+        } catch (summaryError) {
+          console.error('Failed to generate hand summary:', summaryError)
+          // Continue even if summary fails
         }
 
         // Store players and actions

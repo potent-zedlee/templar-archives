@@ -99,12 +99,9 @@ export function YouTubePlayer({ videoId, onTimeUpdate, onDurationChange, startTi
       </div>
 
       {isReady && (
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center justify-between text-sm mt-2 px-2">
           <span className="text-muted-foreground">
             {formatTime(currentTime)} / {formatTime(duration)}
-          </span>
-          <span className="text-muted-foreground">
-            현재 위치: {formatTime(currentTime)}
           </span>
         </div>
       )}

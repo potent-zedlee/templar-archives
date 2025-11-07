@@ -300,3 +300,69 @@ export async function testYouTubeAnalysis(
     }
   }
 }
+
+/**
+ * Generate a 2-3 sentence summary of a poker hand for display
+ */
+export async function generateHandSummary(handData: {
+  handNumber?: number
+  stakes?: string
+  players: Array<{ name: string; position?: string; holeCards?: string[] | string }>
+  board?: { flop?: string[]; turn?: string | null; river?: string | null }
+  pot?: number
+  winners?: Array<{ name: string; amount?: number; hand?: string }>
+  actions?: Array<{ player: string; street: string; action: string; amount?: number }>
+}): Promise<string> {
+  try {
+    // Build a structured hand description
+    const handDescription = `
+Hand #${handData.handNumber || 'N/A'}
+Stakes: ${handData.stakes || 'Unknown'}
+Pot: ${handData.pot || 0}
+
+Players:
+${handData.players.map(p => `- ${p.name} (${p.position || 'Unknown'}): ${Array.isArray(p.holeCards) ? p.holeCards.join('') : p.holeCards || 'Unknown'}`).join('\n')}
+
+Board:
+Flop: ${handData.board?.flop?.join(' ') || 'N/A'}
+Turn: ${handData.board?.turn || 'N/A'}
+River: ${handData.board?.river || 'N/A'}
+
+Key Actions:
+${handData.actions?.slice(0, 10).map(a => `- ${a.player}: ${a.action.toUpperCase()} ${a.amount ? `${a.amount}` : ''} (${a.street})`).join('\n') || 'No actions recorded'}
+
+Winners:
+${handData.winners?.map(w => `- ${w.name}: ${w.hand || 'Won'} (${w.amount || 0})`).join('\n') || 'No winners recorded'}
+`
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: `Summarize this poker hand in exactly 2-3 engaging sentences. Focus on:
+1. Key preflop action (if significant)
+2. Critical decision points on flop/turn/river
+3. Final outcome and winner
+
+Be concise, clear, and exciting. Use poker terminology appropriately.
+
+Hand Data:
+${handDescription}
+
+Example style:
+"Daniel Negreanu raises AsAd from UTG to 300k. Flop comes Ah9d3c giving him top set. He bets 125k, gets called by OSTASH with 9c5c. Turn As gives Negreanu quads and he wins a 2.4M pot."
+
+Your summary:`,
+      config: {
+        temperature: 0.7,
+        maxOutputTokens: 256,
+      },
+    })
+
+    const summary = response.text?.trim() || 'Hand summary not available'
+
+    // Ensure it's not too long (max 500 chars)
+    return summary.length > 500 ? summary.substring(0, 497) + '...' : summary
+  } catch (error) {
+    console.error('Failed to generate hand summary:', error)
+    return 'Summary generation failed - please check hand data'
+  }
+}

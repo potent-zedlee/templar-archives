@@ -18,7 +18,8 @@ import {
 } from "@/lib/supabase-community"
 
 type PostCommentsProps = {
-  postId: string
+  postId?: string
+  handId?: string
   onCommentsCountChange?: (count: number) => void
 }
 
@@ -28,7 +29,7 @@ type CommentWithReplies = Comment & {
   hasLiked?: boolean
 }
 
-export function PostComments({ postId, onCommentsCountChange }: PostCommentsProps) {
+export function PostComments({ postId, handId, onCommentsCountChange }: PostCommentsProps) {
   const { user } = useAuth()
   const router = useRouter()
   const [comments, setComments] = useState<CommentWithReplies[]>([])
@@ -40,7 +41,7 @@ export function PostComments({ postId, onCommentsCountChange }: PostCommentsProp
 
   useEffect(() => {
     loadComments()
-  }, [postId])
+  }, [postId, handId])
 
   useEffect(() => {
     // 댓글 개수 변경 알림
@@ -56,7 +57,7 @@ export function PostComments({ postId, onCommentsCountChange }: PostCommentsProp
   const loadComments = async () => {
     setLoading(true)
     try {
-      const data = await fetchComments({ postId })
+      const data = await fetchComments({ postId, handId })
       setComments(data)
     } catch (error) {
       console.error('댓글 로드 실패:', error)
@@ -109,6 +110,7 @@ export function PostComments({ postId, onCommentsCountChange }: PostCommentsProp
     try {
       await createComment({
         post_id: postId,
+        hand_id: handId,
         author_id: user.id,
         content: newComment.trim(),
       })
@@ -141,6 +143,7 @@ export function PostComments({ postId, onCommentsCountChange }: PostCommentsProp
     try {
       await createComment({
         post_id: postId,
+        hand_id: handId,
         parent_comment_id: parentCommentId,
         author_id: user.id,
         content: content.trim(),
