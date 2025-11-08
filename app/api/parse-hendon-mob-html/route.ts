@@ -294,6 +294,7 @@ export async function POST(request: NextRequest) {
         resultsTable = $(table)
         return false // break
       }
+      return undefined
     })
 
     // Fallback: position-based detection for non-Hendon Mob sites

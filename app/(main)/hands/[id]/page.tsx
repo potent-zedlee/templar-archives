@@ -14,9 +14,10 @@ import { YouTubePlayer } from '@/components/video/youtube-player'
 import { CommentSection } from '@/components/community/comment-section'
 import type { PlayerSeatData } from '@/components/poker/PlayerSeat'
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
   return {
-    title: `Hand #${params.id} | Templar Archives`,
+    title: `Hand #${id} | Templar Archives`,
     description: 'Hand History 상세 정보',
   }
 }
@@ -358,10 +359,11 @@ function HandDetailSkeleton() {
   )
 }
 
-export default function HandDetailPage({ params }: { params: { id: string } }) {
+export default async function HandDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   return (
     <Suspense fallback={<HandDetailSkeleton />}>
-      <HandDetailContent handId={params.id} />
+      <HandDetailContent handId={id} />
     </Suspense>
   )
 }

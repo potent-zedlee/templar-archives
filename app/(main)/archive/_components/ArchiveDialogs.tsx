@@ -151,7 +151,9 @@ export function ArchiveDialogs() {
 
   const handleAnalyzeSuccess = () => {
     // Invalidate hands query to show newly extracted hands
-    queryClient.invalidateQueries({ queryKey: archiveKeys.hands() })
+    if (analyzeDayForDialog?.id) {
+      queryClient.invalidateQueries({ queryKey: archiveKeys.hands(analyzeDayForDialog.id) })
+    }
     closeAnalyzeDialog()
   }
 

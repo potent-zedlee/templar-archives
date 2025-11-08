@@ -4,16 +4,24 @@
  */
 
 export type HandHistory = {
-  handNumber: string
-  startTime: string // "HH:MM:SS" 또는 "MM:SS"
-  endTime: string // "HH:MM:SS" 또는 "MM:SS"
-  duration: number // 초 단위
+  // 핸드 번호 (두 가지 형식 지원)
+  handNumber?: string
+  number?: string  // handNumber의 별칭
+
+  // 시간 정보
+  startTime?: string // "HH:MM:SS" 또는 "MM:SS"
+  endTime?: string // "HH:MM:SS" 또는 "MM:SS"
+  timestamp?: string // 타임스탬프 (startTime의 별칭)
+  duration?: number // 초 단위
+
+  // 메타 정보
   confidence?: number // 0-100 (신뢰도 점수)
-  summary?: string // 한 줄 요약 (예: "타카자와 오픈레이즈, 모두 폴드")
+  summary?: string // 한 줄 요약
+  description?: string // 상세 설명 (summary의 별칭)
   analyzed_by?: 'manual' | 'auto' // 분석 방법
 
   // 플레이어 정보
-  players: {
+  players?: {
     name: string
     position?: string
     cards?: string // 예: "AhKh" (에이스 하트, 킹 하트)
@@ -22,7 +30,9 @@ export type HandHistory = {
 
   // 게임 정보
   potSize?: number
+  pot_size?: number  // potSize의 별칭
   boardCards?: string // 예: "As Kh Qd 7c 3s"
+  board_cards?: string[]  // boardCards의 배열 형식
   winner?: string
   winAmount?: number
 

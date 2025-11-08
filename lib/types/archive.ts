@@ -87,6 +87,7 @@ export interface Stream {
   id: string
   sub_event_id: string
   name: string
+  description?: string
   video_url?: string
   video_file?: string
   video_nas_path?: string

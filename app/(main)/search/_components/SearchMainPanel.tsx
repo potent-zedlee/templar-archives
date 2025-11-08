@@ -31,6 +31,7 @@ type HandWithDetails = Hand & {
   tournament_name?: string
   player_names?: string[]
   day_name?: string
+  pot_size?: number
 }
 
 type ViewMode = "table" | "card"
