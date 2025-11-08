@@ -15,11 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Sparkles, Loader2, CheckCircle2, AlertCircle, Video, Users, Plus, X } from "lucide-react"
+import { Sparkles, Loader2, CheckCircle2, AlertCircle, Users, Plus, X } from "lucide-react"
 import type { Stream } from "@/lib/supabase"
 import { InteractiveTimeline } from "@/components/interactive-video-timeline"
 import type { VideoSegment } from "@/lib/types/video-segments"
-import { gameplaySegmentsToString, timeStringToSeconds } from "@/lib/types/video-segments"
+import { timeStringToSeconds } from "@/lib/types/video-segments"
 import { PlayerMatchResults } from "@/components/player-match-results"
 import { VideoPlayerWithTimestamp } from "@/components/video-player-with-timestamp"
 import { startHaeAnalysis } from "@/app/actions/hae-analysis"
@@ -63,7 +63,7 @@ export function AnalyzeVideoDialog({
   const [error, setError] = useState("")
   const [extractedCount, setExtractedCount] = useState(0)
   const [matchResults, setMatchResults] = useState<PlayerMatchResult[]>([])
-  const [currentVideoTime, setCurrentVideoTime] = useState(0)
+  const [, setCurrentVideoTime] = useState(0)
   const [videoDuration, setVideoDuration] = useState(0)
 
   // Add player
@@ -120,7 +120,8 @@ export function AnalyzeVideoDialog({
         videoUrl: day.video_url,
         segments: timeSegments,
         players: validPlayers.length > 0 ? validPlayers : undefined,
-        streamId: day.id // Pass stream (day) ID for linking hands
+        streamId: day.id, // Pass stream (day) ID for linking hands
+        platform
       })
 
       if (!result.success) {
@@ -128,6 +129,7 @@ export function AnalyzeVideoDialog({
       }
 
       // Success
+      onSuccess?.([])
       setStatus("success")
       setProgress("분석이 완료되었습니다. 핸드가 추출되어 데이터베이스에 저장되었습니다.")
 

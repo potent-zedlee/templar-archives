@@ -47,7 +47,7 @@ export async function loadHandsHelper(dayId: string, setHands: (hands: any[]) =>
       .select(`
         *,
         hand_players(
-          position,
+          position:poker_position,
           cards,
           player:players(name)
         )

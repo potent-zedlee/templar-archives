@@ -5,11 +5,32 @@ import { haeAnalyzeSegments, generateHandSummary } from '@/lib/ai/gemini'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
 
+type HaePlatform = 'ept' | 'triton' | 'pokerstars' | 'wsop' | 'hustler'
+
+const DEFAULT_PLATFORM: HaePlatform = 'ept'
+
+const DB_PLATFORM_MAP: Record<HaePlatform, 'triton' | 'pokerstars' | 'wsop' | 'hustler'> = {
+  ept: 'pokerstars',
+  triton: 'triton',
+  pokerstars: 'pokerstars',
+  wsop: 'wsop',
+  hustler: 'hustler',
+}
+
+const ANALYSIS_PLATFORM_MAP: Record<HaePlatform, 'ept' | 'triton'> = {
+  ept: 'ept',
+  pokerstars: 'ept',
+  wsop: 'ept',
+  triton: 'triton',
+  hustler: 'triton',
+}
+
 export interface HaeStartInput {
   videoUrl: string
   segments: TimeSegment[]
   players?: string[]
   streamId?: string // Stream (day) ID for linking hands
+  platform?: HaePlatform
 }
 
 export interface HaeStartResult {
@@ -96,6 +117,9 @@ export async function startHaeAnalysis(
   try {
     const supabase = await createServerSupabaseClient()
 
+    const selectedPlatform = input.platform || DEFAULT_PLATFORM
+    const dbPlatform = DB_PLATFORM_MAP[selectedPlatform] ?? DB_PLATFORM_MAP[DEFAULT_PLATFORM]
+
     // Extract video ID
     const videoId = extractVideoId(input.videoUrl)
     if (!videoId) {
@@ -155,11 +179,11 @@ export async function startHaeAnalysis(
       .insert({
         video_id: dbVideoId,
         stream_id: input.streamId || null, // Link to stream (day) if provided
+        platform: dbPlatform,
         status: 'pending',
         segments: gameplaySegments,
         progress: 0,
-        ai_provider: 'gemini', // Fixed: was 'ept', should be 'gemini'
-        platform: 'ept', // Platform type
+        ai_provider: 'gemini',
         submitted_players: input.players || null,
       })
       .select('id')
@@ -173,7 +197,7 @@ export async function startHaeAnalysis(
     }
 
     // Start background processing (in production, this would be a queue)
-    processHaeJob(job.id, dbVideoId, videoId, gameplaySegments, input.players, input.streamId).catch(
+    processHaeJob(job.id, videoId, gameplaySegments, input.streamId, selectedPlatform).catch(
       console.error
     )
 
@@ -198,11 +222,10 @@ export async function startHaeAnalysis(
  */
 async function processHaeJob(
   jobId: string,
-  dbVideoId: string,
   youtubeId: string,
   segments: TimeSegment[],
-  submittedPlayers?: string[],
-  streamId?: string
+  streamId?: string,
+  platform: HaePlatform = DEFAULT_PLATFORM
 ) {
   const supabase = await createServerSupabaseClient()
 
@@ -223,9 +246,11 @@ async function processHaeJob(
       label: s.label,
     }))
 
-    // Pass full YouTube URL to HAE (Gemini) with EPT platform
+    // Pass full YouTube URL to HAE (Gemini) with mapped platform
     const fullYoutubeUrl = `https://www.youtube.com/watch?v=${youtubeId}`
-    const results = await haeAnalyzeSegments(fullYoutubeUrl, segmentsForAnalysis, 'ept')
+    const analysisPlatform =
+      ANALYSIS_PLATFORM_MAP[platform] ?? ANALYSIS_PLATFORM_MAP[DEFAULT_PLATFORM]
+    const results = await haeAnalyzeSegments(fullYoutubeUrl, segmentsForAnalysis, analysisPlatform)
 
     // Process results and store in database
     let totalHands = 0

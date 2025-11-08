@@ -60,9 +60,10 @@ async function getHandDetails(handId: string) {
       hand_players (
         id,
         seat,
-        poker_position,
+        position:poker_position,
         hole_cards,
-        stack_size,
+        stack_size:starting_stack,
+        ending_stack,
         final_amount,
         is_winner,
         hand_description,
@@ -91,7 +92,7 @@ async function getHandDetails(handId: string) {
       action_type,
       amount,
       timestamp,
-      action_sequence,
+      action_sequence:sequence,
       hand_players (
         players (
           name
@@ -99,7 +100,7 @@ async function getHandDetails(handId: string) {
       )
     `)
     .eq('hand_id', handId)
-    .order('action_sequence', { ascending: true })
+    .order('sequence', { ascending: true })
 
   return {
     ...hand,
@@ -158,9 +159,9 @@ async function HandDetailContent({ handId }: { handId: string }) {
     hand.hand_players?.map((hp: any) => ({
       id: hp.id,
       seat: hp.seat || 1,
-      position: hp.poker_position,
+      position: hp.position || hp.poker_position,
       name: hp.players?.name || 'Unknown',
-      stack: hp.stack_size || 0,
+      stack: hp.stack_size ?? hp.ending_stack ?? 0,
       holeCards: hp.hole_cards,
       isWinner: hp.is_winner,
       finalAmount: hp.final_amount,

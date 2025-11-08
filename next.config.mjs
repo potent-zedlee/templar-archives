@@ -84,7 +84,7 @@ const nextConfig = {
               "connect-src 'self' https://diopilmkehygiqpizvga.supabase.co https://api.anthropic.com https://vercel.live wss://diopilmkehygiqpizvga.supabase.co",
               "media-src 'self' https: blob:",
               "worker-src 'self' blob:",
-              "frame-src 'self' https://www.youtube.com",
+              "frame-src 'self' https://www.youtube.com https://vercel.live",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

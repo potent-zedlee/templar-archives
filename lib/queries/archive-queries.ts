@@ -132,7 +132,7 @@ export function useHandsQuery(dayId: string | null) {
         .select(`
           *,
           hand_players(
-            position,
+            position:poker_position,
             cards,
             player:players(name)
           )
@@ -171,7 +171,7 @@ export function useHandsInfiniteQuery(dayId: string | null) {
           `
           *,
           hand_players(
-            position,
+            position:poker_position,
             cards,
             player:players(name)
           )
