@@ -7,6 +7,8 @@ import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { getHaeJob } from '@/app/actions/hae-analysis'
+import { createBrowserSupabaseClient } from '@/lib/supabase-client'
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 interface JobStatusProps {
   jobId: string
@@ -15,29 +17,57 @@ interface JobStatusProps {
 
 export function JobStatus({ jobId, onComplete }: JobStatusProps) {
   const [job, setJob] = useState<any>(null)
-  const [isPolling, setIsPolling] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    const pollJob = async () => {
+    const supabase = createBrowserSupabaseClient()
+    let channel: RealtimeChannel | null = null
+
+    // Initial fetch
+    const fetchInitialJob = async () => {
       const data = await getHaeJob(jobId)
       setJob(data)
 
+      // Check if already completed/failed
       if (data && (data.status === 'completed' || data.status === 'failed')) {
-        setIsPolling(false)
         if (data.status === 'completed' && onComplete) {
           onComplete()
         }
       }
     }
 
-    pollJob()
+    fetchInitialJob()
 
-    if (isPolling) {
-      const interval = setInterval(pollJob, 2000)
-      return () => clearInterval(interval)
+    // Subscribe to Realtime updates
+    channel = supabase
+      .channel(`analysis_job:${jobId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'analysis_jobs',
+          filter: `id=eq.${jobId}`,
+        },
+        (payload) => {
+          const updatedJob = payload.new as any
+          setJob(updatedJob)
+
+          // Call onComplete when job finishes
+          if (updatedJob.status === 'completed' && onComplete) {
+            onComplete()
+          }
+        }
+      )
+      .subscribe()
+
+    // Cleanup
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel)
+      }
     }
-  }, [jobId, isPolling, onComplete])
+  }, [jobId, onComplete])
 
   if (!job) {
     return (

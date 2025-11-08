@@ -3,6 +3,7 @@
 import os
 import json
 import re
+import time
 from typing import List, Dict, Any, Optional
 from google import genai
 from .prompts import EPT_PROMPT, TRITON_POKER_PROMPT
@@ -13,6 +14,8 @@ client = genai.Client(api_key=os.environ.get('GOOGLE_API_KEY', ''))
 
 # Constants
 MAX_SEGMENT_DURATION = 3600  # 1 hour in seconds
+MAX_RETRIES = 3  # Maximum retry attempts
+RETRY_DELAY = 2  # Base delay in seconds (exponential backoff)
 
 
 class HaeSegment:
@@ -73,27 +76,59 @@ def split_segment(segment: HaeSegment) -> List[HaeSegment]:
     return chunks
 
 
+def should_retry(error: Exception) -> bool:
+    """Determine if an error is retryable"""
+    error_str = str(error).lower()
+
+    # Don't retry quota errors (need to wait longer)
+    if 'quota' in error_str or 'resource_exhausted' in error_str:
+        return False
+
+    # Don't retry permanent errors
+    if '404' in error_str or 'not found' in error_str:
+        return False
+
+    if '403' in error_str or 'forbidden' in error_str:
+        return False
+
+    # Retry temporary errors
+    if 'timeout' in error_str or 'deadline' in error_str:
+        return True
+
+    if '500' in error_str or '502' in error_str or '503' in error_str:
+        return True
+
+    if 'connection' in error_str or 'network' in error_str:
+        return True
+
+    # Default: don't retry unknown errors
+    return False
+
+
 async def hae_analyze_single_segment(
     youtube_url: str,
     segment: HaeSegment,
     platform: str = 'ept'
 ) -> HaeResult:
-    """Analyze a single segment using HAE (must be <= 1 hour)"""
-    try:
-        # Select prompt based on platform
-        prompt = EPT_PROMPT if platform == 'ept' else TRITON_POKER_PROMPT
+    """Analyze a single segment using HAE (must be <= 1 hour) with retry logic"""
 
-        # Build the content request
-        duration_minutes = int((segment.end - segment.start) / 60)
-        full_prompt = f"""{prompt}
+    # Select prompt based on platform
+    prompt = EPT_PROMPT if platform == 'ept' else TRITON_POKER_PROMPT
+
+    # Build the content request
+    duration_minutes = int((segment.end - segment.start) / 60)
+    full_prompt = f"""{prompt}
 
 Segment: {segment.start}s - {segment.end}s ({duration_minutes} minutes)
 Label: {segment.label}
 
 Please analyze this poker video segment and extract all hand histories in the specified JSON format."""
 
-        # Use async API
-        response = await client.aio.models.generate_content(
+    # Retry loop
+    for attempt in range(MAX_RETRIES):
+        try:
+            # Use async API
+            response = await client.aio.models.generate_content(
             model='gemini-2.5-flash',
             contents=[{
                 'role': 'user',
@@ -122,51 +157,67 @@ Please analyze this poker video segment and extract all hand histories in the sp
             }
         )
 
-        raw_response = response.text or ''
+            raw_response = response.text or ''
 
-        # Parse JSON response
-        try:
-            parsed_data = json.loads(raw_response)
-            return HaeResult(
-                hands=parsed_data.get('hands', []),
-                raw_response=raw_response
-            )
-        except json.JSONDecodeError:
-            # Try to extract JSON from markdown code blocks
-            json_match = re.search(r'```json\n([\s\S]*?)\n```', raw_response)
-            if json_match:
-                parsed_data = json.loads(json_match.group(1))
+            # Parse JSON response
+            try:
+                parsed_data = json.loads(raw_response)
                 return HaeResult(
                     hands=parsed_data.get('hands', []),
                     raw_response=raw_response
                 )
+            except json.JSONDecodeError:
+                # Try to extract JSON from markdown code blocks
+                json_match = re.search(r'```json\n([\s\S]*?)\n```', raw_response)
+                if json_match:
+                    parsed_data = json.loads(json_match.group(1))
+                    return HaeResult(
+                        hands=parsed_data.get('hands', []),
+                        raw_response=raw_response
+                    )
 
-            return HaeResult(
-                hands=[],
-                raw_response=raw_response,
-                error='Could not parse JSON from response'
-            )
+                return HaeResult(
+                    hands=[],
+                    raw_response=raw_response,
+                    error='Could not parse JSON from response'
+                )
 
-    except Exception as error:
-        print(f'Gemini single segment error: {error}')
+        except Exception as error:
+            # Check if we should retry
+            if attempt < MAX_RETRIES - 1 and should_retry(error):
+                # Exponential backoff
+                delay = RETRY_DELAY * (2 ** attempt)
+                print(f'Retry attempt {attempt + 1}/{MAX_RETRIES} after {delay}s: {error}')
+                time.sleep(delay)
+                continue  # Retry
+            else:
+                # Final error handling
+                print(f'Gemini single segment error (final): {error}')
 
-        # Provide more specific error messages
-        error_message = str(error)
+                # Provide more specific error messages
+                error_message = str(error)
 
-        if '404' in error_message or 'not found' in error_message.lower():
-            error_message = 'Video not found or not accessible (may be private or deleted)'
-        elif '403' in error_message or 'forbidden' in error_message.lower():
-            error_message = 'Video access forbidden (may be private or restricted)'
-        elif 'quota' in error_message.lower():
-            error_message = 'API quota exceeded - please try again later'
-        elif 'timeout' in error_message.lower():
-            error_message = 'Request timeout - video may be too long or server is busy'
+                if '404' in error_message or 'not found' in error_message.lower():
+                    error_message = 'Video not found or not accessible (may be private or deleted)'
+                elif '403' in error_message or 'forbidden' in error_message.lower():
+                    error_message = 'Video access forbidden (may be private or restricted)'
+                elif 'quota' in error_message.lower():
+                    error_message = 'API quota exceeded - please try again later'
+                elif 'timeout' in error_message.lower():
+                    error_message = 'Request timeout - video may be too long or server is busy'
 
-        return HaeResult(
-            hands=[],
-            raw_response='',
-            error=error_message
-        )
+                return HaeResult(
+                    hands=[],
+                    raw_response='',
+                    error=error_message
+                )
+
+    # Should never reach here
+    return HaeResult(
+        hands=[],
+        raw_response='',
+        error='Max retries exceeded'
+    )
 
 
 async def hae_analyze_segment(

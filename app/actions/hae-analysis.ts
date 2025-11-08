@@ -240,6 +240,57 @@ async function processHaeJob(
       })
       .eq('id', jobId)
 
+    // Ensure streamId exists (create default if not provided)
+    let finalStreamId = streamId
+    if (!finalStreamId) {
+      console.log('No streamId provided, creating default "Unsorted Hands" stream')
+
+      // Try to find existing "Unsorted Hands" stream
+      const { data: existingStream } = await supabase
+        .from('days')
+        .select('id')
+        .eq('name', 'Unsorted Hands')
+        .single()
+
+      if (existingStream) {
+        finalStreamId = existingStream.id
+      } else {
+        // Create default sub_event and day for unsorted hands
+        const { data: defaultSubEvent, error: subEventError } = await supabase
+          .from('sub_events')
+          .insert({
+            tournament_id: null, // No tournament
+            name: 'Unsorted Videos',
+            date: new Date().toISOString().split('T')[0],
+          })
+          .select('id')
+          .single()
+
+        if (subEventError || !defaultSubEvent) {
+          console.error('Failed to create default sub_event:', subEventError)
+          throw new Error('Failed to create default stream for unsorted hands')
+        }
+
+        const { data: defaultDay, error: dayError } = await supabase
+          .from('days')
+          .insert({
+            sub_event_id: defaultSubEvent.id,
+            name: 'Unsorted Hands',
+            video_url: `https://www.youtube.com/watch?v=${youtubeId}`,
+          })
+          .select('id')
+          .single()
+
+        if (dayError || !defaultDay) {
+          console.error('Failed to create default day:', dayError)
+          throw new Error('Failed to create default stream for unsorted hands')
+        }
+
+        finalStreamId = defaultDay.id
+        console.log(`Created default stream: ${finalStreamId}`)
+      }
+    }
+
     // Analyze each segment with YouTube URL
     const segmentsForAnalysis = segments.map((s) => ({
       start: s.start,
@@ -289,18 +340,10 @@ async function processHaeJob(
       // Store each hand
       for (const handData of result.hands) {
         // Create hand record
-        // Note: hands table uses day_id (stream_id), not video_id
-        if (!streamId) {
-          console.error('Warning: streamId is missing for hand record. Job ID:', jobId, 'Hand:', handData.handNumber)
-          // For now, continue processing other hands
-          // In the future, we might want to create a default stream or handle this differently
-          continue
-        }
-
         const { data: hand, error: handError } = await supabase
           .from('hands')
           .insert({
-            day_id: streamId, // Use day_id (stream_id) instead of video_id
+            day_id: finalStreamId, // Use finalStreamId (guaranteed to exist)
             job_id: jobId,
             number: String(handData.handNumber || ++totalHands),
             description: handData.description || `Hand #${handData.handNumber || totalHands}`,
