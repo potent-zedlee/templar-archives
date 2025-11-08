@@ -2,7 +2,7 @@ import { GoogleGenAI } from '@google/genai'
 import { EPT_PROMPT, TRITON_POKER_PROMPT } from './prompts'
 
 const ai = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_AI_API_KEY || '',
+  apiKey: process.env.GOOGLE_API_KEY || '',
 })
 
 export interface HaeSegment {

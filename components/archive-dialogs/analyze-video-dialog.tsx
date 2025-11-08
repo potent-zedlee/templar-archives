@@ -119,7 +119,8 @@ export function AnalyzeVideoDialog({
       const result = await startHaeAnalysis({
         videoUrl: day.video_url,
         segments: timeSegments,
-        players: validPlayers.length > 0 ? validPlayers : undefined
+        players: validPlayers.length > 0 ? validPlayers : undefined,
+        streamId: day.id // Pass stream (day) ID for linking hands
       })
 
       if (!result.success) {

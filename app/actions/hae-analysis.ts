@@ -9,6 +9,7 @@ export interface HaeStartInput {
   videoUrl: string
   segments: TimeSegment[]
   players?: string[]
+  streamId?: string // Stream (day) ID for linking hands
 }
 
 export interface HaeStartResult {
@@ -41,6 +42,15 @@ function normalizePlayerName(name: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '')
     .trim()
+}
+
+/**
+ * Format seconds to MM:SS timestamp format
+ */
+function formatTimestamp(seconds: number): string {
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 
 /**
@@ -118,7 +128,9 @@ export async function startHaeAnalysis(
       const { data: newVideo, error: videoError } = await supabase
         .from('videos')
         .insert({
+          url: input.videoUrl, // Store full YouTube URL
           youtube_id: videoId,
+          platform: 'youtube',
           title: null, // Will be updated later when we fetch metadata
           duration: null,
         })
@@ -142,10 +154,12 @@ export async function startHaeAnalysis(
       .from('analysis_jobs')
       .insert({
         video_id: dbVideoId,
+        stream_id: input.streamId || null, // Link to stream (day) if provided
         status: 'pending',
         segments: gameplaySegments,
         progress: 0,
-        ai_provider: 'ept',
+        ai_provider: 'gemini', // Fixed: was 'ept', should be 'gemini'
+        platform: 'ept', // Platform type
         submitted_players: input.players || null,
       })
       .select('id')
@@ -159,7 +173,7 @@ export async function startHaeAnalysis(
     }
 
     // Start background processing (in production, this would be a queue)
-    processHaeJob(job.id, dbVideoId, videoId, gameplaySegments, input.players).catch(
+    processHaeJob(job.id, dbVideoId, videoId, gameplaySegments, input.players, input.streamId).catch(
       console.error
     )
 
@@ -187,7 +201,8 @@ async function processHaeJob(
   dbVideoId: string,
   youtubeId: string,
   segments: TimeSegment[],
-  submittedPlayers?: string[]
+  submittedPlayers?: string[],
+  streamId?: string
 ) {
   const supabase = await createServerSupabaseClient()
 
@@ -226,15 +241,23 @@ async function processHaeJob(
       // Store each hand
       for (const handData of result.hands) {
         // Create hand record
+        // Note: hands table uses day_id (stream_id), not video_id
+        if (!streamId) {
+          console.error('streamId is required to create hand record')
+          continue
+        }
+
         const { data: hand, error: handError } = await supabase
           .from('hands')
           .insert({
-            video_id: dbVideoId,
+            day_id: streamId, // Use day_id (stream_id) instead of video_id
             job_id: jobId,
-            hand_number: handData.handNumber || ++totalHands,
+            number: String(handData.handNumber || ++totalHands),
+            description: handData.description || `Hand #${handData.handNumber || totalHands}`,
+            timestamp: formatTimestamp(segment.start), // Convert seconds to MM:SS format
+            video_timestamp_start: segment.start,
+            video_timestamp_end: segment.end,
             stakes: handData.stakes || 'Unknown',
-            timestamp_start: segment.start,
-            timestamp_end: segment.end,
             board_flop: handData.board?.flop || [],
             board_turn: handData.board?.turn || null,
             board_river: handData.board?.river || null,
@@ -282,15 +305,28 @@ async function processHaeJob(
               (w: any) => w.name === playerData.name
             )
 
+            // Convert holeCards to array format if needed
+            let holeCardsArray: string[] | null = null
+            if (playerData.holeCards) {
+              if (Array.isArray(playerData.holeCards)) {
+                holeCardsArray = playerData.holeCards
+              } else if (typeof playerData.holeCards === 'string') {
+                // Parse string format like "AsKd" or "As Kd"
+                holeCardsArray = playerData.holeCards.split(/[\s,]+/).filter(Boolean)
+              }
+            }
+
             const { data: handPlayer, error: hpError } = await supabase
               .from('hand_players')
               .insert({
                 hand_id: hand.id,
                 player_id: playerId,
                 seat: playerData.seat,
-                position: playerData.position,
-                stack_size: playerData.stackSize || 0,
-                hole_cards: playerData.holeCards ? [playerData.holeCards] : null,
+                poker_position: playerData.position, // Use poker_position instead of position
+                starting_stack: playerData.stackSize || 0,
+                ending_stack: playerData.stackSize || 0, // Will be updated if winner info available
+                hole_cards: holeCardsArray,
+                cards: holeCardsArray ? holeCardsArray.join(' ') : null, // Legacy format
                 final_amount: winner?.amount || 0,
                 is_winner: !!winner,
                 hand_description: winner?.hand || null,
@@ -314,12 +350,11 @@ async function processHaeJob(
 
                 await supabase.from('hand_actions').insert({
                   hand_id: hand.id,
-                  hand_player_id: handPlayer.id,
-                  action_sequence: idx,
-                  street: action.street,
-                  action_type: action.action,
+                  player_id: playerId, // Use player_id directly
+                  sequence: idx, // Use sequence instead of action_sequence
+                  street: action.street.toLowerCase(), // Normalize street name
+                  action_type: action.action.toLowerCase(), // Normalize action type
                   amount: action.amount || 0,
-                  timestamp: segment.start, // In production, parse action.timestamp
                 })
               }
             }
