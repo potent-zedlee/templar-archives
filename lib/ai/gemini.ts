@@ -1,9 +1,7 @@
-import { GoogleGenAI } from '@google/genai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { EPT_PROMPT, TRITON_POKER_PROMPT } from './prompts'
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_API_KEY || '',
-})
+const ai = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '')
 
 export interface HaeSegment {
   start: number // seconds
@@ -133,34 +131,9 @@ async function haeAnalyzeSingleSegment(
   platform: 'ept' | 'triton' = 'ept'
 ): Promise<HaeResult> {
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp',
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            {
-              fileData: {
-                fileUri: youtubeUrl,
-                mimeType: 'video/*',
-              },
-              videoMetadata: {
-                startOffset: formatTimeOffset(segment.start),
-                endOffset: formatTimeOffset(segment.end),
-              },
-            },
-            {
-              text: `${platform === 'ept' ? EPT_PROMPT : TRITON_POKER_PROMPT}
-
-Segment: ${segment.start}s - ${segment.end}s (${Math.floor((segment.end - segment.start) / 60)} minutes)
-Label: ${segment.label || 'Gameplay'}
-
-Please analyze this poker video segment and extract all hand histories in the specified JSON format.`,
-            },
-          ],
-        },
-      ],
-      config: {
+    const model = ai.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      generationConfig: {
         temperature: 0.1,
         topP: 0.95,
         topK: 40,
@@ -169,7 +142,28 @@ Please analyze this poker video segment and extract all hand histories in the sp
       },
     })
 
-    const rawResponse = response.text || ''
+    const response = await model.generateContent([
+      {
+        fileData: {
+          fileUri: youtubeUrl,
+          mimeType: 'video/mp4',
+        },
+        videoMetadata: {
+          startOffset: formatTimeOffset(segment.start),
+          endOffset: formatTimeOffset(segment.end),
+        },
+      },
+      {
+        text: `${platform === 'ept' ? EPT_PROMPT : TRITON_POKER_PROMPT}
+
+Segment: ${segment.start}s - ${segment.end}s (${Math.floor((segment.end - segment.start) / 60)} minutes)
+Label: ${segment.label || 'Gameplay'}
+
+Please analyze this poker video segment and extract all hand histories in the specified JSON format.`,
+      },
+    ])
+
+    const rawResponse = response.response.text() || ''
 
     // Parse JSON response
     try {
@@ -244,11 +238,9 @@ export async function haeAnalyzeSegments(
  */
 export async function testGeminiConnection(): Promise<boolean> {
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp',
-      contents: 'Hello',
-    })
-    return !!response.text
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const response = await model.generateContent('Hello')
+    return !!response.response.text()
   } catch (error) {
     console.error('Gemini connection test failed:', error)
     return false
@@ -264,33 +256,26 @@ export async function testYouTubeAnalysis(
   endSeconds: number = 30
 ): Promise<{ success: boolean; error?: string; response?: string }> {
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp',
-      contents: [
-        {
-          role: 'user',
-          parts: [
-            {
-              fileData: {
-                fileUri: youtubeUrl,
-                mimeType: 'video/*',
-              },
-              videoMetadata: {
-                startOffset: formatTimeOffset(startSeconds),
-                endOffset: formatTimeOffset(endSeconds),
-              },
-            },
-            {
-              text: 'Describe what you see in this video segment in 2-3 sentences.',
-            },
-          ],
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const response = await model.generateContent([
+      {
+        fileData: {
+          fileUri: youtubeUrl,
+          mimeType: 'video/mp4',
         },
-      ],
-    })
+        videoMetadata: {
+          startOffset: formatTimeOffset(startSeconds),
+          endOffset: formatTimeOffset(endSeconds),
+        },
+      },
+      {
+        text: 'Describe what you see in this video segment in 2-3 sentences.',
+      },
+    ])
 
     return {
       success: true,
-      response: response.text || 'No response',
+      response: response.response.text() || 'No response',
     }
   } catch (error) {
     console.error('YouTube analysis test failed:', error)
@@ -335,9 +320,16 @@ Winners:
 ${handData.winners?.map(w => `- ${w.name}: ${w.hand || 'Won'} (${w.amount || 0})`).join('\n') || 'No winners recorded'}
 `
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-exp',
-      contents: `Summarize this poker hand in exactly 2-3 engaging sentences. Focus on:
+    const model = ai.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 256,
+      },
+    })
+
+    const response = await model.generateContent(
+      `Summarize this poker hand in exactly 2-3 engaging sentences. Focus on:
 1. Key preflop action (if significant)
 2. Critical decision points on flop/turn/river
 3. Final outcome and winner
@@ -350,14 +342,10 @@ ${handDescription}
 Example style:
 "Daniel Negreanu raises AsAd from UTG to 300k. Flop comes Ah9d3c giving him top set. He bets 125k, gets called by OSTASH with 9c5c. Turn As gives Negreanu quads and he wins a 2.4M pot."
 
-Your summary:`,
-      config: {
-        temperature: 0.7,
-        maxOutputTokens: 256,
-      },
-    })
+Your summary:`
+    )
 
-    const summary = response.text?.trim() || 'Hand summary not available'
+    const summary = response.response.text()?.trim() || 'Hand summary not available'
 
     // Ensure it's not too long (max 500 chars)
     return summary.length > 500 ? summary.substring(0, 497) + '...' : summary

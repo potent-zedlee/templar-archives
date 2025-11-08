@@ -13,7 +13,7 @@ export type HandAction = {
   street: Street
   action_type: ActionType
   amount?: number
-  sequence: number
+  action_order: number
   created_at: string
 }
 
@@ -23,7 +23,7 @@ export type HandActionInput = {
   street: Street
   action_type: ActionType
   amount?: number
-  sequence: number
+  action_order: number
 }
 
 /**
@@ -37,7 +37,7 @@ export async function getHandActions(handId: string): Promise<HandAction[]> {
       .from('hand_actions')
       .select('*')
       .eq('hand_id', handId)
-      .order('sequence', { ascending: true })
+      .order('action_order', { ascending: true })
 
     if (error) throw error
     return data || []
@@ -62,7 +62,7 @@ export async function getHandActionsByStreet(
       .select('*')
       .eq('hand_id', handId)
       .eq('street', street)
-      .order('sequence', { ascending: true })
+      .order('action_order', { ascending: true })
 
     if (error) throw error
     return data || []
@@ -198,10 +198,10 @@ export async function calculateNextSequence(
   try {
     const { data, error } = await supabase
       .from('hand_actions')
-      .select('sequence')
+      .select('action_order')
       .eq('hand_id', handId)
       .eq('street', street)
-      .order('sequence', { ascending: false })
+      .order('action_order', { ascending: false })
       .limit(1)
       .single()
 
@@ -210,7 +210,7 @@ export async function calculateNextSequence(
       throw error
     }
 
-    return data ? data.sequence + 1 : 1
+    return data ? data.action_order + 1 : 1
   } catch (error) {
     console.error('Failed to calculate next sequence:', error)
     return 1
@@ -243,7 +243,7 @@ export function validateActionSequence(actions: HandAction[]): {
     if (streetActions.length === 0) return
 
     // 시퀀스 번호 정렬 확인
-    const sequences = streetActions.map(a => a.sequence).sort((a, b) => a - b)
+    const sequences = streetActions.map(a => a.action_order).sort((a, b) => a - b)
     const expectedSequences = Array.from({ length: sequences.length }, (_, i) => i + 1)
 
     if (JSON.stringify(sequences) !== JSON.stringify(expectedSequences)) {
@@ -287,14 +287,14 @@ export async function reorderHandActions(
     // 각 액션의 시퀀스 번호 업데이트
     const updates = newOrder.map((actionId, index) => ({
       id: actionId,
-      sequence: index + 1,
+      action_order: index + 1,
     }))
 
     // 일괄 업데이트 (upsert 사용)
     for (const update of updates) {
       const { error } = await supabase
         .from('hand_actions')
-        .update({ sequence: update.sequence })
+        .update({ action_order: update.action_order })
         .eq('id', update.id)
         .eq('hand_id', handId)
         .eq('street', street)

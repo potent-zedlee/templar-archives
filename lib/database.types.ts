@@ -437,7 +437,6 @@ export type Database = {
           hand_id: string
           id: string
           player_id: string
-          sequence: number
           street: string
         }
         Insert: {
@@ -448,7 +447,6 @@ export type Database = {
           hand_id: string
           id?: string
           player_id: string
-          sequence: number
           street: string
         }
         Update: {
@@ -459,7 +457,6 @@ export type Database = {
           hand_id?: string
           id?: string
           player_id?: string
-          sequence?: number
           street?: string
         }
         Relationships: [

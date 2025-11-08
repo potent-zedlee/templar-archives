@@ -269,7 +269,9 @@ async function processHaeJob(
         // Create hand record
         // Note: hands table uses day_id (stream_id), not video_id
         if (!streamId) {
-          console.error('streamId is required to create hand record')
+          console.error('Warning: streamId is missing for hand record. Job ID:', jobId, 'Hand:', handData.handNumber)
+          // For now, continue processing other hands
+          // In the future, we might want to create a default stream or handle this differently
           continue
         }
 
@@ -377,7 +379,7 @@ async function processHaeJob(
                 await supabase.from('hand_actions').insert({
                   hand_id: hand.id,
                   player_id: playerId, // Use player_id directly
-                  sequence: idx, // Use sequence instead of action_sequence
+                  action_order: idx + 1, // Use action_order (1-indexed) - fixed column name
                   street: action.street.toLowerCase(), // Normalize street name
                   action_type: action.action.toLowerCase(), // Normalize action type
                   amount: action.amount || 0,

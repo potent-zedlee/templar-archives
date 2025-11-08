@@ -23,13 +23,12 @@ Templar Archive는 포커 핸드 데이터의 자동 추출, 보관, 분석을 �
 
 ### 1. 데이터 관리 ✅
 - 핸드 히스토리 + 영상 클립 동기화 저장
-- 3가지 영상 소스 (YouTube, 로컬 파일, NAS)
-- Archive 이벤트 관리 (Tournament/SubEvent/Day CRUD)
-- Google Drive 스타일 폴더 네비게이션 (4단계 계층)
+- YouTube영상 소스
+- Archive 이벤트 관리 (Tournament/Event/Stream CRUD)
 
 ### 2. 검색 및 분석 ✅
 - 30+ 검색 조건 필터링
-- **AI 자연어 검색** (Claude 3.5 Sonnet)
+- **AI 자연어 검색** (Claude 4.5 Sonnet)
 - 통계 대시보드
 - Full-Text Search (tsvector, GIN 인덱스)
 
@@ -65,20 +64,6 @@ Templar Archive는 포커 핸드 데이터의 자동 추출, 보관, 분석을 �
 - **커뮤니티**: Reddit 스타일 댓글, 북마크, 핸드 공유
 - **관리자**: 역할 관리, 밴 시스템, 콘텐츠 신고, 핸드 수정 요청
 - **Archive**: Google Drive 스타일 4단계 폴더 네비게이션
-
-### Phase 1-33: 핵심 개발 완료 (2025-10-16 ~ 2025-10-28)
-
-**모든 Phase 상세 내역은 [Phase 1-33 Archive](./work-logs/phase-1-to-33-archive.md)를 참고하세요.**
-
-**주요 완료 기능**:
-- **Phase 1-8**: 핵심 시스템 (인증, DB, 커뮤니티, Archive, 폴더 네비게이션)
-- **Phase 9-11**: 코드 품질 및 아키텍처 개선, 성능 최적화, UX/UI 개선
-- **Phase 12-13**: 테스팅 전략 수립, 보안 강화
-- **Phase 14-19**: Archive UI Redesign, 로고 관리, React Query Migration, Archive UI Enhancement
-- **Phase 20-21**: 알림 시스템, 플레이어 통계 고도화
-- **Phase 22-26**: News & Live Reporting, Navigation Expansion, UI Simplification, Last Sign-in Tracking
-- **Phase 27-29**: Quick Upload Enhancement, YouTube API Optimization, Admin Category Logo Upload
-- **Phase 30-33**: Event Management Enhancement, Archive Security Enhancement, UI/Admin Enhancement, Single Mode Accordion
 
 **핵심 성과**:
 - 73개 마이그레이션 완료 (RLS 정책, 알림 시스템, 플레이어 통계, 보안 강화, HAE 제거)
