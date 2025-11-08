@@ -7,6 +7,7 @@
  */
 
 import { useState } from "react"
+import { toast } from "sonner"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -61,7 +62,7 @@ export function AnalyzeVideoDialog({
   const [status, setStatus] = useState<AnalysisStatus>("idle")
   const [progress, setProgress] = useState("")
   const [error, setError] = useState("")
-  const [extractedCount, setExtractedCount] = useState(0)
+  const [jobId, setJobId] = useState<string | null>(null)
   const [matchResults, setMatchResults] = useState<PlayerMatchResult[]>([])
   const [, setCurrentVideoTime] = useState(0)
   const [videoDuration, setVideoDuration] = useState(0)
@@ -99,6 +100,7 @@ export function AnalyzeVideoDialog({
     setStatus("analyzing")
     setProgress("Gemini AI가 영상을 분석하고 있습니다...")
     setError("")
+    setJobId(null)
 
     try {
       // Filter out empty players
@@ -129,19 +131,15 @@ export function AnalyzeVideoDialog({
       }
 
       // Success
+      setJobId(result.jobId ?? null)
       onSuccess?.([])
       setStatus("success")
-      setProgress("분석이 완료되었습니다. 핸드가 추출되어 데이터베이스에 저장되었습니다.")
-
-      // Auto-close after 2 seconds
-      setTimeout(() => {
-        onOpenChange(false)
-        resetDialog()
-      }, 2000)
-
+      setProgress("분석 작업이 접수되었습니다. 처리에는 몇 분이 소요될 수 있습니다.")
+      toast.success("분석 요청이 접수되었습니다. 잠시만 기다려 주세요.")
     } catch (err) {
       setStatus("error")
       setError(err instanceof Error ? err.message : "분석 중 오류가 발생했습니다")
+      toast.error(err instanceof Error ? err.message : "분석 중 오류가 발생했습니다")
     }
   }
 
@@ -150,7 +148,7 @@ export function AnalyzeVideoDialog({
     setStatus("idle")
     setProgress("")
     setError("")
-    setExtractedCount(0)
+    setJobId(null)
     setMatchResults([])
   }
 
@@ -355,19 +353,22 @@ export function AnalyzeVideoDialog({
               </div>
               <div className="text-center space-y-2">
                 <p className="font-medium text-green-600 dark:text-green-400">
-                  분석 완료!
+                  분석 요청이 접수되었습니다
                 </p>
                 <p className="text-sm text-muted-foreground">{progress}</p>
               </div>
             </div>
 
-            <Card className="p-4 bg-green-500/10 border-green-500/20">
-              <div className="text-center space-y-1">
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {extractedCount}개
-                </p>
-                <p className="text-sm text-muted-foreground">핸드가 추출되었습니다</p>
-              </div>
+            <Card className="p-4 bg-green-500/10 border-green-500/20 space-y-3">
+              <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                핸드 추출이 완료되면 해당 Day의 핸드 목록이 자동으로 갱신됩니다.
+                분석이 길어질 경우 2~3분 정도 소요될 수 있습니다.
+              </p>
+              {jobId && (
+                <div className="text-center text-xs text-muted-foreground">
+                  Job ID: <span className="font-mono">{jobId}</span>
+                </div>
+              )}
             </Card>
 
             {/* Match Results */}

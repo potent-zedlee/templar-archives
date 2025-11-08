@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { getServiceSupabaseClient } from '@/lib/supabase-service'
 import { haeAnalyzeSegments, generateHandSummary } from '@/lib/ai/gemini'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
@@ -227,7 +228,7 @@ async function processHaeJob(
   streamId?: string,
   platform: HaePlatform = DEFAULT_PLATFORM
 ) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = getServiceSupabaseClient()
 
   try {
     // Update job status to processing
@@ -312,7 +313,7 @@ async function processHaeJob(
           // Update hand with summary
           await supabase
             .from('hands')
-            .update({ ai_summary: summary })
+            .update({ ai_summary: summary } as any)
             .eq('id', hand.id)
         } catch (summaryError) {
           console.error('Failed to generate hand summary:', summaryError)
