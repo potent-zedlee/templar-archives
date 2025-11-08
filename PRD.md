@@ -46,8 +46,6 @@ Templar Archives는 포커 핸드 데이터의 자동 추출, 보관, 분석을 
 
 ### 1.4 Current Status (2025-11-08)
 - ✅ **프로덕션 배포**: https://templar-archives.vercel.app
-- ✅ **Phase 0-33 완료**: 모든 핵심 기능 개발 완료
-- ✅ **보안 등급**: A (RLS, OAuth, 콘텐츠 신고 시스템)
 - ✅ **기술 스택**: React 19.2.0, Next.js 15.5.5, TypeScript 5.9.3
 - ✅ **AI 모델**: Gemini 2.5-flash (최신 SDK v1.29.0)
 - ✅ **데이터베이스**: Supabase (73개 마이그레이션, 27개 테이블)
@@ -59,9 +57,8 @@ Templar Archives는 포커 핸드 데이터의 자동 추출, 보관, 분석을 
 ### 2.1 Core Features
 
 #### **Archive (영상 아카이브 관리)**
-- 4단계 계층 구조 (Tournament → SubEvent → Day → Hands)
-- Google Drive 스타일 폴더 네비게이션
-- 3가지 영상 소스 (YouTube, 로컬 업로드, NAS)
+- 4단계 계층 구조 (Tournament → Event → Stream → Hands)
+- YouTube 영상 소스
 - Quick Upload 기능 (YouTube URL 자동 파싱)
 - 관리자 카테고리 로고 업로드 시스템
 
@@ -79,9 +76,8 @@ Templar Archives는 포커 핸드 데이터의 자동 추출, 보관, 분석을 
   - 보드 카드 (최대 5장)
   - 날짜 범위, 팟 사이즈 범위
   - 영상 소스 (YouTube/Upload)
-- AI 자연어 검색 (Claude 3.5 Sonnet)
-- Full-Text Search (PostgreSQL tsvector, GIN 인덱스)
-- Table/Card 뷰 모드 전환
+- AI 자연어 검색 (Gemini 2.5 flash)
+- Full-Text Search
 
 #### **Community (커뮤니티)**
 - Reddit 스타일 포스트/댓글 시스템
@@ -243,27 +239,23 @@ Templar Archives는 포커 핸드 데이터의 자동 추출, 보관, 분석을 
   - [x] 관리자가 Tournament 생성 가능
   - [x] 필수 필드: name, category, location, start_date, end_date
   - [x] 선택 필드: city, country, game_type, category_logo
-  - [x] Google Drive 스타일 폴더 표시
   - [x] Single Mode Accordion (한 번에 1개만 확장)
 
-#### FR-A2: SubEvent CRUD
+#### FR-A2: Event CRUD
 - **Priority**: P0 (Critical)
-- **Description**: SubEvent (이벤트) 생성/수정/삭제
+- **Description**: Event (이벤트) 생성/수정/삭제
 - **Acceptance Criteria**:
-  - [x] Tournament 하위에 SubEvent 생성
+  - [x] Tournament 하위에 Event 생성
   - [x] 필수 필드: name, date
   - [x] 선택 필드: event_number, total_prize, winner, buy_in, entry_count
   - [x] Blind structure, level duration, starting stack 지원
 
-#### FR-A3: Day (Stream) CRUD
+#### FR-A3: Stream CRUD
 - **Priority**: P0 (Critical)
-- **Description**: Day (영상 스트림) 생성/수정/삭제
+- **Description**: Stream (영상 스트림) 생성/수정/삭제
 - **Acceptance Criteria**:
-  - [x] SubEvent 하위에 Day 생성
-  - [x] 3가지 영상 소스 지원 (YouTube, Upload, NAS)
+  - [x] Event 하위에 Stream 생성
   - [x] YouTube URL 자동 파싱 (Quick Upload)
-  - [x] 로컬 파일 업로드 (Supabase Storage)
-  - [x] NAS 경로 입력
 
 #### FR-A4: Quick Upload
 - **Priority**: P1 (High)
@@ -289,11 +281,9 @@ Templar Archives는 포커 핸드 데이터의 자동 추출, 보관, 분석을 
 - **Priority**: P0 (Critical)
 - **Description**: Gemini AI 기반 영상 분석
 - **Acceptance Criteria**:
-  - [x] Gemini 2.5-flash 모델 사용 (@google/genai v1.29.0)
+  - [x] Gemini 2.5-flash 모델 사용
   - [x] 플랫폼별 프롬프트 (EPT, WSOP, Triton 등)
-  - [x] 프레임 추출 (FFmpeg.wasm)
-  - [x] Hand number, timestamp, pot size, board cards 추출
-
+  
 #### FR-H2: Hand Data Extraction
 - **Priority**: P0 (Critical)
 - **Description**: 핸드 데이터 구조화 저장
@@ -337,10 +327,10 @@ Templar Archives는 포커 핸드 데이터의 자동 추출, 보관, 분석을 
 
 #### FR-S2: AI Natural Language Search
 - **Priority**: P1 (High)
-- **Description**: Claude 3.5 Sonnet 기반 자연어 검색
+- **Description**: Gemini 기반 자연어 검색
 - **Acceptance Criteria**:
   - [x] 자연어 쿼리 입력 (예: "Phil Ivey의 블러프")
-  - [x] Claude API 연동
+  - [x] Gemini API 연동
   - [x] 검색 결과 반환
   - [x] 검색 히스토리 저장
 
@@ -950,46 +940,7 @@ users (1) ──< (N) posts ──< (N) comments
 
 ## 9. Roadmap & Future Plans
 
-### 9.1 Completed Phases (0-33) ✅
-
-**Phase 0-8**: 핵심 시스템 구축
-- 인증 (Google OAuth, RLS)
-- Archive 관리 (Tournament, SubEvent, Day CRUD)
-- HAE 분석 시스템
-- Community (포스트, 댓글, 좋아요, 북마크)
-- Players (클레임 시스템)
-
-**Phase 9-13**: 코드 품질 및 보안
-- Archive 리팩토링 (1,733줄 → 88줄)
-- 114개 any 타입 제거
-- React Query 마이그레이션
-- 보안 등급 B+ → A
-
-**Phase 14-21**: UI 개선 및 고도화
-- Archive UI Redesign
-- 로고 관리 시스템
-- 알림 시스템
-- 플레이어 통계 고도화
-
-**Phase 22-29**: 기능 확장
-- News & Live Reporting
-- Quick Upload Enhancement
-- YouTube API 최적화
-- Admin Category Logo Upload
-
-**Phase 30-33**: 시스템 통합
-- Event Management Enhancement
-- Archive Security Enhancement
-- Single Mode Accordion
-- **HAE 시스템 통합** (Phase 3.3)
-
-### 9.2 Future Phases (34+)
-
-#### **Phase 34: Mobile App (React Native)**
-- React Native 앱 개발
-- iOS/Android 동시 지원
-- 오프라인 모드 (SQLite)
-- 푸시 알림
+### 9.1 Future Phases (34+)
 
 #### **Phase 35: Advanced Analytics**
 - 플레이어 통계 대시보드
@@ -1009,35 +960,11 @@ users (1) ──< (N) posts ──< (N) comments
 - 라이브 댓글 시스템
 - Overlay (방송용 위젯)
 
-#### **Phase 38: Marketplace**
-- 핸드 히스토리 판매/구매
-- 프리미엄 콘텐츠 구독
-- 코칭 플랫폼
-- 광고 시스템
-
-#### **Phase 39: Tournament Management**
-- 온라인 토너먼트 호스팅
-- 브라켓 생성/관리
-- 리더보드
-- 상금 분배 시스템
-
 #### **Phase 40: Social Features**
 - 친구 추가/팔로우
 - DM (Direct Message)
 - 그룹/클럽 기능
 - 이벤트/대회 캘린더
-
-### 9.3 Technical Debt
-
-| 항목 | 우선순위 | 예상 시간 |
-|---|---|---|
-| **TypeScript 에러 정리** (338개 → 0개) | P1 | 2주 |
-| **단위 테스트 작성** (Jest + RTL) | P1 | 4주 |
-| **E2E 테스트** (Playwright) | P2 | 2주 |
-| **i18n 지원** (영문 번역) | P2 | 3주 |
-| **PWA 전환** (오프라인 지원) | P3 | 2주 |
-| **Sentry 통합** (에러 트래킹) | P2 | 1주 |
-| **성능 최적화** (Lighthouse 100점) | P2 | 2주 |
 
 ---
 
@@ -1052,7 +979,7 @@ users (1) ──< (N) posts ──< (N) comments
 | **RBAC** | Role-Based Access Control (역할 기반 접근 제어) |
 | **Tournament** | 포커 토너먼트 (예: WSOP Main Event) |
 | **SubEvent** | 토너먼트 내 개별 이벤트 (예: Event #1: $10K Main Event) |
-| **Day** | 이벤트 내 개별 Day/스트림 (예: Day 1A) |
+| **Stream** | 이벤트 내 개별 Stream/스트림 |
 | **Hand** | 포커 핸드 히스토리 (1개의 게임) |
 | **Hand Player** | 핸드에 참여한 플레이어 정보 |
 | **Hand Action** | 핸드 내 플레이어 액션 (Bet, Call, Fold 등) |

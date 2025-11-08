@@ -2,7 +2,7 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getServiceSupabaseClient } from '@/lib/supabase-service'
-import { haeAnalyzeSegments, generateHandSummary } from '@/lib/ai/gemini'
+import { generateHandSummary } from '@/lib/ai/gemini'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
 
@@ -247,11 +247,33 @@ async function processHaeJob(
       label: s.label,
     }))
 
-    // Pass full YouTube URL to HAE (Gemini) with mapped platform
+    // Pass full YouTube URL to Python HAE API
     const fullYoutubeUrl = `https://www.youtube.com/watch?v=${youtubeId}`
     const analysisPlatform =
       ANALYSIS_PLATFORM_MAP[platform] ?? ANALYSIS_PLATFORM_MAP[DEFAULT_PLATFORM]
-    const results = await haeAnalyzeSegments(fullYoutubeUrl, segmentsForAnalysis, analysisPlatform)
+
+    // Call Python API endpoint (same domain)
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000'
+    const response = await fetch(`${baseUrl}/api/hae/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        youtubeUrl: fullYoutubeUrl,
+        segments: segmentsForAnalysis,
+        platform: analysisPlatform,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Python API error: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    const results = data.results || []
 
     // Process results and store in database
     let totalHands = 0
