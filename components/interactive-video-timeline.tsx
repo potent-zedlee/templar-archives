@@ -78,8 +78,8 @@ export function InteractiveTimeline({
     return Math.floor(percent * maxSeconds)
   }, [maxSeconds])
 
-  // 10초 단위 스냅
-  const snapToGrid = useCallback((time: number, gridSize: number = 10): number => {
+  // 스냅 단위 조정 (1초 단위로 개선)
+  const snapToGrid = useCallback((time: number, gridSize: number = 1): number => {
     return Math.round(time / gridSize) * gridSize
   }, [])
 
@@ -115,7 +115,9 @@ export function InteractiveTimeline({
     if (!dragState) return
 
     const rawTime = getTimeFromX(e.clientX)
-    const snappedTime = snapToGrid(rawTime, 10) // 10초 단위 스냅
+    // Shift 키를 누르면 1초 단위, 아니면 5초 단위로 스냅 (개선된 감도)
+    const gridSize = e.shiftKey ? 1 : 5
+    const snappedTime = snapToGrid(rawTime, gridSize)
     const segment = segments.find((s) => s.id === dragState.segmentId)
     if (!segment) return
 
@@ -126,18 +128,18 @@ export function InteractiveTimeline({
 
     if (dragState.handle === 'start') {
       // 시작 시간 조절 (종료 시간보다 작아야 함)
-      const clampedTime = Math.max(0, Math.min(snappedTime, endSeconds - 10))
+      const clampedTime = Math.max(0, Math.min(snappedTime, endSeconds - 5))
       updatedSegment.startTime = secondsToTimeString(clampedTime, maxSeconds > 3600)
     } else if (dragState.handle === 'end') {
       // 종료 시간 조절 (시작 시간보다 커야 함)
-      const clampedTime = Math.max(startSeconds + 10, Math.min(snappedTime, maxSeconds))
+      const clampedTime = Math.max(startSeconds + 5, Math.min(snappedTime, maxSeconds))
       updatedSegment.endTime = secondsToTimeString(clampedTime, maxSeconds > 3600)
     } else if (dragState.handle === 'move') {
       // 전체 이동
       const delta = snappedTime - dragState.initialTime
       const duration = endSeconds - startSeconds
       const newStart = Math.max(0, Math.min(startSeconds + delta, maxSeconds - duration))
-      const snappedStart = snapToGrid(newStart, 10)
+      const snappedStart = snapToGrid(newStart, gridSize)
       const newEnd = snappedStart + duration
       updatedSegment.startTime = secondsToTimeString(snappedStart, maxSeconds > 3600)
       updatedSegment.endTime = secondsToTimeString(newEnd, maxSeconds > 3600)
@@ -195,15 +197,43 @@ export function InteractiveTimeline({
     onChange(segments.map((s) => (s.id === selectedId ? { ...s, type } : s)))
   }
 
-  // 시간 입력 처리
+  // 시간 입력 처리 (타이핑 중에는 자유롭게 입력 가능)
   const handleTimeInput = (field: 'startTime' | 'endTime', value: string) => {
     if (!selectedId) return
 
+    // 타이핑 중에는 모든 입력 허용 (사용자 경험 개선)
+    onChange(segments.map((s) => (s.id === selectedId ? { ...s, [field]: value } : s)))
+  }
+
+  // 시간 입력 검증 (blur 시)
+  const handleTimeBlur = (field: 'startTime' | 'endTime') => {
+    if (!selectedId) return
+    
+    const segment = segments.find((s) => s.id === selectedId)
+    if (!segment) return
+
+    const value = field === 'startTime' ? segment.startTime : segment.endTime
+    
     // 유효성 검사: HH:MM:SS 또는 MM:SS 형식
     const timeRegex = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/
-    if (!timeRegex.test(value) && value !== '') return
+    if (!timeRegex.test(value)) {
+      // 유효하지 않으면 이전 값으로 복원
+      const defaultTime = field === 'startTime' ? '00:00' : '00:10:00'
+      onChange(segments.map((s) => (s.id === selectedId ? { ...s, [field]: defaultTime } : s)))
+      return
+    }
 
-    onChange(segments.map((s) => (s.id === selectedId ? { ...s, [field]: value } : s)))
+    // 시간 값 검증 (시작 < 종료)
+    const startSec = timeStringToSeconds(segment.startTime)
+    const endSec = timeStringToSeconds(segment.endTime)
+    
+    if (field === 'startTime' && startSec >= endSec) {
+      // 시작 시간이 종료 시간보다 크거나 같으면 조정
+      onChange(segments.map((s) => (s.id === selectedId ? { ...s, startTime: secondsToTimeString(Math.max(0, endSec - 60), maxSeconds > 3600) } : s)))
+    } else if (field === 'endTime' && endSec <= startSec) {
+      // 종료 시간이 시작 시간보다 작거나 같으면 조정
+      onChange(segments.map((s) => (s.id === selectedId ? { ...s, endTime: secondsToTimeString(startSec + 60, maxSeconds > 3600) } : s)))
+    }
   }
 
   // 템플릿 불러오기
@@ -313,24 +343,32 @@ export function InteractiveTimeline({
           <div className="flex items-center gap-4 p-3 bg-primary/5 rounded-lg">
             <div className="flex-1 grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">시작</label>
+                <label className="text-xs text-muted-foreground">시작 시간</label>
                 <Input
                   type="text"
                   value={selectedSegment.startTime}
                   onChange={(e) => handleTimeInput('startTime', e.target.value)}
+                  onBlur={() => handleTimeBlur('startTime')}
                   placeholder="HH:MM:SS"
                   className="h-8 font-mono text-sm"
+                  autoComplete="off"
+                  spellCheck={false}
                 />
+                <p className="text-[10px] text-muted-foreground">직접 입력 가능 (예: 01:23:45)</p>
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">종료</label>
+                <label className="text-xs text-muted-foreground">종료 시간</label>
                 <Input
                   type="text"
                   value={selectedSegment.endTime}
                   onChange={(e) => handleTimeInput('endTime', e.target.value)}
+                  onBlur={() => handleTimeBlur('endTime')}
                   placeholder="HH:MM:SS"
                   className="h-8 font-mono text-sm"
+                  autoComplete="off"
+                  spellCheck={false}
                 />
+                <p className="text-[10px] text-muted-foreground">직접 입력 가능 (예: 01:30:00)</p>
               </div>
             </div>
             <Select
@@ -353,7 +391,7 @@ export function InteractiveTimeline({
 
         {/* Info */}
         <p className="text-xs text-muted-foreground text-center">
-          구간을 드래그하여 이동, 좌우 가장자리를 드래그하여 시작/종료 시간 조절
+          구간을 드래그하여 이동, 좌우 가장자리를 드래그하여 시작/종료 시간 조절 (Shift+드래그: 1초 단위, 기본: 5초 단위)
         </p>
       </div>
     </Card>
