@@ -307,7 +307,7 @@ async function processHaeJob(
     const baseUrl = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/hae/analyze`, {
+    const response = await fetch(`${baseUrl}/api/hae_analyze`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

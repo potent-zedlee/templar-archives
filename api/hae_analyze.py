@@ -6,7 +6,7 @@ import re
 import time
 from typing import List, Dict, Any, Optional
 from google import genai
-from .prompts import EPT_PROMPT, TRITON_POKER_PROMPT
+from hae_prompts import EPT_PROMPT, TRITON_POKER_PROMPT
 
 
 # Initialize Gemini client
