@@ -287,8 +287,8 @@ export function InteractiveTimeline({
             return (
               <div
                 key={segment.id}
-                className={`absolute top-0 bottom-0 transition-all ${
-                  isSelected ? 'ring-2 ring-white ring-offset-2' : ''
+                className={`absolute top-0 bottom-0 transition-all cursor-grab active:cursor-grabbing hover:brightness-110 ${
+                  isSelected ? 'ring-2 ring-white ring-offset-2 shadow-lg' : ''
                 }`}
                 style={{
                   left: `${pos.left}%`,
@@ -296,12 +296,23 @@ export function InteractiveTimeline({
                   backgroundColor: getSegmentColor(segment.type),
                 }}
                 onMouseDown={(e) => handleMouseDown(e, segment.id, 'move')}
+                role="button"
+                aria-label={`Move ${getSegmentTypeLabel(segment.type)} segment`}
+                tabIndex={0}
               >
                 {/* 좌측 핸들 */}
                 <div
-                  className="absolute left-0 top-0 bottom-0 w-2 bg-white/30 hover:bg-white/50 cursor-ew-resize"
+                  className="absolute left-0 top-0 bottom-0 w-3 bg-white/40 hover:bg-white/70 hover:shadow-lg cursor-ew-resize transition-all duration-150 hover:scale-x-[1.5] active:bg-white/90 group/handle"
                   onMouseDown={(e) => handleMouseDown(e, segment.id, 'start')}
-                />
+                  role="button"
+                  aria-label="Drag to adjust start time"
+                  tabIndex={0}
+                >
+                  {/* 터치 영역 확장 (보이지 않는 영역) */}
+                  <div className="absolute inset-y-0 -left-3 -right-3 md:-left-2 md:-right-2" />
+                  {/* 시각적 그립 인디케이터 */}
+                  <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-white/60 group-hover/handle:bg-white" />
+                </div>
 
                 {/* 레이블 */}
                 {pos.width > 5 && (
@@ -314,9 +325,17 @@ export function InteractiveTimeline({
 
                 {/* 우측 핸들 */}
                 <div
-                  className="absolute right-0 top-0 bottom-0 w-2 bg-white/30 hover:bg-white/50 cursor-ew-resize"
+                  className="absolute right-0 top-0 bottom-0 w-3 bg-white/40 hover:bg-white/70 hover:shadow-lg cursor-ew-resize transition-all duration-150 hover:scale-x-[1.5] active:bg-white/90 group/handle"
                   onMouseDown={(e) => handleMouseDown(e, segment.id, 'end')}
-                />
+                  role="button"
+                  aria-label="Drag to adjust end time"
+                  tabIndex={0}
+                >
+                  {/* 터치 영역 확장 (보이지 않는 영역) */}
+                  <div className="absolute inset-y-0 -left-3 -right-3 md:-left-2 md:-right-2" />
+                  {/* 시각적 그립 인디케이터 */}
+                  <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-white/60 group-hover/handle:bg-white" />
+                </div>
               </div>
             )
           })}
