@@ -153,10 +153,10 @@ export async function startHaeAnalysis(
       const { data: newVideo, error: videoError } = await supabase
         .from('videos')
         .insert({
-          url: input.videoUrl, // Store full YouTube URL
+          url: input.videoUrl,
           youtube_id: videoId,
           platform: 'youtube',
-          title: null, // Will be updated later when we fetch metadata
+          title: null,
           duration: null,
         })
         .select('id')
@@ -179,7 +179,7 @@ export async function startHaeAnalysis(
       .from('analysis_jobs')
       .insert({
         video_id: dbVideoId,
-        stream_id: input.streamId || null, // Link to stream (day) if provided
+        stream_id: input.streamId || null,
         platform: dbPlatform,
         status: 'pending',
         segments: gameplaySegments,
@@ -197,7 +197,7 @@ export async function startHaeAnalysis(
       }
     }
 
-    // Start background processing (in production, this would be a queue)
+    // Start background processing (Python backend)
     processHaeJob(job.id, videoId, gameplaySegments, input.streamId, selectedPlatform).catch(
       console.error
     )
@@ -218,8 +218,7 @@ export async function startHaeAnalysis(
 }
 
 /**
- * Process HAE job in the background
- * In production, this should be moved to a queue worker
+ * Process HAE job using Python backend
  */
 async function processHaeJob(
   jobId: string,
@@ -245,7 +244,6 @@ async function processHaeJob(
     if (!finalStreamId) {
       console.log('No streamId provided, creating default "Unsorted Hands" stream')
 
-      // Try to find existing "Unsorted Hands" stream
       const { data: existingStream } = await supabase
         .from('days')
         .select('id')
@@ -255,11 +253,10 @@ async function processHaeJob(
       if (existingStream) {
         finalStreamId = existingStream.id
       } else {
-        // Create default sub_event and day for unsorted hands
         const { data: defaultSubEvent, error: subEventError } = await supabase
           .from('sub_events')
           .insert({
-            tournament_id: null, // No tournament
+            tournament_id: null,
             name: 'Unsorted Videos',
             date: new Date().toISOString().split('T')[0],
           })
@@ -291,176 +288,222 @@ async function processHaeJob(
       }
     }
 
-    // Analyze each segment with YouTube URL
-    const segmentsForAnalysis = segments.map((s) => ({
-      start: s.start,
-      end: s.end,
-      label: s.label,
-    }))
-
-    // Pass full YouTube URL to Python HAE API
+    // Full YouTube URL
     const fullYoutubeUrl = `https://www.youtube.com/watch?v=${youtubeId}`
-    const analysisPlatform =
-      ANALYSIS_PLATFORM_MAP[platform] ?? ANALYSIS_PLATFORM_MAP[DEFAULT_PLATFORM]
+    const analysisPlatform = ANALYSIS_PLATFORM_MAP[platform] ?? ANALYSIS_PLATFORM_MAP[DEFAULT_PLATFORM]
 
-    // Call Python API endpoint (same domain)
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : 'http://localhost:3000'
-    const response = await fetch(`${baseUrl}/api/hae_analyze`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        youtubeUrl: fullYoutubeUrl,
-        segments: segmentsForAnalysis,
-        platform: analysisPlatform,
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`Python API error: ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    const results = data.results || []
-
-    // Process results and store in database
     let totalHands = 0
 
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i]
+    // Process each segment by calling Python backend
+    for (let i = 0; i < segments.length; i++) {
       const segment = segments[i]
 
-      if (result.error || result.hands.length === 0) {
-        continue
-      }
+      try {
+        // Update progress
+        const progressPercent = Math.round((i / segments.length) * 100)
+        await supabase
+          .from('analysis_jobs')
+          .update({ progress: progressPercent })
+          .eq('id', jobId)
 
-      // Store each hand
-      for (const handData of result.hands) {
-        // Create hand record
-        const { data: hand, error: handError } = await supabase
-          .from('hands')
-          .insert({
-            day_id: finalStreamId, // Use finalStreamId (guaranteed to exist)
-            job_id: jobId,
-            number: String(handData.handNumber || ++totalHands),
-            description: handData.description || `Hand #${handData.handNumber || totalHands}`,
-            timestamp: formatTimestamp(segment.start), // Convert seconds to MM:SS format
-            video_timestamp_start: segment.start,
-            video_timestamp_end: segment.end,
-            stakes: handData.stakes || 'Unknown',
-            board_flop: handData.board?.flop || [],
-            board_turn: handData.board?.turn || null,
-            board_river: handData.board?.river || null,
-            pot_size: handData.pot || 0,
-            raw_data: handData,
-          })
-          .select('id')
-          .single()
+        console.log(`[HAE] Processing segment ${i + 1}/${segments.length}: ${segment.start}s - ${segment.end}s`)
 
-        if (handError || !hand) {
-          console.error('Failed to create hand:', handError)
+        // Call Python backend (HAE-MVP)
+        const backendUrl = process.env.HAE_BACKEND_URL || 'http://localhost:8000'
+        const response = await fetch(`${backendUrl}/api/analyze-video`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            youtubeUrl: fullYoutubeUrl,
+            startTime: segment.start,
+            endTime: segment.end,
+            platform: analysisPlatform,
+          }),
+        })
+
+        if (!response.ok) {
+          console.error(`[HAE] Backend error for segment ${i}:`, response.statusText)
           continue
         }
 
-        // Generate AI summary for the hand
-        try {
-          const summary = await generateHandSummary({
-            handNumber: handData.handNumber,
-            stakes: handData.stakes,
-            players: handData.players || [],
-            board: handData.board,
-            pot: handData.pot,
-            winners: handData.winners,
-            actions: handData.actions,
-          })
-
-          // Update hand with summary
-          await supabase
-            .from('hands')
-            .update({ ai_summary: summary } as any)
-            .eq('id', hand.id)
-        } catch (summaryError) {
-          console.error('Failed to generate hand summary:', summaryError)
-          // Continue even if summary fails
+        // Parse SSE stream from Python backend
+        const reader = response.body?.getReader()
+        if (!reader) {
+          console.error('[HAE] No response body reader')
+          continue
         }
 
-        // Store players and actions
-        if (handData.players) {
-          for (const playerData of handData.players) {
-            // Find or create player
-            const playerId = await findOrCreatePlayer(supabase, playerData.name)
+        const decoder = new TextDecoder()
+        let buffer = ''
+        let segmentResult: any = null
 
-            // Create hand_player record
-            const winner = handData.winners?.find(
-              (w: any) => w.name === playerData.name
-            )
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
 
-            // Convert holeCards to array format if needed
-            let holeCardsArray: string[] | null = null
-            if (playerData.holeCards) {
-              if (Array.isArray(playerData.holeCards)) {
-                holeCardsArray = playerData.holeCards
-              } else if (typeof playerData.holeCards === 'string') {
-                // Parse string format like "AsKd" or "As Kd"
-                holeCardsArray = playerData.holeCards.split(/[\s,]+/).filter(Boolean)
+          buffer += decoder.decode(value, { stream: true })
+          const events = buffer.split('\n\n')
+          buffer = events.pop() || ''
+
+          for (const event of events) {
+            if (!event.trim()) continue
+
+            const lines = event.split('\n')
+            let eventType = ''
+            let data = ''
+
+            for (const line of lines) {
+              if (line.startsWith('event:')) {
+                eventType = line.substring(6).trim()
+              } else if (line.startsWith('data:')) {
+                data = line.substring(5).trim()
               }
             }
 
-            const { data: handPlayer, error: hpError } = await supabase
-              .from('hand_players')
-              .insert({
-                hand_id: hand.id,
-                player_id: playerId,
-                seat: playerData.seat,
-                poker_position: playerData.position, // Use poker_position instead of position
-                starting_stack: playerData.stackSize || 0,
-                ending_stack: playerData.stackSize || 0, // Will be updated if winner info available
-                hole_cards: holeCardsArray,
-                cards: holeCardsArray ? holeCardsArray.join(' ') : null, // Legacy format
-                final_amount: winner?.amount || 0,
-                is_winner: !!winner,
-                hand_description: winner?.hand || null,
-              })
-              .select('id')
-              .single()
+            if (eventType && data) {
+              try {
+                const parsed = JSON.parse(data)
 
-            if (hpError || !handPlayer) {
-              console.error('Failed to create hand_player:', hpError)
-              continue
-            }
+                if (eventType === 'progress') {
+                  // Update Supabase progress
+                  const overallProgress = progressPercent + Math.round((parsed.percent / 100) * (100 / segments.length))
+                  await supabase
+                    .from('analysis_jobs')
+                    .update({ progress: Math.min(overallProgress, 99) })
+                    .eq('id', jobId)
 
-            // Store actions
-            if (handData.actions) {
-              const playerActions = handData.actions.filter(
-                (a: any) => a.player === playerData.name
-              )
+                } else if (eventType === 'complete') {
+                  segmentResult = parsed
+                  console.log(`[HAE] Segment ${i} complete: ${parsed.hands?.length || 0} hands`)
 
-              for (let idx = 0; idx < playerActions.length; idx++) {
-                const action = playerActions[idx]
-
-                await supabase.from('hand_actions').insert({
-                  hand_id: hand.id,
-                  player_id: playerId, // Use player_id directly
-                  action_order: idx + 1, // Use action_order (1-indexed) - fixed column name
-                  street: action.street.toLowerCase(), // Normalize street name
-                  action_type: action.action.toLowerCase(), // Normalize action type
-                  amount: action.amount || 0,
-                })
+                } else if (eventType === 'error') {
+                  console.error(`[HAE] Segment ${i} error:`, parsed.error)
+                }
+              } catch (e) {
+                console.error('[HAE] Failed to parse SSE event:', e)
               }
             }
           }
         }
-      }
 
-      // Update progress
-      const progress = Math.round(((i + 1) / segments.length) * 100)
-      await supabase
-        .from('analysis_jobs')
-        .update({ progress })
-        .eq('id', jobId)
+        // Store hands from this segment
+        if (segmentResult && segmentResult.hands && segmentResult.hands.length > 0) {
+          for (const handData of segmentResult.hands) {
+            // Create hand record
+            const { data: hand, error: handError } = await supabase
+              .from('hands')
+              .insert({
+                day_id: finalStreamId,
+                job_id: jobId,
+                number: String(handData.handNumber || ++totalHands),
+                description: handData.description || `Hand #${handData.handNumber || totalHands}`,
+                timestamp: formatTimestamp(segment.start),
+                video_timestamp_start: segment.start,
+                video_timestamp_end: segment.end,
+                stakes: handData.stakes || 'Unknown',
+                board_flop: handData.board?.flop || [],
+                board_turn: handData.board?.turn || null,
+                board_river: handData.board?.river || null,
+                pot_size: handData.pot || 0,
+                raw_data: handData,
+              })
+              .select('id')
+              .single()
+
+            if (handError || !hand) {
+              console.error('Failed to create hand:', handError)
+              continue
+            }
+
+            // Generate AI summary
+            try {
+              const summary = await generateHandSummary({
+                handNumber: handData.handNumber,
+                stakes: handData.stakes,
+                players: handData.players || [],
+                board: handData.board,
+                pot: handData.pot,
+                winners: handData.winners,
+                actions: handData.actions,
+              })
+
+              await supabase
+                .from('hands')
+                .update({ ai_summary: summary } as any)
+                .eq('id', hand.id)
+            } catch (summaryError) {
+              console.error('Failed to generate hand summary:', summaryError)
+            }
+
+            // Store players and actions
+            if (handData.players) {
+              for (const playerData of handData.players) {
+                const playerId = await findOrCreatePlayer(supabase, playerData.name)
+
+                const winner = handData.winners?.find(
+                  (w: any) => w.name === playerData.name
+                )
+
+                let holeCardsArray: string[] | null = null
+                if (playerData.holeCards) {
+                  if (Array.isArray(playerData.holeCards)) {
+                    holeCardsArray = playerData.holeCards
+                  } else if (typeof playerData.holeCards === 'string') {
+                    holeCardsArray = playerData.holeCards.split(/[\s,]+/).filter(Boolean)
+                  }
+                }
+
+                const { data: handPlayer, error: hpError } = await supabase
+                  .from('hand_players')
+                  .insert({
+                    hand_id: hand.id,
+                    player_id: playerId,
+                    seat: playerData.seat,
+                    poker_position: playerData.position,
+                    starting_stack: playerData.stackSize || 0,
+                    ending_stack: playerData.stackSize || 0,
+                    hole_cards: holeCardsArray,
+                    cards: holeCardsArray ? holeCardsArray.join(' ') : null,
+                    final_amount: winner?.amount || 0,
+                    is_winner: !!winner,
+                    hand_description: winner?.hand || null,
+                  })
+                  .select('id')
+                  .single()
+
+                if (hpError || !handPlayer) {
+                  console.error('Failed to create hand_player:', hpError)
+                  continue
+                }
+
+                // Store actions
+                if (handData.actions) {
+                  const playerActions = handData.actions.filter(
+                    (a: any) => a.player === playerData.name
+                  )
+
+                  for (let idx = 0; idx < playerActions.length; idx++) {
+                    const action = playerActions[idx]
+
+                    await supabase.from('hand_actions').insert({
+                      hand_id: hand.id,
+                      player_id: playerId,
+                      action_order: idx + 1,
+                      street: action.street.toLowerCase(),
+                      action_type: action.action.toLowerCase(),
+                      amount: action.amount || 0,
+                    })
+                  }
+                }
+              }
+            }
+          }
+        }
+      } catch (segmentError) {
+        console.error(`[HAE] Error processing segment ${i}:`, segmentError)
+      }
     }
 
     // Mark job as completed
