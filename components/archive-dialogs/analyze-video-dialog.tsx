@@ -162,8 +162,8 @@ export function AnalyzeVideoDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="!max-w-[80vw] !max-h-[95vh] w-[80vw] h-[95vh] flex flex-col p-3">
-        <DialogHeader>
+      <DialogContent className="w-full max-w-[1200px] h-auto max-h-[min(800px,90vh)] sm:max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-500" />
             AI 핸드 히스토리 추출
@@ -173,7 +173,7 @@ export function AnalyzeVideoDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="overflow-y-auto flex-1 px-3">
+        <div className="overflow-y-auto flex-1 px-6 py-4">
         {status === "idle" && (
           <div className="grid md:grid-cols-5 gap-6">
             {/* Left Column: Video Player + Timeline */}
@@ -308,7 +308,15 @@ export function AnalyzeVideoDialog({
               </div>
             </Card>
 
-            {/* Actions */}
+            {/* End Right Column */}
+            </div>
+          {/* End Grid */}
+          </div>
+        )}
+
+        {/* Actions Footer - Only show in idle state */}
+        {status === "idle" && (
+          <div className="px-6 py-4 border-t shrink-0 bg-muted/10">
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={handleClose}>
                 취소
@@ -318,9 +326,6 @@ export function AnalyzeVideoDialog({
                 분석 시작
               </Button>
             </div>
-            {/* End Right Column */}
-            </div>
-          {/* End Grid */}
           </div>
         )}
 
