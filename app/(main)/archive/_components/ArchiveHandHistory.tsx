@@ -101,50 +101,40 @@ export function ArchiveHandHistory({
 
   return (
     <div className="space-y-0">
-      {/* Hand List */}
-      <Card className="p-7 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 relative overflow-hidden">
-        <div className="flex items-center justify-between mb-7">
-          <div>
-            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
-              Hand History
-            </h2>
-            {filteredHands.length > 0 && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {filteredHands.length} {filteredHands.length === 1 ? 'hand' : 'hands'} found
-              </p>
-            )}
-          </div>
+      {/* Hand Grid or Empty State */}
+      {filteredHands.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+          {filteredHands.map((hand, index) => (
+            <HandCard
+              key={hand.id}
+              hand={hand}
+              onClick={() => handleOpenHandDetail(index)}
+              onPlayHand={(timestamp) => onSeekToTime?.(timestamp)}
+            />
+          ))}
         </div>
-
-        {/* 그리드 레이아웃 */}
-        {filteredHands.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredHands.map((hand, index) => (
-              <HandCard
-                key={hand.id}
-                hand={hand}
-                onClick={() => handleOpenHandDetail(index)}
-                onPlayHand={(timestamp) => onSeekToTime?.(timestamp)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-16 px-6">
-            <div className="inline-block p-8 rounded-2xl backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
-              <Folder className="h-16 w-16 text-muted-foreground/40 mb-4 mx-auto" />
-              <p className="text-xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent text-center">
-                No Hands Available
-              </p>
-              <p className="text-sm text-muted-foreground/70 text-center max-w-md mb-4">
-                이 영상은 아직 AI 분석이 완료되지 않았습니다.
-              </p>
-              <p className="text-xs text-muted-foreground/50 text-center max-w-md">
-                위의 "AI 분석" 버튼을 클릭하여 핸드 히스토리를 자동으로 추출할 수 있습니다.
-              </p>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-24 px-6">
+          <div className="inline-block p-10 rounded-3xl backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl max-w-lg">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="p-6 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/20 border border-border/30">
+                <Folder className="h-20 w-20 text-muted-foreground/40" />
+              </div>
+              <div className="space-y-3 text-center">
+                <h3 className="text-2xl font-extrabold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+                  No Hands Available
+                </h3>
+                <p className="text-sm text-muted-foreground/80 leading-relaxed max-w-md">
+                  이 영상은 아직 AI 분석이 완료되지 않았습니다.
+                </p>
+                <p className="text-xs text-muted-foreground/60 leading-relaxed max-w-md pt-2 border-t border-border/30">
+                  위의 "AI 분석" 버튼을 클릭하여 핸드 히스토리를 자동으로 추출할 수 있습니다.
+                </p>
+              </div>
             </div>
           </div>
-        )}
-      </Card>
+        </div>
+      )}
 
       {/* Hand History Dialog */}
       {selectedDayData && filteredHands.length > 0 && (

@@ -83,73 +83,75 @@ export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelPro
   return (
     <div className="flex flex-col h-full">
       <ScrollArea className="flex-1">
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-8">
           {!selectedDayData ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[600px]">
-              <div className="relative mb-8">
+            <div className="flex flex-col items-center justify-center h-full min-h-[600px] py-16">
+              <div className="relative mb-10">
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-3xl rounded-full" />
-                <div className="relative bg-gradient-to-br from-blue-500 to-purple-500 p-6 rounded-full">
-                  <Play className="h-12 w-12 text-white" />
+                <div className="relative bg-gradient-to-br from-blue-500 to-purple-500 p-8 rounded-2xl shadow-xl">
+                  <Play className="h-16 w-16 text-white" />
                 </div>
               </div>
 
-              <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-extrabold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
                 Select a Day
               </h1>
 
-              <p className="text-muted-foreground text-center max-w-md mb-8">
+              <p className="text-lg text-muted-foreground text-center max-w-lg mb-12">
                 Choose a tournament day from the list to view its video and hand history
               </p>
 
-              <div className="w-full max-w-2xl space-y-3 text-sm text-muted-foreground">
-                <div className="flex items-start gap-2">
-                  <span className="text-blue-400">•</span>
-                  <p>Browse tournaments by category in the left sidebar</p>
+              <div className="w-full max-w-2xl space-y-4">
+                <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-500/20">
+                  <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 flex-shrink-0" />
+                  <p className="text-sm text-foreground/80">Browse tournaments by category in the left sidebar</p>
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-purple-400">•</span>
-                  <p>Expand tournaments and events to see available days</p>
+                <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-purple-500/5 border border-purple-500/20">
+                  <div className="w-2 h-2 rounded-full bg-purple-400 mt-2 flex-shrink-0" />
+                  <p className="text-sm text-foreground/80">Expand tournaments and events to see available days</p>
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-blue-400">•</span>
-                  <p>Click on a day to watch the video and explore hand history</p>
+                <div className="flex items-start gap-4 p-4 rounded-xl bg-gradient-to-r from-pink-500/10 to-pink-500/5 border border-pink-500/20">
+                  <div className="w-2 h-2 rounded-full bg-pink-400 mt-2 flex-shrink-0" />
+                  <p className="text-sm text-foreground/80">Click on a day to watch the video and explore hand history</p>
                 </div>
               </div>
             </div>
           ) : (
             <>
               {/* Day Info Card */}
-              <Card className="p-6 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h1 className="text-2xl font-bold mb-2">{selectedDayData.name}</h1>
-                      <div className="flex flex-wrap gap-2">
-                      {selectedDayData.published_at && (
-                        <Badge variant="secondary" className="gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {formatDate(selectedDayData.published_at)}
-                        </Badge>
-                      )}
-                      {selectedDayData.player_count !== undefined && selectedDayData.player_count > 0 && (
-                        <Badge variant="secondary" className="gap-1">
-                          <Users className="h-3 w-3" />
-                          {selectedDayData.player_count} players
-                        </Badge>
-                      )}
-                      {selectedDayData.video_source === "youtube" && selectedDayData.video_url && (
-                        <Badge variant="destructive" className="gap-1">
-                          <Play className="h-3 w-3" />
-                          YouTube
-                        </Badge>
-                      )}
-                      {(selectedDayData.video_file || selectedDayData.video_nas_path) && (
-                        <Badge className="gap-1 bg-amber-500">
-                          <Play className="h-3 w-3" />
-                          Local
-                        </Badge>
-                      )}
-                    </div>
+              <Card className="p-8 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
+                <div className="space-y-5">
+                  <div className="flex items-start justify-between gap-6">
+                    <div className="flex-1 min-w-0 space-y-3">
+                      <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                        {selectedDayData.name}
+                      </h1>
+                      <div className="flex flex-wrap gap-2.5">
+                        {selectedDayData.published_at && (
+                          <Badge variant="secondary" className="gap-1.5 px-3 py-1.5 text-xs font-medium">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {formatDate(selectedDayData.published_at)}
+                          </Badge>
+                        )}
+                        {selectedDayData.player_count !== undefined && selectedDayData.player_count > 0 && (
+                          <Badge variant="secondary" className="gap-1.5 px-3 py-1.5 text-xs font-medium">
+                            <Users className="h-3.5 w-3.5" />
+                            {selectedDayData.player_count} players
+                          </Badge>
+                        )}
+                        {selectedDayData.video_source === "youtube" && selectedDayData.video_url && (
+                          <Badge variant="destructive" className="gap-1.5 px-3 py-1.5 text-xs font-medium shadow-sm">
+                            <Play className="h-3.5 w-3.5" />
+                            YouTube
+                          </Badge>
+                        )}
+                        {(selectedDayData.video_file || selectedDayData.video_nas_path) && (
+                          <Badge className="gap-1.5 px-3 py-1.5 text-xs font-medium bg-amber-500 hover:bg-amber-600 shadow-sm">
+                            <Play className="h-3.5 w-3.5" />
+                            Local
+                          </Badge>
+                        )}
+                      </div>
                     </div>
 
                     {/* Analyze Button */}
@@ -158,76 +160,104 @@ export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelPro
                       size="lg"
                       onClick={() => selectedDayData.video_url && openAnalyzeDialog(selectedDayData)}
                       disabled={!selectedDayData.video_url}
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-semibold px-6"
                       title={!selectedDayData.video_url ? "영상 URL이 필요합니다" : ""}
                     >
-                      <Sparkles className="h-4 w-4 mr-2" />
+                      <Sparkles className="h-5 w-5 mr-2" />
                       AI 분석
                     </Button>
                   </div>
 
                   {selectedDayData.description && (
-                    <p className="text-muted-foreground">{selectedDayData.description}</p>
+                    <div className="pt-3 border-t border-border/50">
+                      <p className="text-muted-foreground leading-relaxed">{selectedDayData.description}</p>
+                    </div>
                   )}
                 </div>
               </Card>
 
               {/* People Section */}
-              <Card className="p-7 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
-                    People
-                  </h2>
-                  {players.length > 0 && (
-                    <Badge variant="secondary">{players.length} players</Badge>
-                  )}
-                </div>
-                {playersLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">Loading players...</div>
-                ) : (
-                  <PlayerCardList players={players} />
-                )}
-              </Card>
+              <section>
+                <Card className="p-8 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-border/50">
+                      <div>
+                        <h2 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                          People
+                        </h2>
+                        <p className="text-sm text-muted-foreground mt-1">Players in this session</p>
+                      </div>
+                      {players.length > 0 && (
+                        <Badge variant="secondary" className="text-sm font-medium px-3 py-1">
+                          {players.length} {players.length === 1 ? 'player' : 'players'}
+                        </Badge>
+                      )}
+                    </div>
+                    {playersLoading ? (
+                      <div className="text-center py-12">
+                        <div className="inline-block p-4 rounded-xl bg-muted/20 animate-pulse">
+                          <p className="text-muted-foreground">Loading players...</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <PlayerCardList players={players} />
+                    )}
+                  </div>
+                </Card>
+              </section>
 
               {/* Moments Section */}
-              <Card className="p-7 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-extrabold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight">
-                    Moments
-                  </h2>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant={momentFilter === 'all' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setMomentFilter('all')}
-                    >
-                      All
-                    </Button>
-                    <Button
-                      variant={momentFilter === 'highlighted' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setMomentFilter('highlighted')}
-                    >
-                      Highlighted
-                    </Button>
-                    <Button
-                      variant={momentFilter === 'big-pot' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setMomentFilter('big-pot')}
-                    >
-                      Big Pot
-                    </Button>
-                    <Button
-                      variant={momentFilter === 'all-in' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setMomentFilter('all-in')}
-                    >
-                      All-in
-                    </Button>
+              <section>
+                <Card className="p-8 backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl">
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between pb-4 border-b border-border/50 flex-wrap gap-4">
+                      <div>
+                        <h2 className="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                          Moments
+                        </h2>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {filteredHands.length} {filteredHands.length === 1 ? 'hand' : 'hands'} found
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Button
+                          variant={momentFilter === 'all' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setMomentFilter('all')}
+                          className="font-medium"
+                        >
+                          All
+                        </Button>
+                        <Button
+                          variant={momentFilter === 'highlighted' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setMomentFilter('highlighted')}
+                          className="font-medium"
+                        >
+                          Highlighted
+                        </Button>
+                        <Button
+                          variant={momentFilter === 'big-pot' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setMomentFilter('big-pot')}
+                          className="font-medium"
+                        >
+                          Big Pot
+                        </Button>
+                        <Button
+                          variant={momentFilter === 'all-in' ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setMomentFilter('all-in')}
+                          className="font-medium"
+                        >
+                          All-in
+                        </Button>
+                      </div>
+                    </div>
+                    <ArchiveHandHistory onSeekToTime={handleSeekToTime} overrideHands={filteredHands} />
                   </div>
-                </div>
-                <ArchiveHandHistory onSeekToTime={handleSeekToTime} overrideHands={filteredHands} />
-              </Card>
+                </Card>
+              </section>
             </>
           )}
         </div>

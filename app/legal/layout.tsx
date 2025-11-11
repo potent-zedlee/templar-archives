@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Header } from "@/components/header"
+import { Header } from "@/components/header/Header"
 import { cn } from "@/lib/utils"
 import { FileText, Shield, Cookie, Flag, DollarSign } from "lucide-react"
 

@@ -33,7 +33,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
 import { Plus, Trash2, Search, Loader2, ExternalLink, FolderInput, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
-import { QuickUploadDialog } from '@/components/quick-upload-dialog'
+import { QuickUploadDialog } from '@/components/upload/QuickUploadDialog'
 import {
   getUnsortedVideos,
   deleteUnsortedVideo,

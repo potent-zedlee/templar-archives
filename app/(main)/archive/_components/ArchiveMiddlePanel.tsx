@@ -192,73 +192,87 @@ export function ArchiveMiddlePanel() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b">
-        <h2 className="font-semibold text-lg">Events</h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Browse tournaments and days
-        </p>
+      {/* Header Section */}
+      <div className="p-6 border-b bg-gradient-to-br from-background/50 to-muted/20">
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight mb-2">Events</h2>
+            <p className="text-sm text-muted-foreground">
+              Browse tournaments and days
+            </p>
+          </div>
 
-        {/* Search & Sort */}
-        <ArchiveSearchSort
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-        />
+          {/* Search & Sort */}
+          <div className="pt-2 border-t border-border/50">
+            <ArchiveSearchSort
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+            />
+          </div>
+        </div>
       </div>
 
       <ScrollArea className="flex-1 overflow-hidden">
-        <div className="p-4 space-y-2">
+        <div className="p-4 space-y-1.5">
           {tournamentsLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-12 bg-muted/20 rounded-lg animate-pulse"
+                  className="h-16 bg-muted/20 rounded-lg animate-pulse"
                 />
               ))}
             </div>
           ) : folderItems.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No events found</p>
+            <div className="text-center py-16">
+              <div className="inline-block p-8 rounded-2xl backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-xl">
+                <p className="text-lg font-semibold text-muted-foreground">No events found</p>
+                <p className="text-sm text-muted-foreground/60 mt-2">Try adjusting your filters</p>
+              </div>
             </div>
           ) : (
             folderItems.map((item) => {
               if (item.type === 'tournament') {
                 const tournament = item.data as Tournament
                 return (
-                  <div key={item.id}>
+                  <div key={item.id} className="group">
                     <Button
                       variant="ghost"
                       className={cn(
-                        "w-full justify-start h-auto py-2 px-3",
-                        item.isExpanded && "bg-muted"
+                        "w-full justify-start h-auto py-3 px-4 rounded-lg transition-all duration-200",
+                        "border border-transparent hover:border-border/50",
+                        "hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30",
+                        "hover:shadow-sm",
+                        item.isExpanded && "bg-gradient-to-r from-muted/70 to-muted/50 border-border/60 shadow-sm"
                       )}
                       onClick={() => handleToggleExpand(item)}
                     >
                       <div className="flex items-center gap-3 w-full">
                         <ChevronRight
                           className={cn(
-                            "h-4 w-4 transition-transform",
-                            item.isExpanded && "rotate-90"
+                            "h-4 w-4 transition-all duration-200 flex-shrink-0",
+                            "text-muted-foreground group-hover:text-foreground",
+                            item.isExpanded && "rotate-90 text-foreground"
                           )}
                         />
                         {tournament.category_logo_url && (
-                          <div className="w-6 h-6 flex-shrink-0">
+                          <div className="w-7 h-7 flex-shrink-0 rounded-md overflow-hidden bg-background/50 p-0.5">
                             <Image
                               src={tournament.category_logo_url}
                               alt={tournament.category}
-                              width={24}
-                              height={24}
+                              width={28}
+                              height={28}
                               className="object-contain"
                             />
                           </div>
                         )}
-                        <div className="flex-1 text-left">
-                          <div className="font-medium text-sm truncate">
+                        <div className="flex-1 text-left min-w-0">
+                          <div className="font-semibold text-sm truncate mb-0.5">
                             {tournament.name}
                           </div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground font-medium">
                             {formatDate(tournament.start_date)}
                           </div>
                         </div>
@@ -269,30 +283,35 @@ export function ArchiveMiddlePanel() {
               } else if (item.type === 'subevent') {
                 const subEvent = item.data as SubEvent
                 return (
-                  <div key={item.id} className="ml-4">
+                  <div key={item.id} className="ml-6 group">
                     <Button
                       variant="ghost"
                       className={cn(
-                        "w-full justify-start h-auto py-2 px-3",
-                        item.isExpanded && "bg-muted"
+                        "w-full justify-start h-auto py-2.5 px-3 rounded-lg transition-all duration-200",
+                        "border border-transparent hover:border-border/40",
+                        "hover:bg-gradient-to-r hover:from-muted/40 hover:to-muted/20",
+                        item.isExpanded && "bg-gradient-to-r from-muted/60 to-muted/40 border-border/50"
                       )}
                       onClick={() => handleToggleExpand(item)}
                     >
                       <div className="flex items-center gap-3 w-full">
                         <ChevronRight
                           className={cn(
-                            "h-4 w-4 transition-transform",
-                            item.isExpanded && "rotate-90"
+                            "h-3.5 w-3.5 transition-all duration-200 flex-shrink-0",
+                            "text-muted-foreground group-hover:text-foreground",
+                            item.isExpanded && "rotate-90 text-foreground"
                           )}
                         />
-                        <div className="flex-1 text-left">
-                          <div className="font-medium text-sm truncate">
+                        <div className="flex-1 text-left min-w-0">
+                          <div className="font-medium text-sm truncate mb-0.5">
                             {subEvent.name}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            {subEvent.event_number && `#${subEvent.event_number}`}
-                            {subEvent.buy_in && ` • ${subEvent.buy_in}`}
-                          </div>
+                          {(subEvent.event_number || subEvent.buy_in) && (
+                            <div className="text-xs text-muted-foreground font-medium">
+                              {subEvent.event_number && `#${subEvent.event_number}`}
+                              {subEvent.buy_in && (subEvent.event_number ? ` • ${subEvent.buy_in}` : subEvent.buy_in)}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </Button>
@@ -302,33 +321,42 @@ export function ArchiveMiddlePanel() {
                 const day = item.data as Day
                 const isSelected = selectedDay === day.id
                 return (
-                  <div key={item.id} className="ml-8">
+                  <div key={item.id} className="ml-12 group">
                     <Button
                       variant="ghost"
                       className={cn(
-                        "w-full justify-start h-auto py-2 px-3",
-                        isSelected && "bg-purple-500/20 border-l-2 border-purple-500"
+                        "w-full justify-start h-auto py-2.5 px-3 rounded-lg transition-all duration-200",
+                        "border border-transparent hover:border-border/30",
+                        "hover:bg-gradient-to-r hover:from-muted/30 hover:to-muted/10",
+                        "hover:shadow-sm",
+                        isSelected && "bg-gradient-to-r from-purple-500/20 via-purple-500/10 to-purple-500/5 border-l-4 border-l-purple-500 shadow-md shadow-purple-500/10",
+                        isSelected && "hover:from-purple-500/25 hover:via-purple-500/15 hover:to-purple-500/10"
                       )}
                       onClick={() => handleSelectDay(day.id)}
                     >
                       <div className="flex items-center gap-3 w-full">
                         {day.video_source === "youtube" && day.video_url ? (
-                          <div className="w-5 h-5 bg-red-500 rounded flex items-center justify-center flex-shrink-0">
+                          <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
                             <Play className="h-3 w-3 text-white fill-white" />
                           </div>
                         ) : (day.video_file || day.video_nas_path) ? (
-                          <div className="w-5 h-5 bg-amber-500 rounded flex items-center justify-center flex-shrink-0">
+                          <div className="w-6 h-6 bg-gradient-to-br from-amber-500 to-amber-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
                             <Play className="h-3 w-3 text-white fill-white" />
                           </div>
                         ) : (
-                          <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <div className="w-6 h-6 bg-gradient-to-br from-muted to-muted/80 rounded-md flex items-center justify-center flex-shrink-0">
+                            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          </div>
                         )}
-                        <div className="flex-1 text-left">
-                          <div className="font-medium text-sm truncate">
+                        <div className="flex-1 text-left min-w-0">
+                          <div className={cn(
+                            "font-medium text-sm truncate mb-0.5",
+                            isSelected && "font-semibold"
+                          )}>
                             {day.name}
                           </div>
                           {day.player_count !== undefined && day.player_count > 0 && (
-                            <div className="text-xs text-muted-foreground">
+                            <div className="text-xs text-muted-foreground font-medium">
                               {day.player_count} players
                             </div>
                           )}

@@ -9,12 +9,11 @@ const nextConfig = {
   // Specify the workspace root to silence warnings
   output: 'standalone',
   outputFileTracingRoot: import.meta.dirname,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Empty turbopack config to silence webpack/turbopack conflict warning
+  turbopack: {},
   webpack: (config, { isServer }) => {
     if (isServer) {
       // FFmpeg 바이너리를 번들에서 제외
