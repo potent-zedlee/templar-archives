@@ -940,7 +940,7 @@ supabase db push            # 실제 적용
 
 ### 프로젝트 전체
 - **[CLAUDE.md](./CLAUDE.md)** - 전체 프로젝트 컨텍스트 (Phase 0-33 상세)
-- **[ROADMAP.md](./ROADMAP.md)** - 개발 로드맵
+- **[ROADMAP.md](../ROADMAP.md)** - 통합 개발 로드맵 (Part 1: Templar Archives 참조)
 - **[WORK_LOG.md](./WORK_LOG.md)** - 일별 작업 로그
 
 ### 개발 가이드

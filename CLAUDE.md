@@ -330,7 +330,7 @@ const { success } = await ratelimit.limit(identifier)
 5. **UI 컴포넌트** (`components/`)
 6. **페이지** (`app/`)
 7. **테스트** (`e2e/`, `lib/__tests__/`)
-8. **문서 업데이트** (ROADMAP.md, WORK_LOG.md)
+8. **문서 업데이트** (WORK_LOG.md)
 
 ### 코드 스타일
 
@@ -486,7 +486,7 @@ queryClient.invalidateQueries()
 
 ## 참고 문서
 
-- **ROADMAP.md**: Phase 0-33 상세 개발 내역
+- **../ROADMAP.md**: 통합 로드맵 (Part 1: Templar Archives 섹션 참조)
 - **PAGES_STRUCTURE.md**: 43개 페이지 구조
 - **WORK_LOG.md**: 일별 작업 로그
 - **README.md**: Quick Start 가이드
