@@ -408,31 +408,43 @@ export async function startHaeAnalysis(
       .eq('user_id', user.id)
       .single()
 
-    console.log('[HAE] User role check:', {
-      userId: user.id,
-      profile,
-      profileError,
-    })
-
-    // TEMPORARY: Bypass permission check for admin testing
-    // TODO: Remove this bypass and fix the actual permission issue
+    // 권한 체크: High Templar, Reporter, Admin만 허용
     const allowedRoles = ['high_templar', 'reporter', 'admin']
-    const hasValidRole = profile && allowedRoles.includes(profile.role)
+
+    if (profileError) {
+      console.error('[HAE] Profile fetch error:', profileError)
+      return {
+        success: false,
+        error: '사용자 정보를 불러오는데 실패했습니다.',
+      }
+    }
+
+    if (!profile) {
+      console.error('[HAE] No profile found for user:', user.id)
+      return {
+        success: false,
+        error: '사용자 프로필을 찾을 수 없습니다.',
+      }
+    }
+
+    const hasValidRole = allowedRoles.includes(profile.role)
 
     if (!hasValidRole) {
-      console.warn('[HAE] Permission check bypassed temporarily for testing')
-      console.error('[HAE] Would have denied permission:', {
-        hasProfile: !!profile,
-        userRole: profile?.role,
+      console.warn('[HAE] Permission denied:', {
+        userId: user.id,
+        userRole: profile.role,
         allowedRoles,
       })
-      // return {
-      //   success: false,
-      //   error: `High Templar 이상의 권한이 필요합니다 (현재 권한: ${profile?.role || '없음'})`,
-      // }
-    } else {
-      console.log('[HAE] Permission granted for role:', profile.role)
+      return {
+        success: false,
+        error: `이 기능은 High Templar, Reporter, Admin 권한이 필요합니다. (현재 권한: ${profile.role})`,
+      }
     }
+
+    console.log('[HAE] Permission granted:', {
+      userId: user.id,
+      userRole: profile.role,
+    })
 
     const selectedPlatform = input.platform || DEFAULT_PLATFORM
     const dbPlatform = DB_PLATFORM_MAP[selectedPlatform] ?? DB_PLATFORM_MAP[DEFAULT_PLATFORM]
