@@ -194,6 +194,24 @@ async function checkDuplicateAnalysis(
   supabase: TypedSupabaseClient
 ): Promise<{ isDuplicate: boolean; error?: string; existingJobId?: string }> {
   try {
+    // Input validation
+    if (!Array.isArray(segments) || segments.length === 0) {
+      return { isDuplicate: false, error: 'Invalid segments array' }
+    }
+
+    // Validate each segment
+    for (const seg of segments) {
+      if (typeof seg.start !== 'number' || typeof seg.end !== 'number') {
+        return { isDuplicate: false, error: 'Invalid segment format' }
+      }
+      if (seg.start < 0 || seg.end <= seg.start) {
+        return { isDuplicate: false, error: 'Invalid segment range' }
+      }
+      if (seg.end - seg.start > 7200) { // Max 2 hours
+        return { isDuplicate: false, error: 'Segment too long (max 2 hours)' }
+      }
+    }
+
     // Call RPC function to check for overlapping segments
     const { data, error } = await supabase.rpc('check_duplicate_analysis', {
       p_video_id: videoId,
@@ -201,8 +219,12 @@ async function checkDuplicateAnalysis(
     })
 
     if (error) {
-      console.error('Duplicate check error:', error)
-      return { isDuplicate: false } // Fail open - allow analysis if check fails
+      console.error('Duplicate check RPC error:', error)
+      // Fail-Closed: Block analysis on DB error
+      return {
+        isDuplicate: false,
+        error: '중복 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      }
     }
 
     if (data && data.length > 0) {
@@ -217,7 +239,11 @@ async function checkDuplicateAnalysis(
     return { isDuplicate: false }
   } catch (error) {
     console.error('Duplicate check exception:', error)
-    return { isDuplicate: false } // Fail open
+    // Fail-Closed: Block analysis on exception
+    return {
+      isDuplicate: false,
+      error: '중복 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+    }
   }
 }
 
@@ -438,10 +464,14 @@ export async function startHaeAnalysis(
 
     // Check for duplicate analysis
     const duplicateCheck = await checkDuplicateAnalysis(dbVideoId, gameplaySegments, supabase)
+    if (duplicateCheck.error) {
+      // DB error or validation error - block analysis
+      return { success: false, error: duplicateCheck.error }
+    }
     if (duplicateCheck.isDuplicate) {
       return {
         success: false,
-        error: duplicateCheck.error || '중복된 분석 요청입니다',
+        error: duplicateCheck.error || `이미 완료된/분석 중인 세그먼트가 포함되어 있습니다 (작업 ID: ${duplicateCheck.existingJobId})`
       }
     }
 
@@ -647,6 +677,7 @@ async function processHaeJob(
         const reader = response.body?.getReader()
         if (!reader) {
           console.error('[HAE] No response body reader')
+          await response.body?.cancel() // Clean up stream
           continue
         }
 

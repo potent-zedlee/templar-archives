@@ -6,7 +6,7 @@
  * Gemini AI를 사용하여 포커 영상에서 핸드 히스토리를 자동 추출하는 다이얼로그
  */
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -75,6 +75,9 @@ interface AnalysisJob {
   updated_at: string
 }
 
+// Constants
+const AUTO_CLOSE_DELAY_MS = 3000
+
 export function AnalyzeVideoDialog({
   isOpen,
   onOpenChange,
@@ -100,11 +103,21 @@ export function AnalyzeVideoDialog({
   const [processingTime, setProcessingTime] = useState(0)
   const [startTime, setStartTime] = useState<Date | null>(null)
 
+  // useRef to manage onSuccess callback without causing re-subscriptions
+  const onSuccessRef = useRef(onSuccess)
+
+  // Update ref when onSuccess changes
+  useEffect(() => {
+    onSuccessRef.current = onSuccess
+  }, [onSuccess])
+
   // Subscribe to analysis job updates via Supabase Realtime
   useEffect(() => {
     if (!jobId || status !== "processing") return
 
     const supabase = createClientSupabaseClient()
+
+    console.log('[AnalyzeVideoDialog] Setting up Realtime subscription for job:', jobId)
 
     const channel = supabase
       .channel(`analysis-job-${jobId}`)
@@ -117,6 +130,7 @@ export function AnalyzeVideoDialog({
           filter: `id=eq.${jobId}`,
         },
         (payload) => {
+          console.log('[AnalyzeVideoDialog] Realtime update received:', payload)
           const job = payload.new as AnalysisJob
 
           // Update job status
@@ -132,14 +146,15 @@ export function AnalyzeVideoDialog({
           // Handle completion
           if (job.status === 'completed') {
             setStatus('success')
-            setProgress(`분석 완료! ${job.hands_found || 0}개의 핸드가 발견되었습니다`)
-            toast.success(`분석 완료! ${job.hands_found || 0}개의 핸드가 발견되었습니다`)
+            const message = `분석 완료! ${job.hands_found || 0}개의 핸드가 발견되었습니다`
+            setProgress(message)
+            toast.success(message)
 
-            // Auto close after 3 seconds
+            // Auto close after delay
             setTimeout(() => {
-              onSuccess?.([])
+              onSuccessRef.current?.([])
               handleClose()
-            }, 3000)
+            }, AUTO_CLOSE_DELAY_MS)
           }
 
           // Handle failure
@@ -153,9 +168,10 @@ export function AnalyzeVideoDialog({
       .subscribe()
 
     return () => {
+      console.log('[AnalyzeVideoDialog] Cleaning up Realtime subscription for job:', jobId)
       supabase.removeChannel(channel)
     }
-  }, [jobId, status, onSuccess])
+  }, [jobId, status])
 
   // Update processing time
   useEffect(() => {
@@ -238,7 +254,13 @@ export function AnalyzeVideoDialog({
       setStartTime(new Date())
       setProgressPercent(0)
       setHandsFound(0)
-      setSegmentResults([])
+      // Initialize segment results with pending status
+      setSegmentResults(
+        timeSegments.map((seg, idx) => ({
+          status: 'pending' as const,
+          segment_id: `seg_${idx}_${seg.start}_${seg.end}`,
+        }))
+      )
       setProgress("분석 작업이 시작되었습니다...")
       toast.success("분석 요청이 접수되었습니다. 실시간으로 진행 상황을 확인할 수 있습니다.")
     } catch (err) {
@@ -490,8 +512,18 @@ export function AnalyzeVideoDialog({
               <Card className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border-blue-500/20">
                 <CardContent className="p-4">
                   <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                    {segmentResults.filter(s => s.status === 'success' || s.status === 'processing').length}
-                    <span className="text-lg text-muted-foreground">/{segments.length || segmentResults.length}</span>
+                    {(() => {
+                      const totalSegments = Math.max(segments.length, segmentResults.length)
+                      const processedSegments = segmentResults.filter(
+                        s => s.status === 'success' || s.status === 'failed'
+                      ).length
+                      return (
+                        <>
+                          {processedSegments}
+                          <span className="text-lg text-muted-foreground">/{totalSegments}</span>
+                        </>
+                      )
+                    })()}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
                     처리된 세그먼트
