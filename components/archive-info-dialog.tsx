@@ -23,7 +23,7 @@ import { Separator } from "@/components/ui/separator"
 import { Edit, Trash2, Calendar, MapPin, DollarSign, Users, Video, Hash, ExternalLink } from "lucide-react"
 import { CategoryLogo } from "@/components/category-logo"
 import { format } from "date-fns"
-import type { FolderItem, Tournament, SubEvent, Day } from "@/lib/types/archive"
+import type { FolderItem, Tournament, SubEvent, Stream } from "@/lib/types/archive"
 
 interface ArchiveInfoDialogProps {
   item: FolderItem | null
@@ -81,9 +81,9 @@ export function ArchiveInfoDialog({
             <SubEventInfo subEvent={item.data as SubEvent} />
           )}
 
-          {/* Day Information */}
+          {/* Stream Information */}
           {item.type === 'day' && item.data && 'video_url' in item.data && (
-            <DayInfo day={item.data as Day} />
+            <StreamInfo day={item.data as Stream} />
           )}
 
           {/* Common Info: Item Count */}
@@ -258,8 +258,8 @@ function SubEventInfo({ subEvent }: { subEvent: SubEvent }) {
   )
 }
 
-// ==================== Day Info ====================
-function DayInfo({ day }: { day: Day }) {
+// ==================== Stream Info ====================
+function StreamInfo({ day }: { day: Stream }) {
   return (
     <div className="space-y-4">
       {/* Title */}

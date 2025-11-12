@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import type { Day } from "@/lib/supabase"
+import type { Stream } from "@/lib/supabase"
 
 interface VideoPlayerProps {
-  day: Day | null
+  day: Stream | null
   onTimeUpdate?: (time: number) => void
   seekTime?: number | null
 }

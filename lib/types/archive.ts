@@ -101,12 +101,6 @@ export interface Stream {
   selected?: boolean
 }
 
-/**
- * Day type (하위 호환성)
- * @deprecated Use Stream instead
- */
-export type Day = Stream
-
 export interface Hand {
   id: string
   stream_id: string
@@ -203,12 +197,6 @@ export interface StreamFormData {
   upload_file: File | null
   published_at: string
 }
-
-/**
- * DayFormData type (하위 호환성)
- * @deprecated Use StreamFormData instead
- */
-export type DayFormData = StreamFormData
 
 // ==================== UI State Types ====================
 
@@ -340,12 +328,6 @@ export interface StreamActions {
   select: (id: string | null) => void
 }
 
-/**
- * DayActions type (하위 호환성)
- * @deprecated Use StreamActions instead
- */
-export type DayActions = StreamActions
-
 export interface HandActions {
   toggleFavorite: (handId: string) => Promise<void>
   toggleChecked: (handId: string) => void
@@ -391,14 +373,6 @@ export function isStream(item: unknown): item is Stream {
 }
 
 /**
- * 타입 가드: Day 확인 (하위 호환성)
- * @deprecated Use isStream instead
- */
-export function isDay(item: unknown): item is Stream {
-  return isStream(item)
-}
-
-/**
  * 초기 Tournament Form 데이터
  */
 export const INITIAL_TOURNAMENT_FORM: TournamentFormData = {
@@ -440,9 +414,3 @@ export const INITIAL_STREAM_FORM: StreamFormData = {
   upload_file: null,
   published_at: "",
 }
-
-/**
- * 초기 Day Form 데이터 (하위 호환성)
- * @deprecated Use INITIAL_STREAM_FORM instead
- */
-export const INITIAL_DAY_FORM: StreamFormData = INITIAL_STREAM_FORM

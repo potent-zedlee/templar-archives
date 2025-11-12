@@ -59,8 +59,6 @@ export type Stream = {
   organized_at?: string
 }
 
-// Backward compatibility alias
-export type Day = Stream
 
 export type Hand = {
   id: string

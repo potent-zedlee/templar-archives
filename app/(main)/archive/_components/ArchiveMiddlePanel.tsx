@@ -13,7 +13,7 @@ import { BackgroundGradient } from "@/components/ui/background-gradient"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import type { Tournament, SubEvent, Day } from "@/lib/types/archive"
+import type { Tournament, SubEvent, Stream } from "@/lib/types/archive"
 
 export function ArchiveMiddlePanel() {
   const { tournaments, tournamentsLoading } = useArchiveData()

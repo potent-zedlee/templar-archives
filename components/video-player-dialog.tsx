@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Rnd } from "react-rnd"
 import { Button } from "@/components/ui/button"
 import { X, RotateCcw, PictureInPicture2 } from "lucide-react"
-import type { Day } from "@/lib/supabase"
+import type { Stream } from "@/lib/supabase"
 import { parseTimeToSeconds } from "@/lib/utils/time-parser"
 import { toast } from "sonner"
 
@@ -12,7 +12,7 @@ const DEFAULT_WIDTH = 1200
 const DEFAULT_HEIGHT = 700
 
 interface VideoPlayerDialogProps {
-  day: Day | null
+  day: Stream | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   initialTime?: string

@@ -9,7 +9,7 @@ import { VideoPlayer } from "@/components/video-player"
 import { cn } from "@/lib/utils"
 import { FOLDER_COLORS } from "@/lib/constants/archive-colors"
 import type { FolderItem } from "@/lib/types/archive"
-import type { Tournament, SubEvent, Day } from "@/lib/types/archive"
+import type { Tournament, SubEvent, Stream } from "@/lib/types/archive"
 import Image from "next/image"
 import dynamic from "next/dynamic"
 import { useArchiveData } from "@/app/(main)/archive/_components/ArchiveDataContext"
@@ -302,7 +302,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     )
   }
 
-  const renderDay = (day: Day, subEventId: string) => {
+  const renderDay = (day: Stream, subEventId: string) => {
     const dayItem: FolderItem = {
       id: day.id,
       name: day.name,

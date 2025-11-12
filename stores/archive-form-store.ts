@@ -14,14 +14,12 @@ import type {
   TournamentFormData,
   SubEventFormData,
   StreamFormData,
-  DayFormData, // Backward compatibility
   Payout,
   TournamentCategory,
   VideoSource,
   INITIAL_TOURNAMENT_FORM,
   INITIAL_SUBEVENT_FORM,
   INITIAL_STREAM_FORM,
-  INITIAL_DAY_FORM, // Backward compatibility
 } from '@/lib/types/archive'
 
 interface ArchiveFormState {
@@ -31,10 +29,8 @@ interface ArchiveFormState {
   // SubEvent Form
   subEventForm: SubEventFormData
 
-  // Stream Form (new)
+  // Stream Form
   streamForm: StreamFormData
-  /** @deprecated Use streamForm instead */
-  dayForm: DayFormData
 
   // Payout Form
   payouts: Payout[]
@@ -62,18 +58,10 @@ interface ArchiveFormState {
   setSubEventForm: (form: SubEventFormData) => void
   resetSubEventForm: () => void
 
-  // Actions - Stream Form (new)
+  // Actions - Stream Form
   setStreamFormField: <K extends keyof StreamFormData>(field: K, value: StreamFormData[K]) => void
   setStreamForm: (form: StreamFormData) => void
   resetStreamForm: () => void
-
-  // Actions - Day Form (backward compatibility)
-  /** @deprecated Use setStreamFormField instead */
-  setDayFormField: <K extends keyof DayFormData>(field: K, value: DayFormData[K]) => void
-  /** @deprecated Use setStreamForm instead */
-  setDayForm: (form: DayFormData) => void
-  /** @deprecated Use resetStreamForm instead */
-  resetDayForm: () => void
 
   // Actions - Payout Form
   setPayouts: (payouts: Payout[]) => void
@@ -125,15 +113,6 @@ export const useArchiveFormStore = create<ArchiveFormState>()(
 
       // Initial State - Stream Form
       streamForm: {
-        name: '',
-        video_source: 'youtube',
-        video_url: '',
-        upload_file: null,
-        published_at: '',
-      },
-
-      // Initial State - Day Form (backward compatibility)
-      dayForm: {
         name: '',
         video_source: 'youtube',
         video_url: '',
@@ -205,65 +184,19 @@ export const useArchiveFormStore = create<ArchiveFormState>()(
           },
         }),
 
-      // Actions - Stream Form (new)
+      // Actions - Stream Form
       setStreamFormField: (field, value) =>
         set((state) => ({
           streamForm: {
             ...state.streamForm,
             [field]: value,
           },
-          // Keep dayForm in sync for backward compatibility
-          dayForm: {
-            ...state.dayForm,
-            [field]: value,
-          },
         })),
 
-      setStreamForm: (form) => set({ streamForm: form, dayForm: form }),
+      setStreamForm: (form) => set({ streamForm: form }),
 
       resetStreamForm: () =>
         set({
-          streamForm: {
-            name: '',
-            video_source: 'youtube',
-            video_url: '',
-            upload_file: null,
-            published_at: '',
-          },
-          dayForm: {
-            name: '',
-            video_source: 'youtube',
-            video_url: '',
-            upload_file: null,
-            published_at: '',
-          },
-        }),
-
-      // Actions - Day Form (backward compatibility)
-      setDayFormField: (field, value) =>
-        set((state) => ({
-          dayForm: {
-            ...state.dayForm,
-            [field]: value,
-          },
-          // Keep streamForm in sync
-          streamForm: {
-            ...state.streamForm,
-            [field]: value,
-          },
-        })),
-
-      setDayForm: (form) => set({ dayForm: form, streamForm: form }),
-
-      resetDayForm: () =>
-        set({
-          dayForm: {
-            name: '',
-            video_source: 'youtube',
-            video_url: '',
-            upload_file: null,
-            published_at: '',
-          },
           streamForm: {
             name: '',
             video_source: 'youtube',
