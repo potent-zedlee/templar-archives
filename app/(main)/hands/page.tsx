@@ -18,7 +18,7 @@ async function getHands() {
     .from('hands')
     .select(`
       id,
-      hand_number,
+      number,
       stakes,
       pot_size,
       board_flop,
@@ -69,7 +69,7 @@ function HandCard({ hand }: { hand: any }) {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">
-              Hand #{hand.hand_number || 'N/A'}
+              Hand #{hand.number || 'N/A'}
             </CardTitle>
             {hand.stakes && (
               <Badge variant="outline">{hand.stakes}</Badge>

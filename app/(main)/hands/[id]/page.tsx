@@ -30,7 +30,7 @@ async function getHandDetails(handId: string) {
     .from('hands')
     .select(`
       id,
-      hand_number,
+      number,
       stakes,
       pot_size,
       board_flop,
@@ -115,7 +115,7 @@ async function getAdjacentHands(currentHandId: string, dayId: string) {
   // Get prev/next hands from same day
   const { data: hands } = await supabase
     .from('hands')
-    .select('id, hand_number, created_at')
+    .select('id, number, created_at')
     .eq('day_id', dayId)
     .order('created_at', { ascending: true })
 
@@ -220,7 +220,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
                   </Button>
                 </Link>
                 <Badge variant="outline" className="text-sm font-mono">
-                  Hand #{hand.hand_number || 'N/A'}
+                  Hand #{hand.number || 'N/A'}
                 </Badge>
                 <Link href={adjacent.next ? `/hands/${adjacent.next.id}` : '#'}>
                   <Button
