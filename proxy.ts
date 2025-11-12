@@ -2,12 +2,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 /**
- * Middleware for activity tracking
+ * Proxy for activity tracking
  * - Tracks user's last activity on the site
  * - Updates every 5 minutes to reduce DB load
  * - Uses cookie to track last update time
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -96,7 +96,7 @@ export async function middleware(request: NextRequest) {
   return response
 }
 
-// Configure middleware to run on all routes except static files and API routes that don't need tracking
+// Configure proxy to run on all routes except static files and API routes that don't need tracking
 export const config = {
   matcher: [
     /*
