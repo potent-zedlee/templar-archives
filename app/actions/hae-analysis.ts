@@ -592,49 +592,24 @@ async function processHaeJob(
     // Ensure streamId exists (create default if not provided)
     let finalStreamId: string = streamId || ''
     if (!finalStreamId) {
-      console.log('No streamId provided, creating default "Unsorted Hands" stream')
+      console.log('[HAE] No streamId provided, looking for existing "Unsorted Hands" stream')
 
       const existingStreamResult = await supabase
-        .from('days')
+        .from('streams')
         .select('id')
         .eq('name', 'Unsorted Hands')
         .single()
 
       if (existingStreamResult.data?.id) {
         finalStreamId = existingStreamResult.data.id
+        console.log(`[HAE] Using existing "Unsorted Hands" stream: ${finalStreamId}`)
       } else {
-        const subEventResult = await supabase
-          .from('sub_events')
-          .insert({
-            tournament_id: null,
-            name: 'Unsorted Videos',
-            date: new Date().toISOString().split('T')[0],
-          })
-          .select('id')
-          .single()
-
-        if (subEventResult.error || !subEventResult.data?.id) {
-          console.error('Failed to create default sub_event:', subEventResult.error)
-          throw new Error('Failed to create default stream for unsorted hands')
-        }
-
-        const dayResult = await supabase
-          .from('days')
-          .insert({
-            sub_event_id: subEventResult.data.id,
-            name: 'Unsorted Hands',
-            video_url: `https://www.youtube.com/watch?v=${youtubeId}`,
-          })
-          .select('id')
-          .single()
-
-        if (dayResult.error || !dayResult.data?.id) {
-          console.error('Failed to create default day:', dayResult.error)
-          throw new Error('Failed to create default stream for unsorted hands')
-        }
-
-        finalStreamId = dayResult.data.id
-        console.log(`Created default stream: ${finalStreamId}`)
+        // Cannot create stream without streamId due to tournament_id NOT NULL constraint
+        // User must provide streamId or create stream manually
+        const errorMsg = 'No streamId provided and no "Unsorted Hands" stream found. Please provide a streamId or create an "Unsorted Hands" stream manually using the create-unsorted-stream.mjs script.'
+        console.error(`[HAE] ${errorMsg}`)
+        globalErrors.push(errorMsg)
+        throw new Error(errorMsg)
       }
     }
 
