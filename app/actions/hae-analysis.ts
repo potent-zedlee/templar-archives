@@ -60,6 +60,26 @@ export interface HaeStartResult {
   error?: string
 }
 
+// Segment processing result
+interface SegmentResult {
+  segment_id: string
+  segment_index: number
+  status: 'success' | 'failed'
+  hands_found?: number
+  error?: string
+  processing_time?: number
+}
+
+// Job result structure (stored in analysis_jobs.result)
+interface JobResult {
+  success: boolean
+  segments_processed: number
+  segments_failed: number
+  segment_results: SegmentResult[]
+  total_hands: number
+  errors: string[]
+}
+
 /**
  * Extract YouTube video ID from URL
  */
@@ -166,7 +186,43 @@ async function checkRateLimit(
 }
 
 /**
- * Store hands from segment to database
+ * Check for duplicate analysis (same video + overlapping segments)
+ */
+async function checkDuplicateAnalysis(
+  videoId: string,
+  segments: TimeSegment[],
+  supabase: TypedSupabaseClient
+): Promise<{ isDuplicate: boolean; error?: string; existingJobId?: string }> {
+  try {
+    // Call RPC function to check for overlapping segments
+    const { data, error } = await supabase.rpc('check_duplicate_analysis', {
+      p_video_id: videoId,
+      p_segments: segments as unknown as Record<string, unknown>[],
+    })
+
+    if (error) {
+      console.error('Duplicate check error:', error)
+      return { isDuplicate: false } // Fail open - allow analysis if check fails
+    }
+
+    if (data && data.length > 0) {
+      const existingJob = data[0]
+      return {
+        isDuplicate: true,
+        existingJobId: existingJob.job_id,
+        error: `이미 ${existingJob.status === 'completed' ? '완료된' : '분석 중인'} 세그먼트가 포함되어 있습니다. (Job ID: ${existingJob.job_id})`,
+      }
+    }
+
+    return { isDuplicate: false }
+  } catch (error) {
+    console.error('Duplicate check exception:', error)
+    return { isDuplicate: false } // Fail open
+  }
+}
+
+/**
+ * Store hands from segment to database using transactional RPC
  */
 async function storeHandsFromSegment(
   supabase: TypedSupabaseClient,
@@ -175,58 +231,43 @@ async function storeHandsFromSegment(
   jobId: string,
   segment: TimeSegment,
   startHandNumber: number
-): Promise<void> {
+): Promise<{ success: number; failed: number; errors: string[] }> {
   let handNumber = startHandNumber
+  let successCount = 0
+  let failedCount = 0
+  const errors: string[] = []
 
   for (const handData of hands) {
-    // Create hand record
-    const handInsert = await supabase
-      .from('hands')
-      .insert({
-        day_id: streamId,
-        job_id: jobId,
-        number: String(handData.handNumber || ++handNumber),
-        description: handData.description || `Hand #${handData.handNumber || handNumber}`,
-        timestamp: formatTimestamp(segment.start),
-        video_timestamp_start: segment.start,
-        video_timestamp_end: segment.end,
-        stakes: handData.stakes || 'Unknown',
-        board_flop: handData.board?.flop || [],
-        board_turn: handData.board?.turn || null,
-        board_river: handData.board?.river || null,
-        pot_size: handData.pot || 0,
-        raw_data: handData as unknown as Record<string, unknown>,
-      })
-      .select('id')
-      .single()
+    try {
+      // Find or create players first (outside transaction)
+      const playerIdMap = new Map<string, string>()
 
-    const { data: hand, error: handError } = handInsert
-
-    if (handError || !hand) {
-      console.error('Failed to create hand:', handError)
-      continue
-    }
-
-    // Store players and actions
-    if (handData.players) {
-      for (const playerData of handData.players) {
-        const playerId = await findOrCreatePlayer(supabase, playerData.name)
-
-        const winner = handData.winners?.find((w) => w.name === playerData.name)
-
-        let holeCardsArray: string[] | null = null
-        if (playerData.holeCards) {
-          if (Array.isArray(playerData.holeCards)) {
-            holeCardsArray = playerData.holeCards
-          } else if (typeof playerData.holeCards === 'string') {
-            holeCardsArray = playerData.holeCards.split(/[\s,]+/).filter(Boolean)
-          }
+      if (handData.players) {
+        for (const playerData of handData.players) {
+          const playerId = await findOrCreatePlayer(supabase, playerData.name)
+          playerIdMap.set(playerData.name, playerId)
         }
+      }
 
-        const { data: handPlayer, error: hpError } = await supabase
-          .from('hand_players')
-          .insert({
-            hand_id: hand.id,
+      // Prepare players data for RPC
+      const playersData: Record<string, unknown>[] = []
+      if (handData.players) {
+        for (const playerData of handData.players) {
+          const playerId = playerIdMap.get(playerData.name)
+          if (!playerId) continue
+
+          const winner = handData.winners?.find((w) => w.name === playerData.name)
+
+          let holeCardsArray: string[] | null = null
+          if (playerData.holeCards) {
+            if (Array.isArray(playerData.holeCards)) {
+              holeCardsArray = playerData.holeCards
+            } else if (typeof playerData.holeCards === 'string') {
+              holeCardsArray = playerData.holeCards.split(/[\s,]+/).filter(Boolean)
+            }
+          }
+
+          playersData.push({
             player_id: playerId,
             poker_position: playerData.position,
             starting_stack: playerData.stackSize || 0,
@@ -237,34 +278,67 @@ async function storeHandsFromSegment(
             is_winner: !!winner,
             hand_description: winner?.hand || null,
           })
-          .select('id')
-          .single()
-
-        if (hpError || !handPlayer) {
-          console.error('Failed to create hand_player:', hpError)
-          continue
-        }
-
-        // Store actions
-        if (handData.actions) {
-          const playerActions = handData.actions.filter((a) => a.player === playerData.name)
-
-          for (let idx = 0; idx < playerActions.length; idx++) {
-            const action = playerActions[idx]
-
-            await supabase.from('hand_actions').insert({
-              hand_id: hand.id,
-              player_id: playerId,
-              action_order: idx + 1,
-              street: action.street.toLowerCase(),
-              action_type: action.action.toLowerCase(),
-              amount: action.amount || 0,
-            })
-          }
         }
       }
+
+      // Prepare actions data for RPC
+      const actionsData: Record<string, unknown>[] = []
+      if (handData.actions) {
+        for (let idx = 0; idx < handData.actions.length; idx++) {
+          const action = handData.actions[idx]
+          const playerId = playerIdMap.get(action.player)
+          if (!playerId) continue
+
+          actionsData.push({
+            player_id: playerId,
+            action_order: idx + 1,
+            street: action.street.toLowerCase(),
+            action_type: action.action.toLowerCase(),
+            amount: action.amount || 0,
+          })
+        }
+      }
+
+      // Call RPC function to save hand transactionally
+      const { data: newHandId, error: rpcError } = await supabase.rpc(
+        'save_hand_with_players_actions',
+        {
+          p_day_id: streamId,
+          p_job_id: jobId,
+          p_number: String(handData.handNumber || ++handNumber),
+          p_description: handData.description || `Hand #${handData.handNumber || handNumber}`,
+          p_timestamp: formatTimestamp(segment.start),
+          p_video_timestamp_start: segment.start,
+          p_video_timestamp_end: segment.end,
+          p_stakes: handData.stakes || 'Unknown',
+          p_board_flop: handData.board?.flop || [],
+          p_board_turn: handData.board?.turn || null,
+          p_board_river: handData.board?.river || null,
+          p_pot_size: handData.pot || 0,
+          p_raw_data: handData as unknown as Record<string, unknown>,
+          p_players: playersData,
+          p_actions: actionsData,
+        }
+      )
+
+      if (rpcError) {
+        throw new Error(`RPC error: ${rpcError.message}`)
+      }
+
+      if (!newHandId) {
+        throw new Error('No hand ID returned from RPC')
+      }
+
+      successCount++
+    } catch (error) {
+      failedCount++
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+      errors.push(`Hand ${handData.handNumber || handNumber}: ${errorMsg}`)
+      console.error('Failed to save hand:', error)
     }
   }
+
+  return { success: successCount, failed: failedCount, errors }
 }
 
 /**
@@ -362,6 +436,15 @@ export async function startHaeAnalysis(
       dbVideoId = existingVideo.id
     }
 
+    // Check for duplicate analysis
+    const duplicateCheck = await checkDuplicateAnalysis(dbVideoId, gameplaySegments, supabase)
+    if (duplicateCheck.isDuplicate) {
+      return {
+        success: false,
+        error: duplicateCheck.error || '중복된 분석 요청입니다',
+      }
+    }
+
     // Create analysis job
     const { data: job, error: jobError } = await supabase
       .from('analysis_jobs')
@@ -374,6 +457,7 @@ export async function startHaeAnalysis(
         progress: 0,
         ai_provider: 'gemini',
         submitted_players: input.players || null,
+        created_by: user.id,
       })
       .select('id')
       .single()
@@ -450,6 +534,11 @@ async function processHaeJob(
   const supabase = getServiceSupabaseClient()
   const startTime = Date.now()
 
+  // Initialize result tracking
+  const segmentResults: SegmentResult[] = []
+  const globalErrors: string[] = []
+  let totalHands = 0
+
   try {
     // Update job status to processing
     await supabase
@@ -513,11 +602,18 @@ async function processHaeJob(
     const fullYoutubeUrl = `https://www.youtube.com/watch?v=${youtubeId}`
     const analysisPlatform = ANALYSIS_PLATFORM_MAP[platform] ?? ANALYSIS_PLATFORM_MAP[DEFAULT_PLATFORM]
 
-    let totalHands = 0
-
     // Process each segment by calling Python backend
     for (let i = 0; i < segments.length; i++) {
       const segment = segments[i]
+      const segmentStartTime = Date.now()
+      const segmentId = `seg_${i}_${segment.start}_${segment.end}`
+
+      // Initialize segment result
+      const segmentResult: SegmentResult = {
+        segment_id: segmentId,
+        segment_index: i,
+        status: 'failed', // Default to failed, will be updated on success
+      }
 
       try {
         // Update progress
@@ -557,7 +653,7 @@ async function processHaeJob(
         try {
           const decoder = new TextDecoder()
           let buffer = ''
-          let segmentResult: HaeAnalysisResult | null = null
+          let analysisResult: HaeAnalysisResult | null = null
 
           while (true) {
             const { done, value } = await reader.read()
@@ -599,7 +695,7 @@ async function processHaeJob(
                   } else if (eventType === 'complete') {
                     const completeData = parsed as SSECompleteEvent
                     if (completeData.hands) {
-                      segmentResult = { hands: completeData.hands }
+                      analysisResult = { hands: completeData.hands }
                     }
                     console.log(
                       `[HAE] Segment ${i} complete: ${completeData.hands?.length || 0} hands`
@@ -615,34 +711,87 @@ async function processHaeJob(
           }
 
           // Store hands from this segment
-          if (segmentResult && segmentResult.hands && segmentResult.hands.length > 0) {
-            await storeHandsFromSegment(
+          if (analysisResult && analysisResult.hands && analysisResult.hands.length > 0) {
+            const storeResult = await storeHandsFromSegment(
               supabase,
-              segmentResult.hands,
+              analysisResult.hands,
               finalStreamId,
               jobId,
               segment,
               totalHands
             )
-            totalHands += segmentResult.hands.length
+
+            // Update segment result with storage results
+            const currentSegmentResult: SegmentResult = {
+              segment_id: segmentId,
+              segment_index: i,
+              status: 'success',
+              hands_found: storeResult.success,
+              processing_time: Math.round((Date.now() - segmentStartTime) / 1000),
+            }
+
+            if (storeResult.failed > 0) {
+              currentSegmentResult.error = `${storeResult.failed} hands failed to save: ${storeResult.errors.join('; ')}`
+              globalErrors.push(...storeResult.errors)
+            }
+
+            segmentResults.push(currentSegmentResult)
+            totalHands += storeResult.success
+          } else {
+            // No hands found
+            segmentResult.status = 'success'
+            segmentResult.hands_found = 0
+            segmentResult.processing_time = Math.round((Date.now() - segmentStartTime) / 1000)
+            segmentResults.push(segmentResult)
           }
         } finally {
           reader.releaseLock() // 메모리 누수 방지
         }
       } catch (segmentError) {
         console.error(`[HAE] Error processing segment ${i}:`, segmentError)
+
+        // Record segment failure
+        segmentResult.status = 'failed'
+        segmentResult.error = segmentError instanceof Error ? segmentError.message : 'Unknown error'
+        segmentResult.processing_time = Math.round((Date.now() - segmentStartTime) / 1000)
+        segmentResults.push(segmentResult)
+        globalErrors.push(`Segment ${i}: ${segmentResult.error}`)
+
+        // Continue processing next segment (don't throw)
       }
     }
 
-    // Mark job as completed
+    // Calculate final statistics
+    const segmentsProcessed = segmentResults.filter((r) => r.status === 'success').length
+    const segmentsFailed = segmentResults.filter((r) => r.status === 'failed').length
+    const jobSuccess = segmentsFailed === 0
+
+    // Build result object
+    const jobResult: JobResult = {
+      success: jobSuccess,
+      segments_processed: segmentsProcessed,
+      segments_failed: segmentsFailed,
+      segment_results: segmentResults,
+      total_hands: totalHands,
+      errors: globalErrors,
+    }
+
+    // Mark job as completed (even if some segments failed)
     await supabase
       .from('analysis_jobs')
       .update({
-        status: 'completed',
+        status: segmentsFailed === segments.length ? 'failed' : 'completed',
         progress: 100,
+        hands_found: totalHands,
+        result: jobResult as unknown as Record<string, unknown>,
         completed_at: new Date().toISOString(),
+        processing_time: Math.round((Date.now() - startTime) / 1000),
       })
       .eq('id', jobId)
+
+    console.log(
+      `[HAE] Job ${jobId} completed: ${segmentsProcessed}/${segments.length} segments successful, ${totalHands} hands saved`
+    )
   } catch (error) {
     console.error('HAE job processing error:', error)
 
@@ -656,13 +805,27 @@ async function processHaeJob(
       }
     }
 
+    globalErrors.push(errorMessage)
+
+    // Build failure result
+    const failureResult: JobResult = {
+      success: false,
+      segments_processed: segmentResults.filter((r) => r.status === 'success').length,
+      segments_failed: segmentResults.filter((r) => r.status === 'failed').length + 1,
+      segment_results: segmentResults,
+      total_hands: totalHands,
+      errors: globalErrors,
+    }
+
     // Mark job as failed
     await supabase
       .from('analysis_jobs')
       .update({
         status: 'failed',
         error_message: errorMessage,
+        result: failureResult as unknown as Record<string, unknown>,
         completed_at: new Date().toISOString(),
+        processing_time: Math.round((Date.now() - startTime) / 1000),
       })
       .eq('id', jobId)
   }
