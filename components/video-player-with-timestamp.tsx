@@ -191,7 +191,7 @@ export function VideoPlayerWithTimestamp({
     <div className={`space-y-3 ${className}`}>
       {/* Video Player */}
       <Card className="overflow-hidden bg-black">
-        <div className="aspect-video w-full relative min-h-[400px]">
+        <div className="aspect-video w-full relative min-h-[300px] max-h-[400px]">
           <div
             id={`youtube-player-${videoId}`}
             className="absolute inset-0 w-full h-full"
