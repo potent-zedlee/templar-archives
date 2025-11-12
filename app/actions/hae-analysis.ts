@@ -387,7 +387,17 @@ async function storeHandsFromSegment(
       failedCount++
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       errors.push(`Hand ${handData.handNumber || handNumber}: ${errorMsg}`)
-      console.error('Failed to save hand:', error)
+
+      // Detailed error logging in development only
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[storeHands] Failed to save hand:', error)
+        if (error instanceof Error && error.stack) {
+          console.error('[storeHands] Stack trace:', error.stack)
+        }
+      } else {
+        // Production: Log only essential info
+        console.error(`[storeHands] Hand save failed: ${errorMsg}`)
+      }
     }
   }
 
@@ -731,11 +741,12 @@ async function processHaeJob(
       }
 
       try {
-        // Update progress
-        const progressPercent = Math.round((i / segments.length) * 100)
+        // Update progress - base progress for completed segments
+        const segmentWeight = 100 / segments.length
+        const baseProgress = Math.round(i * segmentWeight)
         await supabase
           .from('analysis_jobs')
-          .update({ progress: progressPercent })
+          .update({ progress: Math.min(baseProgress, 99) })
           .eq('id', jobId)
 
         console.log(`[HAE] Processing segment ${i + 1}/${segments.length}: ${segment.start}s - ${segment.end}s`)
@@ -807,13 +818,17 @@ async function processHaeJob(
 
                   if (eventType === 'progress') {
                     const progressData = parsed as SSEProgressEvent
-                    // Update Supabase progress
-                    const overallProgress =
-                      progressPercent +
-                      Math.round((progressData.percent / 100) * (100 / segments.length))
+                    // Calculate accurate progress: base (completed segments) + current segment progress
+                    const segmentWeight = 100 / segments.length
+                    const baseProgress = i * segmentWeight
+                    const currentSegmentProgress = (progressData.percent / 100) * segmentWeight
+                    const overallProgress = Math.min(
+                      Math.round(baseProgress + currentSegmentProgress),
+                      99 // Keep at 99% until truly complete
+                    )
                     await supabase
                       .from('analysis_jobs')
-                      .update({ progress: Math.min(overallProgress, 99) })
+                      .update({ progress: overallProgress })
                       .eq('id', jobId)
                   } else if (eventType === 'complete') {
                     const completeData = parsed as SSECompleteEvent
@@ -850,6 +865,13 @@ async function processHaeJob(
               console.error(`[HAE] Store errors:`, storeResult.errors)
             }
 
+            // Update totalHands ONCE and immediately update DB for realtime feedback
+            totalHands += storeResult.success
+            await supabase
+              .from('analysis_jobs')
+              .update({ hands_found: totalHands })
+              .eq('id', jobId)
+
             // Update segment result with storage results
             const currentSegmentResult: SegmentResult = {
               segment_id: segmentId,
@@ -865,7 +887,6 @@ async function processHaeJob(
             }
 
             segmentResults.push(currentSegmentResult)
-            totalHands += storeResult.success
           } else {
             // No hands found
             segmentResult.status = 'success'
