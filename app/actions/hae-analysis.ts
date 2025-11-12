@@ -401,6 +401,25 @@ export async function startHaeAnalysis(
   input: HaeStartInput
 ): Promise<HaeStartResult> {
   try {
+    console.log('[HAE] startHaeAnalysis called with input:', {
+      videoUrl: input.videoUrl,
+      segmentsCount: input.segments?.length || 0,
+      streamId: input.streamId,
+      platform: input.platform,
+      playersCount: input.players?.length || 0,
+    })
+
+    // Check HAE_BACKEND_URL
+    const backendUrl = process.env.HAE_BACKEND_URL
+    if (!backendUrl) {
+      console.error('[HAE] HAE_BACKEND_URL is not set')
+      return {
+        success: false,
+        error: 'HAE 백엔드 URL이 설정되지 않았습니다. 환경 변수를 확인해주세요.',
+      }
+    }
+    console.log('[HAE] Backend URL:', backendUrl)
+
     const supabase = await createServerSupabaseClient()
 
     // 인증 확인
@@ -409,16 +428,23 @@ export async function startHaeAnalysis(
       error: authError,
     } = await supabase.auth.getUser()
     if (authError || !user) {
+      console.error('[HAE] Auth error:', authError)
       return { success: false, error: '로그인이 필요합니다' }
     }
 
+    console.log('[HAE] User authenticated:', user.id)
+
     // Rate Limiting 체크
+    console.log('[HAE] Checking rate limit...')
     const rateLimitCheck = await checkRateLimit(user.id, supabase)
     if (!rateLimitCheck.allowed) {
+      console.warn('[HAE] Rate limit exceeded:', rateLimitCheck.error)
       return { success: false, error: rateLimitCheck.error }
     }
+    console.log('[HAE] Rate limit check passed')
 
     // 권한 체크 (High Templar 이상)
+    console.log('[HAE] Checking user permissions...')
     const { data: profile, error: profileError } = await supabase
       .from('users')
       .select('role')
@@ -437,56 +463,51 @@ export async function startHaeAnalysis(
     }
 
     if (!profile) {
-      console.error('[HAE] No profile found for user')
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[HAE] User ID:', user.id)
-      }
+      console.error('[HAE] No profile found for user:', user.id)
       return {
         success: false,
         error: '사용자 프로필을 찾을 수 없습니다.',
       }
     }
 
+    console.log('[HAE] User role:', profile.role)
+
     const hasValidRole = allowedRoles.includes(profile.role)
 
     if (!hasValidRole) {
-      console.warn('[HAE] Permission denied')
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[HAE] User details:', {
-          userId: user.id,
-          userRole: profile.role,
-          allowedRoles,
-        })
-      }
+      console.warn('[HAE] Permission denied - insufficient role:', profile.role)
       return {
         success: false,
         error: `이 기능은 High Templar, Reporter, Admin 권한이 필요합니다. (현재 권한: ${profile.role})`,
       }
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[HAE] Permission granted:', {
-        userId: user.id,
-        userRole: profile.role,
-      })
-    }
+    console.log('[HAE] Permission granted for user:', user.id)
 
     const selectedPlatform = input.platform || DEFAULT_PLATFORM
     const dbPlatform = DB_PLATFORM_MAP[selectedPlatform] ?? DB_PLATFORM_MAP[DEFAULT_PLATFORM]
 
+    console.log('[HAE] Platform:', selectedPlatform, '-> DB Platform:', dbPlatform)
+
     // Extract video ID
+    console.log('[HAE] Extracting video ID from:', input.videoUrl)
     const videoId = extractVideoId(input.videoUrl)
     if (!videoId) {
+      console.error('[HAE] Invalid YouTube URL:', input.videoUrl)
       return {
         success: false,
         error: 'Invalid YouTube URL',
       }
     }
+    console.log('[HAE] Video ID extracted:', videoId)
 
     // Filter only gameplay segments
     const gameplaySegments = input.segments.filter((s) => s.type === 'gameplay')
 
+    console.log('[HAE] Total segments:', input.segments.length, '-> Gameplay segments:', gameplaySegments.length)
+
     if (gameplaySegments.length === 0) {
+      console.error('[HAE] No gameplay segments provided')
       return {
         success: false,
         error: 'No gameplay segments provided',
@@ -541,6 +562,17 @@ export async function startHaeAnalysis(
     }
 
     // Create analysis job
+    console.log('[HAE] Creating analysis job...')
+    console.log('[HAE] Job params:', {
+      video_id: dbVideoId,
+      stream_id: input.streamId,
+      platform: dbPlatform,
+      segments_count: gameplaySegments.length,
+      ai_provider: 'gemini',
+      submitted_players_count: input.players?.length || 0,
+      created_by: user.id,
+    })
+
     const { data: job, error: jobError } = await supabase
       .from('analysis_jobs')
       .insert({
@@ -558,25 +590,32 @@ export async function startHaeAnalysis(
       .single()
 
     if (jobError) {
+      console.error('[HAE] Failed to create job:', jobError)
       return {
         success: false,
         error: `Failed to create analysis job: ${jobError.message}`,
       }
     }
 
+    console.log('[HAE] Analysis job created:', job.id)
+
     // Start background processing (Python backend)
+    console.log('[HAE] Starting background processing...')
     processHaeJob(job.id, videoId, gameplaySegments, input.streamId, selectedPlatform).catch(
-      console.error
+      (err) => {
+        console.error('[HAE] Background processing error:', err)
+      }
     )
 
     revalidatePath('/hae')
 
+    console.log('[HAE] startHaeAnalysis completed successfully, jobId:', job.id)
     return {
       success: true,
       jobId: job.id,
     }
   } catch (error) {
-    console.error('Start HAE error:', error)
+    console.error('[HAE] Start HAE error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

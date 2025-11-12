@@ -217,8 +217,14 @@ export function AnalyzeVideoDialog({
 
   // Start analysis
   const handleAnalyze = async () => {
+    console.log('[AnalyzeVideoDialog] handleAnalyze called')
+    console.log('[AnalyzeVideoDialog] day:', day)
+
     if (!day?.video_url) {
+      console.error('[AnalyzeVideoDialog] No video URL')
+      setStatus("error")
       setError("영상 URL이 없습니다")
+      toast.error("영상 URL이 없습니다")
       return
     }
 
@@ -228,10 +234,14 @@ export function AnalyzeVideoDialog({
     setJobId(null)
 
     try {
+      console.log('[AnalyzeVideoDialog] Starting analysis...')
+
       // Filter out empty players
       const validPlayers = players
         .filter(p => p.name.trim())
         .map(p => p.name)
+
+      console.log('[AnalyzeVideoDialog] Valid players:', validPlayers)
 
       // Convert VideoSegment[] to TimeSegment[]
       const timeSegments: TimeSegment[] = segments.map(seg => ({
@@ -242,6 +252,9 @@ export function AnalyzeVideoDialog({
         label: seg.type
       }))
 
+      console.log('[AnalyzeVideoDialog] Time segments:', timeSegments)
+      console.log('[AnalyzeVideoDialog] Calling startHaeAnalysis...')
+
       // Use HAE analysis system
       const result = await startHaeAnalysis({
         videoUrl: day.video_url,
@@ -250,6 +263,8 @@ export function AnalyzeVideoDialog({
         streamId: day.id, // Pass stream (day) ID for linking hands
         platform
       })
+
+      console.log('[AnalyzeVideoDialog] startHaeAnalysis result:', result)
 
       if (!result.success) {
         throw new Error(result.error || "분석에 실패했습니다")
