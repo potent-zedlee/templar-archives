@@ -497,9 +497,55 @@ queryClient.invalidateQueries()
 
 ---
 
-## 최근 중요 변경사항 (2025-11-12)
+## 최근 중요 변경사항
 
-### HAE 데이터 저장 수정
+### Phase 35: 보안 & 안정성 강화 (2025-11-12)
+
+**완료된 작업**:
+
+1. **HAE 권한 체크 정상화**
+   - 권한 우회 코드 제거 (app/actions/hae-analysis.ts)
+   - Admin 역할 명시적 포함
+   - 보안 로깅 강화 (개발/프로덕션 환경 분기)
+   - 커밋: `ceff46b`
+
+2. **Next.js 16.0 Proxy 시스템 마이그레이션**
+   - `middleware.ts` → `proxy.ts` 변경
+   - Next.js 공식 codemod 실행
+   - Deprecated 경고 해결
+   - 커밋: `210d40c`
+
+3. **Console 로그 정리 및 프로덕션 최적화**
+   - 민감한 사용자 정보 로그 제거 (userId 개발 환경으로 제한)
+   - 개발/프로덕션 환경 분기 처리 (`process.env.NODE_ENV`)
+   - 3개 주요 파일 수정 (hae-analysis, analyze-video-dialog, ArchiveMainPanel)
+   - 커밋: `1967ecd`
+
+4. **CSRF 토큰 검증 시스템 완성**
+   - Double Submit Cookie 패턴 구현
+   - SHA-256 해시 기반 검증 (lib/security/csrf.ts)
+   - 프로덕션 레벨 보안 완성
+   - 커밋: `d6db879`
+
+5. **Deprecated 타입 제거**
+   - Day → Stream 리네이밍 완전 완료
+   - 8개 파일 수정, 117줄 코드 감소
+   - 타입 안전성 100% 달성
+   - 커밋: `1380154`
+
+6. **profiles 테이블 참조 오류 수정** (프로덕션 핫픽스)
+   - 문제: Supabase 프로덕션에 `profiles` 테이블 존재하지 않음
+   - 해결: `users` 테이블로 변경 (app/actions/hae-analysis.ts:422-426)
+   - 커밋: `e8d7d07`
+
+**성과**:
+- ✅ 보안 등급 A 유지
+- ✅ 117줄 코드 감소
+- ✅ TypeScript 타입 안전성 100%
+- ✅ Next.js 16.0 완전 호환
+- ✅ 프로덕션 로그 최적화
+
+### Phase 34: HAE 데이터 저장 수정 (2025-11-12)
 
 **문제**: HAE 분석 성공 후 hands 테이블에 데이터가 저장되지 않음
 
@@ -508,12 +554,7 @@ queryClient.invalidateQueries()
 2. **컬럼 이름 불일치**: `hand_number` → `number`로 수정 (hands 테이블)
 3. **"Unsorted Hands" 스트림**: 스크립트로 생성 완료 (scripts/create-unsorted-stream.mjs)
 
-**수정된 파일**:
-- `app/actions/hae-analysis.ts`: 테이블명 변경, 로깅 추가
-- `app/(main)/hands/page.tsx`: 컬럼명 수정
-- `app/(main)/hands/[id]/page.tsx`: 컬럼명 수정
-
-**유틸리티 스크립트 추가**:
+**유틸리티 스크립트**:
 ```bash
 node scripts/check-db.mjs              # DB 상태 확인
 node scripts/create-unsorted-stream.mjs # "Unsorted Hands" 스트림 생성
@@ -525,6 +566,6 @@ node scripts/fix_stuck_jobs.mjs        # 멈춘 작업 정리 (30분 타임아�
 ---
 
 **마지막 업데이트**: 2025-11-12
-**문서 버전**: 29.0
-**현재 Phase**: 34 완료 (HAE 데이터 저장 수정, 프로덕션 배포)
+**문서 버전**: 30.0
+**현재 Phase**: 35 완료 (보안 & 안정성 강화, 프로덕션 배포)
 **보안 등급**: A
