@@ -495,7 +495,36 @@ queryClient.invalidateQueries()
 
 ---
 
-**마지막 업데이트**: 2025-11-08
-**문서 버전**: 28.0
-**현재 Phase**: 33 완료 (HAE 통합, EPT 분석 시스템)
+---
+
+## 최근 중요 변경사항 (2025-11-12)
+
+### HAE 데이터 저장 수정
+
+**문제**: HAE 분석 성공 후 hands 테이블에 데이터가 저장되지 않음
+
+**원인 및 해결**:
+1. **테이블 이름 불일치**: `days` → `streams`로 수정 (app/actions/hae-analysis.ts:598)
+2. **컬럼 이름 불일치**: `hand_number` → `number`로 수정 (hands 테이블)
+3. **"Unsorted Hands" 스트림**: 스크립트로 생성 완료 (scripts/create-unsorted-stream.mjs)
+
+**수정된 파일**:
+- `app/actions/hae-analysis.ts`: 테이블명 변경, 로깅 추가
+- `app/(main)/hands/page.tsx`: 컬럼명 수정
+- `app/(main)/hands/[id]/page.tsx`: 컬럼명 수정
+
+**유틸리티 스크립트 추가**:
+```bash
+node scripts/check-db.mjs              # DB 상태 확인
+node scripts/create-unsorted-stream.mjs # "Unsorted Hands" 스트림 생성
+node scripts/fix_stuck_jobs.mjs        # 멈춘 작업 정리 (30분 타임아웃)
+```
+
+**중요**: HAE 분석 결과는 반드시 기존 stream에 저장되어야 합니다. 자동 스트림 생성은 제거되었습니다.
+
+---
+
+**마지막 업데이트**: 2025-11-12
+**문서 버전**: 29.0
+**현재 Phase**: 34 완료 (HAE 데이터 저장 수정, 프로덕션 배포)
 **보안 등급**: A
