@@ -8,7 +8,7 @@
  * - 컨텍스트 메뉴 다이얼로그 (Rename, Delete, Edit, Move)
  */
 
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useQueryClient } from '@tanstack/react-query'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
@@ -156,6 +156,15 @@ export function ArchiveDialogs() {
     }
     closeAnalyzeDialog()
   }
+
+  // Debug: Log when analyzeDialog state changes
+  useEffect(() => {
+    console.log('============================================')
+    console.log('[ArchiveDialogs] analyzeDialog state changed')
+    console.log('[ArchiveDialogs] analyzeDialog:', analyzeDialog)
+    console.log('[ArchiveDialogs] analyzeDayForDialog:', analyzeDayForDialog)
+    console.log('============================================')
+  }, [analyzeDialog, analyzeDayForDialog])
 
   // Get current item for info dialog
   const infoDialogItem = useMemo((): FolderItem | null => {

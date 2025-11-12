@@ -166,7 +166,21 @@ export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelPro
                     <Button
                       variant="default"
                       size="lg"
-                      onClick={() => selectedDayData.video_url && openAnalyzeDialog(selectedDayData)}
+                      onClick={() => {
+                        console.log('============================================')
+                        console.log('[ArchiveMainPanel] AI 분석 버튼 클릭')
+                        console.log('[ArchiveMainPanel] selectedDayData:', selectedDayData)
+                        console.log('[ArchiveMainPanel] video_url:', selectedDayData.video_url)
+                        console.log('============================================')
+
+                        if (selectedDayData.video_url) {
+                          console.log('[ArchiveMainPanel] Opening analyze dialog...')
+                          openAnalyzeDialog(selectedDayData)
+                          console.log('[ArchiveMainPanel] openAnalyzeDialog called')
+                        } else {
+                          console.error('[ArchiveMainPanel] No video_url, button should be disabled!')
+                        }
+                      }}
                       disabled={!selectedDayData.video_url}
                       className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-semibold px-6"
                       title={!selectedDayData.video_url ? "영상 URL이 필요합니다" : ""}

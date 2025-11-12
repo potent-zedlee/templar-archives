@@ -298,11 +298,19 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
             videoDialog: { ...state.videoDialog, isOpen: false, startTime: '' },
           })),
 
-        openAnalyzeDialog: (day) =>
+        openAnalyzeDialog: (day) => {
+          console.log('============================================')
+          console.log('[useArchiveUIStore] openAnalyzeDialog called')
+          console.log('[useArchiveUIStore] day:', day)
+          console.log('============================================')
+
           set({
             analyzeDialog: { isOpen: true, editingId: null },
             analyzeDayForDialog: day,
-          }),
+          })
+
+          console.log('[useArchiveUIStore] State updated: analyzeDialog.isOpen = true')
+        },
         closeAnalyzeDialog: () =>
           set({
             analyzeDialog: { isOpen: false, editingId: null },

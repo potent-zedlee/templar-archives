@@ -111,6 +111,16 @@ export function AnalyzeVideoDialog({
     onSuccessRef.current = onSuccess
   }, [onSuccess])
 
+  // Debug: Log when dialog props change
+  useEffect(() => {
+    console.log('============================================')
+    console.log('[AnalyzeVideoDialog] Props changed')
+    console.log('[AnalyzeVideoDialog] isOpen:', isOpen)
+    console.log('[AnalyzeVideoDialog] day:', day)
+    console.log('[AnalyzeVideoDialog] day?.video_url:', day?.video_url)
+    console.log('============================================')
+  }, [isOpen, day])
+
   // Subscribe to analysis job updates via Supabase Realtime
   useEffect(() => {
     if (!jobId) return
@@ -217,8 +227,15 @@ export function AnalyzeVideoDialog({
 
   // Start analysis
   const handleAnalyze = async () => {
+    // Very visible console logs
+    console.log('============================================')
     console.log('[AnalyzeVideoDialog] handleAnalyze called')
+    console.log('[AnalyzeVideoDialog] Timestamp:', new Date().toISOString())
     console.log('[AnalyzeVideoDialog] day:', day)
+    console.log('============================================')
+
+    // Show toast to confirm button click
+    toast.info("분석 요청을 처리하고 있습니다...")
 
     if (!day?.video_url) {
       console.error('[AnalyzeVideoDialog] No video URL')
