@@ -101,9 +101,23 @@ export async function verifyCSRF(
     )
   }
 
-  // TODO: 세션 기반 토큰 검증
-  // 현재는 토큰 존재 여부만 확인
-  // 실제로는 세션에 저장된 토큰과 비교 필요
+  // Double Submit Cookie 패턴을 사용한 CSRF 토큰 검증
+  // 쿠키에 저장된 해시 값과 헤더의 토큰을 비교
+  if (csrfToken) {
+    const cookieToken = request.cookies.get("csrf-token")?.value
+
+    // 쿠키가 없거나 토큰이 일치하지 않으면 차단
+    if (!verifyDoubleSubmitToken(csrfToken, cookieToken)) {
+      console.warn("CSRF: Token verification failed")
+
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json(
+          { error: "Invalid CSRF token" },
+          { status: 403 }
+        )
+      }
+    }
+  }
 
   return null
 }
