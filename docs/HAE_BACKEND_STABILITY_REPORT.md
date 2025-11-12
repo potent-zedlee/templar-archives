@@ -1,6 +1,6 @@
 # HAE 백엔드 안정성 강화 보고서
 
-**작업 일자**: 2025-11-12
+**작성일**: 2025-11-12 (압축 버전)
 **커밋**: 88544ef
 **작업 파일**:
 - `app/actions/hae-analysis.ts` (688줄 → 849줄, +161줄)
@@ -9,33 +9,45 @@
 ---
 
 ## 목차
+
 1. [개요](#개요)
 2. [구현 내용](#구현-내용)
 3. [코드 변경 상세](#코드-변경-상세)
-4. [테스트 방법](#테스트-방법)
+4. [테스트 가이드](#테스트-가이드)
 5. [남은 개선 과제](#남은-개선-과제)
 
 ---
 
 ## 개요
 
-AI 분석 시스템(`hae-analysis.ts`)의 백엔드 안정성을 강화하기 위해 3가지 핵심 기능을 구현했습니다:
+AI 분석 시스템의 백엔드 안정성을 강화하기 위해 3가지 핵심 기능을 구현했습니다.
+
+### 핵심 기능
 
 1. **중복 분석 방지** - 같은 비디오 + 세그먼트 조합 재분석 차단
 2. **에러 복구 메커니즘** - 세그먼트별 성공/실패 추적 및 부분 실패 허용
 3. **트랜잭션 처리** - 핸드 데이터 저장 시 원자성 보장
 
+### 개선 효과
+
+- ✅ 데이터 일관성 보장 (트랜잭션)
+- ✅ 사용자 경험 향상 (부분 실패 허용)
+- ✅ 비용 절감 (중복 분석 방지)
+- ✅ 디버깅 편의성 (상세 로그)
+
 ---
 
 ## 구현 내용
 
-### 1. 중복 분석 방지 (소요 시간: 1시간)
+### 1. 중복 분석 방지
 
 #### 구현 방법
+
 - PostgreSQL RPC 함수 `check_duplicate_analysis` 생성
 - `startHaeAnalysis()` 함수에서 분석 시작 전 중복 체크 수행
 
 #### 작동 원리
+
 ```sql
 -- 같은 video_id에 대해 pending/processing/completed 상태의
 -- 기존 작업 중 세그먼트가 겹치는 것이 있는지 확인
@@ -44,7 +56,6 @@ FROM analysis_jobs aj
 WHERE aj.video_id = p_video_id
   AND aj.status IN ('pending', 'processing', 'completed')
   AND EXISTS (
-    -- JSONB 배열에서 start/end가 동일한 세그먼트 찾기
     SELECT 1
     FROM jsonb_array_elements(aj.segments) AS existing_seg,
          jsonb_array_elements(p_segments) AS new_seg
@@ -54,6 +65,7 @@ WHERE aj.video_id = p_video_id
 ```
 
 #### TypeScript 코드
+
 ```typescript
 async function checkDuplicateAnalysis(
   videoId: string,
@@ -79,22 +91,18 @@ async function checkDuplicateAnalysis(
 }
 ```
 
-#### 에러 메시지 예시
-```
-"이미 완료된 세그먼트가 포함되어 있습니다. (Job ID: abc-123)"
-"이미 분석 중인 세그먼트가 포함되어 있습니다. (Job ID: def-456)"
-```
-
 ---
 
-### 2. 에러 복구 메커니즘 (소요 시간: 1.5시간)
+### 2. 에러 복구 메커니즘
 
 #### 구현 방법
+
 - 세그먼트별 결과 추적을 위한 `SegmentResult` 타입 정의
 - `processHaeJob()` 함수 전체 리팩토링
 - `analysis_jobs.result` JSONB 필드에 상세 결과 저장
 
 #### 새로운 타입 정의
+
 ```typescript
 interface SegmentResult {
   segment_id: string          // 예: "seg_0_30_900"
@@ -115,7 +123,8 @@ interface JobResult {
 }
 ```
 
-#### Before: 세그먼트 처리 (기존 코드)
+#### Before: 세그먼트 처리 (기존)
+
 ```typescript
 // 세그먼트 하나 실패하면 전체 중단
 for (const segment of segments) {
@@ -123,7 +132,8 @@ for (const segment of segments) {
 }
 ```
 
-#### After: 세그먼트 처리 (개선 코드)
+#### After: 세그먼트 처리 (개선)
+
 ```typescript
 const segmentResults: SegmentResult[] = []
 const globalErrors: string[] = []
@@ -139,10 +149,8 @@ for (let i = 0; i < segments.length; i++) {
   }
 
   try {
-    // 세그먼트 처리
     const analysisResult = await processSegment(segment)
 
-    // 성공 시 결과 저장
     segmentResult.status = 'success'
     segmentResult.hands_found = analysisResult.hands.length
     segmentResult.processing_time = Math.round((Date.now() - segmentStartTime) / 1000)
@@ -172,15 +180,14 @@ await supabase
 ```
 
 #### 결과 예시 (analysis_jobs.result 필드)
+
 ```json
 {
   "success": false,
   "segments_processed": 3,
   "segments_failed": 1,
   "total_hands": 45,
-  "errors": [
-    "Segment 2: 백엔드 요청 타임아웃 (5분 초과)"
-  ],
+  "errors": ["Segment 2: 백엔드 요청 타임아웃 (5분 초과)"],
   "segment_results": [
     {
       "segment_id": "seg_0_30_900",
@@ -190,25 +197,11 @@ await supabase
       "processing_time": 180
     },
     {
-      "segment_id": "seg_1_900_1800",
-      "segment_index": 1,
-      "status": "success",
-      "hands_found": 20,
-      "processing_time": 195
-    },
-    {
       "segment_id": "seg_2_1800_2700",
       "segment_index": 2,
       "status": "failed",
       "error": "백엔드 요청 타임아웃 (5분 초과)",
       "processing_time": 300
-    },
-    {
-      "segment_id": "seg_3_2700_3600",
-      "segment_index": 3,
-      "status": "success",
-      "hands_found": 10,
-      "processing_time": 150
     }
   ]
 }
@@ -216,13 +209,15 @@ await supabase
 
 ---
 
-### 3. 트랜잭션 처리 (소요 시간: 1.5시간)
+### 3. 트랜잭션 처리
 
 #### 구현 방법
+
 - PostgreSQL RPC 함수 `save_hand_with_players_actions` 생성
 - `storeHandsFromSegment()` 함수를 RPC 호출 방식으로 변경
 
-#### Before: 비트랜잭션 방식 (기존 코드)
+#### Before: 비트랜잭션 방식 (기존)
+
 ```typescript
 // 3단계로 나뉘어 있어 중간에 실패하면 불완전한 데이터 남음
 async function storeHandsFromSegment(...): Promise<void> {
@@ -247,7 +242,8 @@ async function storeHandsFromSegment(...): Promise<void> {
 }
 ```
 
-#### After: 트랜잭션 방식 (개선 코드)
+#### After: 트랜잭션 방식 (개선)
+
 ```typescript
 async function storeHandsFromSegment(...)
   : Promise<{ success: number; failed: number; errors: string[] }> {
@@ -299,6 +295,7 @@ async function storeHandsFromSegment(...)
 ```
 
 #### PostgreSQL RPC 함수
+
 ```sql
 CREATE OR REPLACE FUNCTION save_hand_with_players_actions(
   -- 모든 파라미터...
@@ -334,6 +331,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
 #### 장점
+
 1. **원자성**: 3개 테이블 저장이 모두 성공하거나 모두 실패 (불완전한 데이터 없음)
 2. **성능**: 네트워크 왕복 감소 (3N번 → 1번)
 3. **에러 추적**: 핸드별 성공/실패 기록
@@ -345,6 +343,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ### 파일 1: `supabase/migrations/20251112000001_add_hand_transaction_functions.sql`
 
 #### 1.1 analysis_jobs 테이블 확장
+
 ```sql
 -- created_by 컬럼 추가 (사용자 추적)
 ALTER TABLE analysis_jobs ADD COLUMN created_by UUID REFERENCES auth.users(id);
@@ -358,6 +357,7 @@ CREATE INDEX idx_analysis_jobs_created_by_created_at
 ```
 
 #### 1.2 중복 체크 RPC 함수
+
 ```sql
 CREATE FUNCTION check_duplicate_analysis(
   p_video_id UUID,
@@ -366,6 +366,7 @@ CREATE FUNCTION check_duplicate_analysis(
 ```
 
 #### 1.3 트랜잭션 RPC 함수
+
 ```sql
 CREATE FUNCTION save_hand_with_players_actions(
   -- 13개 hand 필드
@@ -376,14 +377,15 @@ CREATE FUNCTION save_hand_with_players_actions(
 
 ### 파일 2: `app/actions/hae-analysis.ts`
 
-#### 2.1 새로운 타입 (3개)
+#### 2.1 새로운 타입 (2개)
+
 ```typescript
 interface SegmentResult { ... }
 interface JobResult { ... }
-// (HaeStartInput, HaeStartResult는 기존 유지)
 ```
 
 #### 2.2 새로운 함수 (1개)
+
 ```typescript
 async function checkDuplicateAnalysis(
   videoId: string,
@@ -411,11 +413,12 @@ async function checkDuplicateAnalysis(
 
 ---
 
-## 테스트 방법
+## 테스트 가이드
 
 ### 1. 중복 분석 방지 테스트
 
 #### 테스트 1: 동일 세그먼트 재분석 차단
+
 ```typescript
 // 1단계: 첫 번째 분석 요청
 const result1 = await startHaeAnalysis({
@@ -434,28 +437,10 @@ const result2 = await startHaeAnalysis({
 // 예상: { success: false, error: '이미 분석 중인 세그먼트가 포함...' }
 ```
 
-#### 테스트 2: 다른 세그먼트는 허용
-```typescript
-const result3 = await startHaeAnalysis({
-  videoUrl: 'https://youtube.com/watch?v=TEST123',
-  segments: [{ start: 900, end: 1800, type: 'gameplay' }],  // 다른 세그먼트
-  platform: 'ept'
-})
-// 예상: { success: true, jobId: 'def-456' }
-```
-
 ### 2. 에러 복구 메커니즘 테스트
 
-#### 테스트 3: Python 백엔드 일부 세그먼트 타임아웃
-```bash
-# Python 백엔드 중단하여 타임아웃 유발
-docker stop hae-backend
+#### 테스트 2: 부분 실패 확인
 
-# 분석 요청 (4개 세그먼트)
-# 예상: 일부는 성공, 일부는 타임아웃 실패
-```
-
-#### 테스트 4: 결과 확인
 ```sql
 -- analysis_jobs 테이블 확인
 SELECT
@@ -479,27 +464,17 @@ WHERE id = 'job-id';
   "failed": "1",
   "details": [
     { "segment_index": 0, "status": "success", "hands_found": 10 },
-    { "segment_index": 1, "status": "success", "hands_found": 12 },
-    { "segment_index": 2, "status": "failed", "error": "타임아웃" },
-    { "segment_index": 3, "status": "success", "hands_found": 8 }
+    { "segment_index": 2, "status": "failed", "error": "타임아웃" }
   ]
 }
 ```
 
 ### 3. 트랜잭션 처리 테스트
 
-#### 테스트 5: 핸드 저장 중 에러 주입
-```sql
--- 테스트용: hand_actions 테이블에 제약 조건 추가
-ALTER TABLE hand_actions ADD CONSTRAINT test_constraint
-  CHECK (amount >= 0 AND amount < 999999999);
+#### 테스트 3: 원자성 확인
 
--- 이제 amount가 범위를 벗어나면 전체 핸드가 저장 안됨 (롤백)
-```
-
-#### 테스트 6: 원자성 확인
 ```sql
--- 분석 실행 후 확인
+-- 분석 실행 후 확인: 불완전한 핸드가 없는지
 SELECT
   h.id as hand_id,
   COUNT(DISTINCT hp.id) as players_count,
@@ -516,7 +491,8 @@ HAVING COUNT(DISTINCT hp.id) = 0 OR COUNT(DISTINCT ha.id) = 0;
 
 ### 4. 통합 테스트
 
-#### 테스트 7: 실제 분석 워크플로우
+#### 테스트 4: 실제 분석 워크플로우
+
 ```typescript
 // 1. 중복 없는 새 분석 시작
 const result = await startHaeAnalysis({
@@ -553,14 +529,10 @@ result: {
 
 ### 5. 성능 테스트
 
-#### 테스트 8: 대량 핸드 저장 성능
+**대량 핸드 저장 성능**:
 ```bash
 # Before (비트랜잭션): 100 핸드 × (1 + 8×2 + 20×3) = 7700 쿼리
 # After (트랜잭션): 100 핸드 × 1 RPC = 100 호출
-
-# 시간 측정
-time curl -X POST http://localhost:3000/api/analyze ...
-
 # 예상 성능 향상: 3-5배
 ```
 
@@ -569,11 +541,9 @@ time curl -X POST http://localhost:3000/api/analyze ...
 ## 남은 개선 과제
 
 ### 1. 재시도 메커니즘 (우선순위: 중)
-**현재 상태**: 세그먼트 실패 시 1회만 시도
-**개선안**:
-- 실패한 세그먼트만 재분석하는 기능
-- `analysis_jobs` 테이블에 `retry_count` 필드 추가
-- UI에서 "실패한 세그먼트만 재시도" 버튼 제공
+
+**현재**: 세그먼트 실패 시 1회만 시도
+**개선안**: 실패한 세그먼트만 재분석하는 기능
 
 ```typescript
 async function retryFailedSegments(jobId: string): Promise<HaeStartResult> {
@@ -592,17 +562,14 @@ async function retryFailedSegments(jobId: string): Promise<HaeStartResult> {
 ```
 
 ### 2. 우선순위 큐 (우선순위: 낮)
-**현재 상태**: 먼저 요청한 순서대로 처리
-**개선안**:
-- 관리자 요청은 우선 처리
-- `analysis_jobs` 테이블에 `priority` 필드 추가 (1-10)
-- Python 백엔드에서 우선순위 기반 처리
+
+**현재**: 먼저 요청한 순서대로 처리
+**개선안**: 관리자 요청 우선 처리, `priority` 필드 추가
 
 ### 3. 예상 시간 표시 (우선순위: 낮)
-**현재 상태**: 진행률만 표시 (0-100%)
-**개선안**:
-- 과거 데이터 기반 예상 소요 시간 계산
-- UI에 "약 5분 남음" 표시
+
+**현재**: 진행률만 표시 (0-100%)
+**개선안**: 과거 데이터 기반 예상 소요 시간 계산
 
 ```typescript
 // 평균 처리 시간 계산
@@ -620,18 +587,14 @@ const estimatedTime = remainingSegments * avgTime
 ```
 
 ### 4. 캐싱 (우선순위: 중)
-**현재 상태**: 동일 세그먼트 재분석 불가 (중복 방지)
-**개선안**:
-- Python 백엔드에서 AI 응답 캐싱
-- Redis 사용 시 동일 세그먼트 재요청 시 즉시 응답
-- `analysis_jobs` 테이블에 `cache_hit` 필드 추가
+
+**현재**: 동일 세그먼트 재분석 불가 (중복 방지)
+**개선안**: Python 백엔드에서 AI 응답 캐싱 (Redis)
 
 ### 5. 모니터링 및 알림 (우선순위: 중)
-**현재 상태**: 콘솔 로그만
-**개선안**:
-- Sentry 또는 LogRocket 통합
-- 실패율 높을 때 관리자 이메일 알림
-- Slack/Discord 웹훅
+
+**현재**: 콘솔 로그만
+**개선안**: Sentry/LogRocket 통합, Slack/Discord 웹훅
 
 ```typescript
 if (job.result.segments_failed / job.segments.length > 0.5) {
@@ -644,23 +607,9 @@ if (job.result.segments_failed / job.segments.length > 0.5) {
 ```
 
 ### 6. 상세 로그 저장 (우선순위: 낮)
-**현재 상태**: `result` JSONB에 요약만
-**개선안**:
-- `analysis_logs` 테이블 신규 생성
-- 각 세그먼트의 Python 백엔드 요청/응답 전체 저장
-- 디버깅 및 품질 개선에 활용
 
-```sql
-CREATE TABLE analysis_logs (
-  id UUID PRIMARY KEY,
-  job_id UUID REFERENCES analysis_jobs(id),
-  segment_index INTEGER,
-  request_body JSONB,
-  response_body JSONB,
-  error_stack TEXT,
-  created_at TIMESTAMPTZ
-);
-```
+**현재**: `result` JSONB에 요약만
+**개선안**: `analysis_logs` 테이블 신규 생성 (디버깅용)
 
 ---
 
@@ -692,5 +641,4 @@ CREATE TABLE analysis_logs (
 ---
 
 **작성자**: Claude Code (Sonnet 4.5)
-**검토자**: [검토 필요]
-**승인자**: [승인 필요]
+**버전**: 2.0 (압축 버전 - 696줄 → 590줄)
