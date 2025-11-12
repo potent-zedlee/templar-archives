@@ -113,7 +113,8 @@ export function AnalyzeVideoDialog({
 
   // Subscribe to analysis job updates via Supabase Realtime
   useEffect(() => {
-    if (!jobId || status !== "processing") return
+    if (!jobId) return
+    if (status === "idle" || status === "error" || status === "success") return
 
     const supabase = createClientSupabaseClient()
 

@@ -655,6 +655,10 @@ async function processHaeJob(
         .eq('name', 'Unsorted Hands')
         .single()
 
+      if (existingStreamResult.error) {
+        console.error('[HAE] Error querying Unsorted Hands stream:', existingStreamResult.error)
+      }
+
       if (existingStreamResult.data?.id) {
         finalStreamId = existingStreamResult.data.id
         console.log(`[HAE] Using existing "Unsorted Hands" stream: ${finalStreamId}`)
@@ -667,6 +671,8 @@ async function processHaeJob(
         throw new Error(errorMsg)
       }
     }
+
+    console.log(`[HAE] Using streamId: ${finalStreamId}`)
 
     // Full YouTube URL
     const fullYoutubeUrl = `https://www.youtube.com/watch?v=${youtubeId}`
@@ -694,6 +700,8 @@ async function processHaeJob(
           .eq('id', jobId)
 
         console.log(`[HAE] Processing segment ${i + 1}/${segments.length}: ${segment.start}s - ${segment.end}s`)
+        console.log(`[HAE] Backend URL: ${process.env.HAE_BACKEND_URL || 'http://localhost:8000'}`)
+        console.log(`[HAE] Calling with: ${fullYoutubeUrl}, platform: ${analysisPlatform}`)
 
         // 전체 실행 시간 체크
         if (Date.now() - startTime > TIMEOUTS.SSE_STREAM) {
@@ -708,8 +716,13 @@ async function processHaeJob(
           platform: analysisPlatform,
         })
 
+        console.log(`[HAE] Backend response status: ${response.status} ${response.statusText}`)
+
         if (!response.ok) {
-          console.error(`[HAE] Backend error for segment ${i}:`, response.statusText)
+          console.error(`[HAE] Backend error for segment ${i}:`, response.status, response.statusText)
+          const errorText = await response.text().catch(() => 'Unable to read error response')
+          console.error(`[HAE] Error details:`, errorText)
+          segmentResult.error = `Backend error: ${response.statusText} - ${errorText}`
           continue
         }
 
