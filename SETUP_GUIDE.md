@@ -135,7 +135,7 @@ openssl rand -hex 32
 
 ```bash
 # 터미널에서 실행
-cd /Users/zed/Desktop/Archive/hae-mvp/backend
+cd /Users/zed/Desktop/Archive/hae/backend
 
 # .env 파일에 추가
 echo "API_KEY=여기에_생성한_키_붙여넣기" >> .env
@@ -169,7 +169,7 @@ gcloud run services update hae-backend \
 1. **로컬 백엔드 시작**
    ```bash
    # 터미널 1 - 백엔드 시작
-   cd /Users/zed/Desktop/Archive/hae-mvp/backend
+   cd /Users/zed/Desktop/Archive/hae/backend
    source venv/bin/activate
    python main.py
    ```
@@ -263,7 +263,7 @@ git push origin main
 
 **해결**:
 ```bash
-cd /Users/zed/Desktop/Archive/hae-mvp/backend
+cd /Users/zed/Desktop/Archive/hae/backend
 source venv/bin/activate
 python main.py
 ```
