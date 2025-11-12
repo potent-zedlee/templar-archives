@@ -32,6 +32,8 @@ type DragState = {
   handle: 'start' | 'end' | 'move'
   initialX: number
   initialTime: number
+  originalStartTime?: number
+  originalEndTime?: number
 } | null
 
 export function InteractiveTimeline({
@@ -95,17 +97,22 @@ export function InteractiveTimeline({
     const segment = segments.find((s) => s.id === segmentId)
     if (!segment) return
 
+    const startSeconds = timeStringToSeconds(segment.startTime)
+    const endSeconds = timeStringToSeconds(segment.endTime)
+
     const initialTime = handle === 'start'
-      ? timeStringToSeconds(segment.startTime)
+      ? startSeconds
       : handle === 'end'
-      ? timeStringToSeconds(segment.endTime)
-      : timeStringToSeconds(segment.startTime)
+      ? endSeconds
+      : startSeconds
 
     setDragState({
       segmentId,
       handle,
       initialX: e.clientX,
       initialTime,
+      originalStartTime: startSeconds,
+      originalEndTime: endSeconds,
     })
     setSelectedId(segmentId)
   }
@@ -135,10 +142,10 @@ export function InteractiveTimeline({
       const clampedTime = Math.max(startSeconds + 5, Math.min(snappedTime, maxSeconds))
       updatedSegment.endTime = secondsToTimeString(clampedTime, maxSeconds > 3600)
     } else if (dragState.handle === 'move') {
-      // 전체 이동
-      const delta = snappedTime - dragState.initialTime
-      const duration = endSeconds - startSeconds
-      const newStart = Math.max(0, Math.min(startSeconds + delta, maxSeconds - duration))
+      // 전체 이동 - 원래 위치 기준으로 delta 계산
+      const duration = (dragState.originalEndTime || endSeconds) - (dragState.originalStartTime || startSeconds)
+      const delta = snappedTime - (dragState.originalStartTime || startSeconds)
+      const newStart = Math.max(0, Math.min((dragState.originalStartTime || startSeconds) + delta, maxSeconds - duration))
       const snappedStart = snapToGrid(newStart, gridSize)
       const newEnd = snappedStart + duration
       updatedSegment.startTime = secondsToTimeString(snappedStart, maxSeconds > 3600)
