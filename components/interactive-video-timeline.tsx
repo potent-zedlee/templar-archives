@@ -278,7 +278,7 @@ export function InteractiveTimeline({
         {/* Timeline */}
         <div
           ref={containerRef}
-          className="relative h-16 bg-muted/30 rounded-lg cursor-crosshair select-none"
+          className="relative h-20 bg-muted/30 rounded-lg cursor-crosshair select-none"
         >
           {segments.map((segment) => {
             const pos = getSegmentPosition(segment)

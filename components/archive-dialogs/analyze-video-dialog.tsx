@@ -295,7 +295,7 @@ export function AnalyzeVideoDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-full max-w-[1200px] h-auto max-h-[min(800px,90vh)] sm:max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="w-full max-w-[min(1600px,95vw)] h-auto max-h-[90vh] sm:max-h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-500" />
@@ -308,10 +308,10 @@ export function AnalyzeVideoDialog({
 
         <div className="overflow-y-auto flex-1 px-6 py-4">
         {status === "idle" && (
-          <div className="grid md:grid-cols-5 gap-6">
+          <div className="grid md:grid-cols-[3fr_2fr] gap-8">
             {/* Left Column: Video Player + Timeline */}
-            <div className="md:col-span-3 space-y-4">
-              <div className="md:sticky md:top-0 space-y-4">
+            <div className="space-y-4">
+              <div className="md:sticky md:top-6 md:self-start space-y-4">
                 <VideoPlayerWithTimestamp
                   videoUrl={day?.video_url}
                   videoSource={day?.video_source}
@@ -331,7 +331,7 @@ export function AnalyzeVideoDialog({
             </div>
 
             {/* Right Column: Form */}
-            <div className="md:col-span-2 space-y-6">
+            <div className="space-y-6">
             {/* Platform Selection */}
             <div className="space-y-2">
               <Label>플랫폼 선택</Label>
@@ -400,7 +400,7 @@ export function AnalyzeVideoDialog({
               </div>
 
               {players.length > 0 && (
-                <ScrollArea className="max-h-[200px]">
+                <ScrollArea className="max-h-[280px]">
                   <div className="space-y-2">
                     {players.map((player) => (
                       <div key={player.id} className="flex gap-2">
