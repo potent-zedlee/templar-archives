@@ -263,15 +263,21 @@ async function storeHandsFromSegment(
   let failedCount = 0
   const errors: string[] = []
 
+  console.log(`[storeHands] Processing ${hands.length} hands for segment`)
+
   for (const handData of hands) {
     try {
+      console.log(`[storeHands] Processing hand #${handData.handNumber || handNumber}`)
+
       // Find or create players first (outside transaction)
       const playerIdMap = new Map<string, string>()
 
       if (handData.players) {
+        console.log(`[storeHands] Finding/creating ${handData.players.length} players`)
         for (const playerData of handData.players) {
           const playerId = await findOrCreatePlayer(supabase, playerData.name)
           playerIdMap.set(playerData.name, playerId)
+          console.log(`[storeHands] Player ${playerData.name} -> ${playerId}`)
         }
       }
 
@@ -326,6 +332,7 @@ async function storeHandsFromSegment(
       }
 
       // Call RPC function to save hand transactionally
+      console.log(`[storeHands] Calling RPC with ${playersData.length} players, ${actionsData.length} actions`)
       const { data: newHandId, error: rpcError } = await supabase.rpc(
         'save_hand_with_players_actions',
         {
@@ -348,13 +355,16 @@ async function storeHandsFromSegment(
       )
 
       if (rpcError) {
+        console.error(`[storeHands] RPC error:`, rpcError)
         throw new Error(`RPC error: ${rpcError.message}`)
       }
 
       if (!newHandId) {
+        console.error(`[storeHands] No hand ID returned from RPC`)
         throw new Error('No hand ID returned from RPC')
       }
 
+      console.log(`[storeHands] Successfully saved hand with ID: ${newHandId}`)
       successCount++
     } catch (error) {
       failedCount++
@@ -743,6 +753,8 @@ async function processHaeJob(
 
           // Store hands from this segment
           if (analysisResult && analysisResult.hands && analysisResult.hands.length > 0) {
+            console.log(`[HAE] Storing ${analysisResult.hands.length} hands from segment ${i}`)
+            console.log(`[HAE] Stream ID: ${finalStreamId}, Job ID: ${jobId}`)
             const storeResult = await storeHandsFromSegment(
               supabase,
               analysisResult.hands,
@@ -751,6 +763,10 @@ async function processHaeJob(
               segment,
               totalHands
             )
+            console.log(`[HAE] Store result: ${storeResult.success} successful, ${storeResult.failed} failed`)
+            if (storeResult.errors.length > 0) {
+              console.error(`[HAE] Store errors:`, storeResult.errors)
+            }
 
             // Update segment result with storage results
             const currentSegmentResult: SegmentResult = {
