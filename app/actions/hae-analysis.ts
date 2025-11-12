@@ -168,7 +168,10 @@ async function checkRateLimit(
     .gte('created_at', oneHourAgo)
 
   if (error) {
-    console.error('Rate limit check error:', error)
+    console.error('[HAE] Rate limit check failed')
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[HAE] Error details:', error)
+    }
     return { allowed: false, error: 'Rate limit 확인 실패' }
   }
 
@@ -219,7 +222,10 @@ async function checkDuplicateAnalysis(
     })
 
     if (error) {
-      console.error('Duplicate check RPC error:', error)
+      console.error('[HAE] Duplicate check RPC failed')
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[HAE] Error details:', error)
+      }
       // Fail-Closed: Block analysis on DB error
       return {
         isDuplicate: false,
@@ -238,7 +244,10 @@ async function checkDuplicateAnalysis(
 
     return { isDuplicate: false }
   } catch (error) {
-    console.error('Duplicate check exception:', error)
+    console.error('[HAE] Duplicate check exception')
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[HAE] Exception details:', error)
+    }
     // Fail-Closed: Block analysis on exception
     return {
       isDuplicate: false,
@@ -263,21 +272,29 @@ async function storeHandsFromSegment(
   let failedCount = 0
   const errors: string[] = []
 
-  console.log(`[storeHands] Processing ${hands.length} hands for segment`)
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[storeHands] Processing ${hands.length} hands for segment`)
+  }
 
   for (const handData of hands) {
     try {
-      console.log(`[storeHands] Processing hand #${handData.handNumber || handNumber}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[storeHands] Processing hand #${handData.handNumber || handNumber}`)
+      }
 
       // Find or create players first (outside transaction)
       const playerIdMap = new Map<string, string>()
 
       if (handData.players) {
-        console.log(`[storeHands] Finding/creating ${handData.players.length} players`)
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[storeHands] Finding/creating ${handData.players.length} players`)
+        }
         for (const playerData of handData.players) {
           const playerId = await findOrCreatePlayer(supabase, playerData.name)
           playerIdMap.set(playerData.name, playerId)
-          console.log(`[storeHands] Player ${playerData.name} -> ${playerId}`)
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[storeHands] Player ${playerData.name} -> ${playerId}`)
+          }
         }
       }
 
@@ -420,7 +437,10 @@ export async function startHaeAnalysis(
     }
 
     if (!profile) {
-      console.error('[HAE] No profile found for user:', user.id)
+      console.error('[HAE] No profile found for user')
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[HAE] User ID:', user.id)
+      }
       return {
         success: false,
         error: '사용자 프로필을 찾을 수 없습니다.',
@@ -430,21 +450,26 @@ export async function startHaeAnalysis(
     const hasValidRole = allowedRoles.includes(profile.role)
 
     if (!hasValidRole) {
-      console.warn('[HAE] Permission denied:', {
-        userId: user.id,
-        userRole: profile.role,
-        allowedRoles,
-      })
+      console.warn('[HAE] Permission denied')
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[HAE] User details:', {
+          userId: user.id,
+          userRole: profile.role,
+          allowedRoles,
+        })
+      }
       return {
         success: false,
         error: `이 기능은 High Templar, Reporter, Admin 권한이 필요합니다. (현재 권한: ${profile.role})`,
       }
     }
 
-    console.log('[HAE] Permission granted:', {
-      userId: user.id,
-      userRole: profile.role,
-    })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[HAE] Permission granted:', {
+        userId: user.id,
+        userRole: profile.role,
+      })
+    }
 
     const selectedPlatform = input.platform || DEFAULT_PLATFORM
     const dbPlatform = DB_PLATFORM_MAP[selectedPlatform] ?? DB_PLATFORM_MAP[DEFAULT_PLATFORM]

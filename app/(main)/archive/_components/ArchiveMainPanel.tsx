@@ -32,24 +32,32 @@ export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelPro
   // Find selected day data
   const selectedDayData = useMemo((): Stream | null => {
     if (!selectedDay) {
-      console.log('[ArchiveMainPanel] No selectedDay')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ArchiveMainPanel] No selectedDay')
+      }
       return null
     }
 
-    console.log('[ArchiveMainPanel] Looking for day:', selectedDay)
-    console.log('[ArchiveMainPanel] Tournaments count:', tournaments.length)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ArchiveMainPanel] Looking for day:', selectedDay)
+      console.log('[ArchiveMainPanel] Tournaments count:', tournaments.length)
+    }
 
     for (const tournament of tournaments) {
       for (const subEvent of tournament.sub_events || []) {
         const day = subEvent.days?.find((d: Stream) => d.id === selectedDay)
         if (day) {
-          console.log('[ArchiveMainPanel] Found day:', day.name, 'video_url:', day.video_url)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[ArchiveMainPanel] Found day:', day.name, 'video_url:', day.video_url)
+          }
           return day as Stream
         }
       }
     }
 
-    console.log('[ArchiveMainPanel] Day not found!')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[ArchiveMainPanel] Day not found!')
+    }
     return null
   }, [selectedDay, tournaments])
 

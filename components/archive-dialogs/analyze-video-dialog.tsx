@@ -117,7 +117,9 @@ export function AnalyzeVideoDialog({
 
     const supabase = createClientSupabaseClient()
 
-    console.log('[AnalyzeVideoDialog] Setting up Realtime subscription for job:', jobId)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[AnalyzeVideoDialog] Setting up Realtime subscription for job:', jobId)
+    }
 
     const channel = supabase
       .channel(`analysis-job-${jobId}`)
@@ -130,7 +132,9 @@ export function AnalyzeVideoDialog({
           filter: `id=eq.${jobId}`,
         },
         (payload) => {
-          console.log('[AnalyzeVideoDialog] Realtime update received:', payload)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[AnalyzeVideoDialog] Realtime update received:', payload)
+          }
           const job = payload.new as AnalysisJob
 
           // Update job status
@@ -168,7 +172,9 @@ export function AnalyzeVideoDialog({
       .subscribe()
 
     return () => {
-      console.log('[AnalyzeVideoDialog] Cleaning up Realtime subscription for job:', jobId)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AnalyzeVideoDialog] Cleaning up Realtime subscription for job:', jobId)
+      }
       supabase.removeChannel(channel)
     }
   }, [jobId, status])
