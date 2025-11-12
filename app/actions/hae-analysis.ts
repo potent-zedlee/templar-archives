@@ -420,9 +420,9 @@ export async function startHaeAnalysis(
 
     // 권한 체크 (High Templar 이상)
     const { data: profile, error: profileError } = await supabase
-      .from('profiles')
+      .from('users')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single()
 
     // 권한 체크: High Templar, Reporter, Admin만 허용
