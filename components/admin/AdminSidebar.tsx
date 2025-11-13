@@ -61,20 +61,20 @@ const adminMenuItems = [
   },
 ]
 
-const haeMenuItems = [
+const kanMenuItems = [
   {
     title: "새 분석 요청",
-    href: "/admin/hae/new",
+    href: "/admin/kan/new",
     icon: Sparkles,
   },
   {
     title: "진행 중 작업",
-    href: "/admin/hae/active",
+    href: "/admin/kan/active",
     icon: Activity,
   },
   {
     title: "분석 기록",
-    href: "/admin/hae/history",
+    href: "/admin/kan/history",
     icon: History,
   },
 ]
@@ -130,12 +130,12 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* HAE Analysis Section */}
+        {/* KAN Analysis Section */}
         <SidebarGroup>
-          <SidebarGroupLabel>HAE Analysis</SidebarGroupLabel>
+          <SidebarGroupLabel>KAN Analysis</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {haeMenuItems.map((item) => {
+              {kanMenuItems.map((item) => {
                 const Icon = item.icon
                 return (
                   <SidebarMenuItem key={item.href}>

@@ -1,14 +1,14 @@
 /**
- * HAE Active Jobs Page
- * Monitor active HAE analysis jobs in real-time
+ * KAN Active Jobs Page
+ * Monitor active KAN analysis jobs in real-time
  */
 
 import { Activity } from 'lucide-react'
 import { ActiveJobsMonitor } from '../_components/ActiveJobsMonitor'
 
 export const metadata = {
-  title: 'HAE 진행 중 작업 | Templar Archives',
-  description: '실시간으로 HAE 분석 작업의 진행 상황을 모니터링합니다',
+  title: 'KAN 진행 중 작업 | Templar Archives',
+  description: '실시간으로 KAN 분석 작업의 진행 상황을 모니터링합니다',
 }
 
 export default function ActiveJobsPage() {
@@ -20,7 +20,7 @@ export default function ActiveJobsPage() {
           <h1 className="text-3xl font-bold">진행 중 작업</h1>
         </div>
         <p className="text-muted-foreground">
-          실시간으로 HAE 분석 작업의 진행 상황을 확인할 수 있습니다
+          실시간으로 KAN 분석 작업의 진행 상황을 확인할 수 있습니다
         </p>
       </div>
 

@@ -2,7 +2,7 @@
 
 /**
  * History Jobs List
- * List of completed and failed HAE analysis jobs
+ * List of completed and failed KAN analysis jobs
  */
 
 import { useState } from 'react'
@@ -17,7 +17,7 @@ import {
   ChevronUp,
   Sparkles,
 } from 'lucide-react'
-import { useHistoryJobs, useRetryJobMutation } from '@/lib/queries/hae-queries'
+import { useHistoryJobs, useRetryJobMutation } from '@/lib/queries/kan-queries'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

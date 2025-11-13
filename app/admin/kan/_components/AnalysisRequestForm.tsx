@@ -1,8 +1,8 @@
 'use client'
 
 /**
- * HAE Analysis Request Form
- * Form for creating new HAE analysis requests
+ * KAN Analysis Request Form
+ * Form for creating new KAN analysis requests
  */
 
 import { useState, useEffect } from 'react'
@@ -12,7 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { Sparkles, Loader2, Plus, X } from 'lucide-react'
-import { createHaeAnalysisRequest } from '@/app/actions/hae-analysis'
+import { createHaeAnalysisRequest } from '@/app/actions/kan-analysis'
 import { createClientSupabaseClient } from '@/lib/supabase-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -176,7 +176,7 @@ export function AnalysisRequestForm() {
       toast.success('분석 요청이 접수되었습니다')
 
       // Redirect to active jobs page
-      router.push(`/admin/hae/active?job=${result.jobId}`)
+      router.push(`/admin/kan/active?job=${result.jobId}`)
     } catch (error) {
       console.error('Submit error:', error)
       toast.error('분석 요청 중 오류가 발생했습니다')
@@ -385,7 +385,7 @@ export function AnalysisRequestForm() {
                 {...register('streamName')}
               />
               <p className="text-xs text-muted-foreground">
-                비워두면 "HAE Analysis - 날짜" 형식으로 생성됩니다
+                비워두면 "KAN Analysis - 날짜" 형식으로 생성됩니다
               </p>
             </div>
           )}

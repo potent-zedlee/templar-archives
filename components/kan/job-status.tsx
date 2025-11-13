@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
-import { getHaeJob } from '@/app/actions/hae-analysis'
+import { getKanJob } from '@/app/actions/kan-analysis'
 import { createBrowserSupabaseClient } from '@/lib/supabase-client'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
@@ -25,7 +25,7 @@ export function JobStatus({ jobId, onComplete }: JobStatusProps) {
 
     // Initial fetch
     const fetchInitialJob = async () => {
-      const data = await getHaeJob(jobId)
+      const data = await getKanJob(jobId)
       setJob(data)
 
       // Check if already completed/failed

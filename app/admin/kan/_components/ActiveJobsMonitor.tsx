@@ -2,13 +2,13 @@
 
 /**
  * Active Jobs Monitor
- * Real-time monitoring of active HAE analysis jobs
+ * Real-time monitoring of active KAN analysis jobs
  */
 
 import { useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Loader2, CheckCircle2, XCircle, Clock, Sparkles } from 'lucide-react'
-import { useActiveJobs } from '@/lib/queries/hae-queries'
+import { useActiveJobs } from '@/lib/queries/kan-queries'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'

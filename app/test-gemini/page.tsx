@@ -97,7 +97,7 @@ export default function TestGeminiPage() {
         headers["X-Google-API-Key"] = apiKey.trim()
       }
 
-      const response = await fetch("/api/hae/analyze", {
+      const response = await fetch("/api/kan/analyze", {
         method: "POST",
         headers,
         body: JSON.stringify({

@@ -187,8 +187,8 @@ async function HandsList() {
             아직 분석된 핸드가 없습니다.
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            <Link href="/hae" className="text-primary hover:underline">
-              HAE 분석 페이지
+            <Link href="/kan" className="text-primary hover:underline">
+              KAN 분석 페이지
             </Link>
             에서 영상을 분석해보세요.
           </p>
@@ -214,7 +214,7 @@ export default function HandsPage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Hand History</h1>
           <p className="text-muted-foreground">
-            HAE가 분석한 포커 핸드 히스토리
+            KAN가 분석한 포커 핸드 히스토리
           </p>
         </div>
 

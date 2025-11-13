@@ -1,5 +1,5 @@
 /**
- * HAE Analysis History Page
+ * KAN Analysis History Page
  * View completed and failed analysis jobs
  */
 
@@ -7,8 +7,8 @@ import { History } from 'lucide-react'
 import { HistoryJobsList } from '../_components/HistoryJobsList'
 
 export const metadata = {
-  title: 'HAE 분석 기록 | Templar Archives',
-  description: '완료되거나 실패한 HAE 분석 작업의 기록을 확인합니다',
+  title: 'KAN 분석 기록 | Templar Archives',
+  description: '완료되거나 실패한 KAN 분석 작업의 기록을 확인합니다',
 }
 
 export default function HistoryPage() {
@@ -20,7 +20,7 @@ export default function HistoryPage() {
           <h1 className="text-3xl font-bold">분석 기록</h1>
         </div>
         <p className="text-muted-foreground">
-          완료되거나 실패한 HAE 분석 작업의 기록을 확인할 수 있습니다
+          완료되거나 실패한 KAN 분석 작업의 기록을 확인할 수 있습니다
         </p>
       </div>
 
