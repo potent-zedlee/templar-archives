@@ -80,7 +80,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://diopilmkehygiqpizvga.supabase.co https://api.anthropic.com https://vercel.live wss://diopilmkehygiqpizvga.supabase.co https://hae-backend-700566907563.us-central1.run.app",
+              "connect-src 'self' https://diopilmkehygiqpizvga.supabase.co https://api.anthropic.com https://vercel.live wss://diopilmkehygiqpizvga.supabase.co https://kan-backend-700566907563.us-central1.run.app",
               "media-src 'self' https: blob:",
               "worker-src 'self' blob:",
               "frame-src 'self' https://www.youtube.com https://vercel.live",
@@ -113,12 +113,22 @@ const nextConfig = {
     return [
       {
         source: '/analyze',
-        destination: '/hae',
+        destination: '/admin/kan/new',
         permanent: true,
       },
       {
         source: '/analyze/:path*',
-        destination: '/hae/:path*',
+        destination: '/admin/kan/:path*',
+        permanent: true,
+      },
+      {
+        source: '/hae',
+        destination: '/admin/kan/new',
+        permanent: true,
+      },
+      {
+        source: '/hae/:path*',
+        destination: '/admin/kan/:path*',
         permanent: true,
       },
     ]
