@@ -58,7 +58,7 @@ export type HandHistory = {
  * 핸드 히스토리 import 요청 포맷
  */
 export type ImportHandsRequest = {
-  dayId: string // 어느 Day에 추가할지
+  streamId: string // 어느 Stream에 추가할지
   hands: HandHistory[]
   source?: string // 데이터 출처 (예: "external-analyzer-v1")
 }

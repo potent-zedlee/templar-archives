@@ -38,9 +38,9 @@ export async function loadTournamentsHelper(
 }
 
 /**
- * Load hands for a specific day
+ * Load hands for a specific stream
  */
-export async function loadHandsHelper(dayId: string, setHands: (hands: any[]) => void) {
+export async function loadHandsHelper(streamId: string, setHands: (hands: any[]) => void) {
   try {
     const { data, error } = await supabase
       .from('hands')
@@ -52,7 +52,7 @@ export async function loadHandsHelper(dayId: string, setHands: (hands: any[]) =>
           player:players(name)
         )
       `)
-      .eq('day_id', dayId)
+      .eq('day_id', streamId)
       .order('created_at', { ascending: true })
 
     if (error) throw error
@@ -98,14 +98,14 @@ export function toggleSubEventHelper(
 }
 
 /**
- * Select a day
+ * Select a stream
  */
 export function selectDayHelper(
-  dayId: string,
+  streamId: string,
   setSelectedDay: (day: string) => void,
   setTournaments: (fn: (prev: any[]) => any[]) => void
 ) {
-  setSelectedDay(dayId)
+  setSelectedDay(streamId)
   setTournaments((prev) =>
     prev.map((t) => ({
       ...t,
@@ -113,7 +113,7 @@ export function selectDayHelper(
         ...se,
         days: se.days?.map((d: any) => ({
           ...d,
-          selected: d.id === dayId,
+          selected: d.id === streamId,
         })),
       })),
     }))
@@ -193,14 +193,14 @@ export async function deleteSubEventHelper(
 }
 
 /**
- * Delete day
+ * Delete stream
  */
 export async function deleteDayHelper(
-  dayId: string,
+  streamId: string,
   setTournaments: (fn: (prev: any[]) => any[]) => void
 ) {
   try {
-    const { error } = await supabase.from('streams').delete().eq('id', dayId)
+    const { error } = await supabase.from('streams').delete().eq('id', streamId)
 
     if (error) throw error
 
@@ -209,14 +209,14 @@ export async function deleteDayHelper(
         ...t,
         sub_events: t.sub_events?.map((se: any) => ({
           ...se,
-          days: se.days?.filter((d: any) => d.id !== dayId),
+          days: se.days?.filter((d: any) => d.id !== streamId),
         })),
       }))
     )
-    toast.success('Day deleted successfully')
+    toast.success('Stream deleted successfully')
   } catch (error: any) {
-    console.error('Error deleting day:', error)
-    toast.error(error.message || 'Failed to delete day')
+    console.error('Error deleting stream:', error)
+    toast.error(error.message || 'Failed to delete stream')
   }
 }
 

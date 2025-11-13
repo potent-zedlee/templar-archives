@@ -59,20 +59,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { dayId, hands } = validation.data!
+    const { streamId, hands } = validation.data!
 
-    // Day가 존재하는지 확인
-    const { data: day, error: dayError } = await supabase
+    // Stream이 존재하는지 확인
+    const { data: stream, error: streamError } = await supabase
       .from('streams')
       .select('id')
-      .eq('id', dayId)
+      .eq('id', streamId)
       .single()
 
-    if (dayError || !day) {
+    if (streamError || !stream) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Day를 찾을 수 없습니다',
+          error: 'Stream을 찾을 수 없습니다',
           imported: 0,
           failed: 0
         } as ImportHandsResponse,
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         const { data: handData, error: handError } = await supabase
           .from('hands')
           .insert({
-            day_id: dayId,
+            day_id: streamId,
             number: hand.number,
             description: hand.description,
             summary: hand.summary,

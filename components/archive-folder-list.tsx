@@ -23,7 +23,7 @@ const ArchiveHandHistory = dynamic(
 interface ArchiveFolderListProps {
   items: FolderItem[]
   onNavigate: (item: FolderItem) => void
-  onSelectDay?: (dayId: string) => void
+  onSelectDay?: (streamId: string) => void
   expandedDayId: string | null
   seekTime: number | null
   onSeekToTime: (timeString: string) => void

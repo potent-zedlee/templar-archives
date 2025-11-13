@@ -109,14 +109,14 @@ async function getHandDetails(handId: string) {
   }
 }
 
-async function getAdjacentHands(currentHandId: string, dayId: string) {
+async function getAdjacentHands(currentHandId: string, streamId: string) {
   const supabase = await createServerSupabaseClient()
 
-  // Get prev/next hands from same day
+  // Get prev/next hands from same stream
   const { data: hands } = await supabase
     .from('hands')
     .select('id, number, created_at')
-    .eq('day_id', dayId)
+    .eq('day_id', streamId)
     .order('created_at', { ascending: true })
 
   if (!hands) return { prev: null, next: null }

@@ -23,8 +23,8 @@ export const archiveKeys = {
     gameType
       ? [...archiveKeys.all, 'tournaments', gameType, sortParams] as const
       : [...archiveKeys.all, 'tournaments', sortParams] as const,
-  hands: (dayId: string) => [...archiveKeys.all, 'hands', dayId] as const,
-  handsInfinite: (dayId: string) => [...archiveKeys.all, 'hands-infinite', dayId] as const,
+  hands: (streamId: string) => [...archiveKeys.all, 'hands', streamId] as const,
+  handsInfinite: (streamId: string) => [...archiveKeys.all, 'hands-infinite', streamId] as const,
   unsortedVideos: (sortParams?: Partial<ServerSortParams>) =>
     [...archiveKeys.all, 'unsorted-videos', sortParams] as const,
   streamPlayers: (streamId: string) => [...archiveKeys.all, 'stream-players', streamId] as const,
@@ -118,14 +118,14 @@ export function useTournamentsQuery(
 // ==================== Hands Query ====================
 
 /**
- * Fetch hands for a specific day (regular query)
+ * Fetch hands for a specific stream (regular query)
  * Optimized: Increased staleTime as hand data changes infrequently
  */
-export function useHandsQuery(dayId: string | null) {
+export function useHandsQuery(streamId: string | null) {
   return useQuery({
-    queryKey: archiveKeys.hands(dayId || ''),
+    queryKey: archiveKeys.hands(streamId || ''),
     queryFn: async () => {
-      if (!dayId) return []
+      if (!streamId) return []
 
       const { data, error } = await supabase
         .from('hands')
@@ -137,14 +137,14 @@ export function useHandsQuery(dayId: string | null) {
             player:players(name)
           )
         `)
-        .eq('day_id', dayId)
+        .eq('day_id', streamId)
         .order('created_at', { ascending: true })
 
       if (error) throw error
 
       return (data || []).map((hand) => ({ ...hand, checked: false })) as Hand[]
     },
-    enabled: !!dayId,
+    enabled: !!streamId,
     staleTime: 5 * 60 * 1000, // 5분 (핸드 데이터는 자주 변경되지 않음)
     gcTime: 15 * 60 * 1000, // 15분 (메모리에 더 오래 유지)
   })
@@ -156,11 +156,11 @@ export function useHandsQuery(dayId: string | null) {
  */
 const HANDS_PER_PAGE = 50
 
-export function useHandsInfiniteQuery(dayId: string | null) {
+export function useHandsInfiniteQuery(streamId: string | null) {
   return useInfiniteQuery({
-    queryKey: archiveKeys.handsInfinite(dayId || ''),
+    queryKey: archiveKeys.handsInfinite(streamId || ''),
     queryFn: async ({ pageParam = 0 }) => {
-      if (!dayId) return { hands: [], nextCursor: null }
+      if (!streamId) return { hands: [], nextCursor: null }
 
       const from = pageParam * HANDS_PER_PAGE
       const to = from + HANDS_PER_PAGE - 1
@@ -178,7 +178,7 @@ export function useHandsInfiniteQuery(dayId: string | null) {
         `,
           { count: 'exact' }
         )
-        .eq('day_id', dayId)
+        .eq('day_id', streamId)
         .order('created_at', { ascending: true })
         .range(from, to)
 
@@ -191,7 +191,7 @@ export function useHandsInfiniteQuery(dayId: string | null) {
       return { hands, nextCursor }
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    enabled: !!dayId,
+    enabled: !!streamId,
     staleTime: 5 * 60 * 1000, // 5분 (무한 스크롤 데이터도 자주 변경되지 않음)
     gcTime: 15 * 60 * 1000, // 15분 (메모리에 더 오래 유지)
     initialPageParam: 0,
@@ -272,7 +272,7 @@ export function useUnsortedVideosQuery(sortParams?: Partial<ServerSortParams>) {
 /**
  * Toggle hand favorite (Optimistic Update)
  */
-export function useFavoriteHandMutation(dayId: string | null) {
+export function useFavoriteHandMutation(streamId: string | null) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -285,29 +285,29 @@ export function useFavoriteHandMutation(dayId: string | null) {
       if (error) throw error
     },
     onMutate: async ({ handId, favorite }) => {
-      if (!dayId) return
+      if (!streamId) return
 
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: archiveKeys.hands(dayId) })
+      await queryClient.cancelQueries({ queryKey: archiveKeys.hands(streamId) })
 
       // Snapshot previous value
-      const previousHands = queryClient.getQueryData(archiveKeys.hands(dayId))
+      const previousHands = queryClient.getQueryData(archiveKeys.hands(streamId))
 
       // Optimistically update
-      queryClient.setQueryData(archiveKeys.hands(dayId), (old: Hand[] = []) =>
+      queryClient.setQueryData(archiveKeys.hands(streamId), (old: Hand[] = []) =>
         old.map((h) => (h.id === handId ? { ...h, favorite } : h))
       )
 
       return { previousHands }
     },
     onError: (err, variables, context) => {
-      if (dayId && context?.previousHands) {
-        queryClient.setQueryData(archiveKeys.hands(dayId), context.previousHands)
+      if (streamId && context?.previousHands) {
+        queryClient.setQueryData(archiveKeys.hands(streamId), context.previousHands)
       }
     },
     onSettled: () => {
-      if (dayId) {
-        queryClient.invalidateQueries({ queryKey: archiveKeys.hands(dayId) })
+      if (streamId) {
+        queryClient.invalidateQueries({ queryKey: archiveKeys.hands(streamId) })
       }
     },
   })
@@ -316,7 +316,7 @@ export function useFavoriteHandMutation(dayId: string | null) {
 /**
  * Toggle hand checked (local state only, no server update)
  */
-export function useCheckHandMutation(dayId: string | null) {
+export function useCheckHandMutation(streamId: string | null) {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -325,12 +325,12 @@ export function useCheckHandMutation(dayId: string | null) {
       return { handId }
     },
     onMutate: async ({ handId }) => {
-      if (!dayId) return
+      if (!streamId) return
 
-      await queryClient.cancelQueries({ queryKey: archiveKeys.hands(dayId) })
-      const previousHands = queryClient.getQueryData(archiveKeys.hands(dayId))
+      await queryClient.cancelQueries({ queryKey: archiveKeys.hands(streamId) })
+      const previousHands = queryClient.getQueryData(archiveKeys.hands(streamId))
 
-      queryClient.setQueryData(archiveKeys.hands(dayId), (old: Hand[] = []) =>
+      queryClient.setQueryData(archiveKeys.hands(streamId), (old: Hand[] = []) =>
         old.map((h) => (h.id === handId ? { ...h, checked: !h.checked } : h))
       )
 

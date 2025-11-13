@@ -135,14 +135,14 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
   }
 
   // Hand 목록 로드
-  const loadHands = async (dayId: string) => {
+  const loadHands = async (streamId: string) => {
     setIsLoading(true)
     const supabase = createClientSupabaseClient()
     try {
       const { data, error } = await supabase
         .from('hands')
         .select('id, number, description, timestamp')
-        .eq('day_id', dayId)
+        .eq('day_id', streamId)
         .order('number', { ascending: true })
 
       if (error) throw error

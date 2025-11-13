@@ -20,7 +20,7 @@ import Image from "next/image"
 interface ArchiveTimelineViewProps {
   items: FolderItem[]
   onNavigate: (item: FolderItem) => void
-  onSelectDay?: (dayId: string) => void
+  onSelectDay?: (streamId: string) => void
   loading?: boolean
   isUnorganized?: boolean
   selectedIds?: Set<string>

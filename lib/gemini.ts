@@ -101,7 +101,7 @@ export interface AnalysisConfig {
   videoUrl: string
   players?: PlayerInfo[]
   segments?: VideoSegment[]
-  dayId?: string
+  streamId?: string
 }
 
 /**

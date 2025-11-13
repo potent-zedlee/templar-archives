@@ -46,7 +46,7 @@ describe('Validation Utilities', () => {
   describe('importHandsSchema', () => {
     it('should validate correct hand import data', () => {
       const valid = {
-        dayId: '123e4567-e89b-42d3-a456-426614174000',
+        streamId: '123e4567-e89b-42d3-a456-426614174000',
         hands: [
           {
             number: '1',
@@ -64,7 +64,7 @@ describe('Validation Utilities', () => {
 
     it('should reject invalid UUID', () => {
       const invalid = {
-        dayId: 'not-a-uuid',
+        streamId: 'not-a-uuid',
         hands: [
           {
             number: '1',
@@ -79,7 +79,7 @@ describe('Validation Utilities', () => {
 
     it('should reject too many hands', () => {
       const invalid = {
-        dayId: '123e4567-e89b-42d3-a456-426614174000',
+        streamId: '123e4567-e89b-42d3-a456-426614174000',
         hands: Array(101).fill({
           number: '1',
           description: 'Test',

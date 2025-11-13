@@ -48,8 +48,8 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
   const isUserAdmin = isAdmin(userEmail)
 
   // Wrapper function with toggle functionality
-  const handleSelectDay = useCallback((dayId: string) => {
-    setSelectedDay(selectedDay === dayId ? null : dayId)
+  const handleSelectDay = useCallback((streamId: string) => {
+    setSelectedDay(selectedDay === streamId ? null : streamId)
   }, [selectedDay, setSelectedDay])
 
   // Handle seek to time (from hand timestamp to video player)

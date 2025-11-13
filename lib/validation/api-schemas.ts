@@ -22,7 +22,7 @@ export const naturalSearchSchema = z.object({
  * 핸드 Import API 스키마
  */
 export const importHandsSchema = z.object({
-  dayId: z.string().uuid("유효하지 않은 Day ID입니다"),
+  streamId: z.string().uuid("유효하지 않은 Stream ID입니다"),
   hands: z
     .array(
       z.object({

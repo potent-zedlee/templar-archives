@@ -26,7 +26,7 @@ export function useSearchHandsQuery(options: {
   limit?: number
   offset?: number
   favoriteOnly?: boolean
-  dayId?: string
+  streamId?: string
   playerId?: string
   enabled?: boolean
 }) {

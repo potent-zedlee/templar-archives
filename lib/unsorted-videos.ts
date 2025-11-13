@@ -111,7 +111,7 @@ export async function createUnsortedVideo(params: {
  * Organize a video by assigning it to a sub_event
  */
 export async function organizeVideo(
-  dayId: string,
+  streamId: string,
   subEventId: string
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = createClientSupabaseClient()
@@ -123,7 +123,7 @@ export async function organizeVideo(
       is_organized: true,
       organized_at: new Date().toISOString(),
     })
-    .eq('id', dayId)
+    .eq('id', streamId)
 
   if (error) {
     console.error('Error organizing video:', error)
@@ -137,14 +137,14 @@ export async function organizeVideo(
  * Delete an unsorted video
  */
 export async function deleteUnsortedVideo(
-  dayId: string
+  streamId: string
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = createClientSupabaseClient()
 
   const { error } = await supabase
     .from('streams')
     .delete()
-    .eq('id', dayId)
+    .eq('id', streamId)
 
   if (error) {
     console.error('Error deleting unsorted video:', error)
@@ -158,7 +158,7 @@ export async function deleteUnsortedVideo(
  * Organize multiple videos at once
  */
 export async function organizeVideos(
-  dayIds: string[],
+  streamIds: string[],
   subEventId: string
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = createClientSupabaseClient()
@@ -170,7 +170,7 @@ export async function organizeVideos(
       is_organized: true,
       organized_at: new Date().toISOString(),
     })
-    .in('id', dayIds)
+    .in('id', streamIds)
 
   if (error) {
     console.error('Error organizing videos:', error)

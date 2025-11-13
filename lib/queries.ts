@@ -10,11 +10,11 @@ export async function fetchHandsWithDetails(options: {
   limit?: number
   offset?: number
   favoriteOnly?: boolean
-  dayId?: string
+  streamId?: string
   playerId?: string
 }) {
   const supabase = createClientSupabaseClient()
-  const { limit = 20, offset = 0, favoriteOnly, dayId, playerId } = options
+  const { limit = 20, offset = 0, favoriteOnly, streamId, playerId } = options
 
   try {
     // Base query with count
@@ -28,8 +28,8 @@ export async function fetchHandsWithDetails(options: {
       query = query.eq('favorite', true)
     }
 
-    if (dayId) {
-      query = query.eq('day_id', dayId)
+    if (streamId) {
+      query = query.eq('day_id', streamId)
     }
 
     // Pagination

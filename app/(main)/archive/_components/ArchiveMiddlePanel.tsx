@@ -177,9 +177,9 @@ export function ArchiveMiddlePanel() {
     }
   }, [toggleTournamentExpand, toggleSubEventExpand])
 
-  const handleSelectDay = useCallback((dayId: string) => {
-    console.log('[ArchiveMiddlePanel] Day clicked:', dayId, 'Previous:', selectedDay)
-    setSelectedDay(dayId)
+  const handleSelectDay = useCallback((streamId: string) => {
+    console.log('[ArchiveMiddlePanel] Stream clicked:', streamId, 'Previous:', selectedDay)
+    setSelectedDay(streamId)
   }, [selectedDay, setSelectedDay])
 
   const formatDate = (dateStr: string) => {
