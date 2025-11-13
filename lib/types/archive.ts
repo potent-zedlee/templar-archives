@@ -103,7 +103,7 @@ export interface Stream {
 
 export interface Hand {
   id: string
-  stream_id: string
+  day_id: string
   number: string
   description: string
   summary?: string
