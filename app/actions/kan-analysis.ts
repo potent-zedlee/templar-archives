@@ -7,14 +7,14 @@ import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.types'
 import type {
-  HaeAnalysisResult,
-  HaeHand,
+  KanAnalysisResult,
+  KanHand,
   SSEEventType,
   SSEEventData,
   SSECompleteEvent,
   SSEProgressEvent,
   AnalyzeVideoRequest,
-} from '@/lib/types/hae-backend'
+} from '@/lib/types/kan-backend'
 
 // Typed Supabase Client
 type TypedSupabaseClient = SupabaseClient<Database>
@@ -26,11 +26,11 @@ const TIMEOUTS = {
   SEGMENT_PROCESSING: 180000, // 3분 (세그먼트 하나 처리)
 } as const
 
-type HaePlatform = 'ept' | 'triton' | 'pokerstars' | 'wsop' | 'hustler'
+type KanPlatform = 'ept' | 'triton' | 'pokerstars' | 'wsop' | 'hustler'
 
-const DEFAULT_PLATFORM: HaePlatform = 'ept'
+const DEFAULT_PLATFORM: KanPlatform = 'ept'
 
-const DB_PLATFORM_MAP: Record<HaePlatform, 'triton' | 'pokerstars' | 'wsop' | 'hustler'> = {
+const DB_PLATFORM_MAP: Record<KanPlatform, 'triton' | 'pokerstars' | 'wsop' | 'hustler'> = {
   ept: 'pokerstars',
   triton: 'triton',
   pokerstars: 'pokerstars',
@@ -38,7 +38,7 @@ const DB_PLATFORM_MAP: Record<HaePlatform, 'triton' | 'pokerstars' | 'wsop' | 'h
   hustler: 'hustler',
 }
 
-const ANALYSIS_PLATFORM_MAP: Record<HaePlatform, 'ept' | 'triton'> = {
+const ANALYSIS_PLATFORM_MAP: Record<KanPlatform, 'ept' | 'triton'> = {
   ept: 'ept',
   pokerstars: 'ept',
   wsop: 'ept',
@@ -46,22 +46,22 @@ const ANALYSIS_PLATFORM_MAP: Record<HaePlatform, 'ept' | 'triton'> = {
   hustler: 'triton',
 }
 
-export interface HaeStartInput {
+export interface KanStartInput {
   videoUrl: string
   segments: TimeSegment[]
   players?: string[]
   streamId?: string // Stream (day) ID for linking hands
-  platform?: HaePlatform
+  platform?: KanPlatform
 }
 
-export interface HaeStartResult {
+export interface KanStartResult {
   success: boolean
   jobId?: string
   streamId?: string // Created stream ID (if auto-created)
   error?: string
 }
 
-export interface HaeAnalysisRequestInput {
+export interface KanAnalysisRequestInput {
   youtubeUrl: string
   tournamentId: string
   subEventId: string
@@ -69,7 +69,7 @@ export interface HaeAnalysisRequestInput {
   startTime?: string // HH:MM:SS format
   endTime?: string // HH:MM:SS format
   players?: string[]
-  platform?: HaePlatform
+  platform?: KanPlatform
   createDraftStream?: boolean // Auto-create draft stream
   streamName?: string // Custom stream name
 }
@@ -182,9 +182,9 @@ async function checkRateLimit(
     .gte('created_at', oneHourAgo)
 
   if (error) {
-    console.error('[HAE] Rate limit check failed')
+    console.error('[KAN] Rate limit check failed')
     if (process.env.NODE_ENV === 'development') {
-      console.error('[HAE] Error details:', error)
+      console.error('[KAN] Error details:', error)
     }
     return { allowed: false, error: 'Rate limit 확인 실패' }
   }
@@ -236,9 +236,9 @@ async function checkDuplicateAnalysis(
     })
 
     if (error) {
-      console.error('[HAE] Duplicate check RPC failed')
+      console.error('[KAN] Duplicate check RPC failed')
       if (process.env.NODE_ENV === 'development') {
-        console.error('[HAE] Error details:', error)
+        console.error('[KAN] Error details:', error)
       }
       // Fail-Closed: Block analysis on DB error
       return {
@@ -258,9 +258,9 @@ async function checkDuplicateAnalysis(
 
     return { isDuplicate: false }
   } catch (error) {
-    console.error('[HAE] Duplicate check exception')
+    console.error('[KAN] Duplicate check exception')
     if (process.env.NODE_ENV === 'development') {
-      console.error('[HAE] Exception details:', error)
+      console.error('[KAN] Exception details:', error)
     }
     // Fail-Closed: Block analysis on exception
     return {
@@ -275,7 +275,7 @@ async function checkDuplicateAnalysis(
  */
 async function storeHandsFromSegment(
   supabase: TypedSupabaseClient,
-  hands: HaeHand[],
+  hands: KanHand[],
   streamId: string,
   jobId: string,
   segment: TimeSegment,
@@ -419,13 +419,13 @@ async function storeHandsFromSegment(
 }
 
 /**
- * Start HAE video analysis job
+ * Start KAN video analysis job
  */
-export async function startHaeAnalysis(
-  input: HaeStartInput
-): Promise<HaeStartResult> {
+export async function startKanAnalysis(
+  input: KanStartInput
+): Promise<KanStartResult> {
   try {
-    console.log('[HAE] startHaeAnalysis called with input:', {
+    console.log('[KAN] startKanAnalysis called with input:', {
       videoUrl: input.videoUrl,
       segmentsCount: input.segments?.length || 0,
       streamId: input.streamId,
@@ -433,16 +433,16 @@ export async function startHaeAnalysis(
       playersCount: input.players?.length || 0,
     })
 
-    // Check HAE_BACKEND_URL
+    // Check KAN_BACKEND_URL (환경 변수명은 HAE_BACKEND_URL로 유지)
     const backendUrl = process.env.HAE_BACKEND_URL
     if (!backendUrl) {
-      console.error('[HAE] HAE_BACKEND_URL is not set')
+      console.error('[KAN] HAE_BACKEND_URL is not set')
       return {
         success: false,
-        error: 'HAE 백엔드 URL이 설정되지 않았습니다. 환경 변수를 확인해주세요.',
+        error: 'KAN 백엔드 URL이 설정되지 않았습니다. 환경 변수를 확인해주세요.',
       }
     }
-    console.log('[HAE] Backend URL:', backendUrl)
+    console.log('[KAN] Backend URL:', backendUrl)
 
     const supabase = await createServerSupabaseClient()
 
@@ -452,23 +452,23 @@ export async function startHaeAnalysis(
       error: authError,
     } = await supabase.auth.getUser()
     if (authError || !user) {
-      console.error('[HAE] Auth error:', authError)
+      console.error('[KAN] Auth error:', authError)
       return { success: false, error: '로그인이 필요합니다' }
     }
 
-    console.log('[HAE] User authenticated:', user.id)
+    console.log('[KAN] User authenticated:', user.id)
 
     // Rate Limiting 체크
-    console.log('[HAE] Checking rate limit...')
+    console.log('[KAN] Checking rate limit...')
     const rateLimitCheck = await checkRateLimit(user.id, supabase)
     if (!rateLimitCheck.allowed) {
-      console.warn('[HAE] Rate limit exceeded:', rateLimitCheck.error)
+      console.warn('[KAN] Rate limit exceeded:', rateLimitCheck.error)
       return { success: false, error: rateLimitCheck.error }
     }
-    console.log('[HAE] Rate limit check passed')
+    console.log('[KAN] Rate limit check passed')
 
     // 권한 체크 (High Templar 이상)
-    console.log('[HAE] Checking user permissions...')
+    console.log('[KAN] Checking user permissions...')
     const { data: profile, error: profileError } = await supabase
       .from('users')
       .select('role')
@@ -479,7 +479,7 @@ export async function startHaeAnalysis(
     const allowedRoles = ['high_templar', 'reporter', 'admin']
 
     if (profileError) {
-      console.error('[HAE] Profile fetch error:', profileError)
+      console.error('[KAN] Profile fetch error:', profileError)
       return {
         success: false,
         error: '사용자 정보를 불러오는데 실패했습니다.',
@@ -487,51 +487,51 @@ export async function startHaeAnalysis(
     }
 
     if (!profile) {
-      console.error('[HAE] No profile found for user:', user.id)
+      console.error('[KAN] No profile found for user:', user.id)
       return {
         success: false,
         error: '사용자 프로필을 찾을 수 없습니다.',
       }
     }
 
-    console.log('[HAE] User role:', profile.role)
+    console.log('[KAN] User role:', profile.role)
 
     const hasValidRole = allowedRoles.includes(profile.role)
 
     if (!hasValidRole) {
-      console.warn('[HAE] Permission denied - insufficient role:', profile.role)
+      console.warn('[KAN] Permission denied - insufficient role:', profile.role)
       return {
         success: false,
         error: `이 기능은 High Templar, Reporter, Admin 권한이 필요합니다. (현재 권한: ${profile.role})`,
       }
     }
 
-    console.log('[HAE] Permission granted for user:', user.id)
+    console.log('[KAN] Permission granted for user:', user.id)
 
     const selectedPlatform = input.platform || DEFAULT_PLATFORM
     const dbPlatform = DB_PLATFORM_MAP[selectedPlatform] ?? DB_PLATFORM_MAP[DEFAULT_PLATFORM]
 
-    console.log('[HAE] Platform:', selectedPlatform, '-> DB Platform:', dbPlatform)
+    console.log('[KAN] Platform:', selectedPlatform, '-> DB Platform:', dbPlatform)
 
     // Extract video ID
-    console.log('[HAE] Extracting video ID from:', input.videoUrl)
+    console.log('[KAN] Extracting video ID from:', input.videoUrl)
     const videoId = extractVideoId(input.videoUrl)
     if (!videoId) {
-      console.error('[HAE] Invalid YouTube URL:', input.videoUrl)
+      console.error('[KAN] Invalid YouTube URL:', input.videoUrl)
       return {
         success: false,
         error: 'Invalid YouTube URL',
       }
     }
-    console.log('[HAE] Video ID extracted:', videoId)
+    console.log('[KAN] Video ID extracted:', videoId)
 
     // Filter only gameplay segments
     const gameplaySegments = input.segments.filter((s) => s.type === 'gameplay')
 
-    console.log('[HAE] Total segments:', input.segments.length, '-> Gameplay segments:', gameplaySegments.length)
+    console.log('[KAN] Total segments:', input.segments.length, '-> Gameplay segments:', gameplaySegments.length)
 
     if (gameplaySegments.length === 0) {
-      console.error('[HAE] No gameplay segments provided')
+      console.error('[KAN] No gameplay segments provided')
       return {
         success: false,
         error: 'No gameplay segments provided',
@@ -586,8 +586,8 @@ export async function startHaeAnalysis(
     }
 
     // Create analysis job
-    console.log('[HAE] Creating analysis job...')
-    console.log('[HAE] Job params:', {
+    console.log('[KAN] Creating analysis job...')
+    console.log('[KAN] Job params:', {
       video_id: dbVideoId,
       stream_id: input.streamId,
       platform: dbPlatform,
@@ -614,32 +614,32 @@ export async function startHaeAnalysis(
       .single()
 
     if (jobError) {
-      console.error('[HAE] Failed to create job:', jobError)
+      console.error('[KAN] Failed to create job:', jobError)
       return {
         success: false,
         error: `Failed to create analysis job: ${jobError.message}`,
       }
     }
 
-    console.log('[HAE] Analysis job created:', job.id)
+    console.log('[KAN] Analysis job created:', job.id)
 
     // Start background processing (Python backend)
-    console.log('[HAE] Starting background processing...')
-    processHaeJob(job.id, videoId, gameplaySegments, input.streamId, selectedPlatform).catch(
+    console.log('[KAN] Starting background processing...')
+    processKanJob(job.id, videoId, gameplaySegments, input.streamId, selectedPlatform).catch(
       (err) => {
-        console.error('[HAE] Background processing error:', err)
+        console.error('[KAN] Background processing error:', err)
       }
     )
 
-    revalidatePath('/hae')
+    revalidatePath('/kan')
 
-    console.log('[HAE] startHaeAnalysis completed successfully, jobId:', job.id)
+    console.log('[KAN] startKanAnalysis completed successfully, jobId:', job.id)
     return {
       success: true,
       jobId: job.id,
     }
   } catch (error) {
-    console.error('[HAE] Start HAE error:', error)
+    console.error('[KAN] Start KAN error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -680,14 +680,14 @@ async function callPythonBackend(params: AnalyzeVideoRequest): Promise<Response>
 }
 
 /**
- * Process HAE job using Python backend
+ * Process KAN job using Python backend
  */
-async function processHaeJob(
+async function processKanJob(
   jobId: string,
   youtubeId: string,
   segments: TimeSegment[],
   streamId?: string,
-  platform: HaePlatform = DEFAULT_PLATFORM
+  platform: KanPlatform = DEFAULT_PLATFORM
 ) {
   const supabase = getServiceSupabaseClient()
   const startTime = Date.now()
@@ -710,7 +710,7 @@ async function processHaeJob(
     // Ensure streamId exists (create default if not provided)
     let finalStreamId: string = streamId || ''
     if (!finalStreamId) {
-      console.log('[HAE] No streamId provided, looking for existing "Unsorted Hands" stream')
+      console.log('[KAN] No streamId provided, looking for existing "Unsorted Hands" stream')
 
       const existingStreamResult = await supabase
         .from('streams')
@@ -719,23 +719,23 @@ async function processHaeJob(
         .single()
 
       if (existingStreamResult.error) {
-        console.error('[HAE] Error querying Unsorted Hands stream:', existingStreamResult.error)
+        console.error('[KAN] Error querying Unsorted Hands stream:', existingStreamResult.error)
       }
 
       if (existingStreamResult.data?.id) {
         finalStreamId = existingStreamResult.data.id
-        console.log(`[HAE] Using existing "Unsorted Hands" stream: ${finalStreamId}`)
+        console.log(`[KAN] Using existing "Unsorted Hands" stream: ${finalStreamId}`)
       } else {
         // Cannot create stream without streamId due to tournament_id NOT NULL constraint
         // User must provide streamId or create stream manually
         const errorMsg = 'No streamId provided and no "Unsorted Hands" stream found. Please provide a streamId or create an "Unsorted Hands" stream manually using the create-unsorted-stream.mjs script.'
-        console.error(`[HAE] ${errorMsg}`)
+        console.error(`[KAN] ${errorMsg}`)
         globalErrors.push(errorMsg)
         throw new Error(errorMsg)
       }
     }
 
-    console.log(`[HAE] Using streamId: ${finalStreamId}`)
+    console.log(`[KAN] Using streamId: ${finalStreamId}`)
 
     // Full YouTube URL
     const fullYoutubeUrl = `https://www.youtube.com/watch?v=${youtubeId}`
@@ -763,9 +763,9 @@ async function processHaeJob(
           .update({ progress: Math.min(baseProgress, 99) })
           .eq('id', jobId)
 
-        console.log(`[HAE] Processing segment ${i + 1}/${segments.length}: ${segment.start}s - ${segment.end}s`)
-        console.log(`[HAE] Backend URL: ${process.env.HAE_BACKEND_URL || 'http://localhost:8000'}`)
-        console.log(`[HAE] Calling with: ${fullYoutubeUrl}, platform: ${analysisPlatform}`)
+        console.log(`[KAN] Processing segment ${i + 1}/${segments.length}: ${segment.start}s - ${segment.end}s`)
+        console.log(`[KAN] Backend URL: ${process.env.HAE_BACKEND_URL || 'http://localhost:8000'}`)
+        console.log(`[KAN] Calling with: ${fullYoutubeUrl}, platform: ${analysisPlatform}`)
 
         // 전체 실행 시간 체크
         if (Date.now() - startTime > TIMEOUTS.SSE_STREAM) {
@@ -780,12 +780,12 @@ async function processHaeJob(
           platform: analysisPlatform,
         })
 
-        console.log(`[HAE] Backend response status: ${response.status} ${response.statusText}`)
+        console.log(`[KAN] Backend response status: ${response.status} ${response.statusText}`)
 
         if (!response.ok) {
-          console.error(`[HAE] Backend error for segment ${i}:`, response.status, response.statusText)
+          console.error(`[KAN] Backend error for segment ${i}:`, response.status, response.statusText)
           const errorText = await response.text().catch(() => 'Unable to read error response')
-          console.error(`[HAE] Error details:`, errorText)
+          console.error(`[KAN] Error details:`, errorText)
           segmentResult.error = `Backend error: ${response.statusText} - ${errorText}`
           continue
         }
@@ -793,7 +793,7 @@ async function processHaeJob(
         // Parse SSE stream from Python backend
         const reader = response.body?.getReader()
         if (!reader) {
-          console.error('[HAE] No response body reader')
+          console.error('[KAN] No response body reader')
           await response.body?.cancel() // Clean up stream
           continue
         }
@@ -801,7 +801,7 @@ async function processHaeJob(
         try {
           const decoder = new TextDecoder()
           let buffer = ''
-          let analysisResult: HaeAnalysisResult | null = null
+          let analysisResult: KanAnalysisResult | null = null
 
           while (true) {
             const { done, value } = await reader.read()
@@ -850,13 +850,13 @@ async function processHaeJob(
                       analysisResult = { hands: completeData.hands }
                     }
                     console.log(
-                      `[HAE] Segment ${i} complete: ${completeData.hands?.length || 0} hands`
+                      `[KAN] Segment ${i} complete: ${completeData.hands?.length || 0} hands`
                     )
                   } else if (eventType === 'error') {
-                    console.error(`[HAE] Segment ${i} error:`, parsed)
+                    console.error(`[KAN] Segment ${i} error:`, parsed)
                   }
                 } catch (e) {
-                  console.error('[HAE] Failed to parse SSE event:', e)
+                  console.error('[KAN] Failed to parse SSE event:', e)
                 }
               }
             }
@@ -864,8 +864,8 @@ async function processHaeJob(
 
           // Store hands from this segment
           if (analysisResult && analysisResult.hands && analysisResult.hands.length > 0) {
-            console.log(`[HAE] Storing ${analysisResult.hands.length} hands from segment ${i}`)
-            console.log(`[HAE] Stream ID: ${finalStreamId}, Job ID: ${jobId}`)
+            console.log(`[KAN] Storing ${analysisResult.hands.length} hands from segment ${i}`)
+            console.log(`[KAN] Stream ID: ${finalStreamId}, Job ID: ${jobId}`)
             const storeResult = await storeHandsFromSegment(
               supabase,
               analysisResult.hands,
@@ -874,9 +874,9 @@ async function processHaeJob(
               segment,
               totalHands
             )
-            console.log(`[HAE] Store result: ${storeResult.success} successful, ${storeResult.failed} failed`)
+            console.log(`[KAN] Store result: ${storeResult.success} successful, ${storeResult.failed} failed`)
             if (storeResult.errors.length > 0) {
-              console.error(`[HAE] Store errors:`, storeResult.errors)
+              console.error(`[KAN] Store errors:`, storeResult.errors)
             }
 
             // Update totalHands ONCE and immediately update DB for realtime feedback
@@ -912,7 +912,7 @@ async function processHaeJob(
           reader.releaseLock() // 메모리 누수 방지
         }
       } catch (segmentError) {
-        console.error(`[HAE] Error processing segment ${i}:`, segmentError)
+        console.error(`[KAN] Error processing segment ${i}:`, segmentError)
 
         // Record segment failure
         segmentResult.status = 'failed'
@@ -954,10 +954,10 @@ async function processHaeJob(
       .eq('id', jobId)
 
     console.log(
-      `[HAE] Job ${jobId} completed: ${segmentsProcessed}/${segments.length} segments successful, ${totalHands} hands saved`
+      `[KAN] Job ${jobId} completed: ${segmentsProcessed}/${segments.length} segments successful, ${totalHands} hands saved`
     )
   } catch (error) {
-    console.error('HAE job processing error:', error)
+    console.error('KAN job processing error:', error)
 
     // 타임아웃 에러 구분
     let errorMessage = 'Unknown error'
@@ -996,9 +996,9 @@ async function processHaeJob(
 }
 
 /**
- * Get HAE job status
+ * Get KAN job status
  */
-export async function getHaeJob(jobId: string) {
+export async function getKanJob(jobId: string) {
   const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase
@@ -1015,12 +1015,12 @@ export async function getHaeJob(jobId: string) {
 }
 
 /**
- * Create HAE analysis request with auto-generated draft stream
- * Used by admin HAE management pages
+ * Create KAN analysis request with auto-generated draft stream
+ * Used by admin KAN management pages
  */
-export async function createHaeAnalysisRequest(
-  input: HaeAnalysisRequestInput
-): Promise<HaeStartResult> {
+export async function createKanAnalysisRequest(
+  input: KanAnalysisRequestInput
+): Promise<KanStartResult> {
   try {
     const supabase = await createServerSupabaseClient()
 
@@ -1044,7 +1044,7 @@ export async function createHaeAnalysisRequest(
     if (profileError || !profile || !allowedRoles.includes(profile.role)) {
       return {
         success: false,
-        error: 'HAE 분석 권한이 없습니다 (High Templar 이상 필요)',
+        error: 'KAN 분석 권한이 없습니다 (High Templar 이상 필요)',
       }
     }
 
@@ -1096,7 +1096,7 @@ export async function createHaeAnalysisRequest(
       : undefined // Will be created below
 
     if (input.createDraftStream) {
-      const streamName = input.streamName || `HAE Analysis - ${new Date().toLocaleDateString()}`
+      const streamName = input.streamName || `KAN Analysis - ${new Date().toLocaleDateString()}`
 
       const { data: newStream, error: streamError } = await supabase
         .from('streams')
@@ -1160,8 +1160,8 @@ export async function createHaeAnalysisRequest(
       }
     }
 
-    // Start HAE analysis
-    const result = await startHaeAnalysis({
+    // Start KAN analysis
+    const result = await startKanAnalysis({
       videoUrl: input.youtubeUrl,
       segments,
       players: input.players,
@@ -1179,7 +1179,7 @@ export async function createHaeAnalysisRequest(
       streamId,
     }
   } catch (error) {
-    console.error('[createHaeAnalysisRequest] Error:', error)
+    console.error('[createKanAnalysisRequest] Error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

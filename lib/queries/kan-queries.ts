@@ -1,6 +1,6 @@
 /**
- * HAE Analysis Queries
- * React Query hooks for HAE analysis jobs
+ * KAN Analysis Queries
+ * React Query hooks for KAN analysis jobs
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -34,12 +34,12 @@ export interface AnalysisJobWithRelations extends AnalysisJob {
 // Query Keys
 // ============================================
 
-export const haeQueryKeys = {
-  all: ['hae'] as const,
-  jobs: () => [...haeQueryKeys.all, 'jobs'] as const,
-  job: (id: string) => [...haeQueryKeys.jobs(), id] as const,
-  activeJobs: () => [...haeQueryKeys.jobs(), 'active'] as const,
-  historyJobs: () => [...haeQueryKeys.jobs(), 'history'] as const,
+export const kanQueryKeys = {
+  all: ['kan'] as const,
+  jobs: () => [...kanQueryKeys.all, 'jobs'] as const,
+  job: (id: string) => [...kanQueryKeys.jobs(), id] as const,
+  activeJobs: () => [...kanQueryKeys.jobs(), 'active'] as const,
+  historyJobs: () => [...kanQueryKeys.jobs(), 'history'] as const,
 }
 
 // ============================================
@@ -162,7 +162,7 @@ async function getHistoryAnalysisJobs(
  */
 export function useAnalysisJob(jobId: string | null) {
   return useQuery({
-    queryKey: haeQueryKeys.job(jobId || ''),
+    queryKey: kanQueryKeys.job(jobId || ''),
     queryFn: () => getAnalysisJob(jobId!),
     enabled: !!jobId,
     refetchInterval: (query) => {
@@ -181,7 +181,7 @@ export function useAnalysisJob(jobId: string | null) {
  */
 export function useActiveJobs() {
   return useQuery({
-    queryKey: haeQueryKeys.activeJobs(),
+    queryKey: kanQueryKeys.activeJobs(),
     queryFn: getActiveAnalysisJobs,
     refetchInterval: 2000, // Auto-refresh every 2 seconds
   })
@@ -192,7 +192,7 @@ export function useActiveJobs() {
  */
 export function useHistoryJobs(options: GetHistoryJobsOptions = {}) {
   return useQuery({
-    queryKey: [...haeQueryKeys.historyJobs(), options],
+    queryKey: [...kanQueryKeys.historyJobs(), options],
     queryFn: () => getHistoryAnalysisJobs(options),
   })
 }
@@ -240,7 +240,7 @@ export function useRetryJobMutation() {
       return jobId
     },
     onSuccess: (jobId) => {
-      queryClient.invalidateQueries({ queryKey: haeQueryKeys.jobs() })
+      queryClient.invalidateQueries({ queryKey: kanQueryKeys.jobs() })
       toast.success('작업이 재시작되었습니다')
     },
     onError: (error) => {
@@ -274,7 +274,7 @@ export function useCancelJobMutation() {
       return jobId
     },
     onSuccess: (jobId) => {
-      queryClient.invalidateQueries({ queryKey: haeQueryKeys.jobs() })
+      queryClient.invalidateQueries({ queryKey: kanQueryKeys.jobs() })
       toast.success('작업이 취소되었습니다')
     },
     onError: (error) => {

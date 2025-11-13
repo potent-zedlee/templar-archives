@@ -1,42 +1,42 @@
 /**
- * HAE Backend Type Definitions
+ * KAN Backend Type Definitions
  * Python 백엔드와의 통신을 위한 타입 정의
  */
 
 // Python 백엔드 응답 타입
-export interface HaeAnalysisResult {
-  hands: HaeHand[]
+export interface KanAnalysisResult {
+  hands: KanHand[]
 }
 
-export interface HaeHand {
+export interface KanHand {
   handNumber: number
   description: string
   stakes: string
-  players: HaePlayer[]
+  players: KanPlayer[]
   board: {
     flop: string[]
     turn: string | null
     river: string | null
   }
   pot: number
-  winners: HaeWinner[]
-  actions: HaeAction[]
+  winners: KanWinner[]
+  actions: KanAction[]
 }
 
-export interface HaePlayer {
+export interface KanPlayer {
   name: string
   position: string
   stackSize: number
   holeCards?: string[] | string
 }
 
-export interface HaeWinner {
+export interface KanWinner {
   name: string
   amount: number
   hand?: string
 }
 
-export interface HaeAction {
+export interface KanAction {
   player: string
   action: string
   amount?: number
@@ -52,7 +52,7 @@ export interface SSEProgressEvent {
 }
 
 export interface SSECompleteEvent {
-  hands?: HaeHand[]
+  hands?: KanHand[]
 }
 
 export interface SSEErrorEvent {

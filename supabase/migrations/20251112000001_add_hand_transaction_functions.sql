@@ -1,4 +1,4 @@
--- Add transaction support and segment tracking for HAE analysis
+-- Add transaction support and segment tracking for KAN analysis
 -- This migration adds RPC functions for atomic hand insertion and duplicate checking
 
 -- ============================================================================

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Check HAE Analysis Status
+ * Check KAN Analysis Status
  * 최근 분석 작업 상태와 사용자 권한 확인
  */
 

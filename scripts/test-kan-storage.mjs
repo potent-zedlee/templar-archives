@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Test script to manually test HAE hand storage
+ * Test script to manually test KAN hand storage
  * Simulates the storeHandsFromSegment function
  */
 import { createClient } from '@supabase/supabase-js'
@@ -132,7 +132,7 @@ async function testHandStorage() {
   console.log('Starting hand storage test...\n')
 
   try {
-    // 1. Get or create "Unsorted Hands" stream (same as processHaeJob)
+    // 1. Get or create "Unsorted Hands" stream (same as processKanJob)
     console.log('Step 1: Getting/creating "Unsorted Hands" stream...')
 
     let streamId

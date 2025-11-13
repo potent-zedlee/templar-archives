@@ -12,7 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { Sparkles, Loader2, Plus, X } from 'lucide-react'
-import { createHaeAnalysisRequest } from '@/app/actions/kan-analysis'
+import { createKanAnalysisRequest } from '@/app/actions/kan-analysis'
 import { createClientSupabaseClient } from '@/lib/supabase-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -155,7 +155,7 @@ export function AnalysisRequestForm() {
       // Filter valid players
       const validPlayers = players.filter((p) => p.trim().length > 0)
 
-      const result = await createHaeAnalysisRequest({
+      const result = await createKanAnalysisRequest({
         youtubeUrl: data.youtubeUrl,
         tournamentId: data.tournamentId,
         subEventId: data.subEventId,

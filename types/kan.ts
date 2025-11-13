@@ -1,9 +1,9 @@
 /**
- * HAE (Hand Analysis Engine) API Type Definitions
+ * KAN (Khalai Archive Network) API Type Definitions
  */
 
 // Platform types
-export type HaePlatform = 'ept' | 'triton' | 'pokerstars' | 'wsop' | 'hustler'
+export type KanPlatform = 'ept' | 'triton' | 'pokerstars' | 'wsop' | 'hustler'
 
 // API Request
 export interface AnalyzeVideoRequest {
@@ -131,8 +131,8 @@ export interface TimeSegment {
   type: 'gameplay' | 'break' | 'interview'
 }
 
-// HAE Client Configuration
-export interface HaeClientConfig {
+// KAN Client Configuration
+export interface KanClientConfig {
   baseUrl: string
   apiKey?: string
   timeout?: number

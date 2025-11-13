@@ -1,6 +1,6 @@
 /**
- * HAE (Hand Analysis Engine) API Client
- * Wrapper for HAE-MVP Python backend
+ * KAN (Khalai Archive Network) API Client
+ * Wrapper for KAN-MVP Python backend
  */
 
 import type {
@@ -11,18 +11,18 @@ import type {
   LogEvent,
   CompleteEvent,
   ErrorEvent,
-  HaeClientConfig,
-} from '@/types/hae'
+  KanClientConfig,
+} from '@/types/kan'
 
 /**
- * HAE API Client Class
+ * KAN API Client Class
  */
-export class HaeClient {
+export class KanClient {
   private baseUrl: string
   private apiKey?: string
   private timeout: number
 
-  constructor(config?: Partial<HaeClientConfig>) {
+  constructor(config?: Partial<KanClientConfig>) {
     this.baseUrl = config?.baseUrl || this.getDefaultBaseUrl()
     this.apiKey = config?.apiKey
     this.timeout = config?.timeout || 900000 // 15 minutes default
@@ -72,7 +72,7 @@ export class HaeClient {
 
     if (!response.ok) {
       const errorText = await response.text()
-      throw new Error(`HAE API error (${response.status}): ${errorText}`)
+      throw new Error(`KAN API error (${response.status}): ${errorText}`)
     }
 
     const reader = response.body?.getReader()
@@ -180,20 +180,20 @@ export class HaeClient {
 }
 
 /**
- * Create default HAE client instance
+ * Create default KAN client instance
  */
-export function createHaeClient(config?: Partial<HaeClientConfig>): HaeClient {
-  return new HaeClient(config)
+export function createKanClient(config?: Partial<KanClientConfig>): KanClient {
+  return new KanClient(config)
 }
 
 /**
  * Singleton instance for convenience
  */
-let defaultClient: HaeClient | null = null
+let defaultClient: KanClient | null = null
 
-export function getHaeClient(): HaeClient {
+export function getKanClient(): KanClient {
   if (!defaultClient) {
-    defaultClient = createHaeClient()
+    defaultClient = createKanClient()
   }
   return defaultClient
 }

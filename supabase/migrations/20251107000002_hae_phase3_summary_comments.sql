@@ -1,4 +1,4 @@
--- Migration: HAE Phase 3 - Add AI Summary for Hands
+-- Migration: KAN Phase 3 - Add AI Summary for Hands
 -- Date: 2025-11-07
 -- Description:
 --   1. Add ai_summary column to hands table for AI-generated hand summaries

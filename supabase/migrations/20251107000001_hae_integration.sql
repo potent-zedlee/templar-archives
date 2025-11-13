@@ -1,12 +1,12 @@
--- HAE (Hand Analysis Engine) Integration
--- This migration adds HAE-specific tables and extends existing schema for automated video analysis
+-- KAN (Khalai Archive Network) Integration
+-- This migration adds KAN-specific tables and extends existing schema for automated video analysis
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS pg_trgm; -- For trigram search on player names
 
 -- ============================================================================
--- 1. Videos Table (HAE-specific)
+-- 1. Videos Table (KAN-specific)
 -- ============================================================================
 -- Stores YouTube video metadata for analysis (separate from streams table)
 CREATE TABLE IF NOT EXISTS videos (
@@ -61,11 +61,11 @@ CREATE TRIGGER update_videos_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- Comments
-COMMENT ON TABLE videos IS 'YouTube video metadata for HAE analysis (separate from streams)';
+COMMENT ON TABLE videos IS 'YouTube video metadata for KAN analysis (separate from streams)';
 COMMENT ON COLUMN videos.youtube_id IS 'YouTube video ID extracted from URL';
 
 -- ============================================================================
--- 2. Analysis Jobs Table (HAE-specific)
+-- 2. Analysis Jobs Table (KAN-specific)
 -- ============================================================================
 -- Tracks video analysis job status and progress
 CREATE TABLE IF NOT EXISTS analysis_jobs (
@@ -139,12 +139,12 @@ CREATE TRIGGER update_analysis_jobs_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- Comments
-COMMENT ON TABLE analysis_jobs IS 'HAE video analysis job tracking and status';
+COMMENT ON TABLE analysis_jobs IS 'KAN video analysis job tracking and status';
 COMMENT ON COLUMN analysis_jobs.segments IS 'JSON array of video segments: [{start: 30, end: 900, type: "gameplay"}]';
 COMMENT ON COLUMN analysis_jobs.submitted_players IS 'Player names submitted for matching AI-extracted names';
 
 -- ============================================================================
--- 3. Extend Existing Tables for HAE
+-- 3. Extend Existing Tables for KAN
 -- ============================================================================
 
 -- Extend players table
@@ -210,7 +210,7 @@ BEGIN
     ALTER TABLE hands ADD COLUMN video_timestamp_end INTEGER; -- seconds
   END IF;
 
-  -- Add structured board cards (HAE uses array format)
+  -- Add structured board cards (KAN uses array format)
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns
                  WHERE table_name='hands' AND column_name='board_flop') THEN
     ALTER TABLE hands ADD COLUMN board_flop TEXT[]; -- ["As", "Kh", "Qd"]
