@@ -24,7 +24,7 @@ import type { VideoSegment } from "@/lib/types/video-segments"
 import { timeStringToSeconds } from "@/lib/types/video-segments"
 import { PlayerMatchResults } from "@/components/player-match-results"
 import { VideoPlayerWithTimestamp } from "@/components/video-player-with-timestamp"
-import { startHaeAnalysis } from "@/app/actions/kan-analysis"
+import { startKanAnalysis } from "@/app/actions/kan-analysis"
 import type { TimeSegment } from "@/types/segments"
 import { formatTime } from "@/types/segments"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
@@ -271,10 +271,10 @@ export function AnalyzeVideoDialog({
       }))
 
       console.log('[AnalyzeVideoDialog] Time segments:', timeSegments)
-      console.log('[AnalyzeVideoDialog] Calling startHaeAnalysis...')
+      console.log('[AnalyzeVideoDialog] Calling startKanAnalysis...')
 
-      // Use HAE analysis system
-      const result = await startHaeAnalysis({
+      // Use KAN analysis system
+      const result = await startKanAnalysis({
         videoUrl: day.video_url,
         segments: timeSegments,
         players: validPlayers.length > 0 ? validPlayers : undefined,
@@ -282,7 +282,7 @@ export function AnalyzeVideoDialog({
         platform
       })
 
-      console.log('[AnalyzeVideoDialog] startHaeAnalysis result:', result)
+      console.log('[AnalyzeVideoDialog] startKanAnalysis result:', result)
 
       if (!result.success) {
         throw new Error(result.error || "분석에 실패했습니다")
