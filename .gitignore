@@ -34,3 +34,10 @@ build*.log
 
 # Backup files
 *.backup*-*.json
+
+# Google OAuth credentials (sensitive)
+client_secret*.json
+credentials*.json
+*secret*.json
+*.pem
+*.key
