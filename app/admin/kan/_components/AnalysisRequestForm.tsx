@@ -28,6 +28,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
+import { VideoPlayerWithTimestamp } from '@/components/video-player-with-timestamp'
+import { InteractiveTimeline } from '@/components/interactive-video-timeline'
+import type { VideoSegment } from '@/lib/types/video-segments'
+import { timeStringToSeconds } from '@/lib/types/video-segments'
 
 const formSchema = z.object({
   youtubeUrl: z
@@ -66,6 +70,9 @@ export function AnalysisRequestForm() {
   const [loadingTournaments, setLoadingTournaments] = useState(true)
   const [loadingSubEvents, setLoadingSubEvents] = useState(false)
   const [players, setPlayers] = useState<string[]>([''])
+  const [segments, setSegments] = useState<VideoSegment[]>([])
+  const [videoDuration, setVideoDuration] = useState(0)
+  const [currentVideoTime, setCurrentVideoTime] = useState(0)
 
   const {
     register,
@@ -146,22 +153,38 @@ export function AnalysisRequestForm() {
     try {
       // Validate custom segment times
       if (data.segmentType === 'custom') {
-        if (!data.startTime || !data.endTime) {
-          toast.error('시작 시간과 종료 시간을 입력하세요')
-          return
+        // Use segments from InteractiveTimeline if available
+        if (segments.length === 0) {
+          if (!data.startTime || !data.endTime) {
+            toast.error('시작 시간과 종료 시간을 입력하거나 타임라인에서 구간을 선택하세요')
+            return
+          }
         }
       }
 
       // Filter valid players
       const validPlayers = players.filter((p) => p.trim().length > 0)
 
+      // Use segments from InteractiveTimeline if available, otherwise use manual times
+      let finalSegmentType = data.segmentType
+      let finalStartTime = data.startTime
+      let finalEndTime = data.endTime
+
+      if (segments.length > 0) {
+        // User selected segments from timeline
+        finalSegmentType = 'custom'
+        // Use first segment for now (can be enhanced to support multiple segments)
+        finalStartTime = segments[0].startTime
+        finalEndTime = segments[0].endTime
+      }
+
       const result = await createKanAnalysisRequest({
         youtubeUrl: data.youtubeUrl,
         tournamentId: data.tournamentId,
         subEventId: data.subEventId,
-        segmentType: data.segmentType,
-        startTime: data.startTime,
-        endTime: data.endTime,
+        segmentType: finalSegmentType,
+        startTime: finalStartTime,
+        endTime: finalEndTime,
         players: validPlayers.length > 0 ? validPlayers : undefined,
         platform: data.platform,
         createDraftStream: data.createDraftStream,
@@ -218,6 +241,35 @@ export function AnalysisRequestForm() {
               <p className="text-sm text-red-500">{errors.youtubeUrl.message}</p>
             )}
           </div>
+
+          {/* YouTube Player - Show when URL is entered */}
+          {watch('youtubeUrl') && (
+            <div className="space-y-4">
+              <VideoPlayerWithTimestamp
+                videoUrl={watch('youtubeUrl')}
+                videoSource="youtube"
+                onTimeUpdate={setCurrentVideoTime}
+                onDurationUpdate={setVideoDuration}
+              />
+
+              {/* Interactive Timeline */}
+              {videoDuration > 0 && (
+                <div className="space-y-2">
+                  <Label>타임라인에서 분석 구간 선택 (선택사항)</Label>
+                  <InteractiveTimeline
+                    segments={segments}
+                    onChange={setSegments}
+                    totalDuration={videoDuration}
+                  />
+                  {segments.length > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {segments.length}개의 구간이 선택되었습니다
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="platform">플랫폼</Label>
@@ -327,30 +379,37 @@ export function AnalysisRequestForm() {
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="custom" id="custom" />
               <Label htmlFor="custom" className="font-normal cursor-pointer">
-                구간 지정
+                구간 지정 (타임라인 또는 수동 입력)
               </Label>
             </div>
           </RadioGroup>
 
           {segmentType === 'custom' && (
-            <div className="grid grid-cols-2 gap-4 pl-6">
-              <div className="space-y-2">
-                <Label htmlFor="startTime">시작 시간 (HH:MM:SS)</Label>
-                <Input
-                  id="startTime"
-                  placeholder="00:00:00"
-                  {...register('startTime')}
-                />
-                {errors.startTime && (
-                  <p className="text-sm text-red-500">{errors.startTime.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endTime">종료 시간 (HH:MM:SS)</Label>
-                <Input id="endTime" placeholder="01:00:00" {...register('endTime')} />
-                {errors.endTime && (
-                  <p className="text-sm text-red-500">{errors.endTime.message}</p>
-                )}
+            <div className="space-y-4 pl-6">
+              <p className="text-sm text-muted-foreground">
+                • 위의 타임라인에서 구간을 선택하거나
+                <br />
+                • 아래 입력란에 시간을 직접 입력하세요
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="startTime">시작 시간 (HH:MM:SS)</Label>
+                  <Input
+                    id="startTime"
+                    placeholder="00:00:00"
+                    {...register('startTime')}
+                  />
+                  {errors.startTime && (
+                    <p className="text-sm text-red-500">{errors.startTime.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="endTime">종료 시간 (HH:MM:SS)</Label>
+                  <Input id="endTime" placeholder="01:00:00" {...register('endTime')} />
+                  {errors.endTime && (
+                    <p className="text-sm text-red-500">{errors.endTime.message}</p>
+                  )}
+                </div>
               </div>
             </div>
           )}
