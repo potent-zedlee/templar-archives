@@ -1,6 +1,6 @@
 # Templar Archives - 환경 설정 가이드
 
-이 문서는 HAE Backend 환경 분리 작업 후 **사용자가 직접 완료해야 하는 작업**을 안내합니다.
+이 문서는 KAN Backend 환경 분리 작업 후 **사용자가 직접 완료해야 하는 작업**을 안내합니다.
 
 ---
 
@@ -19,7 +19,7 @@
 ## 1. Vercel 배포 URL 확인
 
 ### 목적
-HAE Backend의 CORS 설정에 실제 Vercel 도메인을 추가하기 위함
+KAN Backend의 CORS 설정에 실제 Vercel 도메인을 추가하기 위함
 
 ### 작업 절차
 
@@ -52,7 +52,7 @@ HAE Backend의 CORS 설정에 실제 Vercel 도메인을 추가하기 위함
 ## 2. Vercel 환경변수 설정
 
 ### 목적
-Vercel 배포 시 HAE Backend Cloud Run URL을 사용하도록 설정
+Vercel 배포 시 KAN Backend Cloud Run URL을 사용하도록 설정
 
 ### 작업 절차
 
@@ -64,16 +64,16 @@ Vercel 배포 시 HAE Backend Cloud Run URL을 사용하도록 설정
    - 상단 탭에서 `Settings` 클릭
    - 좌측 메뉴에서 `Environment Variables` 클릭
 
-3. **HAE_BACKEND_URL 추가**
+3. **KHALAI_ARCHIVE_NETWORK_URL 추가**
 
    **Variable Name (키)**:
    ```
-   HAE_BACKEND_URL
+   KHALAI_ARCHIVE_NETWORK_URL
    ```
 
    **Value (값)**:
    ```
-   https://hae-backend-700566907563.us-central1.run.app
+   https://kan-backend-700566907563.us-central1.run.app
    ```
 
    **Environment (환경)**:
@@ -90,8 +90,8 @@ Vercel 환경변수 설정 화면 예시:
 ┌──────────────────────────────────────────────┐
 │ Add Environment Variable                     │
 ├──────────────────────────────────────────────┤
-│ Name:  HAE_BACKEND_URL                      │
-│ Value: https://hae-backend-700566907...     │
+│ Name:  KHALAI_ARCHIVE_NETWORK_URL           │
+│ Value: https://kan-backend-700566907...     │
 │                                              │
 │ Environment:                                 │
 │ ☑ Production                                │
@@ -107,7 +107,7 @@ Vercel 환경변수 설정 화면 예시:
 ## 3. (선택사항) API Key 인증 추가
 
 ### 목적
-HAE Backend에 무단 접근 방지 (보안 강화)
+KAN Backend에 무단 접근 방지 (보안 강화)
 
 **현재는 선택사항입니다. 나중에 추가해도 됩니다.**
 
@@ -131,11 +131,11 @@ openssl rand -hex 32
 - https://randomkeygen.com/
 - "Fort Knox Passwords" 섹션에서 하나 복사
 
-#### Step 2: HAE Backend 환경변수 설정
+#### Step 2: KAN Backend 환경변수 설정
 
 ```bash
 # 터미널에서 실행
-cd /Users/zed/Desktop/Archive/hae/backend
+cd /Users/zed/Desktop/Archive/kan/backend
 
 # .env 파일에 추가
 echo "API_KEY=여기에_생성한_키_붙여넣기" >> .env
@@ -145,7 +145,7 @@ echo "API_KEY=여기에_생성한_키_붙여넣기" >> .env
 
 ```bash
 # 터미널에서 실행
-gcloud run services update hae-backend \
+gcloud run services update kan-backend \
   --set-env-vars API_KEY=여기에_생성한_키_붙여넣기 \
   --region us-central1
 ```
@@ -153,7 +153,7 @@ gcloud run services update hae-backend \
 #### Step 4: Vercel 환경변수에 API Key 추가
 
 - Vercel Dashboard → templar-archives → Settings → Environment Variables
-- Variable Name: `HAE_API_KEY`
+- Variable Name: `KHALAI_ARCHIVE_NETWORK_API_KEY`
 - Value: (위에서 생성한 API Key)
 - Environment: Production
 
@@ -162,14 +162,14 @@ gcloud run services update hae-backend \
 ## 4. 로컬 백엔드 테스트
 
 ### 목적
-로컬 개발 환경에서 HAE Backend가 제대로 작동하는지 확인
+로컬 개발 환경에서 KAN Backend가 제대로 작동하는지 확인
 
 ### 작업 절차
 
 1. **로컬 백엔드 시작**
    ```bash
    # 터미널 1 - 백엔드 시작
-   cd /Users/zed/Desktop/Archive/hae/backend
+   cd /Users/zed/Desktop/Archive/kan/backend
    source venv/bin/activate
    python main.py
    ```
@@ -197,7 +197,7 @@ gcloud run services update hae-backend \
 ## 5. Vercel 재배포 및 확인
 
 ### 목적
-환경변수 설정 후 프로덕션에서 HAE 기능이 작동하는지 확인
+환경변수 설정 후 프로덕션에서 KAN 기능이 작동하는지 확인
 
 ### 작업 절차
 
@@ -220,7 +220,7 @@ Vercel이 자동으로 감지하여 재배포합니다.
 1. **프로덕션 URL 접속**
    - https://templar-archives-xxxxx.vercel.app/test
 
-2. **HAE 분석 테스트**
+2. **KAN 분석 테스트**
    - YouTube URL 입력
    - 플랫폼 선택 (EPT 또는 Triton)
    - "분석 시작" 클릭
@@ -234,13 +234,13 @@ Vercel이 자동으로 감지하여 재배포합니다.
 
 **CORS 에러가 발생한다면**:
 ```
-Access to fetch at 'https://hae-backend-...' from origin 'https://templar-archives-...'
+Access to fetch at 'https://kan-backend-...' from origin 'https://templar-archives-...'
 has been blocked by CORS policy
 ```
 
 **해결 방법**:
 1. 1단계에서 확인한 Vercel 도메인을 다시 확인
-2. HAE Backend의 CORS 설정에 해당 도메인이 포함되었는지 확인
+2. KAN Backend의 CORS 설정에 해당 도메인이 포함되었는지 확인
 3. Claude Code에게 알려서 CORS 설정 업데이트
 
 ---
@@ -263,7 +263,7 @@ git push origin main
 
 **해결**:
 ```bash
-cd /Users/zed/Desktop/Archive/hae/backend
+cd /Users/zed/Desktop/Archive/kan/backend
 source venv/bin/activate
 python main.py
 ```
@@ -284,7 +284,7 @@ python main.py
 
 - [ ] ✅ Vercel 환경변수 설정 완료
 - [ ] ✅ 로컬 백엔드 정상 작동 확인
-- [ ] ✅ Vercel 프로덕션 배포 후 HAE 기능 테스트 완료
+- [ ] ✅ Vercel 프로덕션 배포 후 KAN 기능 테스트 완료
 - [ ] ✅ CORS 에러 없음
 
 **문제가 있다면 Claude Code에게 알려주세요!**
@@ -299,5 +299,5 @@ python main.py
 
 ---
 
-**작성일**: 2025-11-11
-**대상**: HAE Backend 환경 분리 작업
+**작성일**: 2025-11-13
+**대상**: KAN Backend 브랜딩 변경 (HAE → KAN)

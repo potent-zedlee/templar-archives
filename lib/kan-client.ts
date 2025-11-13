@@ -34,10 +34,10 @@ export class KanClient {
   private getDefaultBaseUrl(): string {
     // Server-side
     if (typeof window === 'undefined') {
-      return process.env.HAE_BACKEND_URL || 'http://localhost:8000'
+      return process.env.KHALAI_ARCHIVE_NETWORK_URL || 'http://localhost:8000'
     }
     // Client-side
-    return process.env.NEXT_PUBLIC_HAE_BACKEND_URL || 'http://localhost:8000'
+    return process.env.NEXT_PUBLIC_KHALAI_ARCHIVE_NETWORK_URL || 'http://localhost:8000'
   }
 
   /**

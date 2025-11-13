@@ -161,7 +161,7 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
 
 위치: `app/actions/*.ts`
 - `archive.ts` (670줄): Tournament/SubEvent/Day CRUD
-- `hae-analysis.ts` (380줄): HAE 영상 분석
+- `kan-analysis.ts` (1200줄): KAN 영상 분석
 
 ```typescript
 // 예시: app/actions/archive.ts
@@ -214,18 +214,18 @@ Tournament (토너먼트)
 
 ### 4. AI 통합
 
-**Gemini 2.0 Flash** (영상 분석, HAE)
+**Gemini 2.0 Flash** (영상 분석, KAN)
 - 위치: `lib/ai/gemini.ts`
-- HAE Prompt: `lib/ai/prompts.ts` (EPT_PROMPT 기본값)
+- KAN Prompt: `lib/ai/prompts.ts` (EPT_PROMPT 기본값)
 - TimeSegment 시스템 (초 단위)
 
 ```typescript
-// 예시: startHaeAnalysis() 서버 액션
-const result = await analyzeVideo({
+// 예시: startKanAnalysis() 서버 액션
+const result = await startKanAnalysis({
   videoUrl,
+  segments,
   streamId,
-  layout: 'ept',  // 기본값: EPT
-  maxIterations: 150,
+  platform: 'ept',  // 기본값: EPT
 })
 ```
 
@@ -510,8 +510,8 @@ queryClient.invalidateQueries()
 ### AI 통합
 
 - **Gemini**: `lib/ai/gemini.ts`
-- **HAE Prompts**: `lib/ai/prompts.ts`
-- **HAE Actions**: `app/actions/hae-analysis.ts`
+- **KAN Prompts**: `lib/ai/prompts.ts`
+- **KAN Actions**: `app/actions/kan-analysis.ts`
 
 ### React Query
 
@@ -541,8 +541,8 @@ queryClient.invalidateQueries()
 
 **완료된 작업**:
 
-1. **HAE 권한 체크 정상화**
-   - 권한 우회 코드 제거 (app/actions/hae-analysis.ts)
+1. **KAN 권한 체크 정상화**
+   - 권한 우회 코드 제거 (app/actions/kan-analysis.ts)
    - Admin 역할 명시적 포함
    - 보안 로깅 강화 (개발/프로덕션 환경 분기)
    - 커밋: `ceff46b`
@@ -556,7 +556,7 @@ queryClient.invalidateQueries()
 3. **Console 로그 정리 및 프로덕션 최적화**
    - 민감한 사용자 정보 로그 제거 (userId 개발 환경으로 제한)
    - 개발/프로덕션 환경 분기 처리 (`process.env.NODE_ENV`)
-   - 3개 주요 파일 수정 (hae-analysis, analyze-video-dialog, ArchiveMainPanel)
+   - 3개 주요 파일 수정 (kan-analysis, analyze-video-dialog, ArchiveMainPanel)
    - 커밋: `1967ecd`
 
 4. **CSRF 토큰 검증 시스템 완성**
@@ -573,7 +573,7 @@ queryClient.invalidateQueries()
 
 6. **profiles 테이블 참조 오류 수정** (프로덕션 핫픽스)
    - 문제: Supabase 프로덕션에 `profiles` 테이블 존재하지 않음
-   - 해결: `users` 테이블로 변경 (app/actions/hae-analysis.ts:422-426)
+   - 해결: `users` 테이블로 변경 (app/actions/kan-analysis.ts:422-426)
    - 커밋: `e8d7d07`
 
 **성과**:
@@ -583,12 +583,12 @@ queryClient.invalidateQueries()
 - ✅ Next.js 16.0 완전 호환
 - ✅ 프로덕션 로그 최적화
 
-### Phase 34: HAE 데이터 저장 수정 (2025-11-12)
+### Phase 34: KAN 데이터 저장 수정 (2025-11-12)
 
-**문제**: HAE 분석 성공 후 hands 테이블에 데이터가 저장되지 않음
+**문제**: KAN 분석 성공 후 hands 테이블에 데이터가 저장되지 않음
 
 **원인 및 해결**:
-1. **테이블 이름 불일치**: `days` → `streams`로 수정 (app/actions/hae-analysis.ts:598)
+1. **테이블 이름 불일치**: `days` → `streams`로 수정 (app/actions/kan-analysis.ts:598)
 2. **컬럼 이름 불일치**: `hand_number` → `number`로 수정 (hands 테이블)
 3. **"Unsorted Hands" 스트림**: 스크립트로 생성 완료 (scripts/create-unsorted-stream.mjs)
 
@@ -599,19 +599,19 @@ node scripts/create-unsorted-stream.mjs # "Unsorted Hands" 스트림 생성
 node scripts/fix_stuck_jobs.mjs        # 멈춘 작업 정리 (30분 타임아웃)
 ```
 
-**중요**: HAE 분석 결과는 반드시 기존 stream에 저장되어야 합니다. 자동 스트림 생성은 제거되었습니다.
+**중요**: KAN 분석 결과는 반드시 기존 stream에 저장되어야 합니다. 자동 스트림 생성은 제거되었습니다.
 
-### Phase 36: HAE 분석 트러블슈팅 및 Agent 시스템 (2025-11-13)
+### Phase 36: KAN 분석 트러블슈팅 및 Agent 시스템 (2025-11-13)
 
-**문제**: 프로덕션에서 HAE 분석 요청 시 백엔드에 도달하지 않음
+**문제**: 프로덕션에서 KAN 분석 요청 시 백엔드에 도달하지 않음
 
 **원인 및 해결**:
-1. **환경 변수 설정**: `.env.local`의 `HAE_BACKEND_URL`이 localhost로 되어 있었음
+1. **환경 변수 설정**: `.env.local`의 `KAN_BACKEND_URL`이 localhost로 되어 있었음
    - 해결: Cloud Run 프로덕션 URL로 변경
    - Vercel 환경 변수는 이미 올바르게 설정됨 확인
 
 2. **사용자 권한 부족**: `zed.lee@ggproduction.net`이 `user` 역할
-   - HAE 분석은 `high_templar`, `reporter`, `admin` 권한 필요
+   - KAN 분석은 `high_templar`, `reporter`, `admin` 권한 필요
    - 해결: `update-user-role.mjs` 스크립트로 `high_templar`로 변경
 
 3. **STUCK 작업 정리**: 12분간 멈춘 분석 작업 정리
@@ -640,12 +640,12 @@ node scripts/cleanup-stuck-job.mjs
 
 **커밋**:
 - `93efb98`: Hand 타입 정의 DB 스키마와 일치
-- `c7959a4`: HAE 분석 상태 확인 스크립트 3개 추가
+- `c7959a4`: KAN 분석 상태 확인 스크립트 3개 추가
 - `f2c6366`: Supabase Expert agent 및 config 수정
 
 ---
 
 **마지막 업데이트**: 2025-11-13
-**문서 버전**: 31.0
-**현재 Phase**: 36 완료 (HAE 분석 트러블슈팅, Agent 시스템, DB 관리 도구)
+**문서 버전**: 32.0
+**현재 Phase**: 37 완료 (HAE → KAN 브랜딩 변경)
 **보안 등급**: A

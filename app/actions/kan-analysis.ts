@@ -433,13 +433,13 @@ export async function startKanAnalysis(
       playersCount: input.players?.length || 0,
     })
 
-    // Check KAN_BACKEND_URL (환경 변수명은 HAE_BACKEND_URL로 유지)
-    const backendUrl = process.env.HAE_BACKEND_URL
+    // Check KHALAI_ARCHIVE_NETWORK_URL
+    const backendUrl = process.env.KHALAI_ARCHIVE_NETWORK_URL
     if (!backendUrl) {
-      console.error('[KAN] HAE_BACKEND_URL is not set')
+      console.error('[KAN] KHALAI_ARCHIVE_NETWORK_URL is not set')
       return {
         success: false,
-        error: 'KAN 백엔드 URL이 설정되지 않았습니다. 환경 변수를 확인해주세요.',
+        error: 'Khalai Archive Network 백엔드 URL이 설정되지 않았습니다. 환경 변수를 확인해주세요.',
       }
     }
     console.log('[KAN] Backend URL:', backendUrl)
@@ -651,7 +651,7 @@ export async function startKanAnalysis(
  * Call Python backend with timeout
  */
 async function callPythonBackend(params: AnalyzeVideoRequest): Promise<Response> {
-  const backendUrl = process.env.HAE_BACKEND_URL || 'http://localhost:8000'
+  const backendUrl = process.env.KHALAI_ARCHIVE_NETWORK_URL || 'http://localhost:8000'
 
   // AbortController 생성
   const controller = new AbortController()
@@ -764,7 +764,7 @@ async function processKanJob(
           .eq('id', jobId)
 
         console.log(`[KAN] Processing segment ${i + 1}/${segments.length}: ${segment.start}s - ${segment.end}s`)
-        console.log(`[KAN] Backend URL: ${process.env.HAE_BACKEND_URL || 'http://localhost:8000'}`)
+        console.log(`[KAN] Backend URL: ${process.env.KHALAI_ARCHIVE_NETWORK_URL || 'http://localhost:8000'}`)
         console.log(`[KAN] Calling with: ${fullYoutubeUrl}, platform: ${analysisPlatform}`)
 
         // 전체 실행 시간 체크
