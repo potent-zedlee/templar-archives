@@ -131,6 +131,12 @@ const nextConfig = {
         destination: '/admin/kan/:path*',
         permanent: true,
       },
+      // API 라우트 하위 호환성
+      {
+        source: '/api/hae/:path*',
+        destination: '/api/kan/:path*',
+        permanent: true,
+      },
     ]
   },
 }
