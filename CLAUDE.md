@@ -672,7 +672,73 @@ node scripts/cleanup-stuck-job.mjs
 
 ---
 
+### Phase 38: KAN UI 개선 및 Tournament 스키마 수정 (2025-11-13)
+
+**문제**: `/admin/kan/new` 페이지에서 Tournament 드롭다운 로딩 실패 (400 에러)
+
+**원인 및 해결**:
+1. **tournaments.year 컬럼 없음**
+   - 문제: 코드에서 `year` 컬럼 참조했지만 실제 DB에는 `start_date`만 존재
+   - 해결: `year` → `start_date`로 변경, UI에서 년도 추출
+   - 파일: `app/admin/kan/_components/AnalysisRequestForm.tsx`
+   - 커밋: `a721c06`
+
+2. **YouTube 플레이어 및 타임라인 추가**
+   - YouTube URL 입력 시 VideoPlayerWithTimestamp 자동 표시
+   - InteractiveTimeline으로 구간 선택 가능
+   - 타임라인 선택과 수동 입력 모두 지원
+   - 커밋: `471f046`
+
+**성과**:
+- ✅ Tournament 선택 드롭다운 정상 작동
+- ✅ 영상을 보면서 분석 구간 선택 가능
+- ✅ UX 대폭 개선
+
+### Phase 39: DB 스키마 불일치 종합 해결 (2025-11-13)
+
+**작업 범위**: 4개 에이전트 동원하여 전체 코드베이스 스키마 불일치 점검
+
+**발견 및 해결된 문제**:
+
+1. **streams 테이블 스키마**
+   - 문제: `status` 컬럼 존재 여부 확인 필요
+   - 해결: 프로덕션 DB 확인 후 `status: 'draft'` 복원
+   - 파일: `app/actions/kan-analysis.ts:1108`
+   - 커밋: `ff75ada`
+
+2. **Player 타입 정의**
+   - 추가: `normalized_name`, `aliases`, `bio`, `is_pro`
+   - 제거: `name_lower` (DB에 없음)
+   - 파일: `lib/types/archive.ts:161-180`
+
+3. **Hand 타입 정의**
+   - 추가: `ai_summary`, `board_flop/turn/river`, `video_timestamp_start/end`
+   - 추가: `job_id`, `stakes`, `bookmarks_count`, `raw_data`
+   - 파일: `lib/types/archive.ts:117-159`
+
+4. **HandPlayer 타입 정의**
+   - 추가: `poker_position`, `starting_stack`, `ending_stack`
+   - 추가: `hole_cards`, `seat`, `final_amount`, `hand_description`, `is_winner`
+   - 파일: `lib/types/archive.ts:182-208`
+
+**검증 방법**:
+- 프로덕션 DB API로 실제 스키마 확인
+- 4개 에이전트 병렬 분석 (Debugger, Backend Architect, Frontend Developer, Code Reviewer)
+- 빌드 테스트 및 TypeScript 컴파일 체크
+
+**성과**:
+- ✅ 모든 타입 정의가 DB 스키마와 일치
+- ✅ KAN 분석 시스템 타입 안전성 강화
+- ✅ 향후 스키마 변경 시 참고할 검증 프로세스 확립
+
+**커밋**:
+- `9159dc2`: Backend Architect - streams 테이블 수정
+- `d8326f4`: Code Reviewer - 타입 정의 일괄 수정
+- `ff75ada`: 최종 통합 및 status 복원
+
+---
+
 **마지막 업데이트**: 2025-11-13
-**문서 버전**: 32.0
-**현재 Phase**: 37 완료 (HAE → KAN 브랜딩 변경)
+**문서 버전**: 33.0
+**현재 Phase**: 39 완료 (DB 스키마 불일치 종합 해결)
 **보안 등급**: A
