@@ -57,7 +57,21 @@ export interface HaeStartInput {
 export interface HaeStartResult {
   success: boolean
   jobId?: string
+  streamId?: string // Created stream ID (if auto-created)
   error?: string
+}
+
+export interface HaeAnalysisRequestInput {
+  youtubeUrl: string
+  tournamentId: string
+  subEventId: string
+  segmentType: 'full' | 'custom'
+  startTime?: string // HH:MM:SS format
+  endTime?: string // HH:MM:SS format
+  players?: string[]
+  platform?: HaePlatform
+  createDraftStream?: boolean // Auto-create draft stream
+  streamName?: string // Custom stream name
 }
 
 // Segment processing result
@@ -998,4 +1012,190 @@ export async function getHaeJob(jobId: string) {
   }
 
   return data
+}
+
+/**
+ * Create HAE analysis request with auto-generated draft stream
+ * Used by admin HAE management pages
+ */
+export async function createHaeAnalysisRequest(
+  input: HaeAnalysisRequestInput
+): Promise<HaeStartResult> {
+  try {
+    const supabase = await createServerSupabaseClient()
+
+    // 인증 및 권한 확인
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, error: '로그인이 필요합니다' }
+    }
+
+    // 권한 체크
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const allowedRoles = ['high_templar', 'reporter', 'admin']
+    if (profileError || !profile || !allowedRoles.includes(profile.role)) {
+      return {
+        success: false,
+        error: 'HAE 분석 권한이 없습니다 (High Templar 이상 필요)',
+      }
+    }
+
+    // Rate Limiting
+    const rateLimitCheck = await checkRateLimit(user.id, supabase)
+    if (!rateLimitCheck.allowed) {
+      return { success: false, error: rateLimitCheck.error }
+    }
+
+    // Extract video ID
+    const videoId = extractVideoId(input.youtubeUrl)
+    if (!videoId) {
+      return { success: false, error: 'Invalid YouTube URL' }
+    }
+
+    // Create or get video record
+    const { data: existingVideo } = await supabase
+      .from('videos')
+      .select('id')
+      .eq('youtube_id', videoId)
+      .single()
+
+    let dbVideoId: string
+    if (!existingVideo) {
+      const { data: newVideo, error: videoError } = await supabase
+        .from('videos')
+        .insert({
+          url: input.youtubeUrl,
+          youtube_id: videoId,
+          platform: 'youtube',
+        })
+        .select('id')
+        .single()
+
+      if (videoError || !newVideo) {
+        return {
+          success: false,
+          error: `Failed to create video record: ${videoError?.message}`,
+        }
+      }
+      dbVideoId = newVideo.id
+    } else {
+      dbVideoId = existingVideo.id
+    }
+
+    // Create draft stream if requested
+    let streamId = input.createDraftStream
+      ? undefined
+      : undefined // Will be created below
+
+    if (input.createDraftStream) {
+      const streamName = input.streamName || `HAE Analysis - ${new Date().toLocaleDateString()}`
+
+      const { data: newStream, error: streamError } = await supabase
+        .from('streams')
+        .insert({
+          tournament_id: input.tournamentId,
+          sub_event_id: input.subEventId,
+          name: streamName,
+          video_url: input.youtubeUrl,
+          video_source: 'youtube',
+          status: 'draft',
+        })
+        .select('id')
+        .single()
+
+      if (streamError || !newStream) {
+        return {
+          success: false,
+          error: `Failed to create draft stream: ${streamError?.message}`,
+        }
+      }
+
+      streamId = newStream.id
+    }
+
+    // Convert time strings to segments
+    let segments: TimeSegment[] = []
+
+    if (input.segmentType === 'full') {
+      // Full video - use default full segment
+      segments = [
+        {
+          id: 'full',
+          type: 'gameplay',
+          start: 0,
+          end: 3600, // Default 1 hour, will be adjusted by backend
+          label: 'Full Video',
+        },
+      ]
+    } else if (input.startTime && input.endTime) {
+      // Custom segment
+      const start = timeStringToSeconds(input.startTime)
+      const end = timeStringToSeconds(input.endTime)
+
+      if (start >= end) {
+        return { success: false, error: '시작 시간이 종료 시간보다 늦습니다' }
+      }
+
+      segments = [
+        {
+          id: 'custom',
+          type: 'gameplay',
+          start,
+          end,
+          label: 'Custom Segment',
+        },
+      ]
+    } else {
+      return {
+        success: false,
+        error: '세그먼트 정보가 올바르지 않습니다',
+      }
+    }
+
+    // Start HAE analysis
+    const result = await startHaeAnalysis({
+      videoUrl: input.youtubeUrl,
+      segments,
+      players: input.players,
+      streamId,
+      platform: input.platform,
+    })
+
+    if (!result.success) {
+      return result
+    }
+
+    return {
+      success: true,
+      jobId: result.jobId,
+      streamId,
+    }
+  } catch (error) {
+    console.error('[createHaeAnalysisRequest] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
+ * Helper: Convert HH:MM:SS to seconds
+ */
+function timeStringToSeconds(timeStr: string): number {
+  const parts = timeStr.split(':').map(Number)
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2]
+  } else if (parts.length === 2) {
+    return parts[0] * 60 + parts[1]
+  }
+  return 0
 }
