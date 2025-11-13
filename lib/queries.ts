@@ -123,6 +123,7 @@ export async function fetchHandDetails(handId: string) {
 
 /**
  * Fetch tournaments with sub_events and days (optimized)
+ * Phase 37: Filter to show only published content
  */
 export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game') {
   const supabase = createClientSupabaseClient()
@@ -149,7 +150,32 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
 
     if (error) throw error
 
-    const tournaments = data || []
+    // Filter to show only published content (or null for backward compatibility)
+    const allTournaments = data || []
+    const tournaments = allTournaments.filter((t: any) => {
+      // Tournament level: show if published or status is null (legacy data)
+      if (t.status && t.status !== 'published') return false
+
+      // SubEvent level: filter out non-published sub_events
+      if (t.sub_events) {
+        t.sub_events = t.sub_events.filter((se: any) => {
+          // SubEvent: show if published or status is null
+          if (se.status && se.status !== 'published') return false
+
+          // Stream level: filter out non-published streams
+          if (se.streams) {
+            se.streams = se.streams.filter((s: any) => {
+              // Stream: show if published or status is null
+              return !s.status || s.status === 'published'
+            })
+          }
+
+          return true
+        })
+      }
+
+      return true
+    })
 
     // Get all day IDs from the tournaments tree
     const allDayIds: string[] = []

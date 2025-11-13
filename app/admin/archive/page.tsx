@@ -40,12 +40,16 @@ import { DeleteDialog } from '@/components/archive-dialogs/delete-dialog'
 import { SubEventDialog } from '@/components/archive-dialogs/sub-event-dialog'
 import { DayDialog } from '@/components/archive-dialogs/day-dialog'
 import { UnsortedVideosTab } from './_components/UnsortedVideosTab'
-import type { Tournament, FolderItem } from '@/lib/types/archive'
+import type { Tournament, FolderItem, ContentStatus } from '@/lib/types/archive'
 import type { SubEvent, Stream } from '@/lib/supabase'
 import type { AdminArchiveSortField, SortDirection } from '@/lib/types/sorting'
 import { getSortAriaProps } from '@/hooks/useSorting'
 import { useRouter } from 'next/navigation'
 import { getCategoryByAlias } from '@/lib/tournament-categories'
+import { StreamStatusBadge } from '@/components/admin/archive/StreamStatusBadge'
+import { StreamActions } from '@/components/admin/archive/StreamActions'
+import { StatusFilter } from '@/components/admin/archive/StatusFilter'
+import { BulkActions } from '@/components/admin/archive/BulkActions'
 
 export default function AdminArchivePage() {
   const [loading, setLoading] = useState(true)
@@ -54,6 +58,8 @@ export default function AdminArchivePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [gameTypeFilter, setGameTypeFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState<ContentStatus | 'all'>('all')
+  const [selectedStreamIds, setSelectedStreamIds] = useState<Set<string>>(new Set())
   const [sortField, setSortField] = useState<AdminArchiveSortField>('date')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [_userEmail, setUserEmail] = useState<string | null>(null)
@@ -122,6 +128,14 @@ export default function AdminArchivePage() {
     if (!isUserAdmin) return
     loadTournaments()
   }, [isUserAdmin])
+
+  // Reload streams when status filter changes
+  useEffect(() => {
+    // Reload all expanded subevents
+    expandedSubEvents.forEach(subEventId => {
+      loadStreams(subEventId)
+    })
+  }, [statusFilter])
 
   // Filter and sort tournaments
   useEffect(() => {
@@ -348,12 +362,19 @@ export default function AdminArchivePage() {
 
   const loadStreams = async (subEventId: string) => {
     try {
-      // Load streams with hand count
-      const { data: streamsData, error } = await supabase
+      // Load streams with hand count (Admin 모드: 모든 상태 포함)
+      let query = supabase
         .from('streams')
         .select('*')
         .eq('sub_event_id', subEventId)
         .order('published_at', { ascending: false })
+
+      // Status 필터 적용
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter)
+      }
+
+      const { data: streamsData, error } = await query
 
       if (error) throw error
 
@@ -456,12 +477,27 @@ export default function AdminArchivePage() {
 
         {/* Tournaments Tab */}
         <TabsContent value="tournaments" className="space-y-6">
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-between">
+            <StatusFilter value={statusFilter} onChange={setStatusFilter} />
             <Button onClick={handleCreateTournament}>
               <Plus className="mr-2 h-4 w-4" />
               Add Tournament
             </Button>
           </div>
+
+      {/* Bulk Actions */}
+      {selectedStreamIds.size > 0 && (
+        <BulkActions
+          selectedStreamIds={Array.from(selectedStreamIds)}
+          onSuccess={() => {
+            // Reload streams for expanded subevents
+            expandedSubEvents.forEach(subEventId => {
+              loadStreams(subEventId)
+            })
+          }}
+          onClearSelection={() => setSelectedStreamIds(new Set())}
+        />
+      )}
 
       {/* Filters */}
       <div className="flex gap-4">
@@ -513,6 +549,7 @@ export default function AdminArchivePage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10" />
                 <TableHead
                   className="min-w-[200px] cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('name')}
@@ -785,16 +822,42 @@ export default function AdminArchivePage() {
                             )
                           } else {
                             subEventStreams.forEach((stream) => {
+                              const streamStatus = (stream.status || 'draft') as ContentStatus
+                              const isSelected = selectedStreamIds.has(stream.id)
+
                               rows.push(
-                                <TableRow key={stream.id} className="bg-muted/10 hover:bg-muted/20 h-10">
+                                <TableRow
+                                  key={stream.id}
+                                  className={`bg-muted/10 hover:bg-muted/20 h-10 ${isSelected ? 'bg-blue-50 dark:bg-blue-950' : ''}`}
+                                >
+                                  {/* Checkbox */}
+                                  <TableCell className="w-10 py-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={(e) => {
+                                        e.stopPropagation()
+                                        const newSelected = new Set(selectedStreamIds)
+                                        if (e.target.checked) {
+                                          newSelected.add(stream.id)
+                                        } else {
+                                          newSelected.delete(stream.id)
+                                        }
+                                        setSelectedStreamIds(newSelected)
+                                      }}
+                                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                  </TableCell>
+
                                   <TableCell className="font-medium text-xs min-w-[200px] py-2">
                                     <div className="pl-8">{stream.name}</div>
                                   </TableCell>
+
+                                  {/* Status Badge */}
                                   <TableCell className="w-32 text-xs py-2">
-                                    <Badge variant="secondary" className="text-xs">
-                                      {stream.video_source || 'youtube'}
-                                    </Badge>
+                                    <StreamStatusBadge status={streamStatus} />
                                   </TableCell>
+
                                   <TableCell className="w-32 text-xs py-2">
                                     <Badge variant="outline" className="text-xs">
                                       {stream.hand_count || 0} hands
@@ -808,12 +871,23 @@ export default function AdminArchivePage() {
                                       ? new Date(stream.created_at).toLocaleDateString()
                                       : '-'}
                                   </TableCell>
+
+                                  {/* Actions */}
                                   <TableCell className="w-36 text-right py-2">
                                     <div className="flex items-center justify-end gap-2">
+                                      <StreamActions
+                                        streamId={stream.id}
+                                        streamName={stream.name}
+                                        currentStatus={streamStatus}
+                                        onStatusChange={() => loadStreams(subEvent.id)}
+                                      />
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => handleEditStream(stream.id, subEvent.id)}
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleEditStream(stream.id, subEvent.id)
+                                        }}
                                         title="Edit Stream"
                                       >
                                         <Pencil className="h-3 w-3" />
@@ -821,7 +895,10 @@ export default function AdminArchivePage() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => handleDeleteStream(stream, subEvent.id)}
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleDeleteStream(stream, subEvent.id)
+                                        }}
                                         title="Delete Stream"
                                       >
                                         <Trash2 className="h-3 w-3 text-destructive" />
