@@ -465,6 +465,32 @@ queryClient.invalidateQueries()
 "새 테이블을 추가하고 RLS 정책까지 설정해줘"
 ```
 
+### Vercel Expert Agent
+
+**위치**: `.claude/agents/vercel-expert.md`
+
+**전문 분야**:
+- Vercel CLI 명령어 마스터
+- 배포 관리 (Production, Preview, Development)
+- 환경 변수 설정 및 관리
+- 도메인 및 DNS 설정
+- 로그 모니터링 및 디버깅
+- 프로젝트 설정 최적화
+
+**프로젝트 지식**:
+- templar-archives 프로젝트 구조 이해
+- 주요 환경 변수 (KHALAI_ARCHIVE_NETWORK_URL, Supabase, API Keys)
+- Next.js 16.0.1 배포 패턴
+- Edge Functions 및 Middleware 설정
+
+**사용 예시**:
+```
+"vercel expert를 사용해서 프로덕션 배포해줘"
+"KHALAI_ARCHIVE_NETWORK_URL 환경 변수를 모든 환경에 추가해줘"
+"최근 배포 로그를 확인하고 에러가 있는지 분석해줘"
+"도메인 SSL 인증서 상태를 확인해줘"
+```
+
 ---
 
 ## 성능 최적화 팁
