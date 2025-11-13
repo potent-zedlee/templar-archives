@@ -6,7 +6,7 @@ export function HeaderLogo() {
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-purple-600">
         <span className="font-mono text-lg font-bold text-primary-foreground">TA</span>
       </div>
-      <span className="text-xl font-bold text-foreground">Templar Archives</span>
+      <span className="text-xl font-bold text-foreground">Templar Archives Index</span>
     </Link>
   )
 }

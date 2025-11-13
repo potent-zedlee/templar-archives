@@ -29,7 +29,7 @@ export default function DMCAPolicyPage() {
         <div className="prose prose-sm max-w-none dark:prose-invert">
           <h2>1. Overview</h2>
           <p>
-            Templar Archives respects the intellectual property rights of others and expects our users to do the same.
+            Templar Archives Index respects the intellectual property rights of others and expects our users to do the same.
             In accordance with the Digital Millennium Copyright Act (DMCA), 17 U.S.C. § 512(c),
             we will respond expeditiously to claims of copyright infringement on our Service.
           </p>

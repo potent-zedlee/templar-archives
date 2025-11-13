@@ -87,7 +87,7 @@ export function NicknameSetupModal({ open, currentNickname, onComplete }: Nickna
         <DialogHeader>
           <DialogTitle>Set Nickname</DialogTitle>
           <DialogDescription>
-            Choose a nickname for Templar Archives. You can change it later on your Profile page.
+            Choose a nickname for Templar Archives Index. You can change it later on your Profile page.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">

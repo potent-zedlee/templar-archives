@@ -30,13 +30,13 @@ export function Footer() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-purple-600">
                 <span className="font-mono text-lg font-bold text-primary-foreground">TA</span>
               </div>
-              <span className="text-lg font-bold">Templar Archives</span>
+              <span className="text-lg font-bold">Templar Archives Index</span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4">
               The ultimate poker hand history archive. Analyze, learn, and improve your game.
             </p>
             <p className="text-xs text-muted-foreground">
-              © {currentYear} Templar Archives. All rights reserved.
+              © {currentYear} Templar Archives Index. All rights reserved.
             </p>
           </div>
 

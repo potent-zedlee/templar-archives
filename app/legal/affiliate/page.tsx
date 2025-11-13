@@ -34,7 +34,7 @@ export default function AffiliateDisclosurePage() {
 
           <h2>2. Why We Use Affiliate Links</h2>
           <p>
-            Templar Archives is a free service. Affiliate commissions help us:
+            Templar Archives Index is a free service. Affiliate commissions help us:
           </p>
           <ul>
             <li>Cover server costs (hosting, databases, AI processing)</li>
@@ -121,7 +121,7 @@ export default function AffiliateDisclosurePage() {
           <ul>
             <li>You can visit poker sites directly by typing their URL</li>
             <li>You can use browser extensions to block affiliate tracking (we won't prevent this)</li>
-            <li>You can enjoy all features of Templar Archives without clicking any affiliate links</li>
+            <li>You can enjoy all features of Templar Archives Index without clicking any affiliate links</li>
           </ul>
           <p>
             If you appreciate our Service and want to support us, using our affiliate links is a great way to help at no cost to you!
@@ -144,7 +144,7 @@ export default function AffiliateDisclosurePage() {
           <hr className="my-8" />
 
           <p className="text-sm text-muted-foreground">
-            Thank you for supporting Templar Archives! Your use of affiliate links helps us keep the Service free and continuously improving.
+            Thank you for supporting Templar Archives Index! Your use of affiliate links helps us keep the Service free and continuously improving.
           </p>
         </div>
       </Card>

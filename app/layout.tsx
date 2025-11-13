@@ -12,33 +12,33 @@ import { Providers } from "@/components/providers"
 export const metadata: Metadata = {
   metadataBase: new URL('https://templar-archives.vercel.app'),
   title: {
-    default: "Templar Archives - Poker Hand History Archive & Analysis",
-    template: "%s | Templar Archives"
+    default: "Templar Archives Index - Poker Hand History Archive & Analysis",
+    template: "%s | Templar Archives Index"
   },
   description: "Comprehensive poker hand history archive and analysis platform. Search, analyze, and share professional poker hands from major tournaments worldwide.",
   keywords: ["poker", "hand history", "tournament", "analysis", "archive", "WSOP", "Triton", "EPT", "poker hands"],
-  authors: [{ name: "Templar Archives Team" }],
-  creator: "Templar Archives",
-  publisher: "Templar Archives",
+  authors: [{ name: "Templar Archives Index Team" }],
+  creator: "Templar Archives Index",
+  publisher: "Templar Archives Index",
   openGraph: {
     type: "website",
     locale: "ko_KR",
     url: "https://templar-archives.vercel.app",
-    siteName: "Templar Archives",
-    title: "Templar Archives - Poker Hand History Archive & Analysis",
+    siteName: "Templar Archives Index",
+    title: "Templar Archives Index - Poker Hand History Archive & Analysis",
     description: "Comprehensive poker hand history archive and analysis platform",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Templar Archives"
+        alt: "Templar Archives Index"
       }
     ]
   },
   twitter: {
     card: "summary_large_image",
-    title: "Templar Archives - Poker Hand History Archive",
+    title: "Templar Archives Index - Poker Hand History Archive",
     description: "Comprehensive poker hand history archive and analysis platform",
     images: ["/og-image.png"]
   },

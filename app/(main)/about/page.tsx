@@ -96,7 +96,7 @@ export default function AboutPage() {
             Est. 2024
           </Badge>
           <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Templar Archives
+            Templar Archives Index
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto mb-8 leading-relaxed">
             The ultimate poker hand history archive.{" "}
@@ -230,7 +230,7 @@ export default function AboutPage() {
         <Card className="p-12 text-center bg-gradient-to-br from-primary/5 to-purple-600/5 border-primary/20">
           <h2 className="text-3xl font-bold mb-4">Start Analyzing Hands Today</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of players using Templar Archives to study poker hands from the world's best tournaments and cash games.
+            Join thousands of players using Templar Archives Index to study poker hands from the world's best tournaments and cash games.
           </p>
           <div className="flex gap-4 justify-center">
             <Link href="/auth/login">

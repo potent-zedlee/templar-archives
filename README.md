@@ -1,4 +1,4 @@
-# Templar Archives
+# Templar Archives Index
 
 > 포커 핸드 히스토리 분석 플랫폼 - **프로덕션 배포 중** 🚀
 

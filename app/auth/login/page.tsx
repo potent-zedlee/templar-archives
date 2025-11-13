@@ -55,7 +55,7 @@ export default function loginClient() {
               <span className="font-mono text-2xl font-bold text-primary-foreground">GG</span>
             </div>
           </div>
-          <CardTitle className="text-title-lg">Welcome to Templar Archives</CardTitle>
+          <CardTitle className="text-title-lg">Welcome to Templar Archives Index</CardTitle>
           <CardDescription>
             Poker Hand Archive and Community Platform
           </CardDescription>
@@ -121,7 +121,7 @@ export default function loginClient() {
           )}
 
           <div className="text-xs text-muted-foreground text-center">
-            By signing in, you agree to Templar Archives'{" "}
+            By signing in, you agree to Templar Archives Index'{" "}
             <a href="#" className="underline hover:text-foreground">
               Terms of Service
             </a>

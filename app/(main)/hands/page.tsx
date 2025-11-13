@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 
 export const metadata: Metadata = {
-  title: 'Hand History | Templar Archives',
+  title: 'Hand History | Templar Archives Index',
   description: '분석된 포커 핸드 히스토리를 확인하세요',
 }
 

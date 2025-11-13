@@ -29,13 +29,13 @@ export default function TermsOfServicePage() {
         <div className="prose prose-sm max-w-none dark:prose-invert">
           <h2>1. Acceptance of Terms</h2>
           <p>
-            By accessing and using Templar Archives ("Service", "we", "us", "our"), you accept and agree to be bound by the terms
+            By accessing and using Templar Archives Index ("Service", "we", "us", "our"), you accept and agree to be bound by the terms
             and provisions of this agreement. If you do not agree to these Terms of Service, please do not use this Service.
           </p>
 
           <h2>2. Description of Service</h2>
           <p>
-            Templar Archives is a poker hand history archive platform that:
+            Templar Archives Index is a poker hand history archive platform that:
           </p>
           <ul>
             <li>Analyzes poker video content from public sources (YouTube)</li>
@@ -218,7 +218,7 @@ export default function TermsOfServicePage() {
           <hr className="my-8" />
 
           <p className="text-sm text-muted-foreground">
-            By using Templar Archives, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
+            By using Templar Archives Index, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
           </p>
         </div>
       </Card>

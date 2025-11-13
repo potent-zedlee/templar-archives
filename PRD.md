@@ -1,4 +1,4 @@
-# Templar Archives - Product Requirements Document (PRD)
+# Templar Archives Index - Product Requirements Document (PRD)
 
 **Version**: 2.0 (압축)
 **Last Updated**: 2025-11-12
@@ -26,7 +26,7 @@
 ### Mission
 **"모든 포커 영상을 핸드 히스토리로 변환하고, 분석하고, 학습 가능하게 만든다"**
 
-Templar Archives는 포커 핸드 데이터의 자동 추출, 보관, 분석을 통합하는 차세대 포커 생태계입니다.
+Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분석을 통합하는 차세대 포커 생태계입니다.
 
 ### Vision
 - **자동화**: AI 기반 영상 분석으로 수동 입력 95% 감소
