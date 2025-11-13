@@ -53,7 +53,7 @@ type FormValues = z.infer<typeof formSchema>
 interface Tournament {
   id: string
   name: string
-  year: number
+  start_date: string
 }
 
 interface SubEvent {
@@ -100,8 +100,8 @@ export function AnalysisRequestForm() {
         const supabase = createClientSupabaseClient()
         const { data, error } = await supabase
           .from('tournaments')
-          .select('id, name, year')
-          .order('year', { ascending: false })
+          .select('id, name, start_date')
+          .order('start_date', { ascending: false })
           .limit(50)
 
         if (error) throw error
@@ -323,7 +323,7 @@ export function AnalysisRequestForm() {
               <SelectContent>
                 {tournaments.map((tournament) => (
                   <SelectItem key={tournament.id} value={tournament.id}>
-                    {tournament.name} ({tournament.year})
+                    {tournament.name} ({new Date(tournament.start_date).getFullYear()})
                   </SelectItem>
                 ))}
               </SelectContent>

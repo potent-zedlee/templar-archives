@@ -10,7 +10,8 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 
 - **프로덕션**: https://templar-archives.vercel.app
 - **개발 서버**: http://localhost:3000
-- **현재 Phase**: 0-33 완료 (2025-11-08)
+- **현재 Phase**: 38 완료 (2025-11-13)
+- **KAN Backend**: https://kan-backend-700566907563.us-central1.run.app
 
 ---
 
