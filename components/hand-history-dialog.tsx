@@ -40,7 +40,7 @@ interface HandData {
       avatar?: string
     }
     position?: string
-    cards?: string[]
+    cards?: string[] | string | null  // Support legacy format
     stack?: number
     is_winner?: boolean
   }>

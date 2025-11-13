@@ -119,18 +119,41 @@ export interface Hand {
   day_id: string
   number: string
   description: string
-  summary?: string
+
+  // AI-generated summary (DB: ai_summary)
+  ai_summary?: string
+
   timestamp: string
+
+  // Structured board cards (KAN integration)
+  board_flop?: string[]      // 3 cards: ["As", "Kh", "Qd"]
+  board_turn?: string         // 1 card: "7c"
+  board_river?: string        // 1 card: "3s"
+
+  // DEPRECATED: use board_flop/turn/river instead
   board_cards?: string[]
+
   pot_size?: number
-  confidence?: number
+  stakes?: string             // e.g., "50k/100k/100k"
+
+  // Video timestamps (KAN integration)
+  video_timestamp_start?: number  // seconds
+  video_timestamp_end?: number    // seconds
+  job_id?: string                 // FK to analysis_jobs
+
+  // Raw AI extraction data
+  raw_data?: Record<string, unknown>
+
   favorite?: boolean
   thumbnail_url?: string
   likes_count?: number
   dislikes_count?: number
+  bookmarks_count?: number
   created_at?: string
+
   // Relations
   hand_players?: HandPlayer[]
+
   // UI state (클라이언트 전용)
   checked?: boolean
 }
@@ -138,10 +161,21 @@ export interface Hand {
 export interface Player {
   id: string
   name: string
-  name_lower?: string
+
+  // KAN integration: normalized name for AI matching (DB: normalized_name)
+  // Auto-generated from name (lowercase, alphanumeric only)
+  normalized_name: string
+
+  // Alternative names/spellings for player matching
+  aliases?: string[]
+
+  // Profile information
+  bio?: string
+  is_pro?: boolean
   photo_url?: string
   country?: string
   total_winnings?: number
+
   created_at?: string
 }
 
@@ -149,11 +183,26 @@ export interface HandPlayer {
   id: string
   hand_id: string
   player_id: string
-  position?: string
-  cards?: string[]
-  stack_before?: number
-  stack_after?: number
+
+  // Position information (KAN integration)
+  poker_position?: string     // DB: poker_position (BTN, SB, BB, UTG, MP, CO, HJ)
+  seat?: number               // Seat number (1-9 for 9-max tables)
+
+  // Hole cards
+  hole_cards?: string[]       // Structured format: ["As", "Kd"] (권장)
+  cards?: string[] | string | null  // DEPRECATED: legacy format (use hole_cards instead)
+
+  // Stack information (KAN integration)
+  starting_stack?: number     // DB: starting_stack
+  ending_stack?: number       // DB: ending_stack
+  final_amount?: number       // Amount won/lost in this hand
+
+  // Hand result
+  hand_description?: string   // e.g., "Full House, Aces over Kings"
+  is_winner?: boolean
+
   created_at?: string
+
   // Relations
   player?: Player
 }
