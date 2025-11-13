@@ -318,7 +318,7 @@ export function ArchiveMiddlePanel() {
                   </div>
                 )
               } else if (item.type === 'day') {
-                const day = item.data as Day
+                const day = item.data as Stream
                 const isSelected = selectedDay === day.id
                 return (
                   <div key={item.id} className="ml-12 group">

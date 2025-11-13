@@ -20,7 +20,7 @@ export async function fetchHandsWithDetails(options: {
     // Base query with count
     let query = supabase
       .from('hands')
-      .select('*, days!inner(name, sub_event_id, sub_events!inner(name, tournament_id, tournaments!inner(name, category)))', { count: 'exact' })
+      .select('*, streams!inner(name, sub_event_id, sub_events!inner(name, tournament_id, tournaments!inner(name, category)))', { count: 'exact' })
       .order('created_at', { ascending: false })
 
     // Apply filters
@@ -92,7 +92,7 @@ export async function fetchHandDetails(handId: string) {
       .from('hands')
       .select(`
         *,
-        days!inner(
+        streams!inner(
           id, name, video_url, video_file, video_source, video_nas_path,
           sub_events!inner(
             id, name, date,

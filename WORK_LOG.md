@@ -11,6 +11,151 @@
 
 ---
 
+## 2025-11-13 (세션 48) - Phase 37: 백오피스 시스템 및 콘텐츠 상태 관리 ✅
+
+### 작업 목표
+프론트엔드/백엔드 완전 분리를 위한 백오피스 시스템 구축 및 콘텐츠 상태 관리 시스템 도입
+
+### 배경
+- **현재 상태**: 모든 스트림이 프론트엔드에 노출됨
+- **문제점**: AI 분석 중인 draft 콘텐츠가 사용자에게 보임
+- **목표**: Admin 전용 백오피스 구축 및 발행 워크플로우 도입
+
+### 작업 내용
+
+#### Task 1: 서비스명 변경 (1시간) ✅
+- **변경**: "Templar Archives" → "Templar Archives Index"
+- **영향 범위**: 80+ 파일
+  - UI 컴포넌트 (HeaderLogo, Footer)
+  - Metadata (layout.tsx, opengraph-image.tsx)
+  - 페이지 타이틀 (hands, auth, about)
+  - 법률 문서 (terms, privacy, dmca, affiliate)
+  - 프로젝트 문서 (README, PRD, CLAUDE.md)
+
+#### Task 2: DB 스키마 - 콘텐츠 상태 관리 (2시간) ✅
+- **마이그레이션**: `20251113000001_add_status_columns.sql` (298줄)
+  - ENUM 타입: `content_status` (draft/published/archived)
+  - 3개 테이블에 status 컬럼 추가: `tournaments`, `sub_events`, `streams`
+  - RLS 정책 분리:
+    - Public: `status = 'published'`만 조회 가능
+    - Admin: 모든 status 조회 가능
+  - Helper 함수: `publish_tournament()`, `publish_sub_event()`, `publish_stream()`
+  - Audit 시스템: `content_status_audit` 테이블 및 트리거
+
+#### Task 3: Admin 백오피스 UI 구축 (3시간) ✅
+- **Admin Layout 개선**:
+  - `app/admin/layout.tsx`: 권한 체크 및 SidebarProvider 통합
+  - `components/admin/AdminSidebar.tsx`: 3개 섹션 (Administration, HAE Analysis, Reporting)
+  - `components/admin/AdminHeader.tsx`: 테마 토글, 알림, 사용자 정보
+  - `lib/admin.ts`: `isAdmin()`, `isReporterOrAdmin()` 함수
+
+- **HAE 분석 관리 페이지** (`app/admin/hae/`):
+  - `new/page.tsx` + `AnalysisRequestForm.tsx`: 새 분석 요청
+    - YouTube URL 입력 및 검증
+    - Tournament/SubEvent 선택
+    - 세그먼트 설정 (전체/시간 범위)
+    - 플레이어 목록 관리
+    - 플랫폼 선택 (EPT, Triton, PokerStars, WSOP, Hustler)
+  - `active/page.tsx` + `ActiveJobsMonitor.tsx`: 진행 중 작업
+    - 2초 자동 새로고침
+    - 세그먼트별 진행률 표시
+    - 실시간 핸드 카운트
+  - `history/page.tsx` + `HistoryJobsList.tsx`: 분석 기록
+    - 상태 필터링 (All/Completed/Failed)
+    - 재시도 버튼
+    - 무한 스크롤 (20개/페이지)
+
+- **Archive 상태 관리 UI** (`components/admin/archive/`):
+  - `StreamStatusBadge.tsx`: 상태 표시 (Draft/Published/Archived)
+  - `StreamActions.tsx`: Publish/Unpublish 토글
+  - `StreamChecklist.tsx`: 발행 전 체크리스트 모달
+    - YouTube 링크 확인 (필수)
+    - 핸드 개수 확인 (발행 시 필수)
+    - 썸네일 확인 (경고만)
+  - `StatusFilter.tsx`: 상태 필터 탭
+  - `BulkActions.tsx`: 대량 발행/비발행
+
+#### Task 4: Server Actions 구현 (2시간) ✅
+- **`app/actions/admin/archive-admin.ts`** (663줄):
+  - 개별 작업: `publishTournament/SubEvent/Stream()`, `unpublishTournament/SubEvent/Stream()`, `archiveTournament/SubEvent/Stream()`
+  - 대량 작업: `bulkPublishStreams()`, `bulkUnpublishStreams()`
+  - 검증: `validateStreamChecklist()`
+  - 모든 함수: `verifyAdmin()` 권한 체크 + `revalidatePath()` 캐시 무효화
+
+- **타입 정의**: `lib/types/admin.ts` (150줄)
+  - `ActionResult<T>`, `StreamChecklistValidation`
+  - `ContentStatusAudit`
+  - UI 헬퍼 상수: `STATUS_LABELS`, `STATUS_COLORS`, `STATUS_ICONS`
+
+#### Task 5: React Query 훅 구현 (2시간) ✅
+- **`lib/queries/admin-archive-queries.ts`** (290줄):
+  - 쿼리: `useAdminTournamentsQuery()`, `useAdminSubEventsQuery()`, `useAdminStreamsQuery()`
+  - 뮤테이션: `usePublishStreamMutation()`, `useUnpublishStreamMutation()`, `useBulkPublishMutation()`, `useBulkUnpublishMutation()`
+  - 특징: 모든 status 포함 (필터 옵션 제공)
+
+- **`lib/queries/hae-queries.ts`** (290줄):
+  - `useActiveJobs()`: 2초 자동 새로고침
+  - `useHistoryJobs()`: 페이지네이션
+  - `useAnalysisJob(jobId)`: 단일 작업 상세
+  - `useRetryJobMutation()`, `useCancelJobMutation()`
+
+#### Task 6: Public 쿼리 수정 (1시간) ✅
+- **`lib/queries.ts`**:
+  - Deprecated 테이블 참조 수정: `days` → `streams` (2곳)
+  - 기본적으로 `status = 'published'`만 반환 (RLS 정책으로 강제)
+
+#### Task 7: 중복 코드 제거 및 버그 수정 (1시간) ✅
+- **중복 마이그레이션 파일 삭제**:
+  - `20251113032638_add_status_to_archive_tables.sql` (ENUM vs TEXT 충돌)
+- **중복 Server Actions 파일 삭제**:
+  - `app/actions/archive-status.ts` (archive-admin.ts와 중복)
+  - 2개 컴포넌트 import 경로 수정 (BulkActions, StreamChecklist)
+- **타입 에러 수정**:
+  - `ArchiveMiddlePanel.tsx`: `Day` → `Stream` 타입 변경
+  - `lib/database.types.ts`: npm 경고 메시지 제거 (파일 손상)
+
+### 주요 개선사항
+
+#### 아키텍처 변경
+- **Frontend/Backend 분리**: RLS 정책으로 Public은 `published`만 조회
+- **Admin 백오피스**: 전용 UI로 모든 status 관리 가능
+- **발행 워크플로우**: Draft → Review (Checklist) → Publish
+
+#### 보안 강화
+- **RLS 정책**: 3단계 계층 (Tournament/SubEvent/Stream) 모두 적용
+- **Server Actions**: 모든 write 작업에 `verifyAdmin()` 필수
+- **Audit Logging**: 상태 변경 이력 자동 기록
+
+#### 개발자 경험
+- **타입 안전성**: `lib/types/admin.ts`로 Admin 전용 타입 분리
+- **React Query**: Optimistic Updates로 즉각적인 UI 반영
+- **컴포넌트 재사용**: 5개 Admin Archive 컴포넌트 (단일 책임 원칙)
+
+### 파일 변경 통계
+- **신규 파일**: 18개
+  - DB 마이그레이션: 1
+  - Admin 컴포넌트: 8
+  - HAE 페이지/컴포넌트: 6
+  - React Query 훅: 2
+  - 타입 정의: 1
+- **수정 파일**: 80+
+  - 서비스명 변경: 20+
+  - 타입 정의 업데이트: 3
+  - Public 쿼리 수정: 1
+  - Import 경로 수정: 2
+  - 버그 수정: 2
+- **삭제 파일**: 2
+  - 중복 마이그레이션: 1
+  - 중복 Server Actions: 1
+
+### 다음 세션 계획
+1. Supabase 마이그레이션 적용 (로컬 → 프로덕션)
+2. Admin 백오피스 E2E 테스트 추가
+3. HAE 분석 워크플로우 실전 테스트
+4. 문서 업데이트 (PAGES_STRUCTURE.md에 Admin 페이지 추가)
+
+---
+
 ## 2025-11-13 (세션 47) - Phase 36: 데이터베이스 인덱스 최적화 ✅
 
 ### 작업 목표

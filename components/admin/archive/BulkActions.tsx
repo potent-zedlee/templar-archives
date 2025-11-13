@@ -12,7 +12,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { toast } from 'sonner'
-import { bulkPublishStreams, bulkUnpublishStreams } from '@/app/actions/archive-status'
+import { bulkPublishStreams, bulkUnpublishStreams } from '@/app/actions/admin/archive-admin'
 
 interface BulkActionsProps {
   selectedStreamIds: string[]
