@@ -1105,6 +1105,7 @@ export async function createKanAnalysisRequest(
           name: streamName,
           video_url: input.youtubeUrl,
           video_source: 'youtube',
+          status: 'draft',
           is_organized: false,
         })
         .select('id')
