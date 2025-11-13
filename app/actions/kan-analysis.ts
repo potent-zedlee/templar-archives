@@ -1101,12 +1101,11 @@ export async function createKanAnalysisRequest(
       const { data: newStream, error: streamError } = await supabase
         .from('streams')
         .insert({
-          tournament_id: input.tournamentId,
           sub_event_id: input.subEventId,
           name: streamName,
           video_url: input.youtubeUrl,
           video_source: 'youtube',
-          status: 'draft',
+          is_organized: false,
         })
         .select('id')
         .single()
