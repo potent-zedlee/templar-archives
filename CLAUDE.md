@@ -62,6 +62,13 @@ npm run logo:validate      # 로고 검증
 # 썸네일 생성
 npm run thumbnails:generate           # 전체 생성
 npm run thumbnails:generate:day --day-id=<uuid>  # 특정 Day만
+
+# DB 관리 및 디버깅 (Node.js 스크립트)
+node scripts/check-analysis-status.mjs  # 분석 작업 상태 및 사용자 권한 확인
+node scripts/update-user-role.mjs       # 사용자 권한 업데이트
+node scripts/cleanup-stuck-job.mjs      # STUCK 상태 작업 정리
+node scripts/check-db.mjs               # DB 상태 확인
+node scripts/create-unsorted-stream.mjs # "Unsorted Hands" 스트림 생성
 ```
 
 ---
@@ -429,6 +436,37 @@ queryClient.invalidateQueries()
 
 ---
 
+## Agent 시스템
+
+프로젝트에는 특화된 Agent들이 `.claude/agents/` 디렉토리에 정의되어 있습니다.
+
+### Supabase Expert Agent
+
+**위치**: `.claude/agents/supabase-expert.md`
+
+**전문 분야**:
+- Supabase CLI 명령어 마스터
+- 마이그레이션 관리 (생성, 적용, 롤백)
+- RLS 정책 설계 및 디버깅
+- 인덱스 최적화 (부분 인덱스, CONCURRENTLY)
+- Realtime Publication 관리
+- 성능 모니터링 및 쿼리 튜닝
+
+**프로젝트 지식**:
+- 26개 테이블 구조 완벽 이해
+- day_id vs stream_id 컬럼 네이밍 이슈 파악
+- RLS 정책 패턴 (admin/high_templar 권한)
+- 인덱스 최적화 히스토리 (173개 인덱스)
+
+**사용 예시**:
+```
+"supabase expert를 사용해서 hands 테이블의 인덱스를 최적화해줘"
+"analysis_jobs 테이블에 Realtime을 활성화해줘"
+"새 테이블을 추가하고 RLS 정책까지 설정해줘"
+```
+
+---
+
 ## 성능 최적화 팁
 
 1. **동적 임포트**: 큰 컴포넌트 lazy loading
@@ -563,9 +601,51 @@ node scripts/fix_stuck_jobs.mjs        # 멈춘 작업 정리 (30분 타임아�
 
 **중요**: HAE 분석 결과는 반드시 기존 stream에 저장되어야 합니다. 자동 스트림 생성은 제거되었습니다.
 
+### Phase 36: HAE 분석 트러블슈팅 및 Agent 시스템 (2025-11-13)
+
+**문제**: 프로덕션에서 HAE 분석 요청 시 백엔드에 도달하지 않음
+
+**원인 및 해결**:
+1. **환경 변수 설정**: `.env.local`의 `HAE_BACKEND_URL`이 localhost로 되어 있었음
+   - 해결: Cloud Run 프로덕션 URL로 변경
+   - Vercel 환경 변수는 이미 올바르게 설정됨 확인
+
+2. **사용자 권한 부족**: `zed.lee@ggproduction.net`이 `user` 역할
+   - HAE 분석은 `high_templar`, `reporter`, `admin` 권한 필요
+   - 해결: `update-user-role.mjs` 스크립트로 `high_templar`로 변경
+
+3. **STUCK 작업 정리**: 12분간 멈춘 분석 작업 정리
+
+**새로운 디버깅 도구**:
+```bash
+# 분석 상태 및 권한 확인 (종합 대시보드)
+node scripts/check-analysis-status.mjs
+
+# 사용자 권한 변경
+node scripts/update-user-role.mjs
+
+# STUCK 작업 정리 (10분 이상 processing 상태)
+node scripts/cleanup-stuck-job.mjs
+```
+
+**Supabase CLI 개선**:
+- `supabase/config.toml`: `project_id` 수정 (ggvault → templar-archives)
+- Node.js 스크립트로 Supabase 직접 쿼리 가능 (`.env.local` 활용)
+
+**Agent 시스템 구축**:
+- `.claude/agents/supabase-expert.md`: Supabase CLI 및 PostgreSQL 관리 전문가
+  - 마이그레이션, RLS 정책, 인덱스 최적화, Realtime 관리
+  - 26개 테이블 구조 및 프로젝트 특화 지식 포함
+  - 안전한 마이그레이션 패턴 및 트러블슈팅 가이드
+
+**커밋**:
+- `93efb98`: Hand 타입 정의 DB 스키마와 일치
+- `c7959a4`: HAE 분석 상태 확인 스크립트 3개 추가
+- `f2c6366`: Supabase Expert agent 및 config 수정
+
 ---
 
-**마지막 업데이트**: 2025-11-12
-**문서 버전**: 30.0
-**현재 Phase**: 35 완료 (보안 & 안정성 강화, 프로덕션 배포)
+**마지막 업데이트**: 2025-11-13
+**문서 버전**: 31.0
+**현재 Phase**: 36 완료 (HAE 분석 트러블슈팅, Agent 시스템, DB 관리 도구)
 **보안 등급**: A
