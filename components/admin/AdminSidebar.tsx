@@ -23,6 +23,9 @@ import {
   Video,
   Newspaper,
   Radio,
+  Sparkles,
+  Activity,
+  History,
 } from "lucide-react"
 
 const adminMenuItems = [
@@ -42,11 +45,6 @@ const adminMenuItems = [
     icon: Archive,
   },
   {
-    title: "HAE Analysis",
-    href: "/admin/hae",
-    icon: Video,
-  },
-  {
     title: "Edit Requests",
     href: "/admin/edit-requests",
     icon: FileCheck,
@@ -60,6 +58,24 @@ const adminMenuItems = [
     title: "Content",
     href: "/admin/content",
     icon: Settings,
+  },
+]
+
+const haeMenuItems = [
+  {
+    title: "새 분석 요청",
+    href: "/admin/hae/new",
+    icon: Sparkles,
+  },
+  {
+    title: "진행 중 작업",
+    href: "/admin/hae/active",
+    icon: Activity,
+  },
+  {
+    title: "분석 기록",
+    href: "/admin/hae/history",
+    icon: History,
   },
 ]
 
@@ -95,6 +111,31 @@ export function AdminSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {adminMenuItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.href)}
+                    >
+                      <Link href={item.href}>
+                        <Icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* HAE Analysis Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel>HAE Analysis</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {haeMenuItems.map((item) => {
                 const Icon = item.icon
                 return (
                   <SidebarMenuItem key={item.href}>
