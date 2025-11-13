@@ -17,6 +17,8 @@ export type TournamentCategory =
 
 export type VideoSource = "youtube" | "upload" | "nas"
 
+export type ContentStatus = "draft" | "published" | "archived"
+
 export type ViewMode = "list" | "grid" | "timeline"
 
 export type SortOption =
@@ -57,6 +59,10 @@ export interface Tournament {
   end_date: string
   total_prize?: string
   created_at?: string
+  // Publication status
+  status?: ContentStatus
+  published_by?: string
+  published_at?: string
   // UI state (클라이언트 전용)
   sub_events?: SubEvent[]
   expanded?: boolean
@@ -77,6 +83,10 @@ export interface SubEvent {
   starting_stack?: number
   notes?: string
   created_at?: string
+  // Publication status
+  status?: ContentStatus
+  published_by?: string
+  published_at?: string
   // UI state (클라이언트 전용)
   streams?: Stream[]
   days?: Stream[]
@@ -92,11 +102,14 @@ export interface Stream {
   video_file?: string
   video_nas_path?: string
   video_source?: VideoSource
-  published_at?: string
   created_at?: string
-  is_organized?: boolean
+  is_organized?: boolean // DEPRECATED: use status instead
   organized_at?: string
   player_count?: number
+  // Publication status
+  status?: ContentStatus
+  published_by?: string
+  published_at?: string
   // UI state (클라이언트 전용)
   selected?: boolean
 }
