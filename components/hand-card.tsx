@@ -38,6 +38,23 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
   // 썸네일 URL (없으면 플레이스홀더)
   const thumbnailUrl = hand.thumbnail_url || '/placeholder-hand.jpg'
 
+  // 블라인드 포맷팅 함수
+  const formatBlinds = (sb?: number, bb?: number, ante?: number): string => {
+    if (!bb && !sb) return ''
+
+    const formatChips = (chips: number) => {
+      if (chips >= 1000000) return `${(chips / 1000000).toFixed(chips % 1000000 === 0 ? 0 : 1)}M`
+      if (chips >= 1000) return `${(chips / 1000).toFixed(chips % 1000 === 0 ? 0 : 1)}k`
+      return chips.toString()
+    }
+
+    const parts = []
+    if (sb) parts.push(formatChips(sb))
+    if (bb) parts.push(formatChips(bb))
+    if (ante && ante > 0) parts.push(formatChips(ante))
+    return parts.join('/')
+  }
+
   // 좋아요/싫어요 토글
   const handleLikeToggle = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -159,20 +176,37 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
             </Badge>
           </div>
 
-          {/* 핸드 설명/요약 */}
-          {hand.description && (
+          {/* AI 요약 또는 핸드 설명 */}
+          {hand.ai_summary ? (
+            <div className="flex items-start gap-2">
+              <Sparkles className="h-4 w-4 text-purple-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                {hand.ai_summary}
+              </p>
+            </div>
+          ) : hand.description ? (
             <p className="text-sm text-muted-foreground line-clamp-2">
               {hand.description}
             </p>
-          )}
+          ) : null}
 
-          {/* 메타 정보 (팟 사이즈, 보드 카드) */}
+          {/* 메타 정보 (블라인드, 팟 사이즈, 보드 카드) */}
           <div className="flex items-center gap-2 flex-wrap">
-            {hand.pot_size && (
-              <Badge variant="secondary" className="bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20">
-                ${hand.pot_size.toLocaleString()}
+            {/* 블라인드 정보 */}
+            {(hand.big_blind || hand.small_blind) && (
+              <Badge variant="outline" className="text-xs font-mono">
+                {formatBlinds(hand.small_blind, hand.big_blind, hand.ante)}
               </Badge>
             )}
+
+            {/* 최종 팟 사이즈 (pot_river 우선) */}
+            {(hand.pot_river || hand.pot_size) && (
+              <Badge variant="secondary" className="bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 font-semibold">
+                ${(hand.pot_river || hand.pot_size)!.toLocaleString()}
+              </Badge>
+            )}
+
+            {/* 보드 카드 */}
             {hand.board_cards && hand.board_cards.length > 0 && (
               <Badge variant="outline" className="text-xs">
                 {hand.board_cards.join(' ')}
