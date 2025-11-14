@@ -2,9 +2,11 @@
 
 import { PlayingCard, parseCard } from "./playing-card"
 import { PositionBadge } from "./position-badge"
+import { PlayerHoverCard } from "./player-hover-card"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Badge } from "./ui/badge"
 import { cn } from "@/lib/utils"
+import type { Player } from "@/lib/types/archive"
 
 interface PokerTableSeatProps {
   player: {
@@ -15,6 +17,7 @@ interface PokerTableSeatProps {
     cards?: string[] // e.g., ["As", "Kh"]
     isWinner?: boolean
   }
+  playerData?: Player // Full player data for hover card
   showCards?: boolean
   isActive?: boolean
   className?: string
@@ -22,6 +25,7 @@ interface PokerTableSeatProps {
 
 export function PokerTableSeat({
   player,
+  playerData,
   showCards = false,
   isActive = false,
   className
@@ -65,11 +69,19 @@ export function PokerTableSeat({
         )}
       </div>
 
-      {/* Player Name */}
+      {/* Player Name with Hover Card */}
       <div className="text-center">
-        <div className="text-sm font-semibold text-foreground truncate max-w-[120px]">
-          {name}
-        </div>
+        {playerData ? (
+          <PlayerHoverCard player={playerData} side="bottom">
+            <div className="text-sm font-semibold text-foreground truncate max-w-[120px]">
+              {name}
+            </div>
+          </PlayerHoverCard>
+        ) : (
+          <div className="text-sm font-semibold text-foreground truncate max-w-[120px]">
+            {name}
+          </div>
+        )}
         <div className="text-xs font-mono text-blue-400">
           {stack.toFixed(1)} BB
         </div>

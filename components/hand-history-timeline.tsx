@@ -9,6 +9,7 @@ import { useMemo } from 'react'
 import { useHandPlayersQuery } from '@/lib/queries/hand-players-queries'
 import { useHandActionsQuery } from '@/lib/queries/hand-actions-queries'
 import { PositionBadge } from '@/components/position-badge'
+import { PlayerHoverCard } from '@/components/player-hover-card'
 import { cn } from '@/lib/utils'
 import type { HandAction, Street } from '@/lib/hand-actions'
 
@@ -172,9 +173,17 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="text-white font-medium truncate">
-                    {player.player?.name || 'Unknown Player'}
-                  </div>
+                  {player.player ? (
+                    <PlayerHoverCard player={player.player}>
+                      <div className="text-white font-medium truncate">
+                        {player.player.name}
+                      </div>
+                    </PlayerHoverCard>
+                  ) : (
+                    <div className="text-white font-medium truncate">
+                      Unknown Player
+                    </div>
+                  )}
                   {player.position && (
                     <div className="mt-1">
                       <PositionBadge position={player.position} />

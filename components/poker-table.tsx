@@ -19,6 +19,18 @@ interface PokerTablePlayer {
   stack: number
   cards?: string[]
   isWinner?: boolean
+  playerData?: {
+    id: string
+    name: string
+    normalized_name: string
+    aliases?: string[]
+    bio?: string
+    is_pro?: boolean
+    photo_url?: string
+    country?: string
+    total_winnings?: number
+    created_at?: string
+  }
 }
 
 interface PokerTableProps {
@@ -118,6 +130,7 @@ export function PokerTable({
               >
                 <PokerTableSeat
                   player={player}
+                  playerData={player.playerData}
                   showCards={showAllCards}
                   isActive={false}
                 />

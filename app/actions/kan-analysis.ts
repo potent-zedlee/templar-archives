@@ -15,6 +15,7 @@ import type {
   SSEProgressEvent,
   AnalyzeVideoRequest,
 } from '@/lib/types/kan-backend'
+import { getHandThumbnailUrl } from '@/lib/thumbnail-utils'
 
 // Typed Supabase Client
 type TypedSupabaseClient = SupabaseClient<Database>
@@ -290,6 +291,24 @@ async function storeHandsFromSegment(
     console.log(`[storeHands] Processing ${hands.length} hands for segment`)
   }
 
+  // Fetch stream info once for thumbnail URL generation
+  const { data: streamData } = await supabase
+    .from('streams')
+    .select('video_url, video_source')
+    .eq('id', streamId)
+    .single()
+
+  const thumbnailUrl = streamData
+    ? getHandThumbnailUrl(
+        streamData.video_url || undefined,
+        (streamData.video_source as 'youtube' | 'upload' | 'nas' | undefined) || undefined
+      )
+    : null
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[storeHands] Thumbnail URL for stream ${streamId}:`, thumbnailUrl)
+  }
+
   for (const handData of hands) {
     try {
       if (process.env.NODE_ENV === 'development') {
@@ -376,13 +395,13 @@ async function storeHandsFromSegment(
           p_video_timestamp_end: segment.end,
           p_stakes: handData.stakes || 'Unknown',
           p_board_flop: handData.board?.flop || [],
-          p_board_turn: handData.board?.turn || null,
-          p_board_river: handData.board?.river || null,
+          p_board_turn: handData.board?.turn || '',
+          p_board_river: handData.board?.river || '',
           p_pot_size: handData.pot || 0,
           p_raw_data: handData as unknown as Record<string, unknown>,
           // Players and actions (required params)
-          p_players: playersData,
-          p_actions: actionsData,
+          p_players: playersData as unknown as Record<string, unknown>,
+          p_actions: actionsData as unknown as Record<string, unknown>,
           // NEW: Blind information (optional params)
           p_small_blind: handData.small_blind || null,
           p_big_blind: handData.big_blind || null,
@@ -392,6 +411,8 @@ async function storeHandsFromSegment(
           p_pot_flop: handData.pot_flop || null,
           p_pot_turn: handData.pot_turn || null,
           p_pot_river: handData.pot_river || null,
+          // NEW: Thumbnail URL (Phase 3)
+          p_thumbnail_url: thumbnailUrl || '',
         }
       )
 

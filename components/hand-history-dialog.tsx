@@ -36,8 +36,17 @@ interface HandData {
   board_cards?: string[]
   hand_players?: Array<{
     player?: {
+      id?: string
       name: string
+      normalized_name?: string
       avatar?: string
+      aliases?: string[]
+      bio?: string
+      is_pro?: boolean
+      photo_url?: string
+      country?: string
+      total_winnings?: number
+      created_at?: string
     }
     position?: string
     cards?: string[] | string | null  // Support legacy format
@@ -96,7 +105,19 @@ export function HandHistoryDialog({
       avatar: hp.player?.avatar,
       stack: hp.stack || 0,
       cards: hp.cards,
-      isWinner: hp.is_winner
+      isWinner: hp.is_winner,
+      playerData: hp.player ? {
+        id: hp.player.id || '',
+        name: hp.player.name,
+        normalized_name: hp.player.normalized_name || hp.player.name.toLowerCase(),
+        aliases: hp.player.aliases,
+        bio: hp.player.bio,
+        is_pro: hp.player.is_pro,
+        photo_url: hp.player.photo_url,
+        country: hp.player.country,
+        total_winnings: hp.player.total_winnings,
+        created_at: hp.player.created_at
+      } : undefined
     })) || []
 
     return {
