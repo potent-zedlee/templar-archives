@@ -380,8 +380,18 @@ async function storeHandsFromSegment(
           p_board_river: handData.board?.river || null,
           p_pot_size: handData.pot || 0,
           p_raw_data: handData as unknown as Record<string, unknown>,
+          // Players and actions (required params)
           p_players: playersData,
           p_actions: actionsData,
+          // NEW: Blind information (optional params)
+          p_small_blind: handData.small_blind || null,
+          p_big_blind: handData.big_blind || null,
+          p_ante: handData.ante || 0,
+          // NEW: Street-specific pot sizes (optional params)
+          p_pot_preflop: handData.pot_preflop || null,
+          p_pot_flop: handData.pot_flop || null,
+          p_pot_turn: handData.pot_turn || null,
+          p_pot_river: handData.pot_river || null,
         }
       )
 

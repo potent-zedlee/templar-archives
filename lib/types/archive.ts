@@ -134,7 +134,18 @@ export interface Hand {
   board_cards?: string[]
 
   pot_size?: number
-  stakes?: string             // e.g., "50k/100k/100k"
+  stakes?: string             // e.g., "50k/100k/100k" - DEPRECATED: use small_blind/big_blind/ante
+
+  // NEW: Blind information (Phase 1)
+  small_blind?: number        // Small blind amount (in chips)
+  big_blind?: number          // Big blind amount (in chips)
+  ante?: number               // Ante amount (in chips, default 0)
+
+  // NEW: Street-specific pot sizes (Phase 1)
+  pot_preflop?: number        // Pot size after preflop action
+  pot_flop?: number           // Pot size after flop action
+  pot_turn?: number           // Pot size after turn action
+  pot_river?: number          // Pot size after river action (final pot)
 
   // Video timestamps (KAN integration)
   video_timestamp_start?: number  // seconds

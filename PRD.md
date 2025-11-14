@@ -62,7 +62,7 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 - Quick Upload (YouTube URL 자동 파싱)
 - 카테고리 로고 업로드
 
-#### HAE (Hand Analysis Engine)
+#### KAN (Khalai Archive Network)
 - Gemini 2.0 Flash 기반 AI 영상 분석
 - 자동 핸드 히스토리 추출
 - 타임스탬프 동기화 (영상 클립 생성)
@@ -170,10 +170,10 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 
 | 기능 ID | 설명 | Priority | Status |
 |---|---|---|---|
-| FR-H1 | AI Video Analysis (Gemini 2.0 Flash) | P0 | ✅ |
-| FR-H2 | Hand Data Extraction (hands, hand_players, hand_actions) | P0 | ✅ |
-| FR-H3 | Realtime Progress Tracking (Supabase Realtime) | P1 | ✅ |
-| FR-H4 | Multi-Platform Support (EPT, WSOP, Triton, PokerStars, Hustler) | P1 | ✅ |
+| FR-K1 | AI Video Analysis (Gemini 2.0 Flash) | P0 | ✅ |
+| FR-K2 | Hand Data Extraction (hands, hand_players, hand_actions) | P0 | ✅ |
+| FR-K3 | Realtime Progress Tracking (Supabase Realtime) | P1 | ✅ |
+| FR-K4 | Multi-Platform Support (EPT, WSOP, Triton, PokerStars, Hustler) | P1 | ✅ |
 
 ### Search & Discovery
 

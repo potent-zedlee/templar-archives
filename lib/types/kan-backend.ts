@@ -12,13 +12,23 @@ export interface KanHand {
   handNumber: number
   description: string
   stakes: string
+  // Blind information
+  small_blind?: number
+  big_blind?: number
+  ante?: number
+  // Pot sizes
+  pot: number
+  pot_preflop?: number
+  pot_flop?: number
+  pot_turn?: number
+  pot_river?: number
+  // Hand data
   players: KanPlayer[]
   board: {
     flop: string[]
     turn: string | null
     river: string | null
   }
-  pot: number
   winners: KanWinner[]
   actions: KanAction[]
 }
