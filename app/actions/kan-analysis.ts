@@ -654,13 +654,16 @@ export async function startKanAnalysis(
 
     console.log('[KAN] Analysis job created:', job.id)
 
-    // Start background processing (Python backend)
-    console.log('[KAN] Starting background processing...')
-    processKanJob(job.id, videoId, gameplaySegments, input.streamId, selectedPlatform).catch(
-      (err) => {
-        console.error('[KAN] Background processing error:', err)
-      }
-    )
+    // Start synchronous processing (Python backend)
+    console.log('[KAN] Starting synchronous processing...')
+    try {
+      await processKanJob(job.id, videoId, gameplaySegments, input.streamId, selectedPlatform)
+      console.log('[KAN] Processing completed successfully')
+    } catch (processError) {
+      console.error('[KAN] Processing error:', processError)
+      // Job status will be updated to 'failed' inside processKanJob
+      // Don't fail the entire request, just log the error
+    }
 
     revalidatePath('/kan')
 
