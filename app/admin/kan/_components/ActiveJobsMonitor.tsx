@@ -164,9 +164,6 @@ export function ActiveJobsMonitor() {
                           {job.stream.name}
                         </span>
                       )}
-                      {job.creator && (
-                        <span>요청자: {job.creator.email}</span>
-                      )}
                     </div>
                   </div>
 

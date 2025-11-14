@@ -57,8 +57,7 @@ async function getAnalysisJob(jobId: string): Promise<AnalysisJobWithRelations |
     .select(`
       *,
       video:videos(id, url, youtube_id, title),
-      stream:streams(id, name, tournament_id),
-      creator:users!analysis_jobs_created_by_fkey(id, email, username)
+      stream:streams(id, name, sub_event_id)
     `)
     .eq('id', jobId)
     .single()
@@ -77,13 +76,12 @@ async function getAnalysisJob(jobId: string): Promise<AnalysisJobWithRelations |
 async function getActiveAnalysisJobs(): Promise<AnalysisJobWithRelations[]> {
   const supabase = createClientSupabaseClient()
 
-  const { data, error } = await supabase
+  const { data, error} = await supabase
     .from('analysis_jobs')
     .select(`
       *,
       video:videos(id, url, youtube_id, title),
-      stream:streams(id, name, tournament_id),
-      creator:users!analysis_jobs_created_by_fkey(id, email, username)
+      stream:streams(id, name, sub_event_id)
     `)
     .in('status', ['pending', 'processing'])
     .order('created_at', { ascending: false })
@@ -120,8 +118,7 @@ async function getHistoryAnalysisJobs(
     .select(`
       *,
       video:videos(id, url, youtube_id, title),
-      stream:streams(id, name, tournament_id),
-      creator:users!analysis_jobs_created_by_fkey(id, email, username)
+      stream:streams(id, name, sub_event_id)
     `, { count: 'exact' })
 
   // Filter by status
