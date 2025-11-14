@@ -2,12 +2,12 @@ import { test, expect } from '@playwright/test'
 
 test.describe('Archive Page', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/archive')
+    await page.goto('/archive/tournament')
   })
 
   test('should load archive page', async ({ page }) => {
-    // Check if page loaded
-    await expect(page).toHaveURL('/archive')
+    // Check if page loaded (리다이렉트 허용)
+    await expect(page).toHaveURL(/\/archive/)
 
     // Check for archive page content
     await expect(page.locator('body')).toBeVisible()
