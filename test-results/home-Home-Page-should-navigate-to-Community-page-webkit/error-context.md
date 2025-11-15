@@ -1,0 +1,249 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - link "TA Templar Archives Index" [ref=e6]:
+            - /url: /
+            - generic [ref=e7]: TA
+            - text: Templar Archives Index
+          - navigation "Main navigation" [ref=e8]:
+            - link "ABOUT" [ref=e9]:
+              - /url: /about
+              - text: ABOUT
+            - link "NEWS" [ref=e10]:
+              - /url: /news
+            - link "LIVE" [ref=e11]:
+              - /url: /live-reporting
+            - generic [ref=e13]:
+              - text: ARCHIVE
+              - img [ref=e14]
+            - link "PLAYERS" [ref=e16]:
+              - /url: /players
+            - link "FORUM" [ref=e17]:
+              - /url: /community
+        - button "Toggle menu" [ref=e19]:
+          - img [ref=e20]
+          - text: Toggle menu
+    - main [ref=e22]:
+      - generic [ref=e23]:
+        - text: Est. 2024
+        - heading "Templar Archives Index" [level=1] [ref=e24]
+        - paragraph [ref=e25]: The ultimate poker hand history archive. Powered by AI, built for players.
+        - generic [ref=e26]:
+          - link "Search Hands" [ref=e27]:
+            - /url: /search
+            - button "Search Hands" [ref=e28]:
+              - img [ref=e29]
+              - text: Search Hands
+          - link "Browse Archive" [ref=e32]:
+            - /url: /archive
+            - button "Browse Archive" [ref=e33]:
+              - img [ref=e34]
+              - text: Browse Archive
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - generic [ref=e39]: 10,000+
+          - generic [ref=e40]: Hands Archived
+        - generic [ref=e41]:
+          - generic [ref=e42]: 500+
+          - generic [ref=e43]: Players Tracked
+        - generic [ref=e44]:
+          - generic [ref=e45]: 50+
+          - generic [ref=e46]: Tournaments
+        - generic [ref=e47]:
+          - generic [ref=e48]: 95%
+          - generic [ref=e49]: AI Accuracy
+      - generic [ref=e50]:
+        - heading "Our Mission" [level=2] [ref=e51]
+        - paragraph [ref=e52]: To make poker hand history universally accessible by converting every poker video into searchable, analyzable data. We believe that learning from real-world hands is the fastest path to improving your game.
+      - generic [ref=e53]:
+        - heading "Features" [level=2] [ref=e54]
+        - generic [ref=e55]:
+          - generic [ref=e57]:
+            - img [ref=e59]
+            - generic [ref=e62]:
+              - heading "AI Video Analysis" [level=3] [ref=e63]
+              - paragraph [ref=e64]: Powered by Claude Vision API, automatically extracts hand history from poker videos with 95%+ accuracy.
+          - generic [ref=e66]:
+            - img [ref=e68]
+            - generic [ref=e72]:
+              - heading "Dual Archive System" [level=3] [ref=e73]
+              - paragraph [ref=e74]: Separate archives for tournaments (WSOP, EPT, Triton) and cash games (Hustler, Live at the Bike). Organized and searchable.
+          - generic [ref=e76]:
+            - img [ref=e78]
+            - generic [ref=e81]:
+              - heading "Advanced Search" [level=3] [ref=e82]
+              - paragraph [ref=e83]: 30+ search filters including AI natural language queries. Find specific hands in seconds.
+          - generic [ref=e85]:
+            - img [ref=e87]
+            - generic [ref=e92]:
+              - heading "Player Profiles" [level=3] [ref=e93]
+              - paragraph [ref=e94]: Track stats for thousands of players. Claim your own profile and showcase your achievements.
+          - generic [ref=e96]:
+            - img [ref=e98]
+            - generic [ref=e101]:
+              - heading "Poker News" [level=3] [ref=e102]
+              - paragraph [ref=e103]: Stay updated with the latest poker tournament announcements, industry news, and community highlights.
+          - generic [ref=e105]:
+            - img [ref=e107]
+            - generic [ref=e113]:
+              - heading "Live Reporting" [level=3] [ref=e114]
+              - paragraph [ref=e115]: Real-time tournament updates, live chip counts, and results from ongoing events around the world.
+          - generic [ref=e117]:
+            - img [ref=e119]
+            - generic [ref=e129]:
+              - heading "Hand Review Forum" [level=3] [ref=e130]
+              - paragraph [ref=e131]: Discuss strategy, analyze hands, and learn from the community in Reddit-style forums.
+          - generic [ref=e133]:
+            - img [ref=e135]
+            - generic [ref=e137]:
+              - heading "Privacy & Security" [level=3] [ref=e138]
+              - paragraph [ref=e139]: GDPR, CCPA, and PIPL compliant. Your data is encrypted and secure.
+      - generic [ref=e140]:
+        - heading "How It Works" [level=2] [ref=e141]
+        - generic [ref=e142]:
+          - generic [ref=e143]:
+            - img [ref=e145]
+            - heading "1. Upload or Link Video" [level=3] [ref=e148]
+            - paragraph [ref=e149]: Provide a YouTube URL or upload a video file from your device.
+          - generic [ref=e150]:
+            - img [ref=e152]
+            - heading "2. AI Analysis" [level=3] [ref=e154]
+            - paragraph [ref=e155]: "Claude Vision analyzes frames to extract hand details: cards, actions, pot sizes."
+          - generic [ref=e156]:
+            - img [ref=e158]
+            - heading "3. Search & Learn" [level=3] [ref=e161]
+            - paragraph [ref=e162]: Access hand history, watch video clips, analyze patterns, and improve your game.
+      - generic [ref=e163]:
+        - heading "Built With" [level=2] [ref=e164]
+        - generic [ref=e165]:
+          - generic [ref=e166]: ⚡Next.js 15
+          - generic [ref=e167]: ⚛️React 19
+          - generic [ref=e168]: 🔥Supabase
+          - generic [ref=e169]: 🤖Claude AI
+          - generic [ref=e170]: 🎨Tailwind CSS
+          - generic [ref=e171]: 📘TypeScript
+        - paragraph [ref=e172]:
+          - text: All open-source technologies. See our
+          - link "Terms of Service" [ref=e173]:
+            - /url: /legal/terms
+          - text: for license information.
+      - generic [ref=e174]:
+        - heading "Start Analyzing Hands Today" [level=2] [ref=e175]
+        - paragraph [ref=e176]: Join thousands of players using Templar Archives Index to study poker hands from the world's best tournaments and cash games.
+        - generic [ref=e177]:
+          - link "Sign Up Free" [ref=e178]:
+            - /url: /auth/login
+            - button "Sign Up Free" [ref=e179]:
+              - img [ref=e180]
+              - text: Sign Up Free
+          - link "Explore Hands" [ref=e182]:
+            - /url: /search
+            - button "Explore Hands" [ref=e183]:
+              - img [ref=e184]
+              - text: Explore Hands
+      - generic [ref=e187]:
+        - heading "Contact Us" [level=2] [ref=e188]
+        - generic [ref=e189]:
+          - generic [ref=e190]:
+            - generic [ref=e191]:
+              - generic [ref=e192]:
+                - img [ref=e194]
+                - generic [ref=e196]:
+                  - generic [ref=e197]: Phone
+                  - link "+82 010 2300 7653" [ref=e198]:
+                    - /url: tel:+821023007653
+              - generic [ref=e199]:
+                - img [ref=e201]
+                - generic [ref=e204]:
+                  - generic [ref=e205]: Email
+                  - link "jhng.mov@gmail.com" [ref=e206]:
+                    - /url: mailto:jhng.mov@gmail.com
+            - link "Send us a message" [ref=e208]:
+              - /url: mailto:jhng.mov@gmail.com
+              - button "Send us a message" [ref=e209]:
+                - img [ref=e210]
+                - text: Send us a message
+          - paragraph [ref=e213]: We typically respond within 24 hours
+  - contentinfo [ref=e214]:
+    - generic [ref=e215]:
+      - generic [ref=e216]:
+        - generic [ref=e217]:
+          - link "TA Templar Archives Index" [ref=e218]:
+            - /url: /
+            - generic [ref=e219]: TA
+            - text: Templar Archives Index
+          - paragraph [ref=e220]: The ultimate poker hand history archive. Analyze, learn, and improve your game.
+          - paragraph [ref=e221]: © 2025 Templar Archives Index. All rights reserved.
+        - generic [ref=e222]:
+          - heading "Navigation" [level=3] [ref=e223]
+          - list [ref=e224]:
+            - listitem [ref=e225]:
+              - link "About" [ref=e226]:
+                - /url: /about
+            - listitem [ref=e227]:
+              - link "Search" [ref=e228]:
+                - /url: /search
+            - listitem [ref=e229]:
+              - link "Archive" [ref=e230]:
+                - /url: /archive
+            - listitem [ref=e231]:
+              - link "Players" [ref=e232]:
+                - /url: /players
+            - listitem [ref=e233]:
+              - link "Forum" [ref=e234]:
+                - /url: /community
+        - generic [ref=e235]:
+          - heading "Legal" [level=3] [ref=e236]
+          - list [ref=e237]:
+            - listitem [ref=e238]:
+              - link "Terms of Service" [ref=e239]:
+                - /url: /legal/terms
+            - listitem [ref=e240]:
+              - link "Privacy Policy" [ref=e241]:
+                - /url: /legal/privacy
+            - listitem [ref=e242]:
+              - link "Cookie Policy" [ref=e243]:
+                - /url: /legal/cookies
+            - listitem [ref=e244]:
+              - link "DMCA Policy" [ref=e245]:
+                - /url: /legal/dmca
+            - listitem [ref=e246]:
+              - link "Affiliate Disclosure" [ref=e247]:
+                - /url: /legal/affiliate
+        - generic [ref=e248]:
+          - heading "Resources" [level=3] [ref=e249]
+          - list [ref=e250]:
+            - listitem [ref=e251]:
+              - link "GitHub" [ref=e252]:
+                - /url: https://github.com/anthropics/claude-code
+            - listitem [ref=e253]:
+              - link "Report Copyright" [ref=e254]:
+                - /url: /legal/dmca
+            - listitem [ref=e255]:
+              - link "Contact Legal" [ref=e256]:
+                - /url: mailto:legal@templararchives.com
+            - listitem [ref=e257]
+      - paragraph [ref=e259]:
+        - text: Built with
+        - link "Next.js" [ref=e260]:
+          - /url: https://nextjs.org
+        - text: ","
+        - link "React" [ref=e261]:
+          - /url: https://react.dev
+        - text: ","
+        - link "Supabase" [ref=e262]:
+          - /url: https://supabase.com
+        - text: ", and"
+        - link "shadcn/ui" [ref=e263]:
+          - /url: https://ui.shadcn.com
+        - text: . Powered by
+        - link "Claude AI" [ref=e264]:
+          - /url: https://anthropic.com
+        - text: .
+  - region "Notifications alt+T"
+```
