@@ -74,7 +74,7 @@ export async function createHandManually(input: {
     const actionsData = input.actions.map(a => HandActionInputSchema.parse(a))
 
     // 2. 인증 및 권한 검증
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -133,7 +133,7 @@ export async function updateHandManually(input: {
 }) {
   try {
     // 1. 인증 및 권한 검증
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -145,7 +145,7 @@ export async function updateHandManually(input: {
     // 2. Hand 존재 확인
     const { data: existingHand } = await supabase
       .from('hands')
-      .select('id, day_id')
+      .select('id, stream_id')
       .eq('id', input.hand_id)
       .single()
 
@@ -201,7 +201,7 @@ export async function updateHandManually(input: {
 
     // 6. 캐시 무효화
     revalidatePath('/archive')
-    revalidatePath(`/archive/stream/${existingHand.day_id}`)
+    revalidatePath(`/archive/stream/${existingHand.stream_id}`)
     revalidatePath(`/archive/hand/${input.hand_id}`)
 
     return { success: true }
@@ -222,7 +222,7 @@ export async function updateHandManually(input: {
 export async function deleteHandManually(handId: string) {
   try {
     // 1. 인증 및 권한 검증
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
@@ -234,7 +234,7 @@ export async function deleteHandManually(handId: string) {
     // 2. Hand 존재 확인
     const { data: existingHand } = await supabase
       .from('hands')
-      .select('id, day_id')
+      .select('id, stream_id')
       .eq('id', handId)
       .single()
 
@@ -254,7 +254,7 @@ export async function deleteHandManually(handId: string) {
 
     // 4. 캐시 무효화
     revalidatePath('/archive')
-    revalidatePath(`/archive/stream/${existingHand.day_id}`)
+    revalidatePath(`/archive/stream/${existingHand.stream_id}`)
 
     return { success: true }
   } catch (error) {
