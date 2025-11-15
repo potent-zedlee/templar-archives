@@ -49,6 +49,7 @@ export type Stream = {
   id: string
   sub_event_id: string
   name: string
+  description?: string
   video_url?: string
   video_file?: string
   video_source?: 'youtube' | 'upload' | 'nas'
@@ -57,6 +58,8 @@ export type Stream = {
   created_at?: string
   is_organized?: boolean
   organized_at?: string
+  player_count?: number
+  status?: 'draft' | 'published' | 'archived'
 }
 
 

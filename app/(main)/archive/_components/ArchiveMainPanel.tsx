@@ -17,11 +17,10 @@ import type { MomentFilter } from "@/lib/hand-filters"
 import { filterHandsByMoment } from "@/lib/hand-filters"
 
 interface ArchiveMainPanelProps {
-  seekTime: number | null
   onSeekToTime: (seconds: number) => void
 }
 
-export function ArchiveMainPanel({ seekTime, onSeekToTime }: ArchiveMainPanelProps) {
+export function ArchiveMainPanel({ onSeekToTime }: ArchiveMainPanelProps) {
   const { selectedDay } = useArchiveDataStore()
   const { openAnalyzeDialog } = useArchiveUIStore()
   const { tournaments, hands } = useArchiveData()

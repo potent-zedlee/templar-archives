@@ -150,9 +150,11 @@ async function HandDetailContent({ handId }: { handId: string }) {
     notFound()
   }
 
-  const tournament = hand.days?.sub_events?.tournaments
-  const subEvent = hand.days?.sub_events
-  const day = hand.days
+  const dayData = Array.isArray(hand.days) ? hand.days[0] : hand.days
+  const subEventData = Array.isArray(dayData?.sub_events) ? dayData?.sub_events[0] : dayData?.sub_events
+  const tournament = Array.isArray(subEventData?.tournaments) ? subEventData?.tournaments[0] : subEventData?.tournaments
+  const subEvent = subEventData
+  const day = dayData
   const videoId = day?.video_url ? extractYouTubeId(day.video_url) : null
 
   // Transform hand_players to PlayerSeatData

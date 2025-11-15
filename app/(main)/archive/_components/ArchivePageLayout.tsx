@@ -82,7 +82,7 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
   // ============================================================
   // 5. Video Player Seek State
   // ============================================================
-  const [seekTime, setSeekTime] = useState<number | null>(null)
+  // Removed: seekTime state (not currently used)
 
   // ============================================================
   // 6. Hand Input Mode State
@@ -93,8 +93,8 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
   // ============================================================
   // 7. Event Handlers
   // ============================================================
-  const handleSeekToTime = useCallback((seconds: number) => {
-    setSeekTime(seconds)
+  const handleSeekToTime = useCallback((_seconds: number) => {
+    // Future: implement video seeking functionality
   }, [])
 
   const handleOpenHandInput = useCallback((stream: Stream) => {
@@ -139,7 +139,6 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
                 middlePanel={<ArchiveMiddlePanel onHandInputClick={handleOpenHandInput} />}
                 mainPanel={
                   <ArchiveMainPanel
-                    seekTime={seekTime}
                     onSeekToTime={handleSeekToTime}
                   />
                 }

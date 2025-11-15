@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import type { ImportHandsRequest, ImportHandsResponse, HandHistory } from '@/lib/types/hand-history'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { importHandsSchema, validateInput, formatValidationErrors } from '@/lib/validation/api-schemas'
-import { isValidUUID, sanitizeText, logSecurityEvent } from '@/lib/security'
+import { sanitizeText, logSecurityEvent } from '@/lib/security'
 import { verifyCSRF } from '@/lib/security/csrf'
-import { findBestMatch, normalizeName, type MatchResult } from '@/lib/name-matching'
+import { findBestMatch } from '@/lib/name-matching'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,7 +53,7 @@ export async function POST(request: NextRequest) {
           error: errors[0] || '입력값이 유효하지 않습니다',
           imported: 0,
           failed: 0
-        } as ImportHandsResponse,
+        },
         { status: 400 }
       )
     }
@@ -75,7 +74,7 @@ export async function POST(request: NextRequest) {
           error: 'Stream을 찾을 수 없습니다',
           imported: 0,
           failed: 0
-        } as ImportHandsResponse,
+        },
         { status: 404 }
       )
     }
@@ -178,8 +177,10 @@ export async function POST(request: NextRequest) {
               }
               playerId = newPlayer.id
             } else {
-              playerId = existingPlayer.id
+              playerId = existingPlayer.id ?? newPlayer?.id ?? ''
             }
+
+            if (!playerId) continue
 
             // 매핑 저장 (액션 저장 시 사용)
             playerNameMap.set(sanitizedPlayerName, playerId)

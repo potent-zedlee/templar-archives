@@ -9,7 +9,7 @@ import { SearchHistory } from "./_components/SearchHistory"
 import { SearchMainPanel } from "./_components/SearchMainPanel"
 import { fetchHandsWithDetails } from "@/lib/queries"
 import { useTournamentsQuery, usePlayersQuery } from "@/lib/queries/search-queries"
-import type { Hand, Player } from "@/lib/supabase"
+import type { Hand } from "@/lib/supabase"
 import { toast } from "sonner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { useFilterStore } from "@/lib/filter-store"
@@ -33,22 +33,19 @@ export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || "")
   const [viewMode, setViewMode] = useState<ViewMode>("table")
 
-  // Filter state
-  const [selectedTournament, setSelectedTournament] = useState<string>(searchParams.get('tournament') || "all")
-  const [selectedPlayer, setSelectedPlayer] = useState<string>(searchParams.get('player') || "all")
-  const [favoriteOnly, setFavoriteOnly] = useState(searchParams.get('favorite') === 'true')
-  const [dateFrom, setDateFrom] = useState(searchParams.get('from') || "")
-  const [dateTo, setDateTo] = useState(searchParams.get('to') || "")
+  // Filter state (stored but not actively used in current implementation)
+  const selectedTournament = searchParams.get('tournament') || "all"
+  const selectedPlayer = searchParams.get('player') || "all"
+  const favoriteOnly = searchParams.get('favorite') === 'true'
+  const dateFrom = searchParams.get('from') || ""
+  const dateTo = searchParams.get('to') || ""
 
   // Filter store
   const filterState = useFilterStore()
 
-  // React Query hooks
-  const { data: tournamentsData = [] } = useTournamentsQuery()
-  const { data: playersData = [] } = usePlayersQuery()
-
-  const tournaments = tournamentsData.map(t => ({ id: t.id, name: t.name }))
-  const players = playersData as Player[]
+  // React Query hooks (data available for future filter implementation)
+  useTournamentsQuery()
+  usePlayersQuery()
 
   // Save search to history
   const saveSearchToHistory = useCallback((query: string, isAI: boolean) => {

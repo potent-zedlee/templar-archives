@@ -16,7 +16,6 @@ import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { HandCard } from '@/components/hand-card'
 import { HandHistoryDialog } from '@/components/hand-history-dialog'
-import { Card } from '@/components/ui/card'
 import type { Hand } from '@/lib/types/archive'
 
 interface ArchiveHandHistoryProps {

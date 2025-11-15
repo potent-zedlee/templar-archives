@@ -469,7 +469,7 @@ export default function PlayerDetailClient() {
                                         return {
                                           handNumber: hand.number || "???",
                                           summary: hand.description || "Hand Information",
-                                          timestamp: 0,
+                                          timestamp: startTime,
                                           startTime,
                                           endTime,
                                           duration: 0,

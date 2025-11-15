@@ -1,31 +1,14 @@
 'use server'
 
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { getServiceSupabaseClient } from '@/lib/supabase-service'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/database.types'
-import type {
-  KanAnalysisResult,
-  KanHand,
-  SSEEventType,
-  SSEEventData,
-  SSECompleteEvent,
-  SSEProgressEvent,
-  AnalyzeVideoRequest,
-} from '@/lib/types/kan-backend'
 import { getHandThumbnailUrl } from '@/lib/thumbnail-utils'
 
 // Typed Supabase Client
 type TypedSupabaseClient = SupabaseClient<Database>
-
-// Timeout configurations
-const TIMEOUTS = {
-  BACKEND_REQUEST: 300000, // 5분 (Python 백엔드 요청)
-  SSE_STREAM: 600000, // 10분 (SSE 스트림 전체)
-  SEGMENT_PROCESSING: 180000, // 3분 (세그먼트 하나 처리)
-} as const
 
 type KanPlatform = 'ept' | 'triton' | 'pokerstars' | 'wsop' | 'hustler'
 
@@ -39,12 +22,47 @@ const DB_PLATFORM_MAP: Record<KanPlatform, 'triton' | 'pokerstars' | 'wsop' | 'h
   hustler: 'hustler',
 }
 
-const ANALYSIS_PLATFORM_MAP: Record<KanPlatform, 'ept' | 'triton'> = {
-  ept: 'ept',
-  pokerstars: 'ept',
-  wsop: 'ept',
-  triton: 'triton',
-  hustler: 'triton',
+// KAN Backend Types (inlined to avoid circular dependencies)
+interface KanHand {
+  handNumber: number
+  description: string
+  stakes: string
+  small_blind?: number
+  big_blind?: number
+  ante?: number
+  pot: number
+  pot_preflop?: number
+  pot_flop?: number
+  pot_turn?: number
+  pot_river?: number
+  players: KanPlayer[]
+  board: {
+    flop: string[]
+    turn: string | null
+    river: string | null
+  }
+  winners: KanWinner[]
+  actions: KanAction[]
+}
+
+interface KanPlayer {
+  name: string
+  position: string
+  stackSize: number
+  holeCards?: string[] | string
+}
+
+interface KanWinner {
+  name: string
+  amount: number
+  hand?: string
+}
+
+interface KanAction {
+  player: string
+  action: string
+  amount?: number
+  street: 'preflop' | 'flop' | 'turn' | 'river' | 'showdown'
 }
 
 export interface KanStartInput {
@@ -85,15 +103,15 @@ interface SegmentResult {
   processing_time?: number
 }
 
-// Job result structure (stored in analysis_jobs.result)
-interface JobResult {
-  success: boolean
-  segments_processed: number
-  segments_failed: number
-  segment_results: SegmentResult[]
-  total_hands: number
-  errors: string[]
-}
+// Job result structure (stored in analysis_jobs.result) - Currently unused
+// interface JobResult {
+//   success: boolean
+//   segments_processed: number
+//   segments_failed: number
+//   segment_results: SegmentResult[]
+//   total_hands: number
+//   errors: string[]
+// }
 
 /**
  * Extract YouTube video ID from URL
@@ -233,7 +251,7 @@ async function checkDuplicateAnalysis(
     // Call RPC function to check for overlapping segments
     const { data, error } = await supabase.rpc('check_duplicate_analysis', {
       p_video_id: videoId,
-      p_segments: segments as unknown as Record<string, unknown>[],
+      p_segments: JSON.parse(JSON.stringify(segments)),
     })
 
     if (error) {
@@ -398,10 +416,10 @@ async function storeHandsFromSegment(
           p_board_turn: handData.board?.turn || '',
           p_board_river: handData.board?.river || '',
           p_pot_size: handData.pot || 0,
-          p_raw_data: handData as unknown as Record<string, unknown>,
+          p_raw_data: JSON.parse(JSON.stringify(handData)),
           // Players and actions (required params)
-          p_players: playersData as unknown as Record<string, unknown>,
-          p_actions: actionsData as unknown as Record<string, unknown>,
+          p_players: JSON.parse(JSON.stringify(playersData)),
+          p_actions: JSON.parse(JSON.stringify(actionsData)),
           // NEW: Blind information (optional params)
           p_small_blind: handData.small_blind || null,
           p_big_blind: handData.big_blind || null,
@@ -747,7 +765,7 @@ export async function createKanAnalysisRequest(
       .eq('youtube_id', videoId)
       .single()
 
-    let dbVideoId: string
+    // let dbVideoId: string // Not currently used
     if (!existingVideo) {
       const { data: newVideo, error: videoError } = await supabase
         .from('videos')
