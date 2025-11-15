@@ -1,7 +1,7 @@
 import { createClientSupabaseClient } from './supabase-client'
 import { escapeLikePattern } from './security/sql-sanitizer'
 
-export type AdminRole = 'user' | 'high_templar' | 'admin' | 'reporter'
+export type AdminRole = 'user' | 'templar' | 'arbiter' | 'high_templar' | 'admin' | 'reporter'
 
 export type AdminLog = {
   id: string

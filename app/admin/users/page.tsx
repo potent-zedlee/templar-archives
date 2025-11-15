@@ -259,6 +259,8 @@ export default function usersClient() {
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="user">User</SelectItem>
+                <SelectItem value="templar">Templar</SelectItem>
+                <SelectItem value="arbiter">Arbiter</SelectItem>
                 <SelectItem value="high_templar">High Templar</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
@@ -340,10 +342,14 @@ export default function usersClient() {
                         <Badge variant={
                           targetUser.role === "admin" ? "default" :
                           targetUser.role === "high_templar" ? "secondary" :
+                          targetUser.role === "arbiter" ? "secondary" :
+                          targetUser.role === "templar" ? "outline" :
                           "outline"
                         }>
                           {targetUser.role === "admin" ? "Admin" :
                            targetUser.role === "high_templar" ? "High Templar" :
+                           targetUser.role === "arbiter" ? "Arbiter" :
+                           targetUser.role === "templar" ? "Templar" :
                            "User"}
                         </Badge>
                         {targetUser.is_banned && (
@@ -512,6 +518,8 @@ export default function usersClient() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="templar">Templar</SelectItem>
+                  <SelectItem value="arbiter">Arbiter</SelectItem>
                   <SelectItem value="high_templar">High Templar</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
