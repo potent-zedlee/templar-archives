@@ -39,3 +39,42 @@ export async function isHighTemplar(
   }
 }
 
+/**
+ * Check if the user has Arbiter role or higher
+ * (arbiter, high_templar, reporter, admin)
+ */
+export async function isArbiter(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<boolean> {
+  try {
+    const { data: user } = await supabase
+      .from('users')
+      .select('role, banned_at')
+      .eq('id', userId)
+      .single()
+
+    if (!user) return false
+    if (user.banned_at) return false // 차단된 사용자 제외
+
+    const arbiterRoles = ['arbiter', 'high_templar', 'reporter', 'admin']
+    return arbiterRoles.includes(user.role)
+  } catch (error) {
+    console.error('Error checking Arbiter status:', error)
+    return false
+  }
+}
+
+/**
+ * Verify user is Arbiter or higher (throws error if not)
+ */
+export async function verifyArbiter(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<void> {
+  const isValid = await isArbiter(supabase, userId)
+  if (!isValid) {
+    throw new Error('Insufficient permissions: Arbiter role required')
+  }
+}
+
