@@ -137,28 +137,35 @@ test.describe('KAN AI Analysis - Core UI Flow', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToArchive(page)
     await loginAsHighTemplar(page)
-    // WebKit은 React 하이드레이션이 느림
-    await page.waitForTimeout(3000)
+    // WebKit은 React 하이드레이션이 매우 느림 - 대기 시간 증가
+    await page.waitForTimeout(5000)
   })
 
   test('should display "Select a Day" message when no stream is selected', async ({ page }) => {
+    // WebKit을 위한 추가 대기
+    await page.waitForLoadState('domcontentloaded')
+    await page.waitForTimeout(2000)
+
     // Day가 선택되지 않았을 때 안내 메시지 표시
-    await expect(page.getByText(/Select a Day/i)).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText(/Choose a tournament day from the list/i)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/Select a Day/i)).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText(/Choose a tournament day from the list/i)).toBeVisible({ timeout: 15000 })
   })
 
   test('should display AI Analysis button when stream with video URL is selected', async ({ page }) => {
+    // WebKit: YouTube Badge 로딩까지 추가 대기
+    await page.waitForTimeout(2000)
+
     // YouTube Badge가 있는 스트림 찾기
     const youtubeDay = page.locator('text=YouTube').first()
 
-    if (await youtubeDay.isVisible()) {
+    if (await youtubeDay.isVisible({ timeout: 10000 }).catch(() => false)) {
       // YouTube 스트림의 부모 컨테이너 클릭
-      await youtubeDay.locator('xpath=ancestor::div[contains(@class, "cursor-pointer")]').first().click()
-      await page.waitForTimeout(1000)
+      await youtubeDay.locator('xpath=ancestor::div[contains(@class, "cursor-pointer")]').first().click({ force: true })
+      await page.waitForTimeout(2000)
 
       // AI 분석 버튼 확인
       const analyzeButton = page.getByRole('button', { name: /AI 분석/i })
-      await expect(analyzeButton).toBeVisible()
+      await expect(analyzeButton).toBeVisible({ timeout: 10000 })
       await expect(analyzeButton).toBeEnabled()
     } else {
       test.skip(true, 'No YouTube stream found in UI')

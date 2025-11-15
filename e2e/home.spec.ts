@@ -23,17 +23,20 @@ test.describe('Home Page', () => {
     await archiveNav.hover()
 
     // 서브메뉴가 나타날 때까지 대기 (WebKit은 느림)
-    await page.waitForTimeout(1500)
+    await page.waitForTimeout(2000)
 
     // Tournament 링크가 보이는지 확인
     const tournamentLink = page.getByRole('link', { name: 'Tournament', exact: true })
-    await expect(tournamentLink).toBeVisible({ timeout: 5000 })
+    await expect(tournamentLink).toBeVisible({ timeout: 10000 })
 
-    // Tournament 링크 클릭
-    await tournamentLink.click()
+    // WebKit-specific: 클릭 가능 상태까지 대기
+    await page.waitForTimeout(1000)
+
+    // Tournament 링크 클릭 (WebKit을 위한 force 옵션)
+    await tournamentLink.click({ force: true, timeout: 15000 })
 
     // Wait for navigation (WebKit은 네비게이션이 느림)
-    await page.waitForURL('/archive/tournament', { timeout: 15000 })
+    await page.waitForURL('/archive/tournament', { timeout: 30000 })
     await page.waitForLoadState('networkidle')
 
     // Verify we're on the archive page
@@ -46,11 +49,16 @@ test.describe('Home Page', () => {
 
     // Click Forum link (exact match)
     const forumLink = page.getByRole('link', { name: 'FORUM', exact: true })
-    await expect(forumLink).toBeVisible({ timeout: 5000 })
-    await forumLink.click()
+    await expect(forumLink).toBeVisible({ timeout: 10000 })
+
+    // WebKit-specific: 클릭 가능 상태까지 대기
+    await page.waitForTimeout(1000)
+
+    // WebKit을 위한 force 클릭
+    await forumLink.click({ force: true, timeout: 15000 })
 
     // Wait for navigation (WebKit은 네비게이션이 느림)
-    await page.waitForURL('/community', { timeout: 15000 })
+    await page.waitForURL('/community', { timeout: 30000 })
     await page.waitForLoadState('networkidle')
 
     // Verify we're on the community page

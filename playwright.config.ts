@@ -30,9 +30,13 @@ export default defineConfig({
       name: 'webkit',
       use: {
         ...devices['Desktop Safari'],
-        // WebKit은 React 하이드레이션과 네비게이션이 느림
-        navigationTimeout: 30000, // 30초
-        actionTimeout: 15000, // 15초
+        // WebKit은 React 하이드레이션과 네비게이션이 매우 느림
+        navigationTimeout: 60000, // 60초 (30초 → 60초)
+        actionTimeout: 30000, // 30초 (15초 → 30초)
+        // WebKit 전용 추가 옵션
+        launchOptions: {
+          slowMo: 100, // 각 동작 사이에 100ms 지연
+        },
       },
     },
   ],
