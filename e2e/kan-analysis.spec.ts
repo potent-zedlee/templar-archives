@@ -137,12 +137,14 @@ test.describe('KAN AI Analysis - Core UI Flow', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToArchive(page)
     await loginAsHighTemplar(page)
+    // WebKit은 React 하이드레이션이 느림
+    await page.waitForTimeout(3000)
   })
 
   test('should display "Select a Day" message when no stream is selected', async ({ page }) => {
     // Day가 선택되지 않았을 때 안내 메시지 표시
-    await expect(page.getByText(/Select a Day/i)).toBeVisible()
-    await expect(page.getByText(/Choose a tournament day from the list/i)).toBeVisible()
+    await expect(page.getByText(/Select a Day/i)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/Choose a tournament day from the list/i)).toBeVisible({ timeout: 10000 })
   })
 
   test('should display AI Analysis button when stream with video URL is selected', async ({ page }) => {

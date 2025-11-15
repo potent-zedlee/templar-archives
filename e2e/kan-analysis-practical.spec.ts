@@ -150,7 +150,8 @@ test.describe('KAN AI Analysis - Component-level Tests', () => {
   test('should find AI analysis button elements in DOM (if stream selected)', async ({ page }) => {
     await page.goto('/archive/tournament')
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(3000)
+    // WebKit은 React 하이드레이션이 느림
+    await page.waitForTimeout(5000)
 
     // AI 분석 관련 요소 찾기 (여러 가지 선택자 시도)
     const possibleSelectors = [
@@ -164,7 +165,7 @@ test.describe('KAN AI Analysis - Component-level Tests', () => {
     let found = false
     for (const selector of possibleSelectors) {
       const element = page.locator(selector).first()
-      if (await element.isVisible({ timeout: 1000 }).catch(() => false)) {
+      if (await element.isVisible({ timeout: 2000 }).catch(() => false)) {
         found = true
         console.log(`[Test] Found AI button with selector: ${selector}`)
         break
@@ -172,7 +173,7 @@ test.describe('KAN AI Analysis - Component-level Tests', () => {
     }
 
     // 버튼을 찾거나, 스트림이 선택되지 않아서 "Select a Day" 메시지가 표시되어야 함
-    const hasSelectMessage = await page.getByText(/Select a Day/i).isVisible()
+    const hasSelectMessage = await page.getByText(/Select a Day/i).isVisible({ timeout: 5000 }).catch(() => false)
     expect(found || hasSelectMessage).toBeTruthy()
   })
 
@@ -239,7 +240,8 @@ test.describe('KAN AI Analysis - E2E Flow (Simulated)', () => {
     // 1. Archive 페이지로 이동
     await page.goto('/archive/tournament')
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(2000)
+    // WebKit은 React 하이드레이션이 느림
+    await page.waitForTimeout(5000)
 
     // 2. 페이지 상태 스크린샷 캡처
     await page.screenshot({ path: 'test-results/archive-initial.png', fullPage: true })
@@ -249,22 +251,22 @@ test.describe('KAN AI Analysis - E2E Flow (Simulated)', () => {
     const streamItem = page.locator('[data-testid="stream-item"]').first()
     const dayItem = page.locator('[role="button"]').filter({ hasText: /Day|Stream/i }).first()
 
-    if (await youtubeBadge.isVisible({ timeout: 3000 }).catch(() => false)) {
+    if (await youtubeBadge.isVisible({ timeout: 5000 }).catch(() => false)) {
       console.log('[Test] YouTube badge found, attempting to click...')
       await youtubeBadge.locator('xpath=ancestor::div[contains(@class, "cursor-pointer")]').first().click()
-      await page.waitForTimeout(1000)
+      await page.waitForTimeout(2000)
       await page.screenshot({ path: 'test-results/archive-stream-selected.png' })
-    } else if (await streamItem.isVisible({ timeout: 3000 }).catch(() => false)) {
+    } else if (await streamItem.isVisible({ timeout: 5000 }).catch(() => false)) {
       console.log('[Test] Stream item found, clicking...')
       await streamItem.click()
-      await page.waitForTimeout(1000)
-    } else if (await dayItem.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await page.waitForTimeout(2000)
+    } else if (await dayItem.isVisible({ timeout: 5000 }).catch(() => false)) {
       console.log('[Test] Day item found, clicking...')
       await dayItem.click()
-      await page.waitForTimeout(1000)
+      await page.waitForTimeout(2000)
     } else {
       console.log('[Test] No clickable stream found, checking for "Select a Day" message')
-      const selectMessage = await page.getByText(/Select a Day/i).isVisible()
+      const selectMessage = await page.getByText(/Select a Day/i).isVisible({ timeout: 5000 }).catch(() => false)
       expect(selectMessage).toBeTruthy()
     }
 
