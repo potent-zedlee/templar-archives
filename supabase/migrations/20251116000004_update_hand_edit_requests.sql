@@ -50,12 +50,12 @@ COMMENT ON POLICY "Arbiters can update edit requests" ON hand_edit_requests
 -- ===========================
 
 -- Arbiter 대시보드 쿼리 최적화 (pending 요청만)
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_hand_edit_requests_pending
+CREATE INDEX IF NOT EXISTS idx_hand_edit_requests_pending
   ON hand_edit_requests(status, created_at DESC)
   WHERE status = 'pending';
 
 -- Arbiter별 검토 통계 쿼리 최적화
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_hand_edit_requests_reviewer
+CREATE INDEX IF NOT EXISTS idx_hand_edit_requests_reviewer
   ON hand_edit_requests(reviewed_by, reviewed_at DESC)
   WHERE status IN ('approved', 'rejected');
 

@@ -10,7 +10,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { CheckSquare, Eye, EyeOff } from 'lucide-react'
+import { CheckSquare, Eye, EyeOff, Edit3 } from 'lucide-react'
 import { StreamChecklist } from './StreamChecklist'
 import type { ContentStatus } from '@/lib/types/archive'
 
@@ -18,19 +18,33 @@ interface StreamActionsProps {
   streamId: string
   streamName: string
   currentStatus: ContentStatus
+  videoUrl?: string
   onStatusChange?: () => void
+  onOpenHandInput?: () => void
 }
 
 export function StreamActions({
   streamId,
   streamName,
   currentStatus,
-  onStatusChange
+  videoUrl,
+  onStatusChange,
+  onOpenHandInput
 }: StreamActionsProps) {
   const [checklistOpen, setChecklistOpen] = useState(false)
 
   return (
     <div className="flex items-center gap-2">
+      {/* Hand Input Mode 버튼 */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onOpenHandInput}
+        title="Hand Input Mode"
+      >
+        <Edit3 className="h-4 w-4" />
+      </Button>
+
       {/* Checklist 버튼 */}
       <Button
         variant="ghost"

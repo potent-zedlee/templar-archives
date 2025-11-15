@@ -40,6 +40,7 @@ import { DeleteDialog } from '@/components/archive-dialogs/delete-dialog'
 import { SubEventDialog } from '@/components/archive-dialogs/sub-event-dialog'
 import { DayDialog } from '@/components/archive-dialogs/day-dialog'
 import { UnsortedVideosTab } from './_components/UnsortedVideosTab'
+import { HandInputMode } from '@/app/archive/_components/HandInputMode'
 import type { Tournament, FolderItem, ContentStatus } from '@/lib/types/archive'
 import type { SubEvent, Stream } from '@/lib/supabase'
 import type { AdminArchiveSortField, SortDirection } from '@/lib/types/sorting'
@@ -84,6 +85,10 @@ export default function AdminArchivePage() {
   const [dayDialogOpen, setDayDialogOpen] = useState(false)
   const [editingDayId, setEditingDayId] = useState('')
   const [selectedSubEventIdForDay, setSelectedSubEventIdForDay] = useState('')
+
+  // Hand Input Mode states
+  const [handInputModeOpen, setHandInputModeOpen] = useState(false)
+  const [selectedStreamForHandInput, setSelectedStreamForHandInput] = useState<Stream | null>(null)
 
   // Tournament form states
   const [newTournamentName, setNewTournamentName] = useState('')
@@ -448,6 +453,26 @@ export default function AdminArchivePage() {
       loadStreams(subEventId)
     })
     setDeleteDialogOpen(false)
+  }
+
+  // Hand Input Mode functions
+  const handleOpenHandInput = (stream: Stream) => {
+    setSelectedStreamForHandInput(stream)
+    setHandInputModeOpen(true)
+  }
+
+  const handleCloseHandInput = () => {
+    setHandInputModeOpen(false)
+    setSelectedStreamForHandInput(null)
+    // Reload stream data to show newly created hands
+    if (selectedStreamForHandInput) {
+      const streamSubEventId = Array.from(streams.entries()).find(([_, streamsArray]) =>
+        streamsArray.some(s => s.id === selectedStreamForHandInput.id)
+      )?.[0]
+      if (streamSubEventId) {
+        loadStreams(streamSubEventId)
+      }
+    }
   }
 
   if (!isUserAdmin) {
@@ -879,7 +904,9 @@ export default function AdminArchivePage() {
                                         streamId={stream.id}
                                         streamName={stream.name}
                                         currentStatus={streamStatus}
+                                        videoUrl={stream.video_url}
                                         onStatusChange={() => loadStreams(subEvent.id)}
+                                        onOpenHandInput={() => handleOpenHandInput(stream)}
                                       />
                                       <Button
                                         variant="ghost"
@@ -992,6 +1019,15 @@ export default function AdminArchivePage() {
         editingDayId={editingDayId}
         onSuccess={handleStreamSuccess}
       />
+
+      {/* Hand Input Mode */}
+      {handInputModeOpen && selectedStreamForHandInput && (
+        <HandInputMode
+          streamId={selectedStreamForHandInput.id}
+          videoUrl={selectedStreamForHandInput.video_url}
+          onClose={handleCloseHandInput}
+        />
+      )}
     </div>
   )
 }

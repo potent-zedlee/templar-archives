@@ -171,12 +171,12 @@ COMMENT ON TRIGGER hands_edit_log_trigger ON hands IS 'Audit trigger: Log all ha
 -- ===========================
 
 -- Arbiter 활동 통계 쿼리 최적화
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_hand_edit_history_editor_date
+CREATE INDEX IF NOT EXISTS idx_hand_edit_history_editor_date
   ON hand_edit_history(editor_id, created_at DESC)
   WHERE edit_type IN ('create', 'update');
 
 -- 특정 핸드의 수정 이력 조회 최적화
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_hand_edit_history_hand_type
+CREATE INDEX IF NOT EXISTS idx_hand_edit_history_hand_type
   ON hand_edit_history(hand_id, edit_type, created_at DESC);
 
 COMMENT ON INDEX idx_hand_edit_history_editor_date IS 'Optimize Arbiter activity statistics queries';
