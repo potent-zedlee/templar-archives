@@ -21,10 +21,18 @@ import { ArchiveProviders } from "./ArchiveProviders"
 import { ArchiveSidebar } from "./ArchiveSidebar"
 import { ArchiveMiddlePanel } from "./ArchiveMiddlePanel"
 import { ArchiveMainPanel } from "./ArchiveMainPanel"
+import type { Stream } from "@/lib/supabase"
 
 // Dynamic imports for heavy components
 const ArchiveDialogs = dynamic(
   () => import("./ArchiveDialogs").then(mod => ({ default: mod.ArchiveDialogs })),
+  {
+    ssr: false
+  }
+)
+
+const HandInputMode = dynamic(
+  () => import("@/app/archive/_components/HandInputMode").then(mod => ({ default: mod.HandInputMode })),
   {
     ssr: false
   }
@@ -77,10 +85,26 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
   const [seekTime, setSeekTime] = useState<number | null>(null)
 
   // ============================================================
-  // 6. Event Handlers
+  // 6. Hand Input Mode State
+  // ============================================================
+  const [handInputModeOpen, setHandInputModeOpen] = useState(false)
+  const [selectedStreamForHandInput, setSelectedStreamForHandInput] = useState<Stream | null>(null)
+
+  // ============================================================
+  // 7. Event Handlers
   // ============================================================
   const handleSeekToTime = useCallback((seconds: number) => {
     setSeekTime(seconds)
+  }, [])
+
+  const handleOpenHandInput = useCallback((stream: Stream) => {
+    setSelectedStreamForHandInput(stream)
+    setHandInputModeOpen(true)
+  }, [])
+
+  const handleCloseHandInput = useCallback(() => {
+    setHandInputModeOpen(false)
+    setSelectedStreamForHandInput(null)
   }, [])
 
   // ============================================================
@@ -112,7 +136,7 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
               <DiscoveryLayout
                 sidebar={<ArchiveSidebar gameType={gameType === 'tournament' ? 'tournament' : 'cash_game'} />}
                 sidebarWidth="280px"
-                middlePanel={<ArchiveMiddlePanel />}
+                middlePanel={<ArchiveMiddlePanel onHandInputClick={handleOpenHandInput} />}
                 mainPanel={
                   <ArchiveMainPanel
                     seekTime={seekTime}
@@ -123,6 +147,15 @@ export const ArchivePageLayout = memo(function ArchivePageLayout({
 
               {/* All Dialogs */}
               <ArchiveDialogs />
+
+              {/* Hand Input Mode */}
+              {handInputModeOpen && selectedStreamForHandInput && (
+                <HandInputMode
+                  streamId={selectedStreamForHandInput.id}
+                  videoUrl={selectedStreamForHandInput.video_url}
+                  onClose={handleCloseHandInput}
+                />
+              )}
             </>
           </ArchiveProviders>
         </ArchiveDataProvider>

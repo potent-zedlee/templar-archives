@@ -5,17 +5,21 @@ import { ArchiveSearchSort } from "@/components/archive-search-sort"
 import { useArchiveUIStore } from "@/stores/archive-ui-store"
 import { useArchiveDataStore } from "@/stores/archive-data-store"
 import { useArchiveData } from "./ArchiveDataContext"
-import { useMemo, useCallback } from "react"
+import { useMemo, useCallback, useState, useEffect } from "react"
 import type { FolderItem } from "@/lib/types/archive"
 import { Button } from "@/components/ui/button"
-import { ChevronRight, Play, Calendar } from "lucide-react"
-import { BackgroundGradient } from "@/components/ui/background-gradient"
+import { ChevronRight, Play, Calendar, Edit3 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import type { Tournament, SubEvent, Stream } from "@/lib/types/archive"
+import { hasArbiterPermission } from "@/lib/types/users"
+import { createClientSupabaseClient } from "@/lib/supabase-client"
 
-export function ArchiveMiddlePanel() {
+interface ArchiveMiddlePanelProps {
+  onHandInputClick?: (stream: Stream) => void
+}
+
+export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps) {
   const { tournaments, tournamentsLoading } = useArchiveData()
   const { selectedDay, setSelectedDay } = useArchiveDataStore()
 
@@ -31,6 +35,33 @@ export function ArchiveMiddlePanel() {
     toggleTournamentExpand,
     toggleSubEventExpand,
   } = useArchiveUIStore()
+
+  // Hand Input Mode permission check
+  const [canUseHandInput, setCanUseHandInput] = useState(false)
+
+  useEffect(() => {
+    const checkPermissions = async () => {
+      const supabase = createClientSupabaseClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setCanUseHandInput(false)
+        return
+      }
+
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      if (userData && hasArbiterPermission(userData.role)) {
+        setCanUseHandInput(true)
+      }
+    }
+
+    checkPermissions()
+  }, [])
 
   // Build folder items
   const folderItems = useMemo((): FolderItem[] => {
@@ -322,47 +353,71 @@ export function ArchiveMiddlePanel() {
                 const isSelected = selectedDay === day.id
                 return (
                   <div key={item.id} className="ml-12 group">
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "w-full justify-start h-auto py-2.5 px-3 rounded-lg transition-all duration-200",
-                        "border border-transparent hover:border-border/30",
-                        "hover:bg-gradient-to-r hover:from-muted/30 hover:to-muted/10",
-                        "hover:shadow-sm",
-                        isSelected && "bg-gradient-to-r from-purple-500/20 via-purple-500/10 to-purple-500/5 border-l-4 border-l-purple-500 shadow-md shadow-purple-500/10",
-                        isSelected && "hover:from-purple-500/25 hover:via-purple-500/15 hover:to-purple-500/10"
-                      )}
-                      onClick={() => handleSelectDay(day.id)}
-                    >
-                      <div className="flex items-center gap-3 w-full">
-                        {day.video_source === "youtube" && day.video_url ? (
-                          <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
-                            <Play className="h-3 w-3 text-white fill-white" />
-                          </div>
-                        ) : (day.video_file || day.video_nas_path) ? (
-                          <div className="w-6 h-6 bg-gradient-to-br from-amber-500 to-amber-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
-                            <Play className="h-3 w-3 text-white fill-white" />
-                          </div>
-                        ) : (
-                          <div className="w-6 h-6 bg-gradient-to-br from-muted to-muted/80 rounded-md flex items-center justify-center flex-shrink-0">
-                            <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                          </div>
+                    <div className="relative">
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          "w-full justify-start h-auto py-2.5 px-3 rounded-lg transition-all duration-200",
+                          "border border-transparent hover:border-border/30",
+                          "hover:bg-gradient-to-r hover:from-muted/30 hover:to-muted/10",
+                          "hover:shadow-sm",
+                          isSelected && "bg-gradient-to-r from-purple-500/20 via-purple-500/10 to-purple-500/5 border-l-4 border-l-purple-500 shadow-md shadow-purple-500/10",
+                          isSelected && "hover:from-purple-500/25 hover:via-purple-500/15 hover:to-purple-500/10"
                         )}
-                        <div className="flex-1 text-left min-w-0">
-                          <div className={cn(
-                            "font-medium text-sm truncate mb-0.5",
-                            isSelected && "font-semibold"
-                          )}>
-                            {day.name}
-                          </div>
-                          {day.player_count !== undefined && day.player_count > 0 && (
-                            <div className="text-xs text-muted-foreground font-medium">
-                              {day.player_count} players
+                        onClick={() => handleSelectDay(day.id)}
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          {day.video_source === "youtube" && day.video_url ? (
+                            <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
+                              <Play className="h-3 w-3 text-white fill-white" />
+                            </div>
+                          ) : (day.video_file || day.video_nas_path) ? (
+                            <div className="w-6 h-6 bg-gradient-to-br from-amber-500 to-amber-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
+                              <Play className="h-3 w-3 text-white fill-white" />
+                            </div>
+                          ) : (
+                            <div className="w-6 h-6 bg-gradient-to-br from-muted to-muted/80 rounded-md flex items-center justify-center flex-shrink-0">
+                              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
                           )}
+                          <div className="flex-1 text-left min-w-0">
+                            <div className={cn(
+                              "font-medium text-sm truncate mb-0.5",
+                              isSelected && "font-semibold"
+                            )}>
+                              {day.name}
+                            </div>
+                            {day.player_count !== undefined && day.player_count > 0 && (
+                              <div className="text-xs text-muted-foreground font-medium">
+                                {day.player_count} players
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </Button>
+                      </Button>
+
+                      {/* Hand Input Mode Button (Arbiter+ only) */}
+                      {canUseHandInput && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={cn(
+                            "absolute right-1 top-1/2 -translate-y-1/2",
+                            "h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity",
+                            "hover:bg-purple-500/20 hover:text-purple-600 dark:hover:text-purple-400"
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (onHandInputClick) {
+                              onHandInputClick(day)
+                            }
+                          }}
+                          title="Hand Input Mode"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 )
               }
