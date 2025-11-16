@@ -84,17 +84,15 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
       transition={{ duration: 0.2 }}
       className={className}
     >
-      <Card
-        className="group relative overflow-hidden cursor-pointer border-border/50 hover:border-primary/50 hover:shadow-lg transition-all duration-300"
+      <div
+        className="card-postmodern hover-3d group relative overflow-hidden cursor-pointer p-4 space-y-3"
         onClick={onClick}
       >
         {/* 썸네일 이미지 영역 */}
-        <div className="aspect-video relative bg-muted overflow-hidden">
+        <div className="aspect-video relative bg-black-200 overflow-hidden border-2 border-gold-700">
           {!imageError ? (
             <Image
               src={thumbnailUrl}
@@ -104,30 +102,28 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-              <Play className="w-12 h-12 text-muted-foreground/30" />
+            <div className="w-full h-full flex items-center justify-center bg-black-100">
+              <Play className="w-12 h-12 text-gold-700/30" />
             </div>
           )}
 
           {/* Hover 시 Play 오버레이 */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <Button
-              size="icon"
-              variant="secondary"
-              className="w-16 h-16 rounded-full"
+          <div className="absolute inset-0 bg-black-0/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <button
+              className="btn-primary w-16 h-16 flex items-center justify-center"
               onClick={handlePlayClick}
             >
               <Play className="w-8 h-8" fill="currentColor" />
-            </Button>
+            </button>
           </div>
 
-          {/* AI 분석 배지 (우측 상단) */}
+          {/* AI 분석 배지 (좌측 상단) */}
           {hand.confidence && hand.confidence > 0 && (
             <div className="absolute top-2 left-2">
-              <Badge variant="secondary" className="bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white border-0">
-                <Sparkles className="w-3 h-3 mr-1" />
+              <div className="bg-gold-500 text-black-0 px-2 py-1 text-xs font-bold uppercase border-2 border-gold-600 shadow-lg flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
                 AI
-              </Badge>
+              </div>
             </div>
           )}
 
@@ -135,14 +131,12 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
           <div className="absolute top-2 right-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                <button
+                  className="btn-secondary h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MoreHorizontal className="w-4 h-4" />
-                </Button>
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={(e) => handleMenuAction(e, 'download')}>
@@ -166,93 +160,86 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
           </div>
         </div>
 
-        {/* 카드 콘텐츠 */}
-        <div className="p-4 space-y-3">
-          {/* 핸드 번호 + 타임스탬프 */}
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-base">Hand #{hand.number}</h3>
-            <Badge variant="outline" className="text-xs">
-              {hand.timestamp}
-            </Badge>
-          </div>
-
-          {/* AI 요약 또는 핸드 설명 */}
-          {hand.ai_summary ? (
-            <div className="flex items-start gap-2">
-              <Sparkles className="h-4 w-4 text-purple-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                {hand.ai_summary}
-              </p>
-            </div>
-          ) : hand.description ? (
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {hand.description}
-            </p>
-          ) : null}
-
-          {/* 메타 정보 (블라인드, 팟 사이즈, 보드 카드) */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* 블라인드 정보 */}
-            {(hand.big_blind || hand.small_blind) && (
-              <Badge variant="outline" className="text-xs font-mono">
-                {formatBlinds(hand.small_blind, hand.big_blind, hand.ante)}
-              </Badge>
-            )}
-
-            {/* 최종 팟 사이즈 (pot_river 우선) */}
-            {(hand.pot_river || hand.pot_size) && (
-              <Badge variant="secondary" className="bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20 font-semibold">
-                ${(hand.pot_river || hand.pot_size)!.toLocaleString()}
-              </Badge>
-            )}
-
-            {/* 보드 카드 */}
-            {hand.board_cards && hand.board_cards.length > 0 && (
-              <Badge variant="outline" className="text-xs">
-                {hand.board_cards.join(' ')}
-              </Badge>
-            )}
-          </div>
-
-          {/* 좋아요/싫어요 버튼 */}
-          <div className="flex items-center justify-between pt-2 border-t border-border/50">
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="ghost"
-                className={cn(
-                  'h-8 px-3',
-                  isLiked && 'text-red-500 hover:text-red-600'
-                )}
-                onClick={handleLikeToggle}
-              >
-                <Heart className={cn('w-4 h-4 mr-1', isLiked && 'fill-current')} />
-                <span className="text-xs">{(hand.likes_count || 0) + (isLiked ? 1 : 0)}</span>
-              </Button>
-
-              <Button
-                size="sm"
-                variant="ghost"
-                className={cn(
-                  'h-8 px-3',
-                  isDisliked && 'text-blue-500 hover:text-blue-600'
-                )}
-                onClick={handleDislikeToggle}
-              >
-                <ThumbsDown className={cn('w-4 h-4 mr-1', isDisliked && 'fill-current')} />
-                <span className="text-xs">{(hand.dislikes_count || 0) + (isDisliked ? 1 : 0)}</span>
-              </Button>
-            </div>
-
-            {/* 추가 메타데이터 */}
-            {hand.created_at && (
-              <span className="text-xs text-muted-foreground">
-                {new Date(hand.created_at).toLocaleDateString('ko-KR')}
-              </span>
-            )}
+        {/* 핸드 번호 + 타임스탬프 */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-hand-number">Hand #{hand.number}</h3>
+          <div className="text-xs text-mono text-gold-400 border border-gold-700 px-2 py-0.5 bg-black-200">
+            {hand.timestamp}
           </div>
         </div>
-      </Card>
+
+        {/* AI 요약 또는 핸드 설명 */}
+        {hand.ai_summary ? (
+          <div className="flex items-start gap-2 border-l-2 border-gold-600 pl-2">
+            <Sparkles className="h-4 w-4 text-gold-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">
+              {hand.ai_summary}
+            </p>
+          </div>
+        ) : hand.description ? (
+          <p className="text-sm text-text-muted line-clamp-2 border-l-2 border-gold-700 pl-2">
+            {hand.description}
+          </p>
+        ) : null}
+
+        {/* 메타 정보 (블라인드, 팟 사이즈, 보드 카드) */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* 블라인드 정보 */}
+          {(hand.big_blind || hand.small_blind) && (
+            <div className="text-xs text-mono border border-gold-700 px-2 py-0.5 bg-black-200 text-gold-400">
+              {formatBlinds(hand.small_blind, hand.big_blind, hand.ante)}
+            </div>
+          )}
+
+          {/* 최종 팟 사이즈 (pot_river 우선) */}
+          {(hand.pot_river || hand.pot_size) && (
+            <div className="bg-gold-500 text-black-0 px-2 py-0.5 text-xs font-bold border-2 border-gold-600">
+              ${(hand.pot_river || hand.pot_size)!.toLocaleString()}
+            </div>
+          )}
+
+          {/* 보드 카드 */}
+          {hand.board_cards && hand.board_cards.length > 0 && (
+            <div className="text-xs text-mono border border-gold-700 px-2 py-0.5 bg-black-200 text-text-secondary">
+              {hand.board_cards.join(' ')}
+            </div>
+          )}
+        </div>
+
+        {/* 좋아요/싫어요 버튼 */}
+        <div className="flex items-center justify-between pt-3 border-t-2 border-gold-700">
+          <div className="flex items-center gap-2">
+            <button
+              className={cn(
+                'btn-ghost h-8 px-3 text-xs',
+                isLiked && 'text-gold-400'
+              )}
+              onClick={handleLikeToggle}
+            >
+              <Heart className={cn('w-4 h-4 mr-1', isLiked && 'fill-current')} />
+              <span className="text-mono">{(hand.likes_count || 0) + (isLiked ? 1 : 0)}</span>
+            </button>
+
+            <button
+              className={cn(
+                'btn-ghost h-8 px-3 text-xs',
+                isDisliked && 'text-gold-400'
+              )}
+              onClick={handleDislikeToggle}
+            >
+              <ThumbsDown className={cn('w-4 h-4 mr-1', isDisliked && 'fill-current')} />
+              <span className="text-mono">{(hand.dislikes_count || 0) + (isDisliked ? 1 : 0)}</span>
+            </button>
+          </div>
+
+          {/* 추가 메타데이터 */}
+          {hand.created_at && (
+            <span className="text-xs text-text-muted text-mono">
+              {new Date(hand.created_at).toLocaleDateString('ko-KR')}
+            </span>
+          )}
+        </div>
+      </div>
     </motion.div>
   )
 }

@@ -489,4 +489,174 @@
   .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
   }
+
+  /* === POSTMODERN ARCHIVE COMPONENTS === */
+
+  /* Year Badge - 대형 금색 배지 */
+  .year-badge {
+    background: linear-gradient(135deg, var(--gold-500), var(--gold-400));
+    color: var(--black-0);
+    padding: var(--spacing-3, 1rem);
+    min-width: 120px;
+    text-align: center;
+    border: 3px solid var(--gold-600);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+    font-family: var(--font-mono, 'monospace');
+    font-weight: 900;
+    font-size: 1.875rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* Stats Card - 통계 정보 카드 */
+  .stats-card {
+    background: var(--black-200);
+    border: 2px solid var(--gold-700);
+    padding: 1rem;
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    border-left: 3px solid var(--gold-600);
+    padding-left: 0.75rem;
+  }
+
+  /* Day Badge - 초대형 타이포그래피 */
+  .day-badge {
+    background: var(--black-200);
+    border-left: 5px solid var(--gold-400);
+    padding: 0.75rem 1rem;
+  }
+
+  /* Progress Bar - 핸드 진행률 바 */
+  .progress-wrapper {
+    margin-top: 1.5rem;
+  }
+
+  .progress-bar {
+    background: var(--black-200);
+    border: 2px solid var(--border-secondary);
+    height: 0.5rem;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    background: linear-gradient(90deg, var(--gold-500), var(--gold-400));
+    height: 100%;
+    transition: width 0.3s ease-out;
+    box-shadow: 0 0 10px var(--gold-400);
+  }
+
+  /* Hand Number - 모노스페이스 강조 */
+  .text-hand-number {
+    font-family: var(--font-mono, 'monospace');
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--gold-400);
+    letter-spacing: 0.05em;
+  }
+
+  /* Position Badge - 포지션 배지 */
+  .position-badge {
+    background: var(--black-200);
+    color: var(--gold-500);
+    border: 1px solid var(--gold-700);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* Action Timeline - 핸드 액션 타임라인 */
+  .action-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    border-left: 2px solid var(--gold-700);
+    padding-left: 0.75rem;
+  }
+
+  .action-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+  }
+
+  .text-action {
+    font-family: var(--font-mono, 'monospace');
+    font-weight: 600;
+    color: var(--text-inverse);
+  }
+
+  /* Card Minimal - 컴팩트 카드 스타일 */
+  .card-minimal {
+    background: transparent;
+    border-bottom: 1px solid var(--divider-subtle, rgba(212, 175, 55, 0.1));
+    padding: 1.5rem;
+    transition: all 0.2s;
+  }
+
+  .card-minimal:hover {
+    background: var(--bg-hover, rgba(212, 175, 55, 0.05));
+    border-bottom-color: var(--gold-700);
+    padding-left: 2rem;
+  }
+
+  /* Offset Effects - 비대칭 레이아웃 */
+  .offset-down {
+    transform: translateY(0.75rem);
+  }
+
+  .offset-up {
+    transform: translateY(-0.75rem);
+  }
+
+  /* Sub Event List - 이벤트 리스트 스타일 */
+  .sub-event-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Divider Subtle - 서브틀 구분선 */
+  .divider-subtle {
+    border-color: rgba(212, 175, 55, 0.1);
+  }
+
+  /* BG Hover - 호버 배경색 */
+  .bg-hover {
+    background: rgba(212, 175, 55, 0.05);
+  }
+
+  /* Tournament Card - 비대칭 그리드 */
+  .tournament-card-grid {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  /* Stream Card Grid - 2:3 비대칭 */
+  .stream-card-grid {
+    display: grid;
+    grid-template-columns: 2fr 3fr;
+    gap: 1.5rem;
+  }
+
+  /* Mono Text - 모노스페이스 텍스트 */
+  .text-mono {
+    font-family: var(--font-mono, 'monospace');
+  }
+
+  /* Hover 3D Effect */
+  .hover-3d {
+    transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+  }
+
+  .hover-3d:hover {
+    transform: translateY(-4px) rotateX(2deg);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 30px rgba(212, 175, 55, 0.2);
+  }
 }
