@@ -37,8 +37,8 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
               onMouseLeave={() => setArchiveExpanded(false)}
             >
               <div className={cn(
-                "text-sm font-medium transition-colors hover:text-foreground relative inline-flex items-center gap-1 cursor-pointer",
-                isActive ? "text-foreground" : "text-muted-foreground"
+                "text-sm font-bold uppercase tracking-wide transition-colors hover:text-gold-300 relative inline-flex items-center gap-1 cursor-pointer",
+                isActive ? "text-gold-400" : "text-text-secondary"
               )}>
                 {link.label}
                 <ChevronRight className={cn(
@@ -46,7 +46,7 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
                   archiveExpanded && "rotate-90"
                 )} />
                 {isActive && (
-                  <span className="absolute -bottom-[21px] left-0 right-0 h-0.5 bg-primary" />
+                  <span className="absolute -bottom-[21px] left-0 right-0 h-[3px] bg-gold-400" />
                 )}
               </div>
 
@@ -57,7 +57,7 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
                     animate={{ opacity: 1, width: "auto", x: 0 }}
                     exit={{ opacity: 0, width: 0, x: -10 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="ml-2 flex items-center gap-3 bg-background/95 backdrop-blur-sm border border-border/40 rounded-md shadow-lg px-4 py-2 whitespace-nowrap"
+                    className="ml-2 flex items-center gap-3 bg-black-100 border-2 border-gold-600 shadow-[4px_4px_0_var(--black-0)] px-4 py-2 whitespace-nowrap"
                   >
                     {link.subItems.map((subItem) => {
                       const subIsActive = pathname === subItem.href ||
@@ -67,10 +67,10 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
                           key={subItem.href}
                           href={subItem.href}
                           className={cn(
-                            "text-sm font-medium transition-colors hover:text-foreground",
+                            "text-sm font-semibold uppercase tracking-wide transition-colors hover:text-gold-300",
                             subIsActive
-                              ? "text-primary"
-                              : "text-muted-foreground"
+                              ? "text-gold-400"
+                              : "text-text-secondary"
                           )}
                         >
                           {subItem.label}
@@ -92,15 +92,15 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
             key={link.href}
             href={link.href!}
             className={cn(
-              "text-sm font-medium transition-colors hover:text-foreground relative",
+              "text-sm font-bold uppercase tracking-wide transition-colors hover:text-gold-300 relative",
               isActive
-                ? "text-foreground"
-                : "text-muted-foreground"
+                ? "text-gold-400"
+                : "text-text-secondary"
             )}
           >
             {link.label}
             {isActive && (
-              <span className="absolute -bottom-[21px] left-0 right-0 h-0.5 bg-primary" />
+              <span className="absolute -bottom-[21px] left-0 right-0 h-[3px] bg-gold-400" />
             )}
           </Link>
         )

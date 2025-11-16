@@ -14,7 +14,7 @@ export default function MainLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-black-0 bg-grid-black">
       <Header />
       {children}
     </div>
