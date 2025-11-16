@@ -2,9 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { signInWithGoogle } from "@/lib/auth"
 import { useAuth } from "@/components/auth-provider"
 import { Loader2, AlertTriangle, ExternalLink } from "lucide-react"
@@ -40,56 +37,60 @@ export default function loginClient() {
   // Loading or already logged in
   if (authLoading || user) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-black-0">
+        <Loader2 className="h-8 w-8 animate-spin text-gold-400" />
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
+    <div className="flex min-h-screen items-center justify-center bg-black-0 p-4">
+      <div className="card-postmodern p-8 w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-purple-600">
-              <span className="font-mono text-2xl font-bold text-primary-foreground">GG</span>
+            <div className="flex h-12 w-12 items-center justify-center border-2 border-gold-600 bg-gradient-to-br from-gold-400 to-gold-600">
+              <span className="font-mono text-2xl font-bold text-black-0">GG</span>
             </div>
           </div>
-          <CardTitle className="text-title-lg">Welcome to Templar Archives Index</CardTitle>
-          <CardDescription>
+          <h1 className="text-heading mb-2">WELCOME TO TEMPLAR ARCHIVES INDEX</h1>
+          <p className="text-body text-text-muted">
             Poker Hand Archive and Community Platform
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+        </div>
+
+        {/* Content */}
+        <div className="space-y-4">
           {/* WebView Warning */}
           {webViewDetection.isWebView && (
-            <Alert variant="destructive" className="border-orange-500 bg-orange-50 dark:bg-orange-950/20">
-              <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-              <AlertTitle className="text-orange-900 dark:text-orange-200 font-semibold">
-                앱 내부 브라우저에서는 로그인이 불가능합니다
-              </AlertTitle>
-              <AlertDescription className="text-orange-800 dark:text-orange-300 space-y-2">
-                <p className="text-sm">
-                  Google 보안 정책상 {webViewDetection.browserName} 내부 브라우저에서는 로그인할 수 없습니다.
-                </p>
-                <p className="text-sm font-medium flex items-center gap-1">
-                  <ExternalLink className="h-3 w-3" />
-                  {getOpenInBrowserMessage(webViewDetection.browserType)}
-                </p>
-              </AlertDescription>
-            </Alert>
+            <div className="border-2 border-orange-500 bg-orange-950/20 p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-orange-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-caption-lg text-orange-300 mb-2">
+                    앱 내부 브라우저에서는 로그인이 불가능합니다
+                  </div>
+                  <p className="text-body text-orange-400 mb-2">
+                    Google 보안 정책상 {webViewDetection.browserName} 내부 브라우저에서는 로그인할 수 없습니다.
+                  </p>
+                  <p className="text-body text-orange-300 flex items-center gap-1">
+                    <ExternalLink className="h-3 w-3" />
+                    {getOpenInBrowserMessage(webViewDetection.browserType)}
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
 
-          <Button
+          <button
             onClick={handleGoogleLogin}
             disabled={loading || webViewDetection.isWebView}
-            className="w-full"
-            size="lg"
+            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
+                SIGNING IN...
               </>
             ) : (
               <>
@@ -111,28 +112,28 @@ export default function loginClient() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                Sign in with Google
+                SIGN IN WITH GOOGLE
               </>
             )}
-          </Button>
+          </button>
 
           {error && (
             <p className="text-caption text-destructive text-center">{error}</p>
           )}
 
-          <div className="text-xs text-muted-foreground text-center">
+          <div className="text-caption text-text-muted text-center">
             By signing in, you agree to Templar Archives Index'{" "}
-            <a href="#" className="underline hover:text-foreground">
+            <a href="#" className="text-gold-400 hover:text-gold-300">
               Terms of Service
             </a>
             {" "}and{" "}
-            <a href="#" className="underline hover:text-foreground">
+            <a href="#" className="text-gold-400 hover:text-gold-300">
               Privacy Policy
             </a>
             .
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

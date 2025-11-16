@@ -6,9 +6,6 @@ import dynamic from "next/dynamic"
 import { StatsCard } from "@/components/admin/stats-card"
 import { ActivityFeed } from "@/components/admin/activity-feed"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
-import { LinkButton } from "@/components/ui/link-button"
-import { Card } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Users,
   FileText,
@@ -34,17 +31,18 @@ import {
   useContentDistribution,
   useSecurityEvents,
 } from "@/hooks/admin/useDashboardChartData"
+import Link from "next/link"
 
 // Dynamic imports for chart components to reduce bundle size
 const UserGrowthChart = dynamic(
   () => import("@/components/admin/dashboard/UserGrowthChart").then(mod => ({ default: mod.UserGrowthChart })),
   {
     loading: () => (
-      <Card className="p-6">
+      <div className="card-postmodern p-6">
         <div className="flex items-center justify-center h-[300px]">
-          <div className="animate-pulse text-muted-foreground">Loading chart...</div>
+          <div className="animate-pulse text-muted-foreground">LOADING CHART...</div>
         </div>
-      </Card>
+      </div>
     ),
   }
 )
@@ -53,11 +51,11 @@ const ContentDistributionChart = dynamic(
   () => import("@/components/admin/dashboard/ContentDistributionChart").then(mod => ({ default: mod.ContentDistributionChart })),
   {
     loading: () => (
-      <Card className="p-6">
+      <div className="card-postmodern p-6">
         <div className="flex items-center justify-center h-[300px]">
-          <div className="animate-pulse text-muted-foreground">Loading chart...</div>
+          <div className="animate-pulse text-muted-foreground">LOADING CHART...</div>
         </div>
-      </Card>
+      </div>
     ),
   }
 )
@@ -66,11 +64,11 @@ const SecurityEventsPanel = dynamic(
   () => import("@/components/admin/dashboard/SecurityEventsPanel").then(mod => ({ default: mod.SecurityEventsPanel })),
   {
     loading: () => (
-      <Card className="p-6">
+      <div className="card-postmodern p-6">
         <div className="flex items-center justify-center py-8">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
+          <div className="animate-pulse text-muted-foreground">LOADING...</div>
         </div>
-      </Card>
+      </div>
     ),
   }
 )
@@ -132,18 +130,18 @@ export default function DashboardPage() {
       {/* Section 1: Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">플랫폼 통계 및 최근 활동 모니터링</p>
+          <h1 className="text-heading-lg mb-2">ADMIN DASHBOARD</h1>
+          <p className="text-body text-muted-foreground">플랫폼 통계 및 최근 활동 모니터링</p>
         </div>
         <div className="flex gap-2">
-          <LinkButton href="/admin/security-logs" variant="outline" size="sm">
+          <Link href="/admin/security-logs" className="btn-secondary text-sm">
             <Shield className="h-4 w-4 mr-2" />
-            Security Logs
-          </LinkButton>
-          <LinkButton href="/admin/audit-logs" variant="outline" size="sm">
+            SECURITY LOGS
+          </Link>
+          <Link href="/admin/audit-logs" className="btn-secondary text-sm">
             <Activity className="h-4 w-4 mr-2" />
-            Audit Logs
-          </LinkButton>
+            AUDIT LOGS
+          </Link>
         </div>
       </div>
 
@@ -199,26 +197,20 @@ export default function DashboardPage() {
       )}
 
       {/* Section 4: Charts */}
-      <Tabs defaultValue="growth" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="growth">
+      <div className="space-y-4">
+        <div className="flex gap-2 border-b-2 border-gold-600">
+          <button className="btn-ghost px-4 py-2">
             <BarChart3 className="h-4 w-4 mr-2" />
-            User Growth
-          </TabsTrigger>
-          <TabsTrigger value="distribution">
+            USER GROWTH
+          </button>
+          <button className="btn-ghost px-4 py-2 opacity-50">
             <PieChartIcon className="h-4 w-4 mr-2" />
-            Content Distribution
-          </TabsTrigger>
-        </TabsList>
+            CONTENT DISTRIBUTION
+          </button>
+        </div>
 
-        <TabsContent value="growth">
-          <UserGrowthChart data={userGrowthData} isLoading={userGrowthLoading} />
-        </TabsContent>
-
-        <TabsContent value="distribution">
-          <ContentDistributionChart data={contentDistribution} isLoading={contentLoading} />
-        </TabsContent>
-      </Tabs>
+        <UserGrowthChart data={userGrowthData} isLoading={userGrowthLoading} />
+      </div>
 
       {/* Section 5: Security Events */}
       <SecurityEventsPanel events={securityEvents} isLoading={securityLoading} />
@@ -226,106 +218,100 @@ export default function DashboardPage() {
       {/* Section 6: Recent Activity & Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Recent Activity */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <div className="card-postmodern p-6">
+          <h3 className="text-heading-sm mb-4 flex items-center gap-2">
             <Activity className="h-5 w-5" />
-            Recent Admin Activity
+            RECENT ADMIN ACTIVITY
           </h3>
           <ActivityFeed activities={activities} />
-        </Card>
+        </div>
 
         {/* Quick Actions */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <div className="card-postmodern p-6">
+          <h3 className="text-heading-sm mb-4 flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Quick Actions
+            QUICK ACTIONS
           </h3>
           <div className="grid grid-cols-1 gap-3">
-            <LinkButton
+            <Link
               href="/admin/users"
-              variant="outline"
-              className="h-16 justify-start"
+              className="card-postmodern-interactive p-4 flex items-center"
             >
-              <Users className="h-5 w-5 mr-3" />
+              <Users className="h-5 w-5 mr-3 text-gold-400" />
               <div className="text-left">
-                <div className="font-semibold">User Management</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-caption-lg">USER MANAGEMENT</div>
+                <div className="text-caption text-muted-foreground">
                   사용자 관리, 밴, 역할 변경
                 </div>
               </div>
-            </LinkButton>
+            </Link>
 
-            <LinkButton
+            <Link
               href="/admin/claims"
-              variant="outline"
-              className="h-16 justify-start"
+              className="card-postmodern-interactive p-4 flex items-center"
             >
-              <UserCheck className="h-5 w-5 mr-3" />
+              <UserCheck className="h-5 w-5 mr-3 text-gold-400" />
               <div className="text-left">
-                <div className="font-semibold">Claim Management</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-caption-lg">CLAIM MANAGEMENT</div>
+                <div className="text-caption text-muted-foreground">
                   플레이어 프로필 클레임 승인
                 </div>
               </div>
-            </LinkButton>
+            </Link>
 
-            <LinkButton
+            <Link
               href="/admin/archive"
-              variant="outline"
-              className="h-16 justify-start"
+              className="card-postmodern-interactive p-4 flex items-center"
             >
-              <Archive className="h-5 w-5 mr-3" />
+              <Archive className="h-5 w-5 mr-3 text-gold-400" />
               <div className="text-left">
-                <div className="font-semibold">Archive Management</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-caption-lg">ARCHIVE MANAGEMENT</div>
+                <div className="text-caption text-muted-foreground">
                   토너먼트 및 이벤트 관리
                 </div>
               </div>
-            </LinkButton>
+            </Link>
 
-            <LinkButton
+            <Link
               href="/admin/content"
-              variant="outline"
-              className="h-16 justify-start"
+              className="card-postmodern-interactive p-4 flex items-center"
             >
-              <FileText className="h-5 w-5 mr-3" />
+              <FileText className="h-5 w-5 mr-3 text-gold-400" />
               <div className="text-left">
-                <div className="font-semibold">Content Moderation</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-caption-lg">CONTENT MODERATION</div>
+                <div className="text-caption text-muted-foreground">
                   포스트 및 댓글 관리, 신고 처리
                 </div>
               </div>
-            </LinkButton>
+            </Link>
 
-            <LinkButton
+            <Link
               href="/admin/edit-requests"
-              variant="outline"
-              className="h-16 justify-start"
+              className="card-postmodern-interactive p-4 flex items-center"
             >
-              <AlertCircle className="h-5 w-5 mr-3" />
+              <AlertCircle className="h-5 w-5 mr-3 text-gold-400" />
               <div className="text-left">
-                <div className="font-semibold">Edit Requests</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-caption-lg">EDIT REQUESTS</div>
+                <div className="text-caption text-muted-foreground">
                   핸드 수정 요청 검토 및 승인
                 </div>
               </div>
-            </LinkButton>
+            </Link>
 
-            <LinkButton
+            <Link
               href="/admin/performance"
-              variant="outline"
-              className="h-16 justify-start"
+              className="card-postmodern-interactive p-4 flex items-center"
             >
-              <Activity className="h-5 w-5 mr-3" />
+              <Activity className="h-5 w-5 mr-3 text-gold-400" />
               <div className="text-left">
-                <div className="font-semibold">Performance</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-caption-lg">PERFORMANCE</div>
+                <div className="text-caption text-muted-foreground">
                   Web Vitals 및 성능 메트릭
                 </div>
               </div>
-            </LinkButton>
+            </Link>
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   )
