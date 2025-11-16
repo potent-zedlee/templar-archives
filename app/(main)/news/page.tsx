@@ -2,9 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useNewsQuery } from "@/lib/queries/news-queries"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { Newspaper, Calendar, User } from "lucide-react"
@@ -24,51 +21,55 @@ export default function NewsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-black-0">
       <main className="container max-w-7xl mx-auto py-8 px-4" id="main-content">
-        <div className="mb-6">
-          <h1 className="text-title-lg mb-2">Poker News</h1>
-          <p className="text-body text-muted-foreground">
+        <div className="mb-8">
+          <h1 className="text-display-sm text-gold-400 mb-2">POKER NEWS</h1>
+          <p className="text-body text-white/70">
             Latest poker news, updates, and announcements
           </p>
         </div>
 
         {/* Category Filter */}
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-6">
-          <TabsList>
+        <div className="mb-6">
+          <div className="flex gap-0 border-b-2 border-gold-700 overflow-x-auto community-nav">
             {NEWS_CATEGORIES.map((category) => (
-              <TabsTrigger key={category} value={category}>
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`community-tab whitespace-nowrap ${selectedCategory === category ? 'active' : ''}`}
+              >
                 {category}
-              </TabsTrigger>
+              </button>
             ))}
-          </TabsList>
-        </Tabs>
+          </div>
+        </div>
 
         {/* News List */}
         {isLoading ? (
           <CardSkeleton count={3} />
         ) : allNews.length === 0 ? (
-          <Card className="p-12 text-center">
+          <div className="card-postmodern p-12 text-center">
             <div className="flex flex-col items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <Newspaper className="h-8 w-8 text-primary" />
+              <div className="h-16 w-16 bg-black-200 flex items-center justify-center border-2 border-gold-700">
+                <Newspaper className="h-8 w-8 text-gold-400" />
               </div>
               <div>
-                <h2 className="text-title-md mb-2">No news yet</h2>
-                <p className="text-body text-muted-foreground max-w-md">
+                <h2 className="text-heading text-gold-400 mb-2">No news yet</h2>
+                <p className="text-body text-white/70 max-w-md">
                   {selectedCategory === 'All'
                     ? 'There are no published news articles at this time.'
                     : `No news in the "${selectedCategory}" category.`}
                 </p>
               </div>
             </div>
-          </Card>
+          </div>
         ) : (
           <div className="grid gap-6">
             {allNews.map((news) => (
-              <Card
+              <div
                 key={news.id}
-                className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+                className="card-postmodern-interactive p-0 overflow-hidden cursor-pointer hover-3d"
                 onClick={() => handleNewsClick(news.id)}
               >
                 <div className="flex flex-col md:flex-row">
@@ -78,7 +79,7 @@ export default function NewsPage() {
                       <img
                         src={news.thumbnail_url}
                         alt={news.title}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover border-2 border-gold-700"
                       />
                     </div>
                   )}
@@ -87,17 +88,19 @@ export default function NewsPage() {
                   <div className="flex-1 p-6">
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div className="flex-1">
-                        <h2 className="text-xl font-semibold mb-2 hover:text-primary transition-colors">
+                        <h2 className="text-heading text-gold-400 mb-2 hover:text-gold-300 transition-colors">
                           {news.title}
                         </h2>
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge variant="outline">{news.category}</Badge>
+                          <span className="post-type-badge text-xs py-1 px-3">
+                            {news.category}
+                          </span>
                         </div>
                       </div>
                     </div>
 
                     {/* Preview */}
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
+                    <p className="text-body text-white/80 mb-4 line-clamp-3">
                       {news.content.substring(0, 200)}...
                     </p>
 
@@ -105,22 +108,22 @@ export default function NewsPage() {
                     {news.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-4">
                         {news.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
+                          <span key={tag} className="player-badge text-xs">
                             {tag}
-                          </Badge>
+                          </span>
                         ))}
                       </div>
                     )}
 
                     {/* Meta Info */}
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-4 post-meta">
                       <div className="flex items-center gap-1">
                         <User className="h-3 w-3" />
                         <span>{news.author?.nickname || 'Unknown'}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        <span>
+                        <span className="text-mono">
                           {news.published_at
                             ? new Date(news.published_at).toLocaleDateString('ko-KR')
                             : new Date(news.created_at).toLocaleDateString('ko-KR')}
@@ -130,12 +133,12 @@ export default function NewsPage() {
 
                     {/* External Link */}
                     {news.external_link && (
-                      <div className="mt-3 pt-3 border-t">
+                      <div className="mt-3 pt-3 border-t-2 border-gold-700">
                         <a
                           href={news.external_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-blue-500 hover:underline"
+                          className="text-caption text-gold-400 hover:text-gold-300"
                           onClick={(e) => e.stopPropagation()}
                         >
                           Source: {new URL(news.external_link).hostname}
@@ -144,7 +147,7 @@ export default function NewsPage() {
                     )}
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}

@@ -237,9 +237,9 @@ export default function PlayerDetailClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-black-0">
         <div className="container max-w-7xl mx-auto py-16 text-center">
-          <p className="text-body-lg text-muted-foreground">Loading...</p>
+          <p className="text-body text-white/70">Loading...</p>
         </div>
       </div>
     )
@@ -247,13 +247,13 @@ export default function PlayerDetailClient() {
 
   if (!player) {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-black-0">
         <div className="container max-w-7xl mx-auto py-16 text-center">
-          <p className="text-body-lg text-muted-foreground">Player not found</p>
-          <Button onClick={() => router.push('/players')} className="mt-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
+          <p className="text-body text-white/70">Player not found</p>
+          <button className="btn-primary mt-4" onClick={() => router.push('/players')}>
+            <ArrowLeft className="mr-2 h-4 w-4 inline" />
             Back to Players
-          </Button>
+          </button>
         </div>
       </div>
     )

@@ -2,9 +2,6 @@
 
 import { use } from "react"
 import { useRouter } from "next/navigation"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { useNewsDetailQuery } from "@/lib/queries/news-queries"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { Calendar, User, ExternalLink, ArrowLeft } from "lucide-react"
@@ -17,7 +14,7 @@ export default function NewsDetailPage({ params }: { params: Promise<{ id: strin
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-black-0">
         <div className="container max-w-4xl mx-auto py-8 px-4">
           <CardSkeleton count={1} />
         </div>
@@ -27,43 +24,42 @@ export default function NewsDetailPage({ params }: { params: Promise<{ id: strin
 
   if (error || !news) {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-black-0">
         <div className="container max-w-4xl mx-auto py-8 px-4">
-          <Card className="p-12 text-center">
-            <h2 className="text-title-md mb-2">News not found</h2>
-            <p className="text-body text-muted-foreground mb-4">
+          <div className="card-postmodern p-12 text-center">
+            <h2 className="text-heading text-gold-400 mb-2">News not found</h2>
+            <p className="text-body text-white/70 mb-4">
               The news article you're looking for doesn't exist or has been removed.
             </p>
-            <Button onClick={() => router.push('/news')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+            <button className="btn-primary" onClick={() => router.push('/news')}>
+              <ArrowLeft className="h-4 w-4 mr-2 inline" />
               Back to News
-            </Button>
-          </Card>
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-black-0">
       <main className="container max-w-4xl mx-auto py-8 px-4">
-        <Button
-          variant="ghost"
+        <button
+          className="btn-ghost mb-6"
           onClick={() => router.push('/news')}
-          className="mb-6"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
+          <ArrowLeft className="h-4 w-4 mr-2 inline" />
           Back to News
-        </Button>
+        </button>
 
-        <Card className="overflow-hidden">
+        <div className="card-postmodern overflow-hidden">
           {/* Thumbnail */}
           {news.thumbnail_url && (
             <div className="w-full h-96">
               <img
                 src={news.thumbnail_url}
                 alt={news.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover border-2 border-gold-700"
               />
             </div>
           )}
@@ -72,20 +68,20 @@ export default function NewsDetailPage({ params }: { params: Promise<{ id: strin
           <div className="p-8">
             {/* Title & Category */}
             <div className="mb-6">
-              <Badge variant="outline" className="mb-3">
+              <span className="post-type-badge mb-3 inline-block">
                 {news.category}
-              </Badge>
-              <h1 className="text-3xl font-bold mb-4">{news.title}</h1>
+              </span>
+              <h1 className="text-display text-gold-400 mb-4">{news.title}</h1>
 
               {/* Meta Info */}
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-4 post-meta">
                 <div className="flex items-center gap-1">
                   <User className="h-4 w-4" />
                   <span>{news.author?.nickname || 'Unknown'}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>
+                  <span className="text-mono">
                     {news.published_at
                       ? new Date(news.published_at).toLocaleDateString('ko-KR', {
                           year: 'numeric',
@@ -101,7 +97,7 @@ export default function NewsDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
                 {news.approver && (
                   <div className="flex items-center gap-1">
-                    <span className="text-xs">Approved by: {news.approver.nickname}</span>
+                    <span className="text-caption">Approved by: {news.approver.nickname}</span>
                   </div>
                 )}
               </div>
@@ -111,9 +107,9 @@ export default function NewsDetailPage({ params }: { params: Promise<{ id: strin
             {news.tags.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
                 {news.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
+                  <span key={tag} className="player-badge">
                     {tag}
-                  </Badge>
+                  </span>
                 ))}
               </div>
             )}
@@ -125,12 +121,12 @@ export default function NewsDetailPage({ params }: { params: Promise<{ id: strin
 
             {/* External Link */}
             {news.external_link && (
-              <div className="pt-6 border-t">
+              <div className="pt-6 border-t-2 border-gold-700">
                 <a
                   href={news.external_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-blue-500 hover:underline"
+                  className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300"
                 >
                   <ExternalLink className="h-4 w-4" />
                   View Original Source
@@ -138,7 +134,7 @@ export default function NewsDetailPage({ params }: { params: Promise<{ id: strin
               </div>
             )}
           </div>
-        </Card>
+        </div>
       </main>
     </div>
   )

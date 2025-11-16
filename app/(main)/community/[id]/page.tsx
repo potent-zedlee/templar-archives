@@ -68,7 +68,7 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-black-0">
         <div className="container max-w-4xl mx-auto py-8 md:py-12 px-4 md:px-6">
           <CardSkeleton count={1} />
         </div>
@@ -78,32 +78,32 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-black-0">
         <div className="container max-w-4xl mx-auto py-16 px-4 md:px-6">
-          <Card className="p-12 text-center">
-            <h2 className="text-title-lg mb-4">Post Not Found</h2>
-            <p className="text-body text-muted-foreground mb-6">
+          <div className="card-postmodern p-12 text-center">
+            <h2 className="text-heading text-gold-400 mb-4">Post Not Found</h2>
+            <p className="text-body text-white/70 mb-6">
               The post you're looking for doesn't exist or has been removed.
             </p>
-            <Button onClick={() => router.push('/community')}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
+            <button className="btn-primary" onClick={() => router.push('/community')}>
+              <ArrowLeft className="mr-2 h-4 w-4 inline" />
               Back to Community
-            </Button>
-          </Card>
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-black-0">
       <div className="container max-w-4xl mx-auto py-8 md:py-12 px-4 md:px-6">
         {/* Back Button */}
         <div className="mb-6">
-          <Button variant="ghost" size="sm" onClick={() => router.push('/community')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
+          <button className="btn-ghost" onClick={() => router.push('/community')}>
+            <ArrowLeft className="mr-2 h-4 w-4 inline" />
             Back to Community
-          </Button>
+          </button>
         </div>
 
         {/* Post Card */}
