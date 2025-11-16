@@ -93,15 +93,15 @@ export interface KanAnalysisRequestInput {
   streamName?: string // Custom stream name
 }
 
-// Segment processing result
-interface SegmentResult {
-  segment_id: string
-  segment_index: number
-  status: 'success' | 'failed'
-  hands_found?: number
-  error?: string
-  processing_time?: number
-}
+// Segment processing result (Currently unused, reserved for future multi-segment support)
+// interface SegmentResult {
+//   segment_id: string
+//   segment_index: number
+//   status: 'success' | 'failed'
+//   hands_found?: number
+//   error?: string
+//   processing_time?: number
+// }
 
 // Job result structure (stored in analysis_jobs.result) - Currently unused
 // interface JobResult {
@@ -291,181 +291,182 @@ async function checkDuplicateAnalysis(
 
 /**
  * Store hands from segment to database using transactional RPC
+ * (Currently unused - reserved for future multi-segment support)
  */
-async function storeHandsFromSegment(
-  supabase: TypedSupabaseClient,
-  hands: KanHand[],
-  streamId: string,
-  jobId: string,
-  segment: TimeSegment,
-  startHandNumber: number
-): Promise<{ success: number; failed: number; errors: string[] }> {
-  let handNumber = startHandNumber
-  let successCount = 0
-  let failedCount = 0
-  const errors: string[] = []
-
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[storeHands] Processing ${hands.length} hands for segment`)
-  }
-
-  // Fetch stream info once for thumbnail URL generation
-  const { data: streamData } = await supabase
-    .from('streams')
-    .select('video_url, video_source')
-    .eq('id', streamId)
-    .single()
-
-  const thumbnailUrl = streamData
-    ? getHandThumbnailUrl(
-        streamData.video_url || undefined,
-        (streamData.video_source as 'youtube' | 'upload' | 'nas' | undefined) || undefined
-      )
-    : null
-
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[storeHands] Thumbnail URL for stream ${streamId}:`, thumbnailUrl)
-  }
-
-  for (const handData of hands) {
-    try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[storeHands] Processing hand #${handData.handNumber || handNumber}`)
-      }
-
-      // Find or create players first (outside transaction)
-      const playerIdMap = new Map<string, string>()
-
-      if (handData.players) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[storeHands] Finding/creating ${handData.players.length} players`)
-        }
-        for (const playerData of handData.players) {
-          const playerId = await findOrCreatePlayer(supabase, playerData.name)
-          playerIdMap.set(playerData.name, playerId)
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`[storeHands] Player ${playerData.name} -> ${playerId}`)
-          }
-        }
-      }
-
-      // Prepare players data for RPC
-      const playersData: Record<string, unknown>[] = []
-      if (handData.players) {
-        for (const playerData of handData.players) {
-          const playerId = playerIdMap.get(playerData.name)
-          if (!playerId) continue
-
-          const winner = handData.winners?.find((w) => w.name === playerData.name)
-
-          let holeCardsArray: string[] | null = null
-          if (playerData.holeCards) {
-            if (Array.isArray(playerData.holeCards)) {
-              holeCardsArray = playerData.holeCards
-            } else if (typeof playerData.holeCards === 'string') {
-              holeCardsArray = playerData.holeCards.split(/[\s,]+/).filter(Boolean)
-            }
-          }
-
-          playersData.push({
-            player_id: playerId,
-            poker_position: playerData.position,
-            starting_stack: playerData.stackSize || 0,
-            ending_stack: playerData.stackSize || 0,
-            hole_cards: holeCardsArray,
-            cards: holeCardsArray ? holeCardsArray.join(' ') : null,
-            final_amount: winner?.amount || 0,
-            is_winner: !!winner,
-            hand_description: winner?.hand || null,
-          })
-        }
-      }
-
-      // Prepare actions data for RPC
-      const actionsData: Record<string, unknown>[] = []
-      if (handData.actions) {
-        for (let idx = 0; idx < handData.actions.length; idx++) {
-          const action = handData.actions[idx]
-          const playerId = playerIdMap.get(action.player)
-          if (!playerId) continue
-
-          actionsData.push({
-            player_id: playerId,
-            action_order: idx + 1,
-            street: action.street.toLowerCase(),
-            action_type: action.action.toLowerCase(),
-            amount: action.amount || 0,
-          })
-        }
-      }
-
-      // Call RPC function to save hand transactionally
-      console.log(`[storeHands] Calling RPC with ${playersData.length} players, ${actionsData.length} actions`)
-      const { data: newHandId, error: rpcError } = await supabase.rpc(
-        'save_hand_with_players_actions',
-        {
-          p_day_id: streamId,
-          p_job_id: jobId,
-          p_number: String(handData.handNumber || ++handNumber),
-          p_description: handData.description || `Hand #${handData.handNumber || handNumber}`,
-          p_timestamp: formatTimestamp(segment.start),
-          p_video_timestamp_start: segment.start,
-          p_video_timestamp_end: segment.end,
-          p_stakes: handData.stakes || 'Unknown',
-          p_board_flop: handData.board?.flop || [],
-          p_board_turn: handData.board?.turn || '',
-          p_board_river: handData.board?.river || '',
-          p_pot_size: handData.pot || 0,
-          p_raw_data: JSON.parse(JSON.stringify(handData)),
-          // Players and actions (required params)
-          p_players: JSON.parse(JSON.stringify(playersData)),
-          p_actions: JSON.parse(JSON.stringify(actionsData)),
-          // NEW: Blind information (optional params)
-          p_small_blind: handData.small_blind || null,
-          p_big_blind: handData.big_blind || null,
-          p_ante: handData.ante || 0,
-          // NEW: Street-specific pot sizes (optional params)
-          p_pot_preflop: handData.pot_preflop || null,
-          p_pot_flop: handData.pot_flop || null,
-          p_pot_turn: handData.pot_turn || null,
-          p_pot_river: handData.pot_river || null,
-          // NEW: Thumbnail URL (Phase 3)
-          p_thumbnail_url: thumbnailUrl || '',
-        }
-      )
-
-      if (rpcError) {
-        console.error(`[storeHands] RPC error:`, rpcError)
-        throw new Error(`RPC error: ${rpcError.message}`)
-      }
-
-      if (!newHandId) {
-        console.error(`[storeHands] No hand ID returned from RPC`)
-        throw new Error('No hand ID returned from RPC')
-      }
-
-      console.log(`[storeHands] Successfully saved hand with ID: ${newHandId}`)
-      successCount++
-    } catch (error) {
-      failedCount++
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error'
-      errors.push(`Hand ${handData.handNumber || handNumber}: ${errorMsg}`)
-
-      // Detailed error logging in development only
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[storeHands] Failed to save hand:', error)
-        if (error instanceof Error && error.stack) {
-          console.error('[storeHands] Stack trace:', error.stack)
-        }
-      } else {
-        // Production: Log only essential info
-        console.error(`[storeHands] Hand save failed: ${errorMsg}`)
-      }
-    }
-  }
-
-  return { success: successCount, failed: failedCount, errors }
-}
+// async function storeHandsFromSegment(
+//   supabase: TypedSupabaseClient,
+//   hands: KanHand[],
+//   streamId: string,
+//   jobId: string,
+//   segment: TimeSegment,
+//   startHandNumber: number
+// ): Promise<{ success: number; failed: number; errors: string[] }> {
+//   let handNumber = startHandNumber
+//   let successCount = 0
+//   let failedCount = 0
+//   const errors: string[] = []
+//
+//   if (process.env.NODE_ENV === 'development') {
+//     console.log(`[storeHands] Processing ${hands.length} hands for segment`)
+//   }
+//
+//   // Fetch stream info once for thumbnail URL generation
+//   const { data: streamData } = await supabase
+//     .from('streams')
+//     .select('video_url, video_source')
+//     .eq('id', streamId)
+//     .single()
+//
+//   const thumbnailUrl = streamData
+//     ? getHandThumbnailUrl(
+//         streamData.video_url || undefined,
+//         (streamData.video_source as 'youtube' | 'upload' | 'nas' | undefined) || undefined
+//       )
+//     : null
+//
+//   if (process.env.NODE_ENV === 'development') {
+//     console.log(`[storeHands] Thumbnail URL for stream ${streamId}:`, thumbnailUrl)
+//   }
+//
+//   for (const handData of hands) {
+//     try {
+//       if (process.env.NODE_ENV === 'development') {
+//         console.log(`[storeHands] Processing hand #${handData.handNumber || handNumber}`)
+//       }
+//
+//       // Find or create players first (outside transaction)
+//       const playerIdMap = new Map<string, string>()
+//
+//       if (handData.players) {
+//         if (process.env.NODE_ENV === 'development') {
+//           console.log(`[storeHands] Finding/creating ${handData.players.length} players`)
+//         }
+//         for (const playerData of handData.players) {
+//           const playerId = await findOrCreatePlayer(supabase, playerData.name)
+//           playerIdMap.set(playerData.name, playerId)
+//           if (process.env.NODE_ENV === 'development') {
+//             console.log(`[storeHands] Player ${playerData.name} -> ${playerId}`)
+//           }
+//         }
+//       }
+//
+//       // Prepare players data for RPC
+//       const playersData: Record<string, unknown>[] = []
+//       if (handData.players) {
+//         for (const playerData of handData.players) {
+//           const playerId = playerIdMap.get(playerData.name)
+//           if (!playerId) continue
+//
+//           const winner = handData.winners?.find((w) => w.name === playerData.name)
+//
+//           let holeCardsArray: string[] | null = null
+//           if (playerData.holeCards) {
+//             if (Array.isArray(playerData.holeCards)) {
+//               holeCardsArray = playerData.holeCards
+//             } else if (typeof playerData.holeCards === 'string') {
+//               holeCardsArray = playerData.holeCards.split(/[\s,]+/).filter(Boolean)
+//             }
+//           }
+//
+//           playersData.push({
+//             player_id: playerId,
+//             poker_position: playerData.position,
+//             starting_stack: playerData.stackSize || 0,
+//             ending_stack: playerData.stackSize || 0,
+//             hole_cards: holeCardsArray,
+//             cards: holeCardsArray ? holeCardsArray.join(' ') : null,
+//             final_amount: winner?.amount || 0,
+//             is_winner: !!winner,
+//             hand_description: winner?.hand || null,
+//           })
+//         }
+//       }
+//
+//       // Prepare actions data for RPC
+//       const actionsData: Record<string, unknown>[] = []
+//       if (handData.actions) {
+//         for (let idx = 0; idx < handData.actions.length; idx++) {
+//           const action = handData.actions[idx]
+//           const playerId = playerIdMap.get(action.player)
+//           if (!playerId) continue
+//
+//           actionsData.push({
+//             player_id: playerId,
+//             action_order: idx + 1,
+//             street: action.street.toLowerCase(),
+//             action_type: action.action.toLowerCase(),
+//             amount: action.amount || 0,
+//           })
+//         }
+//       }
+//
+//       // Call RPC function to save hand transactionally
+//       console.log(`[storeHands] Calling RPC with ${playersData.length} players, ${actionsData.length} actions`)
+//       const { data: newHandId, error: rpcError } = await supabase.rpc(
+//         'save_hand_with_players_actions',
+//         {
+//           p_day_id: streamId,
+//           p_job_id: jobId,
+//           p_number: String(handData.handNumber || ++handNumber),
+//           p_description: handData.description || `Hand #${handData.handNumber || handNumber}`,
+//           p_timestamp: formatTimestamp(segment.start),
+//           p_video_timestamp_start: segment.start,
+//           p_video_timestamp_end: segment.end,
+//           p_stakes: handData.stakes || 'Unknown',
+//           p_board_flop: handData.board?.flop || [],
+//           p_board_turn: handData.board?.turn || '',
+//           p_board_river: handData.board?.river || '',
+//           p_pot_size: handData.pot || 0,
+//           p_raw_data: JSON.parse(JSON.stringify(handData)),
+//           // Players and actions (required params)
+//           p_players: JSON.parse(JSON.stringify(playersData)),
+//           p_actions: JSON.parse(JSON.stringify(actionsData)),
+//           // NEW: Blind information (optional params)
+//           p_small_blind: handData.small_blind || null,
+//           p_big_blind: handData.big_blind || null,
+//           p_ante: handData.ante || 0,
+//           // NEW: Street-specific pot sizes (optional params)
+//           p_pot_preflop: handData.pot_preflop || null,
+//           p_pot_flop: handData.pot_flop || null,
+//           p_pot_turn: handData.pot_turn || null,
+//           p_pot_river: handData.pot_river || null,
+//           // NEW: Thumbnail URL (Phase 3)
+//           p_thumbnail_url: thumbnailUrl || '',
+//         }
+//       )
+//
+//       if (rpcError) {
+//         console.error(`[storeHands] RPC error:`, rpcError)
+//         throw new Error(`RPC error: ${rpcError.message}`)
+//       }
+//
+//       if (!newHandId) {
+//         console.error(`[storeHands] No hand ID returned from RPC`)
+//         throw new Error('No hand ID returned from RPC')
+//       }
+//
+//       console.log(`[storeHands] Successfully saved hand with ID: ${newHandId}`)
+//       successCount++
+//     } catch (error) {
+//       failedCount++
+//       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+//       errors.push(`Hand ${handData.handNumber || handNumber}: ${errorMsg}`)
+//
+//       // Detailed error logging in development only
+//       if (process.env.NODE_ENV === 'development') {
+//         console.error('[storeHands] Failed to save hand:', error)
+//         if (error instanceof Error && error.stack) {
+//           console.error('[storeHands] Stack trace:', error.stack)
+//         }
+//       } else {
+//         // Production: Log only essential info
+//         console.error(`[storeHands] Hand save failed: ${errorMsg}`)
+//       }
+//     }
+//   }
+//
+//   return { success: successCount, failed: failedCount, errors }
+// }
 
 /**
  * Start KAN video analysis job
@@ -765,7 +766,7 @@ export async function createKanAnalysisRequest(
       .eq('youtube_id', videoId)
       .single()
 
-    // let dbVideoId: string // Not currently used
+    let dbVideoId: string
     if (!existingVideo) {
       const { data: newVideo, error: videoError } = await supabase
         .from('videos')

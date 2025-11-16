@@ -3,25 +3,16 @@
 import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, ThumbsUp, Share2, Link2 } from "lucide-react"
 import Link from "next/link"
-import { type Post } from "@/lib/supabase-community"
 import { usePostQuery, useLikePostMutation } from "@/lib/queries/community-queries"
 import { toast } from "sonner"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { useAuth } from "@/components/auth-provider"
 import { ReportButton } from "@/components/report-button"
 import { PostComments } from "@/components/post-comments"
-
-const categoryColors: Record<Post['category'], string> = {
-  "analysis": "bg-blue-500/10 text-blue-500",
-  "strategy": "bg-green-500/10 text-green-500",
-  "hand-review": "bg-purple-500/10 text-purple-500",
-  "general": "bg-gray-500/10 text-gray-500"
-}
 
 export default function PostDetailPage() {
   const params = useParams()

@@ -4,12 +4,11 @@ import { useState, useCallback } from "react"
 import dynamic from "next/dynamic"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { StaggerContainer, StaggerItem } from "@/components/page-transition"
-import { AnimatedCard, AnimatedButton, AnimatedIconButton } from "@/components/animated-card"
 import { Card } from "@/components/ui/card"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { MessageSquare, TrendingUp, Clock, Star, ThumbsUp, Link2, X } from "lucide-react"
 import Link from "next/link"
@@ -310,9 +309,9 @@ export default function communityClient() {
                       <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={createPostMutation.isPending}>
                         Cancel
                       </Button>
-                      <AnimatedButton onClick={handleCreatePost} disabled={createPostMutation.isPending} loading={createPostMutation.isPending}>
-                        Create Post
-                      </AnimatedButton>
+                      <Button onClick={handleCreatePost} disabled={createPostMutation.isPending}>
+                        {createPostMutation.isPending ? 'Creating...' : 'Create Post'}
+                      </Button>
                     </div>
                   </div>
                 </DialogContent>
