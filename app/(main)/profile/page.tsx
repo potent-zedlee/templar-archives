@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Loader2, Check, X, Trash2, AlertTriangle } from "lucide-react"
+import { Loader2, Check, X, AlertTriangle, Trash2 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { toast } from "sonner"
 import {
@@ -17,7 +11,7 @@ import {
   useUpdateProfileMutation,
 } from "@/lib/queries/profile-queries"
 
-export default function profileClient() {
+export default function ProfileClient() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
 
@@ -116,7 +110,7 @@ export default function profileClient() {
     return (
       <div className="flex min-h-screen flex-col">
         <div className="flex flex-1 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-gold-400" />
         </div>
       </div>
     )
@@ -126,7 +120,7 @@ export default function profileClient() {
     return (
       <div className="flex min-h-screen flex-col">
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-muted-foreground">Failed to load profile.</p>
+          <p className="text-black-600">Failed to load profile.</p>
         </div>
       </div>
     )
@@ -135,46 +129,58 @@ export default function profileClient() {
   return (
     <div className="flex min-h-screen flex-col">
       <main className="container max-w-4xl mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Settings</CardTitle>
-            <CardDescription>
+        {/* Profile Settings Card */}
+        <div className="card-postmodern mb-8">
+          <div className="p-6 border-b-2 border-black-300">
+            <h1 className="text-heading text-2xl mb-2">PROFILE SETTINGS</h1>
+            <p className="text-black-600">
               Manage your profile information for Templar Archives.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
+            </p>
+          </div>
+
+          <div className="p-6 space-y-8">
             {/* Profile Photo */}
             <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={profile.avatar_url} alt={profile.nickname} />
-                <AvatarFallback>{profile.nickname.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <div className="h-20 w-20 border-2 border-gold-700 gold-glow overflow-hidden bg-black-200 flex items-center justify-center">
+                  {profile.avatar_url ? (
+                    <img src={profile.avatar_url} alt={profile.nickname} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl font-bold text-gold-400">
+                      {profile.nickname.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+              </div>
               <div>
                 <p className="text-caption font-medium">{profile.nickname}</p>
-                <p className="text-xs text-muted-foreground">{profile.email}</p>
+                <p className="text-xs text-black-600">{profile.email}</p>
               </div>
             </div>
 
             {/* Nickname */}
             <div className="space-y-2">
-              <Label htmlFor="nickname">Nickname *</Label>
+              <label htmlFor="nickname" className="text-caption block">
+                NICKNAME *
+              </label>
               <div className="relative">
-                <Input
+                <input
                   id="nickname"
+                  type="text"
                   placeholder="PokerMaster123"
                   value={nickname}
                   onChange={(e) => handleNicknameChange(e.target.value)}
                   disabled={saving}
-                  className="pr-10"
+                  className="input-postmodern w-full pr-10"
                 />
                 {checking && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <Loader2 className="h-4 w-4 animate-spin text-black-600" />
                   </div>
                 )}
                 {!checking && nicknameAvailability === true && nickname !== profile.nickname && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Check className="h-4 w-4 text-green-500" />
+                    <Check className="h-4 w-4 text-gold-400" />
                   </div>
                 )}
                 {!checking && nicknameAvailability === false && (
@@ -183,7 +189,7 @@ export default function profileClient() {
                   </div>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-black-600">
                 3-20 characters, alphanumeric and underscore only
               </p>
               {nicknameAvailability === false && (
@@ -195,8 +201,8 @@ export default function profileClient() {
 
             {/* Bio */}
             <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
+              <label htmlFor="bio" className="text-caption block">BIO</label>
+              <textarea
                 id="bio"
                 placeholder="A passionate poker player."
                 value={bio}
@@ -204,37 +210,43 @@ export default function profileClient() {
                 disabled={saving}
                 rows={4}
                 maxLength={500}
+                className="input-postmodern w-full resize-none"
               />
-              <p className="text-xs text-muted-foreground text-right">
+              <p className="text-xs text-black-600 text-right font-mono">
                 {bio.length} / 500
               </p>
             </div>
 
             {/* Poker Experience */}
             <div className="space-y-2">
-              <Label htmlFor="poker-experience">Poker Experience</Label>
-              <Input
+              <label htmlFor="poker-experience" className="text-caption block">
+                POKER EXPERIENCE
+              </label>
+              <input
                 id="poker-experience"
+                type="text"
                 placeholder="5 years, tournament focused"
                 value={pokerExperience}
                 onChange={(e) => setPokerExperience(e.target.value)}
                 disabled={saving}
                 maxLength={100}
+                className="input-postmodern w-full"
               />
             </div>
 
             {/* Save button */}
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
+            <div className="flex justify-end gap-2 pt-4">
+              <button
                 onClick={() => router.push("/")}
                 disabled={saving}
+                className="btn-secondary"
               >
                 Cancel
-              </Button>
-              <Button
+              </button>
+              <button
                 onClick={handleSave}
                 disabled={!canSave || saving}
+                className="btn-primary"
               >
                 {saving ? (
                   <>
@@ -244,42 +256,40 @@ export default function profileClient() {
                 ) : (
                   "Save"
                 )}
-              </Button>
+              </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Danger Zone */}
-        <Card className="mt-6 border-destructive">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
+        <div className="card-postmodern border-2 border-destructive">
+          <div className="p-6 border-b-2 border-destructive/50">
+            <h2 className="text-heading flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
-              Danger Zone
-            </CardTitle>
-            <CardDescription>
+              DANGER ZONE
+            </h2>
+            <p className="text-black-600 mt-2">
               Irreversible actions that affect your account and data.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg bg-destructive/5">
+            </p>
+          </div>
+          <div className="p-6">
+            <div className="flex items-center justify-between p-4 border-2 border-destructive/20 bg-destructive/5">
               <div className="flex-1">
                 <h3 className="font-semibold text-sm mb-1">Request Data Deletion</h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-black-600">
                   Exercise your right to be forgotten under GDPR, CCPA, and PIPL. This will permanently delete all your data.
                 </p>
               </div>
-              <Button
-                variant="destructive"
-                size="sm"
+              <button
                 onClick={() => router.push("/profile/delete-data")}
-                className="ml-4 gap-2"
+                className="ml-4 px-4 py-2 border-2 border-destructive bg-destructive text-white hover:bg-destructive/90 transition-colors flex items-center gap-2 text-sm uppercase font-bold"
               >
                 <Trash2 className="h-4 w-4" />
                 Request Deletion
-              </Button>
+              </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </main>
     </div>
   )

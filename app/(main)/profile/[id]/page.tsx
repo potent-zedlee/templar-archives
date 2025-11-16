@@ -2,11 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
-import { Card } from "@/components/ui/card"
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   MapPin,
   Globe,
@@ -30,7 +25,7 @@ import {
   useUserBookmarksQuery,
 } from "@/lib/queries/profile-queries"
 
-export default function profileidClient() {
+export default function ProfileIdClient() {
   const params = useParams()
   const userId = params.id as string
   const { user } = useAuth()
@@ -60,7 +55,7 @@ export default function profileidClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-black-100">
         <div className="container max-w-6xl mx-auto py-8 px-4">
           <CardSkeleton count={3} />
         </div>
@@ -70,13 +65,13 @@ export default function profileidClient() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-black-100">
         <div className="container max-w-6xl mx-auto py-16 px-4 text-center">
-          <h2 className="text-title-lg mb-4">User not found</h2>
-          <p className="text-body text-muted-foreground mb-6">
+          <h2 className="text-heading text-2xl mb-4">USER NOT FOUND</h2>
+          <p className="text-black-600 mb-6">
             The profile you are looking for does not exist.
           </p>
-          <Link href="/community" className={buttonVariants()}>
+          <Link href="/community" className="btn-primary">
             Go to Community
           </Link>
         </div>
@@ -85,56 +80,62 @@ export default function profileidClient() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-black-100">
       <div className="container max-w-6xl mx-auto py-8 px-4">
         {/* Profile Header */}
-        <Card className="p-6 mb-6">
+        <div className="card-postmodern p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Avatar */}
-            <Avatar className="h-24 w-24 md:h-32 md:w-32">
-              <AvatarImage src={profile.avatar_url} alt={profile.nickname} />
-              <AvatarFallback className="text-2xl">
-                {profile.nickname.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <div className="h-24 w-24 md:h-32 md:w-32 border-2 border-gold-700 gold-glow bg-black-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt={profile.nickname} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-4xl font-bold text-gold-400">
+                  {profile.nickname.slice(0, 2).toUpperCase()}
+                </span>
+              )}
+            </div>
 
             {/* Profile Info */}
             <div className="flex-1">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h1 className="text-title-lg mb-2">{profile.nickname}</h1>
+                  <h1 className="text-heading text-2xl mb-2">{profile.nickname}</h1>
                   {profile.bio && (
-                    <p className="text-body text-muted-foreground mb-3">{profile.bio}</p>
+                    <p className="text-black-600 mb-3">{profile.bio}</p>
                   )}
                 </div>
                 {isOwnProfile && (
-                  <Button variant="outline" size="sm" onClick={() => setIsEditDialogOpen(true)}>
-                    <Edit className="h-4 w-4 mr-2" />
+                  <button
+                    onClick={() => setIsEditDialogOpen(true)}
+                    className="btn-secondary flex items-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
                     Edit Profile
-                  </Button>
+                  </button>
                 )}
               </div>
 
               {/* Stats */}
               <div className="flex gap-6 mb-4">
                 <div className="text-center">
-                  <div className="text-title font-bold">{profile.posts_count}</div>
-                  <div className="text-caption text-muted-foreground">Posts</div>
+                  <div className="text-heading font-bold font-mono text-xl">{profile.posts_count}</div>
+                  <div className="text-caption text-black-600">POSTS</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-title font-bold">{profile.comments_count}</div>
-                  <div className="text-caption text-muted-foreground">Comments</div>
+                  <div className="text-heading font-bold font-mono text-xl">{profile.comments_count}</div>
+                  <div className="text-caption text-black-600">COMMENTS</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-title font-bold">{profile.likes_received}</div>
-                  <div className="text-caption text-muted-foreground">Likes</div>
+                  <div className="text-heading font-bold font-mono text-xl">{profile.likes_received}</div>
+                  <div className="text-caption text-black-600">LIKES</div>
                 </div>
               </div>
 
               {/* Additional Info */}
               <div className="flex flex-wrap gap-3">
                 {profile.location && (
-                  <div className="flex items-center gap-1 text-caption text-muted-foreground">
+                  <div className="flex items-center gap-1 text-caption text-black-600">
                     <MapPin className="h-4 w-4" />
                     <span>{profile.location}</span>
                   </div>
@@ -144,7 +145,7 @@ export default function profileidClient() {
                     href={profile.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-caption text-primary hover:underline"
+                    className="flex items-center gap-1 text-caption text-gold-400 hover:text-gold-300 transition-colors"
                   >
                     <Globe className="h-4 w-4" />
                     <span>Website</span>
@@ -155,7 +156,7 @@ export default function profileidClient() {
                     href={`https://twitter.com/${profile.twitter_handle}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-caption text-primary hover:underline"
+                    className="flex items-center gap-1 text-caption text-gold-400 hover:text-gold-300 transition-colors"
                   >
                     <Twitter className="h-4 w-4" />
                     <span>@{profile.twitter_handle}</span>
@@ -166,7 +167,7 @@ export default function profileidClient() {
                     href={`https://instagram.com/${profile.instagram_handle}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-caption text-primary hover:underline"
+                    className="flex items-center gap-1 text-caption text-gold-400 hover:text-gold-300 transition-colors"
                   >
                     <Instagram className="h-4 w-4" />
                     <span>@{profile.instagram_handle}</span>
@@ -175,127 +176,159 @@ export default function profileidClient() {
               </div>
             </div>
           </div>
-        </Card>
+        </div>
 
         {/* Activity Tabs */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="posts">
-              <FileText className="h-4 w-4 mr-2" />
-              Posts
-            </TabsTrigger>
-            <TabsTrigger value="comments">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Comments
-            </TabsTrigger>
+        <div className="space-y-4">
+          {/* Tab Headers */}
+          <div className="flex gap-2 border-b-2 border-black-300">
+            <button
+              onClick={() => setActiveTab("posts")}
+              className={`px-4 py-2 border-b-2 -mb-0.5 transition-colors ${
+                activeTab === "posts"
+                  ? "border-gold-400 text-gold-400"
+                  : "border-transparent text-black-600 hover:text-black-800"
+              }`}
+            >
+              <FileText className="h-4 w-4 inline mr-2" />
+              POSTS
+            </button>
+            <button
+              onClick={() => setActiveTab("comments")}
+              className={`px-4 py-2 border-b-2 -mb-0.5 transition-colors ${
+                activeTab === "comments"
+                  ? "border-gold-400 text-gold-400"
+                  : "border-transparent text-black-600 hover:text-black-800"
+              }`}
+            >
+              <MessageSquare className="h-4 w-4 inline mr-2" />
+              COMMENTS
+            </button>
             {isOwnProfile && (
-              <TabsTrigger value="bookmarks">
-                <Bookmark className="h-4 w-4 mr-2" />
-                Bookmarks
-              </TabsTrigger>
+              <button
+                onClick={() => setActiveTab("bookmarks")}
+                className={`px-4 py-2 border-b-2 -mb-0.5 transition-colors ${
+                  activeTab === "bookmarks"
+                    ? "border-gold-400 text-gold-400"
+                    : "border-transparent text-black-600 hover:text-black-800"
+                }`}
+              >
+                <Bookmark className="h-4 w-4 inline mr-2" />
+                BOOKMARKS
+              </button>
             )}
-          </TabsList>
+          </div>
 
           {/* Posts Tab */}
-          <TabsContent value="posts" className="mt-6 space-y-4">
-            {posts.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-body text-muted-foreground">No posts yet</p>
-              </Card>
-            ) : (
-              posts.map((post) => (
-                <Card key={post.id} className="p-4 hover:bg-muted/30 transition-colors">
-                  <Link href={`/community/${post.id}`}>
-                    <h3 className="text-body font-semibold mb-2">{post.title}</h3>
-                    <p className="text-caption text-muted-foreground line-clamp-2 mb-3">
-                      {post.content}
-                    </p>
-                    <div className="flex items-center gap-4 text-caption text-muted-foreground">
-                      <Badge variant="secondary">{post.category}</Badge>
-                      <span className="flex items-center gap-1">
-                        <ThumbsUp className="h-3 w-3" />
-                        {post.likes_count}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MessageSquare className="h-3 w-3" />
-                        {post.comments_count}
-                      </span>
-                      <span>{new Date(post.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </Link>
-                </Card>
-              ))
-            )}
-          </TabsContent>
+          {activeTab === "posts" && (
+            <div className="space-y-4">
+              {posts.length === 0 ? (
+                <div className="card-postmodern p-8 text-center">
+                  <p className="text-black-600">No posts yet</p>
+                </div>
+              ) : (
+                posts.map((post) => (
+                  <div key={post.id} className="card-postmodern-interactive p-4">
+                    <Link href={`/community/${post.id}`}>
+                      <h3 className="font-semibold mb-2">{post.title}</h3>
+                      <p className="text-caption text-black-600 line-clamp-2 mb-3">
+                        {post.content}
+                      </p>
+                      <div className="flex items-center gap-4 text-caption text-black-600">
+                        <span className="px-2 py-1 border border-gold-600 bg-gold-700/20 text-xs uppercase">
+                          {post.category}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <ThumbsUp className="h-3 w-3" />
+                          <span className="font-mono">{post.likes_count}</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MessageSquare className="h-3 w-3" />
+                          <span className="font-mono">{post.comments_count}</span>
+                        </span>
+                        <span className="font-mono">{new Date(post.created_at).toLocaleDateString()}</span>
+                      </div>
+                    </Link>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
 
           {/* Comments Tab */}
-          <TabsContent value="comments" className="mt-6 space-y-4">
-            {comments.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-body text-muted-foreground">No comments yet</p>
-              </Card>
-            ) : (
-              comments.map((comment) => (
-                <Card key={comment.id} className="p-4 hover:bg-muted/30 transition-colors">
-                  <p className="text-body mb-3">{comment.content}</p>
-                  <div className="flex items-center gap-4 text-caption text-muted-foreground">
-                    {(comment.post as any)?.title && (
-                      <Link
-                        href={`/community/${(comment.post as any).id}`}
-                        className="hover:text-primary hover:underline"
-                      >
-                        on: {(comment.post as any).title}
-                      </Link>
-                    )}
-                    <span className="flex items-center gap-1">
-                      <ThumbsUp className="h-3 w-3" />
-                      {comment.likes_count}
-                    </span>
-                    <span>{new Date(comment.created_at).toLocaleDateString()}</span>
+          {activeTab === "comments" && (
+            <div className="space-y-4">
+              {comments.length === 0 ? (
+                <div className="card-postmodern p-8 text-center">
+                  <p className="text-black-600">No comments yet</p>
+                </div>
+              ) : (
+                comments.map((comment) => (
+                  <div key={comment.id} className="card-postmodern-interactive p-4">
+                    <p className="mb-3">{comment.content}</p>
+                    <div className="flex items-center gap-4 text-caption text-black-600">
+                      {(comment.post as any)?.title && (
+                        <Link
+                          href={`/community/${(comment.post as any).id}`}
+                          className="hover:text-gold-400 transition-colors"
+                        >
+                          on: {(comment.post as any).title}
+                        </Link>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <ThumbsUp className="h-3 w-3" />
+                        <span className="font-mono">{comment.likes_count}</span>
+                      </span>
+                      <span className="font-mono">{new Date(comment.created_at).toLocaleDateString()}</span>
+                    </div>
                   </div>
-                </Card>
-              ))
-            )}
-          </TabsContent>
+                ))
+              )}
+            </div>
+          )}
 
           {/* Bookmarks Tab */}
-          {isOwnProfile && (
-            <TabsContent value="bookmarks" className="mt-6 space-y-4">
+          {isOwnProfile && activeTab === "bookmarks" && (
+            <div className="space-y-4">
               {bookmarks.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <p className="text-body text-muted-foreground">No bookmarks yet</p>
-                </Card>
+                <div className="card-postmodern p-8 text-center">
+                  <p className="text-black-600">No bookmarks yet</p>
+                </div>
               ) : (
                 bookmarks.map((bookmark) => (
-                  <Card key={bookmark.id} className="p-4 hover:bg-muted/30 transition-colors">
+                  <div key={bookmark.id} className="card-postmodern-interactive p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Badge>#{(bookmark.hand as any)?.number}</Badge>
+                          <span className="px-2 py-1 border border-gold-600 bg-gold-700/20 text-xs uppercase font-mono">
+                            #{(bookmark.hand as any)?.number}
+                          </span>
                           {bookmark.folder_name && (
-                            <Badge variant="outline">{bookmark.folder_name}</Badge>
+                            <span className="px-2 py-1 border border-black-400 text-xs uppercase">
+                              {bookmark.folder_name}
+                            </span>
                           )}
                         </div>
                         {(bookmark.hand as any)?.description && (
-                          <p className="text-body mb-2">{(bookmark.hand as any).description}</p>
+                          <p className="mb-2">{(bookmark.hand as any).description}</p>
                         )}
                         {bookmark.notes && (
-                          <p className="text-caption text-muted-foreground">{bookmark.notes}</p>
+                          <p className="text-caption text-black-600">{bookmark.notes}</p>
                         )}
                       </div>
                       <Link
                         href={`/archive?hand=${(bookmark.hand as any)?.id}`}
-                        className={buttonVariants({ variant: "ghost", size: "sm" })}
+                        className="btn-ghost ml-4"
                       >
                         View
                       </Link>
                     </div>
-                  </Card>
+                  </div>
                 ))
               )}
-            </TabsContent>
+            </div>
           )}
-        </Tabs>
+        </div>
       </div>
 
       {/* Edit Profile Dialog */}

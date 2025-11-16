@@ -8,15 +8,6 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Plus, Edit, Trash2, Eye } from "lucide-react"
 import { useMyLiveReportsQuery, useCreateLiveReportMutation, useUpdateLiveReportMutation, useDeleteLiveReportMutation, type LiveReport } from "@/lib/queries/live-reports-queries"
 import { ContentEditor } from "@/components/reporter/content-editor"
@@ -99,17 +90,22 @@ export default function ReporterLivePage() {
   const getStatusBadge = (status: LiveReport['status']) => {
     switch (status) {
       case 'draft':
-        return <Badge variant="outline">Draft</Badge>
+        return <span className="px-2 py-1 border border-black-400 text-xs uppercase">Draft</span>
       case 'pending':
-        return <Badge className="bg-yellow-500">Pending Approval</Badge>
+        return <span className="px-2 py-1 border border-gold-600 bg-gold-700/20 text-xs uppercase">Pending Approval</span>
       case 'published':
-        return <Badge className="bg-green-500">Published</Badge>
+        return (
+          <span className="px-2 py-1 border border-gold-500 bg-gold-500/20 text-xs uppercase flex items-center gap-1">
+            <span className="w-2 h-2 bg-gold-400 rounded-full animate-pulse"></span>
+            LIVE
+          </span>
+        )
     }
   }
 
   if (!hasAccess) {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-black-100">
         <div className="container max-w-7xl mx-auto py-8 px-4">
           <CardSkeleton count={3} />
         </div>
@@ -118,103 +114,104 @@ export default function ReporterLivePage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-black-100">
       <main className="container max-w-7xl mx-auto py-8 px-4">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-title-lg mb-2">My Live Reports</h1>
-            <p className="text-body text-muted-foreground">
+            <h1 className="text-heading text-2xl mb-2">MY LIVE REPORTS</h1>
+            <p className="text-black-600">
               Manage your live reporting articles
             </p>
           </div>
-          <Button onClick={handleCreate}>
-            <Plus className="h-4 w-4 mr-2" />
+          <button onClick={handleCreate} className="btn-primary flex items-center gap-2">
+            <Plus className="h-4 w-4" />
             Create Live Report
-          </Button>
+          </button>
         </div>
 
         {isLoading ? (
           <CardSkeleton count={3} />
         ) : myReports.length === 0 ? (
-          <Card className="p-12 text-center">
-            <p className="text-muted-foreground mb-4">No live reports yet</p>
-            <Button onClick={handleCreate}>
-              <Plus className="h-4 w-4 mr-2" />
+          <div className="card-postmodern p-12 text-center">
+            <p className="text-black-600 mb-4">No live reports yet</p>
+            <button onClick={handleCreate} className="btn-primary inline-flex items-center gap-2">
+              <Plus className="h-4 w-4" />
               Create Your First Live Report
-            </Button>
-          </Card>
+            </button>
+          </div>
         ) : (
           <div className="grid gap-4">
             {myReports.map((report) => (
-              <Card key={report.id} className="p-6">
+              <div key={report.id} className="card-postmodern p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="text-lg font-semibold">{report.title}</h3>
                       {getStatusBadge(report.status)}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">
+                    <p className="text-sm text-black-600 mb-2">
                       Category: {report.category}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-black-600">
                       {report.tags.length > 0 && `Tags: ${report.tags.join(', ')}`}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-2">
+                    <p className="text-xs text-black-600 mt-2 font-mono">
                       Created: {new Date(report.created_at).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="flex gap-2">
                     {report.status === 'published' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         onClick={() => router.push(`/live-reporting/${report.id}`)}
+                        className="btn-ghost"
                       >
                         <Eye className="h-4 w-4" />
-                      </Button>
+                      </button>
                     )}
                     {report.status !== 'published' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         onClick={() => handleEdit(report)}
+                        className="btn-ghost"
                       >
                         <Edit className="h-4 w-4" />
-                      </Button>
+                      </button>
                     )}
                     {report.status !== 'published' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         onClick={() => handleDelete(report.id)}
+                        className="btn-ghost text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </button>
                     )}
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
 
-        {/* Editor Dialog */}
-        <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingReport ? 'Edit Live Report' : 'Create Live Report'}
-              </DialogTitle>
-            </DialogHeader>
-            <ContentEditor
-              type="live_report"
-              initialData={editingReport || undefined}
-              onSave={handleSave}
-              onCancel={() => setIsEditorOpen(false)}
-              isLoading={createMutation.isPending || updateMutation.isPending}
-            />
-          </DialogContent>
-        </Dialog>
+        {/* Editor Dialog - keeping shadcn Dialog for complex modal */}
+        {isEditorOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="card-postmodern max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b-2 border-black-300">
+                <h2 className="text-heading text-xl">
+                  {editingReport ? 'EDIT LIVE REPORT' : 'CREATE LIVE REPORT'}
+                </h2>
+              </div>
+              <div className="p-6">
+                <ContentEditor
+                  type="live_report"
+                  initialData={editingReport || undefined}
+                  onSave={handleSave}
+                  onCancel={() => setIsEditorOpen(false)}
+                  isLoading={createMutation.isPending || updateMutation.isPending}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

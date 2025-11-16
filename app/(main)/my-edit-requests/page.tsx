@@ -2,22 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { useAuth } from "@/components/auth-provider"
-import { type EditRequestStatus } from "@/lib/hand-edit-requests"
 import { Clock, CheckCircle, XCircle } from "lucide-react"
 import Link from "next/link"
-import { buttonVariants } from "@/components/ui/button"
+import { useAuth } from "@/components/auth-provider"
+import { type EditRequestStatus } from "@/lib/hand-edit-requests"
 import { useUserEditRequestsQuery } from "@/lib/queries/edit-requests-queries"
 
 const EDIT_TYPE_LABELS: Record<string, string> = {
@@ -50,24 +38,24 @@ export default function EditRequestsClient() {
     switch (status) {
       case "pending":
         return (
-          <Badge variant="outline" className="flex items-center gap-1">
+          <span className="px-2 py-1 border border-gold-600 bg-black-200 text-xs uppercase flex items-center gap-1">
             <Clock className="h-3 w-3" />
             대기 중
-          </Badge>
+          </span>
         )
       case "approved":
         return (
-          <Badge variant="default" className="flex items-center gap-1 bg-green-600">
+          <span className="px-2 py-1 border border-gold-400 bg-gold-700/20 text-gold-400 text-xs uppercase flex items-center gap-1">
             <CheckCircle className="h-3 w-3" />
             승인됨
-          </Badge>
+          </span>
         )
       case "rejected":
         return (
-          <Badge variant="destructive" className="flex items-center gap-1">
+          <span className="px-2 py-1 border border-destructive bg-destructive/10 text-destructive text-xs uppercase flex items-center gap-1">
             <XCircle className="h-3 w-3" />
             거부됨
-          </Badge>
+          </span>
         )
       default:
         return null
@@ -78,7 +66,7 @@ export default function EditRequestsClient() {
     return (
       <div className="min-h-screen">
         <div className="container max-w-7xl mx-auto py-8 px-4">
-          <div className="text-center text-muted-foreground">Loading...</div>
+          <div className="text-center text-black-600">Loading...</div>
         </div>
       </div>
     )
@@ -88,120 +76,157 @@ export default function EditRequestsClient() {
     <div className="min-h-screen">
       <div className="container max-w-7xl mx-auto py-8 px-4">
         <div className="mb-6">
-          <h1 className="text-title-lg mb-2">내 수정 제안</h1>
-          <p className="text-body text-muted-foreground">
+          <h1 className="text-heading text-2xl mb-2">내 수정 제안</h1>
+          <p className="text-black-600">
             제출한 핸드 수정 제안 내역을 확인하세요
           </p>
         </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-          <TabsList>
-            <TabsTrigger value="all">전체</TabsTrigger>
-            <TabsTrigger value="pending">
+        {/* Tabs */}
+        <div className="space-y-6">
+          <div className="flex gap-2 flex-wrap border-b-2 border-black-300">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-4 py-2 border-b-2 -mb-0.5 transition-colors ${
+                activeTab === "all"
+                  ? "border-gold-400 text-gold-400"
+                  : "border-transparent text-black-600 hover:text-black-800"
+              }`}
+            >
+              전체
+            </button>
+            <button
+              onClick={() => setActiveTab("pending")}
+              className={`px-4 py-2 border-b-2 -mb-0.5 transition-colors flex items-center gap-2 ${
+                activeTab === "pending"
+                  ? "border-gold-400 text-gold-400"
+                  : "border-transparent text-black-600 hover:text-black-800"
+              }`}
+            >
               대기 중
               {requests.filter(r => r.status === "pending").length > 0 && (
-                <Badge variant="secondary" className="ml-2">
+                <span className="px-2 py-0.5 border border-gold-600 bg-gold-700/20 text-xs font-mono">
                   {requests.filter(r => r.status === "pending").length}
-                </Badge>
+                </span>
               )}
-            </TabsTrigger>
-            <TabsTrigger value="approved">승인됨</TabsTrigger>
-            <TabsTrigger value="rejected">거부됨</TabsTrigger>
-          </TabsList>
+            </button>
+            <button
+              onClick={() => setActiveTab("approved")}
+              className={`px-4 py-2 border-b-2 -mb-0.5 transition-colors ${
+                activeTab === "approved"
+                  ? "border-gold-400 text-gold-400"
+                  : "border-transparent text-black-600 hover:text-black-800"
+              }`}
+            >
+              승인됨
+            </button>
+            <button
+              onClick={() => setActiveTab("rejected")}
+              className={`px-4 py-2 border-b-2 -mb-0.5 transition-colors ${
+                activeTab === "rejected"
+                  ? "border-gold-400 text-gold-400"
+                  : "border-transparent text-black-600 hover:text-black-800"
+              }`}
+            >
+              거부됨
+            </button>
+          </div>
 
-          <TabsContent value={activeTab} className="mt-6">
+          <div>
             {requests.length === 0 ? (
-              <Card className="p-12 text-center">
+              <div className="card-postmodern p-12 text-center">
                 <div className="flex justify-center mb-4">
-                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                    <Clock className="h-8 w-8 text-muted-foreground" />
+                  <div className="h-16 w-16 border-2 border-black-400 bg-black-200 flex items-center justify-center">
+                    <Clock className="h-8 w-8 text-black-600" />
                   </div>
                 </div>
-                <h3 className="text-title mb-2">수정 제안이 없습니다</h3>
-                <p className="text-body text-muted-foreground mb-6">
+                <h3 className="text-heading mb-2">수정 제안이 없습니다</h3>
+                <p className="text-black-600 mb-6">
                   핸드 상세 페이지에서 수정이 필요한 내용을 제안할 수 있습니다
                 </p>
-              </Card>
+              </div>
             ) : (
-              <Card className="p-6">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>핸드</TableHead>
-                      <TableHead>수정 유형</TableHead>
-                      <TableHead>제출 날짜</TableHead>
-                      <TableHead>상태</TableHead>
-                      <TableHead>검토 날짜</TableHead>
-                      <TableHead>액션</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {requests.map((request) => (
-                      <TableRow key={request.id}>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="font-medium">
-                              #{(request as any).hand?.number}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {(request as any).hand?.day?.sub_event?.tournament?.name}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {EDIT_TYPE_LABELS[request.edit_type]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(request.created_at).toLocaleDateString("ko-KR")}
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(request.status)}
-                        </TableCell>
-                        <TableCell>
-                          {request.reviewed_at
-                            ? new Date(request.reviewed_at).toLocaleDateString("ko-KR")
-                            : "-"}
-                        </TableCell>
-                        <TableCell>
-                          <Link
-                            href={`/archive?hand=${request.hand_id}`}
-                            className={buttonVariants({ variant: "outline", size: "sm" })}
-                          >
-                            핸드 보기
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="card-postmodern overflow-hidden">
+                {/* Table Header */}
+                <div className="grid grid-cols-6 gap-4 p-4 border-b-2 border-black-300 bg-black-200">
+                  <div className="text-caption">핸드</div>
+                  <div className="text-caption">수정 유형</div>
+                  <div className="text-caption">제출 날짜</div>
+                  <div className="text-caption">상태</div>
+                  <div className="text-caption">검토 날짜</div>
+                  <div className="text-caption">액션</div>
+                </div>
+
+                {/* Table Body */}
+                {requests.map((request, index) => (
+                  <div
+                    key={request.id}
+                    className={`grid grid-cols-6 gap-4 p-4 border-b border-black-300 hover:bg-black-200 transition-colors ${
+                      index === requests.length - 1 ? 'border-b-0' : ''
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <div className="font-medium font-mono">
+                        #{(request as any).hand?.number}
+                      </div>
+                      <div className="text-xs text-black-600">
+                        {(request as any).hand?.day?.sub_event?.tournament?.name}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="px-2 py-1 border border-black-400 text-xs uppercase">
+                        {EDIT_TYPE_LABELS[request.edit_type]}
+                      </span>
+                    </div>
+                    <div className="font-mono text-sm">
+                      {new Date(request.created_at).toLocaleDateString("ko-KR")}
+                    </div>
+                    <div>
+                      {getStatusBadge(request.status)}
+                    </div>
+                    <div className="font-mono text-sm">
+                      {request.reviewed_at
+                        ? new Date(request.reviewed_at).toLocaleDateString("ko-KR")
+                        : "-"}
+                    </div>
+                    <div>
+                      <Link
+                        href={`/archive?hand=${request.hand_id}`}
+                        className="btn-secondary text-sm"
+                      >
+                        핸드 보기
+                      </Link>
+                    </div>
+                  </div>
+                ))}
 
                 {/* Admin comment for rejected/approved requests */}
                 {requests.some(r => (r.status !== "pending" && r.admin_comment)) && (
-                  <div className="mt-6 space-y-3">
-                    <h3 className="text-sm font-semibold">관리자 코멘트</h3>
+                  <div className="p-6 border-t-2 border-black-300 space-y-3">
+                    <h3 className="text-caption">관리자 코멘트</h3>
                     {requests
                       .filter(r => r.status !== "pending" && r.admin_comment)
                       .map(r => (
-                        <Card key={r.id} className="p-4 bg-muted/30">
+                        <div key={r.id} className="card-postmodern p-4 bg-black-200">
                           <div className="flex items-start gap-3">
-                            <Badge variant="outline">#{(r as any).hand?.number}</Badge>
+                            <span className="px-2 py-1 border border-black-400 text-xs uppercase font-mono">
+                              #{(r as any).hand?.number}
+                            </span>
                             <div className="flex-1 text-sm">
-                              <p className="text-muted-foreground">{r.admin_comment}</p>
-                              <p className="text-xs text-muted-foreground mt-1">
+                              <p className="text-black-600">{r.admin_comment}</p>
+                              <p className="text-xs text-black-600 mt-1 font-mono">
                                 {new Date(r.reviewed_at!).toLocaleString("ko-KR")}
                               </p>
                             </div>
                           </div>
-                        </Card>
+                        </div>
                       ))}
                   </div>
                 )}
-              </Card>
+              </div>
             )}
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </div>
     </div>
   )

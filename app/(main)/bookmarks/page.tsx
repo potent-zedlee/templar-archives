@@ -2,11 +2,6 @@
 
 import { useEffect, useState, useMemo } from "react"
 import { useRouter} from "next/navigation"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Bookmark, Trash2, FolderOpen, Calendar, Edit } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { type HandBookmarkWithDetails } from "@/lib/hand-bookmarks"
@@ -19,7 +14,7 @@ import {
   useUpdateBookmarkMutation,
 } from "@/lib/queries/bookmarks-queries"
 
-export default function bookmarksClient() {
+export default function BookmarksClient() {
   const { user } = useAuth()
   const router = useRouter()
 
@@ -110,81 +105,86 @@ export default function bookmarksClient() {
         <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-title-lg font-bold flex items-center gap-2">
+          <h1 className="text-heading text-2xl flex items-center gap-2">
             <Bookmark className="h-6 w-6" />
-            My Bookmarks
+            MY BOOKMARKS
           </h1>
-          <p className="text-caption text-muted-foreground mt-2">
+          <p className="text-caption text-black-600 mt-2">
             View and manage your saved hands.
           </p>
         </div>
 
-        <Separator />
+        <div className="border-b-2 border-black-300"></div>
 
         {/* Folder tabs */}
         {folders.length > 0 && (
-          <Tabs value={selectedFolder} onValueChange={setSelectedFolder}>
-            <TabsList>
-              <TabsTrigger value="all">
-                <FolderOpen className="h-4 w-4 mr-2" />
-                All ({bookmarks.length})
-              </TabsTrigger>
-              {folders.map((folder) => (
-                <TabsTrigger key={folder} value={folder}>
-                  {folder} ({bookmarks.filter((b) => (b.folder_name || 'Default') === folder).length})
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setSelectedFolder('all')}
+              className={selectedFolder === 'all' ? 'btn-primary' : 'btn-secondary'}
+            >
+              <FolderOpen className="h-4 w-4 mr-2" />
+              All <span className="font-mono ml-1">({bookmarks.length})</span>
+            </button>
+            {folders.map((folder) => (
+              <button
+                key={folder}
+                onClick={() => setSelectedFolder(folder)}
+                className={selectedFolder === folder ? 'btn-primary' : 'btn-secondary'}
+              >
+                {folder} <span className="font-mono ml-1">({bookmarks.filter((b) => (b.folder_name || 'Default') === folder).length})</span>
+              </button>
+            ))}
+          </div>
         )}
 
         {/* Bookmark list */}
         {isLoading ? (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">Loading bookmarks...</p>
+            <p className="text-black-600">Loading bookmarks...</p>
           </div>
         ) : filteredBookmarks.length === 0 ? (
-          <Card className="p-12">
+          <div className="card-postmodern p-12">
             <div className="text-center space-y-4">
-              <Bookmark className="h-12 w-12 mx-auto text-muted-foreground" />
+              <Bookmark className="h-12 w-12 mx-auto text-black-600" />
               <div>
-                <h3 className="text-body font-semibold">No bookmarks</h3>
-                <p className="text-caption text-muted-foreground mt-2">
+                <h3 className="text-heading mb-2">NO BOOKMARKS</h3>
+                <p className="text-caption text-black-600 mt-2">
                   Save hands by clicking the bookmark button on hand detail pages.
                 </p>
               </div>
-              <Link href="/archive" className={buttonVariants()}>
+              <Link href="/archive" className="btn-primary inline-block">
                 Browse Archive
               </Link>
             </div>
-          </Card>
+          </div>
         ) : (
           <div className="grid gap-4">
             {filteredBookmarks.map((bookmark) => (
-              <Card key={bookmark.id} className="p-4 hover:shadow-lg transition-shadow">
+              <div key={bookmark.id} className="card-postmodern p-4 border-l-3 border-gold-600">
                 <div className="flex items-start justify-between gap-4">
                   {/* Hand info */}
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/archive?tournament=${bookmark.hand?.day?.sub_event?.tournament?.id}&day=${bookmark.hand?.day?.id}`}
-                        className="hover:underline"
+                        className="hover:text-gold-400 transition-colors"
                       >
-                        <h3 className="text-body font-semibold">
-                          Hand #{bookmark.hand?.number}
+                        <h3 className="text-heading font-mono">
+                          HAND #{bookmark.hand?.number}
                         </h3>
                       </Link>
                       {bookmark.folder_name && (
-                        <Badge variant="secondary">
-                          <FolderOpen className="h-3 w-3 mr-1" />
+                        <span className="px-2 py-1 border border-black-400 bg-black-200 text-xs uppercase flex items-center gap-1">
+                          <FolderOpen className="h-3 w-3" />
                           {bookmark.folder_name}
-                        </Badge>
+                        </span>
                       )}
                     </div>
 
                     {/* Tournament info */}
                     {bookmark.hand?.day?.sub_event?.tournament && (
-                      <div className="text-caption text-muted-foreground">
+                      <div className="text-caption text-black-600">
                         {bookmark.hand.day.sub_event.tournament.name} &gt;{' '}
                         {bookmark.hand.day.sub_event.name} &gt; {bookmark.hand.day.name}
                       </div>
@@ -192,22 +192,22 @@ export default function bookmarksClient() {
 
                     {/* Hand description */}
                     {bookmark.hand?.description && (
-                      <p className="text-body text-muted-foreground line-clamp-2">
+                      <p className="text-black-600 line-clamp-2">
                         {bookmark.hand.description}
                       </p>
                     )}
 
                     {/* Personal notes */}
                     {bookmark.notes && (
-                      <div className="bg-muted p-2 rounded text-caption">
+                      <div className="bg-black-200 border border-black-400 p-2 text-caption">
                         <strong>Notes:</strong> {bookmark.notes}
                       </div>
                     )}
 
                     {/* Bookmark date */}
-                    <div className="flex items-center gap-2 text-caption text-muted-foreground">
+                    <div className="flex items-center gap-2 text-caption text-black-600">
                       <Calendar className="h-3 w-3" />
-                      Bookmarked {new Date(bookmark.created_at).toLocaleDateString('en-US')}
+                      Bookmarked <span className="font-mono">{new Date(bookmark.created_at).toLocaleDateString('en-US')}</span>
                     </div>
                   </div>
 
@@ -215,27 +215,25 @@ export default function bookmarksClient() {
                   <div className="flex flex-col gap-2">
                     <Link
                       href={`/archive?tournament=${bookmark.hand?.day?.sub_event?.tournament?.id}&day=${bookmark.hand?.day?.id}`}
-                      className={buttonVariants({ variant: "outline", size: "sm" })}
+                      className="btn-secondary text-sm"
                     >
                       View
                     </Link>
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <button
                       onClick={() => handleEditBookmark(bookmark)}
+                      className="btn-ghost"
                     >
                       <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    </button>
+                    <button
                       onClick={() => handleRemoveBookmark(bookmark.hand_id)}
+                      className="btn-ghost text-destructive"
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
