@@ -116,12 +116,12 @@ export default function PostDetailPage() {
         </div>
 
         {/* Post Card */}
-        <Card className="p-6 md:p-8 mb-6">
+        <div className="post-card mb-6">
           {/* Header */}
           <div className="flex items-start gap-4 mb-6">
-            <Avatar className="h-12 w-12">
+            <Avatar className="h-12 w-12 author-avatar rounded-none">
               <AvatarImage src={post.author_avatar} alt={post.author_name} />
-              <AvatarFallback>
+              <AvatarFallback className="rounded-none bg-black-200 text-gold-400 font-bold">
                 {post.author_name.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
@@ -129,10 +129,10 @@ export default function PostDetailPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4 mb-2">
                 <div>
-                  <h3 className="text-body font-semibold mb-1">
+                  <h3 className="text-heading-sm text-gold-400 mb-1">
                     {post.author_name}
                   </h3>
-                  <div className="flex items-center gap-2 text-caption text-muted-foreground">
+                  <div className="post-meta">
                     <span>{new Date(post.created_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
@@ -142,76 +142,72 @@ export default function PostDetailPage() {
                     })}</span>
                   </div>
                 </div>
-                <Badge className={categoryColors[post.category]}>
+                <div className="post-type-badge">
                   {post.category.replace('-', ' ')}
-                </Badge>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Title */}
-          <h1 className="text-title-lg mb-4">{post.title}</h1>
+          <h1 className="text-heading text-gold-400 mb-4">{post.title}</h1>
 
           {/* Content */}
           <div className="prose prose-sm max-w-none mb-6">
-            <p className="text-body text-foreground whitespace-pre-wrap">
+            <p className="text-body text-white/90 whitespace-pre-wrap">
               {post.content}
             </p>
           </div>
 
           {/* Attached Hand */}
           {post.hand && (
-            <Card className="p-4 mb-6 bg-muted/30">
+            <div className="mb-6 bg-black-200 border-2 border-gold-700 p-4">
               <div className="flex items-center gap-3">
-                <Link2 className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                <Link2 className="h-5 w-5 text-gold-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="secondary">#{post.hand.number}</Badge>
-                    <span className="text-caption text-muted-foreground">
+                    <span className="text-mono text-gold-400 font-bold">#{post.hand.number}</span>
+                    <span className="text-caption text-gold-300">
                       {post.hand.timestamp}
                     </span>
                   </div>
                   {post.hand.description && (
-                    <p className="text-body">{post.hand.description}</p>
+                    <p className="text-body text-white/80">{post.hand.description}</p>
                   )}
                 </div>
                 <Link
                   href={`/archive?hand=${post.hand.id}`}
-                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                  className="btn-secondary py-2 px-4"
                 >
                   View Hand
                 </Link>
               </div>
-            </Card>
+            </div>
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-4 pt-4 border-t">
-            <Button
-              variant="ghost"
-              size="sm"
+          <div className="flex items-center gap-4 pt-4 border-t-2 border-gold-700">
+            <button
               onClick={handleLike}
-              className="gap-1"
+              className="community-action-btn"
             >
-              <ThumbsUp className="h-4 w-4" />
-              <span>{post.likes_count}</span>
-            </Button>
+              <ThumbsUp className="h-5 w-5" />
+              <span className="text-mono text-gold-400">{post.likes_count}</span>
+            </button>
 
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
               onClick={handleShare}
-              className="gap-1"
+              className="community-action-btn"
             >
-              <Share2 className="h-4 w-4" />
-              <span>Share</span>
-            </Button>
+              <Share2 className="h-5 w-5" />
+              <span className="text-gold-400">Share</span>
+            </button>
 
             <div className="flex-1" />
 
             <ReportButton postId={post.id} variant="ghost" size="sm" />
           </div>
-        </Card>
+        </div>
 
         {/* Comments Section */}
         <PostComments

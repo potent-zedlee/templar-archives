@@ -331,20 +331,29 @@ export default function communityClient() {
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="trending" className="gap-2">
-                  <TrendingUp className="h-4 w-4" />
+              <div className="flex gap-0 border-b-2 border-gold-700">
+                <button
+                  onClick={() => setActiveTab('trending')}
+                  className={`community-tab ${activeTab === 'trending' ? 'active' : ''}`}
+                >
+                  <TrendingUp className="inline-block h-4 w-4 mr-2" />
                   Trending
-                </TabsTrigger>
-                <TabsTrigger value="recent" className="gap-2">
-                  <Clock className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setActiveTab('recent')}
+                  className={`community-tab ${activeTab === 'recent' ? 'active' : ''}`}
+                >
+                  <Clock className="inline-block h-4 w-4 mr-2" />
                   Recent
-                </TabsTrigger>
-                <TabsTrigger value="popular" className="gap-2">
-                  <Star className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => setActiveTab('popular')}
+                  className={`community-tab ${activeTab === 'popular' ? 'active' : ''}`}
+                >
+                  <Star className="inline-block h-4 w-4 mr-2" />
                   Popular
-                </TabsTrigger>
-              </TabsList>
+                </button>
+              </div>
 
               <TabsContent value={activeTab} className="mt-6 space-y-4">
                 {loading ? (
@@ -368,94 +377,81 @@ export default function communityClient() {
                   <StaggerContainer staggerDelay={0.1}>
                     {posts.map((post) => (
                       <StaggerItem key={post.id}>
-                        <AnimatedCard>
-                          <Card className="p-4 md:p-6">
-                            <div className="flex gap-4">
-                        <Avatar className="h-12 w-12">
+                        <div className="post-card hover-3d">
+                          <div className="flex gap-4">
+                        <Avatar className="h-12 w-12 author-avatar rounded-none">
                           <AvatarImage src={post.author_avatar} alt={post.author_name} />
-                          <AvatarFallback>{post.author_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          <AvatarFallback className="rounded-none bg-black-200 text-gold-400 font-bold">
+                            {post.author_name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
                         </Avatar>
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4 mb-2">
+                          <div className="flex items-start justify-between gap-4 mb-3">
                             <div className="flex-1">
-                              <h3 className="text-body font-semibold mb-1">
+                              <h3 className="text-heading-sm text-gold-400 mb-2">
                                 {post.title}
                               </h3>
-                              <div className="flex items-center gap-2 text-caption text-muted-foreground">
+                              <div className="flex items-center gap-2 post-meta">
                                 <span>{post.author_name}</span>
                                 <span>•</span>
                                 <span>{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                               </div>
                             </div>
-                            <Badge className={categoryColors[post.category]}>
+                            <div className="post-type-badge">
                               {post.category.replace('-', ' ')}
-                            </Badge>
+                            </div>
                           </div>
 
-                          <p className="text-body text-muted-foreground line-clamp-2 mb-3">
+                          <p className="text-body text-white/90 line-clamp-2 mb-4">
                             {post.content}
                           </p>
 
                           {/* Attached Hand */}
                           {post.hand && (
-                            <Card className="p-3 mb-3 bg-muted/30">
-                              <div className="flex items-center gap-2">
-                                <Link2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <div className="mb-4 bg-black-200 border-2 border-gold-700 p-3">
+                              <div className="flex items-center gap-3">
+                                <Link2 className="h-4 w-4 text-gold-400 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <Badge variant="secondary">#{post.hand.number}</Badge>
-                                    <span className="text-caption text-muted-foreground">{post.hand.timestamp}</span>
+                                    <span className="text-mono text-gold-400 font-bold">#{post.hand.number}</span>
+                                    <span className="text-caption text-gold-300">{post.hand.timestamp}</span>
                                   </div>
                                   {post.hand.description && (
-                                    <p className="text-caption line-clamp-1">{post.hand.description}</p>
+                                    <p className="text-caption text-white/80 line-clamp-1">{post.hand.description}</p>
                                   )}
                                 </div>
                                 <Link
                                   href={`/archive?hand=${post.hand.id}`}
-                                  className={buttonVariants({ variant: "ghost", size: "sm" })}
+                                  className="btn-secondary text-xs py-1 px-3"
                                 >
                                   View
                                 </Link>
                               </div>
-                            </Card>
+                            </div>
                           )}
 
-                          <div className="flex items-center gap-4 text-caption text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div>
-                                    <AnimatedIconButton
-                                      onClick={() => handleLike(post.id)}
-                                      className="p-1"
-                                      activeColor="text-primary"
-                                    >
-                                      <ThumbsUp className="h-4 w-4" />
-                                    </AnimatedIconButton>
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>Like this post</TooltipContent>
-                              </Tooltip>
-                              <span>{post.likes_count}</span>
+                          <div className="flex items-center gap-4 pt-4 border-t-2 border-gold-700">
+                            <button
+                              onClick={() => handleLike(post.id)}
+                              className="community-action-btn"
+                            >
+                              <ThumbsUp className="w-5 h-5" />
+                              <span className="text-mono text-gold-400">{post.likes_count}</span>
+                            </button>
+
+                            <Link href={`/community/${post.id}`} className="community-action-btn">
+                              <MessageSquare className="w-5 h-5" />
+                              <span className="text-mono text-gold-400">{post.comments_count}</span>
+                            </Link>
+
+                            <div className="ml-auto">
+                              <ReportButton postId={post.id} variant="ghost" size="sm" />
                             </div>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Link href={`/community/${post.id}`}>
-                                  <button className="flex items-center gap-1 hover:text-primary transition-colors p-1 rounded-md">
-                                    <MessageSquare className="h-4 w-4" />
-                                    <span>{post.comments_count}</span>
-                                  </button>
-                                </Link>
-                              </TooltipTrigger>
-                              <TooltipContent>View comments</TooltipContent>
-                            </Tooltip>
-                            <ReportButton postId={post.id} variant="ghost" size="sm" />
                           </div>
                         </div>
                       </div>
-                          </Card>
-                        </AnimatedCard>
+                        </div>
                       </StaggerItem>
                     ))}
                   </StaggerContainer>

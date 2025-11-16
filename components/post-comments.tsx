@@ -209,20 +209,20 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     return (
       <div
         key={comment.id}
-        className={`space-y-3 ${isReply ? "ml-8 border-l-2 border-muted pl-4" : ""}`}
+        className={`comment-item ${isReply ? "ml-10 comment-reply-border" : ""}`}
       >
         <div className="flex gap-3">
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-8 w-8 author-avatar rounded-none">
             <AvatarImage src={comment.author_avatar} alt={comment.author_name} />
-            <AvatarFallback>
+            <AvatarFallback className="rounded-none bg-black-200 text-gold-400 font-bold">
               {comment.author_name.split(" ").map((n) => n[0]).join("")}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-body font-medium">{comment.author_name}</span>
-              <span className="text-caption text-muted-foreground">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-heading-sm text-gold-400">{comment.author_name}</span>
+              <span className="post-meta">
                 {new Date(comment.created_at).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "short",
@@ -233,26 +233,21 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
               </span>
             </div>
 
-            <p className="text-body text-foreground whitespace-pre-wrap mb-2">
+            <p className="text-body text-white/90 whitespace-pre-wrap mb-3">
               {comment.content}
             </p>
 
-            <div className="flex items-center gap-3 text-caption">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 gap-1 hover:text-primary"
+            <div className="flex items-center gap-3">
+              <button
                 onClick={() => handleLikeComment(comment.id)}
+                className="community-action-btn text-xs py-1 px-2"
               >
                 <ThumbsUp className="h-3 w-3" />
-                <span>{comment.likes_count}</span>
-              </Button>
+                <span className="text-mono">{comment.likes_count}</span>
+              </button>
 
               {!isReply && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2 gap-1 hover:text-primary"
+                <button
                   onClick={() => {
                     if (replyingTo === comment.id) {
                       setReplyingTo(null)
@@ -263,19 +258,20 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
                       }
                     }
                   }}
+                  className="community-action-btn text-xs py-1 px-2"
                 >
                   <MessageCircle className="h-3 w-3" />
                   <span>Reply</span>
-                  {showReplies && <span>({comment.replies?.length || 0})</span>}
-                </Button>
+                  {showReplies && <span className="text-mono">({comment.replies?.length || 0})</span>}
+                </button>
               )}
             </div>
 
             {/* Reply form */}
             {replyingTo === comment.id && (
-              <div className="mt-3 space-y-2">
+              <div className="mt-4 space-y-2">
                 <Textarea
-                  placeholder="Write a reply..."
+                  placeholder="답글을 작성하세요..."
                   value={replyContent[comment.id] || ""}
                   onChange={(e) =>
                     setReplyContent((prev) => ({
@@ -284,24 +280,23 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
                     }))
                   }
                   rows={2}
-                  className="text-body"
+                  className="input-postmodern w-full resize-none"
                 />
                 <div className="flex gap-2 justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
                     onClick={() => setReplyingTo(null)}
+                    className="btn-secondary text-xs py-1 px-3"
                   >
                     Cancel
-                  </Button>
-                  <Button
-                    size="sm"
+                  </button>
+                  <button
                     onClick={() => handleSubmitReply(comment.id)}
                     disabled={submitting || !replyContent[comment.id]?.trim()}
+                    className="btn-primary text-xs py-1 px-3 flex items-center gap-1"
                   >
-                    <Send className="h-3 w-3 mr-1" />
+                    <Send className="h-3 w-3" />
                     Reply
-                  </Button>
+                  </button>
                 </div>
               </div>
             )}
@@ -326,51 +321,54 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
   }
 
   return (
-    <Card className="p-6 space-y-6">
-      <h4 className="text-title font-semibold flex items-center gap-2">
+    <div className="post-card comment-section">
+      <h4 className="text-heading text-gold-400 flex items-center gap-2 mb-6">
         <MessageCircle className="h-5 w-5" />
-        Comments ({comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)})
+        <span className="text-mono">
+          Comments ({comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)})
+        </span>
       </h4>
 
       {/* Comment form */}
-      <div className="space-y-3">
+      <div className="mb-6">
         <Textarea
           placeholder={
             user
-              ? "Write a comment..."
-              : "Login to comment"
+              ? "댓글을 작성하세요..."
+              : "로그인 후 댓글을 작성할 수 있습니다"
           }
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           rows={3}
           disabled={!user}
-          className="text-body"
+          className="input-postmodern w-full resize-none mb-2"
         />
         <div className="flex justify-end">
-          <Button
+          <button
             onClick={handleSubmitComment}
             disabled={!user || submitting || !newComment.trim()}
+            className="btn-primary flex items-center gap-2"
           >
-            <Send className="h-4 w-4 mr-2" />
-            Post Comment
-          </Button>
+            <Send className="h-4 w-4" />
+            댓글 작성
+          </button>
         </div>
       </div>
 
       {/* Comments list */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         {loading ? (
-          <div className="text-center text-caption text-muted-foreground py-8">
+          <div className="text-center text-caption text-gold-300 py-8">
             Loading comments...
           </div>
         ) : comments.length === 0 ? (
-          <div className="text-center text-caption text-muted-foreground py-8">
-            Be the first to comment!
+          <div className="text-center text-caption text-gold-300 py-8">
+            첫 댓글을 작성해보세요!
           </div>
         ) : (
           comments.map((comment) => renderComment(comment))
         )}
       </div>
-    </Card>
+    </div>
   )
 }

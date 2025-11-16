@@ -659,4 +659,152 @@
     transform: translateY(-4px) rotateX(2deg);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 30px rgba(212, 175, 55, 0.2);
   }
+
+  /* === POSTMODERN COMMUNITY COMPONENTS === */
+
+  /* Post Type Badge - 포스트 타입 배지 */
+  .post-type-badge {
+    background: var(--black-200);
+    color: var(--gold-400);
+    border: 2px solid var(--gold-700);
+    padding: 0.375rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* Community Action Button - 좋아요, 댓글, 북마크 버튼 */
+  .community-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    color: var(--gold-300);
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .community-action-btn:hover {
+    color: var(--gold-400);
+    background: var(--black-200);
+    border-color: var(--gold-700);
+  }
+
+  /* Comment Section - 댓글 섹션 */
+  .comment-section {
+    border-top: 2px solid var(--gold-700);
+    padding-top: 1.5rem;
+  }
+
+  .comment-item {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+    transition: all 0.15s;
+  }
+
+  .comment-item:hover {
+    background: var(--black-100);
+    border-left: 3px solid var(--gold-700);
+    padding-left: 1.5rem;
+  }
+
+  /* Community Tab - 커뮤니티 탭 네비게이션 */
+  .community-tab {
+    padding: 1rem 2rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gold-300);
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .community-tab:hover {
+    color: var(--gold-400);
+    background: var(--black-100);
+  }
+
+  .community-tab.active {
+    color: var(--gold-400);
+    border-bottom-color: var(--gold-400);
+    background: var(--black-100);
+  }
+
+  .community-tab::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px;
+    height: 0;
+    background: var(--gold-400);
+    transition: height 0.2s;
+  }
+
+  .community-tab:hover::before,
+  .community-tab.active::before {
+    height: 100%;
+  }
+
+  /* Filter Chip - 필터 버튼 */
+  .filter-chip {
+    padding: 0.5rem 1.25rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gold-300);
+    border: 2px solid var(--gold-700);
+    background: transparent;
+    transition: all 0.15s;
+  }
+
+  .filter-chip:hover {
+    color: var(--gold-400);
+    border-color: var(--gold-600);
+    background: var(--black-100);
+  }
+
+  .filter-chip.active {
+    color: var(--black-0);
+    background: var(--gold-500);
+    border-color: var(--gold-500);
+  }
+
+  /* Post Card - 포스트 카드 */
+  .post-card {
+    background-color: var(--black-100);
+    border: 2px solid var(--gold-600);
+    padding: 1.5rem;
+    position: relative;
+    box-shadow: 4px 4px 0 var(--black-0), 8px 8px 0 var(--gold-700);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .post-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--black-0), 12px 12px 0 var(--gold-700);
+  }
+
+  /* Comment Reply Border - 대댓글 구분선 */
+  .comment-reply-border {
+    border-left: 2px solid var(--gold-700);
+    padding-left: 1rem;
+  }
+
+  /* Author Avatar - 작성자 아바타 (금색 테두리) */
+  .author-avatar {
+    border: 2px solid var(--gold-600);
+  }
+
+  /* Post Meta - 포스트 메타 정보 */
+  .post-meta {
+    font-family: var(--font-mono, 'monospace');
+    font-size: 0.75rem;
+    color: var(--gold-300);
+    text-transform: uppercase;
+  }
 }
