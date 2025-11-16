@@ -24,17 +24,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+// Select removed - using native select
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, Search, Loader2, ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+// Tabs removed - using custom tabs
 import { TournamentDialog } from '@/components/tournament-dialog'
 import { DeleteDialog } from '@/components/archive-dialogs/delete-dialog'
 import { SubEventDialog } from '@/components/archive-dialogs/sub-event-dialog'
@@ -65,6 +59,7 @@ export default function AdminArchivePage() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [_userEmail, setUserEmail] = useState<string | null>(null)
   const [isUserAdmin, setIsUserAdmin] = useState(false)
+  const [activeTab, setActiveTab] = useState<'tournaments' | 'unsorted'>('tournaments')
 
   // Dialog states
   const [tournamentDialogOpen, setTournamentDialogOpen] = useState(false)
@@ -493,15 +488,38 @@ export default function AdminArchivePage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="tournaments" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="tournaments">Tournaments</TabsTrigger>
-          <TabsTrigger value="unsorted">Unsorted Videos</TabsTrigger>
-        </TabsList>
+      {/* Custom Tabs */}
+      <div className="space-y-6">
+        <div className="border-b border-border">
+          <nav className="flex gap-6 -mb-px" aria-label="Archive tabs">
+            <button
+              onClick={() => setActiveTab('tournaments')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'tournaments'
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }`}
+              aria-current={activeTab === 'tournaments' ? 'page' : undefined}
+            >
+              Tournaments
+            </button>
+            <button
+              onClick={() => setActiveTab('unsorted')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'unsorted'
+                  ? 'border-primary text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }`}
+              aria-current={activeTab === 'unsorted' ? 'page' : undefined}
+            >
+              Unsorted Videos
+            </button>
+          </nav>
+        </div>
 
         {/* Tournaments Tab */}
-        <TabsContent value="tournaments" className="space-y-6">
+        {activeTab === 'tournaments' && (
+          <div className="space-y-6">
           <div className="flex items-center justify-between">
             <StatusFilter value={statusFilter} onChange={setStatusFilter} />
             <Button onClick={handleCreateTournament}>
@@ -537,31 +555,31 @@ export default function AdminArchivePage() {
             />
           </div>
         </div>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="All">All Categories</SelectItem>
-            <SelectItem value="WSOP">WSOP</SelectItem>
-            <SelectItem value="Triton">Triton</SelectItem>
-            <SelectItem value="EPT">EPT</SelectItem>
-            <SelectItem value="APT">APT</SelectItem>
-            <SelectItem value="APL">APL</SelectItem>
-            <SelectItem value="Hustler Casino Live">Hustler Casino Live</SelectItem>
-            <SelectItem value="GGPOKER">GGPOKER</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={gameTypeFilter} onValueChange={setGameTypeFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Game Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="tournament">Tournament</SelectItem>
-            <SelectItem value="cash-game">Cash Game</SelectItem>
-          </SelectContent>
-        </Select>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary min-w-[180px]"
+          aria-label="Category filter"
+        >
+          <option value="All">All Categories</option>
+          <option value="WSOP">WSOP</option>
+          <option value="Triton">Triton</option>
+          <option value="EPT">EPT</option>
+          <option value="APT">APT</option>
+          <option value="APL">APL</option>
+          <option value="Hustler Casino Live">Hustler Casino Live</option>
+          <option value="GGPOKER">GGPOKER</option>
+        </select>
+        <select
+          value={gameTypeFilter}
+          onChange={(e) => setGameTypeFilter(e.target.value)}
+          className="px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary min-w-[180px]"
+          aria-label="Game type filter"
+        >
+          <option value="all">All Types</option>
+          <option value="tournament">Tournament</option>
+          <option value="cash-game">Cash Game</option>
+        </select>
       </div>
 
       {/* Table */}
@@ -955,13 +973,14 @@ export default function AdminArchivePage() {
             <span>•</span>
             <span>Showing: {filteredTournaments.length} tournaments</span>
           </div>
-        </TabsContent>
+        </div>
+        )}
 
         {/* Unsorted Videos Tab */}
-        <TabsContent value="unsorted">
+        {activeTab === 'unsorted' && (
           <UnsortedVideosTab onRefresh={loadTournaments} />
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
 
       {/* Dialogs */}
       <TournamentDialog

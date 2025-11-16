@@ -5,16 +5,6 @@ import { useRouter } from "next/navigation"
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, closestCenter } from "@dnd-kit/core"
 import { arrayMove } from "@/lib/utils/array"
 import { useDebounce } from "@/hooks/useDebounce"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { Search, Save } from "lucide-react"
 import { CategoryDialog } from "@/components/admin/CategoryDialog"
@@ -177,51 +167,49 @@ export default function CategoriesPage() {
         </header>
 
         {/* Toolbar */}
-        <Card className="p-4 mb-6">
+        <div className="border rounded-lg p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <Input
+              <input
+                type="text"
                 placeholder="카테고리 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="w-full pl-10 pr-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary"
                 aria-label="카테고리 검색"
               />
             </div>
 
             {/* Active Filter */}
-            <Select
+            <select
               value={activeFilter}
-              onValueChange={(value: string) => {
-                const filter = value as "all" | "active" | "inactive"
+              onChange={(e) => {
+                const filter = e.target.value as "all" | "active" | "inactive"
                 setActiveFilter(filter)
                 setIncludeInactive(filter === "all" || filter === "inactive")
               }}
+              className="px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary min-w-[180px]"
+              aria-label="활성 상태 필터"
             >
-              <SelectTrigger className="w-[180px]" aria-label="활성 상태 필터">
-                <SelectValue placeholder="활성 상태" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">모두</SelectItem>
-                <SelectItem value="active">활성</SelectItem>
-                <SelectItem value="inactive">비활성</SelectItem>
-              </SelectContent>
-            </Select>
+              <option value="all">모두</option>
+              <option value="active">활성</option>
+              <option value="inactive">비활성</option>
+            </select>
 
             {/* Game Type Filter */}
-            <Select value={gameTypeFilter} onValueChange={setGameTypeFilter}>
-              <SelectTrigger className="w-[180px]" aria-label="게임 타입 필터">
-                <SelectValue placeholder="게임 타입" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">모든 타입</SelectItem>
-                <SelectItem value="tournament">토너먼트</SelectItem>
-                <SelectItem value="cash_game">캐쉬게임</SelectItem>
-                <SelectItem value="both">둘 다</SelectItem>
-              </SelectContent>
-            </Select>
+            <select
+              value={gameTypeFilter}
+              onChange={(e) => setGameTypeFilter(e.target.value)}
+              className="px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary min-w-[180px]"
+              aria-label="게임 타입 필터"
+            >
+              <option value="all">모든 타입</option>
+              <option value="tournament">토너먼트</option>
+              <option value="cash_game">캐쉬게임</option>
+              <option value="both">둘 다</option>
+            </select>
 
             {/* Add Category */}
             <CategoryDialog />
@@ -230,24 +218,29 @@ export default function CategoriesPage() {
           {/* Save Order Button */}
           {hasChanges && (
             <div className="flex items-center gap-2 mt-4 pt-4 border-t" role="alert" aria-live="polite">
-              <Button onClick={handleSaveOrder} disabled={reorderMutation.isPending} aria-label="카테고리 순서 저장">
-                <Save className="h-4 w-4 mr-2" aria-hidden="true" />
+              <button
+                onClick={handleSaveOrder}
+                disabled={reorderMutation.isPending}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                aria-label="카테고리 순서 저장"
+              >
+                <Save className="h-4 w-4" aria-hidden="true" />
                 순서 저장
-              </Button>
-              <Button
-                variant="outline"
+              </button>
+              <button
                 onClick={handleResetOrder}
                 disabled={reorderMutation.isPending}
+                className="px-4 py-2 border border-border rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
                 aria-label="순서 변경 취소"
               >
                 취소
-              </Button>
+              </button>
               <span className="text-sm text-muted-foreground ml-2">
                 순서가 변경되었습니다. 저장하세요.
               </span>
             </div>
           )}
-        </Card>
+        </div>
 
         {/* Categories Table */}
         {isLoading ? (

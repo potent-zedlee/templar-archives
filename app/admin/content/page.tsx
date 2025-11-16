@@ -2,17 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { useAuth } from "@/components/auth-provider"
 import { isAdmin } from "@/lib/admin"
 import { type Report } from "@/lib/content-moderation"
@@ -59,6 +48,9 @@ export default function ContentPage() {
     targetId: string
     targetType: "post" | "comment"
   } | null>(null)
+
+  // Tabs state
+  const [activeTab, setActiveTab] = useState<"reports" | "news" | "live-reports" | "posts" | "comments">("reports")
 
   // React Query hooks
   const { data: posts = [], isLoading: postsLoading } = useAllPostsQuery(true)
@@ -193,6 +185,8 @@ export default function ContentPage() {
     )
   }
 
+  const pendingReportsCount = reports.filter((r) => r.status === "pending").length
+
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
       <div className="mb-6">
@@ -202,52 +196,101 @@ export default function ContentPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="reports" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="reports">
-            Report Management
-            {reports.filter((r) => r.status === "pending").length > 0 && (
-              <Badge variant="destructive" className="ml-2">
-                {reports.filter((r) => r.status === "pending").length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="news">
-            News Approval
-            {pendingNews.length > 0 && (
-              <Badge variant="destructive" className="ml-2">
-                {pendingNews.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="live-reports">
-            Live Reports Approval
-            {pendingLiveReports.length > 0 && (
-              <Badge variant="destructive" className="ml-2">
-                {pendingLiveReports.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="posts">Posts</TabsTrigger>
-          <TabsTrigger value="comments">Comment</TabsTrigger>
-        </TabsList>
+      {/* Custom Tabs */}
+      <div className="space-y-6">
+        {/* Tab List */}
+        <div className="border-b border-border">
+          <nav className="flex gap-6 -mb-px" aria-label="Content tabs">
+            <button
+              onClick={() => setActiveTab("reports")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === "reports"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              }`}
+              aria-current={activeTab === "reports" ? "page" : undefined}
+            >
+              Report Management
+              {pendingReportsCount > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-destructive text-destructive-foreground">
+                  {pendingReportsCount}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("news")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === "news"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              }`}
+              aria-current={activeTab === "news" ? "page" : undefined}
+            >
+              News Approval
+              {pendingNews.length > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-destructive text-destructive-foreground">
+                  {pendingNews.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("live-reports")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === "live-reports"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              }`}
+              aria-current={activeTab === "live-reports" ? "page" : undefined}
+            >
+              Live Reports Approval
+              {pendingLiveReports.length > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-destructive text-destructive-foreground">
+                  {pendingLiveReports.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("posts")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === "posts"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              }`}
+              aria-current={activeTab === "posts" ? "page" : undefined}
+            >
+              Posts
+            </button>
+            <button
+              onClick={() => setActiveTab("comments")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === "comments"
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              }`}
+              aria-current={activeTab === "comments" ? "page" : undefined}
+            >
+              Comment
+            </button>
+          </nav>
+        </div>
 
-        <TabsContent value="reports">
+        {/* Tab Content */}
+        {activeTab === "reports" && (
           <ReportsTab reports={reports} onReview={setSelectedReport} />
-        </TabsContent>
+        )}
 
-        <TabsContent value="news">
+        {activeTab === "news" && (
           <NewsApprovalTab pendingNews={pendingNews} onReview={setSelectedNews} />
-        </TabsContent>
+        )}
 
-        <TabsContent value="live-reports">
+        {activeTab === "live-reports" && (
           <LiveReportsApprovalTab
             pendingLiveReports={pendingLiveReports}
             onReview={setSelectedLiveReport}
           />
-        </TabsContent>
+        )}
 
-        <TabsContent value="posts">
+        {activeTab === "posts" && (
           <PostsTab
             posts={posts as any}
             onHide={(postId) =>
@@ -270,9 +313,9 @@ export default function ContentPage() {
               })
             }
           />
-        </TabsContent>
+        )}
 
-        <TabsContent value="comments">
+        {activeTab === "comments" && (
           <CommentsTab
             comments={comments as any}
             onHide={(commentId) =>
@@ -300,8 +343,8 @@ export default function ContentPage() {
               })
             }
           />
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
 
       <ReportDetailDialog
         report={selectedReport}
@@ -313,34 +356,48 @@ export default function ContentPage() {
 
       {/* Content Action Dialog */}
       {actionDialog && (
-        <Dialog open={actionDialog.open} onOpenChange={() => setActionDialog(null)}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {actionDialog.type === "delete" ? "Delete Confirmation" : "Action Confirmation"}
-              </DialogTitle>
-              <DialogDescription>
-                {actionDialog.type === "delete"
-                  ? "This action cannot be undone."
-                  : "Change the status of selected content."}
-              </DialogDescription>
-            </DialogHeader>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setActionDialog(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="action-dialog-title"
+        >
+          <div
+            className="bg-background rounded-lg shadow-xl max-w-md w-full mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="action-dialog-title" className="text-xl font-semibold mb-2">
+              {actionDialog.type === "delete" ? "Delete Confirmation" : "Action Confirmation"}
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              {actionDialog.type === "delete"
+                ? "This action cannot be undone."
+                : "Change the status of selected content."}
+            </p>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setActionDialog(null)}>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setActionDialog(null)}
+                className="px-4 py-2 border border-border rounded-lg hover:bg-accent transition-colors"
+              >
                 Cancel
-              </Button>
-              <Button
-                variant={actionDialog.type === "delete" ? "destructive" : "default"}
+              </button>
+              <button
                 onClick={handleContentAction}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  actionDialog.type === "delete"
+                    ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                }`}
               >
                 {actionDialog.type === "hide" && "Hide"}
                 {actionDialog.type === "unhide" && "Show"}
                 {actionDialog.type === "delete" && "Delete"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <NewsPreviewDialog
