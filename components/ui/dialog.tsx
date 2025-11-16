@@ -38,7 +38,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50',
+        'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/85',
         className,
       )}
       {...props}
@@ -60,7 +60,27 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+          'fixed top-[50%] left-[50%] z-50',
+          'translate-x-[-50%] translate-y-[-50%]',
+          'w-full max-w-[calc(100%-2rem)] sm:max-w-lg',
+          'grid gap-4',
+
+          // Postmodern style
+          'bg-black-100',
+          'border-[3px] border-gold-600',
+          'rounded-none',
+
+          // 3D layer shadow + glow
+          'shadow-[0_0_0_1px_var(--gold-700),0_0_60px_rgba(212,175,55,0.3),0_20px_40px_rgba(0,0,0,0.8)]',
+
+          // Animation
+          'duration-200',
+          'data-[state=open]:animate-in data-[state=closed]:animate-out',
+          'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+          'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+          'data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%]',
+          'data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]',
+
           className,
         )}
         {...props}
@@ -69,7 +89,15 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className={cn(
+              'absolute top-4 right-4',
+              'rounded-none',
+              'opacity-70 transition-opacity hover:opacity-100',
+              'focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400',
+              'disabled:pointer-events-none',
+              'text-gold-400 hover:text-gold-300',
+              '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*=\'size-\'])]:size-4'
+            )}
           >
             <XIcon />
             <span className="sr-only">Close</span>
@@ -84,7 +112,14 @@ function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn('flex flex-col gap-2 text-center sm:text-left', className)}
+      className={cn(
+        'flex flex-col gap-2 text-center sm:text-left',
+        'bg-black-200',
+        'border-b-2 border-gold-700',
+        'p-6',
+        '-mx-4 -mt-4 mb-2',
+        className
+      )}
       {...props}
     />
   )
@@ -96,6 +131,10 @@ function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
       data-slot="dialog-footer"
       className={cn(
         'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
+        'bg-black-200',
+        'border-t border-gold-700/50',
+        'p-6',
+        '-mx-4 -mb-4 mt-2',
         className,
       )}
       {...props}
@@ -110,7 +149,12 @@ function DialogTitle({
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"
-      className={cn('text-lg leading-none font-semibold', className)}
+      className={cn(
+        'text-2xl leading-none font-bold',
+        'text-gold-400',
+        'uppercase tracking-wide',
+        className
+      )}
       {...props}
     />
   )
@@ -123,7 +167,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn('text-muted-foreground text-sm', className)}
+      className={cn('text-sm text-gold-300', className)}
       {...props}
     />
   )
