@@ -117,10 +117,10 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
             </button>
           </div>
 
-          {/* AI 분석 배지 (좌측 상단) */}
+          {/* AI 분석 배지 (좌측 상단) - Intense Glow */}
           {hand.confidence && hand.confidence > 0 && (
             <div className="absolute top-2 left-2">
-              <div className="bg-gold-500 text-black-0 px-2 py-1 text-xs font-bold uppercase border-2 border-gold-600 shadow-lg flex items-center gap-1">
+              <div className="bg-gold-500 text-black-0 px-2 py-1 text-xs font-black uppercase border-2 border-gold-600 gold-glow-intense flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
                 AI
               </div>
@@ -160,47 +160,47 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
           </div>
         </div>
 
-        {/* 핸드 번호 + 타임스탬프 */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-hand-number">Hand #{hand.number}</h3>
-          <div className="text-xs text-mono text-gold-400 border border-gold-700 px-2 py-0.5 bg-black-200">
+        {/* 핸드 번호 + 타임스탬프 (Asymmetric Grid) */}
+        <div className="grid grid-cols-[1fr_auto] gap-3 items-center">
+          <h3 className="text-heading text-gold-400">Hand #{hand.number}</h3>
+          <div className="text-xs text-mono text-gold-400 border-2 border-gold-700 px-2 py-1 bg-black-200 font-bold">
             {hand.timestamp}
           </div>
         </div>
 
-        {/* AI 요약 또는 핸드 설명 */}
+        {/* AI 요약 또는 핸드 설명 (Left Border Accent) */}
         {hand.ai_summary ? (
-          <div className="flex items-start gap-2 border-l-2 border-gold-600 pl-2">
+          <div className="flex items-start gap-2 border-l-3 border-gold-500 pl-3">
             <Sparkles className="h-4 w-4 text-gold-400 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">
               {hand.ai_summary}
             </p>
           </div>
         ) : hand.description ? (
-          <p className="text-sm text-text-muted line-clamp-2 border-l-2 border-gold-700 pl-2">
+          <p className="text-sm text-text-muted line-clamp-2 border-l-3 border-gold-700 pl-3">
             {hand.description}
           </p>
         ) : null}
 
         {/* 메타 정보 (블라인드, 팟 사이즈, 보드 카드) */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* 블라인드 정보 */}
+          {/* 블라인드 정보 (Monospace) */}
           {(hand.big_blind || hand.small_blind) && (
-            <div className="text-xs text-mono border border-gold-700 px-2 py-0.5 bg-black-200 text-gold-400">
+            <div className="text-xs text-mono border-2 border-gold-700 px-2 py-1 bg-black-200 text-gold-400 font-bold">
               {formatBlinds(hand.small_blind, hand.big_blind, hand.ante)}
             </div>
           )}
 
-          {/* 최종 팟 사이즈 (pot_river 우선) */}
+          {/* 최종 팟 사이즈 (Gold Badge) */}
           {(hand.pot_river || hand.pot_size) && (
-            <div className="bg-gold-500 text-black-0 px-2 py-0.5 text-xs font-bold border-2 border-gold-600">
+            <div className="bg-gold-500 text-black-0 px-2 py-1 text-xs font-black uppercase border-2 border-gold-600">
               ${(hand.pot_river || hand.pot_size)!.toLocaleString()}
             </div>
           )}
 
-          {/* 보드 카드 */}
+          {/* 보드 카드 (Monospace) */}
           {hand.board_cards && hand.board_cards.length > 0 && (
-            <div className="text-xs text-mono border border-gold-700 px-2 py-0.5 bg-black-200 text-text-secondary">
+            <div className="text-xs text-mono border-2 border-gold-700 px-2 py-1 bg-black-200 text-text-secondary font-bold">
               {hand.board_cards.join(' ')}
             </div>
           )}

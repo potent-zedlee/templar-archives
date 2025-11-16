@@ -10,7 +10,6 @@ import { LatestPosts } from "@/components/main/latest-posts"
 import { TopPlayers } from "@/components/main/top-players"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect"
-import { Button } from "@/components/ui/button"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
 import type { PlatformStats, WeeklyHighlight, TopPlayer } from "@/lib/main-page"
 
@@ -164,43 +163,40 @@ export default function homeClient() {
   }
 
   const words = [
-    { text: "Templar", className: "text-blue-500 dark:text-blue-500" },
-    { text: "Archives:", className: "text-purple-500 dark:text-purple-500" },
-    { text: "Your", className: "text-foreground" },
-    { text: "Poker", className: "text-foreground" },
-    { text: "Knowledge", className: "text-pink-500 dark:text-pink-500" },
-    { text: "Base", className: "text-foreground" },
+    { text: "TEMPLAR", className: "text-gold-400" },
+    { text: "ARCHIVES:", className: "text-gold-500" },
+    { text: "YOUR", className: "text-text-secondary" },
+    { text: "POKER", className: "text-text-secondary" },
+    { text: "KNOWLEDGE", className: "text-gold-400" },
+    { text: "BASE", className: "text-text-secondary" },
   ]
 
   return (
     <PageTransition variant="fade">
       <main id="main-content" role="main">
-        {/* Hero Section */}
-        <section className="relative py-20 md:py-32 overflow-hidden">
-          {/* Background gradient effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5" />
-
+        {/* Hero Section (Postmodern) */}
+        <section className="relative py-20 md:py-32 overflow-hidden bg-grid-black">
           <div className="container max-w-7xl mx-auto px-4 md:px-6 relative z-10">
             <div className="flex flex-col items-center text-center space-y-8">
               {/* Typewriter title */}
               <TypewriterEffectSmooth words={words} />
 
               {/* Subtitle */}
-              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
+              <p className="text-body-lg text-text-secondary max-w-2xl">
                 프로 포커 토너먼트의 모든 핸드 히스토리를 분석하고 학습하세요
               </p>
 
-              {/* CTA Buttons */}
+              {/* CTA Buttons (Postmodern) */}
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Link href="/archive/tournament">
-                  <Button size="lg" className="min-w-[200px]">
-                    Archive 둘러보기
-                  </Button>
+                  <button className="btn-primary min-w-[200px]">
+                    ARCHIVE 둘러보기
+                  </button>
                 </Link>
                 <Link href="/search">
-                  <Button size="lg" variant="outline" className="min-w-[200px]">
+                  <button className="btn-secondary min-w-[200px]">
                     핸드 검색하기
-                  </Button>
+                  </button>
                 </Link>
               </div>
             </div>

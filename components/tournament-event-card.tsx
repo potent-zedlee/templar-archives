@@ -56,27 +56,20 @@ export function TournamentEventCard({
         aria-label={`Select ${title}`}
       />
 
-      {/* Date/Time */}
-      <div className="flex-shrink-0 text-sm text-muted-foreground min-w-[100px]">
+      {/* Date/Time (Monospace) */}
+      <div className="flex-shrink-0 text-sm text-mono text-text-muted min-w-[100px] font-bold">
         {date}
         {time && <span className="ml-1">{time}</span>}
       </div>
 
-      {/* 3D Banner */}
+      {/* Postmodern Card Button */}
       <button
         onClick={onClick}
-        className={cn(
-          "flex-1 flex items-center gap-4 px-6 py-4 rounded-xl",
-          "bg-gradient-to-r transition-all duration-300",
-          "hover:scale-[1.02] hover:shadow-2xl",
-          "relative overflow-hidden",
-          theme.gradient,
-          theme.shadow
-        )}
+        className="card-postmodern-interactive flex-1 flex items-center gap-4 px-6 py-4"
       >
-        {/* Logo */}
+        {/* Logo with Gold Border */}
         {(logo || categoryData) && (
-          <div className="flex-shrink-0 w-12 h-12">
+          <div className="flex-shrink-0 w-12 h-12 border-2 border-gold-700">
             {categoryData ? (
               <CategoryLogo
                 category={categoryData.id}
@@ -90,13 +83,10 @@ export function TournamentEventCard({
           </div>
         )}
 
-        {/* Title */}
-        <div className={cn("flex-1 text-left font-semibold", theme.text)}>
+        {/* Title (Uppercase, Bold) */}
+        <div className="flex-1 text-left text-heading-sm text-gold-400">
           {title}
         </div>
-
-        {/* 3D Effect Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
       </button>
     </div>
   )

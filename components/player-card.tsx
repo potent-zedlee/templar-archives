@@ -44,39 +44,49 @@ export function PlayerCard({ player, className, index = 0 }: PlayerCardProps) {
       className={cn('flex-shrink-0', className)}
     >
       <Link href={`/players/${player.id}`}>
-        <Card className="group p-4 hover:shadow-lg hover:border-primary/50 transition-all duration-300 cursor-pointer min-w-[140px]">
+        <div className="card-postmodern hover-3d p-4 cursor-pointer min-w-[140px]">
           <div className="flex flex-col items-center space-y-3">
-            {/* Avatar */}
-            <Avatar className="h-16 w-16 border-2 border-border group-hover:border-primary transition-colors">
+            {/* Avatar with Gold Border + Glow */}
+            <div className="w-16 h-16 border-2 border-gold-700 gold-glow overflow-hidden bg-black-200">
               {player.photo_url ? (
-                <AvatarImage src={player.photo_url} alt={player.name} />
+                <img
+                  src={player.photo_url}
+                  alt={player.name}
+                  className="w-full h-full object-cover"
+                />
               ) : (
-                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold">
-                  {initials || <User className="h-6 w-6" />}
-                </AvatarFallback>
-              )}
-            </Avatar>
-
-            {/* Name */}
-            <div className="text-center space-y-1 w-full">
-              <p className="font-semibold text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors">
-                {player.name}
-              </p>
-
-              {/* Country Flag (optional) */}
-              {player.country && (
-                <p className="text-xs text-muted-foreground">{player.country}</p>
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gold-700 to-gold-600">
+                  {initials ? (
+                    <span className="text-2xl font-black text-black-0">
+                      {initials}
+                    </span>
+                  ) : (
+                    <User className="h-6 w-6 text-black-0" />
+                  )}
+                </div>
               )}
             </div>
 
-            {/* Hand Count Badge */}
+            {/* Name (Uppercase, Bold) */}
+            <div className="text-center space-y-1 w-full">
+              <p className="text-caption-lg text-gold-400 leading-tight line-clamp-2">
+                {player.name}
+              </p>
+
+              {/* Country (Monospace) */}
+              {player.country && (
+                <p className="text-xs text-mono text-text-muted">{player.country}</p>
+              )}
+            </div>
+
+            {/* Hand Count Badge (Monospace) */}
             {player.hand_count !== undefined && player.hand_count > 0 && (
-              <Badge variant="secondary" className="text-xs">
-                {player.hand_count} {player.hand_count === 1 ? 'hand' : 'hands'}
-              </Badge>
+              <div className="text-mono text-xs border-2 border-gold-700 px-2 py-1 bg-black-200 text-gold-400 font-bold">
+                {player.hand_count} {player.hand_count === 1 ? 'HAND' : 'HANDS'}
+              </div>
             )}
           </div>
-        </Card>
+        </div>
       </Link>
     </motion.div>
   )

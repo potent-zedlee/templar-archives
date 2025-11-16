@@ -1,10 +1,6 @@
 "use client"
 
 import { FormEvent } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
@@ -58,53 +54,50 @@ export function SearchMainPanel({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Search Header */}
-      <div className="p-6 border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      {/* Search Header (Postmodern) */}
+      <div className="p-6 border-b-2 border-gold-700 bg-black-100 sticky top-0 z-10">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto space-y-4">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gold-400" />
+            <input
               type="text"
               placeholder="Ask me anything about your poker hands..."
               value={searchQuery}
               onChange={(e) => onSearchQueryChange(e.target.value)}
-              className="pl-12 pr-12 h-14 text-lg bg-background border-2 focus:border-purple-500 transition-colors"
+              className="input-postmodern pl-12 pr-20 h-14 text-lg w-full"
             />
-            <Button
+            <button
               type="submit"
-              size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+              className="btn-primary absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 flex items-center justify-center"
               disabled={loading}
             >
               <Sparkles className="h-5 w-5" />
-            </Button>
+            </button>
           </div>
 
           {hasSearched && (
             <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="flex items-center gap-2 text-mono text-gold-400 font-bold">
                 <TrendingUp className="h-4 w-4" />
                 <span>
-                  {loading ? "Searching..." : `Found ${hands.length} result${hands.length !== 1 ? 's' : ''}`}
+                  {loading ? "SEARCHING..." : `FOUND ${hands.length} RESULT${hands.length !== 1 ? 'S' : ''}`}
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">View:</span>
-                <Button
-                  variant={viewMode === "table" ? "default" : "ghost"}
-                  size="sm"
+                <span className="text-text-muted uppercase tracking-wider text-xs">VIEW:</span>
+                <button
+                  className={viewMode === "table" ? "btn-secondary h-8 w-8 p-0" : "btn-ghost h-8 w-8 p-0"}
                   onClick={() => onViewModeChange("table")}
                 >
                   <List className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={viewMode === "card" ? "default" : "ghost"}
-                  size="sm"
+                </button>
+                <button
+                  className={viewMode === "card" ? "btn-secondary h-8 w-8 p-0" : "btn-ghost h-8 w-8 p-0"}
                   onClick={() => onViewModeChange("card")}
                 >
                   <Grid3x3 className="h-4 w-4" />
-                </Button>
+                </button>
               </div>
             </div>
           )}
@@ -131,51 +124,50 @@ export function SearchMainPanel({
               </div>
             </div>
           ) : viewMode === "table" ? (
-            <Card>
+            <div className="card-postmodern p-0 overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">Hand #</TableHead>
-                    <TableHead>Tournament</TableHead>
-                    <TableHead>Day</TableHead>
-                    <TableHead>Players</TableHead>
-                    <TableHead className="text-right">Pot Size</TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
+                  <TableRow className="border-b-2 border-gold-700 bg-black-200">
+                    <TableHead className="w-[100px] text-caption text-gold-400">HAND #</TableHead>
+                    <TableHead className="text-caption text-gold-400">TOURNAMENT</TableHead>
+                    <TableHead className="text-caption text-gold-400">DAY</TableHead>
+                    <TableHead className="text-caption text-gold-400">PLAYERS</TableHead>
+                    <TableHead className="text-right text-caption text-gold-400">POT SIZE</TableHead>
+                    <TableHead className="w-[100px] text-caption text-gold-400">ACTIONS</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {hands.map((hand) => (
                     <TableRow
                       key={hand.id}
-                      className="cursor-pointer hover:bg-muted/50"
+                      className="cursor-pointer hover:bg-black-200 transition-colors border-b border-gold-700/20"
                       onClick={() => window.location.href = `/hands/${hand.id}`}
                     >
-                      <TableCell className="font-mono">
+                      <TableCell className="text-mono text-gold-400 font-bold">
                         {hand.number || "N/A"}
                       </TableCell>
-                      <TableCell>{hand.tournament_name || "N/A"}</TableCell>
-                      <TableCell>{hand.day_name || "N/A"}</TableCell>
+                      <TableCell className="text-text-secondary">{hand.tournament_name || "N/A"}</TableCell>
+                      <TableCell className="text-text-secondary">{hand.day_name || "N/A"}</TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {hand.player_names?.slice(0, 3).map((name, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
+                            <div key={idx} className="text-xs border border-gold-700 px-2 py-0.5 bg-black-200 text-gold-400">
                               {name}
-                            </Badge>
+                            </div>
                           )) || "N/A"}
                           {hand.player_names && hand.player_names.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
+                            <div className="text-xs border border-gold-700 px-2 py-0.5 bg-black-200 text-text-muted">
                               +{hand.player_names.length - 3}
-                            </Badge>
+                            </div>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-mono">
+                      <TableCell className="text-right text-mono text-gold-400 font-bold">
                         ${(hand.pot_size || 0).toLocaleString()}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
+                        <button
+                          className="btn-ghost h-8 w-8 p-0"
                           onClick={(e) => {
                             e.stopPropagation()
                             // Toggle favorite
@@ -183,34 +175,33 @@ export function SearchMainPanel({
                         >
                           <Star className={cn(
                             "h-4 w-4",
-                            hand.favorite ? "fill-yellow-500 text-yellow-500" : ""
+                            hand.favorite ? "fill-gold-400 text-gold-400" : ""
                           )} />
-                        </Button>
+                        </button>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </Card>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {hands.map((hand) => (
-                <Card
+                <div
                   key={hand.id}
-                  className="p-4 cursor-pointer hover:shadow-lg transition-shadow"
+                  className="card-postmodern hover-3d p-4 cursor-pointer"
                   onClick={() => window.location.href = `/hands/${hand.id}`}
                 >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
-                        <div className="font-semibold">Hand #{hand.number || "N/A"}</div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-heading-sm text-gold-400">Hand #{hand.number || "N/A"}</div>
+                        <div className="text-sm text-text-muted">
                           {hand.tournament_name || "N/A"}
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
+                      <button
+                        className="btn-ghost h-8 w-8 p-0"
                         onClick={(e) => {
                           e.stopPropagation()
                           // Toggle favorite
@@ -218,27 +209,27 @@ export function SearchMainPanel({
                       >
                         <Star className={cn(
                           "h-4 w-4",
-                          hand.favorite ? "fill-yellow-500 text-yellow-500" : ""
+                          hand.favorite ? "fill-gold-400 text-gold-400" : ""
                         )} />
-                      </Button>
+                      </button>
                     </div>
 
                     <div className="flex flex-wrap gap-1">
                       {hand.player_names?.slice(0, 4).map((name, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-xs">
+                        <div key={idx} className="text-xs border border-gold-700 px-2 py-0.5 bg-black-200 text-gold-400">
                           {name}
-                        </Badge>
+                        </div>
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Pot Size</span>
-                      <span className="font-mono font-semibold">
+                    <div className="flex items-center justify-between pt-3 border-t-2 border-gold-700">
+                      <span className="text-caption text-text-muted">POT SIZE</span>
+                      <span className="text-mono text-gold-400 font-bold">
                         ${(hand.pot_size || 0).toLocaleString()}
                       </span>
                     </div>
                   </div>
-                </Card>
+                </div>
               ))}
             </div>
           )}
