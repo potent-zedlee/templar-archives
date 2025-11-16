@@ -10,7 +10,7 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 
 - **프로덕션**: https://templar-archives.vercel.app
 - **개발 서버**: http://localhost:3000
-- **현재 Phase**: 38 완료 (2025-11-13)
+- **현재 Phase**: 40 완료 (2025-11-16)
 - **KAN Backend**: https://kan-backend-700566907563.us-central1.run.app
 
 ---
@@ -36,6 +36,9 @@ npm run test:coverage     # Coverage report
 npm run test:e2e          # E2E tests (Playwright)
 npm run test:e2e:ui       # Playwright UI mode
 npm run test:e2e:headed   # Playwright with browser
+
+# 번들 분석
+npm run analyze           # Bundle size 분석
 ```
 
 ### 데이터베이스
@@ -234,7 +237,68 @@ const result = await startKanAnalysis({
 - 위치: `app/api/natural-search/route.ts`
 - JSON 필터 방식 (SQL Injection 방지)
 
-### 5. 타입 시스템
+### 5. Postmodern 디자인 시스템
+
+**Phase 39-40 완료** (2025-11-16): 전체 28개 페이지 Postmodern 디자인 전환
+
+#### 개요
+
+- shadcn/ui 의존성 완전 제거
+- 순수 HTML/CSS + Tailwind CSS 4
+- Claude Code Skill 활용 (`.claude/skills/templar-postmodern/`)
+
+#### 디자인 원칙
+
+**Color Palette**:
+- Gold: `oklch(0.68 0.16 85)` - Primary
+- Black: `oklch(0 0 0)` - Background
+- 5-level gold/black spectrum
+
+**Typography**:
+- Display: Geist Sans, 900 weight, UPPERCASE
+- Mono: Geist Mono, 700 weight (statistics)
+
+**Signature Elements**:
+- 3D layered shadows (4px/8px/12px)
+- Gold glow effects
+- Sharp edges (border-radius: 0)
+- Asymmetric grids (2:3, auto 1fr auto)
+- Monospace for all data/numbers
+
+#### 사용 방법
+
+**globals.css 클래스**:
+```css
+.card-postmodern          /* Base card with 3D shadows */
+.btn-primary              /* Gold gradient button */
+.btn-secondary            /* Outlined button */
+.input-postmodern         /* Sharp-edged input */
+.text-heading             /* Uppercase heading */
+.text-mono                /* Monospace for stats */
+.gold-glow                /* Gold glow effect */
+```
+
+**Claude Code Skill**:
+- 위치: `.claude/skills/templar-postmodern/`
+- 사용: "Use templar-postmodern skill to create [component]"
+- 예시 컴포넌트: `examples/` 디렉토리 참고
+
+#### 금지 사항
+
+❌ **절대 사용 금지**:
+- Rounded corners (`border-radius > 0`)
+- Purple gradients
+- Glassmorphism
+- shadcn/ui 컴포넌트 재도입
+- `any` 타입
+
+#### 관련 파일
+
+- **디자인 시스템**: `app/globals.css` (line 6-500)
+- **Skill 문서**: `.claude/skills/templar-postmodern/SKILL.md`
+- **예시**: `.claude/skills/templar-postmodern/examples/*.tsx`
+
+### 6. 타입 시스템
 
 **114개 `any` 타입 완전 제거** (Phase 9)
 
@@ -563,6 +627,43 @@ queryClient.invalidateQueries()
 ---
 
 ## 최근 중요 변경사항
+
+### Phase 39-40: Postmodern 디자인 시스템 전환 (2025-11-16)
+
+**완료된 작업**:
+
+1. **Claude Code Skill 생성**
+   - `.claude/skills/templar-postmodern/` 디렉토리 생성
+   - SKILL.md (487줄), README.md (294줄)
+   - 4개 예시 컴포넌트 (tournament-card, player-card, hand-card, community-post)
+   - 커밋: `47a63b5`
+
+2. **전체 페이지 Postmodern 디자인 적용** (28개 파일)
+   - 공통 컴포넌트 3개
+   - Core Pages 2개 (홈, 검색)
+   - Content/User/Reporter Pages 14개
+   - Admin Pages 8개
+   - Other Pages 2개 (About, Login)
+   - 커밋: `424db39`, `8a1cdb5`, `faeaacc`, `161b330`, `7b3c030`, `020e042`
+
+3. **shadcn/ui 완전 제거**
+   - Button, Card, Dialog, Select, Table 등 → 순수 HTML/CSS
+   - ~2,000줄 삭제, ~2,500줄 추가
+   - 번들 크기 ~15KB 감소
+
+4. **디자인 시스템 구현**
+   - `app/globals.css`에 완전 구현 (500+줄)
+   - CSS 변수, 유틸리티 클래스, 컴포넌트 스타일
+   - Tailwind CSS 4 완전 호환
+
+**성과**:
+- ✅ 28개 페이지 100% 완료
+- ✅ 빌드 성공 (49 routes)
+- ✅ TypeScript 에러 0개
+- ✅ 접근성 WCAG AA 유지
+- ✅ Vercel 프로덕션 배포 완료
+
+---
 
 ### Phase 35: 보안 & 안정성 강화 (2025-11-12)
 
