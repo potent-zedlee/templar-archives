@@ -2,46 +2,17 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Button, buttonVariants } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Ban,
-  Shield,
   MoreVertical,
   UserX,
   UserCheck,
-  Download
+  Download,
+  Shield
 } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/components/auth-provider"
 import { isAdmin, type AdminRole } from "@/lib/admin"
 import {
@@ -69,7 +40,7 @@ type User = {
   comments_count: number
 }
 
-export default function usersClient() {
+export default function UsersClient() {
   const router = useRouter()
   const { user, loading } = useAuth()
   const [hasAccess, setHasAccess] = useState(false)
@@ -86,6 +57,9 @@ export default function usersClient() {
   // Role dialog state
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
   const [newRole, setNewRole] = useState<AdminRole>("user")
+
+  // Dropdown state
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
 
   // React Query hooks
   const {
@@ -111,7 +85,6 @@ export default function usersClient() {
   }, [user, loading])
 
   async function checkAccess() {
-    // Wait for auth loading to complete
     if (loading) return
 
     if (!user) {
@@ -218,79 +191,70 @@ export default function usersClient() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-title-lg mb-2">User Management</h1>
-            <p className="text-body text-muted-foreground">
+            <h1 className="text-heading mb-2">USER MANAGEMENT</h1>
+            <p className="text-text-secondary">
               View and manage all users
             </p>
           </div>
-          <Link href="/admin/dashboard" className={buttonVariants({ variant: "outline" })}>
-            Back to Dashboard
+          <Link href="/admin/dashboard" className="btn-secondary">
+            BACK TO DASHBOARD
           </Link>
         </div>
 
         {/* Filters */}
-        <Card className="p-4 mb-6">
+        <div className="card-postmodern p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="md:col-span-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by nickname or email..."
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gold-400" />
+                <input
+                  type="text"
+                  placeholder="SEARCH BY NICKNAME OR EMAIL..."
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value)
                     setCurrentPage(1)
                   }}
-                  className="pl-10"
+                  className="input-postmodern pl-10 w-full"
                 />
               </div>
             </div>
 
-            <Select
+            <select
               value={roleFilter}
-              onValueChange={(value) => {
-                setRoleFilter(value as AdminRole | "all")
+              onChange={(e) => {
+                setRoleFilter(e.target.value as AdminRole | "all")
                 setCurrentPage(1)
               }}
+              className="input-postmodern"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Role Filter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="templar">Templar</SelectItem>
-                <SelectItem value="arbiter">Arbiter</SelectItem>
-                <SelectItem value="high_templar">High Templar</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
+              <option value="all">ALL ROLES</option>
+              <option value="user">USER</option>
+              <option value="templar">TEMPLAR</option>
+              <option value="arbiter">ARBITER</option>
+              <option value="high_templar">HIGH TEMPLAR</option>
+              <option value="admin">ADMIN</option>
+            </select>
 
-            <Select
+            <select
               value={bannedFilter}
-              onValueChange={(value) => {
-                setBannedFilter(value as "all" | "banned" | "active")
+              onChange={(e) => {
+                setBannedFilter(e.target.value as "all" | "banned" | "active")
                 setCurrentPage(1)
               }}
+              className="input-postmodern"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Status Filter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="banned">Banned</SelectItem>
-              </SelectContent>
-            </Select>
+              <option value="all">ALL STATUS</option>
+              <option value="active">ACTIVE</option>
+              <option value="banned">BANNED</option>
+            </select>
           </div>
 
-          <div className="md:col-span-4 flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
+          <div className="md:col-span-4 flex justify-end mt-4">
+            <button
               onClick={() => {
                 if (users.length === 0) {
-                  toast.error('내보낼 데이터가 없습니다')
+                  toast.error('No data to export')
                   return
                 }
                 const exportData = users.map(u => ({
@@ -303,135 +267,143 @@ export default function usersClient() {
                   banned_at: u.is_banned ? new Date().toISOString() : null,
                 }))
                 exportUsers(exportData as any, 'csv')
-                toast.success('CSV 파일이 다운로드되었습니다')
+                toast.success('CSV downloaded')
               }}
+              className="btn-secondary text-sm"
             >
               <Download className="h-4 w-4 mr-2" />
-              Export CSV
-            </Button>
+              EXPORT CSV
+            </button>
           </div>
-        </Card>
+        </div>
 
         {/* Users List */}
         {loading ? (
           <CardSkeleton count={5} />
         ) : users.length === 0 ? (
-          <Card className="p-8 text-center">
-            <p className="text-body text-muted-foreground">
+          <div className="card-postmodern p-8 text-center">
+            <p className="text-text-secondary">
               No users match the criteria
             </p>
-          </Card>
+          </div>
         ) : (
           <div className="space-y-4 mb-6">
             {users.map((targetUser) => (
-              <Card key={targetUser.id} className="p-4">
+              <div key={targetUser.id} className="card-postmodern p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4 flex-1">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={targetUser.avatar_url} />
-                      <AvatarFallback>
-                        {targetUser.nickname.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="h-12 w-12 rounded-full bg-gold-700/20 flex items-center justify-center text-gold-400 font-bold">
+                      {targetUser.nickname.slice(0, 2).toUpperCase()}
+                    </div>
 
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-body font-semibold">
+                        <h3 className="text-body font-semibold text-white">
                           {targetUser.nickname}
                         </h3>
-                        <Badge variant={
-                          targetUser.role === "admin" ? "default" :
-                          targetUser.role === "high_templar" ? "secondary" :
-                          targetUser.role === "arbiter" ? "secondary" :
-                          targetUser.role === "templar" ? "outline" :
-                          "outline"
-                        }>
-                          {targetUser.role === "admin" ? "Admin" :
-                           targetUser.role === "high_templar" ? "High Templar" :
-                           targetUser.role === "arbiter" ? "Arbiter" :
-                           targetUser.role === "templar" ? "Templar" :
-                           "User"}
-                        </Badge>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          targetUser.role === "admin" ? "bg-gold-700 text-black-0" :
+                          targetUser.role === "high_templar" ? "bg-purple-700 text-white" :
+                          targetUser.role === "arbiter" ? "bg-blue-700 text-white" :
+                          targetUser.role === "templar" ? "bg-green-700 text-white" :
+                          "bg-gray-700 text-white"
+                        }`}>
+                          {targetUser.role === "admin" ? "ADMIN" :
+                           targetUser.role === "high_templar" ? "HIGH TEMPLAR" :
+                           targetUser.role === "arbiter" ? "ARBITER" :
+                           targetUser.role === "templar" ? "TEMPLAR" :
+                           "USER"}
+                        </span>
                         {targetUser.is_banned && (
-                          <Badge variant="destructive">Banned</Badge>
+                          <span className="px-2 py-1 rounded bg-red-700 text-white text-xs font-medium">
+                            BANNED
+                          </span>
                         )}
                       </div>
-                      <p className="text-caption text-muted-foreground mb-1">
+                      <p className="text-caption text-text-secondary mb-1">
                         {targetUser.email}
                       </p>
-                      <div className="flex gap-4 text-caption text-muted-foreground">
-                        <span>Posts {targetUser.posts_count}</span>
-                        <span>Comments {targetUser.comments_count}</span>
-                        <span>Joined: {new Date(targetUser.created_at).toLocaleDateString("ko-KR")}</span>
+                      <div className="flex gap-4 text-caption text-text-secondary">
+                        <span>POSTS: {targetUser.posts_count}</span>
+                        <span>COMMENTS: {targetUser.comments_count}</span>
+                        <span>JOINED: {new Date(targetUser.created_at).toLocaleDateString("ko-KR")}</span>
                         {targetUser.last_sign_in_at ? (
                           <span className={
                             new Date().getTime() - new Date(targetUser.last_sign_in_at).getTime() < 7 * 24 * 60 * 60 * 1000
-                              ? "text-green-600 dark:text-green-400"
+                              ? "text-green-400"
                               : new Date().getTime() - new Date(targetUser.last_sign_in_at).getTime() > 30 * 24 * 60 * 60 * 1000
-                              ? "text-muted-foreground/50"
+                              ? "text-gray-600"
                               : ""
                           }>
-                            Last Sign In: {new Date(targetUser.last_sign_in_at).toLocaleDateString("ko-KR")}
+                            LAST SIGN IN: {new Date(targetUser.last_sign_in_at).toLocaleDateString("ko-KR")}
                           </span>
                         ) : (
-                          <span className="text-muted-foreground/50">Last Sign In: Never</span>
-                        )}
-                        {targetUser.last_activity_at ? (
-                          <span className={
-                            new Date().getTime() - new Date(targetUser.last_activity_at).getTime() < 7 * 24 * 60 * 60 * 1000
-                              ? "text-green-600 dark:text-green-400"
-                              : new Date().getTime() - new Date(targetUser.last_activity_at).getTime() > 30 * 24 * 60 * 60 * 1000
-                              ? "text-muted-foreground/50"
-                              : ""
-                          }>
-                            Last Activity: {new Date(targetUser.last_activity_at).toLocaleDateString("ko-KR")}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground/50">Last Activity: Never</span>
+                          <span className="text-gray-600">LAST SIGN IN: NEVER</span>
                         )}
                       </div>
                       {targetUser.is_banned && targetUser.ban_reason && (
-                        <p className="text-caption text-destructive mt-1">
+                        <p className="text-caption text-red-400 mt-1">
                           Ban reason: {targetUser.ban_reason}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/profile/${targetUser.id}`}>
-                          View Profile
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => openRoleDialog(targetUser)}>
-                        <Shield className="h-4 w-4 mr-2" />
-                        Change Role
-                      </DropdownMenuItem>
-                      {targetUser.is_banned ? (
-                        <DropdownMenuItem onClick={() => handleUnbanUser(targetUser)}>
-                          <UserCheck className="h-4 w-4 mr-2" />
-                          Unban
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem
-                          onClick={() => openBanDialog(targetUser)}
-                          className="text-destructive"
+                  {/* Dropdown Menu */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setOpenDropdownId(openDropdownId === targetUser.id ? null : targetUser.id)}
+                      className="btn-ghost p-2"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                    {openDropdownId === targetUser.id && (
+                      <div className="absolute right-0 mt-2 w-48 card-postmodern py-2 z-10">
+                        <Link
+                          href={`/profile/${targetUser.id}`}
+                          className="block px-4 py-2 text-sm hover:bg-gold-700/20 text-white"
+                          onClick={() => setOpenDropdownId(null)}
                         >
-                          <UserX className="h-4 w-4 mr-2" />
-                          Ban User
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                          VIEW PROFILE
+                        </Link>
+                        <button
+                          onClick={() => {
+                            openRoleDialog(targetUser)
+                            setOpenDropdownId(null)
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-gold-700/20 text-white flex items-center"
+                        >
+                          <Shield className="h-4 w-4 mr-2" />
+                          CHANGE ROLE
+                        </button>
+                        {targetUser.is_banned ? (
+                          <button
+                            onClick={() => {
+                              handleUnbanUser(targetUser)
+                              setOpenDropdownId(null)
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-gold-700/20 text-white flex items-center"
+                          >
+                            <UserCheck className="h-4 w-4 mr-2" />
+                            UNBAN
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              openBanDialog(targetUser)
+                              setOpenDropdownId(null)
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-gold-700/20 text-red-400 flex items-center"
+                          >
+                            <UserX className="h-4 w-4 mr-2" />
+                            BAN USER
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
@@ -439,104 +411,115 @@ export default function usersClient() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
+            <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
+              className="btn-secondary p-2"
             >
               <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-body">
+            </button>
+            <span className="text-body text-white">
               {currentPage} / {totalPages}
             </span>
-            <Button
-              variant="outline"
-              size="icon"
+            <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
+              className="btn-secondary p-2"
             >
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </button>
           </div>
         )}
 
       {/* Ban Dialog */}
-      <Dialog open={banDialogOpen} onOpenChange={setBanDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Ban User</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to ban {selectedUser?.nickname}?
-            </DialogDescription>
-          </DialogHeader>
+      {banDialogOpen && (
+        <div className="fixed inset-0 bg-black-0/80 z-50 flex items-center justify-center p-4">
+          <div className="card-postmodern p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-heading">BAN USER</h2>
+              <button onClick={() => setBanDialogOpen(false)} className="btn-ghost text-2xl">×</button>
+            </div>
 
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="ban-reason">Ban Reason *</Label>
-              <Textarea
-                id="ban-reason"
+            <p className="text-text-secondary mb-4">
+              Are you sure you want to ban {selectedUser?.nickname}?
+            </p>
+
+            <div className="mb-4">
+              <label className="text-caption text-gold-400 block mb-2">BAN REASON *</label>
+              <textarea
                 value={banReason}
                 onChange={(e) => setBanReason(e.target.value)}
                 placeholder="Enter the reason for banning..."
                 rows={4}
+                className="input-postmodern w-full"
               />
             </div>
-          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setBanDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleBanUser}
-              disabled={banUserMutation.isPending || !banReason.trim()}
-            >
-              {banUserMutation.isPending ? "Processing..." : "Ban"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Role Change Dialog */}
-      <Dialog open={roleDialogOpen} onOpenChange={setRoleDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Change Role</DialogTitle>
-            <DialogDescription>
-              Change role for {selectedUser?.nickname}?
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-role">New Role</Label>
-              <Select value={newRole} onValueChange={(value) => setNewRole(value as AdminRole)}>
-                <SelectTrigger id="new-role">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="templar">Templar</SelectItem>
-                  <SelectItem value="arbiter">Arbiter</SelectItem>
-                  <SelectItem value="high_templar">High Templar</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setBanDialogOpen(false)}
+                className="btn-secondary"
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={handleBanUser}
+                disabled={banUserMutation.isPending || !banReason.trim()}
+                className="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50"
+              >
+                {banUserMutation.isPending ? "PROCESSING..." : "BAN"}
+              </button>
             </div>
           </div>
+        </div>
+      )}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRoleDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleChangeRole} disabled={changeRoleMutation.isPending}>
-              {changeRoleMutation.isPending ? "Processing..." : "Change"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Role Change Dialog */}
+      {roleDialogOpen && (
+        <div className="fixed inset-0 bg-black-0/80 z-50 flex items-center justify-center p-4">
+          <div className="card-postmodern p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-heading">CHANGE ROLE</h2>
+              <button onClick={() => setRoleDialogOpen(false)} className="btn-ghost text-2xl">×</button>
+            </div>
+
+            <p className="text-text-secondary mb-4">
+              Change role for {selectedUser?.nickname}?
+            </p>
+
+            <div className="mb-4">
+              <label className="text-caption text-gold-400 block mb-2">NEW ROLE</label>
+              <select
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value as AdminRole)}
+                className="input-postmodern w-full"
+              >
+                <option value="user">USER</option>
+                <option value="templar">TEMPLAR</option>
+                <option value="arbiter">ARBITER</option>
+                <option value="high_templar">HIGH TEMPLAR</option>
+                <option value="admin">ADMIN</option>
+              </select>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setRoleDialogOpen(false)}
+                className="btn-secondary"
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={handleChangeRole}
+                disabled={changeRoleMutation.isPending}
+                className="btn-primary"
+              >
+                {changeRoleMutation.isPending ? "PROCESSING..." : "CHANGE"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

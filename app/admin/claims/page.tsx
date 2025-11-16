@@ -2,29 +2,6 @@
 
 
 import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Check, X, ExternalLink, Clock, CheckCircle2, XCircle } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/components/auth-provider"
@@ -38,7 +15,7 @@ import {
   useRejectClaimMutation,
 } from "@/lib/queries/admin-queries"
 
-export default function claimsClient() {
+export default function ClaimsClient() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [userEmail, setUserEmail] = useState<string | null>(null)
@@ -47,6 +24,7 @@ export default function claimsClient() {
   const [actionType, setActionType] = useState<"approve" | "reject">("approve")
   const [adminNotes, setAdminNotes] = useState("")
   const [rejectedReason, setRejectedReason] = useState("")
+  const [activeTab, setActiveTab] = useState<"pending" | "all">("pending")
 
   // React Query hooks
   const { data: pendingClaims = [], isLoading: pendingLoading } = usePendingClaimsQuery()
@@ -65,7 +43,6 @@ export default function claimsClient() {
   }, [])
 
   useEffect(() => {
-    // Wait for auth loading to complete
     if (authLoading) return
 
     if (userEmail && !isAdmin(userEmail)) {
@@ -134,24 +111,24 @@ export default function claimsClient() {
     switch (status) {
       case "pending":
         return (
-          <Badge variant="secondary" className="gap-1">
+          <span className="px-2 py-1 rounded bg-gold-700/30 text-gold-400 text-xs font-medium inline-flex items-center gap-1">
             <Clock className="h-3 w-3" />
-            Pending
-          </Badge>
+            PENDING
+          </span>
         )
       case "approved":
         return (
-          <Badge variant="default" className="gap-1 bg-green-600">
+          <span className="px-2 py-1 rounded bg-green-700/30 text-green-400 text-xs font-medium inline-flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3" />
-            Approved
-          </Badge>
+            APPROVED
+          </span>
         )
       case "rejected":
         return (
-          <Badge variant="destructive" className="gap-1">
+          <span className="px-2 py-1 rounded bg-red-700/30 text-red-400 text-xs font-medium inline-flex items-center gap-1">
             <XCircle className="h-3 w-3" />
-            Rejected
-          </Badge>
+            REJECTED
+          </span>
         )
       default:
         return null
@@ -161,22 +138,22 @@ export default function claimsClient() {
   const getVerificationMethodLabel = (method: string) => {
     switch (method) {
       case "social_media":
-        return "Social Media"
+        return "SOCIAL MEDIA"
       case "email":
-        return "Email"
+        return "EMAIL"
       case "admin":
-        return "Admin"
+        return "ADMIN"
       case "other":
-        return "Other"
+        return "OTHER"
       default:
-        return method
+        return method.toUpperCase()
     }
   }
 
   if (loading) {
     return (
       <div className="container max-w-7xl mx-auto py-16 text-center">
-        <p className="text-body-lg text-muted-foreground">Loading...</p>
+        <p className="text-text-secondary">LOADING...</p>
       </div>
     )
   }
@@ -184,261 +161,266 @@ export default function claimsClient() {
   return (
     <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="mb-8">
-          <h1 className="text-title-lg mb-2">Player Claim Management</h1>
-          <p className="text-body text-muted-foreground">
+          <h1 className="text-heading mb-2">PLAYER CLAIM MANAGEMENT</h1>
+          <p className="text-text-secondary">
             Approve or reject player profile claim requests
           </p>
         </div>
 
-        <Tabs defaultValue="pending">
-          <TabsList>
-            <TabsTrigger value="pending">
-              Pending ({pendingClaims.length})
-            </TabsTrigger>
-            <TabsTrigger value="all">All ({allClaims.length})</TabsTrigger>
-          </TabsList>
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6 border-b border-gold-700/20">
+          <button
+            onClick={() => setActiveTab("pending")}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === "pending"
+                ? "border-b-2 border-gold-700 text-gold-400"
+                : "text-text-secondary hover:text-white"
+            }`}
+          >
+            PENDING ({pendingClaims.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("all")}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === "all"
+                ? "border-b-2 border-gold-700 text-gold-400"
+                : "text-text-secondary hover:text-white"
+            }`}
+          >
+            ALL ({allClaims.length})
+          </button>
+        </div>
 
-          <TabsContent value="pending" className="mt-6">
-            {pendingClaims.length === 0 ? (
-              <Card className="p-12 text-center">
-                <p className="text-body text-muted-foreground">
-                  No pending claim requests
-                </p>
-              </Card>
-            ) : (
-              <Card>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Player</TableHead>
-                      <TableHead>Requester</TableHead>
-                      <TableHead>Verification Method</TableHead>
-                      <TableHead>Evidence</TableHead>
-                      <TableHead>Requested At</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pendingClaims.map((claim) => (
-                      <TableRow key={claim.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={claim.player.photo_url} />
-                              <AvatarFallback>
-                                {claim.player.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{claim.player.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={claim.user.avatar_url} />
-                              <AvatarFallback>
-                                {claim.user.nickname.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{claim.user.nickname}</p>
-                              <p className="text-caption text-muted-foreground">
-                                {claim.user.email}
-                              </p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {getVerificationMethodLabel(claim.verification_method)}
-                        </TableCell>
-                        <TableCell>
-                          {claim.verification_data?.social_media_url && (
-                            <a
-                              href={claim.verification_data.social_media_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-primary hover:underline"
-                            >
-                              View Link
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          )}
-                          {claim.verification_data?.email && (
-                            <span>{claim.verification_data.email}</span>
-                          )}
-                          {claim.verification_data?.additional_info && (
-                            <p className="text-caption text-muted-foreground mt-1">
-                              {claim.verification_data.additional_info}
-                            </p>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(claim.claimed_at).toLocaleString("ko-KR")}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center gap-2 justify-end">
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => handleActionClick(claim, "approve")}
-                            >
-                              <Check className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleActionClick(claim, "reject")}
-                            >
-                              <X className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="all" className="mt-6">
-            <Card>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Player</TableHead>
-                    <TableHead>Requester</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Verification Method</TableHead>
-                    <TableHead>Processed At</TableHead>
-                    <TableHead>Processed By</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {allClaims.map((claim) => (
-                    <TableRow key={claim.id}>
-                      <TableCell>
+        {/* Pending Tab */}
+        {activeTab === "pending" && (
+          pendingClaims.length === 0 ? (
+            <div className="card-postmodern p-12 text-center">
+              <p className="text-text-secondary">
+                No pending claim requests
+              </p>
+            </div>
+          ) : (
+            <div className="card-postmodern overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2 border-gold-700">
+                    <th className="text-caption text-gold-400 text-left p-3">PLAYER</th>
+                    <th className="text-caption text-gold-400 text-left p-3">REQUESTER</th>
+                    <th className="text-caption text-gold-400 text-left p-3">VERIFICATION METHOD</th>
+                    <th className="text-caption text-gold-400 text-left p-3">EVIDENCE</th>
+                    <th className="text-caption text-gold-400 text-left p-3">REQUESTED AT</th>
+                    <th className="text-caption text-gold-400 text-right p-3">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingClaims.map((claim) => (
+                    <tr key={claim.id} className="border-b border-gold-700/20 hover:bg-black-200">
+                      <td className="p-3">
                         <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={claim.player.photo_url} />
-                            <AvatarFallback>
-                              {claim.player.name.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{claim.player.name}</span>
+                          <div className="h-8 w-8 rounded-full bg-gold-700/20 flex items-center justify-center text-gold-400 text-xs font-bold">
+                            {claim.player.name.charAt(0)}
+                          </div>
+                          <span className="font-medium text-white">{claim.player.name}</span>
                         </div>
-                      </TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="p-3">
                         <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={claim.user.avatar_url} />
-                            <AvatarFallback>
-                              {claim.user.nickname.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
+                          <div className="h-8 w-8 rounded-full bg-gold-700/20 flex items-center justify-center text-gold-400 text-xs font-bold">
+                            {claim.user.nickname.charAt(0)}
+                          </div>
                           <div>
-                            <p className="font-medium">{claim.user.nickname}</p>
-                            <p className="text-caption text-muted-foreground">
+                            <p className="font-medium text-white">{claim.user.nickname}</p>
+                            <p className="text-caption text-text-secondary">
                               {claim.user.email}
                             </p>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(claim.status)}</TableCell>
-                      <TableCell>
+                      </td>
+                      <td className="p-3 text-text-secondary">
                         {getVerificationMethodLabel(claim.verification_method)}
-                      </TableCell>
-                      <TableCell>
-                        {claim.verified_at
-                          ? new Date(claim.verified_at).toLocaleString("ko-KR")
-                          : "-"}
-                      </TableCell>
-                      <TableCell>
-                        {claim.verified_by_user?.nickname || "-"}
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                      <td className="p-3">
+                        {claim.verification_data?.social_media_url && (
+                          <a
+                            href={claim.verification_data.social_media_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-gold-400 hover:underline"
+                          >
+                            View Link
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
+                        {claim.verification_data?.email && (
+                          <span className="text-text-secondary">{claim.verification_data.email}</span>
+                        )}
+                        {claim.verification_data?.additional_info && (
+                          <p className="text-caption text-text-secondary mt-1">
+                            {claim.verification_data.additional_info}
+                          </p>
+                        )}
+                      </td>
+                      <td className="p-3 text-text-secondary">
+                        {new Date(claim.claimed_at).toLocaleString("ko-KR")}
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex items-center gap-2 justify-end">
+                          <button
+                            onClick={() => handleActionClick(claim, "approve")}
+                            className="btn-primary text-sm px-3 py-1"
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            APPROVE
+                          </button>
+                          <button
+                            onClick={() => handleActionClick(claim, "reject")}
+                            className="bg-red-700 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                          >
+                            <X className="h-4 w-4 mr-1" />
+                            REJECT
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
                   ))}
-                </TableBody>
-              </Table>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
+
+        {/* All Tab */}
+        {activeTab === "all" && (
+          <div className="card-postmodern overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b-2 border-gold-700">
+                  <th className="text-caption text-gold-400 text-left p-3">PLAYER</th>
+                  <th className="text-caption text-gold-400 text-left p-3">REQUESTER</th>
+                  <th className="text-caption text-gold-400 text-left p-3">STATUS</th>
+                  <th className="text-caption text-gold-400 text-left p-3">VERIFICATION METHOD</th>
+                  <th className="text-caption text-gold-400 text-left p-3">PROCESSED AT</th>
+                  <th className="text-caption text-gold-400 text-left p-3">PROCESSED BY</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allClaims.map((claim) => (
+                  <tr key={claim.id} className="border-b border-gold-700/20 hover:bg-black-200">
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-gold-700/20 flex items-center justify-center text-gold-400 text-xs font-bold">
+                          {claim.player.name.charAt(0)}
+                        </div>
+                        <span className="font-medium text-white">{claim.player.name}</span>
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-full bg-gold-700/20 flex items-center justify-center text-gold-400 text-xs font-bold">
+                          {claim.user.nickname.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">{claim.user.nickname}</p>
+                          <p className="text-caption text-text-secondary">
+                            {claim.user.email}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3">{getStatusBadge(claim.status)}</td>
+                    <td className="p-3 text-text-secondary">
+                      {getVerificationMethodLabel(claim.verification_method)}
+                    </td>
+                    <td className="p-3 text-text-secondary">
+                      {claim.verified_at
+                        ? new Date(claim.verified_at).toLocaleString("ko-KR")
+                        : "-"}
+                    </td>
+                    <td className="p-3 text-text-secondary">
+                      {claim.verified_by_user?.nickname || "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
       {/* Action Dialog */}
-      <Dialog open={actionDialogOpen} onOpenChange={setActionDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {actionType === "approve" ? "Approve Claim" : "Reject Claim"}
-            </DialogTitle>
-            <DialogDescription>
+      {actionDialogOpen && selectedClaim && (
+        <div className="fixed inset-0 bg-black-0/80 z-50 flex items-center justify-center p-4">
+          <div className="card-postmodern p-6 max-w-lg w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-heading">
+                {actionType === "approve" ? "APPROVE CLAIM" : "REJECT CLAIM"}
+              </h2>
+              <button onClick={() => setActionDialogOpen(false)} className="btn-ghost text-2xl">×</button>
+            </div>
+
+            <p className="text-text-secondary mb-4">
               {actionType === "approve"
                 ? "Are you sure you want to approve this claim?"
                 : "Are you sure you want to reject this claim?"}
-            </DialogDescription>
-          </DialogHeader>
+            </p>
 
-          {selectedClaim && (
-            <div className="space-y-4 py-4">
-              {/* Claim Info */}
-              <div className="p-3 bg-muted rounded-lg space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-caption text-muted-foreground">Player</span>
-                  <span className="font-medium">{selectedClaim.player.name}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-caption text-muted-foreground">Requester</span>
-                  <span className="font-medium">{selectedClaim.user.nickname}</span>
-                </div>
+            {/* Claim Info */}
+            <div className="p-4 bg-black-200 rounded mb-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-caption text-text-secondary">PLAYER</span>
+                <span className="font-medium text-white">{selectedClaim.player.name}</span>
               </div>
-
-              {actionType === "reject" && (
-                <div className="space-y-2">
-                  <Label>Rejection Reason *</Label>
-                  <Textarea
-                    placeholder="Please enter the reason for rejecting this claim"
-                    value={rejectedReason}
-                    onChange={(e) => setRejectedReason(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label>Admin Notes (Optional)</Label>
-                <Textarea
-                  placeholder="Enter internal notes"
-                  value={adminNotes}
-                  onChange={(e) => setAdminNotes(e.target.value)}
-                  rows={2}
-                />
+              <div className="flex items-center justify-between">
+                <span className="text-caption text-text-secondary">REQUESTER</span>
+                <span className="font-medium text-white">{selectedClaim.user.nickname}</span>
               </div>
             </div>
-          )}
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setActionDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant={actionType === "approve" ? "default" : "destructive"}
-              onClick={handleAction}
-              disabled={approveClaimMutation.isPending || rejectClaimMutation.isPending}
-            >
-              {(approveClaimMutation.isPending || rejectClaimMutation.isPending)
-                ? "Processing..."
-                : actionType === "approve"
-                ? "Approve"
-                : "Reject"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            {actionType === "reject" && (
+              <div className="mb-4">
+                <label className="text-caption text-gold-400 block mb-2">REJECTION REASON *</label>
+                <textarea
+                  placeholder="Please enter the reason for rejecting this claim"
+                  value={rejectedReason}
+                  onChange={(e) => setRejectedReason(e.target.value)}
+                  rows={3}
+                  className="input-postmodern w-full"
+                />
+              </div>
+            )}
+
+            <div className="mb-4">
+              <label className="text-caption text-gold-400 block mb-2">ADMIN NOTES (OPTIONAL)</label>
+              <textarea
+                placeholder="Enter internal notes"
+                value={adminNotes}
+                onChange={(e) => setAdminNotes(e.target.value)}
+                rows={2}
+                className="input-postmodern w-full"
+              />
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setActionDialogOpen(false)}
+                className="btn-secondary"
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={handleAction}
+                disabled={approveClaimMutation.isPending || rejectClaimMutation.isPending}
+                className={actionType === "approve" ? "btn-primary" : "bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded"}
+              >
+                {(approveClaimMutation.isPending || rejectClaimMutation.isPending)
+                  ? "PROCESSING..."
+                  : actionType === "approve"
+                  ? "APPROVE"
+                  : "REJECT"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
