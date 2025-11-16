@@ -83,96 +83,142 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     const tournament = item.data as Tournament
     const isExpanded = item.isExpanded || false
 
-    // Format date as YYYY/MM/DD
-    const formatDate = (dateStr: string) => {
-      const date = new Date(dateStr)
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}/${month}/${day}`
-    }
+    // Extract year from start_date
+    const year = new Date(tournament.start_date).getFullYear()
+
+    // Calculate total hands across all sub events
+    const totalHands = tournament.sub_events?.reduce((sum, event) => {
+      return sum + (event.streams?.reduce((streamSum, stream) => {
+        return streamSum + (hands.filter(h => h.stream_id === stream.id).length || 0)
+      }, 0) || 0)
+    }, 0) || 0
 
     return (
-      <div key={item.id} className="space-y-0 mb-3">
-        <BackgroundGradient
-          className="rounded-[22px]"
-          containerClassName="p-[1px]"
-          animate={false}
+      <div key={item.id} className="space-y-0 mb-6">
+        {/* Tournament Card - Postmodern Design */}
+        <div
+          className={cn(
+            "card-postmodern hover-3d p-6 cursor-pointer",
+            isExpanded && "ring-2 ring-gold-400"
+          )}
+          onClick={() => onNavigate(item)}
         >
-          {/* Tournament Row */}
-          <div
-            className={cn(
-              "group flex items-center gap-6 px-6 py-4 backdrop-blur-md bg-slate-950 rounded-[21px] border-0 shadow-xl hover:shadow-2xl transition-all duration-300 ease-out cursor-pointer relative overflow-hidden",
-              "before:absolute before:inset-0 before:bg-gradient-to-r before:from-blue-500/20 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none",
-              isExpanded && "shadow-2xl ring-2 ring-blue-500/30"
-            )}
-            onClick={() => onNavigate(item)}
-          >
-          {/* Date */}
-          <div className="w-24 flex-shrink-0 text-sm font-medium text-foreground/70 relative z-10">
-            <div className="font-mono">{formatDate(tournament.start_date)}</div>
-            <div className="font-mono text-xs">{formatDate(tournament.end_date)}</div>
-          </div>
+          {/* Header: 비대칭 그리드 */}
+          <div className="tournament-card-grid">
+            {/* Year Badge */}
+            <div className="year-badge">
+              <span className="text-display">{year}</span>
+            </div>
 
-          {/* Logo */}
-          <div className="flex-shrink-0 w-16 h-16 flex items-center justify-center relative z-10">
+            {/* Tournament Info */}
+            <div className="space-y-2">
+              <h2 className="text-heading-lg text-gold-400">{tournament.name}</h2>
+              <div className="flex gap-3 items-center flex-wrap">
+                {tournament.city && tournament.country && (
+                  <>
+                    <span className="text-caption text-gold-300">
+                      {tournament.city}, {tournament.country}
+                    </span>
+                    <span className="text-gold-700">•</span>
+                  </>
+                )}
+                {tournament.category && (
+                  <span className="text-caption text-gold-300">{tournament.category}</span>
+                )}
+                {tournament.total_prize && (
+                  <>
+                    <span className="text-gold-700">•</span>
+                    <span className="text-caption text-gold-400 font-bold">{tournament.total_prize}</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Logo */}
             {(() => {
               const logoUrl = tournament.category_logo_url || tournament.category_logo
               return logoUrl ? (
-                <div className="w-full h-full backdrop-blur-sm bg-white/10 dark:bg-black/10 rounded-lg p-2 border border-white/10 shadow-lg">
-                  <Image
-                    src={logoUrl}
-                    alt={tournament.category}
-                    width={56}
-                    height={56}
-                    className="object-contain w-full h-full"
-                  />
-                </div>
+                <Image
+                  src={logoUrl}
+                  alt={tournament.name}
+                  width={80}
+                  height={80}
+                  className="w-20 h-20 object-contain offset-down border-2 border-gold-700 bg-black-200 p-2"
+                />
               ) : (
-                <div className="w-full h-full backdrop-blur-sm bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center text-sm font-bold text-foreground border border-white/10 shadow-lg">
+                <div className="w-20 h-20 offset-down border-2 border-gold-700 bg-gradient-to-br from-gold-500/20 to-gold-700/20 flex items-center justify-center text-gold-400 font-bold text-lg">
                   {tournament.category.slice(0, 2).toUpperCase()}
                 </div>
               )
             })()}
           </div>
 
-          {/* Location */}
-          <div className="w-32 flex-shrink-0 text-sm text-foreground/70 relative z-10">
-            {tournament.city && tournament.country ? (
-              <span className="font-medium">
-                {tournament.city} <span className="text-foreground/40">/</span> {tournament.country}
-              </span>
-            ) : (
-              tournament.location || "-"
-            )}
-          </div>
+          {/* Stats Grid: 2:3 비대칭 */}
+          {(totalHands > 0 || (tournament.sub_events && tournament.sub_events.length > 0)) && (
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6 mt-6">
+              {/* Left: Statistics */}
+              <div className="stats-card space-y-4">
+                <div className="stat-item">
+                  <span className="text-caption text-gold-300">총 핸드</span>
+                  <span className="text-heading text-mono text-gold-400">{totalHands}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="text-caption text-gold-300">서브 이벤트</span>
+                  <span className="text-heading text-mono text-gold-400">{tournament.sub_events?.length || 0}</span>
+                </div>
+              </div>
 
-          {/* Tournament Name */}
-          <div className="flex-1 min-w-0 font-bold text-xl text-foreground truncate relative z-10 tracking-tight">
-            {tournament.name}
-          </div>
-
-          {/* Prize */}
-          <div className="w-44 text-xl font-extrabold bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent text-right relative z-10">
-            {tournament.total_prize || "-"}
-          </div>
+              {/* Right: Sub Events (있으면 표시) */}
+              {tournament.sub_events && tournament.sub_events.length > 0 && (
+                <div className="sub-event-list space-y-1">
+                  {tournament.sub_events.slice(0, 3).map((event, idx) => (
+                    <div
+                      key={event.id}
+                      className="card-minimal flex items-center gap-3"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onNavigate({
+                          id: event.id,
+                          name: event.name,
+                          type: "subevent",
+                          data: event,
+                          level: 1,
+                          parentId: tournament.id,
+                        })
+                      }}
+                    >
+                      <span className="text-caption text-gold-500 font-bold min-w-[2rem]">#{idx + 1}</span>
+                      <div className="flex-1">
+                        <h3 className="text-heading-sm text-gold-400">{event.name}</h3>
+                        <span className="text-caption text-gold-300">{event.streams?.length || 0} Streams</span>
+                      </div>
+                    </div>
+                  ))}
+                  {tournament.sub_events.length > 3 && (
+                    <div className="text-caption text-gold-600 text-center py-2">
+                      +{tournament.sub_events.length - 3} more events
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Info Button */}
-          <div className="flex-shrink-0 relative z-10">
+          <div className="absolute top-4 right-4">
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 backdrop-blur-md bg-white/10 dark:bg-black/10 hover:bg-white/20 dark:hover:bg-black/20 border border-white/10 hover:border-white/20 hover:rotate-12 hover:scale-110 transition-all duration-300 shadow-lg"
+              className="h-10 w-10 btn-ghost"
               onClick={(e) => {
                 e.stopPropagation()
                 onShowInfo?.(item)
               }}
             >
-              <Info className="h-4 w-4 text-foreground/80" />
+              <Info className="h-4 w-4 text-gold-400" />
             </Button>
           </div>
-          </div>
-        </BackgroundGradient>
+        </div>
 
         {/* SubEvents (if expanded) */}
         <AnimatePresence>
@@ -317,74 +363,113 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
       const date = new Date(dateStr)
       const year = date.getFullYear()
       const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}/${month}/${day}`
+      const dayNum = String(date.getDate()).padStart(2, '0')
+      return `${year}/${month}/${dayNum}`
     }
 
     const isExpanded = expandedDayId === day.id
 
+    // Calculate hand count for this stream
+    const streamHandCount = hands.filter(h => h.stream_id === day.id).length
+
+    // Extract day number from name (e.g., "Day 1A" -> 1)
+    const dayNumberMatch = day.name.match(/Day (\d+)/i)
+    const dayNumber = dayNumberMatch ? dayNumberMatch[1] : '?'
+
     return (
-      <div key={day.id} className="ml-12 mr-6 mb-1.5 space-y-2">
-        {/* Day Card */}
-        <BackgroundGradient
-          className="rounded-[16px]"
-          containerClassName="p-[1px]"
-          animate={false}
+      <div key={day.id} className="ml-12 mr-6 mb-3 space-y-2">
+        {/* Stream Card - Postmodern Design */}
+        <div
+          className={cn(
+            "card-postmodern hover-3d p-5 cursor-pointer relative",
+            isExpanded && "ring-2 ring-gold-400"
+          )}
+          onClick={() => onSelectDay?.(day.id)}
         >
-          <div
-            className={cn(
-              "group flex items-center gap-4 px-4 py-2.5 backdrop-blur-md bg-slate-950 rounded-[15px] border-0 shadow-md hover:shadow-lg transition-all duration-300 ease-out cursor-pointer relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-emerald-500/15 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none",
-              isExpanded && "ring-2 ring-emerald-500/30"
-            )}
-            onClick={() => onSelectDay?.(day.id)}
-          >
-        {/* Date */}
-        <div className="w-20 flex-shrink-0 text-xs font-medium text-foreground/60 relative z-10">
-          <div className="font-mono">{day.published_at ? formatDate(day.published_at) : "-"}</div>
-        </div>
-
-        {/* Video Icon */}
-        <div className="flex-shrink-0 w-7 h-7 flex items-center justify-center relative z-10">
-          {day.video_source === "youtube" && day.video_url ? (
-            <div className="w-full h-full bg-gradient-to-br from-red-500 to-red-600 rounded shadow-lg flex items-center justify-center ring-1 ring-red-400/50">
-              <Play className="h-3 w-3 text-white fill-white" />
-            </div>
-          ) : (day.video_file || day.video_nas_path) ? (
-            <div className="w-full h-full bg-gradient-to-br from-amber-500 to-amber-600 rounded shadow-lg flex items-center justify-center ring-1 ring-amber-400/50">
-              <Play className="h-3 w-3 text-white fill-white" />
-            </div>
-          ) : null}
-        </div>
-
-        {/* Day Name */}
-        <div className="flex-1 min-w-0 text-base font-medium text-foreground truncate relative z-10">
-          {day.name}
-        </div>
-
-        {/* Player count */}
-        <div className="w-40 text-xs text-right text-foreground/60 relative z-10">
-          {day.player_count !== undefined && day.player_count > 0
-            ? <span className="font-medium text-emerald-400">{day.player_count} players</span>
-            : <span className="text-foreground/40">-</span>}
-        </div>
-
-        {/* Analyze Button (High Templar+) */}
-        {/* Info Button */}
-        <div className="flex-shrink-0 relative z-10">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 backdrop-blur-md bg-white/10 dark:bg-black/10 hover:bg-white/20 dark:hover:bg-black/20 border border-white/10 hover:border-white/20 hover:rotate-12 hover:scale-110 transition-all duration-300 shadow-sm"
-            onClick={(e) => {
-              e.stopPropagation()
-              onShowInfo?.(dayItem)
-            }}
-          >
-            <Info className="h-3 w-3 text-foreground/60" />
-          </Button>
-        </div>
+          {/* Day Badge */}
+          <div className="day-badge mb-4">
+            <span className="text-display-sm text-gold-400">DAY {dayNumber}</span>
           </div>
-        </BackgroundGradient>
+
+          {/* Stream Info */}
+          <div className="space-y-2 mb-4">
+            <h3 className="text-heading text-gold-400">{day.name}</h3>
+            <div className="flex gap-3 items-center flex-wrap">
+              {day.published_at && (
+                <>
+                  <span className="text-caption text-gold-300">{formatDate(day.published_at)}</span>
+                  <span className="text-gold-700">•</span>
+                </>
+              )}
+              {day.player_count !== undefined && day.player_count > 0 && (
+                <>
+                  <span className="text-caption text-gold-300">{day.player_count} Players</span>
+                  <span className="text-gold-700">•</span>
+                </>
+              )}
+              {day.video_source && (
+                <span className="text-caption text-gold-400 font-bold uppercase">{day.video_source}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Hand Progress */}
+          {streamHandCount > 0 && (
+            <div className="mt-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-caption text-gold-300">핸드 진행률</span>
+                <span className="text-mono text-gold-400 font-bold">{streamHandCount}</span>
+              </div>
+              <div className="progress-bar">
+                <div
+                  className="progress-bar-fill"
+                  style={{ width: `${Math.min(100, (streamHandCount / 500) * 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex gap-3 mt-6">
+            {day.video_url && (
+              <a
+                href={day.video_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary inline-flex items-center gap-2 no-underline-animation"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Play className="h-4 w-4" />
+                YouTube
+              </a>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onSelectDay?.(day.id)
+              }}
+              className="btn-secondary inline-flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              핸드 보기 ({streamHandCount})
+            </button>
+          </div>
+
+          {/* Info Button */}
+          <div className="absolute top-4 right-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 btn-ghost"
+              onClick={(e) => {
+                e.stopPropagation()
+                onShowInfo?.(dayItem)
+              }}
+            >
+              <Info className="h-3.5 w-3.5 text-gold-400" />
+            </Button>
+          </div>
+        </div>
 
         {/* Expanded Content - Video Player + Hand History */}
         <AnimatePresence>
