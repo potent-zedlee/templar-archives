@@ -140,57 +140,58 @@ export default function playersClient() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-black-0">
       <PageTransition variant="slideUp">
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-display-sm text-gold-400 mb-2">PLAYERS</h1>
+          <p className="text-body text-white/70">프로 플레이어 프로필 및 통계</p>
+        </div>
+
         {/* Search and Filter Bar */}
-        <Card className="p-3 md:p-4 mb-6 space-y-4">
+        <div className="card-postmodern p-4 md:p-6 mb-6 space-y-4">
           {/* Search and Sort Row */}
-          <div className="flex gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search players by name or country..."
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="player-search-wrapper flex-1">
+              <Search className="player-search-icon h-4 w-4" />
+              <input
+                type="text"
+                placeholder="플레이어 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="input-postmodern w-full pl-12"
               />
             </div>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="winnings-desc">Winnings (High-Low)</SelectItem>
-                <SelectItem value="winnings-asc">Winnings (Low-High)</SelectItem>
-                <SelectItem value="hands-desc">Hands (High-Low)</SelectItem>
-                <SelectItem value="hands-asc">Hands (Low-High)</SelectItem>
-                <SelectItem value="name-asc">Name (A-Z)</SelectItem>
-                <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
+
+            {/* Filter Chips */}
+            <div className="flex gap-2 flex-wrap">
+              <button className="filter-chip active">전체</button>
+              <button className="filter-chip">Cash Game</button>
+              <button className="filter-chip">Tournament</button>
+              <button
+                className="filter-chip"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-3 w-3 mr-1 inline" />
+                고급 필터
+              </button>
+            </div>
           </div>
 
           {/* Filters Panel */}
           {showFilters && (
-            <div className="space-y-4 pt-4 border-t">
+            <div className="space-y-4 pt-4 border-t-2 border-gold-700">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Country Filter */}
                 <div>
-                  <label className="text-caption font-medium mb-2 block">Country</label>
+                  <label className="text-caption text-gold-300 mb-2 block">국가</label>
                   <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All countries" />
+                    <SelectTrigger className="input-postmodern">
+                      <SelectValue placeholder="전체 국가" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Countries</SelectItem>
+                      <SelectItem value="all">전체 국가</SelectItem>
                       {countries.map(country => (
                         <SelectItem key={country} value={country!}>{country}</SelectItem>
                       ))}
@@ -200,91 +201,135 @@ export default function playersClient() {
 
                 {/* Winnings Range */}
                 <div>
-                  <label className="text-caption font-medium mb-2 block">Min Winnings</label>
+                  <label className="text-caption text-gold-300 mb-2 block">최소 상금</label>
                   <Input
                     type="number"
                     placeholder="0"
                     value={minWinnings}
                     onChange={(e) => setMinWinnings(e.target.value)}
+                    className="input-postmodern"
                   />
                 </div>
                 <div>
-                  <label className="text-caption font-medium mb-2 block">Max Winnings</label>
+                  <label className="text-caption text-gold-300 mb-2 block">최대 상금</label>
                   <Input
                     type="number"
-                    placeholder="No limit"
+                    placeholder="제한 없음"
                     value={maxWinnings}
                     onChange={(e) => setMaxWinnings(e.target.value)}
+                    className="input-postmodern"
                   />
                 </div>
 
                 {/* Hands Range */}
                 <div>
-                  <label className="text-caption font-medium mb-2 block">Min Hands</label>
+                  <label className="text-caption text-gold-300 mb-2 block">최소 핸드</label>
                   <Input
                     type="number"
                     placeholder="0"
                     value={minHands}
                     onChange={(e) => setMinHands(e.target.value)}
+                    className="input-postmodern"
                   />
                 </div>
               </div>
 
               {/* Clear Filters Button */}
               {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters}>
-                  <X className="h-4 w-4 mr-2" />
-                  Clear Filters
-                </Button>
+                <button className="btn-ghost" onClick={clearFilters}>
+                  <X className="h-4 w-4 mr-2 inline" />
+                  필터 초기화
+                </button>
               )}
             </div>
           )}
 
-          {/* Results Count */}
-          <div className="text-caption text-muted-foreground">
-            Showing {startIndex + 1}-{Math.min(endIndex, sortedPlayers.length)} of {sortedPlayers.length} players
+          {/* Results Count & Sort */}
+          <div className="flex items-center justify-between">
+            <div className="text-caption text-gold-300">
+              <span className="text-mono font-bold text-gold-400">
+                {startIndex + 1}-{Math.min(endIndex, sortedPlayers.length)}
+              </span>
+              {' '}/ {sortedPlayers.length} 플레이어
+            </div>
+
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[200px] input-postmodern text-caption">
+                <SelectValue placeholder="정렬" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="winnings-desc">상금 (높음-낮음)</SelectItem>
+                <SelectItem value="winnings-asc">상금 (낮음-높음)</SelectItem>
+                <SelectItem value="hands-desc">핸드 (높음-낮음)</SelectItem>
+                <SelectItem value="hands-asc">핸드 (낮음-높음)</SelectItem>
+                <SelectItem value="name-asc">이름 (A-Z)</SelectItem>
+                <SelectItem value="name-desc">이름 (Z-A)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </Card>
+        </div>
 
         {/* Players Grid */}
         <ScrollArea className="h-[calc(100vh-460px)]">
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" staggerDelay={0.05}>
+          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" staggerDelay={0.05}>
             {paginatedPlayers.map((player) => (
               <StaggerItem key={player.id}>
-                <Link href={`/players/${player.id}`}>
+                <Link href={`/players/${player.id}`} className="block">
                   <AnimatedCard>
-                    <Card className="p-4 md:p-6">
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={player.photo_url} alt={player.name} />
-                      <AvatarFallback className="text-lg font-bold">
-                        {player.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-body font-semibold mb-1 truncate">
-                        {player.name}
-                      </h3>
-
-                      {player.country && (
-                        <Badge variant="secondary" className="text-caption mb-2">
-                          {player.country}
-                        </Badge>
-                      )}
-
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-1 text-caption text-muted-foreground">
-                          <TrendingUp className="h-3 w-3" />
-                          <span>{formatWinnings(player.total_winnings)} total winnings</span>
+                    <div className="player-card hover-3d">
+                      {/* Player Header - 비대칭 그리드 */}
+                      <div className="grid grid-cols-[auto_1fr] gap-4 mb-4">
+                        {/* Profile Image */}
+                        <div className="relative">
+                          <Avatar className="w-20 h-20 player-avatar">
+                            <AvatarImage src={player.photo_url} alt={player.name} />
+                            <AvatarFallback className="text-lg font-bold bg-black-200 text-gold-400">
+                              {player.name.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
                         </div>
-                        <div className="text-caption text-muted-foreground">
-                          {player.hand_count} {player.hand_count === 1 ? 'hand' : 'hands'} in archive
+
+                        {/* Player Info */}
+                        <div className="space-y-2 min-w-0">
+                          <h3 className="text-heading-sm text-gold-400 truncate">
+                            {player.name}
+                          </h3>
+
+                          <div className="flex gap-2 items-center flex-wrap">
+                            {/* Country */}
+                            {player.country && (
+                              <div className="player-badge">
+                                <span>{player.country}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Player Stats - 금색 강조 */}
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t-2 border-gold-700">
+                        <div className="stat-item">
+                          <span className="text-caption text-gold-300">Total Hands</span>
+                          <span className="text-heading text-mono text-gold-400">
+                            {player.hand_count}
+                          </span>
+                        </div>
+
+                        <div className="stat-item">
+                          <span className="text-caption text-gold-300">Winnings</span>
+                          <span className="text-heading text-mono text-gold-400">
+                            {formatWinnings(player.total_winnings)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="mt-4">
+                        <div className="btn-primary w-full text-center">
+                          프로필 보기
                         </div>
                       </div>
                     </div>
-                  </div>
-                    </Card>
                   </AnimatedCard>
                 </Link>
               </StaggerItem>
@@ -308,14 +353,13 @@ export default function playersClient() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 mt-6">
-            <Button
-              variant="outline"
-              size="sm"
+            <button
+              className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
             >
               <ChevronLeft className="h-4 w-4" />
-            </Button>
+            </button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter(page => {
@@ -329,26 +373,24 @@ export default function playersClient() {
                 const showEllipsisBefore = index > 0 && page - arr[index - 1] > 1
                 return (
                   <div key={page} className="flex items-center gap-2">
-                    {showEllipsisBefore && <span className="text-muted-foreground">...</span>}
-                    <Button
-                      variant={currentPage === page ? "default" : "outline"}
-                      size="sm"
+                    {showEllipsisBefore && <span className="text-gold-300">...</span>}
+                    <button
+                      className={currentPage === page ? "pagination-btn active" : "pagination-btn"}
                       onClick={() => setCurrentPage(page)}
                     >
                       {page}
-                    </Button>
+                    </button>
                   </div>
                 )
               })}
 
-            <Button
-              variant="outline"
-              size="sm"
+            <button
+              className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
             >
               <ChevronRight className="h-4 w-4" />
-            </Button>
+            </button>
           </div>
         )}
         </div>

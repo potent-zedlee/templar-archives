@@ -807,4 +807,130 @@
     color: var(--gold-300);
     text-transform: uppercase;
   }
+
+  /* === POSTMODERN PLAYERS COMPONENTS === */
+
+  /* Player Card - 플레이어 카드 */
+  .player-card {
+    background-color: var(--black-100);
+    border: 2px solid var(--gold-600);
+    padding: 1.5rem;
+    position: relative;
+    box-shadow: 4px 4px 0 var(--black-0), 8px 8px 0 var(--gold-700);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .player-card:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 var(--black-0), 12px 12px 0 var(--gold-700);
+  }
+
+  /* Player Badge - 국가/플랫폼 배지 */
+  .player-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--black-200);
+    color: var(--gold-300);
+    border: 1px solid var(--gold-700);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Player Stats Grid - 통계 그리드 */
+  .player-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .player-stats-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  /* Player Profile Header - 프로필 헤더 */
+  .player-profile-header {
+    background-color: var(--black-100);
+    border: 3px solid var(--gold-600);
+    padding: 2rem;
+    position: relative;
+    box-shadow: 6px 6px 0 var(--black-0), 12px 12px 0 var(--gold-700);
+  }
+
+  @media (min-width: 768px) {
+    .player-profile-header {
+      padding: 3rem;
+    }
+  }
+
+  /* Player Avatar - 프로필 이미지 (금색 테두리) */
+  .player-avatar {
+    border: 4px solid var(--gold-600);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  }
+
+  .player-avatar-lg {
+    width: 12rem;
+    height: 12rem;
+    border: 4px solid var(--gold-600);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  }
+
+  /* Pagination Button - 페이지네이션 버튼 */
+  .pagination-btn {
+    padding: 0.5rem 1rem;
+    min-width: 2.5rem;
+    font-family: var(--font-mono, 'monospace');
+    font-weight: 700;
+    color: var(--gold-300);
+    border: 2px solid var(--gold-700);
+    background: transparent;
+    transition: all 0.15s;
+  }
+
+  .pagination-btn:hover {
+    color: var(--gold-400);
+    border-color: var(--gold-600);
+    background: var(--black-100);
+  }
+
+  .pagination-btn.active {
+    color: var(--black-0);
+    background: var(--gold-500);
+    border-color: var(--gold-500);
+  }
+
+  /* Verified Badge - 인증 배지 */
+  .verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: var(--gold-500);
+    color: var(--black-0);
+    border: 2px solid var(--gold-600);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+  }
+
+  /* Player Search - 플레이어 검색 */
+  .player-search-wrapper {
+    position: relative;
+  }
+
+  .player-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold-400);
+  }
 }

@@ -260,23 +260,24 @@ export default function PlayerDetailClient() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="min-h-screen bg-black-0">
       <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="mb-6">
-          <Button variant="ghost" size="sm" onClick={() => router.push('/players')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Players
-          </Button>
+          <button className="btn-ghost" onClick={() => router.push('/players')}>
+            <ArrowLeft className="mr-2 h-4 w-4 inline" />
+            플레이어 목록
+          </button>
         </div>
 
-        {/* Player Info Card */}
-        <BackgroundGradient className="rounded-[22px] mb-6">
-          <Card className="p-6 border-0 bg-slate-950">
-            <div className="flex items-start gap-6">
+        {/* Player Profile Header */}
+        <div className="player-profile-header mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-8">
+            {/* Large Profile Image */}
+            <div className="flex flex-col items-center">
               <div className="relative">
-                <Avatar className="h-24 w-24">
+                <Avatar className="player-avatar-lg">
                   <AvatarImage src={player.photo_url} alt={player.name} />
-                  <AvatarFallback className="text-2xl font-bold">
+                  <AvatarFallback className="text-4xl font-bold bg-black-200 text-gold-400">
                     {player.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
@@ -289,79 +290,104 @@ export default function PlayerDetailClient() {
                       className="hidden"
                       onChange={handlePhotoUpload}
                     />
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 h-8 px-2"
+                    <button
+                      className="btn-secondary absolute -bottom-2 left-1/2 -translate-x-1/2 h-8 px-2"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={updatePhotoMutation.isPending}
                     >
                       <Upload className="h-3 w-3" />
-                    </Button>
+                    </button>
                   </>
                 )}
               </div>
+            </div>
 
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {player.country && (
-                      <span className="text-3xl">{getCountryFlag(player.country)}</span>
-                    )}
-                    <h1 className="text-title-lg">{player.name}</h1>
+            {/* Player Info & Stats */}
+            <div className="space-y-6">
+              {/* Name & Meta */}
+              <div>
+                <h1 className="text-display text-gold-400 mb-2">{player.name}</h1>
+                <div className="flex gap-3 items-center">
+                  {player.country && (
+                    <div className="player-badge">
+                      <span className="text-xl">{getCountryFlag(player.country)}</span>
+                      {player.country}
+                    </div>
+                  )}
 
-                    {/* Claim Status Badges */}
-                    {isClaimed && playerClaim && (
-                      <Badge variant="default" className="ml-2">
-                        Claimed by {playerClaim.user.nickname}
-                      </Badge>
-                    )}
-                    {userClaim && userClaim.status === 'pending' && (
-                      <Badge variant="secondary" className="ml-2">
-                        Claim Pending
-                      </Badge>
-                    )}
-                    {user && userClaim && userClaim.status === 'approved' && (
-                      <Badge variant="default" className="ml-2 bg-green-600">
-                        Your Profile
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Claim Button */}
-                  {user && !isClaimed && !userClaim && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setClaimDialogOpen(true)}
-                    >
-                      Claim This Profile
-                    </Button>
+                  {/* Claim Status Badges */}
+                  {isClaimed && playerClaim && (
+                    <div className="verified-badge">
+                      Claimed by {playerClaim.user.nickname}
+                    </div>
+                  )}
+                  {userClaim && userClaim.status === 'pending' && (
+                    <div className="player-badge">
+                      Claim Pending
+                    </div>
+                  )}
+                  {user && userClaim && userClaim.status === 'approved' && (
+                    <div className="verified-badge bg-green-600">
+                      Your Profile
+                    </div>
                   )}
                 </div>
-                {player.country && (
-                  <Badge variant="secondary" className="text-caption mb-4">
-                    {player.country}
-                  </Badge>
-                )}
+              </div>
 
-                <div className="grid grid-cols-2 gap-4 max-w-md">
-                  <div>
-                    <p className="text-caption text-muted-foreground mb-1">Total Winnings</p>
-                    <div className="flex items-center gap-1 text-title">
-                      <TrendingUp className="h-4 w-4 text-green-500" />
-                      <span className="font-bold">{formatWinnings(player.total_winnings)}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-caption text-muted-foreground mb-1">Hands in Archive</p>
-                    <p className="text-title font-bold">{totalHandsCount}</p>
-                  </div>
+              {/* Stats Grid - 2x2 */}
+              <div className="player-stats-grid">
+                <div className="stat-item">
+                  <span className="text-caption text-gold-300">Total Hands</span>
+                  <span className="text-display-sm text-mono text-gold-400">
+                    {totalHandsCount}
+                  </span>
+                </div>
+
+                <div className="stat-item">
+                  <span className="text-caption text-gold-300">Winnings</span>
+                  <span className="text-display-sm text-mono text-gold-400">
+                    {formatWinnings(player.total_winnings)}
+                  </span>
+                </div>
+
+                <div className="stat-item">
+                  <span className="text-caption text-gold-300">Tournaments</span>
+                  <span className="text-display-sm text-mono text-gold-400">
+                    {statistics.tournamentsCount}
+                  </span>
+                </div>
+
+                <div className="stat-item">
+                  <span className="text-caption text-gold-300">Events</span>
+                  <span className="text-display-sm text-mono text-gold-400">
+                    {statistics.eventsCount}
+                  </span>
                 </div>
               </div>
+
+              {/* Actions */}
+              {user && !isClaimed && !userClaim && (
+                <div className="flex gap-3">
+                  <button
+                    className="btn-primary"
+                    onClick={() => setClaimDialogOpen(true)}
+                  >
+                    프로필 소유권 주장
+                  </button>
+                </div>
+              )}
             </div>
-          </Card>
-        </BackgroundGradient>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="community-nav mb-6">
+          <div className="flex gap-0 border-b-2 border-gold-700">
+            <button className="community-tab active">핸드 히스토리</button>
+            <button className="community-tab">토너먼트</button>
+            <button className="community-tab">통계</button>
+          </div>
+        </div>
 
         {/* Statistics Dashboard */}
         <div className="space-y-6">
@@ -378,30 +404,33 @@ export default function PlayerDetailClient() {
           {totalHandsCount > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Prize History Chart */}
-              <Card className="p-6">
-                <h3 className="text-title mb-4">Prize History</h3>
+              <div className="card-postmodern p-6">
+                <h3 className="text-heading text-gold-400 mb-4">상금 히스토리</h3>
                 <PrizeHistoryChart data={prizeHistory} />
-              </Card>
+              </div>
 
               {/* Pie Chart - Tournament Categories */}
               {statistics.tournamentCategories.length > 0 && (
-                <Card className="p-6">
-                  <h3 className="text-title mb-4">Tournament Category Distribution</h3>
+                <div className="card-postmodern p-6">
+                  <h3 className="text-heading text-gold-400 mb-4">토너먼트 카테고리 분포</h3>
                   <TournamentCategoryChart data={statistics.tournamentCategories} />
-                </Card>
+                </div>
               )}
             </div>
           )}
         </div>
 
         {/* Hands List - Hierarchical */}
-        <Card className="p-6 mt-6">
-          <h2 className="text-title mb-4">Hand History ({totalHandsCount})</h2>
+        <div className="card-postmodern p-6 mt-6">
+          <h2 className="text-heading-lg text-gold-400 mb-4">
+            핸드 히스토리
+            <span className="text-mono ml-2 text-gold-300">({totalHandsCount})</span>
+          </h2>
           <ScrollArea className="h-[calc(100vh-480px)]">
             {tournaments.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-body text-muted-foreground">
-                  No hands found for this player
+                <p className="text-body text-white/70">
+                  이 플레이어의 핸드가 없습니다
                 </p>
               </div>
             ) : (
@@ -410,42 +439,42 @@ export default function PlayerDetailClient() {
                   <div key={tournament.id}>
                     {/* Tournament Level */}
                     <div
-                      className="flex items-center gap-2 py-2 px-3 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                      className="flex items-center gap-3 py-3 px-4 hover:bg-black-200 transition-colors cursor-pointer border-b border-gold-700/20"
                       onClick={() => toggleTournament(tournament.id)}
                     >
                       {tournament.expanded ? (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        <ChevronDown className="h-4 w-4 text-gold-400" />
                       ) : (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                        <ChevronRight className="h-4 w-4 text-gold-400" />
                       )}
-                      <div className="flex h-5 w-5 items-center justify-center rounded-sm bg-primary/10 text-xs font-bold text-primary flex-shrink-0">
+                      <div className="flex h-6 w-6 items-center justify-center bg-gold-600 text-xs font-bold text-black-0 flex-shrink-0">
                         {tournament.category.charAt(0)}
                       </div>
-                      <span className="text-body font-normal text-foreground">
+                      <span className="text-body font-semibold text-gold-400">
                         {tournament.name}
                       </span>
                     </div>
 
                     {/* SubEvent Level */}
                     {tournament.expanded && (
-                      <div className="ml-4">
+                      <div className="ml-8">
                         {tournament.sub_events?.map((subEvent) => (
                           <div key={subEvent.id}>
                             <div
-                              className="flex items-center gap-2 py-2 px-3 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                              className="flex items-center gap-3 py-2 px-4 hover:bg-black-200/50 transition-colors cursor-pointer border-b border-gold-700/10"
                               onClick={() => toggleSubEvent(tournament.id, subEvent.id)}
                             >
                               {subEvent.expanded ? (
-                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                <ChevronDown className="h-4 w-4 text-gold-300" />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                <ChevronRight className="h-4 w-4 text-gold-300" />
                               )}
-                              <span className="text-body font-normal text-foreground">
+                              <span className="text-body font-medium text-white/90">
                                 {subEvent.name}
                               </span>
-                              <Badge variant="secondary" className="text-xs">
+                              <div className="player-badge ml-auto">
                                 {subEvent.days.reduce((total, day) => total + day.hands.length, 0)} hands
-                              </Badge>
+                              </div>
                             </div>
 
                             {/* Day Level with Hands */}
@@ -453,9 +482,12 @@ export default function PlayerDetailClient() {
                               <div className="ml-8 mt-2">
                                 {subEvent.days?.map((day) => (
                                   <div key={day.id} className="mb-4">
-                                    <div className="flex items-center gap-2 py-1 px-3 mb-2">
-                                      <span className="text-caption font-medium text-muted-foreground">
-                                        {day.name} ({day.hands.length} hands)
+                                    <div className="flex items-center gap-2 py-2 px-3 mb-2 bg-black-200/30">
+                                      <span className="text-caption font-bold text-gold-300 text-mono">
+                                        {day.name}
+                                      </span>
+                                      <span className="text-caption text-white/70">
+                                        ({day.hands.length} hands)
                                       </span>
                                     </div>
                                     <HandListAccordion
@@ -518,7 +550,7 @@ export default function PlayerDetailClient() {
               </div>
             )}
           </ScrollArea>
-        </Card>
+        </div>
       </div>
 
       {/* Claim Player Dialog */}
