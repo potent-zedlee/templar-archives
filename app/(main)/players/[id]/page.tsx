@@ -271,9 +271,9 @@ export default function PlayerDetailClient() {
 
         {/* Player Profile Header */}
         <div className="player-profile-header mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-8">
-            {/* Large Profile Image */}
-            <div className="flex flex-col items-center">
+          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 md:gap-8">
+            {/* Large Profile Image: 모바일 중앙 정렬 */}
+            <div className="flex flex-col items-center md:items-start">
               <div className="relative">
                 <Avatar className="player-avatar-lg">
                   <AvatarImage src={player.photo_url} alt={player.name} />
@@ -334,8 +334,8 @@ export default function PlayerDetailClient() {
                 </div>
               </div>
 
-              {/* Stats Grid - 2x2 */}
-              <div className="player-stats-grid">
+              {/* Stats Grid - 모바일 2x2, 데스크톱 4x1 */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 <div className="stat-item">
                   <span className="text-caption text-gold-300">Total Hands</span>
                   <span className="text-display-sm text-mono text-gold-400">
@@ -367,9 +367,9 @@ export default function PlayerDetailClient() {
 
               {/* Actions */}
               {user && !isClaimed && !userClaim && (
-                <div className="flex gap-3">
+                <div className="flex flex-col md:flex-row gap-3">
                   <button
-                    className="btn-primary"
+                    className="btn-primary w-full md:w-auto"
                     onClick={() => setClaimDialogOpen(true)}
                   >
                     프로필 소유권 주장

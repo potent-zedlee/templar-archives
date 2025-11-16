@@ -329,26 +329,26 @@ export default function communityClient() {
               />
             </Card>
 
-            {/* Tabs */}
+            {/* Tabs: 모바일 스크롤 */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-              <div className="flex gap-0 border-b-2 border-gold-700">
+              <div className="flex gap-0 border-b-2 border-gold-700 overflow-x-auto community-nav">
                 <button
                   onClick={() => setActiveTab('trending')}
-                  className={`community-tab ${activeTab === 'trending' ? 'active' : ''}`}
+                  className={`community-tab whitespace-nowrap ${activeTab === 'trending' ? 'active' : ''}`}
                 >
                   <TrendingUp className="inline-block h-4 w-4 mr-2" />
                   Trending
                 </button>
                 <button
                   onClick={() => setActiveTab('recent')}
-                  className={`community-tab ${activeTab === 'recent' ? 'active' : ''}`}
+                  className={`community-tab whitespace-nowrap ${activeTab === 'recent' ? 'active' : ''}`}
                 >
                   <Clock className="inline-block h-4 w-4 mr-2" />
                   Recent
                 </button>
                 <button
                   onClick={() => setActiveTab('popular')}
-                  className={`community-tab ${activeTab === 'popular' ? 'active' : ''}`}
+                  className={`community-tab whitespace-nowrap ${activeTab === 'popular' ? 'active' : ''}`}
                 >
                   <Star className="inline-block h-4 w-4 mr-2" />
                   Popular

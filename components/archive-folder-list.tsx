@@ -103,11 +103,11 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           )}
           onClick={() => onNavigate(item)}
         >
-          {/* Header: 비대칭 그리드 */}
-          <div className="tournament-card-grid">
-            {/* Year Badge */}
-            <div className="year-badge">
-              <span className="text-display">{year}</span>
+          {/* Header: 모바일 세로 배치, 데스크톱 비대칭 그리드 */}
+          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr_auto] gap-4 md:gap-6">
+            {/* Year Badge: 모바일에서 작게 */}
+            <div className="year-badge w-full md:w-auto md:min-w-[120px]">
+              <span className="text-display-sm md:text-display">{year}</span>
             </div>
 
             {/* Tournament Info */}
@@ -153,9 +153,9 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             })()}
           </div>
 
-          {/* Stats Grid: 2:3 비대칭 */}
+          {/* Stats Grid: 모바일 1컬럼, 데스크톱 2:3 비대칭 */}
           {(totalHands > 0 || (tournament.sub_events && tournament.sub_events.length > 0)) && (
-            <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-6 mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-4 md:gap-6 mt-6">
               {/* Left: Statistics */}
               <div className="stats-card space-y-4">
                 <div className="stat-item">
@@ -429,14 +429,14 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex gap-3 mt-6">
+          {/* Actions: 모바일 세로 배치, 데스크톱 가로 배치 */}
+          <div className="flex flex-col md:flex-row gap-2 md:gap-3 mt-6">
             {day.video_url && (
               <a
                 href={day.video_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-primary inline-flex items-center gap-2 no-underline-animation"
+                className="btn-primary w-full md:w-auto inline-flex items-center justify-center gap-2 no-underline-animation"
                 onClick={(e) => e.stopPropagation()}
               >
                 <Play className="h-4 w-4" />
@@ -448,7 +448,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                 e.stopPropagation()
                 onSelectDay?.(day.id)
               }}
-              className="btn-secondary inline-flex items-center gap-2"
+              className="btn-secondary w-full md:w-auto inline-flex items-center justify-center gap-2"
             >
               <FileText className="h-4 w-4" />
               핸드 보기 ({streamHandCount})

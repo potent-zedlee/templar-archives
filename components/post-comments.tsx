@@ -209,7 +209,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     return (
       <div
         key={comment.id}
-        className={`comment-item ${isReply ? "ml-10 comment-reply-border" : ""}`}
+        className={`comment-item ${isReply ? "ml-6 md:ml-10 pl-3 md:pl-4 comment-reply-border" : ""}`}
       >
         <div className="flex gap-3">
           <Avatar className="h-8 w-8 author-avatar rounded-none">

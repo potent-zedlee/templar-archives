@@ -933,4 +933,144 @@
     transform: translateY(-50%);
     color: var(--gold-400);
   }
+
+  /* === MOBILE OPTIMIZATIONS === */
+
+  /* 모바일 폰트 크기 조정 */
+  @media (max-width: 767px) {
+    .text-display {
+      font-size: 3rem; /* 48px instead of 60px */
+    }
+
+    .text-display-sm {
+      font-size: 2rem; /* 32px instead of 36px */
+    }
+
+    .text-heading-lg {
+      font-size: 1.5rem; /* 24px instead of 30px */
+    }
+
+    .text-heading {
+      font-size: 1.25rem; /* 20px instead of 24px */
+    }
+
+    .text-heading-sm {
+      font-size: 1.125rem; /* 18px instead of 20px */
+    }
+
+    /* Year Badge 모바일 작게 */
+    .year-badge {
+      min-width: 80px;
+      padding: 0.5rem;
+      font-size: 1.5rem;
+    }
+
+    /* Day Badge 모바일 작게 */
+    .day-badge span {
+      font-size: 1.25rem;
+    }
+
+    /* Community Tab 모바일 작게 */
+    .community-tab {
+      padding: 0.875rem 1.25rem;
+      font-size: 0.75rem;
+    }
+
+    /* Post Card 모바일 패딩 조정 */
+    .post-card {
+      padding: 1.25rem;
+    }
+
+    /* Player Card 모바일 패딩 조정 */
+    .player-card {
+      padding: 1rem;
+    }
+  }
+
+  /* 터치 인터랙션 개선 */
+  @media (hover: none) {
+    /* 터치 타겟 최소 크기 (44x44px) */
+    .btn-primary,
+    .btn-secondary,
+    .btn-ghost,
+    .btn-icon {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    .community-action-btn {
+      padding: 0.75rem 1.25rem;
+      min-height: 44px;
+    }
+
+    /* hover 효과 제거 (터치 디바이스) */
+    .card-postmodern:hover {
+      transform: none;
+      box-shadow: 4px 4px 0 var(--black-0), 8px 8px 0 var(--gold-700);
+    }
+
+    .player-card:hover,
+    .post-card:hover {
+      transform: none;
+      box-shadow: 4px 4px 0 var(--black-0), 8px 8px 0 var(--gold-700);
+    }
+
+    /* 탭 효과는 유지 */
+    .card-postmodern:active,
+    .player-card:active,
+    .post-card:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0 var(--black-0), 4px 4px 0 var(--gold-700);
+    }
+  }
+
+  /* 모바일 숨김/표시 */
+  .mobile-only {
+    display: block;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-only {
+      display: none;
+    }
+
+    .desktop-only {
+      display: block;
+    }
+  }
+
+  /* 스크롤 스냅 (모바일 탭) */
+  .community-nav {
+    scroll-snap-type: x mandatory;
+  }
+
+  .community-tab {
+    scroll-snap-align: start;
+  }
+
+  /* 모바일 패딩 조정 유틸리티 */
+  .mobile-p-4 {
+    padding: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-p-4 {
+      padding: 1.5rem;
+    }
+  }
+
+  /* 모바일 간격 조정 유틸리티 */
+  .mobile-gap-4 {
+    gap: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-gap-4 {
+      gap: 1.5rem;
+    }
+  }
 }
