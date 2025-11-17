@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronRight, Play, Calendar, Edit3 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
-import type { Tournament, SubEvent, Stream } from "@/lib/types/archive"
+import type { Tournament, Event, Stream } from "@/lib/types/archive"
 import { hasArbiterPermission } from "@/lib/types/users"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
 
@@ -25,7 +25,7 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
 
   const {
     expandedTournament,
-    expandedSubEvent,
+    expandedEvent,
     selectedCategory,
     searchQuery,
     setSearchQuery,
@@ -193,7 +193,7 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
   }, [
     tournaments,
     expandedTournament,
-    expandedSubEvent,
+    expandedEvent,
     selectedCategory,
     searchQuery,
     sortBy,

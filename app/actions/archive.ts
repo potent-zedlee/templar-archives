@@ -248,9 +248,9 @@ export async function deleteTournament(id: string) {
   }
 }
 
-// ==================== SubEvent Actions ====================
+// ==================== Event Actions ====================
 
-export async function createSubEvent(tournamentId: string, data: {
+export async function createEvent(tournamentId: string, data: {
   name: string
   date: string
   event_number?: string
@@ -278,7 +278,7 @@ export async function createSubEvent(tournamentId: string, data: {
     const supabase = await createServerSupabaseClient()
 
     // 3. DB에 삽입
-    const { data: subEvent, error } = await supabase
+    const { data: event, error } = await supabase
       .from('sub_events')
       .insert({
         tournament_id: tournamentId,
@@ -298,7 +298,7 @@ export async function createSubEvent(tournamentId: string, data: {
       .single()
 
     if (error) {
-      console.error('[Server Action] Create sub event error:', error)
+      console.error('[Server Action] Create event error:', error)
       return { success: false, error: error.message }
     }
 
@@ -306,14 +306,14 @@ export async function createSubEvent(tournamentId: string, data: {
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
-    return { success: true, data: subEvent }
+    return { success: true, data: event }
   } catch (error: any) {
-    console.error('[Server Action] Create sub event exception:', error)
+    console.error('[Server Action] Create event exception:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
 
-export async function updateSubEvent(id: string, data: {
+export async function updateEvent(id: string, data: {
   name: string
   date: string
   event_number?: string
@@ -341,7 +341,7 @@ export async function updateSubEvent(id: string, data: {
     const supabase = await createServerSupabaseClient()
 
     // 3. DB 업데이트
-    const { data: subEvent, error } = await supabase
+    const { data: event, error } = await supabase
       .from('sub_events')
       .update({
         name: data.name.trim(),
@@ -361,7 +361,7 @@ export async function updateSubEvent(id: string, data: {
       .single()
 
     if (error) {
-      console.error('[Server Action] Update sub event error:', error)
+      console.error('[Server Action] Update event error:', error)
       return { success: false, error: error.message }
     }
 
@@ -369,14 +369,14 @@ export async function updateSubEvent(id: string, data: {
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
-    return { success: true, data: subEvent }
+    return { success: true, data: event }
   } catch (error: any) {
-    console.error('[Server Action] Update sub event exception:', error)
+    console.error('[Server Action] Update event exception:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
 
-export async function deleteSubEvent(id: string) {
+export async function deleteEvent(id: string) {
   try {
     // 1. 관리자 권한 검증
     const authCheck = await verifyAdmin()
@@ -393,7 +393,7 @@ export async function deleteSubEvent(id: string) {
       .eq('id', id)
 
     if (error) {
-      console.error('[Server Action] Delete sub event error:', error)
+      console.error('[Server Action] Delete event error:', error)
       return { success: false, error: error.message }
     }
 
@@ -403,14 +403,14 @@ export async function deleteSubEvent(id: string) {
 
     return { success: true }
   } catch (error: any) {
-    console.error('[Server Action] Delete sub event exception:', error)
+    console.error('[Server Action] Delete event exception:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
 
 // ==================== Stream Actions ====================
 
-export async function createStream(subEventId: string, data: {
+export async function createStream(eventId: string, data: {
   name?: string
   video_source: 'youtube' | 'upload'
   video_url?: string
@@ -435,7 +435,7 @@ export async function createStream(subEventId: string, data: {
     const { data: stream, error } = await supabase
       .from('streams')
       .insert({
-        sub_event_id: subEventId,
+        sub_event_id: eventId,
         name: data.name?.trim() || `Stream ${new Date().toISOString()}`,
         video_source: data.video_source,
         video_url: data.video_url?.trim() || null,
@@ -557,7 +557,7 @@ export const deleteDay = deleteStream
 
 // ==================== Payout Actions ====================
 
-export async function saveEventPayouts(subEventId: string, payouts: Array<{
+export async function saveEventPayouts(eventId: string, payouts: Array<{
   rank: number
   playerName: string
   prizeAmount: string
@@ -575,7 +575,7 @@ export async function saveEventPayouts(subEventId: string, payouts: Array<{
     await supabase
       .from('event_payouts')
       .delete()
-      .eq('sub_event_id', subEventId)
+      .eq('sub_event_id', eventId)
 
     // 3. Prize amount 파싱 함수
     const parsePrizeAmount = (amountStr: string): number => {
@@ -600,7 +600,7 @@ export async function saveEventPayouts(subEventId: string, payouts: Array<{
 
     if (validPayouts.length > 0) {
       const payoutInserts = validPayouts.map(p => ({
-        sub_event_id: subEventId,
+        sub_event_id: eventId,
         rank: p.rank,
         player_name: p.playerName.trim(),
         prize_amount: parsePrizeAmount(p.prizeAmount),
@@ -631,7 +631,7 @@ export async function saveEventPayouts(subEventId: string, payouts: Array<{
 // ==================== Rename Action ====================
 
 export async function renameItem(
-  itemType: 'tournament' | 'subevent' | 'stream' | 'day',
+  itemType: 'tournament' | 'event' | 'stream',
   itemId: string,
   newName: string
 ) {
@@ -649,10 +649,10 @@ export async function renameItem(
 
     const supabase = await createServerSupabaseClient()
 
-    // 3. 테이블 이름 매핑 (backward compatibility: 'day' → 'streams')
+    // 3. 테이블 이름 매핑
     const table = itemType === 'tournament' ? 'tournaments'
-      : itemType === 'subevent' ? 'sub_events'
-      : 'streams' // Both 'stream' and 'day' map to 'streams'
+      : itemType === 'event' ? 'sub_events'
+      : 'streams'
 
     // 4. DB 업데이트
     const { error } = await supabase

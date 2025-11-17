@@ -64,11 +64,11 @@ export interface Tournament {
   published_by?: string
   published_at?: string
   // UI state (클라이언트 전용)
-  sub_events?: SubEvent[]
+  events?: Event[]
   expanded?: boolean
 }
 
-export interface SubEvent {
+export interface Event {
   id: string
   tournament_id: string
   name: string
@@ -89,7 +89,6 @@ export interface SubEvent {
   published_at?: string
   // UI state (클라이언트 전용)
   streams?: Stream[]
-  days?: Stream[]
   expanded?: boolean
 }
 
@@ -249,7 +248,7 @@ export interface TournamentFormData {
   end_date: string
 }
 
-export interface SubEventFormData {
+export interface EventFormData {
   name: string
   date: string
   event_number: string
@@ -273,7 +272,7 @@ export interface StreamFormData {
 
 // ==================== UI State Types ====================
 
-export type NavigationLevel = 'root' | 'tournament' | 'subevent'
+export type NavigationLevel = 'root' | 'tournament' | 'event'
 
 export interface DialogState {
   isOpen: boolean
@@ -283,7 +282,7 @@ export interface DialogState {
 export interface NavigationState {
   level: NavigationLevel
   tournamentId: string
-  subEventId: string
+  eventId: string
 }
 
 export interface SelectionState {
@@ -327,7 +326,7 @@ export interface AdvancedFilters {
 
 // ==================== Folder Navigation Types ====================
 
-export type FolderItemType = "tournament" | "subevent" | "day" | "unorganized"
+export type FolderItemType = "tournament" | "event" | "stream" | "unorganized"
 
 export interface FolderItem {
   id: string
@@ -335,8 +334,8 @@ export interface FolderItem {
   type: FolderItemType
   itemCount?: number
   date?: string
-  data?: Tournament | SubEvent | Stream | UnsortedVideo
-  level?: number  // Tree level: 0=tournament, 1=subevent, 2=stream
+  data?: Tournament | Event | Stream | UnsortedVideo
+  level?: number  // Tree level: 0=tournament, 1=event, 2=stream
   isExpanded?: boolean  // Expansion state
   parentId?: string  // Parent folder ID
 }
@@ -344,7 +343,7 @@ export interface FolderItem {
 export interface BreadcrumbItem {
   id: string
   name: string
-  type: "home" | "tournament" | "subevent"
+  type: "home" | "tournament" | "event"
 }
 
 // ==================== Video Player Types ====================
@@ -387,15 +386,15 @@ export interface TournamentActions {
   toggle: (id: string) => void
 }
 
-export interface SubEventActions {
-  create: (tournamentId: string, data: SubEventFormData) => Promise<void>
-  update: (id: string, data: SubEventFormData) => Promise<void>
+export interface EventActions {
+  create: (tournamentId: string, data: EventFormData) => Promise<void>
+  update: (id: string, data: EventFormData) => Promise<void>
   delete: (id: string) => Promise<void>
-  toggle: (tournamentId: string, subEventId: string) => void
+  toggle: (tournamentId: string, eventId: string) => void
 }
 
 export interface StreamActions {
-  create: (subEventId: string, data: StreamFormData) => Promise<void>
+  create: (eventId: string, data: StreamFormData) => Promise<void>
   update: (id: string, data: StreamFormData) => Promise<void>
   delete: (id: string) => Promise<void>
   select: (id: string | null) => void
@@ -432,9 +431,9 @@ export function isTournament(item: unknown): item is Tournament {
 }
 
 /**
- * 타입 가드: SubEvent 확인
+ * 타입 가드: Event 확인
  */
-export function isSubEvent(item: unknown): item is SubEvent {
+export function isEvent(item: unknown): item is Event {
   return typeof item === "object" && item !== null && "tournament_id" in item
 }
 
@@ -461,9 +460,9 @@ export const INITIAL_TOURNAMENT_FORM: TournamentFormData = {
 }
 
 /**
- * 초기 SubEvent Form 데이터
+ * 초기 Event Form 데이터
  */
-export const INITIAL_SUBEVENT_FORM: SubEventFormData = {
+export const INITIAL_EVENT_FORM: EventFormData = {
   name: "",
   date: "",
   event_number: "",
