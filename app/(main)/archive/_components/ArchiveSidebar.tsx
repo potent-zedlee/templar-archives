@@ -38,10 +38,10 @@ export function ArchiveSidebar({ gameType }: ArchiveSidebarProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b">
-        <h2 className="font-semibold text-lg">Archive</h2>
-        <p className="text-sm text-muted-foreground">
+    <div className="flex flex-col h-full bg-white border-r border-gray-200">
+      <div className="p-4 border-b border-gray-200">
+        <h2 className="font-semibold text-lg text-gray-900">Archive</h2>
+        <p className="text-sm text-gray-600">
           Filter tournaments and events
         </p>
       </div>
@@ -50,7 +50,7 @@ export function ArchiveSidebar({ gameType }: ArchiveSidebarProps) {
         <div className="p-4 space-y-6">
           {/* Tournament Categories */}
           <div>
-            <h3 className="text-sm font-medium mb-3">Categories</h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Categories</h3>
             <ArchiveSidebarCategories
               selectedCategory={selectedCategory}
               onCategoryChange={setSelectedCategory}
@@ -58,11 +58,11 @@ export function ArchiveSidebar({ gameType }: ArchiveSidebarProps) {
             />
           </div>
 
-          <Separator />
+          <Separator className="bg-gray-200" />
 
           {/* Advanced Filters */}
           <div>
-            <h3 className="text-sm font-medium mb-3">Filters</h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">Filters</h3>
             <ArchiveUnifiedFilters
               selectedCategory={selectedCategory}
               onCategoryChange={setSelectedCategory}
@@ -75,7 +75,7 @@ export function ArchiveSidebar({ gameType }: ArchiveSidebarProps) {
         </div>
       </ScrollArea>
 
-      <Separator />
+      <Separator className="bg-gray-200" />
 
       <div className="p-4 space-y-2">
         {/* Quick Upload */}
@@ -91,7 +91,7 @@ export function ArchiveSidebar({ gameType }: ArchiveSidebarProps) {
         {isUserAdmin && (
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full rounded-lg border-gray-200 hover:bg-gray-50 hover:border-gray-300"
             onClick={() => openTournamentDialog()}
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -102,7 +102,7 @@ export function ArchiveSidebar({ gameType }: ArchiveSidebarProps) {
         {/* Reset All */}
         <Button
           variant="ghost"
-          className="w-full"
+          className="w-full rounded-lg hover:bg-gray-100 text-gray-700"
           onClick={handleReset}
         >
           <RotateCcw className="h-4 w-4 mr-2" />

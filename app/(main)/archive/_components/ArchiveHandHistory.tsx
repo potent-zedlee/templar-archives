@@ -114,19 +114,19 @@ export function ArchiveHandHistory({
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-24 px-6">
-          <div className="inline-block p-10 rounded-3xl backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-2xl max-w-lg">
+          <div className="inline-block p-10 rounded-lg bg-white border border-gray-200 shadow-sm max-w-lg">
             <div className="flex flex-col items-center space-y-4">
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/20 border border-border/30">
-                <Folder className="h-20 w-20 text-muted-foreground/40" />
+              <div className="p-6 rounded-lg bg-gray-100 border border-gray-200">
+                <Folder className="h-20 w-20 text-gray-400" />
               </div>
               <div className="space-y-3 text-center">
-                <h3 className="text-2xl font-extrabold bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
-                  No Hands Available
+                <h3 className="text-xl font-semibold text-gray-900">
+                  No hands available
                 </h3>
-                <p className="text-sm text-muted-foreground/80 leading-relaxed max-w-md">
+                <p className="text-sm text-gray-600 leading-relaxed max-w-md">
                   이 영상은 아직 AI 분석이 완료되지 않았습니다.
                 </p>
-                <p className="text-xs text-muted-foreground/60 leading-relaxed max-w-md pt-2 border-t border-border/30">
+                <p className="text-xs text-gray-500 leading-relaxed max-w-md pt-2 border-t border-gray-200">
                   위의 "AI 분석" 버튼을 클릭하여 핸드 히스토리를 자동으로 추출할 수 있습니다.
                 </p>
               </div>

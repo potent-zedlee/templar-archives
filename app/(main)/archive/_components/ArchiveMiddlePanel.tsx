@@ -224,17 +224,17 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
   return (
     <div className="flex flex-col h-full">
       {/* Header Section */}
-      <div className="p-6 border-b bg-gradient-to-br from-background/50 to-muted/20">
+      <div className="p-6 border-b border-gray-200 bg-white">
         <div className="space-y-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight mb-2">Events</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-xl font-semibold text-gray-900 mb-1">Events</h2>
+            <p className="text-sm text-gray-600">
               Browse tournaments and days
             </p>
           </div>
 
           {/* Search & Sort */}
-          <div className="pt-2 border-t border-border/50">
+          <div className="pt-3 border-t border-gray-100">
             <ArchiveSearchSort
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -246,21 +246,21 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
       </div>
 
       <ScrollArea className="flex-1 overflow-hidden">
-        <div className="p-4 space-y-1.5">
+        <div className="p-4 space-y-2">
           {tournamentsLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-16 bg-muted/20 rounded-lg animate-pulse"
+                  className="h-16 bg-gray-100 rounded-lg animate-pulse"
                 />
               ))}
             </div>
           ) : folderItems.length === 0 ? (
             <div className="text-center py-16">
-              <div className="inline-block p-8 rounded-2xl backdrop-blur-xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 dark:from-black/10 dark:via-black/5 dark:to-black/10 border border-white/20 shadow-xl">
-                <p className="text-lg font-semibold text-muted-foreground">No events found</p>
-                <p className="text-sm text-muted-foreground/60 mt-2">Try adjusting your filters</p>
+              <div className="inline-block p-8 rounded-lg bg-white border border-gray-200 shadow-sm">
+                <p className="text-base font-semibold text-gray-900">No events found</p>
+                <p className="text-sm text-gray-500 mt-2">Try adjusting your filters</p>
               </div>
             </div>
           ) : (
@@ -273,10 +273,9 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                       variant="ghost"
                       className={cn(
                         "w-full justify-start h-auto py-3 px-4 rounded-lg transition-all duration-200",
-                        "border border-transparent hover:border-border/50",
-                        "hover:bg-gradient-to-r hover:from-muted/50 hover:to-muted/30",
-                        "hover:shadow-sm",
-                        item.isExpanded && "bg-gradient-to-r from-muted/70 to-muted/50 border-border/60 shadow-sm"
+                        "border border-gray-200 hover:border-gray-300",
+                        "hover:bg-gray-50 hover:shadow-md",
+                        item.isExpanded && "bg-gray-50 border-gray-300 shadow-md"
                       )}
                       onClick={() => handleToggleExpand(item)}
                     >
@@ -284,12 +283,12 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                         <ChevronRight
                           className={cn(
                             "h-4 w-4 transition-all duration-200 flex-shrink-0",
-                            "text-muted-foreground group-hover:text-foreground",
-                            item.isExpanded && "rotate-90 text-foreground"
+                            "text-gray-500 group-hover:text-gray-700",
+                            item.isExpanded && "rotate-90 text-gray-700"
                           )}
                         />
                         {tournament.category_logo_url && (
-                          <div className="w-7 h-7 flex-shrink-0 rounded-md overflow-hidden bg-background/50 p-0.5">
+                          <div className="w-7 h-7 flex-shrink-0 rounded-md overflow-hidden bg-white border border-gray-200 p-0.5">
                             <Image
                               src={tournament.category_logo_url}
                               alt={tournament.category}
@@ -300,10 +299,10 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                           </div>
                         )}
                         <div className="flex-1 text-left min-w-0">
-                          <div className="font-semibold text-sm truncate mb-0.5">
+                          <div className="font-semibold text-sm text-gray-900 truncate mb-0.5">
                             {tournament.name}
                           </div>
-                          <div className="text-xs text-muted-foreground font-medium">
+                          <div className="text-xs text-gray-600 font-normal">
                             {formatDate(tournament.start_date)}
                           </div>
                         </div>
@@ -319,9 +318,9 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                       variant="ghost"
                       className={cn(
                         "w-full justify-start h-auto py-2.5 px-3 rounded-lg transition-all duration-200",
-                        "border border-transparent hover:border-border/40",
-                        "hover:bg-gradient-to-r hover:from-muted/40 hover:to-muted/20",
-                        item.isExpanded && "bg-gradient-to-r from-muted/60 to-muted/40 border-border/50"
+                        "border border-transparent hover:border-gray-200",
+                        "hover:bg-gray-50 hover:shadow-sm",
+                        item.isExpanded && "bg-gray-50 border-gray-200 shadow-sm"
                       )}
                       onClick={() => handleToggleExpand(item)}
                     >
@@ -329,16 +328,16 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                         <ChevronRight
                           className={cn(
                             "h-3.5 w-3.5 transition-all duration-200 flex-shrink-0",
-                            "text-muted-foreground group-hover:text-foreground",
-                            item.isExpanded && "rotate-90 text-foreground"
+                            "text-gray-500 group-hover:text-gray-700",
+                            item.isExpanded && "rotate-90 text-gray-700"
                           )}
                         />
                         <div className="flex-1 text-left min-w-0">
-                          <div className="font-medium text-sm truncate mb-0.5">
+                          <div className="font-medium text-sm text-gray-900 truncate mb-0.5">
                             {event.name}
                           </div>
                           {(event.event_number || event.buy_in) && (
-                            <div className="text-xs text-muted-foreground font-medium">
+                            <div className="text-xs text-gray-600 font-normal">
                               {event.event_number && `#${event.event_number}`}
                               {event.buy_in && (event.event_number ? ` • ${event.buy_in}` : event.buy_in)}
                             </div>
@@ -358,37 +357,36 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                         variant="ghost"
                         className={cn(
                           "w-full justify-start h-auto py-2.5 px-3 rounded-lg transition-all duration-200",
-                          "border border-transparent hover:border-border/30",
-                          "hover:bg-gradient-to-r hover:from-muted/30 hover:to-muted/10",
-                          "hover:shadow-sm",
-                          isSelected && "bg-gradient-to-r from-purple-500/20 via-purple-500/10 to-purple-500/5 border-l-4 border-l-purple-500 shadow-md shadow-purple-500/10",
-                          isSelected && "hover:from-purple-500/25 hover:via-purple-500/15 hover:to-purple-500/10"
+                          "border border-transparent hover:border-gray-200",
+                          "hover:bg-gray-50 hover:shadow-sm",
+                          isSelected && "bg-blue-50 border-l-4 border-l-blue-500 shadow-md",
+                          isSelected && "hover:bg-blue-100"
                         )}
                         onClick={() => handleSelectDay(stream.id)}
                       >
                         <div className="flex items-center gap-3 w-full">
                           {stream.video_source === "youtube" && stream.video_url ? (
-                            <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <div className="w-6 h-6 bg-red-500 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
                               <Play className="h-3 w-3 text-white fill-white" />
                             </div>
                           ) : (stream.video_file || stream.video_nas_path) ? (
-                            <div className="w-6 h-6 bg-gradient-to-br from-amber-500 to-amber-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <div className="w-6 h-6 bg-amber-500 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
                               <Play className="h-3 w-3 text-white fill-white" />
                             </div>
                           ) : (
-                            <div className="w-6 h-6 bg-gradient-to-br from-muted to-muted/80 rounded-md flex items-center justify-center flex-shrink-0">
-                              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                            <div className="w-6 h-6 bg-gray-200 rounded-md flex items-center justify-center flex-shrink-0">
+                              <Calendar className="h-3.5 w-3.5 text-gray-500" />
                             </div>
                           )}
                           <div className="flex-1 text-left min-w-0">
                             <div className={cn(
-                              "font-medium text-sm truncate mb-0.5",
+                              "font-medium text-sm text-gray-900 truncate mb-0.5",
                               isSelected && "font-semibold"
                             )}>
                               {stream.name}
                             </div>
                             {stream.player_count !== undefined && stream.player_count > 0 && (
-                              <div className="text-xs text-muted-foreground font-medium">
+                              <div className="text-xs text-gray-600 font-normal">
                                 {stream.player_count} players
                               </div>
                             )}
@@ -406,7 +404,7 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                             "h-8 w-8 p-0",
                             "hover:bg-gold-500/20 hover:text-gold-400",
                             "focus:ring-2 focus:ring-gold-400 focus:ring-offset-2",
-                            "transition-colors"
+                            "transition-colors rounded-md"
                           )}
                           onClick={(e) => {
                             e.stopPropagation()
