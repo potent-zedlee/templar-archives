@@ -65,6 +65,35 @@
   /* Border Radius - Postmodern (sharp edges) */
   --radius: 0;
 
+  /* === LUXURY GRADIENTS === */
+  --gold-gradient-luxury: linear-gradient(135deg,
+    oklch(0.78 0.14 85),  /* Light Gold */
+    oklch(0.68 0.16 85),  /* Standard Gold */
+    oklch(0.58 0.18 80),  /* Deep Gold */
+    oklch(0.48 0.16 75)   /* Dark Gold */
+  );
+
+  --gold-gradient-subtle: linear-gradient(180deg,
+    oklch(0.68 0.16 85),
+    oklch(0.58 0.18 80)
+  );
+
+  --gold-radial-glow: radial-gradient(circle,
+    oklch(0.68 0.16 85 / 0.2),
+    transparent 70%
+  );
+
+  /* === GLOW EFFECTS === */
+  --gold-glow-sm: 0 0 10px oklch(0.68 0.16 85 / 0.3);
+  --gold-glow-md: 0 0 20px oklch(0.68 0.16 85 / 0.5);
+  --gold-glow-lg: 0 0 30px oklch(0.68 0.16 85 / 0.7);
+  --gold-glow-pulse: 0 0 20px oklch(0.68 0.16 85 / 0.5),
+                     0 0 40px oklch(0.68 0.16 85 / 0.3);
+
+  /* === AMBIENT LIGHTING === */
+  --ambient-gold: 0 4px 20px oklch(0.68 0.16 85 / 0.15);
+  --ambient-gold-hover: 0 8px 30px oklch(0.68 0.16 85 / 0.25);
+
   /* Sidebar */
   --sidebar: var(--black-0);
   --sidebar-foreground: var(--text-secondary);
@@ -180,6 +209,20 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* === LUXURY THEME UTILITIES === */
+
+  /* Box Shadow - Luxury */
+  --shadow-gold-glow-sm: var(--gold-glow-sm);
+  --shadow-gold-glow-md: var(--gold-glow-md);
+  --shadow-gold-glow-lg: var(--gold-glow-lg);
+  --shadow-ambient-gold: var(--ambient-gold);
+  --shadow-ambient-gold-hover: var(--ambient-gold-hover);
+
+  /* Background Image - Luxury */
+  --bg-gold-luxury: var(--gold-gradient-luxury);
+  --bg-gold-subtle: var(--gold-gradient-subtle);
+  --bg-gold-radial: var(--gold-radial-glow);
 }
 
 @layer base {
@@ -415,6 +458,35 @@
     }
   }
 
+  /* === LUXURY ANIMATIONS === */
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: var(--gold-glow-md);
+    }
+    50% {
+      box-shadow: var(--gold-glow-lg);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
   /* === BUTTON INTERACTIONS === */
 
   button:not(:disabled):active {
@@ -458,9 +530,38 @@
     background-size: 32px 32px;
   }
 
-  /* === ANIMATIONS === */
+  /* === LUXURY UTILITY CLASSES === */
 
-  @keyframes shimmer {
+  .luxury-gradient {
+    background: var(--gold-gradient-luxury);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .luxury-glow {
+    box-shadow: var(--gold-glow-md);
+  }
+
+  .luxury-glow-pulse {
+    animation: glow-pulse 3s ease-in-out infinite;
+  }
+
+  .luxury-card {
+    background: var(--black-100);
+    border: 2px solid var(--gold-600);
+    box-shadow: var(--ambient-gold);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .luxury-card:hover {
+    box-shadow: var(--ambient-gold-hover);
+    border-color: var(--gold-400);
+  }
+
+  /* === LEGACY ANIMATIONS === */
+
+  @keyframes shimmer-legacy {
     0% {
       transform: translateX(-100%);
     }
@@ -470,7 +571,7 @@
   }
 
   .animate-shimmer {
-    animation: shimmer 2s infinite;
+    animation: shimmer-legacy 2s infinite;
   }
 
   .delay-1000 {
