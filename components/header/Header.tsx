@@ -98,14 +98,10 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-[100] w-full border-b-[3px] border-gold-600 bg-white dark:bg-gray-900 dark:border-gold-500" role="banner">
-        <div className="container max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
-          {/* Left: Logo */}
-          <div className="flex items-center">
+        <div className="w-full px-6 h-16 flex items-center justify-between">
+          {/* Left: Logo + Navigation Menu */}
+          <div className="flex items-center gap-8">
             <HeaderLogo />
-          </div>
-
-          {/* Center: Navigation Menu */}
-          <div className="flex-1 flex items-center justify-center">
             <HeaderDesktopNav navLinks={navLinks} />
           </div>
 

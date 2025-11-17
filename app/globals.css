@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 /* ============================================
    TEMPLAR ARCHIVES - MINIMAL/CLEAN DESIGN SYSTEM
    Version: 2.0
