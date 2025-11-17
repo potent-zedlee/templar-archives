@@ -226,9 +226,9 @@ export default function communityClient() {
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
-                    <DialogTitle>Create new post</DialogTitle>
+                    <DialogTitle className="text-gray-900 dark:text-gray-100">Create new post</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4 py-4">
+                  <div className="space-y-4 py-4 bg-white dark:bg-gray-900">
                     <div className="space-y-2">
                       <Label htmlFor="title">Title</Label>
                       <Input
@@ -267,27 +267,27 @@ export default function communityClient() {
 
                     {/* Hand Attachment */}
                     <div className="space-y-2">
-                      <Label>Attach hand (optional)</Label>
+                      <Label className="text-gray-900 dark:text-gray-100">Attach hand (optional)</Label>
                       {selectedHand ? (
-                        <Card className="p-3 relative">
+                        <Card className="p-3 relative bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="absolute top-2 right-2 h-6 w-6 p-0"
+                            className="absolute top-2 right-2 h-6 w-6 p-0 text-gray-900 dark:text-gray-100"
                             onClick={() => setSelectedHand(null)}
                           >
                             <X className="h-4 w-4" />
                           </Button>
                           <div className="pr-8">
                             <div className="flex items-center gap-2 mb-1">
-                              <Badge>#{selectedHand.number}</Badge>
-                              <Link2 className="h-4 w-4 text-muted-foreground" />
+                              <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">#{selectedHand.number}</Badge>
+                              <Link2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                             </div>
-                            <p className="text-caption text-muted-foreground">
+                            <p className="text-xs text-gray-600 dark:text-gray-400">
                               {selectedHand.tournament} &gt; {selectedHand.day}
                             </p>
                             {selectedHand.description && (
-                              <p className="text-body mt-1 line-clamp-1">{selectedHand.description}</p>
+                              <p className="text-sm text-gray-900 dark:text-gray-100 mt-1 line-clamp-1">{selectedHand.description}</p>
                             )}
                           </div>
                         </Card>

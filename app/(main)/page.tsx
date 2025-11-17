@@ -146,7 +146,7 @@ export default function homeClient() {
 
   if (loading) {
     return (
-      <main className="container max-w-7xl mx-auto px-4 md:px-6 py-12">
+      <main className="container max-w-7xl mx-auto px-4 md:px-6 py-12 bg-white dark:bg-gray-900">
         <CardSkeleton count={4} />
       </main>
     )
@@ -154,9 +154,9 @@ export default function homeClient() {
 
   if (!data) {
     return (
-      <main className="container max-w-7xl mx-auto px-4 md:px-6 py-12">
+      <main className="container max-w-7xl mx-auto px-4 md:px-6 py-12 bg-white dark:bg-gray-900">
         <div className="text-center">
-          <p className="text-muted-foreground">Failed to load data. Please try again later.</p>
+          <p className="text-gray-500 dark:text-gray-400">Failed to load data. Please try again later.</p>
         </div>
       </main>
     )
@@ -173,16 +173,16 @@ export default function homeClient() {
 
   return (
     <PageTransition variant="fade">
-      <main id="main-content" role="main">
+      <main id="main-content" role="main" className="bg-white dark:bg-gray-900">
         {/* Hero Section (Postmodern) */}
-        <section className="relative py-20 md:py-32 overflow-hidden bg-grid-black">
+        <section className="relative py-20 md:py-32 overflow-hidden bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
           <div className="container max-w-7xl mx-auto px-4 md:px-6 relative z-10">
             <div className="flex flex-col items-center text-center space-y-8">
               {/* Typewriter title */}
               <TypewriterEffectSmooth words={words} />
 
               {/* Subtitle */}
-              <p className="text-body-lg text-text-secondary max-w-2xl">
+              <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
                 프로 포커 토너먼트의 모든 핸드 히스토리를 분석하고 학습하세요
               </p>
 
@@ -205,7 +205,7 @@ export default function homeClient() {
 
           {/* Platform Statistics */}
           {data.stats && (
-            <section className="py-12 md:py-16">
+            <section className="py-12 md:py-16 bg-white dark:bg-gray-900">
               <div className="container max-w-7xl mx-auto px-4 md:px-6">
                 <StatsCounter stats={data.stats} />
               </div>
@@ -214,7 +214,7 @@ export default function homeClient() {
 
         {/* Weekly Highlights */}
         {data.highlights && data.highlights.length > 0 && (
-          <section className="py-12 md:py-16">
+          <section className="py-12 md:py-16 bg-gray-50 dark:bg-gray-800">
             <div className="container max-w-7xl mx-auto px-4 md:px-6">
               <WeeklyHighlights highlights={data.highlights} />
             </div>
@@ -223,7 +223,7 @@ export default function homeClient() {
 
         {/* Latest Community Posts */}
         {data.posts && data.posts.length > 0 && (
-          <section className="py-12 md:py-16 bg-muted/30">
+          <section className="py-12 md:py-16 bg-white dark:bg-gray-900">
             <div className="container max-w-7xl mx-auto px-4 md:px-6">
               <LatestPosts posts={data.posts} />
             </div>
@@ -232,7 +232,7 @@ export default function homeClient() {
 
         {/* Top Players */}
         {data.topPlayers && data.topPlayers.length > 0 && (
-          <section className="py-12 md:py-16">
+          <section className="py-12 md:py-16 bg-gray-50 dark:bg-gray-800">
             <div className="container max-w-7xl mx-auto px-4 md:px-6">
               <TopPlayers players={data.topPlayers} />
             </div>

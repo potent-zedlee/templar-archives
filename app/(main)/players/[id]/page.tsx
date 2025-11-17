@@ -233,9 +233,9 @@ export default function PlayerDetailClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container max-w-7xl mx-auto py-16 text-center">
-          <p className="text-base text-gray-600">Loading...</p>
+          <p className="text-base text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
     )
@@ -243,11 +243,11 @@ export default function PlayerDetailClient() {
 
   if (!player) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container max-w-7xl mx-auto py-16 text-center">
-          <p className="text-base text-gray-600">Player not found</p>
+          <p className="text-base text-gray-600 dark:text-gray-400">Player not found</p>
           <button
-            className="mt-4 px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors inline-flex items-center gap-2"
+            className="mt-4 px-4 py-2 bg-green-600 dark:bg-green-700 text-white font-medium rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors inline-flex items-center gap-2"
             onClick={() => router.push('/players')}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -259,11 +259,11 @@ export default function PlayerDetailClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="mb-6">
           <button
-            className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors inline-flex items-center gap-2"
+            className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors inline-flex items-center gap-2"
             onClick={() => router.push('/players')}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -272,14 +272,14 @@ export default function PlayerDetailClient() {
         </div>
 
         {/* Player Profile Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 md:p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 md:p-8 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 md:gap-8">
             {/* Large Profile Image: 모바일 중앙 정렬 */}
             <div className="flex flex-col items-center md:items-start">
               <div className="relative">
-                <Avatar className="w-32 h-32 rounded-full border-4 border-gray-100">
+                <Avatar className="w-32 h-32 rounded-full border-4 border-gray-100 dark:border-gray-700">
                   <AvatarImage src={player.photo_url} alt={player.name} />
-                  <AvatarFallback className="text-3xl font-semibold bg-gray-100 text-gray-700">
+                  <AvatarFallback className="text-3xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                     {player.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
@@ -293,7 +293,7 @@ export default function PlayerDetailClient() {
                       onChange={handlePhotoUpload}
                     />
                     <button
-                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 transition-colors"
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-xs font-medium rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={updatePhotoMutation.isPending}
                     >
@@ -308,10 +308,10 @@ export default function PlayerDetailClient() {
             <div className="space-y-6">
               {/* Name & Meta */}
               <div>
-                <h1 className="text-3xl font-semibold text-gray-900 mb-2">{player.name}</h1>
+                <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{player.name}</h1>
                 <div className="flex gap-3 items-center flex-wrap">
                   {player.country && (
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg">
                       <span className="text-lg">{getCountryFlag(player.country)}</span>
                       {player.country}
                     </div>
@@ -319,17 +319,17 @@ export default function PlayerDetailClient() {
 
                   {/* Claim Status Badges */}
                   {isClaimed && playerClaim && (
-                    <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-lg">
+                    <div className="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-lg">
                       Claimed by {playerClaim.user.nickname}
                     </div>
                   )}
                   {userClaim && userClaim.status === 'pending' && (
-                    <div className="inline-flex items-center px-3 py-1 bg-yellow-100 text-yellow-700 text-sm font-medium rounded-lg">
+                    <div className="inline-flex items-center px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 text-sm font-medium rounded-lg">
                       Claim Pending
                     </div>
                   )}
                   {user && userClaim && userClaim.status === 'approved' && (
-                    <div className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-lg">
+                    <div className="inline-flex items-center px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-sm font-medium rounded-lg">
                       Your Profile
                     </div>
                   )}
@@ -339,29 +339,29 @@ export default function PlayerDetailClient() {
               {/* Stats Grid - 모바일 2x2, 데스크톱 4x1 */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 <div className="space-y-1">
-                  <span className="text-xs text-gray-500 block">Total Hands</span>
-                  <span className="text-2xl font-semibold text-gray-900 font-mono">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 block">Total Hands</span>
+                  <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100 font-mono">
                     {totalHandsCount}
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs text-gray-500 block">Winnings</span>
-                  <span className="text-2xl font-semibold text-green-600 font-mono">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 block">Winnings</span>
+                  <span className="text-2xl font-semibold text-green-600 dark:text-green-400 font-mono">
                     {formatWinnings(player.total_winnings)}
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs text-gray-500 block">Tournaments</span>
-                  <span className="text-2xl font-semibold text-gray-900 font-mono">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 block">Tournaments</span>
+                  <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100 font-mono">
                     {statistics.tournamentsCount}
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs text-gray-500 block">Events</span>
-                  <span className="text-2xl font-semibold text-gray-900 font-mono">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 block">Events</span>
+                  <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100 font-mono">
                     {statistics.eventsCount}
                   </span>
                 </div>
@@ -371,7 +371,7 @@ export default function PlayerDetailClient() {
               {user && !isClaimed && !userClaim && (
                 <div className="flex flex-col md:flex-row gap-3">
                   <button
-                    className="w-full md:w-auto px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
+                    className="w-full md:w-auto px-4 py-2 bg-green-600 dark:bg-green-700 text-white font-medium rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
                     onClick={() => setClaimDialogOpen(true)}
                   >
                     프로필 소유권 주장
@@ -383,15 +383,15 @@ export default function PlayerDetailClient() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="flex gap-0 border-b border-gray-200">
-            <button className="px-6 py-3 text-sm font-medium text-green-600 border-b-2 border-green-600 bg-green-50">
+        <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="flex gap-0 border-b border-gray-200 dark:border-gray-700">
+            <button className="px-6 py-3 text-sm font-medium text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400 bg-green-50 dark:bg-green-900/20">
               핸드 히스토리
             </button>
-            <button className="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
+            <button className="px-6 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               토너먼트
             </button>
-            <button className="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
+            <button className="px-6 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
               통계
             </button>
           </div>
@@ -412,15 +412,15 @@ export default function PlayerDetailClient() {
           {totalHandsCount > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Prize History Chart */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">상금 히스토리</h3>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">상금 히스토리</h3>
                 <PrizeHistoryChart data={prizeHistory} />
               </div>
 
               {/* Pie Chart - Tournament Categories */}
               {statistics.tournamentCategories.length > 0 && (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">토너먼트 카테고리 분포</h3>
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">토너먼트 카테고리 분포</h3>
                   <TournamentCategoryChart data={statistics.tournamentCategories} />
                 </div>
               )}
@@ -429,10 +429,10 @@ export default function PlayerDetailClient() {
         </div>
 
         {/* Hands List - Hierarchical */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
             핸드 히스토리
-            <span className="font-mono ml-2 text-gray-600">({totalHandsCount})</span>
+            <span className="font-mono ml-2 text-gray-600 dark:text-gray-400">({totalHandsCount})</span>
           </h2>
           <ScrollArea className="h-[calc(100vh-480px)]">
             {tournaments.length === 0 ? (

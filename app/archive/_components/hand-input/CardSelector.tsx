@@ -72,7 +72,7 @@ export function CardSelector({
 
   return (
     <div className="space-y-3">
-      {label && <label className="text-sm font-medium text-gray-900">{label}</label>}
+      {label && <label className="text-sm font-medium text-gray-900 dark:text-gray-100">{label}</label>}
 
       {/* Text Input */}
       <div className="flex gap-2">
@@ -90,7 +90,7 @@ export function CardSelector({
       </div>
 
       {/* Visual Grid */}
-      <div className="grid grid-cols-13 gap-1 p-3 bg-gray-50 rounded-lg border border-gray-200">
+      <div className="grid grid-cols-13 gap-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
         {RANKS.map((rank) => (
           <div key={rank} className="space-y-1">
             {SUITS.map((suit) => {
@@ -107,8 +107,8 @@ export function CardSelector({
                   className={cn(
                     'w-8 h-10 text-xs font-bold rounded-md border transition-all duration-200',
                     isSelected
-                      ? 'bg-gold-400 text-white border-gold-500 shadow-sm'
-                      : 'bg-white hover:bg-gray-50 border-gray-300',
+                      ? 'bg-gold-400 dark:bg-gold-500 text-white border-gold-500 dark:border-gold-400 shadow-sm'
+                      : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 border-gray-300 dark:border-gray-600',
                     isDisabled && 'opacity-30 cursor-not-allowed',
                     getSuitColor(suit)
                   )}
@@ -126,8 +126,8 @@ export function CardSelector({
 
       {/* Selected cards display */}
       {value.length > 0 && (
-        <div className="text-sm text-gray-600">
-          Selected: <span className="font-medium text-gray-900">{value.join(' ')}</span>
+        <div className="text-sm text-gray-600 dark:text-gray-400">
+          Selected: <span className="font-medium text-gray-900 dark:text-gray-100">{value.join(' ')}</span>
         </div>
       )}
     </div>

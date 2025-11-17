@@ -14,10 +14,10 @@ import { PostComments } from "@/components/post-comments"
 import { Badge } from "@/components/ui/badge"
 
 const categoryColors: Record<string, string> = {
-  "analysis": "bg-blue-100 text-blue-700",
-  "strategy": "bg-green-100 text-green-700",
-  "hand-review": "bg-purple-100 text-purple-700",
-  "general": "bg-gray-100 text-gray-700"
+  "analysis": "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300",
+  "strategy": "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300",
+  "hand-review": "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300",
+  "general": "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
 }
 
 export default function PostDetailPage() {
@@ -74,7 +74,7 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container max-w-4xl mx-auto py-8 md:py-12 px-4 md:px-6">
           <CardSkeleton count={1} />
         </div>
@@ -84,14 +84,14 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container max-w-4xl mx-auto py-16 px-4 md:px-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Post not found</h2>
-            <p className="text-sm text-gray-600 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Post not found</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
               The post you're looking for doesn't exist or has been removed.
             </p>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" onClick={() => router.push('/community')}>
+            <button className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors" onClick={() => router.push('/community')}>
               <ArrowLeft className="mr-2 h-4 w-4 inline" />
               Back to community
             </button>
@@ -102,23 +102,23 @@ export default function PostDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="container max-w-4xl mx-auto py-8 md:py-12 px-4 md:px-6">
         {/* Back Button */}
         <div className="mb-6">
-          <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white rounded-md transition-colors" onClick={() => router.push('/community')}>
+          <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-800 rounded-md transition-colors" onClick={() => router.push('/community')}>
             <ArrowLeft className="h-4 w-4" />
             Back to community
           </button>
         </div>
 
         {/* Post Card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
           {/* Header */}
           <div className="flex items-start gap-4 mb-6">
             <Avatar className="h-12 w-12 rounded-full">
               <AvatarImage src={post.author_avatar} alt={post.author_name} />
-              <AvatarFallback className="rounded-full bg-blue-100 text-blue-600 font-semibold">
+              <AvatarFallback className="rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold">
                 {post.author_name.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
@@ -126,10 +126,10 @@ export default function PostDetailPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4 mb-2">
                 <div>
-                  <h3 className="text-base font-semibold text-gray-900 mb-1">
+                  <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
                     {post.author_name}
                   </h3>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     <span>{new Date(post.created_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
@@ -147,34 +147,34 @@ export default function PostDetailPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl font-semibold text-gray-900 mb-4">{post.title}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">{post.title}</h1>
 
           {/* Content */}
           <div className="prose prose-sm max-w-none mb-6">
-            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-normal">
+            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-normal">
               {post.content}
             </p>
           </div>
 
           {/* Attached Hand */}
           {post.hand && (
-            <div className="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <div className="mb-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <div className="flex items-center gap-3">
-                <Link2 className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                <Link2 className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-mono font-semibold text-blue-600">#{post.hand.number}</span>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">#{post.hand.number}</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400">
                       {post.hand.timestamp}
                     </span>
                   </div>
                   {post.hand.description && (
-                    <p className="text-sm text-gray-700">{post.hand.description}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{post.hand.description}</p>
                   )}
                 </div>
                 <Link
                   href={`/archive?hand=${post.hand.id}`}
-                  className="px-4 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   View hand
                 </Link>
@@ -183,10 +183,10 @@ export default function PostDetailPage() {
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
+          <div className="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={handleLike}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-400"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400"
             >
               <ThumbsUp className="h-5 w-5" />
               <span className="font-mono">{post.likes_count}</span>
@@ -194,7 +194,7 @@ export default function PostDetailPage() {
 
             <button
               onClick={handleShare}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-400"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400"
             >
               <Share2 className="h-5 w-5" />
               <span>Share</span>
