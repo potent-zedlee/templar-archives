@@ -80,6 +80,9 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
     console.log(`Action: ${action}`, hand.id)
   }
 
+  // 하이라이트 조건: AI 분석 + 높은 confidence
+  const isHighlighted = hand.confidence && hand.confidence > 0.8
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -88,7 +91,12 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
       className={className}
     >
       <div
-        className="card-postmodern hover-3d group relative overflow-hidden cursor-pointer p-4 space-y-3"
+        className={cn(
+          "card-postmodern hover-3d group relative overflow-hidden cursor-pointer p-4 space-y-3",
+          // Ambient lighting effects
+          "shadow-ambient-gold hover:shadow-ambient-gold-hover",
+          isHighlighted && "luxury-glow-pulse"
+        )}
         onClick={onClick}
       >
         {/* 썸네일 이미지 영역 */}
@@ -162,7 +170,12 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
 
         {/* 핸드 번호 + 타임스탬프 (Asymmetric Grid) */}
         <div className="grid grid-cols-[1fr_auto] gap-3 items-center">
-          <h3 className="text-heading text-gold-400">Hand #{hand.number}</h3>
+          <h3 className={cn(
+            "text-heading font-black",
+            isHighlighted ? "luxury-gradient text-xl" : "text-gold-400"
+          )}>
+            Hand #{hand.number}
+          </h3>
           <div className="text-xs text-mono text-gold-400 border-2 border-gold-700 px-2 py-1 bg-black-200 font-bold">
             {hand.timestamp}
           </div>

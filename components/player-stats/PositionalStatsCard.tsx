@@ -64,11 +64,12 @@ export function PositionalStatsCard({ playerId }: PositionalStatsCardProps) {
   }
 
   const totalHands = posStats.reduce((sum, stat) => sum + stat.hands, 0)
+  const isPremium = posStats.length >= 5 // 5개 이상 포지션 데이터
 
   return (
-    <Card>
+    <Card variant={isPremium ? 'premium' : 'default'}>
       <CardHeader>
-        <CardTitle>포지션별 통계</CardTitle>
+        <CardTitle gradient={isPremium}>포지션별 통계</CardTitle>
         <CardDescription>
           총 {formatStatNumber(totalHands)}개의 핸드 ({posStats.length}개 포지션)
         </CardDescription>

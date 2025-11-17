@@ -89,10 +89,12 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
     { stat: '승률', value: stats.winRate, fullMark: 100 },
   ]
 
+  const isPremium = posStats.length >= 5 // 5개 이상 포지션 데이터
+
   return (
-    <Card>
+    <Card variant={isPremium ? 'premium' : 'default'}>
       <CardHeader>
-        <CardTitle>성과 차트</CardTitle>
+        <CardTitle gradient={isPremium}>성과 차트</CardTitle>
         <CardDescription>시각화된 통계 분석</CardDescription>
       </CardHeader>
       <CardContent>

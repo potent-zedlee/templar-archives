@@ -2,7 +2,13 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
-function Card({ className, ...props }: React.ComponentProps<'div'>) {
+type CardVariant = 'default' | 'premium' | 'highlighted'
+
+interface CardProps extends React.ComponentProps<'div'> {
+  variant?: CardVariant
+}
+
+function Card({ className, variant = 'default', ...props }: CardProps) {
   return (
     <div
       data-slot="card"
@@ -10,6 +16,9 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
         'bg-black-100 text-card-foreground flex flex-col gap-6 border-2 border-gold-600 py-6 relative transition-all duration-200',
         'shadow-[4px_4px_0_var(--black-0),8px_8px_0_var(--gold-700)]',
         'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_var(--black-0),12px_12px_0_var(--gold-700)]',
+        // Variant styles
+        variant === 'premium' && 'shadow-ambient-gold hover:shadow-ambient-gold-hover',
+        variant === 'highlighted' && 'luxury-glow-pulse border-gold-400',
         className,
       )}
       {...props}
@@ -30,11 +39,19 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
+interface CardTitleProps extends React.ComponentProps<'div'> {
+  gradient?: boolean
+}
+
+function CardTitle({ className, gradient = false, ...props }: CardTitleProps) {
   return (
     <div
       data-slot="card-title"
-      className={cn('leading-none font-bold text-gold-400 uppercase tracking-wide', className)}
+      className={cn(
+        'leading-none font-bold uppercase tracking-wide',
+        gradient ? 'luxury-gradient text-2xl' : 'text-gold-400',
+        className
+      )}
       {...props}
     />
   )

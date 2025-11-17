@@ -458,14 +458,83 @@
     }
   }
 
+  /* === LUXURY UTILITIES === */
+
+  /* Luxury Card Base */
+  .luxury-card {
+    position: relative;
+    background-color: var(--black-100);
+    border: 2px solid var(--gold-600);
+    box-shadow: 4px 4px 0 var(--black-0), 8px 8px 0 var(--gold-700), var(--ambient-gold);
+    transition: all 0.3s ease-out;
+  }
+
+  .luxury-card:hover {
+    box-shadow: 6px 6px 0 var(--black-0), 12px 12px 0 var(--gold-700), var(--ambient-gold-hover);
+  }
+
+  /* Luxury Gradient Text */
+  .luxury-gradient {
+    background: var(--gold-gradient-luxury);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+  }
+
+  .luxury-gradient-animate {
+    background: var(--gold-gradient-luxury);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
+  }
+
+  /* Glow Effects */
+  .gold-glow-sm {
+    box-shadow: var(--gold-glow-sm);
+  }
+
+  .gold-glow-md {
+    box-shadow: var(--gold-glow-md);
+  }
+
+  .gold-glow-lg {
+    box-shadow: var(--gold-glow-lg);
+  }
+
+  /* Luxury Glow (combines 3D shadow + ambient glow) */
+  .luxury-glow {
+    box-shadow: 4px 4px 0 var(--black-0), 8px 8px 0 var(--gold-700), var(--gold-glow-md);
+  }
+
+  /* Luxury Glow Pulse Animation */
+  .luxury-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  /* Ambient Shadow Variants */
+  .shadow-ambient-gold {
+    box-shadow: var(--ambient-gold);
+  }
+
+  .shadow-ambient-gold-hover {
+    box-shadow: var(--ambient-gold-hover);
+  }
+
+  .hover\:shadow-ambient-gold-hover:hover {
+    box-shadow: var(--ambient-gold-hover);
+  }
+
   /* === LUXURY ANIMATIONS === */
 
   @keyframes glow-pulse {
     0%, 100% {
-      box-shadow: var(--gold-glow-md);
+      box-shadow: 4px 4px 0 var(--black-0), 8px 8px 0 var(--gold-700), var(--gold-glow-md);
     }
     50% {
-      box-shadow: var(--gold-glow-lg);
+      box-shadow: 4px 4px 0 var(--black-0), 8px 8px 0 var(--gold-700), var(--gold-glow-lg);
     }
   }
 
