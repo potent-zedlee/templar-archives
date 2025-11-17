@@ -103,7 +103,7 @@ export function PlayerSelector({
             {loading ? (
               <CommandEmpty>Loading players...</CommandEmpty>
             ) : filteredPlayers.length === 0 ? (
-              <CommandEmpty>No player found.</CommandEmpty>
+              <CommandEmpty>No player found</CommandEmpty>
             ) : (
               <CommandGroup>
                 {filteredPlayers.map((player) => (

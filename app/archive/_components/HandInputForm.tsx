@@ -114,19 +114,19 @@ export function HandInputForm() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white">
       {/* Form Content */}
       <div className="flex-1 overflow-y-auto px-6 py-4">
         <Accordion
           type="multiple"
           value={openSections}
           onValueChange={setOpenSections}
-          className="space-y-2"
+          className="space-y-3"
         >
           {/* 1. Basic Info */}
-          <AccordionItem value="basic-info" className="border rounded-lg px-4">
+          <AccordionItem value="basic-info" className="border border-gray-200 rounded-lg px-4 bg-white shadow-sm">
             <AccordionTrigger className="hover:no-underline">
-              <span className="font-semibold">Basic Info</span>
+              <span className="font-semibold text-gray-900">Basic info</span>
             </AccordionTrigger>
             <AccordionContent className="space-y-4 pt-4">
               {/* Hand Number */}
@@ -171,9 +171,9 @@ export function HandInputForm() {
           </AccordionItem>
 
           {/* 2. Blinds & Pot */}
-          <AccordionItem value="blinds-pot" className="border rounded-lg px-4">
+          <AccordionItem value="blinds-pot" className="border border-gray-200 rounded-lg px-4 bg-white shadow-sm">
             <AccordionTrigger className="hover:no-underline">
-              <span className="font-semibold">Blinds & Pot</span>
+              <span className="font-semibold text-gray-900">Blinds & pot</span>
             </AccordionTrigger>
             <AccordionContent className="space-y-4 pt-4">
               <div className="grid grid-cols-3 gap-4">
@@ -269,15 +269,15 @@ export function HandInputForm() {
           </AccordionItem>
 
           {/* 3. Players & Positions */}
-          <AccordionItem value="players" className="border rounded-lg px-4">
+          <AccordionItem value="players" className="border border-gray-200 rounded-lg px-4 bg-white shadow-sm">
             <AccordionTrigger className="hover:no-underline">
-              <span className="font-semibold">
-                Players & Positions ({currentHand.players.length})
+              <span className="font-semibold text-gray-900">
+                Players & positions ({currentHand.players.length})
               </span>
             </AccordionTrigger>
             <AccordionContent className="space-y-4 pt-4">
               {currentHand.players.map((player, index) => (
-                <div key={index} className="p-4 border rounded-lg space-y-3 bg-muted/30">
+                <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-3 bg-gray-50">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-semibold">Player {index + 1}</span>
                     <Button
@@ -376,9 +376,9 @@ export function HandInputForm() {
           </AccordionItem>
 
           {/* 4. Board Cards */}
-          <AccordionItem value="board" className="border rounded-lg px-4">
+          <AccordionItem value="board" className="border border-gray-200 rounded-lg px-4 bg-white shadow-sm">
             <AccordionTrigger className="hover:no-underline">
-              <span className="font-semibold">Board Cards</span>
+              <span className="font-semibold text-gray-900">Board cards</span>
             </AccordionTrigger>
             <AccordionContent className="space-y-4 pt-4">
               {/* Flop */}
@@ -415,10 +415,10 @@ export function HandInputForm() {
           </AccordionItem>
 
           {/* 5. Actions */}
-          <AccordionItem value="actions" className="border rounded-lg px-4">
+          <AccordionItem value="actions" className="border border-gray-200 rounded-lg px-4 bg-white shadow-sm">
             <AccordionTrigger className="hover:no-underline">
-              <span className="font-semibold">
-                Action Sequence ({currentHand.actions.length})
+              <span className="font-semibold text-gray-900">
+                Action sequence ({currentHand.actions.length})
               </span>
             </AccordionTrigger>
             <AccordionContent className="pt-4">
@@ -447,7 +447,7 @@ export function HandInputForm() {
       </div>
 
       {/* Bottom Action Bar */}
-      <div className="border-t bg-background p-4 flex gap-2">
+      <div className="border-t border-gray-200 bg-white p-4 flex gap-2 shadow-sm">
         <Button
           type="button"
           variant="outline"
@@ -456,7 +456,7 @@ export function HandInputForm() {
           className="flex-1"
         >
           <Save className="h-4 w-4 mr-2" />
-          Save Draft
+          Save draft
         </Button>
         <Button
           type="button"
@@ -465,7 +465,7 @@ export function HandInputForm() {
           className="flex-1"
         >
           <Send className="h-4 w-4 mr-2" />
-          {submitting ? 'Submitting...' : 'Submit Hand'}
+          {submitting ? 'Submitting...' : 'Submit hand'}
         </Button>
       </div>
     </div>

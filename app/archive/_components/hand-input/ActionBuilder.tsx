@@ -94,7 +94,7 @@ export function ActionBuilder({ actions, players, onChange }: ActionBuilderProps
 
         return (
           <div key={street.value} className="space-y-2">
-            <h4 className="text-sm font-semibold text-primary">{street.label}</h4>
+            <h4 className="text-sm font-semibold text-gold-600">{street.label}</h4>
             <div className="space-y-2">
               {streetActions.map((action, idx) => {
                 const globalIndex = actions.findIndex(
@@ -104,7 +104,7 @@ export function ActionBuilder({ actions, players, onChange }: ActionBuilderProps
                 return (
                   <div
                     key={`${street.value}-${idx}`}
-                    className="grid grid-cols-12 gap-2 items-center p-2 bg-muted/50 rounded-lg"
+                    className="grid grid-cols-12 gap-2 items-center p-2 bg-gray-50 rounded-lg border border-gray-200"
                   >
                     {/* Order */}
                     <div className="col-span-1 text-center text-sm font-medium">
@@ -205,12 +205,12 @@ export function ActionBuilder({ actions, players, onChange }: ActionBuilderProps
       {/* Add Action Button */}
       <Button type="button" variant="outline" onClick={handleAddAction} className="w-full">
         <Plus className="h-4 w-4 mr-2" />
-        Add Action
+        Add action
       </Button>
 
       {actions.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          No actions added yet. Click "Add Action" to start.
+        <p className="text-sm text-gray-500 text-center py-4">
+          No actions added yet. Click "Add action" to start.
         </p>
       )}
     </div>

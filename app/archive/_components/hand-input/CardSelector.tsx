@@ -72,7 +72,7 @@ export function CardSelector({
 
   return (
     <div className="space-y-3">
-      {label && <label className="text-sm font-medium">{label}</label>}
+      {label && <label className="text-sm font-medium text-gray-900">{label}</label>}
 
       {/* Text Input */}
       <div className="flex gap-2">
@@ -90,7 +90,7 @@ export function CardSelector({
       </div>
 
       {/* Visual Grid */}
-      <div className="grid grid-cols-13 gap-1 p-3 bg-muted/50 rounded-lg">
+      <div className="grid grid-cols-13 gap-1 p-3 bg-gray-50 rounded-lg border border-gray-200">
         {RANKS.map((rank) => (
           <div key={rank} className="space-y-1">
             {SUITS.map((suit) => {
@@ -105,10 +105,10 @@ export function CardSelector({
                   onClick={() => handleCardClick(card)}
                   disabled={isDisabled}
                   className={cn(
-                    'w-8 h-10 text-xs font-bold rounded border-2 transition-all',
+                    'w-8 h-10 text-xs font-bold rounded-md border transition-all duration-200',
                     isSelected
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background hover:bg-muted border-border',
+                      ? 'bg-gold-400 text-white border-gold-500 shadow-sm'
+                      : 'bg-white hover:bg-gray-50 border-gray-300',
                     isDisabled && 'opacity-30 cursor-not-allowed',
                     getSuitColor(suit)
                   )}
@@ -126,8 +126,8 @@ export function CardSelector({
 
       {/* Selected cards display */}
       {value.length > 0 && (
-        <div className="text-sm text-muted-foreground">
-          Selected: <span className="font-medium">{value.join(' ')}</span>
+        <div className="text-sm text-gray-600">
+          Selected: <span className="font-medium text-gray-900">{value.join(' ')}</span>
         </div>
       )}
     </div>
@@ -174,5 +174,5 @@ function getSuitSymbol(suit: Suit): string {
 }
 
 function getSuitColor(suit: Suit): string {
-  return suit === 'h' || suit === 'd' ? 'text-red-600' : 'text-foreground'
+  return suit === 'h' || suit === 'd' ? 'text-red-500' : 'text-gray-900'
 }

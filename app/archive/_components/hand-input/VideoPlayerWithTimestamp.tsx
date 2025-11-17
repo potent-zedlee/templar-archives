@@ -30,8 +30,8 @@ export function VideoPlayerWithTimestamp({
 
   if (!videoId) {
     return (
-      <div className="bg-muted/50 rounded-lg p-6 text-center">
-        <p className="text-sm text-muted-foreground">
+      <div className="bg-gray-50 rounded-lg p-6 text-center border border-gray-200">
+        <p className="text-sm text-gray-600">
           Invalid YouTube URL. Please enter a valid YouTube video URL.
         </p>
       </div>
@@ -46,7 +46,7 @@ export function VideoPlayerWithTimestamp({
   return (
     <div className="space-y-4">
       {/* YouTube Player */}
-      <div className="aspect-video bg-black rounded-lg overflow-hidden">
+      <div className="aspect-video bg-black rounded-lg overflow-hidden shadow-md">
         <iframe
           src={embedUrl}
           title="YouTube video player"
@@ -61,7 +61,7 @@ export function VideoPlayerWithTimestamp({
         <div className="grid grid-cols-2 gap-3">
           {/* Start Time */}
           <div>
-            <label className="text-xs font-medium mb-1 block">Start Time (seconds)</label>
+            <label className="text-xs font-medium mb-1 block text-gray-900">Start time (seconds)</label>
             <Input
               type="number"
               min="0"
@@ -73,7 +73,7 @@ export function VideoPlayerWithTimestamp({
 
           {/* End Time */}
           <div>
-            <label className="text-xs font-medium mb-1 block">End Time (seconds)</label>
+            <label className="text-xs font-medium mb-1 block text-gray-900">End time (seconds)</label>
             <Input
               type="number"
               min="0"
@@ -92,7 +92,7 @@ export function VideoPlayerWithTimestamp({
             size="sm"
             onClick={() => onTimestampSelect?.(currentTime)}
           >
-            Use Current Time
+            Use current time
           </Button>
           <Button
             type="button"
@@ -105,9 +105,9 @@ export function VideoPlayerWithTimestamp({
         </div>
 
         {/* Helper Text */}
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-gray-600 leading-normal">
           Tip: You can manually enter the timestamp in seconds, or play the video and click "Use
-          Current Time" to capture the current position.
+          current time" to capture the current position.
         </p>
       </div>
     </div>
