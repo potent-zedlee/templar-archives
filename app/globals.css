@@ -11,6 +11,11 @@
   --gold-600: oklch(0.48 0.16 75);
   --gold-700: oklch(0.38 0.14 70);
 
+  /* Texture System */
+  --texture-noise: url('/textures/noise.svg');
+  --texture-grain: url('/textures/grain.svg');
+  --texture-metallic: url('/textures/metallic-reflection.svg');
+
   /* Black Spectrum */
   --black-0: oklch(0 0 0);
   --black-100: oklch(0.12 0 0);
@@ -1458,6 +1463,203 @@
   @media (min-width: 768px) {
     .mobile-gap-4 {
       gap: 1.5rem;
+    }
+  }
+
+  /* === TEXTURE SYSTEM === */
+
+  /* Background Textures */
+  .bg-textured {
+    background-image: var(--texture-noise);
+    background-repeat: repeat;
+    background-size: 300px 300px;
+  }
+
+  .bg-grain {
+    background-image: var(--texture-grain);
+    background-repeat: repeat;
+    background-size: 200px 200px;
+  }
+
+  .bg-metallic-reflection {
+    position: relative;
+  }
+
+  .bg-metallic-reflection::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--texture-metallic);
+    background-size: cover;
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Card Surface Texture */
+  .card-surface-texture {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-surface-texture::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(
+        45deg,
+        transparent 30%,
+        oklch(0.68 0.16 85 / 0.02) 50%,
+        transparent 70%
+      ),
+      var(--texture-grain);
+    background-size: 200% 200%, 200px 200px;
+    background-position: -100% -100%, 0 0;
+    opacity: 0;
+    transition: opacity 0.3s ease, background-position 0.6s ease;
+    pointer-events: none;
+  }
+
+  .card-surface-texture:hover::after {
+    opacity: 1;
+    background-position: 100% 100%, 0 0;
+  }
+
+  /* Metallic Edge Highlight */
+  .metallic-edge {
+    position: relative;
+  }
+
+  .metallic-edge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(0.88 0.14 85 / 0.5) 50%,
+      transparent
+    );
+  }
+
+  .metallic-edge::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    background: linear-gradient(
+      180deg,
+      oklch(0.88 0.14 85 / 0.5),
+      transparent
+    );
+  }
+
+  /* Glass Morphism (Input Fields) */
+  .glass-input {
+    background: oklch(0.12 0 0 / 0.6);
+    backdrop-filter: blur(10px) saturate(180%);
+    -webkit-backdrop-filter: blur(10px) saturate(180%);
+    border: 1px solid oklch(0.68 0.16 85 / 0.2);
+    box-shadow:
+      0 8px 32px oklch(0 0 0 / 0.3),
+      inset 0 1px 0 oklch(1 0 0 / 0.05);
+  }
+
+  .glass-input:focus {
+    border-color: oklch(0.68 0.16 85 / 0.5);
+    box-shadow:
+      0 8px 32px oklch(0 0 0 / 0.3),
+      0 0 20px oklch(0.68 0.16 85 / 0.3),
+      inset 0 1px 0 oklch(1 0 0 / 0.1);
+  }
+
+  /* Depth Layers (Parallax Background) */
+  .depth-layer-1 {
+    z-index: 1;
+    transform: translateZ(10px);
+  }
+
+  .depth-layer-2 {
+    z-index: 2;
+    transform: translateZ(20px);
+  }
+
+  .depth-layer-3 {
+    z-index: 3;
+    transform: translateZ(30px);
+  }
+
+  /* Film Grain Animation */
+  @keyframes grain-animation {
+    0%, 100% {
+      background-position: 0 0;
+    }
+    10% {
+      background-position: -5% -10%;
+    }
+    20% {
+      background-position: -15% 5%;
+    }
+    30% {
+      background-position: 7% -25%;
+    }
+    40% {
+      background-position: -5% 25%;
+    }
+    50% {
+      background-position: -15% 10%;
+    }
+    60% {
+      background-position: 15% -25%;
+    }
+    70% {
+      background-position: 0 15%;
+    }
+    80% {
+      background-position: 25% -10%;
+    }
+    90% {
+      background-position: -10% 5%;
+    }
+  }
+
+  .animated-grain {
+    animation: grain-animation 8s steps(10) infinite;
+  }
+
+  /* Holographic Reflection */
+  .holographic {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .holographic::before {
+    content: '';
+    position: absolute;
+    inset: -100%;
+    background: linear-gradient(
+      45deg,
+      transparent 30%,
+      oklch(0.68 0.16 85 / 0.1) 50%,
+      transparent 70%
+    );
+    background-size: 200% 200%;
+    animation: holographic-sweep 3s linear infinite;
+    pointer-events: none;
+  }
+
+  @keyframes holographic-sweep {
+    0% {
+      background-position: -100% -100%;
+    }
+    100% {
+      background-position: 100% 100%;
     }
   }
 }
