@@ -112,8 +112,8 @@ export function NotificationBell() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 dark:hover:bg-gray-800">
+          <Bell className="h-5 w-5 text-gray-600 dark:text-gray-400" />
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
@@ -124,9 +124,9 @@ export function NotificationBell() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[380px] p-0">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">Notifications</h3>
+      <DropdownMenuContent align="end" className="w-[380px] p-0 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">Notifications</h3>
           <div className="flex gap-2">
             {unreadCount > 0 && (
               <Button
@@ -134,14 +134,14 @@ export function NotificationBell() {
                 size="sm"
                 onClick={handleMarkAllAsRead}
                 disabled={markAllAsReadMutation.isPending}
-                className="h-8 text-xs"
+                className="h-8 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300"
               >
                 <Check className="h-3 w-3 mr-1" />
                 Mark all read
               </Button>
             )}
             <Link href="/notifications">
-              <Button variant="ghost" size="sm" className="h-8 text-xs">
+              <Button variant="ghost" size="sm" className="h-8 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300">
                 View all
               </Button>
             </Link>
@@ -150,7 +150,7 @@ export function NotificationBell() {
 
         <ScrollArea className="h-[400px]">
           {notifications.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground">
+            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
               <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No notifications yet</p>
             </div>
@@ -159,8 +159,8 @@ export function NotificationBell() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`group relative px-4 py-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0 ${
-                    !notification.is_read ? "bg-primary/5" : ""
+                  className={`group relative px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer border-b border-gray-200 dark:border-gray-700 last:border-b-0 ${
+                    !notification.is_read ? "bg-gold-50 dark:bg-gold-900/10" : ""
                   }`}
                   onClick={() => handleNotificationClick(notification)}
                 >
@@ -178,33 +178,33 @@ export function NotificationBell() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6"
+                        className="h-6 w-6 hover:bg-gray-200 dark:hover:bg-gray-600"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
                           handleMarkAsRead(notification.id)
                         }}
                       >
-                        <Check className="h-3 w-3" />
+                        <Check className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                       </Button>
                     )}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className="h-6 w-6 hover:bg-gray-200 dark:hover:bg-gray-600"
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
                         handleDelete(notification.id)
                       }}
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Trash2 className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                     </Button>
                   </div>
 
                   {/* Unread indicator */}
                   {!notification.is_read && (
-                    <div className="absolute left-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-primary" />
+                    <div className="absolute left-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-gold-400 dark:bg-gold-500" />
                   )}
                 </div>
               ))}
@@ -222,7 +222,7 @@ function NotificationItem({ notification }: { notification: Notification }) {
       {notification.sender && (
         <Avatar className="h-10 w-10 flex-shrink-0">
           <AvatarImage src={notification.sender.avatar_url || undefined} />
-          <AvatarFallback>
+          <AvatarFallback className="bg-gold-100 dark:bg-gold-900 text-gold-700 dark:text-gold-300">
             {notification.sender.nickname
               .split(" ")
               .map((n) => n[0])
@@ -231,11 +231,11 @@ function NotificationItem({ notification }: { notification: Notification }) {
         </Avatar>
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium mb-1">{notification.title}</p>
-        <p className="text-xs text-muted-foreground line-clamp-2 mb-1">
+        <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">{notification.title}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-1">
           {notification.message}
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-gray-500 dark:text-gray-400">
           {formatNotificationTime(notification.created_at)}
         </p>
       </div>

@@ -81,7 +81,6 @@ export function Header() {
   }
 
   const navLinks: NavLink[] = [
-    { href: "/about", label: "ABOUT" },
     { href: "/news", label: "NEWS" },
     { href: "/live-reporting", label: "LIVE" },
     {
@@ -92,29 +91,36 @@ export function Header() {
         { href: "/archive/cash-game", label: "Cash Game" },
       ]
     },
-    { href: "/players", label: "PLAYERS" },
+    { href: "/players", label: "PLAYER" },
     { href: "/community", label: "FORUM" },
   ]
 
   return (
     <>
-      <header className="sticky top-0 z-[100] w-full border-b-[3px] border-gold-600 bg-black-0" role="banner">
-        <div className="container max-w-7xl mx-auto px-4 md:px-6 flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
+      <header className="sticky top-0 z-[100] w-full border-b-[3px] border-gold-600 bg-white dark:bg-gray-900 dark:border-gold-500" role="banner">
+        <div className="container max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+          {/* Left: Logo */}
+          <div className="flex items-center">
             <HeaderLogo />
+          </div>
+
+          {/* Center: Navigation Menu */}
+          <div className="flex-1 flex items-center justify-center">
             <HeaderDesktopNav navLinks={navLinks} />
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Right: Dark Mode, Notification, Profile */}
+          <div className="flex items-center gap-3">
             {mounted && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="h-9 w-9"
+                className="h-9 w-9 hover:bg-gray-100 dark:hover:bg-gray-800"
+                aria-label="Toggle theme"
               >
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-gray-600 dark:text-gray-400" />
+                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-gray-600 dark:text-gray-400" />
                 <span className="sr-only">Toggle theme</span>
               </Button>
             )}
@@ -139,7 +145,7 @@ export function Header() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="hidden md:inline-flex"
+                    className="hidden md:inline-flex dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
                     onClick={() => router.push("/auth/login")}
                   >
                     LOGIN
@@ -151,10 +157,15 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden h-9 w-9"
+              className="md:hidden h-9 w-9 hover:bg-gray-100 dark:hover:bg-gray-800"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+              ) : (
+                <Menu className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+              )}
               <span className="sr-only">Toggle menu</span>
             </Button>
           </div>

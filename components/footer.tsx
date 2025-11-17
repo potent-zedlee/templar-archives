@@ -5,11 +5,16 @@ export function Footer() {
   const currentYear = new Date().getFullYear()
 
   const navigationLinks = [
-    { href: "/about", label: "About" },
     { href: "/search", label: "Search" },
     { href: "/archive", label: "Archive" },
     { href: "/players", label: "Players" },
     { href: "/community", label: "Forum" },
+  ]
+
+  const aboutLinks = [
+    { href: "/about", label: "About Us" },
+    { href: "/news", label: "News" },
+    { href: "/live-reporting", label: "Live Reporting" },
   ]
 
   const legalLinks = [
@@ -21,34 +26,51 @@ export function Footer() {
   ]
 
   return (
-    <footer className="border-t border-border/40 bg-background">
+    <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <div className="container max-w-7xl mx-auto px-4 md:px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-purple-600">
-                <span className="font-mono text-lg font-bold text-primary-foreground">TA</span>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-gold-400 to-gold-600">
+                <span className="font-mono text-lg font-bold text-white dark:text-gray-900">TA</span>
               </div>
-              <span className="text-lg font-bold">Templar Archives Index</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">Templar Archives Index</span>
             </Link>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               The ultimate poker hand history archive. Analyze, learn, and improve your game.
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               © {currentYear} Templar Archives Index. All rights reserved.
             </p>
           </div>
 
+          {/* About */}
+          <div>
+            <h3 className="font-semibold mb-4 text-gray-900 dark:text-gray-100">About</h3>
+            <ul className="space-y-2">
+              {aboutLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gold-400 dark:hover:text-gold-300 transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Navigation */}
           <div>
-            <h3 className="font-semibold mb-4">Navigation</h3>
+            <h3 className="font-semibold mb-4 text-gray-900 dark:text-gray-100">Navigation</h3>
             <ul className="space-y-2">
               {navigationLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gold-400 dark:hover:text-gold-300 transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -57,56 +79,41 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Legal */}
+          {/* Legal & Resources */}
           <div>
-            <h3 className="font-semibold mb-4">Legal</h3>
+            <h3 className="font-semibold mb-4 text-gray-900 dark:text-gray-100">Legal & Resources</h3>
             <ul className="space-y-2">
               {legalLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gold-400 dark:hover:text-gold-300 transition-colors"
                   >
                     {link.label}
                   </Link>
                 </li>
               ))}
-            </ul>
-          </div>
-
-          {/* Resources */}
-          <div>
-            <h3 className="font-semibold mb-4">Resources</h3>
-            <ul className="space-y-2">
               <li>
                 <a
                   href="https://github.com/anthropics/claude-code"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gold-400 dark:hover:text-gold-300 transition-colors"
                 >
                   GitHub
                 </a>
               </li>
               <li>
-                <Link
-                  href="/legal/dmca"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Report Copyright
-                </Link>
-              </li>
-              <li>
                 <a
                   href="mailto:legal@templararchives.com"
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-sm text-gray-500 dark:text-gray-400 hover:text-gold-400 dark:hover:text-gold-300 transition-colors"
                 >
                   Contact Legal
                 </a>
               </li>
               <li>
                 <CookieSettingsDialog>
-                  <button className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left">
+                  <button className="text-sm text-gray-500 dark:text-gray-400 hover:text-gold-400 dark:hover:text-gold-300 transition-colors text-left">
                     Cookie Settings
                   </button>
                 </CookieSettingsDialog>
@@ -116,26 +123,26 @@ export function Footer() {
         </div>
 
         {/* Open Source Credits */}
-        <div className="mt-12 pt-8 border-t border-border/40">
-          <p className="text-xs text-muted-foreground text-center">
+        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
             Built with{" "}
-            <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
+            <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" className="hover:text-gold-400 dark:hover:text-gold-300 transition-colors">
               Next.js
             </a>
             {", "}
-            <a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
+            <a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="hover:text-gold-400 dark:hover:text-gold-300 transition-colors">
               React
             </a>
             {", "}
-            <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
+            <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="hover:text-gold-400 dark:hover:text-gold-300 transition-colors">
               Supabase
             </a>
             {", and "}
-            <a href="https://ui.shadcn.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
-              shadcn/ui
+            <a href="https://tailwindcss.com" target="_blank" rel="noopener noreferrer" className="hover:text-gold-400 dark:hover:text-gold-300 transition-colors">
+              Tailwind CSS
             </a>
             . Powered by{" "}
-            <a href="https://anthropic.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">
+            <a href="https://anthropic.com" target="_blank" rel="noopener noreferrer" className="hover:text-gold-400 dark:hover:text-gold-300 transition-colors">
               Claude AI
             </a>
             .

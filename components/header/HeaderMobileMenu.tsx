@@ -53,7 +53,7 @@ export function HeaderMobileMenu({
   }
 
   return (
-    <div className="md:hidden border-b border-border bg-background">
+    <div className="md:hidden border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <nav className="container max-w-7xl mx-auto px-4 py-4 space-y-2">
         {navLinks.map((link, index) => {
           // Check if this link has subItems (accordion)
@@ -68,8 +68,8 @@ export function HeaderMobileMenu({
                   className={cn(
                     "w-full flex items-center justify-between px-4 py-2 rounded-md text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      ? "bg-gold-50 dark:bg-gold-900/10 text-gold-600 dark:text-gold-400"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
                   )}
                 >
                   <span>{link.label}</span>
@@ -100,8 +100,8 @@ export function HeaderMobileMenu({
                               className={cn(
                                 "block px-8 py-2 rounded-md text-sm font-medium transition-colors",
                                 subIsActive
-                                  ? "bg-primary/10 text-primary"
-                                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                  ? "bg-gold-50 dark:bg-gold-900/10 text-gold-600 dark:text-gold-400"
+                                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
                               )}
                             >
                               {subItem.label}
@@ -127,8 +127,8 @@ export function HeaderMobileMenu({
               className={cn(
                 "block px-4 py-2 rounded-md text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  ? "bg-gold-50 dark:bg-gold-900/10 text-gold-600 dark:text-gold-400"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
               )}
             >
               {link.label}
@@ -141,17 +141,17 @@ export function HeaderMobileMenu({
           <>
             {user ? (
               <div className="mt-4 space-y-2">
-                <div className="px-4 py-2 border-t border-border">
+                <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={getAvatarUrl()} alt={getDisplayName()} />
-                      <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                      <AvatarFallback className="bg-gold-100 dark:bg-gold-900 text-gold-700 dark:text-gold-300">{getUserInitials()}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
-                      <p className="text-sm font-medium">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {getDisplayName()}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {user.email}
                       </p>
                     </div>
@@ -160,7 +160,7 @@ export function HeaderMobileMenu({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start px-4"
+                  className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                   onClick={() => {
                     router.push("/profile")
                     onClose()
@@ -172,7 +172,7 @@ export function HeaderMobileMenu({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start px-4"
+                  className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                   onClick={() => {
                     router.push("/bookmarks")
                     onClose()
@@ -183,13 +183,13 @@ export function HeaderMobileMenu({
                 </Button>
                 {isUserReporter && (
                   <>
-                    <div className="px-4 py-2 text-xs text-muted-foreground font-semibold">
+                    <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 font-semibold">
                       REPORTER MENU
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start px-4"
+                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                       onClick={() => {
                         router.push("/reporter/news")
                         onClose()
@@ -201,7 +201,7 @@ export function HeaderMobileMenu({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start px-4"
+                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                       onClick={() => {
                         router.push("/reporter/live")
                         onClose()
@@ -214,13 +214,13 @@ export function HeaderMobileMenu({
                 )}
                 {isUserAdmin && (
                   <>
-                    <div className="px-4 py-2 text-xs text-muted-foreground font-semibold">
+                    <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 font-semibold">
                       ADMIN MENU
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start px-4"
+                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                       onClick={() => {
                         router.push("/admin/dashboard")
                         onClose()
@@ -232,7 +232,7 @@ export function HeaderMobileMenu({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start px-4"
+                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                       onClick={() => {
                         router.push("/admin/users")
                         onClose()
@@ -244,7 +244,7 @@ export function HeaderMobileMenu({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start px-4"
+                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                       onClick={() => {
                         router.push("/admin/claims")
                         onClose()
@@ -256,7 +256,7 @@ export function HeaderMobileMenu({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start px-4"
+                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                       onClick={() => {
                         router.push("/admin/content")
                         onClose()
@@ -268,7 +268,7 @@ export function HeaderMobileMenu({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start px-4"
+                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                       onClick={() => {
                         router.push("/admin/edit-requests")
                         onClose()
@@ -280,7 +280,7 @@ export function HeaderMobileMenu({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start px-4"
+                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                       onClick={() => {
                         router.push("/admin/archive")
                         onClose()
@@ -292,7 +292,7 @@ export function HeaderMobileMenu({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-full justify-start px-4"
+                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                       onClick={() => {
                         router.push("/admin/categories")
                         onClose()
@@ -306,7 +306,7 @@ export function HeaderMobileMenu({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start px-4"
+                  className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
                   onClick={handleSignOut}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -317,7 +317,7 @@ export function HeaderMobileMenu({
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full mt-4"
+                className="w-full mt-4 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
                 onClick={() => {
                   router.push("/auth/login")
                   onClose()
