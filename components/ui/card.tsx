@@ -1,21 +1,29 @@
+'use client'
+
 import * as React from 'react'
 
 import { cn } from '@/lib/utils'
+import { use3DTilt } from '@/lib/animations/luxury-effects'
 
 type CardVariant = 'default' | 'premium' | 'highlighted'
 
 interface CardProps extends React.ComponentProps<'div'> {
   variant?: CardVariant
+  enable3DTilt?: boolean
 }
 
-function Card({ className, variant = 'default', ...props }: CardProps) {
+function Card({ className, variant = 'default', enable3DTilt = false, ...props }: CardProps) {
+  const { ref: tiltRef } = use3DTilt(8)
+
   return (
     <div
+      ref={enable3DTilt ? (tiltRef as React.Ref<HTMLDivElement>) : undefined}
       data-slot="card"
       className={cn(
-        'bg-black-100 text-card-foreground flex flex-col gap-6 border-2 border-gold-600 py-6 relative transition-all duration-200',
+        'bg-black-100 text-card-foreground flex flex-col gap-6 border-2 border-gold-600 py-6 relative',
         'shadow-[4px_4px_0_var(--black-0),8px_8px_0_var(--gold-700)]',
         'hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0_var(--black-0),12px_12px_0_var(--gold-700)]',
+        enable3DTilt ? 'transition-transform duration-200 ease-out' : 'transition-all duration-200',
         // Variant styles
         variant === 'premium' && 'shadow-ambient-gold hover:shadow-ambient-gold-hover',
         variant === 'highlighted' && 'luxury-glow-pulse border-gold-400',
