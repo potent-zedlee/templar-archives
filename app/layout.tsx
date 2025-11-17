@@ -67,8 +67,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable} antialiased bg-textured`}>
+        {/* Skip to main content link - WCAG 2.4.1 */}
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <Providers>
-          {children}
+          <main id="main-content" role="main">
+            {children}
+          </main>
           <Footer />
           <CookieConsentBanner />
         </Providers>

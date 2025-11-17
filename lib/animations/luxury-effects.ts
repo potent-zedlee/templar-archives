@@ -28,6 +28,7 @@ export function useRipple() {
 /**
  * 자기장 커서 효과 훅
  * 마우스가 버튼에 접근하면 자석처럼 끌리는 효과
+ * 키보드 포커스 시에는 비활성화됨 (접근성)
  */
 export function useMagneticCursor(strength = 0.3) {
   const ref = useRef<HTMLElement>(null)
@@ -36,6 +37,12 @@ export function useMagneticCursor(strength = 0.3) {
   useEffect(() => {
     const element = ref.current
     if (!element) return
+
+    // 키보드 포커스 감지 - 자기장 효과 비활성화
+    const handleFocus = () => {
+      element.style.transform = 'translate(0, 0)'
+      setIsHovering(false)
+    }
 
     const handleMouseMove = (e: MouseEvent) => {
       const rect = element.getBoundingClientRect()
@@ -64,10 +71,12 @@ export function useMagneticCursor(strength = 0.3) {
       setIsHovering(false)
     }
 
+    element.addEventListener('focus', handleFocus)
     document.addEventListener('mousemove', handleMouseMove)
     element.addEventListener('mouseleave', handleMouseLeave)
 
     return () => {
+      element.removeEventListener('focus', handleFocus)
       document.removeEventListener('mousemove', handleMouseMove)
       element.removeEventListener('mouseleave', handleMouseLeave)
     }
