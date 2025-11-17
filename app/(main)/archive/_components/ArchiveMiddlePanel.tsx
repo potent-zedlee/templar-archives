@@ -224,17 +224,17 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
   return (
     <div className="flex flex-col h-full">
       {/* Header Section */}
-      <div className="p-6 border-b border-gray-200 bg-white">
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="space-y-4">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-1">Events</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">Events</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Browse tournaments and days
             </p>
           </div>
 
           {/* Search & Sort */}
-          <div className="pt-3 border-t border-gray-100">
+          <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
             <ArchiveSearchSort
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -252,15 +252,15 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-16 bg-gray-100 rounded-lg animate-pulse"
+                  className="h-16 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse"
                 />
               ))}
             </div>
           ) : folderItems.length === 0 ? (
             <div className="text-center py-16">
-              <div className="inline-block p-8 rounded-lg bg-white border border-gray-200 shadow-sm">
-                <p className="text-base font-semibold text-gray-900">No events found</p>
-                <p className="text-sm text-gray-500 mt-2">Try adjusting your filters</p>
+              <div className="inline-block p-8 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <p className="text-base font-semibold text-gray-900 dark:text-gray-100">No events found</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Try adjusting your filters</p>
               </div>
             </div>
           ) : (
@@ -273,9 +273,9 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                       variant="ghost"
                       className={cn(
                         "w-full justify-start h-auto py-3 px-4 rounded-lg transition-all duration-200",
-                        "border border-gray-200 hover:border-gray-300",
-                        "hover:bg-gray-50 hover:shadow-md",
-                        item.isExpanded && "bg-gray-50 border-gray-300 shadow-md"
+                        "border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600",
+                        "hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-md",
+                        item.isExpanded && "bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600 shadow-md"
                       )}
                       onClick={() => handleToggleExpand(item)}
                     >
@@ -283,12 +283,12 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                         <ChevronRight
                           className={cn(
                             "h-4 w-4 transition-all duration-200 flex-shrink-0",
-                            "text-gray-500 group-hover:text-gray-700",
-                            item.isExpanded && "rotate-90 text-gray-700"
+                            "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300",
+                            item.isExpanded && "rotate-90 text-gray-700 dark:text-gray-300"
                           )}
                         />
                         {tournament.category_logo_url && (
-                          <div className="w-7 h-7 flex-shrink-0 rounded-md overflow-hidden bg-white border border-gray-200 p-0.5">
+                          <div className="w-7 h-7 flex-shrink-0 rounded-md overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-0.5">
                             <Image
                               src={tournament.category_logo_url}
                               alt={tournament.category}
@@ -299,10 +299,10 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                           </div>
                         )}
                         <div className="flex-1 text-left min-w-0">
-                          <div className="font-semibold text-sm text-gray-900 truncate mb-0.5">
+                          <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate mb-0.5">
                             {tournament.name}
                           </div>
-                          <div className="text-xs text-gray-600 font-normal">
+                          <div className="text-xs text-gray-600 dark:text-gray-400 font-normal">
                             {formatDate(tournament.start_date)}
                           </div>
                         </div>
@@ -318,9 +318,9 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                       variant="ghost"
                       className={cn(
                         "w-full justify-start h-auto py-2.5 px-3 rounded-lg transition-all duration-200",
-                        "border border-transparent hover:border-gray-200",
-                        "hover:bg-gray-50 hover:shadow-sm",
-                        item.isExpanded && "bg-gray-50 border-gray-200 shadow-sm"
+                        "border border-transparent hover:border-gray-200 dark:hover:border-gray-700",
+                        "hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-sm",
+                        item.isExpanded && "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm"
                       )}
                       onClick={() => handleToggleExpand(item)}
                     >
@@ -328,16 +328,16 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                         <ChevronRight
                           className={cn(
                             "h-3.5 w-3.5 transition-all duration-200 flex-shrink-0",
-                            "text-gray-500 group-hover:text-gray-700",
-                            item.isExpanded && "rotate-90 text-gray-700"
+                            "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300",
+                            item.isExpanded && "rotate-90 text-gray-700 dark:text-gray-300"
                           )}
                         />
                         <div className="flex-1 text-left min-w-0">
-                          <div className="font-medium text-sm text-gray-900 truncate mb-0.5">
+                          <div className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate mb-0.5">
                             {event.name}
                           </div>
                           {(event.event_number || event.buy_in) && (
-                            <div className="text-xs text-gray-600 font-normal">
+                            <div className="text-xs text-gray-600 dark:text-gray-400 font-normal">
                               {event.event_number && `#${event.event_number}`}
                               {event.buy_in && (event.event_number ? ` • ${event.buy_in}` : event.buy_in)}
                             </div>
@@ -357,36 +357,36 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                         variant="ghost"
                         className={cn(
                           "w-full justify-start h-auto py-2.5 px-3 rounded-lg transition-all duration-200",
-                          "border border-transparent hover:border-gray-200",
-                          "hover:bg-gray-50 hover:shadow-sm",
-                          isSelected && "bg-blue-50 border-l-4 border-l-blue-500 shadow-md",
-                          isSelected && "hover:bg-blue-100"
+                          "border border-transparent hover:border-gray-200 dark:hover:border-gray-700",
+                          "hover:bg-gray-50 dark:hover:bg-gray-800 hover:shadow-sm",
+                          isSelected && "bg-blue-50 dark:bg-blue-950 border-l-4 border-l-blue-500 dark:border-l-blue-400 shadow-md",
+                          isSelected && "hover:bg-blue-100 dark:hover:bg-blue-900"
                         )}
                         onClick={() => handleSelectDay(stream.id)}
                       >
                         <div className="flex items-center gap-3 w-full">
                           {stream.video_source === "youtube" && stream.video_url ? (
-                            <div className="w-6 h-6 bg-red-500 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <div className="w-6 h-6 bg-red-500 dark:bg-red-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
                               <Play className="h-3 w-3 text-white fill-white" />
                             </div>
                           ) : (stream.video_file || stream.video_nas_path) ? (
-                            <div className="w-6 h-6 bg-amber-500 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <div className="w-6 h-6 bg-amber-500 dark:bg-amber-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
                               <Play className="h-3 w-3 text-white fill-white" />
                             </div>
                           ) : (
-                            <div className="w-6 h-6 bg-gray-200 rounded-md flex items-center justify-center flex-shrink-0">
-                              <Calendar className="h-3.5 w-3.5 text-gray-500" />
+                            <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center flex-shrink-0">
+                              <Calendar className="h-3.5 w-3.5 text-gray-500 dark:text-gray-400" />
                             </div>
                           )}
                           <div className="flex-1 text-left min-w-0">
                             <div className={cn(
-                              "font-medium text-sm text-gray-900 truncate mb-0.5",
+                              "font-medium text-sm text-gray-900 dark:text-gray-100 truncate mb-0.5",
                               isSelected && "font-semibold"
                             )}>
                               {stream.name}
                             </div>
                             {stream.player_count !== undefined && stream.player_count > 0 && (
-                              <div className="text-xs text-gray-600 font-normal">
+                              <div className="text-xs text-gray-600 dark:text-gray-400 font-normal">
                                 {stream.player_count} players
                               </div>
                             )}

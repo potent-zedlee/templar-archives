@@ -77,12 +77,12 @@ export function HandInputMode({ streamId, videoUrl, onClose }: HandInputModeProp
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-white">
+    <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900">
       {/* Header */}
-      <div className="h-14 border-b border-gray-200 flex items-center justify-between px-6 bg-white shadow-sm">
+      <div className="h-14 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 bg-white dark:bg-gray-800 shadow-sm">
         <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold text-gray-900">Hand input mode</h1>
-          <span className="text-sm text-gray-600">
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Hand input mode</h1>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
             Add hands manually to this stream
           </span>
         </div>
@@ -95,7 +95,7 @@ export function HandInputMode({ streamId, videoUrl, onClose }: HandInputModeProp
       <div className="h-[calc(100vh-3.5rem)] flex">
         {/* Left Panel: Video Player */}
         <div
-          className="border-r border-gray-200 overflow-y-auto bg-gray-50"
+          className="border-r border-gray-200 dark:border-gray-700 overflow-y-auto bg-gray-50 dark:bg-gray-900"
           style={{ width: `${leftPanelWidth}%` }}
         >
           <div className="p-6">
@@ -105,8 +105,8 @@ export function HandInputMode({ streamId, videoUrl, onClose }: HandInputModeProp
                 onTimestampSelect={handleTimestampSelect}
               />
             ) : (
-              <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center border border-gray-200">
-                <p className="text-sm text-gray-500">No video available</p>
+              <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-500 dark:text-gray-400">No video available</p>
               </div>
             )}
           </div>
@@ -114,7 +114,7 @@ export function HandInputMode({ streamId, videoUrl, onClose }: HandInputModeProp
 
         {/* Resize Handle */}
         <div
-          className="w-1 bg-gray-200 cursor-col-resize hover:bg-gold-400 transition-all duration-200"
+          className="w-1 bg-gray-200 dark:bg-gray-700 cursor-col-resize hover:bg-gold-400 dark:hover:bg-gold-500 transition-all duration-200"
           onMouseDown={(e) => {
             const startX = e.clientX
             const startWidth = leftPanelWidth
@@ -136,7 +136,7 @@ export function HandInputMode({ streamId, videoUrl, onClose }: HandInputModeProp
         />
 
         {/* Right Panel: Hand Input Form */}
-        <div className="flex-1 overflow-hidden bg-white">
+        <div className="flex-1 overflow-hidden bg-white dark:bg-gray-900">
           <HandInputForm />
         </div>
       </div>
