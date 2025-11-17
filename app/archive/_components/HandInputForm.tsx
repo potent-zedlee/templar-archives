@@ -125,8 +125,8 @@ export function HandInputForm() {
         >
           {/* 1. Basic Info */}
           <AccordionItem value="basic-info" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4 bg-white dark:bg-gray-800 shadow-sm">
-            <AccordionTrigger className="hover:no-underline">
-              <span className="font-semibold text-gray-900 dark:text-gray-100">Basic info</span>
+            <AccordionTrigger className="hover:no-underline text-gray-900 dark:text-gray-100">
+              <span className="font-semibold">Basic info</span>
             </AccordionTrigger>
             <AccordionContent className="space-y-4 pt-4">
               {/* Hand Number */}
@@ -172,8 +172,8 @@ export function HandInputForm() {
 
           {/* 2. Blinds & Pot */}
           <AccordionItem value="blinds-pot" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4 bg-white dark:bg-gray-800 shadow-sm">
-            <AccordionTrigger className="hover:no-underline">
-              <span className="font-semibold text-gray-900 dark:text-gray-100">Blinds & pot</span>
+            <AccordionTrigger className="hover:no-underline text-gray-900 dark:text-gray-100">
+              <span className="font-semibold">Blinds & pot</span>
             </AccordionTrigger>
             <AccordionContent className="space-y-4 pt-4">
               <div className="grid grid-cols-3 gap-4">
@@ -270,8 +270,8 @@ export function HandInputForm() {
 
           {/* 3. Players & Positions */}
           <AccordionItem value="players" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4 bg-white dark:bg-gray-800 shadow-sm">
-            <AccordionTrigger className="hover:no-underline">
-              <span className="font-semibold text-gray-900 dark:text-gray-100">
+            <AccordionTrigger className="hover:no-underline text-gray-900 dark:text-gray-100">
+              <span className="font-semibold">
                 Players & positions ({currentHand.players.length})
               </span>
             </AccordionTrigger>
@@ -377,8 +377,8 @@ export function HandInputForm() {
 
           {/* 4. Board Cards */}
           <AccordionItem value="board" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4 bg-white dark:bg-gray-800 shadow-sm">
-            <AccordionTrigger className="hover:no-underline">
-              <span className="font-semibold text-gray-900 dark:text-gray-100">Board cards</span>
+            <AccordionTrigger className="hover:no-underline text-gray-900 dark:text-gray-100">
+              <span className="font-semibold">Board cards</span>
             </AccordionTrigger>
             <AccordionContent className="space-y-4 pt-4">
               {/* Flop */}
@@ -416,8 +416,8 @@ export function HandInputForm() {
 
           {/* 5. Actions */}
           <AccordionItem value="actions" className="border border-gray-200 dark:border-gray-700 rounded-lg px-4 bg-white dark:bg-gray-800 shadow-sm">
-            <AccordionTrigger className="hover:no-underline">
-              <span className="font-semibold text-gray-900 dark:text-gray-100">
+            <AccordionTrigger className="hover:no-underline text-gray-900 dark:text-gray-100">
+              <span className="font-semibold">
                 Action sequence ({currentHand.actions.length})
               </span>
             </AccordionTrigger>
