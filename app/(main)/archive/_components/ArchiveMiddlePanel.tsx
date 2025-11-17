@@ -402,9 +402,11 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                           variant="ghost"
                           size="sm"
                           className={cn(
-                            "absolute right-1 top-1/2 -translate-y-1/2",
-                            "h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity",
-                            "hover:bg-purple-500/20 hover:text-purple-600 dark:hover:text-purple-400"
+                            "absolute right-2 top-1/2 -translate-y-1/2",
+                            "h-8 w-8 p-0",
+                            "hover:bg-gold-500/20 hover:text-gold-400",
+                            "focus:ring-2 focus:ring-gold-400 focus:ring-offset-2",
+                            "transition-colors"
                           )}
                           onClick={(e) => {
                             e.stopPropagation()
@@ -413,8 +415,9 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                             }
                           }}
                           title="Hand Input Mode"
+                          aria-label="Open hand input form"
                         >
-                          <Edit3 className="h-4 w-4" />
+                          <Edit3 className="h-4 w-4 text-gold-400" aria-hidden="true" />
                         </Button>
                       )}
                     </div>
