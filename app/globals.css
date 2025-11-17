@@ -18,6 +18,36 @@
   --black-300: oklch(0.20 0 0);
   --black-400: oklch(0.28 0 0);
 
+  /* === PREMIUM TYPOGRAPHY SYSTEM - GOLDEN RATIO === */
+
+  /* Base Size: 16px */
+  --font-size-base: 1rem;
+
+  /* Golden Ratio Scale (φ = 1.618) */
+  --font-size-xs: 0.618rem;     /* ~10px */
+  --font-size-sm: 0.75rem;      /* 12px - Caption */
+  --font-size-md: 0.875rem;     /* 14px - Body */
+  --font-size-lg: 1rem;         /* 16px - Body Large */
+  --font-size-xl: 1.25rem;      /* 20px - φ^0.5 */
+  --font-size-2xl: 1.618rem;    /* ~26px - φ^1 */
+  --font-size-3xl: 2.618rem;    /* ~42px - φ^2 */
+  --font-size-4xl: 4.236rem;    /* ~68px - φ^3 */
+  --font-size-display: 6.854rem; /* ~110px - φ^4 */
+
+  /* Line Heights - Golden Ratio */
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.618;
+  --line-height-loose: 2;
+
+  /* Letter Spacing - Premium Brand */
+  --letter-spacing-tighter: -0.05em;
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.05em;
+  --letter-spacing-wider: 0.1em;
+  --letter-spacing-widest: 0.15em;
+
   /* Text Colors */
   --text-primary: var(--gold-400);
   --text-secondary: oklch(0.88 0 0);
@@ -223,6 +253,19 @@
   --bg-gold-luxury: var(--gold-gradient-luxury);
   --bg-gold-subtle: var(--gold-gradient-subtle);
   --bg-gold-radial: var(--gold-radial-glow);
+
+  /* === PREMIUM TYPOGRAPHY UTILITIES === */
+
+  /* Font Sizes */
+  --font-xs: var(--font-size-xs);
+  --font-sm: var(--font-size-sm);
+  --font-md: var(--font-size-md);
+  --font-lg: var(--font-size-lg);
+  --font-xl: var(--font-size-xl);
+  --font-2xl: var(--font-size-2xl);
+  --font-3xl: var(--font-size-3xl);
+  --font-4xl: var(--font-size-4xl);
+  --font-display: var(--font-size-display);
 }
 
 @layer base {
@@ -232,82 +275,217 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+
+    /* Premium Font Features */
+    font-feature-settings:
+      "liga" 1,      /* Standard Ligatures */
+      "clig" 1,      /* Contextual Ligatures */
+      "kern" 1;      /* Kerning */
+
+    /* Text Rendering Quality */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: always;
   }
 }
 
 @layer utilities {
-  /* === POSTMODERN TYPOGRAPHY === */
+  /* === PREMIUM TYPOGRAPHY SYSTEM - GOLDEN RATIO === */
 
   /* Display - Hero, massive emphasis */
   .text-display {
-    font-size: 3.75rem;
+    font-size: var(--font-size-display);
     font-weight: 900;
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-wider);
     text-transform: uppercase;
-    letter-spacing: 0.15em;
   }
 
   .text-display-sm {
-    font-size: 2.25rem;
+    font-size: var(--font-size-4xl);
     font-weight: 900;
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-wide);
     text-transform: uppercase;
-    letter-spacing: 0.12em;
   }
 
   /* Heading - Section titles */
+  .text-h1 {
+    font-size: var(--font-size-4xl);
+    font-weight: 900;
+    line-height: var(--line-height-tight);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .text-h2 {
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    line-height: var(--line-height-normal);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+  }
+
+  .text-h3 {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    line-height: var(--line-height-normal);
+    letter-spacing: var(--letter-spacing-normal);
+  }
+
+  .text-h4 {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    line-height: var(--line-height-normal);
+  }
+
+  /* Legacy Heading Classes (for compatibility) */
   .text-heading-lg {
-    font-size: 1.875rem;
+    font-size: var(--font-size-3xl);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: var(--letter-spacing-wide);
   }
 
   .text-heading {
-    font-size: 1.5rem;
+    font-size: var(--font-size-2xl);
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--letter-spacing-normal);
   }
 
   .text-heading-sm {
-    font-size: 1.25rem;
+    font-size: var(--font-size-xl);
     font-weight: 600;
     text-transform: uppercase;
   }
 
   /* Title (Legacy) - Compatibility */
   .text-title-lg {
-    font-size: 1.5rem;
+    font-size: var(--font-size-2xl);
     font-weight: 700;
   }
 
   .text-title {
-    font-size: 1.125rem;
+    font-size: var(--font-size-xl);
     font-weight: 600;
   }
 
   /* Body - Main content */
   .text-body-lg {
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-relaxed);
   }
 
   .text-body {
-    font-size: 0.875rem;
-    font-weight: 400;
+    font-size: var(--font-size-md);
+    line-height: var(--line-height-relaxed);
   }
 
   /* Caption - Metadata, labels */
   .text-caption-lg {
-    font-size: 0.875rem;
+    font-size: var(--font-size-md);
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: var(--letter-spacing-wide);
   }
 
   .text-caption {
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     font-weight: 500;
     text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wider);
+  }
+
+  .text-micro {
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    letter-spacing: var(--letter-spacing-widest);
+  }
+
+  /* === PREMIUM FONT FEATURES === */
+
+  /* Tabular Numbers (aligned numbers for tables/stats) */
+  .font-tabular {
+    font-feature-settings: "tnum" 1, "lnum" 1;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  /* Fractions */
+  .font-fraction {
+    font-feature-settings: "frac" 1;
+    font-variant-numeric: diagonal-fractions;
+  }
+
+  /* Oldstyle Numbers (luxury) */
+  .font-oldstyle {
+    font-feature-settings: "onum" 1;
+    font-variant-numeric: oldstyle-nums;
+  }
+
+  /* Small Caps */
+  .font-smallcaps {
+    font-feature-settings: "smcp" 1;
+    font-variant-caps: small-caps;
+  }
+
+  /* === METALLIC TEXT EFFECTS === */
+
+  /* Metallic Gold Gradient */
+  .text-metallic-gold {
+    background: linear-gradient(
+      135deg,
+      oklch(0.88 0.14 85),  /* Bright Gold */
+      oklch(0.68 0.16 85),  /* Standard Gold */
+      oklch(0.48 0.16 75),  /* Dark Gold */
+      oklch(0.68 0.16 85)   /* Back to Standard */
+    );
+    background-size: 200% 200%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow:
+      0 1px 2px oklch(0 0 0 / 0.3),
+      0 0 20px oklch(0.68 0.16 85 / 0.2);
+  }
+
+  /* Animated Metallic Gold */
+  .text-metallic-gold-animated {
+    background: linear-gradient(
+      135deg,
+      oklch(0.88 0.14 85),
+      oklch(0.68 0.16 85),
+      oklch(0.48 0.16 75),
+      oklch(0.68 0.16 85)
+    );
+    background-size: 200% 200%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow:
+      0 1px 2px oklch(0 0 0 / 0.3),
+      0 0 20px oklch(0.68 0.16 85 / 0.2);
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* Embossed 3D Text Effect */
+  .text-embossed {
+    text-shadow:
+      0 1px 0 oklch(0.78 0.14 85),     /* Highlight */
+      0 2px 0 oklch(0.58 0.18 80),     /* Midtone */
+      0 3px 0 oklch(0.48 0.16 75),     /* Shadow */
+      0 4px 8px oklch(0 0 0 / 0.3);    /* Depth */
+  }
+
+  /* Neon Glow (for emphasis) */
+  .text-neon-gold {
+    color: var(--gold-400);
+    text-shadow:
+      0 0 10px oklch(0.68 0.16 85),
+      0 0 20px oklch(0.68 0.16 85),
+      0 0 30px oklch(0.68 0.16 85),
+      0 0 40px oklch(0.58 0.18 80);
   }
 
   /* === POSTMODERN CARDS === */
