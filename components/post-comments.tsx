@@ -1,8 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ThumbsUp, MessageCircle, Send } from "lucide-react"
@@ -209,20 +207,20 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     return (
       <div
         key={comment.id}
-        className={`comment-item ${isReply ? "ml-6 md:ml-10 pl-3 md:pl-4 comment-reply-border" : ""}`}
+        className={`${isReply ? "ml-6 md:ml-10 pl-3 md:pl-4 border-l-2 border-gray-200" : ""}`}
       >
         <div className="flex gap-3">
-          <Avatar className="h-8 w-8 author-avatar rounded-none">
+          <Avatar className="h-8 w-8 rounded-full">
             <AvatarImage src={comment.author_avatar} alt={comment.author_name} />
-            <AvatarFallback className="rounded-none bg-black-200 text-gold-400 font-bold">
+            <AvatarFallback className="rounded-full bg-blue-100 text-blue-600 font-semibold">
               {comment.author_name.split(" ").map((n) => n[0]).join("")}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-heading-sm text-gold-400">{comment.author_name}</span>
-              <span className="post-meta">
+              <span className="text-sm font-semibold text-gray-900">{comment.author_name}</span>
+              <span className="text-xs text-gray-600">
                 {new Date(comment.created_at).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "short",
@@ -233,17 +231,17 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
               </span>
             </div>
 
-            <p className="text-body text-white/90 whitespace-pre-wrap mb-3">
+            <p className="text-sm text-gray-700 whitespace-pre-wrap mb-3 leading-normal">
               {comment.content}
             </p>
 
             <div className="flex items-center gap-3">
               <button
                 onClick={() => handleLikeComment(comment.id)}
-                className="community-action-btn text-xs py-1 px-2"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-400"
               >
                 <ThumbsUp className="h-3 w-3" />
-                <span className="text-mono">{comment.likes_count}</span>
+                <span className="font-mono">{comment.likes_count}</span>
               </button>
 
               {!isReply && (
@@ -258,11 +256,11 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
                       }
                     }
                   }}
-                  className="community-action-btn text-xs py-1 px-2"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-400"
                 >
                   <MessageCircle className="h-3 w-3" />
                   <span>Reply</span>
-                  {showReplies && <span className="text-mono">({comment.replies?.length || 0})</span>}
+                  {showReplies && <span className="font-mono">({comment.replies?.length || 0})</span>}
                 </button>
               )}
             </div>
@@ -280,19 +278,19 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
                     }))
                   }
                   rows={2}
-                  className="input-postmodern w-full resize-none"
+                  className="w-full resize-none rounded-md"
                 />
                 <div className="flex gap-2 justify-end">
                   <button
                     onClick={() => setReplyingTo(null)}
-                    className="btn-secondary text-xs py-1 px-3"
+                    className="px-3 py-1 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => handleSubmitReply(comment.id)}
                     disabled={submitting || !replyContent[comment.id]?.trim()}
-                    className="btn-primary text-xs py-1 px-3 flex items-center gap-1"
+                    className="px-3 py-1 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                   >
                     <Send className="h-3 w-3" />
                     Reply
@@ -310,7 +308,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
 
             {/* Loading replies */}
             {comment.isLoadingReplies && (
-              <div className="mt-3 text-caption text-muted-foreground">
+              <div className="mt-3 text-xs text-gray-600">
                 Loading replies...
               </div>
             )}
@@ -321,10 +319,10 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
   }
 
   return (
-    <div className="post-card comment-section">
-      <h4 className="text-heading text-gold-400 flex items-center gap-2 mb-6">
+    <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-6">
         <MessageCircle className="h-5 w-5" />
-        <span className="text-mono">
+        <span className="font-mono">
           Comments ({comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)})
         </span>
       </h4>
@@ -341,13 +339,13 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
           onChange={(e) => setNewComment(e.target.value)}
           rows={3}
           disabled={!user}
-          className="input-postmodern w-full resize-none mb-2"
+          className="w-full resize-none mb-2 rounded-md"
         />
         <div className="flex justify-end">
           <button
             onClick={handleSubmitComment}
             disabled={!user || submitting || !newComment.trim()}
-            className="btn-primary flex items-center gap-2"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Send className="h-4 w-4" />
             댓글 작성
@@ -358,11 +356,11 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
       {/* Comments list */}
       <div className="space-y-4">
         {loading ? (
-          <div className="text-center text-caption text-gold-300 py-8">
+          <div className="text-center text-sm text-gray-600 py-8">
             Loading comments...
           </div>
         ) : comments.length === 0 ? (
-          <div className="text-center text-caption text-gold-300 py-8">
+          <div className="text-center text-sm text-gray-600 py-8">
             첫 댓글을 작성해보세요!
           </div>
         ) : (

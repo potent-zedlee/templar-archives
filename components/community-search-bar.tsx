@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, X, SlidersHorizontal } from "lucide-react"
@@ -59,18 +59,18 @@ export function CommunitySearchBar({
   return (
     <div className="flex gap-2">
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
         <Input
           type="text"
           placeholder="포스트 검색... (제목, 내용)"
           value={searchValue}
           onChange={handleChange}
-          className="pl-10 pr-10"
+          className="pl-10 pr-10 rounded-md"
         />
         {searchValue && (
           <button
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 hover:text-gray-900 transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -82,6 +82,7 @@ export function CommunitySearchBar({
         size="icon"
         onClick={onToggleFilters}
         title="고급 필터"
+        className="rounded-md"
       >
         <SlidersHorizontal className="h-4 w-4" />
       </Button>

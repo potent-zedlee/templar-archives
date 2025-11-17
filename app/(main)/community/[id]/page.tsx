@@ -2,8 +2,6 @@
 
 import { useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, ThumbsUp, Share2, Link2 } from "lucide-react"
 import Link from "next/link"
@@ -13,6 +11,14 @@ import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import { useAuth } from "@/components/auth-provider"
 import { ReportButton } from "@/components/report-button"
 import { PostComments } from "@/components/post-comments"
+import { Badge } from "@/components/ui/badge"
+
+const categoryColors: Record<string, string> = {
+  "analysis": "bg-blue-100 text-blue-700",
+  "strategy": "bg-green-100 text-green-700",
+  "hand-review": "bg-purple-100 text-purple-700",
+  "general": "bg-gray-100 text-gray-700"
+}
 
 export default function PostDetailPage() {
   const params = useParams()
@@ -68,7 +74,7 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black-0">
+      <div className="min-h-screen bg-gray-50">
         <div className="container max-w-4xl mx-auto py-8 md:py-12 px-4 md:px-6">
           <CardSkeleton count={1} />
         </div>
@@ -78,16 +84,16 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-black-0">
+      <div className="min-h-screen bg-gray-50">
         <div className="container max-w-4xl mx-auto py-16 px-4 md:px-6">
-          <div className="card-postmodern p-12 text-center">
-            <h2 className="text-heading text-gold-400 mb-4">Post Not Found</h2>
-            <p className="text-body text-white/70 mb-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Post not found</h2>
+            <p className="text-sm text-gray-600 mb-6">
               The post you're looking for doesn't exist or has been removed.
             </p>
-            <button className="btn-primary" onClick={() => router.push('/community')}>
+            <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors" onClick={() => router.push('/community')}>
               <ArrowLeft className="mr-2 h-4 w-4 inline" />
-              Back to Community
+              Back to community
             </button>
           </div>
         </div>
@@ -96,23 +102,23 @@ export default function PostDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black-0">
+    <div className="min-h-screen bg-gray-50">
       <div className="container max-w-4xl mx-auto py-8 md:py-12 px-4 md:px-6">
         {/* Back Button */}
         <div className="mb-6">
-          <button className="btn-ghost" onClick={() => router.push('/community')}>
-            <ArrowLeft className="mr-2 h-4 w-4 inline" />
-            Back to Community
+          <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-white rounded-md transition-colors" onClick={() => router.push('/community')}>
+            <ArrowLeft className="h-4 w-4" />
+            Back to community
           </button>
         </div>
 
         {/* Post Card */}
-        <div className="post-card mb-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
           {/* Header */}
           <div className="flex items-start gap-4 mb-6">
-            <Avatar className="h-12 w-12 author-avatar rounded-none">
+            <Avatar className="h-12 w-12 rounded-full">
               <AvatarImage src={post.author_avatar} alt={post.author_name} />
-              <AvatarFallback className="rounded-none bg-black-200 text-gold-400 font-bold">
+              <AvatarFallback className="rounded-full bg-blue-100 text-blue-600 font-semibold">
                 {post.author_name.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
@@ -120,10 +126,10 @@ export default function PostDetailPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4 mb-2">
                 <div>
-                  <h3 className="text-heading-sm text-gold-400 mb-1">
+                  <h3 className="text-base font-semibold text-gray-900 mb-1">
                     {post.author_name}
                   </h3>
-                  <div className="post-meta">
+                  <div className="text-sm text-gray-600">
                     <span>{new Date(post.created_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
@@ -133,65 +139,65 @@ export default function PostDetailPage() {
                     })}</span>
                   </div>
                 </div>
-                <div className="post-type-badge">
+                <Badge className={categoryColors[post.category]}>
                   {post.category.replace('-', ' ')}
-                </div>
+                </Badge>
               </div>
             </div>
           </div>
 
           {/* Title */}
-          <h1 className="text-heading text-gold-400 mb-4">{post.title}</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-4">{post.title}</h1>
 
           {/* Content */}
           <div className="prose prose-sm max-w-none mb-6">
-            <p className="text-body text-white/90 whitespace-pre-wrap">
+            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-normal">
               {post.content}
             </p>
           </div>
 
           {/* Attached Hand */}
           {post.hand && (
-            <div className="mb-6 bg-black-200 border-2 border-gold-700 p-4">
+            <div className="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
               <div className="flex items-center gap-3">
-                <Link2 className="h-5 w-5 text-gold-400 flex-shrink-0" />
+                <Link2 className="h-5 w-5 text-blue-600 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-mono text-gold-400 font-bold">#{post.hand.number}</span>
-                    <span className="text-caption text-gold-300">
+                    <span className="text-sm font-mono font-semibold text-blue-600">#{post.hand.number}</span>
+                    <span className="text-xs text-gray-600">
                       {post.hand.timestamp}
                     </span>
                   </div>
                   {post.hand.description && (
-                    <p className="text-body text-white/80">{post.hand.description}</p>
+                    <p className="text-sm text-gray-700">{post.hand.description}</p>
                   )}
                 </div>
                 <Link
                   href={`/archive?hand=${post.hand.id}`}
-                  className="btn-secondary py-2 px-4"
+                  className="px-4 py-2 text-sm font-medium bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
                 >
-                  View Hand
+                  View hand
                 </Link>
               </div>
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-4 pt-4 border-t-2 border-gold-700">
+          <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
             <button
               onClick={handleLike}
-              className="community-action-btn"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-400"
             >
               <ThumbsUp className="h-5 w-5" />
-              <span className="text-mono text-gold-400">{post.likes_count}</span>
+              <span className="font-mono">{post.likes_count}</span>
             </button>
 
             <button
               onClick={handleShare}
-              className="community-action-btn"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-400"
             >
               <Share2 className="h-5 w-5" />
-              <span className="text-gold-400">Share</span>
+              <span>Share</span>
             </button>
 
             <div className="flex-1" />

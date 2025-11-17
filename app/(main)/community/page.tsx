@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { MessageSquare, TrendingUp, Clock, Star, ThumbsUp, Link2, X } from "lucide-react"
 import Link from "next/link"
 import { fetchPosts, togglePostLike, type Post } from "@/lib/supabase-community"
@@ -183,7 +182,7 @@ export default function communityClient() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-gray-50">
       <main id="main-content" role="main">
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
@@ -222,12 +221,12 @@ export default function communityClient() {
                 <DialogTrigger asChild>
                   <Button className="w-full" size="lg">
                     <MessageSquare className="mr-2 h-5 w-5" />
-                    Create New Post
+                    Create new post
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
-                    <DialogTitle>Create New Post</DialogTitle>
+                    <DialogTitle>Create new post</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
@@ -268,7 +267,7 @@ export default function communityClient() {
 
                     {/* Hand Attachment */}
                     <div className="space-y-2">
-                      <Label>Attach Hand (Optional)</Label>
+                      <Label>Attach hand (optional)</Label>
                       {selectedHand ? (
                         <Card className="p-3 relative">
                           <Button
@@ -300,7 +299,7 @@ export default function communityClient() {
                           type="button"
                         >
                           <Link2 className="mr-2 h-4 w-4" />
-                          Attach Hand
+                          Attach hand
                         </Button>
                       )}
                     </div>
@@ -310,7 +309,7 @@ export default function communityClient() {
                         Cancel
                       </Button>
                       <Button onClick={handleCreatePost} disabled={createPostMutation.isPending}>
-                        {createPostMutation.isPending ? 'Creating...' : 'Create Post'}
+                        {createPostMutation.isPending ? 'Creating...' : 'Create post'}
                       </Button>
                     </div>
                   </div>
@@ -330,24 +329,36 @@ export default function communityClient() {
 
             {/* Tabs: 모바일 스크롤 */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-              <div className="flex gap-0 border-b-2 border-gold-700 overflow-x-auto community-nav">
+              <div className="flex gap-0 border-b border-gray-200 overflow-x-auto">
                 <button
                   onClick={() => setActiveTab('trending')}
-                  className={`community-tab whitespace-nowrap ${activeTab === 'trending' ? 'active' : ''}`}
+                  className={`px-6 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
+                    activeTab === 'trending'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                  }`}
                 >
                   <TrendingUp className="inline-block h-4 w-4 mr-2" />
                   Trending
                 </button>
                 <button
                   onClick={() => setActiveTab('recent')}
-                  className={`community-tab whitespace-nowrap ${activeTab === 'recent' ? 'active' : ''}`}
+                  className={`px-6 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
+                    activeTab === 'recent'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                  }`}
                 >
                   <Clock className="inline-block h-4 w-4 mr-2" />
                   Recent
                 </button>
                 <button
                   onClick={() => setActiveTab('popular')}
-                  className={`community-tab whitespace-nowrap ${activeTab === 'popular' ? 'active' : ''}`}
+                  className={`px-6 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
+                    activeTab === 'popular'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                  }`}
                 >
                   <Star className="inline-block h-4 w-4 mr-2" />
                   Popular
@@ -360,27 +371,27 @@ export default function communityClient() {
                 ) : posts.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="flex justify-center mb-4">
-                      <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                        <MessageSquare className="h-8 w-8 text-muted-foreground" />
+                      <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
+                        <MessageSquare className="h-8 w-8 text-gray-400" />
                       </div>
                     </div>
-                    <h3 className="text-title mb-2">No Posts Yet</h3>
-                    <p className="text-body text-muted-foreground mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No posts yet</h3>
+                    <p className="text-sm text-gray-600 mb-6">
                       Be the first to create a post in the community!
                     </p>
                     <Button onClick={() => setIsDialogOpen(true)}>
-                      Create First Post
+                      Create first post
                     </Button>
                   </div>
                 ) : (
                   <StaggerContainer staggerDelay={0.1}>
                     {posts.map((post) => (
                       <StaggerItem key={post.id}>
-                        <div className="post-card hover-3d">
+                        <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-all duration-200">
                           <div className="flex gap-4">
-                        <Avatar className="h-12 w-12 author-avatar rounded-none">
+                        <Avatar className="h-12 w-12 rounded-full">
                           <AvatarImage src={post.author_avatar} alt={post.author_name} />
-                          <AvatarFallback className="rounded-none bg-black-200 text-gold-400 font-bold">
+                          <AvatarFallback className="rounded-full bg-blue-100 text-blue-600 font-semibold">
                             {post.author_name.split(' ').map(n => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
@@ -388,41 +399,41 @@ export default function communityClient() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-4 mb-3">
                             <div className="flex-1">
-                              <h3 className="text-heading-sm text-gold-400 mb-2">
+                              <h3 className="text-lg font-semibold text-gray-900 mb-1">
                                 {post.title}
                               </h3>
-                              <div className="flex items-center gap-2 post-meta">
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <span>{post.author_name}</span>
                                 <span>•</span>
                                 <span>{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                               </div>
                             </div>
-                            <div className="post-type-badge">
+                            <Badge className={categoryColors[post.category]}>
                               {post.category.replace('-', ' ')}
-                            </div>
+                            </Badge>
                           </div>
 
-                          <p className="text-body text-white/90 line-clamp-2 mb-4">
+                          <p className="text-sm text-gray-700 line-clamp-2 mb-4">
                             {post.content}
                           </p>
 
                           {/* Attached Hand */}
                           {post.hand && (
-                            <div className="mb-4 bg-black-200 border-2 border-gold-700 p-3">
+                            <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
                               <div className="flex items-center gap-3">
-                                <Link2 className="h-4 w-4 text-gold-400 flex-shrink-0" />
+                                <Link2 className="h-4 w-4 text-blue-600 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-mono text-gold-400 font-bold">#{post.hand.number}</span>
-                                    <span className="text-caption text-gold-300">{post.hand.timestamp}</span>
+                                    <span className="text-sm font-mono font-semibold text-blue-600">#{post.hand.number}</span>
+                                    <span className="text-xs text-gray-600">{post.hand.timestamp}</span>
                                   </div>
                                   {post.hand.description && (
-                                    <p className="text-caption text-white/80 line-clamp-1">{post.hand.description}</p>
+                                    <p className="text-xs text-gray-700 line-clamp-1">{post.hand.description}</p>
                                   )}
                                 </div>
                                 <Link
                                   href={`/archive?hand=${post.hand.id}`}
-                                  className="btn-secondary text-xs py-1 px-3"
+                                  className="px-3 py-1 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
                                 >
                                   View
                                 </Link>
@@ -430,18 +441,18 @@ export default function communityClient() {
                             </div>
                           )}
 
-                          <div className="flex items-center gap-4 pt-4 border-t-2 border-gold-700">
+                          <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
                             <button
                               onClick={() => handleLike(post.id)}
-                              className="community-action-btn"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-400"
                             >
-                              <ThumbsUp className="w-5 h-5" />
-                              <span className="text-mono text-gold-400">{post.likes_count}</span>
+                              <ThumbsUp className="w-4 h-4" />
+                              <span className="font-mono">{post.likes_count}</span>
                             </button>
 
-                            <Link href={`/community/${post.id}`} className="community-action-btn">
-                              <MessageSquare className="w-5 h-5" />
-                              <span className="text-mono text-gold-400">{post.comments_count}</span>
+                            <Link href={`/community/${post.id}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-400">
+                              <MessageSquare className="w-4 h-4" />
+                              <span className="font-mono">{post.comments_count}</span>
                             </Link>
 
                             <div className="ml-auto">
