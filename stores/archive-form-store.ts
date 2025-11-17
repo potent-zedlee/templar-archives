@@ -12,13 +12,13 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type {
   TournamentFormData,
-  SubEventFormData,
+  EventFormData,
   StreamFormData,
   Payout,
   TournamentCategory,
   VideoSource,
   INITIAL_TOURNAMENT_FORM,
-  INITIAL_SUBEVENT_FORM,
+  INITIAL_EVENT_FORM,
   INITIAL_STREAM_FORM,
 } from '@/lib/types/archive'
 
@@ -26,8 +26,8 @@ interface ArchiveFormState {
   // Tournament Form
   tournamentForm: TournamentFormData
 
-  // SubEvent Form
-  subEventForm: SubEventFormData
+  // Event Form
+  eventForm: EventFormData
 
   // Stream Form
   streamForm: StreamFormData
@@ -50,13 +50,13 @@ interface ArchiveFormState {
   setTournamentForm: (form: TournamentFormData) => void
   resetTournamentForm: () => void
 
-  // Actions - SubEvent Form
-  setSubEventFormField: <K extends keyof SubEventFormData>(
+  // Actions - Event Form
+  setEventFormField: <K extends keyof EventFormData>(
     field: K,
-    value: SubEventFormData[K]
+    value: EventFormData[K]
   ) => void
-  setSubEventForm: (form: SubEventFormData) => void
-  resetSubEventForm: () => void
+  setEventForm: (form: EventFormData) => void
+  resetEventForm: () => void
 
   // Actions - Stream Form
   setStreamFormField: <K extends keyof StreamFormData>(field: K, value: StreamFormData[K]) => void
@@ -97,8 +97,8 @@ export const useArchiveFormStore = create<ArchiveFormState>()(
         end_date: '',
       },
 
-      // Initial State - SubEvent Form
-      subEventForm: {
+      // Initial State - Event Form
+      eventForm: {
         name: '',
         date: '',
         total_prize: '',
@@ -156,20 +156,20 @@ export const useArchiveFormStore = create<ArchiveFormState>()(
           },
         }),
 
-      // Actions - SubEvent Form
-      setSubEventFormField: (field, value) =>
+      // Actions - Event Form
+      setEventFormField: (field, value) =>
         set((state) => ({
-          subEventForm: {
-            ...state.subEventForm,
+          eventForm: {
+            ...state.eventForm,
             [field]: value,
           },
         })),
 
-      setSubEventForm: (form) => set({ subEventForm: form }),
+      setEventForm: (form) => set({ eventForm: form }),
 
-      resetSubEventForm: () =>
+      resetEventForm: () =>
         set({
-          subEventForm: {
+          eventForm: {
             name: '',
             date: '',
             event_number: '',

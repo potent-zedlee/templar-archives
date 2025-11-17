@@ -320,7 +320,7 @@ export default function AdminArchivePage() {
     setDeletingItem({
       id: subEvent.id,
       name: subEvent.name,
-      type: 'subevent' as const,
+      type: 'event' as const,
     })
     setDeleteDialogOpen(true)
   }
@@ -427,7 +427,7 @@ export default function AdminArchivePage() {
     setDeletingItem({
       id: stream.id,
       name: stream.name,
-      type: 'day' as const,
+      type: 'stream' as const,
     })
     setDeleteDialogOpen(true)
   }
@@ -1015,9 +1015,9 @@ export default function AdminArchivePage() {
         onOpenChange={setDeleteDialogOpen}
         item={deletingItem}
         onSuccess={
-          deletingItem?.type === 'day'
+          deletingItem?.type === 'stream'
             ? handleStreamDeleted
-            : deletingItem?.type === 'subevent'
+            : deletingItem?.type === 'event'
             ? handleSubEventDeleted
             : handleTournamentDeleted
         }

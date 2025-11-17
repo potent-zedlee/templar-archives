@@ -43,9 +43,9 @@ export function ArchiveHandHistory({
     if (!selectedDay) return null
 
     for (const tournament of tournaments) {
-      for (const subEvent of tournament.sub_events || []) {
-        const day = subEvent.days?.find((d: any) => d.id === selectedDay)
-        if (day) return { day, tournament }
+      for (const event of tournament.events || []) {
+        const stream = event.streams?.find((s: any) => s.id === selectedDay)
+        if (stream) return { day: stream, tournament }
       }
     }
     return null

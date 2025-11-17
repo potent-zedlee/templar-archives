@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import type { FolderItem } from "@/lib/types/archive"
-import { deleteTournament, deleteSubEvent, deleteStream } from "@/app/actions/archive"
+import { deleteTournament, deleteEvent, deleteStream } from "@/app/actions/archive"
 
 interface DeleteDialogProps {
   isOpen: boolean
@@ -37,10 +37,10 @@ export function DeleteDialog({
       // Call appropriate Server Action based on item type
       if (item.type === 'tournament') {
         result = await deleteTournament(item.id)
-      } else if (item.type === 'subevent') {
-        result = await deleteSubEvent(item.id)
+      } else if (item.type === 'event') {
+        result = await deleteEvent(item.id)
       } else {
-        // Handle both 'stream' and 'day' (backward compatibility)
+        // stream type
         result = await deleteStream(item.id)
       }
 

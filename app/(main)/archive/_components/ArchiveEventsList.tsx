@@ -31,16 +31,16 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
 
   const {
     expandedTournament,
-    expandedSubEvent,
+    expandedEvent,
     selectedCategory,
     searchQuery,
     sortBy,
     advancedFilters,
     selectedVideoIds,
     toggleTournamentExpand,
-    toggleSubEventExpand,
+    toggleEventExpand,
     clearSelection,
-    openSubEventDialog,
+    openEventDialog,
     openInfoDialog,
   } = useArchiveUIStore()
 
@@ -74,42 +74,42 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
         id: tournament.id,
         name: tournament.name,
         type: 'tournament' as const,
-        itemCount: tournament.sub_events?.length || 0,
+        itemCount: tournament.events?.length || 0,
         data: tournament,
         level: 0,
         isExpanded: expandedTournament === tournament.id,
       })
 
-      // If tournament is expanded, add sub-events
+      // If tournament is expanded, add events
       if (expandedTournament === tournament.id) {
-        const subEvents = tournament.sub_events || []
+        const events = tournament.events || []
 
-        subEvents.forEach((subEvent) => {
-          // Add sub-event
+        events.forEach((event) => {
+          // Add event
           items.push({
-            id: subEvent.id,
-            name: subEvent.name,
-            type: 'subevent' as const,
-            itemCount: subEvent.days?.length || 0,
-            date: subEvent.date,
-            data: subEvent,
+            id: event.id,
+            name: event.name,
+            type: 'event' as const,
+            itemCount: event.streams?.length || 0,
+            date: event.date,
+            data: event,
             level: 1,
-            isExpanded: expandedSubEvent === subEvent.id,
+            isExpanded: expandedEvent === event.id,
             parentId: tournament.id,
           })
 
-          // If sub-event is expanded, add days
-          if (expandedSubEvent === subEvent.id) {
-            const days = subEvent.days || []
+          // If event is expanded, add streams
+          if (expandedEvent === event.id) {
+            const streams = event.streams || []
 
-            days.forEach((day: import('@/lib/supabase').Stream) => {
+            streams.forEach((stream: import('@/lib/supabase').Stream) => {
               items.push({
-                id: day.id,
-                name: day.name,
-                type: 'day' as const,
-                data: day,
+                id: stream.id,
+                name: stream.name,
+                type: 'stream' as const,
+                data: stream,
                 level: 2,
-                parentId: subEvent.id,
+                parentId: event.id,
               })
             })
           }
@@ -123,15 +123,15 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
       items = items.filter((item) => item.name.toLowerCase().includes(query))
     }
 
-    // Apply Tournament Name filter (search in tournament/subevent names)
+    // Apply Tournament Name filter (search in tournament/event names)
     if (advancedFilters.tournamentName?.trim()) {
       const tournamentQuery = advancedFilters.tournamentName.toLowerCase()
       items = items.filter((item) => {
-        if (item.type === 'tournament' || item.type === 'subevent') {
+        if (item.type === 'tournament' || item.type === 'event') {
           return item.name.toLowerCase().includes(tournamentQuery)
         }
-        if (item.type === 'day') {
-          // Keep days if their parent subevent/tournament matches
+        if (item.type === 'stream') {
+          // Keep streams if their parent event/tournament matches
           // This is handled by the tree structure - filtered parents won't render children
           return true
         }
@@ -139,11 +139,11 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
       })
     }
 
-    // Apply Player Name filter (only for day items)
+    // Apply Player Name filter (only for stream items)
     if (advancedFilters.playerName?.trim()) {
       const playerQuery = advancedFilters.playerName.toLowerCase()
       items = items.filter((item) => {
-        if (item.type === 'day') {
+        if (item.type === 'stream') {
           return item.name.toLowerCase().includes(playerQuery)
         }
         return true
@@ -202,7 +202,7 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
     tournaments,
     unsortedVideos,
     expandedTournament,
-    expandedSubEvent,
+    expandedEvent,
     selectedCategory,
     searchQuery,
     sortBy,
@@ -213,10 +213,10 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
   const handleToggleExpand = useCallback((item: FolderItem) => {
     if (item.type === 'tournament') {
       toggleTournamentExpand(item.id)
-    } else if (item.type === 'subevent') {
-      toggleSubEventExpand(item.id)
+    } else if (item.type === 'event') {
+      toggleEventExpand(item.id)
     }
-  }, [toggleTournamentExpand, toggleSubEventExpand])
+  }, [toggleTournamentExpand, toggleEventExpand])
 
   // Context menu handlers
   const handleShowInfo = useCallback((item: FolderItem) => {
@@ -249,7 +249,7 @@ export function ArchiveEventsList({ seekTime, onSeekToTime }: ArchiveEventsListP
         onSeekToTime={handleSeekToTime}
         loading={tournamentsLoading}
         onShowInfo={handleShowInfo}
-        onAddSubEvent={(tournamentId) => openSubEventDialog(tournamentId)}
+        onAddSubEvent={(tournamentId) => openEventDialog(tournamentId)}
         isAdmin={isUserAdmin}
       />
     </>

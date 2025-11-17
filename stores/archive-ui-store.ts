@@ -23,7 +23,7 @@ import type {
 interface ArchiveUIState {
   // Expansion State (Tree View) - Single Mode
   expandedTournament: string | null
-  expandedSubEvent: string | null
+  expandedEvent: string | null
 
   // Search & Sort
   searchQuery: string
@@ -37,8 +37,8 @@ interface ArchiveUIState {
 
   // Dialogs
   tournamentDialog: DialogState
-  subEventDialog: DialogState
-  subEventInfoDialog: DialogState
+  eventDialog: DialogState
+  eventInfoDialog: DialogState
   streamDialog: DialogState
   /** @deprecated Use streamDialog instead */
   dayDialog: DialogState
@@ -57,23 +57,23 @@ interface ArchiveUIState {
   // Selection
   selectedVideoIds: Set<string>
   selectedTournamentIdForDialog: string
-  selectedSubEventIdForDialog: string
+  selectedEventIdForDialog: string
   selectedEventIdForEdit: string | null
-  analyzeDayForDialog: Stream | null
+  analyzeStreamForDialog: Stream | null
 
   // Menu State
   openMenuId: string
 
-  // Viewing SubEvent (for info dialog)
-  viewingSubEventId: string
-  viewingSubEvent: any | null
+  // Viewing Event (for info dialog)
+  viewingEventId: string
+  viewingEvent: any | null
   viewingPayouts: any[]
   loadingViewingPayouts: boolean
   isEditingViewingPayouts: boolean
 
   // Actions - Expansion (Tree View) - Single Mode
   toggleTournamentExpand: (id: string) => void
-  toggleSubEventExpand: (id: string) => void
+  toggleEventExpand: (id: string) => void
 
   // Actions - Search & Sort
   setSearchQuery: (query: string) => void
@@ -85,19 +85,19 @@ interface ArchiveUIState {
   // Actions - Dialogs
   openTournamentDialog: (editingId?: string) => void
   closeTournamentDialog: () => void
-  openSubEventDialog: (tournamentId: string, editingId?: string) => void
-  closeSubEventDialog: () => void
-  openSubEventInfoDialog: (subEventId: string) => void
-  closeSubEventInfoDialog: () => void
-  openStreamDialog: (subEventId: string, editingId?: string) => void
+  openEventDialog: (tournamentId: string, editingId?: string) => void
+  closeEventDialog: () => void
+  openEventInfoDialog: (eventId: string) => void
+  closeEventInfoDialog: () => void
+  openStreamDialog: (eventId: string, editingId?: string) => void
   closeStreamDialog: () => void
   /** @deprecated Use openStreamDialog instead */
-  openDayDialog: (subEventId: string, editingId?: string) => void
+  openDayDialog: (eventId: string, editingId?: string) => void
   /** @deprecated Use closeStreamDialog instead */
   closeDayDialog: () => void
   openVideoDialog: (stream: Stream | null, startTime?: string) => void
   closeVideoDialog: () => void
-  openAnalyzeDialog: (day: Stream | null) => void
+  openAnalyzeDialog: (stream: Stream | null) => void
   closeAnalyzeDialog: () => void
   openRenameDialog: (itemId: string) => void
   closeRenameDialog: () => void
@@ -126,9 +126,9 @@ interface ArchiveUIState {
   // Actions - Menu
   setOpenMenuId: (id: string) => void
 
-  // Actions - Viewing SubEvent
-  setViewingSubEventId: (id: string) => void
-  setViewingSubEvent: (subEvent: any | null) => void
+  // Actions - Viewing Event
+  setViewingEventId: (id: string) => void
+  setViewingEvent: (event: any | null) => void
   setViewingPayouts: (payouts: any[]) => void
   setLoadingViewingPayouts: (loading: boolean) => void
   setIsEditingViewingPayouts: (editing: boolean) => void
@@ -157,7 +157,7 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
       (set, get) => ({
         // Initial State - Expansion (Tree View) - Single Mode
         expandedTournament: null,
-        expandedSubEvent: null,
+        expandedEvent: null,
 
         // Initial State - Search & Sort
         searchQuery: '',
@@ -167,8 +167,8 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
 
         // Initial State - Dialogs
         tournamentDialog: { isOpen: false, editingId: null },
-        subEventDialog: { isOpen: false, editingId: null },
-        subEventInfoDialog: { isOpen: false, editingId: null },
+        eventDialog: { isOpen: false, editingId: null },
+        eventInfoDialog: { isOpen: false, editingId: null },
         streamDialog: { isOpen: false, editingId: null },
         dayDialog: { isOpen: false, editingId: null }, // Backward compatibility
         videoDialog: { isOpen: false, startTime: '', stream: null },
@@ -190,16 +190,16 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         // Initial State - Selection
         selectedVideoIds: new Set<string>(),
         selectedTournamentIdForDialog: '',
-        selectedSubEventIdForDialog: '',
+        selectedEventIdForDialog: '',
         selectedEventIdForEdit: null,
-        analyzeDayForDialog: null,
+        analyzeStreamForDialog: null,
 
         // Initial State - Menu
         openMenuId: '',
 
-        // Initial State - Viewing SubEvent
-        viewingSubEventId: '',
-        viewingSubEvent: null,
+        // Initial State - Viewing Event
+        viewingEventId: '',
+        viewingEvent: null,
         viewingPayouts: [],
         loadingViewingPayouts: false,
         isEditingViewingPayouts: false,
@@ -209,14 +209,14 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
           set((state) => ({
             // Toggle: same ID → close (null), different ID → open new one
             expandedTournament: state.expandedTournament === id ? null : id,
-            // Close SubEvent when Tournament changes
-            expandedSubEvent: state.expandedTournament === id ? state.expandedSubEvent : null,
+            // Close Event when Tournament changes
+            expandedEvent: state.expandedTournament === id ? state.expandedEvent : null,
           })),
 
-        toggleSubEventExpand: (id) =>
+        toggleEventExpand: (id) =>
           set((state) => ({
             // Toggle: same ID → close (null), different ID → open new one
-            expandedSubEvent: state.expandedSubEvent === id ? null : id,
+            expandedEvent: state.expandedEvent === id ? null : id,
           })),
 
         // Actions - Search & Sort
@@ -230,7 +230,7 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
             sortBy: 'date-desc',
             advancedFilters: INITIAL_ADVANCED_FILTERS,
             expandedTournament: null,
-            expandedSubEvent: null,
+            expandedEvent: null,
           }),
 
         // Actions - Dialogs
@@ -239,54 +239,54 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         closeTournamentDialog: () =>
           set({ tournamentDialog: { isOpen: false, editingId: null } }),
 
-        openSubEventDialog: (tournamentId, editingId) =>
+        openEventDialog: (tournamentId, editingId) =>
           set({
-            subEventDialog: { isOpen: true, editingId: editingId || null },
+            eventDialog: { isOpen: true, editingId: editingId || null },
             selectedTournamentIdForDialog: tournamentId,
           }),
-        closeSubEventDialog: () =>
+        closeEventDialog: () =>
           set({
-            subEventDialog: { isOpen: false, editingId: null },
+            eventDialog: { isOpen: false, editingId: null },
             selectedTournamentIdForDialog: '',
           }),
 
-        openSubEventInfoDialog: (subEventId) =>
+        openEventInfoDialog: (eventId) =>
           set({
-            subEventInfoDialog: { isOpen: true, editingId: subEventId },
-            viewingSubEventId: subEventId,
+            eventInfoDialog: { isOpen: true, editingId: eventId },
+            viewingEventId: eventId,
           }),
-        closeSubEventInfoDialog: () =>
+        closeEventInfoDialog: () =>
           set({
-            subEventInfoDialog: { isOpen: false, editingId: null },
-            viewingSubEventId: '',
-            viewingSubEvent: null,
+            eventInfoDialog: { isOpen: false, editingId: null },
+            viewingEventId: '',
+            viewingEvent: null,
           }),
 
-        openStreamDialog: (subEventId, editingId) =>
+        openStreamDialog: (eventId, editingId) =>
           set({
             streamDialog: { isOpen: true, editingId: editingId || null },
             dayDialog: { isOpen: true, editingId: editingId || null }, // Keep in sync
-            selectedSubEventIdForDialog: subEventId,
+            selectedEventIdForDialog: eventId,
           }),
         closeStreamDialog: () =>
           set({
             streamDialog: { isOpen: false, editingId: null },
             dayDialog: { isOpen: false, editingId: null }, // Keep in sync
-            selectedSubEventIdForDialog: '',
+            selectedEventIdForDialog: '',
           }),
 
         // Backward compatibility
-        openDayDialog: (subEventId, editingId) =>
+        openDayDialog: (eventId, editingId) =>
           set({
             dayDialog: { isOpen: true, editingId: editingId || null },
             streamDialog: { isOpen: true, editingId: editingId || null }, // Keep in sync
-            selectedSubEventIdForDialog: subEventId,
+            selectedEventIdForDialog: eventId,
           }),
         closeDayDialog: () =>
           set({
             dayDialog: { isOpen: false, editingId: null },
             streamDialog: { isOpen: false, editingId: null }, // Keep in sync
-            selectedSubEventIdForDialog: '',
+            selectedEventIdForDialog: '',
           }),
 
         openVideoDialog: (stream, startTime = '') =>
@@ -298,15 +298,15 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
             videoDialog: { ...state.videoDialog, isOpen: false, startTime: '' },
           })),
 
-        openAnalyzeDialog: (day) => {
+        openAnalyzeDialog: (stream) => {
           console.log('============================================')
           console.log('[useArchiveUIStore] openAnalyzeDialog called')
-          console.log('[useArchiveUIStore] day:', day)
+          console.log('[useArchiveUIStore] stream:', stream)
           console.log('============================================')
 
           set({
             analyzeDialog: { isOpen: true, editingId: null },
-            analyzeDayForDialog: day,
+            analyzeStreamForDialog: stream,
           })
 
           console.log('[useArchiveUIStore] State updated: analyzeDialog.isOpen = true')
@@ -314,7 +314,7 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         closeAnalyzeDialog: () =>
           set({
             analyzeDialog: { isOpen: false, editingId: null },
-            analyzeDayForDialog: null,
+            analyzeStreamForDialog: null,
           }),
 
         openRenameDialog: (itemId) =>
@@ -391,9 +391,9 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         // Actions - Menu
         setOpenMenuId: (id) => set({ openMenuId: id }),
 
-        // Actions - Viewing SubEvent
-        setViewingSubEventId: (id) => set({ viewingSubEventId: id }),
-        setViewingSubEvent: (subEvent) => set({ viewingSubEvent: subEvent }),
+        // Actions - Viewing Event
+        setViewingEventId: (id) => set({ viewingEventId: id }),
+        setViewingEvent: (event) => set({ viewingEvent: event }),
         setViewingPayouts: (payouts) => set({ viewingPayouts: payouts }),
         setLoadingViewingPayouts: (loading) => set({ loadingViewingPayouts: loading }),
         setIsEditingViewingPayouts: (editing) => set({ isEditingViewingPayouts: editing }),

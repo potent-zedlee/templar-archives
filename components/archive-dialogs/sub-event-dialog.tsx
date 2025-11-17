@@ -22,7 +22,7 @@ import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
 import { Plus, X } from "lucide-react"
 import type { PayoutRow } from "@/hooks/useArchiveState"
-import { createSubEvent, updateSubEvent, saveEventPayouts } from "@/app/actions/archive"
+import { createEvent, updateEvent, saveEventPayouts } from "@/app/actions/archive"
 
 interface SubEventDialogProps {
   isOpen: boolean
@@ -281,10 +281,10 @@ export function SubEventDialog({
 
       if (editingSubEventId) {
         // Update existing event via Server Action
-        result = await updateSubEvent(editingSubEventId, subEventData)
+        result = await updateEvent(editingSubEventId, subEventData)
       } else {
         // Create new event via Server Action
-        result = await createSubEvent(selectedTournamentId, subEventData)
+        result = await createEvent(selectedTournamentId, subEventData)
         if (result.success && result.data) {
           targetSubEventId = result.data.id
         }

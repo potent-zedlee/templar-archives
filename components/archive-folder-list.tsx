@@ -9,7 +9,7 @@ import { VideoPlayer } from "@/components/video-player"
 import { cn } from "@/lib/utils"
 import { FOLDER_COLORS } from "@/lib/constants/archive-colors"
 import type { FolderItem } from "@/lib/types/archive"
-import type { Tournament, SubEvent, Stream } from "@/lib/types/archive"
+import type { Tournament, Event, Stream } from "@/lib/types/archive"
 import Image from "next/image"
 import dynamic from "next/dynamic"
 import { useArchiveData } from "@/app/(main)/archive/_components/ArchiveDataContext"
@@ -86,8 +86,8 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     // Extract year from start_date
     const year = new Date(tournament.start_date).getFullYear()
 
-    // Calculate total hands across all sub events
-    const totalHands = tournament.sub_events?.reduce((sum, event) => {
+    // Calculate total hands across all events
+    const totalHands = tournament.events?.reduce((sum, event) => {
       return sum + (event.streams?.reduce((streamSum, stream) => {
         return streamSum + (hands.filter(h => h.stream_id === stream.id).length || 0)
       }, 0) || 0)
@@ -154,7 +154,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           </div>
 
           {/* Stats Grid: 모바일 1컬럼, 데스크톱 2:3 비대칭 */}
-          {(totalHands > 0 || (tournament.sub_events && tournament.sub_events.length > 0)) && (
+          {(totalHands > 0 || (tournament.events && tournament.events.length > 0)) && (
             <div className="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-4 md:gap-6 mt-6">
               {/* Left: Statistics */}
               <div className="stats-card space-y-4">
@@ -163,15 +163,15 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                   <span className="text-heading text-mono text-gold-400">{totalHands}</span>
                 </div>
                 <div className="stat-item">
-                  <span className="text-caption text-gold-300">서브 이벤트</span>
-                  <span className="text-heading text-mono text-gold-400">{tournament.sub_events?.length || 0}</span>
+                  <span className="text-caption text-gold-300">이벤트</span>
+                  <span className="text-heading text-mono text-gold-400">{tournament.events?.length || 0}</span>
                 </div>
               </div>
 
-              {/* Right: Sub Events (있으면 표시) */}
-              {tournament.sub_events && tournament.sub_events.length > 0 && (
+              {/* Right: Events (있으면 표시) */}
+              {tournament.events && tournament.events.length > 0 && (
                 <div className="sub-event-list space-y-1">
-                  {tournament.sub_events.slice(0, 3).map((event, idx) => (
+                  {tournament.events.slice(0, 3).map((event, idx) => (
                     <div
                       key={event.id}
                       className="card-minimal flex items-center gap-3"
@@ -180,7 +180,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                         onNavigate({
                           id: event.id,
                           name: event.name,
-                          type: "subevent",
+                          type: "event",
                           data: event,
                           level: 1,
                           parentId: tournament.id,
@@ -194,9 +194,9 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                       </div>
                     </div>
                   ))}
-                  {tournament.sub_events.length > 3 && (
+                  {tournament.events.length > 3 && (
                     <div className="text-caption text-gold-600 text-center py-2">
-                      +{tournament.sub_events.length - 3} more events
+                      +{tournament.events.length - 3} more events
                     </div>
                   )}
                 </div>
@@ -220,9 +220,9 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           </div>
         </div>
 
-        {/* SubEvents (if expanded) */}
+        {/* Events (if expanded) */}
         <AnimatePresence>
-          {isExpanded && tournament.sub_events && tournament.sub_events.length > 0 && (
+          {isExpanded && tournament.events && tournament.events.length > 0 && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -230,15 +230,15 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="space-y-0 overflow-hidden"
             >
-              {tournament.sub_events.map((subEvent) =>
-                renderSubEvent(subEvent, tournament.id)
+              {tournament.events.map((event) =>
+                renderEvent(event, tournament.id)
               )}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Add SubEvent Button (if expanded and no subevents) */}
-        {isExpanded && (!tournament.sub_events || tournament.sub_events.length === 0) && isAdmin && onAddSubEvent && (
+        {/* Add Event Button (if expanded and no events) */}
+        {isExpanded && (!tournament.events || tournament.events.length === 0) && isAdmin && onAddSubEvent && (
           <div className="px-6 py-3 ml-6 mr-6 mb-3">
             <Button
               variant="outline"
@@ -258,15 +258,15 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     )
   }
 
-  const renderSubEvent = (subEvent: SubEvent, tournamentId: string) => {
-    const item = items.find((i) => i.id === subEvent.id)
+  const renderEvent = (event: Event, tournamentId: string) => {
+    const item = items.find((i) => i.id === event.id)
     const isExpanded = item?.isExpanded || false
 
-    const subEventItem: FolderItem = {
-      id: subEvent.id,
-      name: subEvent.name,
-      type: "subevent",
-      data: subEvent,
+    const eventItem: FolderItem = {
+      id: event.id,
+      name: event.name,
+      type: "event",
+      data: event,
       level: 1,
       isExpanded,
       parentId: tournamentId,
@@ -282,36 +282,36 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     }
 
     return (
-      <div key={subEvent.id} className="space-y-0">
-        {/* SubEvent Row */}
+      <div key={event.id} className="space-y-0">
+        {/* Event Row */}
         <div
           className={cn(
             "group flex items-center gap-5 px-5 py-3 ml-6 mr-6 mb-2 backdrop-blur-md bg-purple-500/5 dark:bg-purple-500/5 hover:bg-purple-500/10 dark:hover:bg-purple-500/10 hover:scale-[1.015] active:scale-[0.99] rounded-lg border border-purple-500/20 shadow-lg hover:shadow-xl transition-all duration-300 ease-out cursor-pointer relative overflow-hidden",
             "before:absolute before:inset-0 before:bg-gradient-to-r before:from-purple-500/15 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:pointer-events-none",
             isExpanded && "bg-purple-500/10 dark:bg-purple-500/10 shadow-xl ring-1 ring-purple-500/30"
           )}
-          onClick={() => onNavigate(subEventItem)}
+          onClick={() => onNavigate(eventItem)}
         >
           {/* Date */}
           <div className="w-24 flex-shrink-0 text-sm font-medium text-foreground/70 relative z-10">
-            <div className="font-mono">{formatDate(subEvent.date)}</div>
+            <div className="font-mono">{formatDate(event.date)}</div>
           </div>
 
           {/* Event Number + Buy-in */}
           <div className="w-32 flex-shrink-0 text-sm font-medium text-foreground/70 relative z-10">
-            {subEvent.event_number && <span className="text-purple-400 font-semibold">#{subEvent.event_number}</span>}
-            {subEvent.event_number && subEvent.buy_in && <span className="text-foreground/30 mx-1">•</span>}
-            {subEvent.buy_in && <span className="text-foreground/80">{subEvent.buy_in}</span>}
+            {event.event_number && <span className="text-purple-400 font-semibold">#{event.event_number}</span>}
+            {event.event_number && event.buy_in && <span className="text-foreground/30 mx-1">•</span>}
+            {event.buy_in && <span className="text-foreground/80">{event.buy_in}</span>}
           </div>
 
-          {/* SubEvent Name */}
+          {/* Event Name */}
           <div className="flex-1 min-w-0 text-lg font-semibold text-foreground truncate relative z-10">
-            {subEvent.name}
+            {event.name}
           </div>
 
           {/* Prize */}
           <div className="w-44 text-lg font-bold bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent text-right relative z-10">
-            {subEvent.total_prize || "-"}
+            {event.total_prize || "-"}
           </div>
 
           {/* Info Button */}
@@ -322,7 +322,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
               className="h-9 w-9 backdrop-blur-md bg-white/10 dark:bg-black/10 hover:bg-white/20 dark:hover:bg-black/20 border border-white/10 hover:border-white/20 hover:rotate-12 hover:scale-110 transition-all duration-300 shadow-md"
               onClick={(e) => {
                 e.stopPropagation()
-                onShowInfo?.(subEventItem)
+                onShowInfo?.(eventItem)
               }}
             >
               <Info className="h-3.5 w-3.5 text-foreground/70" />
@@ -330,9 +330,9 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
           </div>
         </div>
 
-        {/* Days (if expanded) */}
+        {/* Streams (if expanded) */}
         <AnimatePresence>
-          {isExpanded && subEvent.streams && subEvent.streams.length > 0 && (
+          {isExpanded && event.streams && event.streams.length > 0 && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -340,7 +340,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className="space-y-0 overflow-hidden"
             >
-              {subEvent.streams.map((day) => renderDay(day, subEvent.id))}
+              {event.streams.map((stream) => renderStream(stream, event.id))}
             </motion.div>
           )}
         </AnimatePresence>
@@ -348,14 +348,14 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
     )
   }
 
-  const renderDay = (day: Stream, subEventId: string) => {
-    const dayItem: FolderItem = {
-      id: day.id,
-      name: day.name,
-      type: "day",
-      data: day,
+  const renderStream = (stream: Stream, eventId: string) => {
+    const streamItem: FolderItem = {
+      id: stream.id,
+      name: stream.name,
+      type: "stream",
+      data: stream,
       level: 2,
-      parentId: subEventId,
+      parentId: eventId,
     }
 
     // Format date as YYYY/MM/DD
@@ -367,24 +367,24 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
       return `${year}/${month}/${dayNum}`
     }
 
-    const isExpanded = expandedDayId === day.id
+    const isExpanded = expandedDayId === stream.id
 
     // Calculate hand count for this stream
-    const streamHandCount = hands.filter(h => h.stream_id === day.id).length
+    const streamHandCount = hands.filter(h => h.stream_id === stream.id).length
 
     // Extract day number from name (e.g., "Day 1A" -> 1)
-    const dayNumberMatch = day.name.match(/Day (\d+)/i)
+    const dayNumberMatch = stream.name.match(/Day (\d+)/i)
     const dayNumber = dayNumberMatch ? dayNumberMatch[1] : '?'
 
     return (
-      <div key={day.id} className="ml-12 mr-6 mb-3 space-y-2">
+      <div key={stream.id} className="ml-12 mr-6 mb-3 space-y-2">
         {/* Stream Card - Postmodern Design */}
         <div
           className={cn(
             "card-postmodern hover-3d p-5 cursor-pointer relative",
             isExpanded && "ring-2 ring-gold-400"
           )}
-          onClick={() => onSelectDay?.(day.id)}
+          onClick={() => onSelectDay?.(stream.id)}
         >
           {/* Day Badge */}
           <div className="day-badge mb-4">
@@ -393,22 +393,22 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
 
           {/* Stream Info */}
           <div className="space-y-2 mb-4">
-            <h3 className="text-heading text-gold-400">{day.name}</h3>
+            <h3 className="text-heading text-gold-400">{stream.name}</h3>
             <div className="flex gap-3 items-center flex-wrap">
-              {day.published_at && (
+              {stream.published_at && (
                 <>
-                  <span className="text-caption text-gold-300">{formatDate(day.published_at)}</span>
+                  <span className="text-caption text-gold-300">{formatDate(stream.published_at)}</span>
                   <span className="text-gold-700">•</span>
                 </>
               )}
-              {day.player_count !== undefined && day.player_count > 0 && (
+              {stream.player_count !== undefined && stream.player_count > 0 && (
                 <>
-                  <span className="text-caption text-gold-300">{day.player_count} Players</span>
+                  <span className="text-caption text-gold-300">{stream.player_count} Players</span>
                   <span className="text-gold-700">•</span>
                 </>
               )}
-              {day.video_source && (
-                <span className="text-caption text-gold-400 font-bold uppercase">{day.video_source}</span>
+              {stream.video_source && (
+                <span className="text-caption text-gold-400 font-bold uppercase">{stream.video_source}</span>
               )}
             </div>
           </div>
@@ -431,9 +431,9 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
 
           {/* Actions: 모바일 세로 배치, 데스크톱 가로 배치 */}
           <div className="flex flex-col md:flex-row gap-2 md:gap-3 mt-6">
-            {day.video_url && (
+            {stream.video_url && (
               <a
-                href={day.video_url}
+                href={stream.video_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary w-full md:w-auto inline-flex items-center justify-center gap-2 no-underline-animation"
@@ -446,7 +446,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
             <button
               onClick={(e) => {
                 e.stopPropagation()
-                onSelectDay?.(day.id)
+                onSelectDay?.(stream.id)
               }}
               className="btn-secondary w-full md:w-auto inline-flex items-center justify-center gap-2"
             >
@@ -463,7 +463,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
               className="h-9 w-9 btn-ghost"
               onClick={(e) => {
                 e.stopPropagation()
-                onShowInfo?.(dayItem)
+                onShowInfo?.(streamItem)
               }}
             >
               <Info className="h-3.5 w-3.5 text-gold-400" />
@@ -484,7 +484,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
               <div className="p-6 space-y-6 backdrop-blur-xl bg-slate-950/95 rounded-xl border border-white/20 shadow-2xl">
                 {/* Video Player */}
                 <div>
-                  <VideoPlayer day={day} seekTime={seekTime} />
+                  <VideoPlayer day={stream} seekTime={seekTime} />
                 </div>
 
                 {/* Hand History */}
@@ -500,7 +500,7 @@ export const ArchiveFolderList = memo(function ArchiveFolderList({
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation()
-                      onSelectDay?.(day.id)
+                      onSelectDay?.(stream.id)
                     }}
                     className="backdrop-blur-md bg-white/10 dark:bg-black/10 hover:bg-red-500/20 border-white/20 hover:border-red-500/40 text-foreground hover:text-red-400 shadow-lg transition-all duration-300"
                   >

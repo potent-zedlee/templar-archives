@@ -43,13 +43,13 @@ export function ArchiveMainPanel({ onSeekToTime }: ArchiveMainPanelProps) {
     }
 
     for (const tournament of tournaments) {
-      for (const subEvent of tournament.sub_events || []) {
-        const day = subEvent.days?.find((d: Stream) => d.id === selectedDay)
-        if (day) {
+      for (const event of tournament.events || []) {
+        const stream = event.streams?.find((s: Stream) => s.id === selectedDay)
+        if (stream) {
           if (process.env.NODE_ENV === 'development') {
-            console.log('[ArchiveMainPanel] Found day:', day.name, 'video_url:', day.video_url)
+            console.log('[ArchiveMainPanel] Found stream:', stream.name, 'video_url:', stream.video_url)
           }
-          return day as Stream
+          return stream as Stream
         }
       }
     }

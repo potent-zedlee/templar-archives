@@ -17,8 +17,8 @@ import { useArchiveFormStore } from '@/stores/archive-form-store'
 import { useArchiveData } from './ArchiveDataContext'
 import { archiveKeys } from '@/lib/queries/archive-queries'
 import { isAdmin } from '@/lib/auth-utils'
-import type { FolderItem } from '@/lib/types/archive'
-import type { Stream, SubEvent } from '@/lib/supabase'
+import type { FolderItem, Event } from '@/lib/types/archive'
+import type { Stream } from '@/lib/supabase'
 
 // Dynamic imports for all dialogs (only load when needed)
 const TournamentDialog = dynamic(() => import('@/components/tournament-dialog').then(mod => ({ default: mod.TournamentDialog })), {
@@ -66,12 +66,12 @@ export function ArchiveDialogs() {
   const {
     selectedCategory,
     tournamentDialog,
-    subEventDialog,
-    subEventInfoDialog,
+    eventDialog,
+    eventInfoDialog,
     dayDialog,
     videoDialog,
     analyzeDialog,
-    analyzeDayForDialog,
+    analyzeStreamForDialog,
     renameDialog,
     deleteDialog,
     editEventDialog,
@@ -80,13 +80,13 @@ export function ArchiveDialogs() {
     infoDialog,
     selectedVideoIds,
     selectedTournamentIdForDialog,
-    selectedSubEventIdForDialog,
+    selectedEventIdForDialog,
     selectedEventIdForEdit,
-    viewingSubEventId,
-    viewingSubEvent,
+    viewingEventId,
+    viewingEvent,
     closeTournamentDialog,
-    closeSubEventDialog,
-    closeSubEventInfoDialog,
+    closeEventDialog,
+    closeEventInfoDialog,
     closeDayDialog,
     closeVideoDialog,
     closeAnalyzeDialog,
@@ -117,9 +117,9 @@ export function ArchiveDialogs() {
     closeTournamentDialog()
   }
 
-  const handleSubEventSuccess = () => {
+  const handleEventSuccess = () => {
     queryClient.invalidateQueries({ queryKey: archiveKeys.tournaments() })
-    closeSubEventDialog()
+    closeEventDialog()
   }
 
   const handleDaySuccess = () => {
@@ -151,8 +151,8 @@ export function ArchiveDialogs() {
 
   const handleAnalyzeSuccess = () => {
     // Invalidate hands query to show newly extracted hands
-    if (analyzeDayForDialog?.id) {
-      queryClient.invalidateQueries({ queryKey: archiveKeys.hands(analyzeDayForDialog.id) })
+    if (analyzeStreamForDialog?.id) {
+      queryClient.invalidateQueries({ queryKey: archiveKeys.hands(analyzeStreamForDialog.id) })
     }
     closeAnalyzeDialog()
   }
@@ -162,9 +162,9 @@ export function ArchiveDialogs() {
     console.log('============================================')
     console.log('[ArchiveDialogs] analyzeDialog state changed')
     console.log('[ArchiveDialogs] analyzeDialog:', analyzeDialog)
-    console.log('[ArchiveDialogs] analyzeDayForDialog:', analyzeDayForDialog)
+    console.log('[ArchiveDialogs] analyzeStreamForDialog:', analyzeStreamForDialog)
     console.log('============================================')
-  }, [analyzeDialog, analyzeDayForDialog])
+  }, [analyzeDialog, analyzeStreamForDialog])
 
   // Get current item for info dialog
   const infoDialogItem = useMemo((): FolderItem | null => {
@@ -181,26 +181,26 @@ export function ArchiveDialogs() {
       }
     }
 
-    // Check if it's a subevent or day
+    // Check if it's an event or stream
     for (const tournament of tournaments) {
-      const subEvent = tournament.sub_events?.find((se) => se.id === infoDialog.editingId)
-      if (subEvent) {
+      const event = tournament.events?.find((e) => e.id === infoDialog.editingId)
+      if (event) {
         return {
-          id: subEvent.id,
-          name: subEvent.name,
-          type: 'subevent',
-          data: subEvent,
+          id: event.id,
+          name: event.name,
+          type: 'event',
+          data: event,
         }
       }
 
-      for (const subEvent of tournament.sub_events || []) {
-        const day = subEvent.days?.find((d: Stream) => d.id === infoDialog.editingId)
-        if (day) {
+      for (const event of tournament.events || []) {
+        const stream = event.streams?.find((s: Stream) => s.id === infoDialog.editingId)
+        if (stream) {
           return {
-            id: day.id,
-            name: day.name,
-            type: 'day',
-            data: day,
+            id: stream.id,
+            name: stream.name,
+            type: 'stream',
+            data: stream,
           }
         }
       }
@@ -239,30 +239,30 @@ export function ArchiveDialogs() {
         isUserAdmin={isUserAdmin}
       />
 
-      {/* SubEvent Dialog */}
+      {/* Event Dialog */}
       <SubEventDialog
-        isOpen={subEventDialog.isOpen}
-        onOpenChange={closeSubEventDialog}
+        isOpen={eventDialog.isOpen}
+        onOpenChange={closeEventDialog}
         selectedTournamentId={selectedTournamentIdForDialog}
-        editingSubEventId={subEventDialog.editingId || ''}
-        onSuccess={handleSubEventSuccess}
+        editingSubEventId={eventDialog.editingId || ''}
+        onSuccess={handleEventSuccess}
       />
 
-      {/* SubEvent Info Dialog */}
+      {/* Event Info Dialog */}
       <SubEventInfoDialog
-        isOpen={subEventInfoDialog.isOpen}
-        onOpenChange={closeSubEventInfoDialog}
-        subEventId={viewingSubEventId}
-        subEvent={viewingSubEvent}
+        isOpen={eventInfoDialog.isOpen}
+        onOpenChange={closeEventInfoDialog}
+        subEventId={viewingEventId}
+        subEvent={viewingEvent}
         isUserAdmin={isUserAdmin}
-        onSuccess={handleSubEventSuccess}
+        onSuccess={handleEventSuccess}
       />
 
-      {/* Day Dialog */}
+      {/* Stream Dialog */}
       <DayDialog
         isOpen={dayDialog.isOpen}
         onOpenChange={closeDayDialog}
-        selectedSubEventId={selectedSubEventIdForDialog}
+        selectedSubEventId={selectedEventIdForDialog}
         editingDayId={dayDialog.editingId || ''}
         onSuccess={handleDaySuccess}
       />
@@ -327,18 +327,18 @@ export function ArchiveDialogs() {
           // Open appropriate dialog based on type
           if (item.type === 'tournament') {
             useArchiveUIStore.getState().openTournamentDialog(item.id)
-          } else if (item.type === 'subevent') {
+          } else if (item.type === 'event') {
             useArchiveUIStore.getState().openEditEventDialog(item.id)
-          } else if (item.type === 'day') {
-            // Find parent subevent
+          } else if (item.type === 'stream') {
+            // Find parent event
             const tournament = tournaments.find(t =>
-              t.sub_events?.some((se: SubEvent) => se.days?.some((d: Stream) => d.id === item.id))
+              t.events?.some((e: Event) => e.streams?.some((s: Stream) => s.id === item.id))
             )
-            const subEvent = tournament?.sub_events?.find((se: SubEvent) =>
-              se.days?.some((d: Stream) => d.id === item.id)
+            const event = tournament?.events?.find((e: Event) =>
+              e.streams?.some((s: Stream) => s.id === item.id)
             )
-            if (subEvent) {
-              useArchiveUIStore.getState().openDayDialog(subEvent.id, item.id)
+            if (event) {
+              useArchiveUIStore.getState().openDayDialog(event.id, item.id)
             }
           }
         }}
@@ -351,7 +351,7 @@ export function ArchiveDialogs() {
       <AnalyzeVideoDialog
         isOpen={analyzeDialog.isOpen}
         onOpenChange={closeAnalyzeDialog}
-        day={analyzeDayForDialog}
+        day={analyzeStreamForDialog}
         onSuccess={handleAnalyzeSuccess}
       />
     </>

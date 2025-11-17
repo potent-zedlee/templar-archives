@@ -33,7 +33,7 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
     setSortBy,
     advancedFilters,
     toggleTournamentExpand,
-    toggleSubEventExpand,
+    toggleEventExpand,
   } = useArchiveUIStore()
 
   // Hand Input Mode permission check
@@ -79,39 +79,39 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
         id: tournament.id,
         name: tournament.name,
         type: 'tournament' as const,
-        itemCount: tournament.sub_events?.length || 0,
+        itemCount: tournament.events?.length || 0,
         data: tournament,
         level: 0,
         isExpanded: expandedTournament === tournament.id,
       })
 
       if (expandedTournament === tournament.id) {
-        const subEvents = tournament.sub_events || []
+        const events = tournament.events || []
 
-        subEvents.forEach((subEvent) => {
+        events.forEach((event) => {
           items.push({
-            id: subEvent.id,
-            name: subEvent.name,
-            type: 'subevent' as const,
-            itemCount: subEvent.days?.length || 0,
-            date: subEvent.date,
-            data: subEvent,
+            id: event.id,
+            name: event.name,
+            type: 'event' as const,
+            itemCount: event.streams?.length || 0,
+            date: event.date,
+            data: event,
             level: 1,
-            isExpanded: expandedSubEvent === subEvent.id,
+            isExpanded: expandedEvent === event.id,
             parentId: tournament.id,
           })
 
-          if (expandedSubEvent === subEvent.id) {
-            const days = subEvent.days || []
+          if (expandedEvent === event.id) {
+            const streams = event.streams || []
 
-            days.forEach((day: import('@/lib/supabase').Stream) => {
+            streams.forEach((stream: import('@/lib/supabase').Stream) => {
               items.push({
-                id: day.id,
-                name: day.name,
-                type: 'day' as const,
-                data: day,
+                id: stream.id,
+                name: stream.name,
+                type: 'stream' as const,
+                data: stream,
                 level: 2,
-                parentId: subEvent.id,
+                parentId: event.id,
               })
             })
           }
@@ -129,7 +129,7 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
     if (advancedFilters.tournamentName?.trim()) {
       const tournamentQuery = advancedFilters.tournamentName.toLowerCase()
       items = items.filter((item) => {
-        if (item.type === 'tournament' || item.type === 'subevent') {
+        if (item.type === 'tournament' || item.type === 'event') {
           return item.name.toLowerCase().includes(tournamentQuery)
         }
         return true
@@ -139,7 +139,7 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
     if (advancedFilters.playerName?.trim()) {
       const playerQuery = advancedFilters.playerName.toLowerCase()
       items = items.filter((item) => {
-        if (item.type === 'day') {
+        if (item.type === 'stream') {
           return item.name.toLowerCase().includes(playerQuery)
         }
         return true
@@ -203,10 +203,10 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
   const handleToggleExpand = useCallback((item: FolderItem) => {
     if (item.type === 'tournament') {
       toggleTournamentExpand(item.id)
-    } else if (item.type === 'subevent') {
-      toggleSubEventExpand(item.id)
+    } else if (item.type === 'event') {
+      toggleEventExpand(item.id)
     }
-  }, [toggleTournamentExpand, toggleSubEventExpand])
+  }, [toggleTournamentExpand, toggleEventExpand])
 
   const handleSelectDay = useCallback((streamId: string) => {
     console.log('[ArchiveMiddlePanel] Stream clicked:', streamId, 'Previous:', selectedDay)
@@ -311,8 +311,8 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                     </Button>
                   </div>
                 )
-              } else if (item.type === 'subevent') {
-                const subEvent = item.data as SubEvent
+              } else if (item.type === 'event') {
+                const event = item.data as Event
                 return (
                   <div key={item.id} className="ml-6 group">
                     <Button
@@ -335,12 +335,12 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                         />
                         <div className="flex-1 text-left min-w-0">
                           <div className="font-medium text-sm truncate mb-0.5">
-                            {subEvent.name}
+                            {event.name}
                           </div>
-                          {(subEvent.event_number || subEvent.buy_in) && (
+                          {(event.event_number || event.buy_in) && (
                             <div className="text-xs text-muted-foreground font-medium">
-                              {subEvent.event_number && `#${subEvent.event_number}`}
-                              {subEvent.buy_in && (subEvent.event_number ? ` • ${subEvent.buy_in}` : subEvent.buy_in)}
+                              {event.event_number && `#${event.event_number}`}
+                              {event.buy_in && (event.event_number ? ` • ${event.buy_in}` : event.buy_in)}
                             </div>
                           )}
                         </div>
@@ -348,9 +348,9 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                     </Button>
                   </div>
                 )
-              } else if (item.type === 'day') {
-                const day = item.data as Stream
-                const isSelected = selectedDay === day.id
+              } else if (item.type === 'stream') {
+                const stream = item.data as Stream
+                const isSelected = selectedDay === stream.id
                 return (
                   <div key={item.id} className="ml-12 group">
                     <div className="relative">
@@ -364,14 +364,14 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                           isSelected && "bg-gradient-to-r from-purple-500/20 via-purple-500/10 to-purple-500/5 border-l-4 border-l-purple-500 shadow-md shadow-purple-500/10",
                           isSelected && "hover:from-purple-500/25 hover:via-purple-500/15 hover:to-purple-500/10"
                         )}
-                        onClick={() => handleSelectDay(day.id)}
+                        onClick={() => handleSelectDay(stream.id)}
                       >
                         <div className="flex items-center gap-3 w-full">
-                          {day.video_source === "youtube" && day.video_url ? (
+                          {stream.video_source === "youtube" && stream.video_url ? (
                             <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
                               <Play className="h-3 w-3 text-white fill-white" />
                             </div>
-                          ) : (day.video_file || day.video_nas_path) ? (
+                          ) : (stream.video_file || stream.video_nas_path) ? (
                             <div className="w-6 h-6 bg-gradient-to-br from-amber-500 to-amber-600 rounded-md flex items-center justify-center flex-shrink-0 shadow-sm">
                               <Play className="h-3 w-3 text-white fill-white" />
                             </div>
@@ -385,11 +385,11 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                               "font-medium text-sm truncate mb-0.5",
                               isSelected && "font-semibold"
                             )}>
-                              {day.name}
+                              {stream.name}
                             </div>
-                            {day.player_count !== undefined && day.player_count > 0 && (
+                            {stream.player_count !== undefined && stream.player_count > 0 && (
                               <div className="text-xs text-muted-foreground font-medium">
-                                {day.player_count} players
+                                {stream.player_count} players
                               </div>
                             )}
                           </div>
@@ -409,7 +409,7 @@ export function ArchiveMiddlePanel({ onHandInputClick }: ArchiveMiddlePanelProps
                           onClick={(e) => {
                             e.stopPropagation()
                             if (onHandInputClick) {
-                              onHandInputClick(day)
+                              onHandInputClick(stream)
                             }
                           }}
                           title="Hand Input Mode"
