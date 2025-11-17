@@ -44,10 +44,10 @@ export function PlayerCard({ player, className, index = 0 }: PlayerCardProps) {
       className={cn('flex-shrink-0', className)}
     >
       <Link href={`/players/${player.id}`}>
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 p-4 cursor-pointer min-w-[140px]">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200 p-4 cursor-pointer min-w-[140px]">
           <div className="flex flex-col items-center space-y-3">
             {/* Avatar */}
-            <div className="w-16 h-16 rounded-full border-2 border-gray-100 overflow-hidden bg-gray-100">
+            <div className="w-16 h-16 rounded-full border-2 border-gray-100 dark:border-gray-700 overflow-hidden bg-gray-100 dark:bg-gray-700">
               {player.photo_url ? (
                 <img
                   src={player.photo_url}
@@ -55,7 +55,7 @@ export function PlayerCard({ player, className, index = 0 }: PlayerCardProps) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600">
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 dark:from-green-600 dark:to-green-700">
                   {initials ? (
                     <span className="text-xl font-semibold text-white">
                       {initials}
@@ -69,19 +69,19 @@ export function PlayerCard({ player, className, index = 0 }: PlayerCardProps) {
 
             {/* Name */}
             <div className="text-center space-y-1 w-full">
-              <p className="text-sm font-semibold text-gray-900 leading-tight line-clamp-2">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2">
                 {player.name}
               </p>
 
               {/* Country */}
               {player.country && (
-                <p className="text-xs text-gray-600">{player.country}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{player.country}</p>
               )}
             </div>
 
             {/* Hand Count Badge */}
             {player.hand_count !== undefined && player.hand_count > 0 && (
-              <div className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded font-mono">
+              <div className="inline-flex items-center px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs font-semibold rounded font-mono">
                 {player.hand_count} {player.hand_count === 1 ? 'hand' : 'hands'}
               </div>
             )}

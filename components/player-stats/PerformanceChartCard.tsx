@@ -110,17 +110,18 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis
                   dataKey="position"
-                  className="text-xs"
+                  className="text-xs text-gray-600 dark:text-gray-400"
                   tick={{ fill: 'currentColor' }}
                 />
-                <YAxis className="text-xs" tick={{ fill: 'currentColor' }} />
+                <YAxis className="text-xs text-gray-600 dark:text-gray-400" tick={{ fill: 'currentColor' }} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
+                    backgroundColor: 'var(--tw-bg-opacity, 1)',
+                    border: '1px solid',
+                    borderColor: 'var(--tw-border-opacity, 1)',
                     borderRadius: '8px',
                   }}
-                  labelStyle={{ color: 'hsl(var(--foreground))' }}
+                  className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                 />
                 <Legend />
                 <Bar dataKey="VPIP" fill="#3b82f6" name="VPIP (%)" />
@@ -129,9 +130,9 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
               </RechartsBarChart>
             </ResponsiveContainer>
 
-            <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+            <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
               <div>
-                <p className="font-medium mb-1">차트 설명</p>
+                <p className="font-medium mb-1 text-gray-900 dark:text-gray-100">차트 설명</p>
                 <ul className="space-y-1">
                   <li>• 파란색: VPIP (자발적 팟 참여율)</li>
                   <li>• 초록색: PFR (프리플롭 레이즈율)</li>
@@ -139,7 +140,7 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
                 </ul>
               </div>
               <div>
-                <p className="font-medium mb-1">분석 포인트</p>
+                <p className="font-medium mb-1 text-gray-900 dark:text-gray-100">분석 포인트</p>
                 <ul className="space-y-1">
                   <li>• BTN, CO: 높은 VPIP/PFR 권장</li>
                   <li>• UTG: 낮은 VPIP/PFR 권장</li>
@@ -152,16 +153,16 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
           <TabsContent value="radar" className="mt-6">
             <ResponsiveContainer width="100%" height={300}>
               <RadarChart data={radarChartData}>
-                <PolarGrid className="stroke-muted" />
+                <PolarGrid className="stroke-gray-200 dark:stroke-gray-700" />
                 <PolarAngleAxis
                   dataKey="stat"
-                  className="text-xs"
+                  className="text-xs text-gray-600 dark:text-gray-400"
                   tick={{ fill: 'currentColor' }}
                 />
                 <PolarRadiusAxis
                   angle={90}
                   domain={[0, 100]}
-                  className="text-xs"
+                  className="text-xs text-gray-600 dark:text-gray-400"
                   tick={{ fill: 'currentColor' }}
                 />
                 <Radar
@@ -173,19 +174,20 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
+                    backgroundColor: 'var(--tw-bg-opacity, 1)',
+                    border: '1px solid',
+                    borderColor: 'var(--tw-border-opacity, 1)',
                     borderRadius: '8px',
                   }}
-                  labelStyle={{ color: 'hsl(var(--foreground))' }}
+                  className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                   formatter={(value: number) => formatStatPercentage(value)}
                 />
               </RadarChart>
             </ResponsiveContainer>
 
-            <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-muted-foreground">
+            <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
               <div>
-                <p className="font-medium mb-1">현재 통계</p>
+                <p className="font-medium mb-1 text-gray-900 dark:text-gray-100">현재 통계</p>
                 <ul className="space-y-1">
                   <li>• VPIP: {formatStatPercentage(stats.vpip)}</li>
                   <li>• PFR: {formatStatPercentage(stats.pfr)}</li>
@@ -195,7 +197,7 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
                 </ul>
               </div>
               <div>
-                <p className="font-medium mb-1">권장 범위</p>
+                <p className="font-medium mb-1 text-gray-900 dark:text-gray-100">권장 범위</p>
                 <ul className="space-y-1">
                   <li>• VPIP: 20-30%</li>
                   <li>• PFR: 15-25%</li>

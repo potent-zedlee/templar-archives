@@ -43,10 +43,10 @@ const HandSearchDialog = dynamic(
 )
 
 const categoryColors: Record<Post['category'], string> = {
-  "analysis": "bg-blue-500/10 text-blue-500",
-  "strategy": "bg-green-500/10 text-green-500",
-  "hand-review": "bg-purple-500/10 text-purple-500",
-  "general": "bg-gray-500/10 text-gray-500"
+  "analysis": "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300",
+  "strategy": "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300",
+  "hand-review": "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300",
+  "general": "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
 }
 
 export default function communityClient() {

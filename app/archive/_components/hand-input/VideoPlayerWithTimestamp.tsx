@@ -30,8 +30,8 @@ export function VideoPlayerWithTimestamp({
 
   if (!videoId) {
     return (
-      <div className="bg-gray-50 rounded-lg p-6 text-center border border-gray-200">
-        <p className="text-sm text-gray-600">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 text-center border border-gray-200 dark:border-gray-700">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Invalid YouTube URL. Please enter a valid YouTube video URL.
         </p>
       </div>
@@ -61,7 +61,7 @@ export function VideoPlayerWithTimestamp({
         <div className="grid grid-cols-2 gap-3">
           {/* Start Time */}
           <div>
-            <label className="text-xs font-medium mb-1 block text-gray-900">Start time (seconds)</label>
+            <label className="text-xs font-medium mb-1 block text-gray-900 dark:text-gray-100">Start time (seconds)</label>
             <Input
               type="number"
               min="0"
@@ -73,7 +73,7 @@ export function VideoPlayerWithTimestamp({
 
           {/* End Time */}
           <div>
-            <label className="text-xs font-medium mb-1 block text-gray-900">End time (seconds)</label>
+            <label className="text-xs font-medium mb-1 block text-gray-900 dark:text-gray-100">End time (seconds)</label>
             <Input
               type="number"
               min="0"
@@ -105,7 +105,7 @@ export function VideoPlayerWithTimestamp({
         </div>
 
         {/* Helper Text */}
-        <p className="text-xs text-gray-600 leading-normal">
+        <p className="text-xs text-gray-600 dark:text-gray-400 leading-normal">
           Tip: You can manually enter the timestamp in seconds, or play the video and click "Use
           current time" to capture the current position.
         </p>

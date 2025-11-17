@@ -174,5 +174,5 @@ function getSuitSymbol(suit: Suit): string {
 }
 
 function getSuitColor(suit: Suit): string {
-  return suit === 'h' || suit === 'd' ? 'text-red-500' : 'text-gray-900'
+  return suit === 'h' || suit === 'd' ? 'text-red-500 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'
 }

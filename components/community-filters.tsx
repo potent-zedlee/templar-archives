@@ -19,10 +19,10 @@ interface CommunityFiltersProps {
 }
 
 const categoryColors: Record<Post['category'], string> = {
-  "analysis": "bg-blue-100 text-blue-700 hover:bg-blue-200",
-  "strategy": "bg-green-100 text-green-700 hover:bg-green-200",
-  "hand-review": "bg-purple-100 text-purple-700 hover:bg-purple-200",
-  "general": "bg-gray-100 text-gray-700 hover:bg-gray-200"
+  "analysis": "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800",
+  "strategy": "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800",
+  "hand-review": "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800",
+  "general": "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
 }
 
 const categoryLabels: Record<Post['category'], string> = {
@@ -44,15 +44,15 @@ export function CommunityFilters({
   const hasFilters = selectedCategory || dateFrom || dateTo
 
   return (
-    <Card className="p-4 rounded-lg border-gray-200">
+    <Card className="p-4 rounded-lg border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-900">고급 필터</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">고급 필터</h3>
         {hasFilters && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onReset}
-            className="h-7 text-xs text-gray-600"
+            className="h-7 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             <X className="h-3 w-3 mr-1" />
             초기화
@@ -63,7 +63,7 @@ export function CommunityFilters({
       <div className="space-y-4">
         {/* Category Filter */}
         <div className="space-y-2">
-          <Label className="text-xs text-gray-700">카테고리</Label>
+          <Label className="text-xs text-gray-700 dark:text-gray-300">카테고리</Label>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(categoryColors).map(([category, colorClass]) => (
               <button
@@ -78,7 +78,7 @@ export function CommunityFilters({
                 className={`
                   p-2 rounded-md text-xs font-medium transition-colors text-left
                   ${colorClass}
-                  ${selectedCategory === category ? 'ring-2 ring-blue-400' : ''}
+                  ${selectedCategory === category ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''}
                 `}
               >
                 {categoryLabels[category as Post['category']]}
@@ -87,7 +87,7 @@ export function CommunityFilters({
           </div>
           {selectedCategory && (
             <div className="flex items-center gap-1 mt-2">
-              <span className="text-xs text-gray-600">선택됨:</span>
+              <span className="text-xs text-gray-600 dark:text-gray-400">선택됨:</span>
               <Badge className={categoryColors[selectedCategory]}>
                 {categoryLabels[selectedCategory]}
               </Badge>
@@ -97,7 +97,7 @@ export function CommunityFilters({
 
         {/* Date Range Filter */}
         <div className="space-y-2">
-          <Label className="text-xs text-gray-700">날짜 범위</Label>
+          <Label className="text-xs text-gray-700 dark:text-gray-300">날짜 범위</Label>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <Input
@@ -105,7 +105,7 @@ export function CommunityFilters({
                 value={dateFrom || ""}
                 onChange={(e) => onDateFromChange(e.target.value)}
                 placeholder="시작일"
-                className="text-xs rounded-md"
+                className="text-xs rounded-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div>
@@ -114,7 +114,7 @@ export function CommunityFilters({
                 value={dateTo || ""}
                 onChange={(e) => onDateToChange(e.target.value)}
                 placeholder="종료일"
-                className="text-xs rounded-md"
+                className="text-xs rounded-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>

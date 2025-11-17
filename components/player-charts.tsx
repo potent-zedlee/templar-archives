@@ -11,7 +11,7 @@ type PrizeHistoryChartProps = {
 export function PrizeHistoryChart({ data }: PrizeHistoryChartProps) {
   if (data.length === 0) {
     return (
-      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+      <div className="h-[300px] flex items-center justify-center text-gray-600 dark:text-gray-400">
         <p>No prize history available</p>
       </div>
     )
@@ -26,14 +26,15 @@ export function PrizeHistoryChart({ data }: PrizeHistoryChartProps) {
             <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" />
+        <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
         <XAxis
           dataKey="date"
           tickFormatter={(value) => {
             const date = new Date(value)
             return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
           }}
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 12, fill: 'currentColor' }}
+          className="text-gray-600 dark:text-gray-400"
         />
         <YAxis
           tickFormatter={(value) => {
@@ -41,7 +42,8 @@ export function PrizeHistoryChart({ data }: PrizeHistoryChartProps) {
             if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`
             return `$${value}`
           }}
-          tick={{ fontSize: 12 }}
+          tick={{ fontSize: 12, fill: 'currentColor' }}
+          className="text-gray-600 dark:text-gray-400"
         />
         <Tooltip
           formatter={(value: any) => [`$${value.toLocaleString()}`, 'Prize']}
@@ -49,6 +51,13 @@ export function PrizeHistoryChart({ data }: PrizeHistoryChartProps) {
             const item = data.find(p => p.date === label)
             return item ? `${item.eventName} (Rank ${item.rank})` : label
           }}
+          contentStyle={{
+            backgroundColor: 'var(--tw-bg-opacity, 1)',
+            border: '1px solid',
+            borderColor: 'var(--tw-border-opacity, 1)',
+            borderRadius: '8px',
+          }}
+          className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
         />
         <Area
           type="monotone"
@@ -84,7 +93,15 @@ export function TournamentCategoryChart({ data }: TournamentCategoryChartProps) 
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
-        <Tooltip />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: 'var(--tw-bg-opacity, 1)',
+            border: '1px solid',
+            borderColor: 'var(--tw-border-opacity, 1)',
+            borderRadius: '8px',
+          }}
+          className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+        />
       </RechartsPie>
     </ResponsiveContainer>
   )

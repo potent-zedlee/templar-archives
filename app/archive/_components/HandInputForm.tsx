@@ -131,8 +131,8 @@ export function HandInputForm() {
             <AccordionContent className="space-y-4 pt-4">
               {/* Hand Number */}
               <div>
-                <label className="text-sm font-medium mb-1 block">
-                  Hand Number <span className="text-red-500">*</span>
+                <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">
+                  Hand Number <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
                 <Input
                   value={currentHand.hand.number}
@@ -144,8 +144,8 @@ export function HandInputForm() {
 
               {/* Description */}
               <div>
-                <label className="text-sm font-medium mb-1 block">
-                  Description <span className="text-red-500">*</span>
+                <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">
+                  Description <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
                 <Textarea
                   value={currentHand.hand.description}
@@ -158,7 +158,7 @@ export function HandInputForm() {
 
               {/* AI Summary (optional) */}
               <div>
-                <label className="text-sm font-medium mb-1 block">AI Summary (optional)</label>
+                <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">AI Summary (optional)</label>
                 <Textarea
                   value={currentHand.hand.ai_summary || ''}
                   onChange={(e) => updateHandField('ai_summary', e.target.value)}
@@ -179,8 +179,8 @@ export function HandInputForm() {
               <div className="grid grid-cols-3 gap-4">
                 {/* Small Blind */}
                 <div>
-                  <label className="text-sm font-medium mb-1 block">
-                    Small Blind <span className="text-red-500">*</span>
+                  <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">
+                    Small Blind <span className="text-red-500 dark:text-red-400">*</span>
                   </label>
                   <Input
                     type="number"
@@ -195,7 +195,7 @@ export function HandInputForm() {
 
                 {/* Big Blind */}
                 <div>
-                  <label className="text-sm font-medium mb-1 block">
+                  <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">
                     Big Blind <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -209,7 +209,7 @@ export function HandInputForm() {
 
                 {/* Ante */}
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Ante (optional)</label>
+                  <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">Ante (optional)</label>
                   <Input
                     type="number"
                     min="0"
@@ -223,7 +223,7 @@ export function HandInputForm() {
               {/* Pot Sizes by Street */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Pot Preflop</label>
+                  <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">Pot Preflop</label>
                   <Input
                     type="number"
                     min="0"
@@ -235,7 +235,7 @@ export function HandInputForm() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Pot Flop</label>
+                  <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">Pot Flop</label>
                   <Input
                     type="number"
                     min="0"
@@ -245,7 +245,7 @@ export function HandInputForm() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Pot Turn</label>
+                  <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">Pot Turn</label>
                   <Input
                     type="number"
                     min="0"
@@ -255,7 +255,7 @@ export function HandInputForm() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Pot River (Final)</label>
+                  <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">Pot River (Final)</label>
                   <Input
                     type="number"
                     min="0"
@@ -292,7 +292,7 @@ export function HandInputForm() {
 
                   {/* Player Selector */}
                   <div>
-                    <label className="text-sm font-medium mb-1 block">Player Name</label>
+                    <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">Player Name</label>
                     <PlayerSelector
                       value={player.player_id}
                       onChange={(playerId) => updatePlayer(index, { player_id: playerId || '' })}
@@ -302,7 +302,7 @@ export function HandInputForm() {
                   <div className="grid grid-cols-2 gap-3">
                     {/* Position */}
                     <div>
-                      <label className="text-sm font-medium mb-1 block">Position</label>
+                      <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">Position</label>
                       <select
                         className="w-full h-10 px-3 rounded-md border border-input bg-background"
                         value={player.poker_position}
@@ -318,7 +318,7 @@ export function HandInputForm() {
 
                     {/* Seat */}
                     <div>
-                      <label className="text-sm font-medium mb-1 block">Seat</label>
+                      <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">Seat</label>
                       <Input
                         type="number"
                         min="1"
@@ -330,7 +330,7 @@ export function HandInputForm() {
 
                     {/* Starting Stack */}
                     <div>
-                      <label className="text-sm font-medium mb-1 block">Starting Stack</label>
+                      <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">Starting Stack</label>
                       <Input
                         type="number"
                         min="0"
@@ -343,7 +343,7 @@ export function HandInputForm() {
 
                     {/* Ending Stack */}
                     <div>
-                      <label className="text-sm font-medium mb-1 block">Ending Stack</label>
+                      <label className="text-sm font-medium mb-1 block text-gray-900 dark:text-gray-100">Ending Stack</label>
                       <Input
                         type="number"
                         min="0"

@@ -437,7 +437,7 @@ export default function PlayerDetailClient() {
           <ScrollArea className="h-[calc(100vh-480px)]">
             {tournaments.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-base text-gray-600">
+                <p className="text-base text-gray-600 dark:text-gray-400">
                   이 플레이어의 핸드가 없습니다
                 </p>
               </div>
@@ -447,18 +447,18 @@ export default function PlayerDetailClient() {
                   <div key={tournament.id}>
                     {/* Tournament Level */}
                     <div
-                      className="flex items-center gap-3 py-3 px-4 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-200"
+                      className="flex items-center gap-3 py-3 px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-b border-gray-200 dark:border-gray-700"
                       onClick={() => toggleTournament(tournament.id)}
                     >
                       {tournament.expanded ? (
-                        <ChevronDown className="h-4 w-4 text-green-600" />
+                        <ChevronDown className="h-4 w-4 text-green-600 dark:text-green-400" />
                       ) : (
-                        <ChevronRight className="h-4 w-4 text-green-600" />
+                        <ChevronRight className="h-4 w-4 text-green-600 dark:text-green-400" />
                       )}
-                      <div className="flex h-6 w-6 items-center justify-center bg-green-600 text-xs font-bold text-white rounded flex-shrink-0">
+                      <div className="flex h-6 w-6 items-center justify-center bg-green-600 dark:bg-green-700 text-xs font-bold text-white rounded flex-shrink-0">
                         {tournament.category.charAt(0)}
                       </div>
-                      <span className="text-sm font-semibold text-gray-900">
+                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                         {tournament.name}
                       </span>
                     </div>
@@ -469,18 +469,18 @@ export default function PlayerDetailClient() {
                         {tournament.sub_events?.map((subEvent) => (
                           <div key={subEvent.id}>
                             <div
-                              className="flex items-center gap-3 py-2 px-4 hover:bg-gray-50 transition-colors cursor-pointer border-b border-gray-100"
+                              className="flex items-center gap-3 py-2 px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700"
                               onClick={() => toggleSubEvent(tournament.id, subEvent.id)}
                             >
                               {subEvent.expanded ? (
-                                <ChevronDown className="h-4 w-4 text-green-500" />
+                                <ChevronDown className="h-4 w-4 text-green-500 dark:text-green-400" />
                               ) : (
-                                <ChevronRight className="h-4 w-4 text-green-500" />
+                                <ChevronRight className="h-4 w-4 text-green-500 dark:text-green-400" />
                               )}
-                              <span className="text-sm font-medium text-gray-700">
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 {subEvent.name}
                               </span>
-                              <div className="ml-auto inline-flex items-center px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">
+                              <div className="ml-auto inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded">
                                 {subEvent.days.reduce((total, day) => total + day.hands.length, 0)} hands
                               </div>
                             </div>
@@ -490,11 +490,11 @@ export default function PlayerDetailClient() {
                               <div className="ml-8 mt-2">
                                 {subEvent.days?.map((day) => (
                                   <div key={day.id} className="mb-4">
-                                    <div className="flex items-center gap-2 py-2 px-3 mb-2 bg-gray-50 rounded">
-                                      <span className="text-xs font-semibold text-gray-700 font-mono">
+                                    <div className="flex items-center gap-2 py-2 px-3 mb-2 bg-gray-50 dark:bg-gray-700 rounded">
+                                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 font-mono">
                                         {day.name}
                                       </span>
-                                      <span className="text-xs text-gray-500">
+                                      <span className="text-xs text-gray-500 dark:text-gray-400">
                                         ({day.hands.length} hands)
                                       </span>
                                     </div>

@@ -135,7 +135,7 @@ export function PositionalStatsCard({ playerId }: PositionalStatsCardProps) {
           </TableBody>
         </Table>
 
-        <div className="mt-4 text-xs text-muted-foreground">
+        <div className="mt-4 text-xs text-gray-600 dark:text-gray-400">
           <p>• VPIP: 자발적 팟 참여율</p>
           <p>• PFR: 프리플롭 레이즈율</p>
           <p>• 승률: 해당 포지션에서 승리한 핸드 비율</p>
