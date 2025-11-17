@@ -182,7 +182,7 @@ export default function communityClient() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main id="main-content" role="main">
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
@@ -210,7 +210,7 @@ export default function communityClient() {
             )}
 
             {/* Create Post Button */}
-            <Card className="p-4">
+            <Card className="p-4 dark:bg-gray-800 dark:border-gray-700">
               <Dialog open={isDialogOpen} onOpenChange={(open) => {
                 if (!user && open) {
                   toast.error('Login required')
@@ -329,13 +329,13 @@ export default function communityClient() {
 
             {/* Tabs: 모바일 스크롤 */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-              <div className="flex gap-0 border-b border-gray-200 overflow-x-auto">
+              <div className="flex gap-0 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
                 <button
                   onClick={() => setActiveTab('trending')}
                   className={`px-6 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
                     activeTab === 'trending'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <TrendingUp className="inline-block h-4 w-4 mr-2" />
@@ -345,8 +345,8 @@ export default function communityClient() {
                   onClick={() => setActiveTab('recent')}
                   className={`px-6 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
                     activeTab === 'recent'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <Clock className="inline-block h-4 w-4 mr-2" />
@@ -356,8 +356,8 @@ export default function communityClient() {
                   onClick={() => setActiveTab('popular')}
                   className={`px-6 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
                     activeTab === 'popular'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                      ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   <Star className="inline-block h-4 w-4 mr-2" />
@@ -371,12 +371,12 @@ export default function communityClient() {
                 ) : posts.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="flex justify-center mb-4">
-                      <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
-                        <MessageSquare className="h-8 w-8 text-gray-400" />
+                      <div className="h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                        <MessageSquare className="h-8 w-8 text-gray-400 dark:text-gray-500" />
                       </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No posts yet</h3>
-                    <p className="text-sm text-gray-600 mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No posts yet</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                       Be the first to create a post in the community!
                     </p>
                     <Button onClick={() => setIsDialogOpen(true)}>
@@ -387,11 +387,11 @@ export default function communityClient() {
                   <StaggerContainer staggerDelay={0.1}>
                     {posts.map((post) => (
                       <StaggerItem key={post.id}>
-                        <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-all duration-200">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200">
                           <div className="flex gap-4">
                         <Avatar className="h-12 w-12 rounded-full">
                           <AvatarImage src={post.author_avatar} alt={post.author_name} />
-                          <AvatarFallback className="rounded-full bg-blue-100 text-blue-600 font-semibold">
+                          <AvatarFallback className="rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold">
                             {post.author_name.split(' ').map(n => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
@@ -399,10 +399,10 @@ export default function communityClient() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-4 mb-3">
                             <div className="flex-1">
-                              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
                                 {post.title}
                               </h3>
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                                 <span>{post.author_name}</span>
                                 <span>•</span>
                                 <span>{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
@@ -413,27 +413,27 @@ export default function communityClient() {
                             </Badge>
                           </div>
 
-                          <p className="text-sm text-gray-700 line-clamp-2 mb-4">
+                          <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 mb-4">
                             {post.content}
                           </p>
 
                           {/* Attached Hand */}
                           {post.hand && (
-                            <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <div className="mb-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                               <div className="flex items-center gap-3">
-                                <Link2 className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                                <Link2 className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-sm font-mono font-semibold text-blue-600">#{post.hand.number}</span>
-                                    <span className="text-xs text-gray-600">{post.hand.timestamp}</span>
+                                    <span className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">#{post.hand.number}</span>
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">{post.hand.timestamp}</span>
                                   </div>
                                   {post.hand.description && (
-                                    <p className="text-xs text-gray-700 line-clamp-1">{post.hand.description}</p>
+                                    <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-1">{post.hand.description}</p>
                                   )}
                                 </div>
                                 <Link
                                   href={`/archive?hand=${post.hand.id}`}
-                                  className="px-3 py-1 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                                  className="px-3 py-1 text-xs font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                                 >
                                   View
                                 </Link>
@@ -441,16 +441,16 @@ export default function communityClient() {
                             </div>
                           )}
 
-                          <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
+                          <div className="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                             <button
                               onClick={() => handleLike(post.id)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-400"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400"
                             >
                               <ThumbsUp className="w-4 h-4" />
                               <span className="font-mono">{post.likes_count}</span>
                             </button>
 
-                            <Link href={`/community/${post.id}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors focus:ring-2 focus:ring-blue-400">
+                            <Link href={`/community/${post.id}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400">
                               <MessageSquare className="w-4 h-4" />
                               <span className="font-mono">{post.comments_count}</span>
                             </Link>

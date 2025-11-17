@@ -128,7 +128,7 @@ export default function playersClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
           <GridSkeleton count={9} columns={3} />
         </div>
@@ -137,43 +137,43 @@ export default function playersClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <PageTransition variant="slideUp">
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">Players</h1>
-          <p className="text-base text-gray-600">프로 플레이어 프로필 및 통계</p>
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Players</h1>
+          <p className="text-base text-gray-600 dark:text-gray-400">프로 플레이어 프로필 및 통계</p>
         </div>
 
         {/* Search and Filter Bar */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6 mb-6 space-y-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 md:p-6 mb-6 space-y-4">
           {/* Search and Sort Row */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 placeholder="플레이어 검색..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all"
               />
             </div>
 
             {/* Filter Chips */}
             <div className="flex gap-2 flex-wrap">
-              <button className="px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+              <button className="px-3 py-2 bg-green-600 dark:bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors">
                 전체
               </button>
-              <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+              <button className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                 Cash Game
               </button>
-              <button className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+              <button className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                 Tournament
               </button>
               <button
-                className="px-3 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1"
+                className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center gap-1"
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Filter className="h-3 w-3" />
@@ -184,13 +184,13 @@ export default function playersClient() {
 
           {/* Filters Panel */}
           {showFilters && (
-            <div className="space-y-4 pt-4 border-t border-gray-200">
+            <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Country Filter */}
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">국가</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">국가</label>
                   <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                    <SelectTrigger className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent">
+                    <SelectTrigger className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent">
                       <SelectValue placeholder="전체 국가" />
                     </SelectTrigger>
                     <SelectContent>
@@ -204,35 +204,35 @@ export default function playersClient() {
 
                 {/* Winnings Range */}
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">최소 상금</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">최소 상금</label>
                   <Input
                     type="number"
                     placeholder="0"
                     value={minWinnings}
                     onChange={(e) => setMinWinnings(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">최대 상금</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">최대 상금</label>
                   <Input
                     type="number"
                     placeholder="제한 없음"
                     value={maxWinnings}
                     onChange={(e) => setMaxWinnings(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
                   />
                 </div>
 
                 {/* Hands Range */}
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">최소 핸드</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">최소 핸드</label>
                   <Input
                     type="number"
                     placeholder="0"
                     value={minHands}
                     onChange={(e) => setMinHands(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -240,7 +240,7 @@ export default function playersClient() {
               {/* Clear Filters Button */}
               {hasActiveFilters && (
                 <button
-                  className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
                   onClick={clearFilters}
                 >
                   <X className="h-4 w-4" />
@@ -252,15 +252,15 @@ export default function playersClient() {
 
           {/* Results Count & Sort */}
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              <span className="font-semibold text-gray-900">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
                 {startIndex + 1}-{Math.min(endIndex, sortedPlayers.length)}
               </span>
               {' '}/ {sortedPlayers.length} 플레이어
             </div>
 
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[200px] px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent">
+              <SelectTrigger className="w-[200px] px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent">
                 <SelectValue placeholder="정렬" />
               </SelectTrigger>
               <SelectContent>
@@ -277,19 +277,19 @@ export default function playersClient() {
 
         {/* Players Grid */}
         <ScrollArea className="h-[calc(100vh-460px)]">
-          <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" staggerDelay={0.05}>
+          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" staggerDelay={0.05}>
             {paginatedPlayers.map((player) => (
               <StaggerItem key={player.id}>
                 <Link href={`/players/${player.id}`} className="block">
                   <AnimatedCard>
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200">
                       {/* Player Header */}
                       <div className="flex items-start gap-4 mb-4">
                         {/* Profile Image */}
                         <div className="relative flex-shrink-0">
-                          <Avatar className="w-16 h-16 rounded-full border-2 border-gray-100">
+                          <Avatar className="w-16 h-16 rounded-full border-2 border-gray-100 dark:border-gray-700">
                             <AvatarImage src={player.photo_url} alt={player.name} />
-                            <AvatarFallback className="text-base font-semibold bg-gray-100 text-gray-700">
+                            <AvatarFallback className="text-base font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                               {player.name.split(' ').map(n => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
@@ -297,13 +297,13 @@ export default function playersClient() {
 
                         {/* Player Info */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-semibold text-gray-900 truncate mb-1">
+                          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate mb-1">
                             {player.name}
                           </h3>
 
                           {/* Country */}
                           {player.country && (
-                            <div className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded">
+                            <div className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium rounded">
                               {player.country}
                             </div>
                           )}
@@ -311,17 +311,17 @@ export default function playersClient() {
                       </div>
 
                       {/* Player Stats */}
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                         <div className="space-y-1">
-                          <span className="text-xs text-gray-500 block">Total Hands</span>
-                          <span className="text-lg font-semibold text-gray-900 font-mono">
+                          <span className="text-xs text-gray-500 dark:text-gray-400 block">Total Hands</span>
+                          <span className="text-lg font-semibold text-gray-900 dark:text-gray-100 font-mono">
                             {player.hand_count}
                           </span>
                         </div>
 
                         <div className="space-y-1">
-                          <span className="text-xs text-gray-500 block">Winnings</span>
-                          <span className="text-lg font-semibold text-green-600 font-mono">
+                          <span className="text-xs text-gray-500 dark:text-gray-400 block">Winnings</span>
+                          <span className="text-lg font-semibold text-green-600 dark:text-green-400 font-mono">
                             {formatWinnings(player.total_winnings)}
                           </span>
                         </div>
@@ -329,7 +329,7 @@ export default function playersClient() {
 
                       {/* Actions */}
                       <div className="mt-4">
-                        <div className="w-full text-center py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                        <div className="w-full text-center py-2 bg-green-600 dark:bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors">
                           프로필 보기
                         </div>
                       </div>
@@ -356,9 +356,9 @@ export default function playersClient() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-6">
+          <div className="flex items-center justify-center gap-2 mt-6 flex-wrap">
             <button
-              className="p-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
             >
@@ -377,11 +377,11 @@ export default function playersClient() {
                 const showEllipsisBefore = index > 0 && page - arr[index - 1] > 1
                 return (
                   <div key={page} className="flex items-center gap-2">
-                    {showEllipsisBefore && <span className="text-gray-400">...</span>}
+                    {showEllipsisBefore && <span className="text-gray-400 dark:text-gray-500">...</span>}
                     <button
                       className={currentPage === page
-                        ? "px-4 py-2 bg-green-600 text-white font-medium rounded-lg text-sm"
-                        : "px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg text-sm hover:bg-gray-50 transition-colors"
+                        ? "px-4 py-2 bg-green-600 dark:bg-green-700 text-white font-medium rounded-lg text-sm"
+                        : "px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       }
                       onClick={() => setCurrentPage(page)}
                     >
@@ -392,7 +392,7 @@ export default function playersClient() {
               })}
 
             <button
-              className="p-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
             >
