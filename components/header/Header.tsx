@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Moon, Sun, Menu, X } from "lucide-react"
-import { useTheme } from "next-themes"
+import { Menu, X } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { signOut } from "@/lib/auth"
 import { isAdmin, isReporterOrAdmin } from "@/lib/admin"
@@ -17,16 +16,10 @@ import type { NavLink } from "./HeaderDesktopNav"
 
 export function Header() {
   const router = useRouter()
-  const { theme, setTheme } = useTheme()
   const { user, profile, loading: authLoading } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const [isUserAdmin, setIsUserAdmin] = useState(false)
   const [isUserReporter, setIsUserReporter] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   useEffect(() => {
     async function checkAdmin() {
@@ -97,7 +90,7 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-[100] w-full border-b-[3px] border-gold-600 bg-white dark:bg-gray-900 dark:border-gold-500" role="banner">
+      <header className="sticky top-0 z-[100] w-full border-b-[3px] border-gold-500 bg-gray-900" role="banner">
         <div className="w-full px-6 h-16 flex items-center justify-between">
           {/* Left: Logo + Navigation Menu */}
           <div className="flex items-center gap-8">
@@ -105,22 +98,8 @@ export function Header() {
             <HeaderDesktopNav navLinks={navLinks} />
           </div>
 
-          {/* Right: Dark Mode, Notification, Profile */}
+          {/* Right: Notification, Profile */}
           <div className="flex items-center gap-3">
-            {mounted && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="h-9 w-9 hover:bg-gray-100 dark:hover:bg-gray-800"
-                aria-label="Toggle theme"
-              >
-                <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-gray-600 dark:text-gray-400" />
-                <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-gray-600 dark:text-gray-400" />
-                <span className="sr-only">Toggle theme</span>
-              </Button>
-            )}
-
             <NotificationBell />
 
             {/* Login/Profile UI */}
@@ -141,7 +120,7 @@ export function Header() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="hidden md:inline-flex dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+                    className="hidden md:inline-flex border-gray-600 text-gray-200 hover:bg-gray-800"
                     onClick={() => router.push("/auth/login")}
                   >
                     LOGIN
@@ -153,14 +132,14 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden h-9 w-9 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="md:hidden h-9 w-9 hover:bg-gray-800"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? (
-                <X className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                <X className="h-5 w-5 text-gray-400" />
               ) : (
-                <Menu className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                <Menu className="h-5 w-5 text-gray-400" />
               )}
               <span className="sr-only">Toggle menu</span>
             </Button>
