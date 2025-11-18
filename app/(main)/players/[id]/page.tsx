@@ -88,7 +88,8 @@ export default function PlayerDetailClient() {
   const updatePhotoMutation = useUpdatePlayerPhotoMutation(playerId)
 
   // UI states
-  const [tournaments, setTournaments] = useState<Tournament[]>([])
+  const [expandedTournaments, setExpandedTournaments] = useState<Record<string, boolean>>({})
+  const [expandedSubEvents, setExpandedSubEvents] = useState<Record<string, boolean>>({})
   const [claimDialogOpen, setClaimDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -97,18 +98,17 @@ export default function PlayerDetailClient() {
   const isClaimed = claimData?.claimInfo.claimed || false
   const userClaim = claimData?.userClaim || null
 
-  // Update tournaments when hands data changes
-  useEffect(() => {
-    const tournamentsWithState = handsData.map((tournament: any) => ({
+  // Calculate tournaments from hands data (useMemo to prevent hydration mismatch)
+  const tournaments = useMemo(() => {
+    return handsData.map((tournament: any) => ({
       ...tournament,
-      expanded: true,
+      expanded: expandedTournaments[tournament.id] ?? true,
       sub_events: tournament.sub_events.map((subEvent: any) => ({
         ...subEvent,
-        expanded: false,
+        expanded: expandedSubEvents[subEvent.id] ?? false,
       })),
     }))
-    setTournaments(tournamentsWithState)
-  }, [handsData])
+  }, [handsData, expandedTournaments, expandedSubEvents])
 
   // Calculate total hands count
   const totalHandsCount = useMemo(() => {
@@ -204,26 +204,17 @@ export default function PlayerDetailClient() {
   }
 
   const toggleTournament = (tournamentId: string) => {
-    setTournaments((prev) =>
-      prev.map((t) =>
-        t.id === tournamentId ? { ...t, expanded: !t.expanded } : t
-      )
-    )
+    setExpandedTournaments((prev) => ({
+      ...prev,
+      [tournamentId]: !(prev[tournamentId] ?? true)
+    }))
   }
 
   const toggleSubEvent = (tournamentId: string, subEventId: string) => {
-    setTournaments((prev) =>
-      prev.map((t) =>
-        t.id === tournamentId
-          ? {
-              ...t,
-              sub_events: t.sub_events?.map((se) =>
-                se.id === subEventId ? { ...se, expanded: !se.expanded } : se
-              ),
-            }
-          : t
-      )
-    )
+    setExpandedSubEvents((prev) => ({
+      ...prev,
+      [subEventId]: !(prev[subEventId] ?? false)
+    }))
   }
 
   const handleClaimSuccess = () => {
