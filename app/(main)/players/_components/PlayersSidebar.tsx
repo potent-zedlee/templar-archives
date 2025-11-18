@@ -162,7 +162,7 @@ export function PlayersSidebar({
 
             {/* Country List */}
             {isCountryExpanded && (
-              <div className="mt-2 space-y-1 pl-4">
+              <div className="mt-2 space-y-1 pl-4 max-h-[400px] overflow-y-auto">
                 {countries.map((country) => {
                   const count = countryPlayerCounts[country] || 0
                   const isSelected = selectedCountry === country
