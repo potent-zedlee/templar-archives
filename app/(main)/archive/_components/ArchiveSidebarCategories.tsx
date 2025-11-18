@@ -1,12 +1,12 @@
 "use client"
 
 /**
- * Archive Sidebar Categories - Flowbite Enhanced
+ * Archive Sidebar Categories - Flowbite Redesigned
  *
- * Flowbite 패턴을 활용한 개선:
- * - Accordion 스타일 개선
- * - 접근성 개선 (ARIA 속성)
- * - 시각적 계층 구조 강화
+ * 완전히 새로운 디자인:
+ * - 간단한 리스트 형태
+ * - 텍스트 겹침 없음
+ * - Flowbite 패턴 적용
  */
 
 import { useState, useMemo } from 'react'
@@ -69,35 +69,24 @@ export function ArchiveSidebarCategories({
   }
 
   return (
-    <nav className="space-y-1" aria-label="Category navigation">
-      {/* ALL Button */}
+    <div className="space-y-1">
+      {/* ALL Button - Flowbite Style */}
       <button
         type="button"
-        className={cn(
-          "w-full flex items-start gap-2.5 min-h-[40px] py-2.5 px-3 rounded-lg transition-all duration-200 font-medium focus:outline-none focus:ring-4",
-          selectedCategory === 'All'
-            ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold focus:ring-gold-300"
-            : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-gray-300"
-        )}
         onClick={() => onCategoryChange('All')}
-        aria-current={selectedCategory === 'All' ? 'page' : undefined}
+        className={cn(
+          "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+          selectedCategory === 'All'
+            ? "bg-gold-600 text-white"
+            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+        )}
       >
-        <LayoutGrid className="h-4 w-4 flex-shrink-0 mt-0.5" />
-        <span
-          className="text-sm font-medium text-left leading-tight flex-1 overflow-hidden"
-          style={{
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            wordBreak: 'break-word'
-          }}
-        >
-          All Categories
-        </span>
+        <LayoutGrid className="w-5 h-5 flex-shrink-0" />
+        <span className="flex-1 text-left truncate">All Categories</span>
       </button>
 
-      {/* Category List (Flowbite Accordion Style) */}
-      <div className="space-y-1 pt-1">
+      {/* Categories List - Flowbite Style */}
+      <ul className="space-y-0.5">
         {rootCategories.map((category) => {
           const children = getChildren(category.id)
           const hasChildren = children.length > 0
@@ -105,109 +94,85 @@ export function ArchiveSidebarCategories({
           const isSelected = selectedCategory === category.id
 
           return (
-            <div key={category.id} className="space-y-0.5">
+            <li key={category.id}>
               {/* Parent Category */}
-              <div className="flex items-start gap-1">
-                {hasChildren && (
+              <div className="flex items-center">
+                {hasChildren ? (
                   <button
                     type="button"
-                    className={cn(
-                      "w-6 min-h-[36px] flex items-center justify-center rounded-md flex-shrink-0 mt-0.5",
-                      "hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150",
-                      "focus:outline-none focus:ring-2 focus:ring-gold-400"
-                    )}
                     onClick={() => toggleParent(category.id)}
-                    aria-expanded={isExpanded}
-                    aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${category.display_name}`}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                    aria-label={isExpanded ? 'Collapse' : 'Expand'}
                   >
                     <ChevronRight
                       className={cn(
-                        "h-4 w-4 text-gray-500 dark:text-gray-400 transition-transform duration-200",
+                        "w-4 h-4 text-gray-500 transition-transform",
                         isExpanded && "rotate-90"
                       )}
                     />
                   </button>
+                ) : (
+                  <div className="w-10"></div>
                 )}
+
                 <button
                   type="button"
-                  className={cn(
-                    "flex-1 flex items-start gap-2.5 min-h-[36px] py-2 px-3 rounded-lg transition-all duration-200 font-medium focus:outline-none focus:ring-4",
-                    !hasChildren && "ml-6",
-                    isSelected
-                      ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold focus:ring-gold-300"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-gray-300"
-                  )}
                   onClick={() => onCategoryChange(category.id)}
-                  aria-current={isSelected ? 'page' : undefined}
+                  className={cn(
+                    "flex-1 flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
+                    isSelected
+                      ? "bg-gold-600 text-white"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  )}
                 >
                   <CategoryLogo
                     category={category}
                     size="sm"
-                    className="w-4 h-4 flex-shrink-0 mt-0.5"
+                    className="w-5 h-5 flex-shrink-0"
                     fallback="text"
                   />
-                  <span
-                    className="text-sm font-medium text-left leading-tight flex-1 overflow-hidden"
-                    style={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      wordBreak: 'break-word'
-                    }}
-                  >
+                  <span className="flex-1 text-left truncate" title={category.display_name}>
                     {category.display_name}
                   </span>
                 </button>
               </div>
 
-              {/* Child Categories (Collapsible) */}
+              {/* Child Categories */}
               {isExpanded && hasChildren && (
-                <div
-                  className="ml-6 space-y-0.5 pl-4 border-l-2 border-gray-200 dark:border-gray-700"
-                  role="group"
-                  aria-label={`${category.display_name} subcategories`}
-                >
+                <ul className="ml-10 mt-1 space-y-0.5 border-l-2 border-gray-200 dark:border-gray-700 pl-3">
                   {children.map((child) => {
                     const isChildSelected = selectedCategory === child.id
                     return (
-                      <button
-                        key={child.id}
-                        type="button"
-                        className={cn(
-                          "w-full flex items-start gap-2.5 min-h-[32px] py-1.5 px-3 rounded-lg transition-all duration-200 font-medium focus:outline-none focus:ring-4",
-                          isChildSelected
-                            ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold focus:ring-gold-300"
-                            : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 focus:ring-gray-300"
-                        )}
-                        onClick={() => onCategoryChange(child.id)}
-                        aria-current={isChildSelected ? 'page' : undefined}
-                      >
-                        <CategoryLogo
-                          category={child}
-                          size="sm"
-                          className="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
-                          fallback="text"
-                        />
-                        <span
-                          className="text-xs font-medium text-left leading-tight flex-1 overflow-hidden"
-                          style={{
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            wordBreak: 'break-word'
-                          }}
+                      <li key={child.id}>
+                        <button
+                          type="button"
+                          onClick={() => onCategoryChange(child.id)}
+                          className={cn(
+                            "w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors",
+                            isChildSelected
+                              ? "bg-gold-600 text-white font-medium"
+                              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          )}
                         >
-                          {child.display_name}
-                        </span>
-                      </button>
+                          <CategoryLogo
+                            category={child}
+                            size="sm"
+                            className="w-4 h-4 flex-shrink-0"
+                            fallback="text"
+                          />
+                          <span className="flex-1 text-left truncate" title={child.display_name}>
+                            {child.display_name}
+                          </span>
+                        </button>
+                      </li>
                     )
                   })}
-                </div>
+                </ul>
               )}
-            </div>
+            </li>
           )
         })}
-      </div>
-    </nav>
+      </ul>
+    </div>
   )
 }
