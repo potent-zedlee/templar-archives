@@ -1,16 +1,16 @@
 "use client"
 
 /**
- * Archive Hand History
+ * Archive Hand History - Flowbite Enhanced
  *
- * 핸드 히스토리 섹션 컴포넌트 (카드 그리드 뷰)
- * - 핸드 카드 그리드 레이아웃
- * - 빈 상태 표시
- * - Hand History Dialog 통합
+ * Flowbite 패턴을 활용한 개선:
+ * - Card Grid 레이아웃 최적화
+ * - Empty State 개선 (Alert 스타일)
+ * - 접근성 개선
  */
 
 import { useState, useMemo } from 'react'
-import { Folder } from 'lucide-react'
+import { Folder, AlertCircle } from 'lucide-react'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
@@ -102,6 +102,7 @@ export function ArchiveHandHistory({
     <div className="space-y-0">
       {/* Hand Grid or Empty State */}
       {filteredHands.length > 0 ? (
+        /* Flowbite Responsive Grid */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
           {filteredHands.map((hand, index) => (
             <HandCard
@@ -113,22 +114,40 @@ export function ArchiveHandHistory({
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-24 px-6">
-          <div className="inline-block p-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm max-w-lg">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="p-6 rounded-lg bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
-                <Folder className="h-20 w-20 text-gray-400 dark:text-gray-500" />
-              </div>
-              <div className="space-y-3 text-center">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                  No hands available
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed max-w-md">
-                  이 영상은 아직 AI 분석이 완료되지 않았습니다.
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-500 leading-relaxed max-w-md pt-2 border-t border-gray-200 dark:border-gray-700">
-                  위의 "AI 분석" 버튼을 클릭하여 핸드 히스토리를 자동으로 추출할 수 있습니다.
-                </p>
+        /* Flowbite Alert/Empty State */
+        <div className="flex items-center justify-center py-24 px-6">
+          <div className="w-full max-w-xl">
+            <div className="p-8 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-md">
+              <div className="flex flex-col items-center space-y-4 text-center">
+                {/* Icon */}
+                <div className="p-5 bg-gray-100 dark:bg-gray-900 rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                  <Folder className="h-16 w-16 text-gray-400 dark:text-gray-500" />
+                </div>
+
+                {/* Heading */}
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    No hands available
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed max-w-md">
+                    이 영상은 아직 AI 분석이 완료되지 않았습니다.
+                  </p>
+                </div>
+
+                {/* Info Alert */}
+                <div className="w-full p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">
+                        AI 분석으로 핸드를 자동 추출하세요
+                      </p>
+                      <p className="text-xs text-blue-700 dark:text-blue-400">
+                        위의 "AI 분석" 버튼을 클릭하여 핸드 히스토리를 자동으로 추출할 수 있습니다.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

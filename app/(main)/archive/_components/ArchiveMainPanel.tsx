@@ -1,5 +1,15 @@
 "use client"
 
+/**
+ * Archive Main Panel - Flowbite Enhanced
+ *
+ * Flowbite 패턴을 활용한 개선:
+ * - Card 스타일 개선
+ * - Badge 컴포넌트 일관성
+ * - 버튼 그룹 스타일 개선
+ * - 접근성 개선
+ */
+
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArchiveHandHistory } from "./ArchiveHandHistory"
 import { useArchiveDataStore } from "@/stores/archive-data-store"
@@ -38,26 +48,15 @@ export function ArchiveMainPanel({ onSeekToTime }: ArchiveMainPanelProps) {
       return null
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[ArchiveMainPanel] Looking for day:', selectedDay)
-      console.log('[ArchiveMainPanel] Tournaments count:', tournaments.length)
-    }
-
     for (const tournament of tournaments) {
       for (const event of tournament.events || []) {
         const stream = event.streams?.find((s: Stream) => s.id === selectedDay)
         if (stream) {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[ArchiveMainPanel] Found stream:', stream.name, 'video_url:', stream.video_url)
-          }
           return stream as Stream
         }
       }
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[ArchiveMainPanel] Day not found!')
-    }
     return null
   }, [selectedDay, tournaments])
 
@@ -88,209 +87,190 @@ export function ArchiveMainPanel({ onSeekToTime }: ArchiveMainPanelProps) {
     })
   }
 
+  // Flowbite moment filter buttons
+  const momentFilters: { value: MomentFilter; label: string }[] = [
+    { value: 'all', label: 'All' },
+    { value: 'highlighted', label: 'Highlighted' },
+    { value: 'big-pot', label: 'Big Pot' },
+    { value: 'all-in', label: 'All-in' },
+  ]
+
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
       <ScrollArea className="flex-1">
         <div className="p-4 md:p-6 space-y-4 md:space-y-6">
           {!selectedDayData ? (
+            /* Empty State - Flowbite Alert Style */
             <div className="flex flex-col items-center justify-center h-full min-h-[600px] py-16 px-4">
-              <div className="mb-10">
-                <div className="bg-blue-500 dark:bg-blue-600 p-8 rounded-lg shadow-md">
-                  <Play className="h-16 w-16 text-white" />
+              <div className="w-full max-w-2xl p-8 text-center bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-md">
+                <div className="mb-6 flex justify-center">
+                  <div className="p-6 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                    <Play className="h-16 w-16 text-blue-600 dark:text-blue-400" />
+                  </div>
                 </div>
-              </div>
 
-              <h1 className="text-2xl md:text-3xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
-                Select a day
-              </h1>
+                <h3 className="text-2xl font-bold mb-3 text-gray-900 dark:text-gray-100">
+                  Select a day
+                </h3>
 
-              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 text-center max-w-lg mb-12">
-                Choose a tournament day from the list to view its video and hand history
-              </p>
+                <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+                  Choose a tournament day from the list to view its video and hand history
+                </p>
 
-              <div className="w-full max-w-2xl space-y-3">
-                <div className="flex items-start gap-4 p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400 mt-2 flex-shrink-0" />
-                  <p className="text-sm text-gray-700 dark:text-gray-300">Browse tournaments by category in the left sidebar</p>
-                </div>
-                <div className="flex items-start gap-4 p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400 mt-2 flex-shrink-0" />
-                  <p className="text-sm text-gray-700 dark:text-gray-300">Expand tournaments and events to see available days</p>
-                </div>
-                <div className="flex items-start gap-4 p-4 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 dark:bg-blue-400 mt-2 flex-shrink-0" />
-                  <p className="text-sm text-gray-700 dark:text-gray-300">Click on a day to watch the video and explore hand history</p>
+                <div className="space-y-3 text-left">
+                  <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">Browse tournaments by category in the left sidebar</p>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">Expand tournaments and events to see available days</p>
+                  </div>
+                  <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-0.5">Click on a day to watch the video and explore hand history</p>
+                  </div>
                 </div>
               </div>
             </div>
           ) : (
             <>
-              {/* Day Info Card */}
-              <Card className="p-4 md:p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-md rounded-lg">
+              {/* Day Info Card - Flowbite Card Style */}
+              <Card className="p-5 md:p-6 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-lg rounded-lg">
                 <div className="space-y-4">
-                  <div className="flex flex-col md:flex-row items-start justify-between gap-4 md:gap-6">
+                  <div className="flex flex-col md:flex-row items-start justify-between gap-4">
                     <div className="flex-1 min-w-0 space-y-3 w-full">
-                      <h1 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                      <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {selectedDayData.name}
                       </h1>
+                      {/* Flowbite Badge Group */}
                       <div className="flex flex-wrap gap-2">
                         {selectedDayData.published_at && (
-                          <Badge variant="secondary" className="gap-1.5 px-3 py-1 text-xs font-normal bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                             <Calendar className="h-3.5 w-3.5" />
                             {formatDate(selectedDayData.published_at)}
-                          </Badge>
+                          </span>
                         )}
                         {selectedDayData.player_count !== undefined && selectedDayData.player_count > 0 && (
-                          <Badge variant="secondary" className="gap-1.5 px-3 py-1 text-xs font-normal bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900 rounded-lg border border-blue-200 dark:border-blue-700">
                             <Users className="h-3.5 w-3.5" />
                             {selectedDayData.player_count} players
-                          </Badge>
+                          </span>
                         )}
                         {selectedDayData.video_source === "youtube" && selectedDayData.video_url && (
-                          <Badge variant="destructive" className="gap-1.5 px-3 py-1 text-xs font-normal bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-md">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900 rounded-lg border border-red-200 dark:border-red-700">
                             <Play className="h-3.5 w-3.5" />
                             YouTube
-                          </Badge>
+                          </span>
                         )}
                         {(selectedDayData.video_file || selectedDayData.video_nas_path) && (
-                          <Badge className="gap-1.5 px-3 py-1 text-xs font-normal bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 rounded-md">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900 rounded-lg border border-amber-200 dark:border-amber-700">
                             <Play className="h-3.5 w-3.5" />
                             Local
-                          </Badge>
+                          </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Analyze Button */}
+                    {/* AI Analyze Button - Flowbite Primary Button */}
                     <Button
-                      variant="default"
-                      size="lg"
                       onClick={() => {
-                        console.log('============================================')
-                        console.log('[ArchiveMainPanel] AI 분석 버튼 클릭')
-                        console.log('[ArchiveMainPanel] selectedDayData:', selectedDayData)
-                        console.log('[ArchiveMainPanel] video_url:', selectedDayData.video_url)
-                        console.log('============================================')
-
                         if (selectedDayData.video_url) {
-                          console.log('[ArchiveMainPanel] Opening analyze dialog...')
                           openAnalyzeDialog(selectedDayData)
-                          console.log('[ArchiveMainPanel] openAnalyzeDialog called')
-                        } else {
-                          console.error('[ArchiveMainPanel] No video_url, button should be disabled!')
                         }
                       }}
                       disabled={!selectedDayData.video_url}
-                      className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold px-6 rounded-lg text-white"
+                      className={cn(
+                        "w-full md:w-auto gap-2 font-semibold shadow-md hover:shadow-lg transition-all",
+                        "bg-gradient-to-r from-gold-600 to-gold-700 hover:from-gold-700 hover:to-gold-800",
+                        "text-white focus:ring-4 focus:ring-gold-300 dark:focus:ring-gold-800",
+                        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md"
+                      )}
                       title={!selectedDayData.video_url ? "영상 URL이 필요합니다" : ""}
                     >
-                      <Sparkles className="h-5 w-5 mr-2" />
+                      <Sparkles className="h-5 w-5" />
                       AI 분석
                     </Button>
                   </div>
 
                   {selectedDayData.description && (
-                    <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                      <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{selectedDayData.description}</p>
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                        {selectedDayData.description}
+                      </p>
                     </div>
                   )}
                 </div>
               </Card>
 
-              {/* People Section */}
-              <section>
-                <Card className="p-4 md:p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-md rounded-lg">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-700">
-                      <div>
-                        <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">
-                          People
-                        </h2>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Players in this session</p>
-                      </div>
-                      {players.length > 0 && (
-                        <Badge variant="secondary" className="text-sm font-normal px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md">
-                          {players.length} {players.length === 1 ? 'player' : 'players'}
-                        </Badge>
-                      )}
+              {/* People Section - Flowbite Card */}
+              <Card className="p-5 md:p-6 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-lg rounded-lg">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                        People
+                      </h2>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        Players in this session
+                      </p>
                     </div>
-                    {playersLoading ? (
-                      <div className="text-center py-12">
-                        <div className="inline-block p-4 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse">
-                          <p className="text-gray-600 dark:text-gray-400">Loading players...</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <PlayerCardList players={players} />
+                    {players.length > 0 && (
+                      <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                        {players.length} {players.length === 1 ? 'player' : 'players'}
+                      </span>
                     )}
                   </div>
-                </Card>
-              </section>
-
-              {/* Moments Section */}
-              <section>
-                <Card className="p-4 md:p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-md rounded-lg">
-                  <div className="space-y-4">
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between pb-3 border-b border-gray-200 dark:border-gray-700 gap-4">
-                      <div>
-                        <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">
-                          Moments
-                        </h2>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {filteredHands.length} {filteredHands.length === 1 ? 'hand' : 'hands'} found
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Button
-                          variant={momentFilter === 'all' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setMomentFilter('all')}
-                          className={cn(
-                            "font-medium rounded-md",
-                            momentFilter === 'all' && "bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white"
-                          )}
-                        >
-                          All
-                        </Button>
-                        <Button
-                          variant={momentFilter === 'highlighted' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setMomentFilter('highlighted')}
-                          className={cn(
-                            "font-medium rounded-md",
-                            momentFilter === 'highlighted' && "bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white"
-                          )}
-                        >
-                          Highlighted
-                        </Button>
-                        <Button
-                          variant={momentFilter === 'big-pot' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setMomentFilter('big-pot')}
-                          className={cn(
-                            "font-medium rounded-md",
-                            momentFilter === 'big-pot' && "bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white"
-                          )}
-                        >
-                          Big Pot
-                        </Button>
-                        <Button
-                          variant={momentFilter === 'all-in' ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setMomentFilter('all-in')}
-                          className={cn(
-                            "font-medium rounded-md",
-                            momentFilter === 'all-in' && "bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white"
-                          )}
-                        >
-                          All-in
-                        </Button>
+                  {playersLoading ? (
+                    <div className="flex justify-center py-12">
+                      <div className="inline-flex items-center gap-3 px-6 py-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                        <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-gold-600 rounded-full"></div>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Loading players...</span>
                       </div>
                     </div>
-                    <ArchiveHandHistory onSeekToTime={handleSeekToTime} overrideHands={filteredHands} />
+                  ) : (
+                    <PlayerCardList players={players} />
+                  )}
+                </div>
+              </Card>
+
+              {/* Moments Section - Flowbite Card with Button Group */}
+              <Card className="p-5 md:p-6 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 shadow-lg rounded-lg">
+                <div className="space-y-4">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                        Moments
+                      </h2>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        {filteredHands.length} {filteredHands.length === 1 ? 'hand' : 'hands'} found
+                      </p>
+                    </div>
+                    {/* Flowbite Button Group */}
+                    <div className="inline-flex rounded-lg shadow-sm" role="group">
+                      {momentFilters.map((filter, index) => (
+                        <button
+                          key={filter.value}
+                          type="button"
+                          onClick={() => setMomentFilter(filter.value)}
+                          className={cn(
+                            "px-4 py-2 text-sm font-medium transition-colors",
+                            "focus:z-10 focus:ring-2 focus:ring-gold-400",
+                            index === 0 && "rounded-l-lg",
+                            index === momentFilters.length - 1 && "rounded-r-lg",
+                            momentFilter === filter.value
+                              ? "bg-gold-600 text-white hover:bg-gold-700 border border-gold-600"
+                              : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                          )}
+                        >
+                          {filter.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </Card>
-              </section>
+                  <ArchiveHandHistory onSeekToTime={handleSeekToTime} overrideHands={filteredHands} />
+                </div>
+              </Card>
             </>
           )}
         </div>
