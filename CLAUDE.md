@@ -575,6 +575,7 @@ queryClient.invalidateQueries() // 전체 무효화
 - **PAGES_STRUCTURE.md**: 43개 페이지 구조
 - **docs/REACT_QUERY_GUIDE.md**: 데이터 페칭 패턴
 - **docs/HAND_IMPORT_API.md**: 핸드 Import API
+- **docs/FLOWBITE_GUIDE.md**: Flowbite UI 컴포넌트 라이브러리 가이드
 
 ---
 
