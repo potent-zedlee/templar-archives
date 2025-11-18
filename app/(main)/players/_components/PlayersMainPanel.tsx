@@ -48,6 +48,11 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
     setCurrentPage(1)
   }, [searchQuery])
 
+  // Reset to page 1 when players array changes (e.g., leaderboard filter)
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [players])
+
   const formatWinnings = (winnings?: number) => {
     if (!winnings) return '$0'
     if (winnings >= 1000000) {
