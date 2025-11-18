@@ -75,14 +75,14 @@ export function ArchiveSidebarCategories({
         type="button"
         onClick={() => onCategoryChange('All')}
         className={cn(
-          "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+          "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors min-w-0",
           selectedCategory === 'All'
             ? "bg-gold-600 text-white"
             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
         )}
       >
         <LayoutGrid className="w-5 h-5 flex-shrink-0" />
-        <span className="flex-1 text-left truncate">All Categories</span>
+        <span className="flex-1 text-left truncate min-w-0 overflow-hidden">All Categories</span>
       </button>
 
       {/* Categories List - Flowbite Style */}
@@ -119,7 +119,7 @@ export function ArchiveSidebarCategories({
                   type="button"
                   onClick={() => onCategoryChange(category.id)}
                   className={cn(
-                    "flex-1 flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors",
+                    "flex-1 flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors min-w-0",
                     isSelected
                       ? "bg-gold-600 text-white"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -131,7 +131,7 @@ export function ArchiveSidebarCategories({
                     className="w-5 h-5 flex-shrink-0"
                     fallback="text"
                   />
-                  <span className="flex-1 text-left truncate" title={category.display_name}>
+                  <span className="flex-1 text-left truncate min-w-0 overflow-hidden" title={category.display_name}>
                     {category.display_name}
                   </span>
                 </button>
@@ -148,7 +148,7 @@ export function ArchiveSidebarCategories({
                           type="button"
                           onClick={() => onCategoryChange(child.id)}
                           className={cn(
-                            "w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors",
+                            "w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors min-w-0",
                             isChildSelected
                               ? "bg-gold-600 text-white font-medium"
                               : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -160,7 +160,7 @@ export function ArchiveSidebarCategories({
                             className="w-4 h-4 flex-shrink-0"
                             fallback="text"
                           />
-                          <span className="flex-1 text-left truncate" title={child.display_name}>
+                          <span className="flex-1 text-left truncate min-w-0 overflow-hidden" title={child.display_name}>
                             {child.display_name}
                           </span>
                         </button>
