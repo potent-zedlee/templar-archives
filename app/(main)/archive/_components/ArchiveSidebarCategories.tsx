@@ -75,7 +75,7 @@ export function ArchiveSidebarCategories({
       <Button
         variant={selectedCategory === 'All' ? 'default' : 'ghost'}
         className={cn(
-          "w-full justify-start gap-2.5 min-h-[40px] py-2 px-3 rounded-lg transition-all duration-200",
+          "w-full justify-start gap-2.5 !h-auto min-h-[40px] py-2.5 px-3 rounded-lg transition-all duration-200",
           selectedCategory === 'All'
             ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold"
             : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
@@ -122,7 +122,7 @@ export function ArchiveSidebarCategories({
                 <Button
                   variant={isSelected ? 'default' : 'ghost'}
                   className={cn(
-                    "flex-1 justify-start items-start gap-2.5 min-h-[36px] py-2 px-3 rounded-lg transition-all duration-200",
+                    "flex-1 justify-start items-start gap-2.5 !h-auto min-h-[36px] py-2 px-3 rounded-lg transition-all duration-200",
                     !hasChildren && "ml-6",
                     isSelected
                       ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold"
@@ -157,7 +157,7 @@ export function ArchiveSidebarCategories({
                         key={child.id}
                         variant={isChildSelected ? 'default' : 'ghost'}
                         className={cn(
-                          "w-full justify-start items-start gap-2.5 min-h-[32px] py-1.5 px-3 rounded-lg transition-all duration-200",
+                          "w-full justify-start items-start gap-2.5 !h-auto min-h-[32px] py-1.5 px-3 rounded-lg transition-all duration-200",
                           isChildSelected
                             ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold"
                             : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
