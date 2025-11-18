@@ -75,7 +75,7 @@ export function ArchiveSidebarCategories({
       <Button
         variant={selectedCategory === 'All' ? 'default' : 'ghost'}
         className={cn(
-          "w-full justify-start gap-2.5 h-10 px-3 rounded-lg transition-all duration-200",
+          "w-full justify-start gap-2.5 min-h-[40px] py-2 px-3 rounded-lg transition-all duration-200",
           selectedCategory === 'All'
             ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold"
             : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
@@ -84,7 +84,7 @@ export function ArchiveSidebarCategories({
         aria-current={selectedCategory === 'All' ? 'page' : undefined}
       >
         <LayoutGrid className="h-4 w-4 flex-shrink-0" />
-        <span className="text-sm font-medium">All Categories</span>
+        <span className="text-sm font-medium whitespace-normal text-left leading-tight">All Categories</span>
       </Button>
 
       {/* Category List (Flowbite Accordion Style) */}
@@ -98,12 +98,12 @@ export function ArchiveSidebarCategories({
           return (
             <div key={category.id} className="space-y-0.5">
               {/* Parent Category */}
-              <div className="flex items-center">
+              <div className="flex items-start gap-1">
                 {hasChildren && (
                   <button
                     type="button"
                     className={cn(
-                      "w-7 h-9 flex items-center justify-center rounded-md",
+                      "w-6 min-h-[36px] flex items-center justify-center rounded-md flex-shrink-0 mt-0.5",
                       "hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150",
                       "focus:outline-none focus:ring-2 focus:ring-gold-400"
                     )}
@@ -122,8 +122,8 @@ export function ArchiveSidebarCategories({
                 <Button
                   variant={isSelected ? 'default' : 'ghost'}
                   className={cn(
-                    "flex-1 justify-start gap-2.5 h-9 px-3 rounded-lg transition-all duration-200",
-                    !hasChildren && "ml-7",
+                    "flex-1 justify-start items-start gap-2.5 min-h-[36px] py-2 px-3 rounded-lg transition-all duration-200",
+                    !hasChildren && "ml-6",
                     isSelected
                       ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold"
                       : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
@@ -134,10 +134,10 @@ export function ArchiveSidebarCategories({
                   <CategoryLogo
                     category={category}
                     size="sm"
-                    className="w-4 h-4 flex-shrink-0"
+                    className="w-4 h-4 flex-shrink-0 mt-0.5"
                     fallback="text"
                   />
-                  <span className="text-sm font-medium truncate">
+                  <span className="text-sm font-medium whitespace-normal text-left leading-tight line-clamp-2 flex-1">
                     {category.display_name}
                   </span>
                 </Button>
@@ -146,7 +146,7 @@ export function ArchiveSidebarCategories({
               {/* Child Categories (Collapsible) */}
               {isExpanded && hasChildren && (
                 <div
-                  className="ml-7 space-y-0.5 pl-4 border-l-2 border-gray-200 dark:border-gray-700"
+                  className="ml-6 space-y-0.5 pl-4 border-l-2 border-gray-200 dark:border-gray-700"
                   role="group"
                   aria-label={`${category.display_name} subcategories`}
                 >
@@ -157,10 +157,10 @@ export function ArchiveSidebarCategories({
                         key={child.id}
                         variant={isChildSelected ? 'default' : 'ghost'}
                         className={cn(
-                          "w-full justify-start gap-2.5 h-8 px-3 rounded-lg transition-all duration-200",
+                          "w-full justify-start items-start gap-2.5 min-h-[32px] py-1.5 px-3 rounded-lg transition-all duration-200",
                           isChildSelected
-                            ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold text-xs"
-                            : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 text-xs"
+                            ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold"
+                            : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
                         )}
                         onClick={() => onCategoryChange(child.id)}
                         aria-current={isChildSelected ? 'page' : undefined}
@@ -168,10 +168,10 @@ export function ArchiveSidebarCategories({
                         <CategoryLogo
                           category={child}
                           size="sm"
-                          className="w-3.5 h-3.5 flex-shrink-0"
+                          className="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
                           fallback="text"
                         />
-                        <span className="font-medium truncate">
+                        <span className="text-xs font-medium whitespace-normal text-left leading-tight line-clamp-2 flex-1">
                           {child.display_name}
                         </span>
                       </Button>
