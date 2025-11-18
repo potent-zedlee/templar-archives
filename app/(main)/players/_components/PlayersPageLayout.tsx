@@ -1,12 +1,15 @@
 "use client"
 
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { PlayersSidebar, type LeaderboardType } from "./PlayersSidebar"
 import { PlayersMainPanel } from "./PlayersMainPanel"
+import { PlayerDetailPanel } from "./PlayerDetailPanel"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
 import type { Player } from "@/lib/supabase"
+import { usePlayerQuery } from "@/lib/queries/players-queries"
 
 type PlayerWithHandCount = Player & {
   hand_count: number
@@ -18,9 +21,15 @@ interface PlayersPageLayoutProps {
 }
 
 export function PlayersPageLayout({ players, loading }: PlayersPageLayoutProps) {
+  const searchParams = useSearchParams()
+  const selectedPlayerId = searchParams.get('selected')
+
   const [selectedLeaderboard, setSelectedLeaderboard] = useState<LeaderboardType>('all-time')
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // Load selected player data if ID exists
+  const { data: selectedPlayer, isLoading: playerLoading } = usePlayerQuery(selectedPlayerId || '')
 
   // Get unique countries with player counts
   const countries = Array.from(new Set(players.map(p => p.country).filter(Boolean))).sort() as string[]
@@ -94,9 +103,13 @@ export function PlayersPageLayout({ players, loading }: PlayersPageLayoutProps) 
           </Sheet>
         </div>
 
-        {/* Players Main Panel */}
+        {/* Main Panel - Conditional Rendering */}
         <div className="flex-1 overflow-hidden">
-          <PlayersMainPanel players={sortedPlayers} loading={loading} />
+          {selectedPlayer ? (
+            <PlayerDetailPanel player={selectedPlayer as PlayerWithHandCount} />
+          ) : (
+            <PlayersMainPanel players={sortedPlayers} loading={loading} />
+          )}
         </div>
       </main>
     </div>

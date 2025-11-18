@@ -1,15 +1,13 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { StaggerContainer, StaggerItem } from "@/components/page-transition"
 import { AnimatedCard } from "@/components/animated-card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Search, ChevronLeft, ChevronRight, Users } from "lucide-react"
 import type { Player } from "@/lib/supabase"
-import Link from "next/link"
-import { usePlayersQuery } from "@/lib/queries/players-queries"
-import { toast } from "sonner"
 import { GridSkeleton } from "@/components/skeletons/grid-skeleton"
 import { EmptyState } from "@/components/empty-state"
 
@@ -23,9 +21,14 @@ interface PlayersMainPanelProps {
 }
 
 export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const PLAYERS_PER_PAGE = 12
+
+  const handlePlayerClick = (playerId: string) => {
+    router.push(`/players?selected=${playerId}`)
+  }
 
   // Filter players by search
   const filteredPlayers = players.filter(player => {
@@ -94,9 +97,12 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
           <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" staggerDelay={0.05}>
             {paginatedPlayers.map((player) => (
               <StaggerItem key={player.id}>
-                <Link href={`/players/${player.id}`} className="block">
+                <button
+                  onClick={() => handlePlayerClick(player.id)}
+                  className="block w-full text-left"
+                >
                   <AnimatedCard>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200 cursor-pointer">
                       {/* Player Header */}
                       <div className="flex items-start gap-4 mb-4">
                         {/* Profile Image */}
@@ -142,7 +148,7 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
                       </div>
                     </div>
                   </AnimatedCard>
-                </Link>
+                </button>
               </StaggerItem>
             ))}
           </StaggerContainer>
