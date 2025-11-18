@@ -24,7 +24,7 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
   return (
     <nav className="hidden md:flex items-center gap-6" role="navigation" aria-label="Main navigation">
       {navLinks.map((link, index) => {
-        // Check if this link has subItems (expandable)
+        // Dropdown for ARCHIVE menu
         if ('subItems' in link && link.subItems) {
           const isActive = pathname.startsWith("/archive") ||
                          pathname.startsWith("/search")
@@ -37,8 +37,8 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
               onMouseLeave={() => setArchiveExpanded(false)}
             >
               <div className={cn(
-                "text-sm font-bold uppercase tracking-wide transition-colors hover:text-gold-300 dark:hover:text-gold-200 relative inline-flex items-center gap-1 cursor-pointer",
-                isActive ? "text-gold-400 dark:text-gold-300" : "text-gray-600 dark:text-gray-400"
+                "text-sm font-bold uppercase tracking-wide transition-colors hover:text-gold-400 relative inline-flex items-center gap-1 cursor-pointer",
+                isActive ? "text-gold-400" : "text-gray-300"
               )}>
                 {link.label}
                 <ChevronRight className={cn(
@@ -46,10 +46,11 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
                   archiveExpanded && "rotate-90"
                 )} />
                 {isActive && (
-                  <span className="absolute -bottom-[21px] left-0 right-0 h-[3px] bg-gold-400 dark:bg-gold-300" />
+                  <span className="absolute -bottom-[21px] left-0 right-0 h-[3px] bg-gold-400" />
                 )}
               </div>
 
+              {/* Flowbite-style Dropdown Menu */}
               <AnimatePresence>
                 {archiveExpanded && (
                   <motion.div
@@ -57,7 +58,7 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
                     animate={{ opacity: 1, width: "auto", x: 0 }}
                     exit={{ opacity: 0, width: 0, x: -10 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="ml-2 flex items-center gap-3 bg-gray-50 dark:bg-gray-800 border-2 border-gold-600 dark:border-gold-500 shadow-[4px_4px_0_var(--gold-200)] dark:shadow-[4px_4px_0_var(--gold-700)] px-4 py-2 whitespace-nowrap"
+                    className="ml-2 flex items-center gap-3 bg-gray-800 border-2 border-gold-500 rounded-lg shadow-lg px-4 py-2 whitespace-nowrap"
                   >
                     {link.subItems.map((subItem) => {
                       const subIsActive = pathname === subItem.href ||
@@ -67,10 +68,10 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
                           key={subItem.href}
                           href={subItem.href}
                           className={cn(
-                            "text-sm font-semibold uppercase tracking-wide transition-colors hover:text-gold-300 dark:hover:text-gold-200",
+                            "text-sm font-semibold uppercase tracking-wide transition-colors hover:text-gold-400",
                             subIsActive
-                              ? "text-gold-400 dark:text-gold-300"
-                              : "text-gray-600 dark:text-gray-400"
+                              ? "text-gold-400"
+                              : "text-gray-300"
                           )}
                         >
                           {subItem.label}
@@ -92,15 +93,15 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
             key={link.href}
             href={link.href!}
             className={cn(
-              "text-sm font-bold uppercase tracking-wide transition-colors hover:text-gold-300 dark:hover:text-gold-200 relative",
+              "text-sm font-bold uppercase tracking-wide transition-colors hover:text-gold-400 relative",
               isActive
-                ? "text-gold-400 dark:text-gold-300"
-                : "text-gray-600 dark:text-gray-400"
+                ? "text-gold-400"
+                : "text-gray-300"
             )}
           >
             {link.label}
             {isActive && (
-              <span className="absolute -bottom-[21px] left-0 right-0 h-[3px] bg-gold-400 dark:bg-gold-300" />
+              <span className="absolute -bottom-[21px] left-0 right-0 h-[3px] bg-gold-400" />
             )}
           </Link>
         )

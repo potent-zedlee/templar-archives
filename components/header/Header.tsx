@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { signOut } from "@/lib/auth"
@@ -90,7 +89,8 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-[100] w-full border-b-[3px] border-gold-500 bg-gray-900" role="banner">
+      {/* Flowbite Navbar - Dark Mode */}
+      <nav className="sticky top-0 z-[100] w-full border-b-[3px] border-gold-500 bg-gray-900" role="banner">
         <div className="w-full px-6 h-16 flex items-center justify-between">
           {/* Left: Logo + Navigation Menu */}
           <div className="flex items-center gap-8">
@@ -117,35 +117,37 @@ export function Header() {
                     getAvatarUrl={getAvatarUrl}
                   />
                 ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="hidden md:inline-flex border-gray-600 text-gray-200 hover:bg-gray-800"
+                  <button
+                    type="button"
+                    className="hidden md:inline-flex text-gray-100 bg-transparent border border-gray-600 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-700 font-medium rounded-lg text-sm px-4 py-2 transition-colors"
                     onClick={() => router.push("/auth/login")}
                   >
                     LOGIN
-                  </Button>
+                  </button>
                 )}
               </>
             )}
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden h-9 w-9 hover:bg-gray-800"
+            {/* Mobile Menu Toggle Button */}
+            <button
+              type="button"
+              className="md:hidden inline-flex items-center p-2 w-9 h-9 justify-center text-gray-400 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-700 transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle menu"
+              aria-label="Toggle navigation"
+              aria-controls="mobile-menu"
+              aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? (
-                <X className="h-5 w-5 text-gray-400" />
-              ) : (
-                <Menu className="h-5 w-5 text-gray-400" />
-              )}
               <span className="sr-only">Toggle menu</span>
-            </Button>
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
+            </button>
           </div>
         </div>
 
+        {/* Mobile Menu */}
         <HeaderMobileMenu
           isOpen={mobileMenuOpen}
           onClose={() => setMobileMenuOpen(false)}
@@ -160,7 +162,7 @@ export function Header() {
           getDisplayName={getDisplayName}
           getAvatarUrl={getAvatarUrl}
         />
-      </header>
+      </nav>
     </>
   )
 }

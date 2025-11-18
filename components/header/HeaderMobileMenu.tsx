@@ -3,8 +3,6 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, Newspaper, Radio, Folder, Archive } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -52,11 +50,19 @@ export function HeaderMobileMenu({
     onClose()
   }
 
+  const avatarUrl = getAvatarUrl()
+  const displayName = getDisplayName()
+  const initials = getUserInitials()
+
   return (
-    <div className="md:hidden border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-      <nav className="container max-w-7xl mx-auto px-4 py-4 space-y-2">
+    <div
+      id="mobile-menu"
+      className="md:hidden border-b border-gray-700 bg-gray-900"
+    >
+      <div className="w-full px-4 py-4 space-y-2">
+        {/* Navigation Links */}
         {navLinks.map((link, index) => {
-          // Check if this link has subItems (accordion)
+          // Accordion for ARCHIVE menu
           if ('subItems' in link && link.subItems) {
             const isActive = pathname.startsWith("/archive") ||
                            pathname.startsWith("/search")
@@ -66,10 +72,10 @@ export function HeaderMobileMenu({
                 <button
                   onClick={() => setArchiveExpandedMobile(!archiveExpandedMobile)}
                   className={cn(
-                    "w-full flex items-center justify-between px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                    "w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-gold-50 dark:bg-gold-900/10 text-gold-600 dark:text-gold-400"
-                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      ? "bg-gold-900/20 text-gold-400"
+                      : "text-gray-300 hover:bg-gray-800 hover:text-gray-100"
                   )}
                 >
                   <span>{link.label}</span>
@@ -98,10 +104,10 @@ export function HeaderMobileMenu({
                               href={subItem.href}
                               onClick={onClose}
                               className={cn(
-                                "block px-8 py-2 rounded-md text-sm font-medium transition-colors",
+                                "block px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                                 subIsActive
-                                  ? "bg-gold-50 dark:bg-gold-900/10 text-gold-600 dark:text-gold-400"
-                                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                  ? "bg-gold-900/20 text-gold-400"
+                                  : "text-gray-400 hover:bg-gray-800 hover:text-gray-100"
                               )}
                             >
                               {subItem.label}
@@ -125,10 +131,10 @@ export function HeaderMobileMenu({
               href={link.href!}
               onClick={onClose}
               className={cn(
-                "block px-4 py-2 rounded-md text-sm font-medium transition-colors",
+                "block px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-gold-50 dark:bg-gold-900/10 text-gold-600 dark:text-gold-400"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  ? "bg-gold-900/20 text-gold-400"
+                  : "text-gray-300 hover:bg-gray-800 hover:text-gray-100"
               )}
             >
               {link.label}
@@ -136,199 +142,189 @@ export function HeaderMobileMenu({
           )
         })}
 
-        {/* Mobile Login/Profile UI */}
+        {/* User Section */}
         {!authLoading && (
           <>
             {user ? (
-              <div className="mt-4 space-y-2">
-                <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-4 pt-4 border-t border-gray-700 space-y-2">
+                {/* User Info */}
+                <div className="px-4 py-2">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={getAvatarUrl()} alt={getDisplayName()} />
-                      <AvatarFallback className="bg-gold-100 dark:bg-gold-900 text-gold-700 dark:text-gold-300">{getUserInitials()}</AvatarFallback>
-                    </Avatar>
+                    {avatarUrl ? (
+                      <img
+                        className="w-10 h-10 rounded-full object-cover"
+                        src={avatarUrl}
+                        alt={displayName}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gold-500 flex items-center justify-center">
+                        <span className="text-sm font-semibold text-gray-900">{initials}</span>
+                      </div>
+                    )}
                     <div className="flex flex-col">
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {getDisplayName()}
+                      <p className="text-sm font-medium text-gray-100">
+                        {displayName}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-400 truncate">
                         {user.email}
                       </p>
                     </div>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+
+                {/* User Menu Items */}
+                <button
                   onClick={() => {
                     router.push("/profile")
                     onClose()
                   }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   <User className="mr-2 h-4 w-4" />
                   Profile
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+                </button>
+                <button
                   onClick={() => {
                     router.push("/bookmarks")
                     onClose()
                   }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   <Bookmark className="mr-2 h-4 w-4" />
                   Bookmarks
-                </Button>
+                </button>
+
+                {/* Reporter Menu */}
                 {isUserReporter && (
                   <>
-                    <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 font-semibold">
-                      REPORTER MENU
+                    <div className="px-4 py-2 text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                      Reporter Menu
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+                    <button
                       onClick={() => {
                         router.push("/reporter/news")
                         onClose()
                       }}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                     >
                       <Newspaper className="mr-2 h-4 w-4" />
                       My News
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+                    </button>
+                    <button
                       onClick={() => {
                         router.push("/reporter/live")
                         onClose()
                       }}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                     >
                       <Radio className="mr-2 h-4 w-4" />
                       My Live Reports
-                    </Button>
+                    </button>
                   </>
                 )}
+
+                {/* Admin Menu */}
                 {isUserAdmin && (
                   <>
-                    <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 font-semibold">
-                      ADMIN MENU
+                    <div className="px-4 py-2 text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                      Admin Menu
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+                    <button
                       onClick={() => {
                         router.push("/admin/dashboard")
                         onClose()
                       }}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                     >
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Dashboard
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+                    </button>
+                    <button
                       onClick={() => {
                         router.push("/admin/users")
                         onClose()
                       }}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                     >
                       <Users className="mr-2 h-4 w-4" />
                       Users
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+                    </button>
+                    <button
                       onClick={() => {
                         router.push("/admin/claims")
                         onClose()
                       }}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                     >
                       <Shield className="mr-2 h-4 w-4" />
                       Claims
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+                    </button>
+                    <button
                       onClick={() => {
                         router.push("/admin/content")
                         onClose()
                       }}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                     >
                       <FileText className="mr-2 h-4 w-4" />
                       Content
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+                    </button>
+                    <button
                       onClick={() => {
                         router.push("/admin/edit-requests")
                         onClose()
                       }}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                     >
                       <Edit className="mr-2 h-4 w-4" />
                       Edit Requests
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+                    </button>
+                    <button
                       onClick={() => {
                         router.push("/admin/archive")
                         onClose()
                       }}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                     >
                       <Archive className="mr-2 h-4 w-4" />
                       Archive
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+                    </button>
+                    <button
                       onClick={() => {
                         router.push("/admin/categories")
                         onClose()
                       }}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                     >
                       <Folder className="mr-2 h-4 w-4" />
                       Categories
-                    </Button>
+                    </button>
                   </>
                 )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start px-4 hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300"
+
+                {/* Logout */}
+                <button
                   onClick={handleSignOut}
+                  className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
-                </Button>
+                </button>
               </div>
             ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-4 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+              <button
                 onClick={() => {
                   router.push("/auth/login")
                   onClose()
                 }}
+                className="w-full mt-4 text-gray-100 bg-transparent border border-gray-600 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-700 font-medium rounded-lg text-sm px-4 py-2 transition-colors"
               >
                 LOGIN
-              </Button>
+              </button>
             )}
           </>
         )}
-      </nav>
+      </div>
     </div>
   )
 }
