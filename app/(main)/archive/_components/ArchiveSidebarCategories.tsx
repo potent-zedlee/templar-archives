@@ -16,7 +16,6 @@ import { useActiveCategoriesQuery } from '@/lib/queries/category-queries'
 import type { GameType } from '@/lib/tournament-categories'
 import { ChevronDown, ChevronRight, LayoutGrid } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface ArchiveSidebarCategoriesProps {
   selectedCategory: string
@@ -86,84 +85,82 @@ export function ArchiveSidebarCategories({
       </Button>
 
       {/* Category List */}
-      <ScrollArea className="h-[400px]">
-        <div className="space-y-1 pr-2">
-          {rootCategories.map((category) => {
-            const children = getChildren(category.id)
-            const hasChildren = children.length > 0
-            const isExpanded = expandedParentIds.has(category.id)
-            const isSelected = selectedCategory === category.id
+      <div className="space-y-1">
+        {rootCategories.map((category) => {
+          const children = getChildren(category.id)
+          const hasChildren = children.length > 0
+          const isExpanded = expandedParentIds.has(category.id)
+          const isSelected = selectedCategory === category.id
 
-            return (
-              <div key={category.id} className="space-y-0.5">
-                {/* Parent Category */}
-                <div className="flex items-center gap-1">
-                  {hasChildren && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-6 p-0"
-                      onClick={() => toggleParent(category.id)}
-                    >
-                      {isExpanded ? (
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      ) : (
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      )}
-                    </Button>
-                  )}
+          return (
+            <div key={category.id} className="space-y-0.5">
+              {/* Parent Category */}
+              <div className="flex items-center gap-1">
+                {hasChildren && (
                   <Button
-                    variant={isSelected ? 'default' : 'ghost'}
-                    className={cn(
-                      "flex-1 justify-start gap-2 h-8",
-                      !hasChildren && "ml-6",
-                      isSelected && "bg-primary text-primary-foreground"
-                    )}
-                    onClick={() => onCategoryChange(category.id)}
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-6 p-0"
+                    onClick={() => toggleParent(category.id)}
                   >
-                    <CategoryLogo
-                      category={category}
-                      size="sm"
-                      className="w-4 h-4 flex-shrink-0"
-                      fallback="text"
-                    />
-                    <span className="text-xs font-medium truncate">
-                      {category.display_name}
-                    </span>
+                    {isExpanded ? (
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    ) : (
+                      <ChevronRight className="h-3.5 w-3.5" />
+                    )}
                   </Button>
-                </div>
-
-                {/* Child Categories */}
-                {isExpanded && hasChildren && (
-                  <div className="ml-8 space-y-0.5 border-l border-border/40 pl-2">
-                    {children.map((child) => (
-                      <Button
-                        key={child.id}
-                        variant={selectedCategory === child.id ? 'default' : 'ghost'}
-                        className={cn(
-                          "w-full justify-start gap-2 h-7",
-                          selectedCategory === child.id && "bg-primary text-primary-foreground"
-                        )}
-                        onClick={() => onCategoryChange(child.id)}
-                      >
-                        <CategoryLogo
-                          category={child}
-                          size="sm"
-                          className="w-3.5 h-3.5 flex-shrink-0"
-                          fallback="text"
-                        />
-                        <span className="text-xs truncate">
-                          {child.display_name}
-                        </span>
-                      </Button>
-                    ))}
-                  </div>
                 )}
+                <Button
+                  variant={isSelected ? 'default' : 'ghost'}
+                  className={cn(
+                    "flex-1 justify-start gap-2 h-8",
+                    !hasChildren && "ml-6",
+                    isSelected && "bg-primary text-primary-foreground"
+                  )}
+                  onClick={() => onCategoryChange(category.id)}
+                >
+                  <CategoryLogo
+                    category={category}
+                    size="sm"
+                    className="w-4 h-4 flex-shrink-0"
+                    fallback="text"
+                  />
+                  <span className="text-xs font-medium truncate">
+                    {category.display_name}
+                  </span>
+                </Button>
               </div>
-            )
-          })}
-        </div>
-      </ScrollArea>
+
+              {/* Child Categories */}
+              {isExpanded && hasChildren && (
+                <div className="ml-8 space-y-0.5 border-l border-border/40 pl-2">
+                  {children.map((child) => (
+                    <Button
+                      key={child.id}
+                      variant={selectedCategory === child.id ? 'default' : 'ghost'}
+                      className={cn(
+                        "w-full justify-start gap-2 h-7",
+                        selectedCategory === child.id && "bg-primary text-primary-foreground"
+                      )}
+                      onClick={() => onCategoryChange(child.id)}
+                    >
+                      <CategoryLogo
+                        category={child}
+                        size="sm"
+                        className="w-3.5 h-3.5 flex-shrink-0"
+                        fallback="text"
+                      />
+                      <span className="text-xs truncate">
+                        {child.display_name}
+                      </span>
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
