@@ -69,24 +69,24 @@ export function ArchiveSidebarCategories({
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1 overflow-hidden">
       {/* ALL Button - Flowbite Style */}
       <button
         type="button"
         onClick={() => onCategoryChange('All')}
         className={cn(
-          "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors min-w-0",
+          "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors min-w-0 overflow-hidden",
           selectedCategory === 'All'
             ? "bg-gold-600 text-white"
             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
         )}
       >
         <LayoutGrid className="w-5 h-5 flex-shrink-0" />
-        <span className="flex-1 text-left truncate min-w-0 overflow-hidden">All Categories</span>
+        <span className="flex-1 text-left truncate min-w-0 overflow-hidden whitespace-nowrap">All Categories</span>
       </button>
 
       {/* Categories List - Flowbite Style */}
-      <ul className="space-y-0.5">
+      <ul className="space-y-0.5 overflow-hidden">
         {rootCategories.map((category) => {
           const children = getChildren(category.id)
           const hasChildren = children.length > 0
@@ -94,14 +94,14 @@ export function ArchiveSidebarCategories({
           const isSelected = selectedCategory === category.id
 
           return (
-            <li key={category.id}>
+            <li key={category.id} className="min-w-0 overflow-hidden">
               {/* Parent Category */}
-              <div className="flex items-center">
+              <div className="flex items-center min-w-0 overflow-hidden">
                 {hasChildren ? (
                   <button
                     type="button"
                     onClick={() => toggleParent(category.id)}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex-shrink-0"
                     aria-label={isExpanded ? 'Collapse' : 'Expand'}
                   >
                     <ChevronRight
@@ -112,14 +112,14 @@ export function ArchiveSidebarCategories({
                     />
                   </button>
                 ) : (
-                  <div className="w-10"></div>
+                  <div className="w-10 flex-shrink-0"></div>
                 )}
 
                 <button
                   type="button"
                   onClick={() => onCategoryChange(category.id)}
                   className={cn(
-                    "flex-1 flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors min-w-0",
+                    "flex-1 flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors min-w-0 overflow-hidden",
                     isSelected
                       ? "bg-gold-600 text-white"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -131,7 +131,7 @@ export function ArchiveSidebarCategories({
                     className="w-5 h-5 flex-shrink-0"
                     fallback="text"
                   />
-                  <span className="flex-1 text-left truncate min-w-0 overflow-hidden" title={category.display_name}>
+                  <span className="flex-1 text-left truncate min-w-0 overflow-hidden whitespace-nowrap" title={category.display_name}>
                     {category.display_name}
                   </span>
                 </button>
@@ -139,16 +139,16 @@ export function ArchiveSidebarCategories({
 
               {/* Child Categories */}
               {isExpanded && hasChildren && (
-                <ul className="ml-10 mt-1 space-y-0.5 border-l-2 border-gray-200 dark:border-gray-700 pl-3">
+                <ul className="ml-10 mt-1 space-y-0.5 border-l-2 border-gray-200 dark:border-gray-700 pl-3 overflow-hidden">
                   {children.map((child) => {
                     const isChildSelected = selectedCategory === child.id
                     return (
-                      <li key={child.id}>
+                      <li key={child.id} className="min-w-0 overflow-hidden">
                         <button
                           type="button"
                           onClick={() => onCategoryChange(child.id)}
                           className={cn(
-                            "w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors min-w-0",
+                            "w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors min-w-0 overflow-hidden",
                             isChildSelected
                               ? "bg-gold-600 text-white font-medium"
                               : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -160,7 +160,7 @@ export function ArchiveSidebarCategories({
                             className="w-4 h-4 flex-shrink-0"
                             fallback="text"
                           />
-                          <span className="flex-1 text-left truncate min-w-0 overflow-hidden" title={child.display_name}>
+                          <span className="flex-1 text-left truncate min-w-0 overflow-hidden whitespace-nowrap" title={child.display_name}>
                             {child.display_name}
                           </span>
                         </button>
