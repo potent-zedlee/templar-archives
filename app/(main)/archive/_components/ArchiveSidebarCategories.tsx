@@ -83,7 +83,17 @@ export function ArchiveSidebarCategories({
         aria-current={selectedCategory === 'All' ? 'page' : undefined}
       >
         <LayoutGrid className="h-4 w-4 flex-shrink-0 mt-0.5" />
-        <span className="text-sm font-medium whitespace-normal text-left leading-tight flex-1">All Categories</span>
+        <span
+          className="text-sm font-medium text-left leading-tight flex-1 overflow-hidden"
+          style={{
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            wordBreak: 'break-word'
+          }}
+        >
+          All Categories
+        </span>
       </button>
 
       {/* Category List (Flowbite Accordion Style) */}
@@ -136,7 +146,15 @@ export function ArchiveSidebarCategories({
                     className="w-4 h-4 flex-shrink-0 mt-0.5"
                     fallback="text"
                   />
-                  <span className="text-sm font-medium whitespace-normal text-left leading-tight line-clamp-2 flex-1">
+                  <span
+                    className="text-sm font-medium text-left leading-tight flex-1 overflow-hidden"
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      wordBreak: 'break-word'
+                    }}
+                  >
                     {category.display_name}
                   </span>
                 </button>
@@ -170,7 +188,15 @@ export function ArchiveSidebarCategories({
                           className="w-3.5 h-3.5 flex-shrink-0 mt-0.5"
                           fallback="text"
                         />
-                        <span className="text-xs font-medium whitespace-normal text-left leading-tight line-clamp-2 flex-1">
+                        <span
+                          className="text-xs font-medium text-left leading-tight flex-1 overflow-hidden"
+                          style={{
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            wordBreak: 'break-word'
+                          }}
+                        >
                           {child.display_name}
                         </span>
                       </button>
