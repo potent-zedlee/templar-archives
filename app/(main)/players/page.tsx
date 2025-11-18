@@ -326,13 +326,6 @@ export default function playersClient() {
                           </span>
                         </div>
                       </div>
-
-                      {/* Actions */}
-                      <div className="mt-4">
-                        <div className="w-full text-center py-2 bg-green-600 dark:bg-green-700 text-white text-sm font-medium rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors">
-                          프로필 보기
-                        </div>
-                      </div>
                     </div>
                   </AnimatedCard>
                 </Link>
