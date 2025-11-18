@@ -9,7 +9,7 @@
  * - Flowbite 패턴 적용
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { CategoryLogo } from '@/components/category-logo'
 import { useActiveCategoriesQuery } from '@/lib/queries/category-queries'
@@ -56,6 +56,32 @@ export function ArchiveSidebarCategories({
 
     return children.sort((a, b) => a.name.localeCompare(b.name))
   }
+
+  // Auto-expand parent when child category is selected
+  useEffect(() => {
+    if (selectedCategory === 'All') return
+
+    // Find if selected category is a child and auto-expand its parent
+    const selectedCat = allCategories.find(cat => cat.id === selectedCategory)
+    if (selectedCat?.parent_id) {
+      setExpandedParentIds(prev => {
+        const newSet = new Set(prev)
+        newSet.add(selectedCat.parent_id)
+        return newSet
+      })
+    }
+    // If selected category is a parent with children, auto-expand it
+    else if (selectedCat) {
+      const children = getChildren(selectedCat.id)
+      if (children.length > 0) {
+        setExpandedParentIds(prev => {
+          const newSet = new Set(prev)
+          newSet.add(selectedCat.id)
+          return newSet
+        })
+      }
+    }
+  }, [selectedCategory, allCategories])
 
   // Toggle parent expansion
   const toggleParent = (parentId: string) => {
