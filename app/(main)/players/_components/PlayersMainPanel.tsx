@@ -99,7 +99,7 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
       {/* Players Grid - Scrollable */}
       <ScrollArea className="flex-1">
         <div className="p-4 md:p-6">
-          <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" staggerDelay={0.05}>
+          <StaggerContainer key={currentPage} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6" staggerDelay={0.05}>
             {paginatedPlayers.map((player) => (
               <StaggerItem key={player.id}>
                 <button
