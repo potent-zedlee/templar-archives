@@ -4,7 +4,6 @@ import { useState, useRef, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowLeft, ChevronDown, ChevronRight, Upload, X } from "lucide-react"
 import { toast } from "sonner"
 import { isAdmin } from "@/lib/auth-utils"
@@ -222,7 +221,7 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
       </div>
 
       {/* Scrollable Content */}
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-y-auto">
         <div className="p-4 md:p-6 space-y-6">
           {/* Player Profile Header */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
@@ -496,7 +495,7 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
             )}
           </div>
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Claim Player Dialog */}
       {player && (
