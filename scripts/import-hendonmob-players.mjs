@@ -66,7 +66,18 @@ const COUNTRY_MAP = {
   'ltu': 'Lithuania',
   'tpe': 'Taiwan',
   'jpn': 'Japan',
-  'col': 'Colombia'
+  'col': 'Colombia',
+  'bra': 'Brazil',
+  'est': 'Estonia',
+  'gre': 'Greece',
+  'lib': 'Lebanon',
+  'mda': 'Moldova',
+  'mne': 'Montenegro',
+  'ned': 'Netherlands',
+  'sco': 'Scotland',
+  'srb': 'Serbia',
+  'swi': 'Switzerland',
+  'tun': 'Tunisia'
 }
 
 /**
@@ -134,8 +145,10 @@ async function upsertPlayer(player) {
   }
 
   if (existing) {
-    // Update if total_winnings changed
-    if (existing.total_winnings !== totalWinnings) {
+    // Update if total_winnings changed OR country is null/empty
+    const needsUpdate = existing.total_winnings !== totalWinnings || !existing.country
+
+    if (needsUpdate) {
       const { error: updateError } = await supabase
         .from('players')
         .update({
@@ -149,7 +162,7 @@ async function upsertPlayer(player) {
         return { success: false, error: updateError.message }
       }
 
-      console.log(`✅ Updated: ${name} ($${(totalWinnings / 100).toLocaleString()})`)
+      console.log(`✅ Updated: ${name} ${country ? `(${country})` : ''} - $${(totalWinnings / 100).toLocaleString()}`)
       return { success: true, action: 'updated' }
     } else {
       console.log(`⏭️  Skipped: ${name} (already exists)`)
