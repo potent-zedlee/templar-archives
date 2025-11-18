@@ -56,7 +56,17 @@ const COUNTRY_MAP = {
   'bih': 'Bosnia & Herzegovina',
   'ita': 'Italy',
   'cze': 'Czech Republic',
-  'bul': 'Bulgaria'
+  'bul': 'Bulgaria',
+  'den': 'Denmark',
+  'aze': 'Azerbaijan',
+  'ukr': 'Ukraine',
+  'bel': 'Belgium',
+  'pol': 'Poland',
+  'hun': 'Hungary',
+  'ltu': 'Lithuania',
+  'tpe': 'Taiwan',
+  'jpn': 'Japan',
+  'col': 'Colombia'
 }
 
 /**
