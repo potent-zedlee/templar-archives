@@ -92,7 +92,15 @@ const COUNTRY_MAP = {
   'sin': 'Singapore',
   'svk': 'Slovakia',
   'vie': 'Vietnam',
-  'wal': 'Wales'
+  'wal': 'Wales',
+  'uru': 'Uruguay',
+  'rsa': 'South Africa',
+  'irn': 'Iran',
+  'slo': 'Slovenia',
+  'mar': 'Morocco',
+  'ven': 'Venezuela',
+  'arm': 'Armenia',
+  'chl': 'Chile'
 }
 
 /**
