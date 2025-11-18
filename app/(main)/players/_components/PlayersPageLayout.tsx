@@ -76,9 +76,9 @@ export function PlayersPageLayout({ players, loading }: PlayersPageLayoutProps) 
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       {/* Desktop Sidebar - Fixed */}
-      <aside className="hidden lg:block w-80 flex-shrink-0">
+      <aside className="hidden lg:block w-80 flex-shrink-0 h-full">
         <PlayersSidebar {...sidebarProps} />
       </aside>
 
