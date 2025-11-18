@@ -14,8 +14,7 @@ import { cn } from '@/lib/utils'
 import { CategoryLogo } from '@/components/category-logo'
 import { useActiveCategoriesQuery } from '@/lib/queries/category-queries'
 import type { GameType } from '@/lib/tournament-categories'
-import { ChevronDown, ChevronRight, LayoutGrid } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ChevronRight, LayoutGrid } from 'lucide-react'
 
 interface ArchiveSidebarCategoriesProps {
   selectedCategory: string
@@ -72,20 +71,20 @@ export function ArchiveSidebarCategories({
   return (
     <nav className="space-y-1" aria-label="Category navigation">
       {/* ALL Button */}
-      <Button
-        variant={selectedCategory === 'All' ? 'default' : 'ghost'}
+      <button
+        type="button"
         className={cn(
-          "w-full justify-start gap-2.5 !h-auto min-h-[40px] py-2.5 px-3 rounded-lg transition-all duration-200",
+          "w-full flex items-start gap-2.5 min-h-[40px] py-2.5 px-3 rounded-lg transition-all duration-200 font-medium focus:outline-none focus:ring-4",
           selectedCategory === 'All'
-            ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold"
-            : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+            ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold focus:ring-gold-300"
+            : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-gray-300"
         )}
         onClick={() => onCategoryChange('All')}
         aria-current={selectedCategory === 'All' ? 'page' : undefined}
       >
-        <LayoutGrid className="h-4 w-4 flex-shrink-0" />
-        <span className="text-sm font-medium whitespace-normal text-left leading-tight">All Categories</span>
-      </Button>
+        <LayoutGrid className="h-4 w-4 flex-shrink-0 mt-0.5" />
+        <span className="text-sm font-medium whitespace-normal text-left leading-tight flex-1">All Categories</span>
+      </button>
 
       {/* Category List (Flowbite Accordion Style) */}
       <div className="space-y-1 pt-1">
@@ -119,14 +118,14 @@ export function ArchiveSidebarCategories({
                     />
                   </button>
                 )}
-                <Button
-                  variant={isSelected ? 'default' : 'ghost'}
+                <button
+                  type="button"
                   className={cn(
-                    "flex-1 justify-start items-start gap-2.5 !h-auto min-h-[36px] py-2 px-3 rounded-lg transition-all duration-200",
+                    "flex-1 flex items-start gap-2.5 min-h-[36px] py-2 px-3 rounded-lg transition-all duration-200 font-medium focus:outline-none focus:ring-4",
                     !hasChildren && "ml-6",
                     isSelected
-                      ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
+                      ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold focus:ring-gold-300"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 focus:ring-gray-300"
                   )}
                   onClick={() => onCategoryChange(category.id)}
                   aria-current={isSelected ? 'page' : undefined}
@@ -140,7 +139,7 @@ export function ArchiveSidebarCategories({
                   <span className="text-sm font-medium whitespace-normal text-left leading-tight line-clamp-2 flex-1">
                     {category.display_name}
                   </span>
-                </Button>
+                </button>
               </div>
 
               {/* Child Categories (Collapsible) */}
@@ -153,14 +152,14 @@ export function ArchiveSidebarCategories({
                   {children.map((child) => {
                     const isChildSelected = selectedCategory === child.id
                     return (
-                      <Button
+                      <button
                         key={child.id}
-                        variant={isChildSelected ? 'default' : 'ghost'}
+                        type="button"
                         className={cn(
-                          "w-full justify-start items-start gap-2.5 !h-auto min-h-[32px] py-1.5 px-3 rounded-lg transition-all duration-200",
+                          "w-full flex items-start gap-2.5 min-h-[32px] py-1.5 px-3 rounded-lg transition-all duration-200 font-medium focus:outline-none focus:ring-4",
                           isChildSelected
-                            ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold"
-                            : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+                            ? "bg-gold-600 hover:bg-gold-700 text-white shadow-sm font-semibold focus:ring-gold-300"
+                            : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 focus:ring-gray-300"
                         )}
                         onClick={() => onCategoryChange(child.id)}
                         aria-current={isChildSelected ? 'page' : undefined}
@@ -174,7 +173,7 @@ export function ArchiveSidebarCategories({
                         <span className="text-xs font-medium whitespace-normal text-left leading-tight line-clamp-2 flex-1">
                           {child.display_name}
                         </span>
-                      </Button>
+                      </button>
                     )
                   })}
                 </div>
