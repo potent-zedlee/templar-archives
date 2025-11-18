@@ -77,7 +77,22 @@ const COUNTRY_MAP = {
   'sco': 'Scotland',
   'srb': 'Serbia',
   'swi': 'Switzerland',
-  'tun': 'Tunisia'
+  'tun': 'Tunisia',
+  'alg': 'Algeria',
+  'crc': 'Costa Rica',
+  'cyp': 'Cyprus',
+  'geo': 'Georgia',
+  'irl': 'Ireland',
+  'isr': 'Israel',
+  'kor': 'South Korea',
+  'mex': 'Mexico',
+  'nzl': 'New Zealand',
+  'phi': 'Philippines',
+  'rom': 'Romania',
+  'sin': 'Singapore',
+  'svk': 'Slovakia',
+  'vie': 'Vietnam',
+  'wal': 'Wales'
 }
 
 /**
