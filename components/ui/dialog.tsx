@@ -65,13 +65,13 @@ function DialogContent({
           'w-full max-w-[calc(100%-2rem)] sm:max-w-lg',
           'grid gap-4',
 
-          // Postmodern style
-          'bg-black-100',
-          'border-[3px] border-gold-600',
-          'rounded-none',
+          // Minimal/Clean style
+          'bg-gray-900',
+          'border border-gray-700',
+          'rounded-lg',
 
-          // 3D layer shadow + glow
-          'shadow-[0_0_0_1px_var(--gold-700),0_0_60px_rgba(212,175,55,0.3),0_20px_40px_rgba(0,0,0,0.8)]',
+          // Subtle shadow
+          'shadow-lg',
 
           // Animation
           'duration-200',
@@ -91,7 +91,7 @@ function DialogContent({
             data-slot="dialog-close"
             className={cn(
               'absolute top-4 right-4',
-              'rounded-none',
+              'rounded-md',
               'opacity-70 transition-opacity hover:opacity-100',
               'focus:outline-none focus-visible:ring-2 focus-visible:ring-gold-400',
               'disabled:pointer-events-none',
@@ -114,8 +114,8 @@ function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
       data-slot="dialog-header"
       className={cn(
         'flex flex-col gap-2 text-center sm:text-left',
-        'bg-black-200',
-        'border-b-2 border-gold-700',
+        'bg-gray-800',
+        'border-b border-gray-700',
         'p-6',
         '-mx-4 -mt-4 mb-2',
         className
@@ -131,8 +131,8 @@ function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
       data-slot="dialog-footer"
       className={cn(
         'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
-        'bg-black-200',
-        'border-t border-gold-700/50',
+        'bg-gray-800',
+        'border-t border-gray-700',
         'p-6',
         '-mx-4 -mb-4 mt-2',
         className,
@@ -150,9 +150,8 @@ function DialogTitle({
     <DialogPrimitive.Title
       data-slot="dialog-title"
       className={cn(
-        'text-2xl leading-none font-bold',
-        'text-gold-400',
-        'uppercase tracking-wide',
+        'text-2xl leading-none font-semibold',
+        'text-gray-50',
         className
       )}
       {...props}
@@ -167,7 +166,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn('text-sm text-gold-300', className)}
+      className={cn('text-sm text-gray-400', className)}
       {...props}
     />
   )

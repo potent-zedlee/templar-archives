@@ -8,6 +8,7 @@ import { Footer } from "@/components/footer"
 import { CookieConsentBanner } from "@/components/cookie-consent-banner"
 import "./globals.css"
 import { Providers } from "@/components/providers"
+import { FlowbiteInitializer } from "@/components/flowbite-initializer"
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://templar-archives.vercel.app'),
@@ -78,6 +79,7 @@ export default function RootLayout({
           <Footer />
           <CookieConsentBanner />
         </Providers>
+        <FlowbiteInitializer />
         <WebVitalsReporter />
         <Analytics />
         <SpeedInsights />
