@@ -148,8 +148,19 @@ export function calculateSPR(stack: number, pot: number): number {
  */
 export function applyClientSideFilters<T extends {
   board_cards?: string | null
+  board_flop?: string[] | null
+  board_turn?: string | null
+  board_river?: string | null
   pot_size?: number | null
+  final_pot?: number | null
+  small_blind?: number | null
+  big_blind?: number | null
+  ante?: number | null
   player_names?: string[]
+  hand_players?: any[]
+  hand_actions?: any[]
+  ai_summary?: string | null
+  video_timestamp_start?: number | null
   [key: string]: any
 }>(
   hands: T[],
@@ -168,7 +179,7 @@ export function applyClientSideFilters<T extends {
   // 팟 사이즈 필터
   if (filters.potMin !== null || filters.potMax !== null) {
     filtered = filtered.filter(hand => {
-      const pot = hand.pot_size || 0
+      const pot = hand.pot_size || hand.final_pot || 0
       if (filters.potMin !== null && pot < filters.potMin) return false
       if (filters.potMax !== null && pot > filters.potMax) return false
       return true
@@ -182,6 +193,234 @@ export function applyClientSideFilters<T extends {
       return filters.selectedPlayers.some(selectedPlayer =>
         playerNames.some(name => name.toLowerCase().includes(selectedPlayer.toLowerCase()))
       )
+    })
+  }
+
+  return filtered
+}
+
+/**
+ * Extended search filters (SearchFilterSidebar용)
+ */
+export interface ExtendedSearchFilters {
+  // Blinds & Stakes
+  smallBlindRange?: [number, number]
+  bigBlindRange?: [number, number]
+  hasAnte?: boolean | null
+
+  // Board Cards
+  boardFlop?: string[]
+  boardTurn?: string | null
+  boardRiver?: string | null
+  boardTexture?: string | null
+
+  // Hole Cards
+  holeCards?: string[]
+
+  // Hand Strength
+  handStrength?: string | null
+
+  // Actions & Streets
+  actionTypes?: string[]
+  street?: string | null
+
+  // Position & Result
+  positions?: string[]
+  isWinner?: boolean | null
+
+  // Stack
+  stackRange?: [number, number]
+
+  // Player Info
+  playerGender?: string | null
+
+  // Misc
+  hasVideo?: boolean | null
+  hasAISummary?: boolean | null
+  summaryKeyword?: string | null
+}
+
+/**
+ * Apply extended search filters
+ */
+export function applyExtendedSearchFilters<T extends {
+  small_blind?: number | null
+  big_blind?: number | null
+  ante?: number | null
+  board_flop?: string[] | null
+  board_turn?: string | null
+  board_river?: string | null
+  hand_players?: any[]
+  hand_actions?: any[]
+  ai_summary?: string | null
+  video_timestamp_start?: number | null
+  [key: string]: any
+}>(
+  hands: T[],
+  filters: ExtendedSearchFilters
+): T[] {
+  let filtered = hands
+
+  // Blinds filters
+  if (filters.smallBlindRange) {
+    filtered = filtered.filter(hand => {
+      const sb = hand.small_blind || 0
+      return sb >= filters.smallBlindRange![0] && sb <= filters.smallBlindRange![1]
+    })
+  }
+
+  if (filters.bigBlindRange) {
+    filtered = filtered.filter(hand => {
+      const bb = hand.big_blind || 0
+      return bb >= filters.bigBlindRange![0] && bb <= filters.bigBlindRange![1]
+    })
+  }
+
+  if (filters.hasAnte !== null && filters.hasAnte !== undefined) {
+    filtered = filtered.filter(hand => {
+      const hasAnte = (hand.ante || 0) > 0
+      return hasAnte === filters.hasAnte
+    })
+  }
+
+  // Board Cards filters
+  if (filters.boardFlop && filters.boardFlop.length > 0) {
+    filtered = filtered.filter(hand => {
+      const flop = hand.board_flop || []
+      return filters.boardFlop!.every(card => flop.includes(card))
+    })
+  }
+
+  if (filters.boardTurn) {
+    filtered = filtered.filter(hand => hand.board_turn === filters.boardTurn)
+  }
+
+  if (filters.boardRiver) {
+    filtered = filtered.filter(hand => hand.board_river === filters.boardRiver)
+  }
+
+  if (filters.boardTexture) {
+    filtered = filtered.filter(hand => {
+      const boardString = [
+        ...(hand.board_flop || []),
+        hand.board_turn,
+        hand.board_river
+      ].filter(Boolean).join(' ')
+
+      const texture = analyzeBoardTexture(boardString)
+
+      switch (filters.boardTexture) {
+        case 'monotone': return texture.monotone
+        case 'two-tone': return texture.twoTone
+        case 'rainbow': return texture.rainbow
+        case 'paired': return texture.paired
+        case 'straight': return texture.connected
+        case 'flush': return texture.monotone || texture.twoTone
+        default: return true
+      }
+    })
+  }
+
+  // Hole Cards filter
+  if (filters.holeCards && filters.holeCards.length > 0) {
+    filtered = filtered.filter(hand => {
+      if (!hand.hand_players) return false
+      return hand.hand_players.some((hp: any) => {
+        const holeCards = hp.hole_cards || []
+        return filters.holeCards!.every(card => holeCards.includes(card))
+      })
+    })
+  }
+
+  // Hand Strength filter
+  if (filters.handStrength) {
+    filtered = filtered.filter(hand => {
+      if (!hand.hand_players) return false
+      return hand.hand_players.some((hp: any) => {
+        const desc = (hp.hand_description || '').toLowerCase()
+        const strength = filters.handStrength!.replace('-', ' ')
+        return desc.includes(strength)
+      })
+    })
+  }
+
+  // Action Types filter
+  if (filters.actionTypes && filters.actionTypes.length > 0) {
+    filtered = filtered.filter(hand => {
+      if (!hand.hand_actions) return false
+      return filters.actionTypes!.some(actionType =>
+        hand.hand_actions.some((action: any) =>
+          action.action_type?.toLowerCase() === actionType.toLowerCase()
+        )
+      )
+    })
+  }
+
+  // Street filter
+  if (filters.street) {
+    filtered = filtered.filter(hand => {
+      if (!hand.hand_actions) return false
+      return hand.hand_actions.some((action: any) =>
+        action.street?.toLowerCase() === filters.street!.toLowerCase()
+      )
+    })
+  }
+
+  // Position filter
+  if (filters.positions && filters.positions.length > 0) {
+    filtered = filtered.filter(hand => {
+      if (!hand.hand_players) return false
+      return hand.hand_players.some((hp: any) =>
+        filters.positions!.includes(hp.poker_position)
+      )
+    })
+  }
+
+  // Winner filter
+  if (filters.isWinner !== null && filters.isWinner !== undefined) {
+    filtered = filtered.filter(hand => {
+      if (!hand.hand_players) return false
+      return hand.hand_players.some((hp: any) => hp.is_winner === filters.isWinner)
+    })
+  }
+
+  // Stack Range filter
+  if (filters.stackRange) {
+    filtered = filtered.filter(hand => {
+      if (!hand.hand_players) return false
+      return hand.hand_players.some((hp: any) => {
+        const stack = hp.starting_stack || 0
+        return stack >= filters.stackRange![0] && stack <= filters.stackRange![1]
+      })
+    })
+  }
+
+  // Player Gender filter
+  if (filters.playerGender) {
+    filtered = filtered.filter(hand => {
+      if (!hand.hand_players) return false
+      return hand.hand_players.some((hp: any) =>
+        hp.player?.gender === filters.playerGender
+      )
+    })
+  }
+
+  // Video filter
+  if (filters.hasVideo) {
+    filtered = filtered.filter(hand => !!hand.video_timestamp_start)
+  }
+
+  // AI Summary filter
+  if (filters.hasAISummary) {
+    filtered = filtered.filter(hand => !!hand.ai_summary)
+  }
+
+  // Summary Keyword filter
+  if (filters.summaryKeyword) {
+    const keyword = filters.summaryKeyword.toLowerCase()
+    filtered = filtered.filter(hand => {
+      const summary = (hand.ai_summary || '').toLowerCase()
+      return summary.includes(keyword)
     })
   }
 

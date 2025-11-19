@@ -11,8 +11,7 @@ import { toast } from "sonner"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { EmptyState } from "@/components/empty-state"
 import { Search, Monitor } from "lucide-react"
-import { applyClientSideFilters } from "@/lib/filter-utils"
-import { useFilterStore } from "@/lib/filter-store"
+import { applyExtendedSearchFilters } from "@/lib/filter-utils"
 
 export default function SearchPage() {
   const router = useRouter()
@@ -22,9 +21,6 @@ export default function SearchPage() {
   const [hands, setHands] = useState<HandWithDetails[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedHandId, setSelectedHandId] = useState<string | null>(null)
-
-  // Filter store for advanced filters
-  const filterState = useFilterStore()
 
   // Search hands with filters
   const searchHands = useCallback(
@@ -52,16 +48,6 @@ export default function SearchPage() {
         let filteredHands = handsData as HandWithDetails[]
 
         // Client-side filtering
-        // Filter by positions
-        const selectedPositions = Object.entries(filters.positions)
-          .filter(([_, selected]) => selected)
-          .map(([position]) => position)
-
-        if (selectedPositions.length > 0) {
-          // This would require hand_players data, which we'd need to include in the query
-          // For now, skip position filtering (would need to enhance fetchHandsWithDetails)
-        }
-
         // Filter by pot size
         if (filters.potSizeRange[0] > 0 || filters.potSizeRange[1] < 10000000) {
           filteredHands = filteredHands.filter((hand) => {
@@ -81,8 +67,31 @@ export default function SearchPage() {
           })
         }
 
-        // Apply advanced filters from filter store
-        filteredHands = applyClientSideFilters(filteredHands, filterState)
+        // Apply extended search filters
+        const selectedPositions = Object.entries(filters.positions)
+          .filter(([_, selected]) => selected)
+          .map(([position]) => position)
+
+        filteredHands = applyExtendedSearchFilters(filteredHands, {
+          smallBlindRange: filters.smallBlindRange,
+          bigBlindRange: filters.bigBlindRange,
+          hasAnte: filters.hasAnte,
+          boardFlop: filters.boardFlop,
+          boardTurn: filters.boardTurn,
+          boardRiver: filters.boardRiver,
+          boardTexture: filters.boardTexture,
+          holeCards: filters.holeCards,
+          handStrength: filters.handStrength,
+          actionTypes: filters.actionTypes,
+          street: filters.street,
+          positions: selectedPositions.length > 0 ? selectedPositions : undefined,
+          isWinner: filters.isWinner,
+          stackRange: filters.stackRange,
+          playerGender: filters.playerGender,
+          hasVideo: filters.hasVideo,
+          hasAISummary: filters.hasAISummary,
+          summaryKeyword: filters.summaryKeyword,
+        })
 
         setHands(filteredHands)
         toast.success(`${filteredHands.length}개의 핸드를 찾았습니다.`)
@@ -93,7 +102,7 @@ export default function SearchPage() {
         setLoading(false)
       }
     },
-    [filterState]
+    []
   )
 
   // Auto-select first hand when results change
