@@ -33,6 +33,7 @@ import { TournamentDialog } from '@/components/tournament-dialog'
 import { DeleteDialog } from '@/components/archive-dialogs/delete-dialog'
 import { SubEventDialog } from '@/components/archive-dialogs/sub-event-dialog'
 import { DayDialog } from '@/components/archive-dialogs/day-dialog'
+import { AnalyzeVideoDialog } from '@/components/archive-dialogs/analyze-video-dialog'
 import { UnsortedVideosTab } from './_components/UnsortedVideosTab'
 import { HandInputMode } from '@/app/archive/_components/HandInputMode'
 import type { Tournament, FolderItem, ContentStatus } from '@/lib/types/archive'
@@ -45,6 +46,7 @@ import { StreamStatusBadge } from '@/components/admin/archive/StreamStatusBadge'
 import { StreamActions } from '@/components/admin/archive/StreamActions'
 import { StatusFilter } from '@/components/admin/archive/StatusFilter'
 import { BulkActions } from '@/components/admin/archive/BulkActions'
+import { useArchiveUIStore } from '@/stores/archive-ui-store'
 
 export default function AdminArchivePage() {
   const [loading, setLoading] = useState(true)
@@ -84,6 +86,10 @@ export default function AdminArchivePage() {
   // Hand Input Mode states
   const [handInputModeOpen, setHandInputModeOpen] = useState(false)
   const [selectedStreamForHandInput, setSelectedStreamForHandInput] = useState<Stream | null>(null)
+
+  // KAN Analyze states
+  const [analyzeDialogOpen, setAnalyzeDialogOpen] = useState(false)
+  const [selectedStreamForAnalyze, setSelectedStreamForAnalyze] = useState<Stream | null>(null)
 
   // Tournament form states
   const [newTournamentName, setNewTournamentName] = useState('')
@@ -468,6 +474,12 @@ export default function AdminArchivePage() {
         loadStreams(streamSubEventId)
       }
     }
+  }
+
+  // KAN Analyze functions
+  const handleOpenAnalyze = (stream: Stream) => {
+    setSelectedStreamForAnalyze(stream)
+    setAnalyzeDialogOpen(true)
   }
 
   if (!isUserAdmin) {
@@ -923,8 +935,10 @@ export default function AdminArchivePage() {
                                         streamName={stream.name}
                                         currentStatus={streamStatus}
                                         videoUrl={stream.video_url}
+                                        stream={stream}
                                         onStatusChange={() => loadStreams(subEvent.id)}
                                         onOpenHandInput={() => handleOpenHandInput(stream)}
+                                        onOpenAnalyze={() => handleOpenAnalyze(stream)}
                                       />
                                       <Button
                                         variant="ghost"
@@ -1037,6 +1051,25 @@ export default function AdminArchivePage() {
         selectedSubEventId={selectedSubEventIdForDay}
         editingDayId={editingDayId}
         onSuccess={handleStreamSuccess}
+      />
+
+      {/* KAN Analyze Dialog */}
+      <AnalyzeVideoDialog
+        isOpen={analyzeDialogOpen}
+        onOpenChange={setAnalyzeDialogOpen}
+        day={selectedStreamForAnalyze}
+        onSuccess={() => {
+          // Reload streams when analysis completes
+          if (selectedStreamForAnalyze) {
+            // Find parent subEvent to reload
+            for (const [subEventId, streamList] of streams.entries()) {
+              if (streamList.some(s => s.id === selectedStreamForAnalyze.id)) {
+                loadStreams(subEventId)
+                break
+              }
+            }
+          }
+        }}
       />
 
       {/* Hand Input Mode */}

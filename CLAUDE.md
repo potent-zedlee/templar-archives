@@ -10,8 +10,9 @@ Templar Archives는 포커 영상을 자동으로 핸드 히스토리로 변환�
 
 - **프로덕션**: https://templar-archives.vercel.app
 - **로컬**: http://localhost:3000
-- **Phase**: 41 완료 (2025-11-19)
+- **Phase**: 44 완료 (2025-11-19)
 - **페이지 수**: 49개
+- **레이아웃**: 3-Column (Desktop 전용, lg+)
 
 ---
 
@@ -199,7 +200,7 @@ export async function createTournament(data: TournamentData) {
 
 ```
 Tournament (토너먼트)
-  └── SubEvent (서브 이벤트)
+  └── Event (이벤트)
       └── Stream (일별 스트림)
           └── Hand (핸드)
               ├── HandPlayers (플레이어별 정보)
@@ -207,11 +208,33 @@ Tournament (토너먼트)
 ```
 
 **핵심 파일**:
-- `app/archive/tournament/page.tsx` (88줄)
-- `app/archive/_components/` (5개 컴포넌트)
+- `app/(main)/archive/tournament/page.tsx` - 3-column 레이아웃
+- `app/(main)/archive/cash-game/page.tsx` - 3-column 레이아웃
+- `app/(main)/archive/_components/`:
+  - `ArchiveFilterSidebar.tsx` - 왼쪽 필터 (320px)
+  - `ArchiveNavigationSidebar.tsx` - 중앙 네비게이션 (400px)
+  - `ArchiveDashboard.tsx` - 초기 대시보드
+  - `HandsListPanel.tsx` - 핸드 리스트
 - `lib/types/archive.ts`
 
-**UI 패턴**: Accordion (한 번에 하나만 열림)
+**3-Column 레이아웃 구조**:
+```
+┌─────────────────────────────────────────────────────┐
+│ 필터 (320px)  │  네비게이션 (400px)  │  메인 (flex-1) │
+│               │                     │                │
+│ [Filters]     │ [Tournament Tree]   │ [Dashboard]    │
+│ • Category    │ ▼ Tournament        │ 또는           │
+│ • Location    │   ▼ Event           │ [Hands List]   │
+│ • Date        │     • Stream        │                │
+│ • HandCount   │                     │                │
+│ [Reset]       │                     │                │
+└─────────────────────────────────────────────────────┘
+```
+
+**UI 패턴**:
+- 네비게이션: 3-level 중첩 Accordion (Tournament → Event → Stream)
+- 데스크톱 전용 (lg+ 브레이크포인트)
+- 모바일: "데스크톱 전용" 안내 메시지
 
 ### 4. 플레이어 시스템
 
@@ -238,7 +261,54 @@ Tournament (토너먼트)
 - `PositionalStatsCard` - 포지션별 통계 차트
 - `PerformanceChartCard` - 승률 분석
 
-### 5. AI 통합
+### 5. Search 페이지 (3-Column)
+
+**레이아웃 구조**:
+```
+┌─────────────────────────────────────────────────────────┐
+│ 필터 (320px)   │  핸드 리스트 (400px)  │  핸드 상세 (flex-1) │
+│                │                       │                     │
+│ [Filters]      │ [Search Results]      │ [Hand Detail]       │
+│ • Search Type  │ • Hand #001           │ • Board Cards       │
+│ • Tournament   │ • Hand #002           │ • Players           │
+│ • Player       │ • Hand #003           │ • Actions           │
+│ • Position     │                       │ • Video Link        │
+│ • Pot Size     │ 클릭 시 우측 표시      │                     │
+│ • Date Range   │                       │ 초기: 안내 메시지    │
+│ • Board Cards  │                       │                     │
+│ • Hole Cards   │                       │                     │
+│ • Hand Value   │                       │                     │
+│ • Actions      │                       │                     │
+│ [Reset]        │                       │                     │
+└─────────────────────────────────────────────────────────┘
+```
+
+**주요 컴포넌트**:
+- `SearchFilterSidebar.tsx` - 10개 Accordion 섹션, 21개 필터
+- `SearchResultsList.tsx` - 검색된 핸드 리스트
+- `HandDetailPanel.tsx` - 선택된 핸드 상세 정보
+- `HoleCardDialog.tsx` - 홀 카드 선택 다이얼로그 (2줄 Rank 그리드)
+- `HandValueDialog.tsx` - 핸드 강도 선택 다이얼로그 (10가지 핸드 타입)
+
+**세밀한 필터 (21개)**:
+1. Search Type (Natural Language / Basic)
+2. Tournament, Player, Date Range
+3. Blinds & Stakes (SB, BB, Ante)
+4. Board Cards (Flop, Turn, River, Texture)
+5. Hole Cards (다이얼로그: ?, 2-A, Suited only)
+6. Hand Value (다이얼로그: Royal Flush ~ High card, Exact/At Least/At Most)
+7. Actions & Streets (fold, check, call, bet, raise, 3-bet, 4-bet, all-in)
+8. Position (BTN, SB, BB, UTG, MP, CO)
+9. Stack Size, Winner/Loser
+10. Pot Size Range
+11. Video Available, AI Summary
+
+**필터 로직**:
+- 위치: `lib/filter-utils.ts`
+- `applyExtendedSearchFilters()` 함수
+- LocalStorage 필터 상태 저장
+
+### 6. AI 통합
 
 **KAN (Khalai Archive Network)** - 영상 분석:
 - 위치: `app/actions/kan-analysis.ts` (27KB)
@@ -604,10 +674,26 @@ queryClient.invalidateQueries()
 
 ### 아키텍처
 
-- **Archive 메인**: `app/archive/tournament/page.tsx` (88줄)
-- **Archive 컴포넌트**: `app/archive/_components/` (5개 파일)
-- **Archive 타입**: `lib/types/archive.ts`
-- **Archive Stores**: `stores/archive-*.ts` (3개 파일)
+**Archive 페이지** (3-Column):
+- `app/(main)/archive/tournament/page.tsx`
+- `app/(main)/archive/cash-game/page.tsx`
+- `app/(main)/archive/_components/`:
+  - `ArchiveFilterSidebar.tsx` - 필터 (320px)
+  - `ArchiveNavigationSidebar.tsx` - 네비게이션 (400px)
+  - `ArchiveDashboard.tsx` - 대시보드
+  - `HandsListPanel.tsx` - 핸드 리스트
+- `lib/types/archive.ts`
+- `stores/archive-*.ts` (3개 파일)
+
+**Search 페이지** (3-Column):
+- `app/(main)/search/page.tsx`
+- `app/(main)/search/_components/`:
+  - `SearchFilterSidebar.tsx` - 21개 필터 (320px)
+  - `SearchResultsList.tsx` - 검색 결과 (400px)
+  - `HandDetailPanel.tsx` - 핸드 상세 (flex-1)
+  - `HoleCardDialog.tsx` - 홀 카드 선택
+  - `HandValueDialog.tsx` - 핸드 강도 선택
+- `lib/filter-utils.ts` - 필터 로직
 
 ### 플레이어 시스템
 
@@ -656,11 +742,13 @@ queryClient.invalidateQueries()
 
 ---
 
-**마지막 업데이트**: 2025-11-18
-**문서 버전**: 2.1
-**현재 Phase**: 40 완료
+**마지막 업데이트**: 2025-11-19
+**문서 버전**: 2.2
+**현재 Phase**: 44 완료
 **보안 등급**: A
 **주요 업데이트**:
-- 플레이어 통계 시스템 추가 (VPIP, 3BET, ATS)
-- 여성 플레이어 500명 gender 정보 업데이트
-- 플레이어 데이터 관리 스크립트 추가
+- 3-Column 레이아웃 통일 (Tournament, Cash Game, Search)
+- Search 필터 확장 (21개 세밀한 필터)
+- Hole Card 및 Hand Value 다이얼로그 추가
+- 헤더 네비게이션 구조 변경 (Archive 드롭다운 제거)
+- 데스크톱 전용 처리 (lg+ 브레이크포인트)

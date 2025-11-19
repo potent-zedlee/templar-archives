@@ -23,7 +23,6 @@ import {
   Video,
   Newspaper,
   Radio,
-  Sparkles,
   Activity,
   History,
 } from "lucide-react"
@@ -62,11 +61,6 @@ const adminMenuItems = [
 ]
 
 const kanMenuItems = [
-  {
-    title: "새 분석 요청",
-    href: "/admin/kan/new",
-    icon: Sparkles,
-  },
   {
     title: "진행 중 작업",
     href: "/admin/kan/active",

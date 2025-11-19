@@ -12,26 +12,32 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Search, Inbox, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Inbox, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { useHandsQuery } from '@/lib/queries/archive-queries'
 import { HandListItem } from './HandListItem'
 import { GridSkeleton } from '@/components/skeletons/grid-skeleton'
 import { EmptyState } from '@/components/empty-state'
 import { StaggerContainer, StaggerItem } from '@/components/page-transition'
+import { useArchiveUIStore } from '@/stores/archive-ui-store'
+import type { Stream } from '@/lib/supabase'
 
 interface HandsListPanelProps {
   streamId: string
+  stream: Stream
 }
 
 const HANDS_PER_PAGE = 20
 
-export function HandsListPanel({ streamId }: HandsListPanelProps) {
+export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
 
   // React Query
   const { data: hands = [], isLoading } = useHandsQuery(streamId)
+
+  // Zustand Store
+  const openAnalyzeDialog = useArchiveUIStore(state => state.openAnalyzeDialog)
 
   // 필터링
   const filteredHands = useMemo(() => {
@@ -66,9 +72,18 @@ export function HandsListPanel({ streamId }: HandsListPanelProps) {
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 w-full">
       {/* 헤더 + 검색바 */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-        <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">
-          Hand History
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            Hand History
+          </h2>
+          <button
+            onClick={() => openAnalyzeDialog(stream)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+          >
+            <Sparkles className="w-4 h-4" />
+            분석 시작
+          </button>
+        </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />

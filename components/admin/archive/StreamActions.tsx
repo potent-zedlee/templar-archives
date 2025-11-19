@@ -10,17 +10,20 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { CheckSquare, Eye, EyeOff, Edit3 } from 'lucide-react'
+import { CheckSquare, Eye, EyeOff, Edit3, Sparkles } from 'lucide-react'
 import { StreamChecklist } from './StreamChecklist'
 import type { ContentStatus } from '@/lib/types/archive'
+import type { Stream } from '@/lib/supabase'
 
 interface StreamActionsProps {
   streamId: string
   streamName: string
   currentStatus: ContentStatus
   videoUrl?: string
+  stream?: Stream
   onStatusChange?: () => void
   onOpenHandInput?: () => void
+  onOpenAnalyze?: () => void
 }
 
 export function StreamActions({
@@ -28,13 +31,28 @@ export function StreamActions({
   streamName,
   currentStatus,
   videoUrl,
+  stream,
   onStatusChange,
-  onOpenHandInput
+  onOpenHandInput,
+  onOpenAnalyze
 }: StreamActionsProps) {
   const [checklistOpen, setChecklistOpen] = useState(false)
 
   return (
     <div className="flex items-center gap-2">
+      {/* KAN 분석 버튼 */}
+      {stream && onOpenAnalyze && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onOpenAnalyze}
+          title="KAN 분석 시작"
+          className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20"
+        >
+          <Sparkles className="h-4 w-4" />
+        </Button>
+      )}
+
       {/* Hand Input Mode 버튼 */}
       <Button
         variant="ghost"

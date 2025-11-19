@@ -19,6 +19,7 @@ import { ArchiveDashboard } from "../_components/ArchiveDashboard"
 import { HandsListPanel } from "../_components/HandsListPanel"
 import { useTournamentsQuery } from "@/lib/queries/archive-queries"
 import type { TournamentCategory } from "@/lib/types/archive"
+import type { Stream } from "@/lib/supabase"
 import { GridSkeleton } from "@/components/skeletons/grid-skeleton"
 import { EmptyState } from "@/components/empty-state"
 import { Monitor } from "lucide-react"
@@ -33,6 +34,7 @@ export default function ArchiveTournamentPage() {
   // 2. UI State (Local)
   // ============================================================
   const [selectedStreamId, setSelectedStreamId] = useState<string | null>(null)
+  const [selectedStream, setSelectedStream] = useState<Stream | null>(null)
 
   // Filter states
   const [selectedCategory, setSelectedCategory] = useState<TournamentCategory | null>(null)
@@ -168,14 +170,17 @@ export default function ArchiveTournamentPage() {
             <ArchiveNavigationSidebar
               tournaments={filteredTournaments}
               selectedStreamId={selectedStreamId}
-              onStreamSelect={setSelectedStreamId}
+              onStreamSelect={(streamId, stream) => {
+                setSelectedStreamId(streamId)
+                setSelectedStream(stream)
+              }}
             />
           </aside>
 
           {/* 3. Right: Main Panel (flex-1) */}
           <main className="hidden lg:flex flex-1 overflow-hidden">
-            {selectedStreamId ? (
-              <HandsListPanel streamId={selectedStreamId} />
+            {selectedStreamId && selectedStream ? (
+              <HandsListPanel streamId={selectedStreamId} stream={selectedStream} />
             ) : (
               <ArchiveDashboard tournaments={filteredTournaments} />
             )}

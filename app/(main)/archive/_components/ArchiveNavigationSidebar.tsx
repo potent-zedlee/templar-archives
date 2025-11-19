@@ -19,11 +19,12 @@ import {
 import { Trophy, Video, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Tournament } from '@/lib/types/archive'
+import type { Stream } from '@/lib/supabase'
 
 interface ArchiveNavigationSidebarProps {
   tournaments: Tournament[]
   selectedStreamId: string | null
-  onStreamSelect: (streamId: string) => void
+  onStreamSelect: (streamId: string, stream: Stream) => void
 }
 
 export function ArchiveNavigationSidebar({
@@ -122,7 +123,7 @@ export function ArchiveNavigationSidebar({
                                   return (
                                     <button
                                       key={stream.id}
-                                      onClick={() => onStreamSelect(stream.id)}
+                                      onClick={() => onStreamSelect(stream.id, stream)}
                                       className={cn(
                                         "w-full px-3 py-2 text-left rounded-md text-sm transition-colors",
                                         selectedStreamId === stream.id
