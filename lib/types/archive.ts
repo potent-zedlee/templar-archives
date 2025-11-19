@@ -561,6 +561,18 @@ export interface HandHistoryPokerKitFormat {
 
   /** PokerKit 텍스트 형식 원본 */
   rawText?: string
+
+  /** 영상 타임스탬프 정보 */
+  videoTimestamp?: {
+    /** 시작 타임스탬프 (초) */
+    start: number
+    /** 종료 타임스탬프 (초) */
+    end: number
+    /** 시작 타임스탬프 포맷 (HH:MM:SS) */
+    startFormatted: string
+    /** 종료 타임스탬프 포맷 (HH:MM:SS) */
+    endFormatted: string
+  }
 }
 
 /**

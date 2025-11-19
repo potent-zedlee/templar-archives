@@ -9,8 +9,28 @@ import { Loader2, Video, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { EmptyState } from "@/components/empty-state"
 import { Search } from "lucide-react"
+import { YouTubePlayer } from "@/components/video/youtube-player"
 
 const supabase = createClientSupabaseClient()
+
+/**
+ * YouTube URL에서 video ID 추출
+ */
+function extractVideoId(url?: string): string | null {
+  if (!url) return null
+
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /^([a-zA-Z0-9_-]{11})$/
+  ]
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match) return match[1]
+  }
+
+  return null
+}
 
 // Playing card component
 interface CardProps {
@@ -125,10 +145,22 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
 
   const stream = hand.stream as any
   const tournament = stream?.sub_event?.tournament
+  const videoId = extractVideoId(stream?.video_url)
 
   return (
     <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
+        {/* YouTube Player (상단 고정) */}
+        {videoId && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border sticky top-0 z-10">
+            <h2 className="text-lg font-semibold mb-4">영상</h2>
+            <YouTubePlayer
+              videoId={videoId}
+              startTime={hand.video_timestamp_start}
+              className="w-full"
+            />
+          </div>
+        )}
         {/* Header */}
         <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border">
           <div className="flex items-center justify-between">
@@ -267,22 +299,6 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
           </div>
         )}
 
-        {/* Video Link */}
-        {hand.video_timestamp_start && stream?.video_url && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border">
-            <h2 className="text-lg font-semibold mb-4">영상</h2>
-            <a
-              href={`${stream.video_url}?t=${hand.video_timestamp_start}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button className="bg-red-600 hover:bg-red-700 text-white">
-                <Video className="w-5 h-5 mr-2" />
-                YouTube에서 보기
-              </Button>
-            </a>
-          </div>
-        )}
       </div>
     </div>
   )
