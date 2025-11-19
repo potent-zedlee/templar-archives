@@ -7,7 +7,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClientSupabaseClient } from '@/lib/supabase-client'
 import { publishStream, unpublishStream, bulkPublishStreams, bulkUnpublishStreams } from '@/app/actions/archive-status'
-import type { Tournament, SubEvent, Stream, ContentStatus } from '@/lib/types/archive'
+import type { Tournament, Event, Stream, ContentStatus } from '@/lib/types/archive'
 
 const supabase = createClientSupabaseClient()
 
@@ -17,10 +17,10 @@ export const adminArchiveKeys = {
   all: ['admin-archive'] as const,
   tournaments: (statusFilter?: ContentStatus | 'all') =>
     [...adminArchiveKeys.all, 'tournaments', statusFilter] as const,
-  subEvents: (tournamentId: string, statusFilter?: ContentStatus | 'all') =>
-    [...adminArchiveKeys.all, 'sub-events', tournamentId, statusFilter] as const,
-  streams: (subEventId: string, statusFilter?: ContentStatus | 'all') =>
-    [...adminArchiveKeys.all, 'streams', subEventId, statusFilter] as const,
+  events: (tournamentId: string, statusFilter?: ContentStatus | 'all') =>
+    [...adminArchiveKeys.all, 'events', tournamentId, statusFilter] as const,
+  streams: (eventId: string, statusFilter?: ContentStatus | 'all') =>
+    [...adminArchiveKeys.all, 'streams', eventId, statusFilter] as const,
 }
 
 // ==================== Admin Tournaments Query ====================
@@ -52,17 +52,17 @@ export function useAdminTournamentsQuery(statusFilter: ContentStatus | 'all' = '
   })
 }
 
-// ==================== Admin SubEvents Query ====================
+// ==================== Admin Events Query ====================
 
 /**
- * Admin 전용 SubEvents 쿼리 (모든 상태 포함)
+ * Admin 전용 Events 쿼리 (모든 상태 포함)
  */
-export function useAdminSubEventsQuery(
+export function useAdminEventsQuery(
   tournamentId: string,
   statusFilter: ContentStatus | 'all' = 'all'
 ) {
   return useQuery({
-    queryKey: adminArchiveKeys.subEvents(tournamentId, statusFilter),
+    queryKey: adminArchiveKeys.events(tournamentId, statusFilter),
     queryFn: async () => {
       let query = supabase
         .from('sub_events')
@@ -78,7 +78,7 @@ export function useAdminSubEventsQuery(
       const { data, error } = await query
 
       if (error) throw error
-      return (data || []) as SubEvent[]
+      return (data || []) as Event[]
     },
     enabled: !!tournamentId,
     staleTime: 2 * 60 * 1000, // 2분
@@ -92,16 +92,16 @@ export function useAdminSubEventsQuery(
  * Admin 전용 Streams 쿼리 (모든 상태 포함)
  */
 export function useAdminStreamsQuery(
-  subEventId: string,
+  eventId: string,
   statusFilter: ContentStatus | 'all' = 'all'
 ) {
   return useQuery({
-    queryKey: adminArchiveKeys.streams(subEventId, statusFilter),
+    queryKey: adminArchiveKeys.streams(eventId, statusFilter),
     queryFn: async () => {
       let query = supabase
         .from('streams')
         .select('*')
-        .eq('sub_event_id', subEventId)
+        .eq('sub_event_id', eventId)
         .order('published_at', { ascending: false })
 
       // Status 필터 적용
@@ -139,7 +139,7 @@ export function useAdminStreamsQuery(
 
       return streamsWithCounts as (Stream & { hand_count?: number })[]
     },
-    enabled: !!subEventId,
+    enabled: !!eventId,
     staleTime: 2 * 60 * 1000, // 2분
     gcTime: 10 * 60 * 1000, // 10분
   })

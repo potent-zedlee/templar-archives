@@ -36,9 +36,9 @@ export function useArchiveNavigation({
 
   // Build breadcrumb items
   const breadcrumbItems = useMemo(() => {
-    const items: Array<{ id: string; name: string; type: 'home' | 'tournament' | 'subevent' }> = []
+    const items: Array<{ id: string; name: string; type: 'home' | 'tournament' | 'event' }> = []
 
-    if (navigationLevel === 'tournament' || navigationLevel === 'subevent') {
+    if (navigationLevel === 'tournament' || navigationLevel === 'event') {
       const tournament = tournaments.find(t => t.id === currentTournamentId)
       if (tournament) {
         items.push({
@@ -49,14 +49,14 @@ export function useArchiveNavigation({
       }
     }
 
-    if (navigationLevel === 'subevent') {
+    if (navigationLevel === 'event') {
       const tournament = tournaments.find(t => t.id === currentTournamentId)
       const subEvent = tournament?.sub_events?.find((se: any) => se.id === currentSubEventId)
       if (subEvent) {
         items.push({
           id: subEvent.id,
           name: subEvent.name,
-          type: 'subevent'
+          type: 'event'
         })
       }
     }
@@ -87,12 +87,12 @@ export function useArchiveNavigation({
       items = subEvents.map((subEvent: any) => ({
         id: subEvent.id,
         name: subEvent.name,
-        type: 'subevent' as const,
+        type: 'event' as const,
         itemCount: subEvent.streams?.length || 0,
         date: subEvent.date,
         data: subEvent
       }))
-    } else if (navigationLevel === 'subevent') {
+    } else if (navigationLevel === 'event') {
       // Show days of current sub-event
       const tournament = tournaments.find(t => t.id === currentTournamentId)
       const subEvent = tournament?.sub_events?.find((se: any) => se.id === currentSubEventId)
@@ -156,7 +156,7 @@ export function useArchiveNavigation({
   }, [navigationLevel, filteredTournaments, unsortedVideos, tournaments, currentTournamentId, currentSubEventId, searchQuery, advancedFilters, sortBy])
 
   // Handle breadcrumb navigation
-  const handleBreadcrumbNavigate = (item: { id: string; name: string; type: 'home' | 'tournament' | 'subevent' } | null) => {
+  const handleBreadcrumbNavigate = (item: { id: string; name: string; type: 'home' | 'tournament' | 'event' } | null) => {
     if (!item) {
       // Navigate to root
       setNavigationLevel('root')
@@ -167,9 +167,9 @@ export function useArchiveNavigation({
       setNavigationLevel('tournament')
       setCurrentTournamentId(item.id)
       setCurrentSubEventId('')
-    } else if (item.type === 'subevent') {
+    } else if (item.type === 'event') {
       // Navigate to subevent level (stay at current level)
-      setNavigationLevel('subevent')
+      setNavigationLevel('event')
       setCurrentSubEventId(item.id)
     }
   }
@@ -180,8 +180,8 @@ export function useArchiveNavigation({
       setNavigationLevel('tournament')
       setCurrentTournamentId(item.id)
       setCurrentSubEventId('')
-    } else if (item.type === 'subevent') {
-      setNavigationLevel('subevent')
+    } else if (item.type === 'event') {
+      setNavigationLevel('event')
       setCurrentSubEventId(item.id)
     }
     // Day clicks are handled by onSelectDay
@@ -189,7 +189,7 @@ export function useArchiveNavigation({
 
   // Navigate back
   const navigateBack = () => {
-    if (navigationLevel === 'subevent') {
+    if (navigationLevel === 'event') {
       setNavigationLevel('tournament')
       setCurrentSubEventId('')
     } else if (navigationLevel === 'tournament') {

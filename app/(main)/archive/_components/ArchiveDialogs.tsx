@@ -295,7 +295,7 @@ export function ArchiveDialogs() {
       <EditEventDialog
         isOpen={editEventDialog.isOpen}
         onOpenChange={closeEditEventDialog}
-        subEventId={selectedEventIdForEdit}
+        eventId={selectedEventIdForEdit}
         onSuccess={handleEditEventSuccess}
       />
 

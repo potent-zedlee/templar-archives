@@ -3,7 +3,7 @@
  *
  * 폼 데이터 관리를 담당하는 Zustand store
  * - Tournament 폼
- * - SubEvent 폼
+ * - Event 폼
  * - Stream 폼 (이전 Day 폼)
  * - Payout 폼
  */

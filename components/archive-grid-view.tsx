@@ -75,7 +75,7 @@ export function ArchiveGridView({
     switch (type) {
       case 'tournament':
         return <Folder className="h-6 w-6 text-blue-500" />
-      case 'subevent':
+      case 'event':
         return <Folder className="h-6 w-6 text-green-500" />
       case 'day':
         return <FileVideo className="h-6 w-6 text-purple-500" />
@@ -143,7 +143,7 @@ export function ArchiveGridView({
     }
 
     // SubEvent folder menu
-    if (item.type === 'subevent') {
+    if (item.type === 'event') {
       return (
         <>
           <DropdownMenuItem onClick={() => onNavigate(item)}>
@@ -276,7 +276,7 @@ export function ArchiveGridView({
     >
       {items.map((item, index) => {
         // Use ArchiveEventCard for tournaments and subevents
-        if (item.type === 'tournament' || item.type === 'subevent') {
+        if (item.type === 'tournament' || item.type === 'event') {
           return (
             <motion.div
               key={item.id}

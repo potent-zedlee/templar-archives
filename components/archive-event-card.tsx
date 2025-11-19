@@ -123,7 +123,7 @@ export function ArchiveEventCard({
 
   const getIcon = (category?: string) => {
     // If category exists, show logo instead
-    if (category && (item.type === 'tournament' || item.type === 'subevent')) {
+    if (category && (item.type === 'tournament' || item.type === 'event')) {
       return <CategoryLogo category={category} size="md" fallback="icon" />
     }
 
@@ -131,7 +131,7 @@ export function ArchiveEventCard({
     switch (item.type) {
       case 'tournament':
         return <Folder className="h-5 w-5" />
-      case 'subevent':
+      case 'event':
         return <Folder className="h-5 w-5" />
       case 'day':
         return <FileVideo className="h-5 w-5" />
@@ -260,9 +260,9 @@ export function ArchiveEventCard({
         {/* Footer */}
         <div className="px-6 py-3 bg-muted/30 flex items-center justify-between border-t">
           <span className="text-xs text-muted-foreground">
-            {item.type === 'tournament' ? 'Tournament' : item.type === 'subevent' ? 'Event' : 'Video'}
+            {item.type === 'tournament' ? 'Tournament' : item.type === 'event' ? 'Event' : 'Video'}
           </span>
-          {(item.type === 'tournament' || item.type === 'subevent') && (
+          {(item.type === 'tournament' || item.type === 'event') && (
             item.isExpanded ? (
               <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
             ) : (
@@ -280,7 +280,7 @@ export function ArchiveEventCard({
 
   // Determine chevron icon
   const ChevronIcon = item.isExpanded ? ChevronDown : ChevronRight
-  const showChevron = item.type === 'tournament' || item.type === 'subevent'
+  const showChevron = item.type === 'tournament' || item.type === 'event'
 
   // List variant
   return (

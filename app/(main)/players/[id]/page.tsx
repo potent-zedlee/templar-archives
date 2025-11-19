@@ -49,11 +49,11 @@ type Tournament = {
   name: string
   category: string
   location: string
-  sub_events: SubEvent[]
+  sub_events: Event[]
   expanded: boolean
 }
 
-type SubEvent = {
+type Event = {
   id: string
   name: string
   date: string
@@ -89,7 +89,7 @@ export default function PlayerDetailClient() {
 
   // UI states
   const [expandedTournaments, setExpandedTournaments] = useState<Record<string, boolean>>({})
-  const [expandedSubEvents, setExpandedSubEvents] = useState<Record<string, boolean>>({})
+  const [expandedEvents, setExpandedEvents] = useState<Record<string, boolean>>({})
   const [claimDialogOpen, setClaimDialogOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -103,18 +103,18 @@ export default function PlayerDetailClient() {
     return handsData.map((tournament: any) => ({
       ...tournament,
       expanded: expandedTournaments[tournament.id] ?? true,
-      sub_events: tournament.sub_events.map((subEvent: any) => ({
-        ...subEvent,
-        expanded: expandedSubEvents[subEvent.id] ?? false,
+      sub_events: tournament.sub_events.map((event: any) => ({
+        ...event,
+        expanded: expandedEvents[event.id] ?? false,
       })),
     }))
-  }, [handsData, expandedTournaments, expandedSubEvents])
+  }, [handsData, expandedTournaments, expandedEvents])
 
   // Calculate total hands count
   const totalHandsCount = useMemo(() => {
     return handsData.reduce((total: number, tournament: any) => {
-      return total + tournament.sub_events.reduce((subTotal: number, subEvent: any) => {
-        return subTotal + subEvent.days.reduce((dayTotal: number, day: any) => {
+      return total + tournament.sub_events.reduce((subTotal: number, event: any) => {
+        return subTotal + event.days.reduce((dayTotal: number, day: any) => {
           return dayTotal + day.hands.length
         }, 0)
       }, 0)
@@ -129,18 +129,18 @@ export default function PlayerDetailClient() {
     tournaments.forEach((tournament) => {
       let tournamentHandCount = 0
 
-      tournament.sub_events?.forEach((subEvent) => {
-        let subEventHandCount = 0
+      tournament.sub_events?.forEach((event) => {
+        let eventHandCount = 0
 
-        subEvent.days?.forEach((day) => {
+        event.days?.forEach((day) => {
           day.hands?.forEach((_hand: any) => {
-            subEventHandCount++
+            eventHandCount++
             tournamentHandCount++
           })
         })
 
-        if (subEventHandCount > 0) {
-          eventsMap.set(subEvent.name, subEventHandCount)
+        if (eventHandCount > 0) {
+          eventsMap.set(event.name, eventHandCount)
         }
       })
 
@@ -210,10 +210,10 @@ export default function PlayerDetailClient() {
     }))
   }
 
-  const toggleSubEvent = (tournamentId: string, subEventId: string) => {
-    setExpandedSubEvents((prev) => ({
+  const toggleEvent = (tournamentId: string, eventId: string) => {
+    setExpandedEvents((prev) => ({
       ...prev,
-      [subEventId]: !(prev[subEventId] ?? false)
+      [eventId]: !(prev[eventId] ?? false)
     }))
   }
 
@@ -454,32 +454,32 @@ export default function PlayerDetailClient() {
                       </span>
                     </div>
 
-                    {/* SubEvent Level */}
+                    {/* Event Level */}
                     {tournament.expanded && (
                       <div className="ml-8">
-                        {tournament.sub_events?.map((subEvent) => (
-                          <div key={subEvent.id}>
+                        {tournament.sub_events?.map((event) => (
+                          <div key={event.id}>
                             <div
                               className="flex items-center gap-3 py-2 px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700"
-                              onClick={() => toggleSubEvent(tournament.id, subEvent.id)}
+                              onClick={() => toggleEvent(tournament.id, event.id)}
                             >
-                              {subEvent.expanded ? (
+                              {event.expanded ? (
                                 <ChevronDown className="h-4 w-4 text-green-500 dark:text-green-400" />
                               ) : (
                                 <ChevronRight className="h-4 w-4 text-green-500 dark:text-green-400" />
                               )}
                               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {subEvent.name}
+                                {event.name}
                               </span>
                               <div className="ml-auto inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded">
-                                {subEvent.days.reduce((total, day) => total + day.hands.length, 0)} hands
+                                {event.days.reduce((total, day) => total + day.hands.length, 0)} hands
                               </div>
                             </div>
 
                             {/* Day Level with Hands */}
-                            {subEvent.expanded && (
+                            {event.expanded && (
                               <div className="ml-8 mt-2">
-                                {subEvent.days?.map((day) => (
+                                {event.days?.map((day) => (
                                   <div key={day.id} className="mb-4">
                                     <div className="flex items-center gap-2 py-2 px-3 mb-2 bg-gray-50 dark:bg-gray-700 rounded">
                                       <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 font-mono">

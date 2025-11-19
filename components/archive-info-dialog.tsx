@@ -23,7 +23,7 @@ import { Separator } from "@/components/ui/separator"
 import { Edit, Trash2, Calendar, MapPin, DollarSign, Users, Video, Hash, ExternalLink } from "lucide-react"
 import { CategoryLogo } from "@/components/category-logo"
 import { format } from "date-fns"
-import type { FolderItem, Tournament, SubEvent, Stream } from "@/lib/types/archive"
+import type { FolderItem, Tournament, Event, Stream } from "@/lib/types/archive"
 
 interface ArchiveInfoDialogProps {
   item: FolderItem | null
@@ -62,7 +62,7 @@ export function ArchiveInfoDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {item.type === 'tournament' && '🏆 Tournament Details'}
-            {item.type === 'subevent' && '📋 Event Details'}
+            {item.type === 'event' && '📋 Event Details'}
             {item.type === 'day' && '📅 Day Details'}
           </DialogTitle>
           <DialogDescription>
@@ -76,9 +76,9 @@ export function ArchiveInfoDialog({
             <TournamentInfo tournament={item.data as Tournament} />
           )}
 
-          {/* SubEvent Information */}
-          {item.type === 'subevent' && item.data && 'buy_in' in item.data && (
-            <SubEventInfo subEvent={item.data as SubEvent} />
+          {/* Event Information */}
+          {item.type === 'event' && item.data && 'buy_in' in item.data && (
+            <EventInfo event={item.data as Event} />
           )}
 
           {/* Stream Information */}
@@ -94,7 +94,7 @@ export function ArchiveInfoDialog({
                 <Hash className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">Contains:</span>
                 <Badge variant="secondary">
-                  {item.itemCount} {item.type === 'tournament' ? 'events' : item.type === 'subevent' ? 'days' : 'hands'}
+                  {item.itemCount} {item.type === 'tournament' ? 'events' : item.type === 'event' ? 'days' : 'hands'}
                 </Badge>
               </div>
             </>
@@ -182,16 +182,16 @@ function TournamentInfo({ tournament }: { tournament: Tournament }) {
   )
 }
 
-// ==================== SubEvent Info ====================
-function SubEventInfo({ subEvent }: { subEvent: SubEvent }) {
+// ==================== Event Info ====================
+function EventInfo({ event }: { event: Event }) {
   return (
     <div className="space-y-4">
       {/* Title */}
       <div>
-        <h3 className="text-lg font-bold">{subEvent.name}</h3>
-        {subEvent.date && (
+        <h3 className="text-lg font-bold">{event.name}</h3>
+        {event.date && (
           <p className="text-sm text-muted-foreground mt-1">
-            {format(new Date(subEvent.date), "MMMM dd, yyyy")}
+            {format(new Date(event.date), "MMMM dd, yyyy")}
           </p>
         )}
       </div>
@@ -200,57 +200,57 @@ function SubEventInfo({ subEvent }: { subEvent: SubEvent }) {
 
       {/* Details Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {subEvent.buy_in && (
+        {event.buy_in && (
           <InfoItem
             icon={<DollarSign className="h-4 w-4" />}
             label="Buy-in"
-            value={subEvent.buy_in}
+            value={event.buy_in}
           />
         )}
-        {subEvent.total_prize && (
+        {event.total_prize && (
           <InfoItem
             icon={<DollarSign className="h-4 w-4" />}
             label="Prize Pool"
-            value={subEvent.total_prize}
+            value={event.total_prize}
           />
         )}
-        {subEvent.entry_count !== undefined && (
+        {event.entry_count !== undefined && (
           <InfoItem
             icon={<Users className="h-4 w-4" />}
             label="Entries"
-            value={`${subEvent.entry_count} players`}
+            value={`${event.entry_count} players`}
           />
         )}
-        {subEvent.winner && (
+        {event.winner && (
           <InfoItem
             icon={<Users className="h-4 w-4" />}
             label="Winner"
-            value={subEvent.winner}
+            value={event.winner}
           />
         )}
-        {subEvent.starting_stack && (
+        {event.starting_stack && (
           <InfoItem
             icon={<Hash className="h-4 w-4" />}
             label="Starting Stack"
-            value={subEvent.starting_stack.toLocaleString()}
+            value={event.starting_stack.toLocaleString()}
           />
         )}
-        {subEvent.level_duration && (
+        {event.level_duration && (
           <InfoItem
             icon={<Calendar className="h-4 w-4" />}
             label="Level Duration"
-            value={`${subEvent.level_duration} min`}
+            value={`${event.level_duration} min`}
           />
         )}
       </div>
 
       {/* Notes */}
-      {subEvent.notes && (
+      {event.notes && (
         <>
           <Separator />
           <div>
             <p className="text-sm font-medium mb-2">Notes</p>
-            <p className="text-sm text-muted-foreground">{subEvent.notes}</p>
+            <p className="text-sm text-muted-foreground">{event.notes}</p>
           </div>
         </>
       )}

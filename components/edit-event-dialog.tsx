@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Trash2, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import type { SubEvent } from "@/lib/supabase"
+import type { Event } from "@/lib/supabase"
 
 interface EventPayout {
   id?: string
@@ -27,14 +27,14 @@ interface EventPayout {
 interface EditEventDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
-  subEventId: string | null
+  eventId: string | null
   onSuccess?: () => void
 }
 
 export function EditEventDialog({
   isOpen,
   onOpenChange,
-  subEventId,
+  eventId,
   onSuccess,
 }: EditEventDialogProps) {
   const { toast } = useToast()
@@ -62,39 +62,39 @@ export function EditEventDialog({
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
 
-  // Load SubEvent data
+  // Load Event data
   useEffect(() => {
-    if (!isOpen || !subEventId) return
+    if (!isOpen || !eventId) return
 
     const loadData = async () => {
       setLoading(true)
       try {
-        // Load SubEvent
-        const { data: subEvent, error: subEventError } = await supabase
+        // Load Event
+        const { data: event, error: eventError } = await supabase
           .from("sub_events")
           .select("*")
-          .eq("id", subEventId)
+          .eq("id", eventId)
           .single()
 
-        if (subEventError) throw subEventError
+        if (eventError) throw eventError
 
         // Set form values
-        setName(subEvent.name || "")
-        setDate(subEvent.date || "")
-        setBuyIn(subEvent.buy_in || "")
-        setEntryCount(subEvent.entry_count?.toString() || "")
-        setNotes(subEvent.notes || "")
-        setBlindStructure(subEvent.blind_structure || "")
-        setLevelDuration(subEvent.level_duration?.toString() || "")
-        setStartingStack(subEvent.starting_stack?.toString() || "")
-        setTotalPrize(subEvent.total_prize || "")
-        setWinner(subEvent.winner || "")
+        setName(event.name || "")
+        setDate(event.date || "")
+        setBuyIn(event.buy_in || "")
+        setEntryCount(event.entry_count?.toString() || "")
+        setNotes(event.notes || "")
+        setBlindStructure(event.blind_structure || "")
+        setLevelDuration(event.level_duration?.toString() || "")
+        setStartingStack(event.starting_stack?.toString() || "")
+        setTotalPrize(event.total_prize || "")
+        setWinner(event.winner || "")
 
         // Load Payouts
         const { data: payoutsData, error: payoutsError } = await supabase
           .from("event_payouts")
           .select("*")
-          .eq("sub_event_id", subEventId)
+          .eq("sub_event_id", eventId)
           .order("rank", { ascending: true })
 
         if (payoutsError) throw payoutsError
@@ -120,14 +120,14 @@ export function EditEventDialog({
     }
 
     loadData()
-  }, [isOpen, subEventId, supabase, toast])
+  }, [isOpen, eventId, supabase, toast])
 
   const handleSave = async () => {
-    if (!subEventId) return
+    if (!eventId) return
 
     setSaving(true)
     try {
-      // Update SubEvent
+      // Update Event
       const { error: updateError } = await supabase
         .from("sub_events")
         .update({
@@ -142,7 +142,7 @@ export function EditEventDialog({
           total_prize: totalPrize || null,
           winner: winner || null,
         })
-        .eq("id", subEventId)
+        .eq("id", eventId)
 
       if (updateError) throw updateError
 
@@ -151,7 +151,7 @@ export function EditEventDialog({
       const { error: deleteError } = await supabase
         .from("event_payouts")
         .delete()
-        .eq("sub_event_id", subEventId)
+        .eq("sub_event_id", eventId)
 
       if (deleteError) throw deleteError
 
@@ -161,7 +161,7 @@ export function EditEventDialog({
           .from("event_payouts")
           .insert(
             payouts.map((p) => ({
-              sub_event_id: subEventId,
+              sub_event_id: eventId,
               rank: p.rank,
               player_name: p.player_name,
               prize_amount: p.prize_amount,

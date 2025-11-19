@@ -13,7 +13,7 @@ describe('Archive Form Store', () => {
         start_date: '',
         end_date: '',
       },
-      subEventForm: {
+      eventForm: {
         name: '',
         date: '',
         total_prize: '',
@@ -97,23 +97,23 @@ describe('Archive Form Store', () => {
 
   describe('SubEvent Form', () => {
     it('should set sub-event form field', () => {
-      const { setSubEventFormField } = useArchiveFormStore.getState()
-      setSubEventFormField('name', 'Event #15: Main Event')
+      const { setEventFormField } = useArchiveFormStore.getState()
+      setEventFormField('name', 'Event #15: Main Event')
 
-      const { subEventForm } = useArchiveFormStore.getState()
-      expect(subEventForm.name).toBe('Event #15: Main Event')
+      const { eventForm } = useArchiveFormStore.getState()
+      expect(eventForm.name).toBe('Event #15: Main Event')
     })
 
     it('should set multiple sub-event form fields', () => {
-      const { setSubEventFormField } = useArchiveFormStore.getState()
-      setSubEventFormField('name', 'Event #15')
-      setSubEventFormField('buy_in', '10000')
-      setSubEventFormField('total_prize', '50000000')
+      const { setEventFormField } = useArchiveFormStore.getState()
+      setEventFormField('name', 'Event #15')
+      setEventFormField('buy_in', '10000')
+      setEventFormField('total_prize', '50000000')
 
-      const { subEventForm } = useArchiveFormStore.getState()
-      expect(subEventForm.name).toBe('Event #15')
-      expect(subEventForm.buy_in).toBe('10000')
-      expect(subEventForm.total_prize).toBe('50000000')
+      const { eventForm } = useArchiveFormStore.getState()
+      expect(eventForm.name).toBe('Event #15')
+      expect(eventForm.buy_in).toBe('10000')
+      expect(eventForm.total_prize).toBe('50000000')
     })
 
     it('should set entire sub-event form', () => {
@@ -130,23 +130,23 @@ describe('Archive Form Store', () => {
         notes: 'Test notes',
       }
 
-      const { setSubEventForm } = useArchiveFormStore.getState()
-      setSubEventForm(newForm as any)
+      const { setEventForm } = useArchiveFormStore.getState()
+      setEventForm(newForm as any)
 
-      const { subEventForm } = useArchiveFormStore.getState()
-      expect(subEventForm).toMatchObject(newForm)
+      const { eventForm } = useArchiveFormStore.getState()
+      expect(eventForm).toMatchObject(newForm)
     })
 
     it('should reset sub-event form', () => {
-      const { setSubEventFormField, resetSubEventForm } = useArchiveFormStore.getState()
-      setSubEventFormField('name', 'Test Event')
-      setSubEventFormField('buy_in', '1000')
+      const { setEventFormField, resetEventForm } = useArchiveFormStore.getState()
+      setEventFormField('name', 'Test Event')
+      setEventFormField('buy_in', '1000')
 
-      resetSubEventForm()
+      resetEventForm()
 
-      const { subEventForm } = useArchiveFormStore.getState()
-      expect(subEventForm.name).toBe('')
-      expect(subEventForm.buy_in).toBe('')
+      const { eventForm } = useArchiveFormStore.getState()
+      expect(eventForm.name).toBe('')
+      expect(eventForm.buy_in).toBe('')
     })
   })
 

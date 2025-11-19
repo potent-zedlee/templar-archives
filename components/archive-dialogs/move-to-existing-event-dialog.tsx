@@ -36,20 +36,20 @@ export function MoveToExistingEventDialog({
   onSuccess,
 }: MoveToExistingEventDialogProps) {
   const [moveToExistingTournamentId, setMoveToExistingTournamentId] = useState('')
-  const [moveToSubEventId, setMoveToSubEventId] = useState('')
+  const [moveToEventId, setMoveToEventId] = useState('')
   const [movingVideos, setMovingVideos] = useState(false)
 
   // Reset form when dialog closes
   useEffect(() => {
     if (!isOpen) {
       setMoveToExistingTournamentId('')
-      setMoveToSubEventId('')
+      setMoveToEventId('')
       setMovingVideos(false)
     }
   }, [isOpen])
 
   const handleMove = async () => {
-    if (!moveToSubEventId) {
+    if (!moveToEventId) {
       toast.error('Please select an event')
       return
     }
@@ -62,7 +62,7 @@ export function MoveToExistingEventDialog({
     setMovingVideos(true)
     try {
       const videoIds = Array.from(selectedVideoIds)
-      const result = await organizeVideos(videoIds, moveToSubEventId)
+      const result = await organizeVideos(videoIds, moveToEventId)
 
       if (result.success) {
         toast.success(`${videoIds.length} video(s) moved successfully`)
@@ -103,22 +103,22 @@ export function MoveToExistingEventDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="move-existing-subevent">Event *</Label>
+            <Label htmlFor="move-existing-event">Event *</Label>
             <Select
-              value={moveToSubEventId}
-              onValueChange={setMoveToSubEventId}
+              value={moveToEventId}
+              onValueChange={setMoveToEventId}
               disabled={!moveToExistingTournamentId}
             >
-              <SelectTrigger id="move-existing-subevent">
+              <SelectTrigger id="move-existing-event">
                 <SelectValue placeholder="Select an event" />
               </SelectTrigger>
               <SelectContent>
                 {moveToExistingTournamentId &&
                   tournaments
                     .find(t => t.id === moveToExistingTournamentId)
-                    ?.sub_events?.map((subEvent) => (
-                      <SelectItem key={subEvent.id} value={subEvent.id}>
-                        {subEvent.name}
+                    ?.sub_events?.map((event: any) => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {event.name}
                       </SelectItem>
                     ))}
               </SelectContent>
@@ -137,7 +137,7 @@ export function MoveToExistingEventDialog({
             >
               Cancel
             </Button>
-            <Button onClick={handleMove} disabled={movingVideos || !moveToSubEventId}>
+            <Button onClick={handleMove} disabled={movingVideos || !moveToEventId}>
               {movingVideos ? 'Moving...' : 'Move'}
             </Button>
           </div>

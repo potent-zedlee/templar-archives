@@ -80,7 +80,7 @@ export function ArchiveTimelineView({
     switch (type) {
       case 'tournament':
         return <Folder className="h-5 w-5 text-blue-500" />
-      case 'subevent':
+      case 'event':
         return <Folder className="h-5 w-5 text-green-500" />
       case 'day':
         return <FileVideo className="h-5 w-5 text-purple-500" />
@@ -146,7 +146,7 @@ export function ArchiveTimelineView({
       )
     }
 
-    if (item.type === 'subevent') {
+    if (item.type === 'event') {
       return (
         <>
           <DropdownMenuItem onClick={() => onNavigate(item)}>
@@ -271,7 +271,7 @@ export function ArchiveTimelineView({
           <div className="space-y-2 relative before:absolute before:left-0 before:top-0 before:bottom-0 before:w-px before:bg-border before:ml-5">
             {dateItems.map((item, index) => {
               const thumbnail = getYouTubeThumbnail(item)
-              const isFolder = item.type === 'tournament' || item.type === 'subevent' || item.type === 'unorganized'
+              const isFolder = item.type === 'tournament' || item.type === 'event' || item.type === 'unorganized'
               const isSelected = selectedIds.has(item.id)
 
               return (
@@ -333,7 +333,7 @@ export function ArchiveTimelineView({
                               Tournament
                             </Badge>
                           )}
-                          {item.type === 'subevent' && (
+                          {item.type === 'event' && (
                             <Badge variant="outline" className="text-xs border-green-500/50 text-green-600 dark:text-green-400">
                               Event
                             </Badge>

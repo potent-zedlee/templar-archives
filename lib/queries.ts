@@ -65,7 +65,7 @@ export async function fetchHandsWithDetails(options: {
       ...hand,
       tournament_name: hand.streams?.sub_events?.tournaments?.name,
       tournament_category: hand.streams?.sub_events?.tournaments?.category,
-      sub_event_name: hand.streams?.sub_events?.name,
+      event_name: hand.streams?.sub_events?.name,
       day_name: hand.streams?.name,
       player_names: playersMap[hand.id] || [],
       player_count: playersMap[hand.id]?.length || 0
@@ -122,7 +122,7 @@ export async function fetchHandDetails(handId: string) {
 }
 
 /**
- * Fetch tournaments with sub_events and days (optimized)
+ * Fetch tournaments with events and days (optimized)
  * Phase 37: Filter to show only published content
  */
 export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game') {
@@ -156,15 +156,15 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
       // Tournament level: show if published or status is null (legacy data)
       if (t.status && t.status !== 'published') return false
 
-      // SubEvent level: filter out non-published sub_events
+      // Event level: filter out non-published events
       if (t.sub_events) {
-        t.sub_events = t.sub_events.filter((se: any) => {
-          // SubEvent: show if published or status is null
-          if (se.status && se.status !== 'published') return false
+        t.sub_events = t.sub_events.filter((event: any) => {
+          // Event: show if published or status is null
+          if (event.status && event.status !== 'published') return false
 
           // Stream level: filter out non-published streams
-          if (se.streams) {
-            se.streams = se.streams.filter((s: any) => {
+          if (event.streams) {
+            event.streams = event.streams.filter((s: any) => {
               // Stream: show if published or status is null
               return !s.status || s.status === 'published'
             })
@@ -180,8 +180,8 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
     // Get all day IDs from the tournaments tree
     const allDayIds: string[] = []
     tournaments.forEach((tournament: any) => {
-      tournament.sub_events?.forEach((subEvent: any) => {
-        subEvent.streams?.forEach((day: any) => {
+      tournament.sub_events?.forEach((event: any) => {
+        event.streams?.forEach((day: any) => {
           allDayIds.push(day.id)
         })
       })
@@ -211,7 +211,7 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
         delete tournament.tournament_categories
       }
 
-      // Sort sub_events by date descending
+      // Sort events by date descending
       if (tournament.sub_events) {
         tournament.sub_events.sort((a: any, b: any) => {
           const dateA = new Date(a.date).getTime()
@@ -219,17 +219,17 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
           return dateB - dateA // Descending order
         })
 
-        tournament.sub_events.forEach((subEvent: any) => {
+        tournament.sub_events.forEach((event: any) => {
           // Sort streams by published_at descending
-          if (subEvent.streams) {
-            subEvent.streams.sort((a: any, b: any) => {
+          if (event.streams) {
+            event.streams.sort((a: any, b: any) => {
               const dateA = a.published_at ? new Date(a.published_at).getTime() : 0
               const dateB = b.published_at ? new Date(b.published_at).getTime() : 0
               return dateB - dateA // Descending order
             })
 
             // Add player counts
-            subEvent.streams.forEach((day: any) => {
+            event.streams.forEach((day: any) => {
               day.player_count = playerCountsByDayId[day.id] || 0
             })
           }

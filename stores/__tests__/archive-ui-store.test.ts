@@ -7,18 +7,18 @@ describe('Archive UI Store', () => {
     // Reset store state before each test
     useArchiveUIStore.setState({
       expandedTournament: null,
-      expandedSubEvent: null,
+      expandedEvent: null,
       searchQuery: '',
       sortBy: 'date-desc',
       selectedCategory: 'All',
       tournamentDialog: { isOpen: false, editingId: null },
-      subEventDialog: { isOpen: false, editingId: null },
+      eventDialog: { isOpen: false, editingId: null },
       streamDialog: { isOpen: false, editingId: null },
       analyzeDialog: { isOpen: false, editingId: null },
       videoDialog: { isOpen: false, startTime: '', stream: null },
       selectedVideoIds: new Set<string>(),
       selectedTournamentIdForDialog: '',
-      selectedSubEventIdForDialog: '',
+      selectedEventIdForDialog: '',
       analyzeDayForDialog: null,
       openMenuId: '',
     })
@@ -52,31 +52,31 @@ describe('Archive UI Store', () => {
     })
 
     it('should close SubEvent when Tournament changes', () => {
-      const { toggleTournamentExpand, toggleSubEventExpand } = useArchiveUIStore.getState()
+      const { toggleTournamentExpand, toggleEventExpand } = useArchiveUIStore.getState()
 
       toggleTournamentExpand('tournament-1')
-      toggleSubEventExpand('subevent-1')
+      toggleEventExpand('subevent-1')
       toggleTournamentExpand('tournament-2')
 
-      const { expandedSubEvent } = useArchiveUIStore.getState()
-      expect(expandedSubEvent).toBeNull()
+      const { expandedEvent } = useArchiveUIStore.getState()
+      expect(expandedEvent).toBeNull()
     })
 
     it('should expand sub-event', () => {
-      const { toggleSubEventExpand } = useArchiveUIStore.getState()
-      toggleSubEventExpand('subevent-1')
+      const { toggleEventExpand } = useArchiveUIStore.getState()
+      toggleEventExpand('subevent-1')
 
-      const { expandedSubEvent } = useArchiveUIStore.getState()
-      expect(expandedSubEvent).toBe('subevent-1')
+      const { expandedEvent } = useArchiveUIStore.getState()
+      expect(expandedEvent).toBe('subevent-1')
     })
 
     it('should collapse sub-event when clicked again', () => {
-      const { toggleSubEventExpand } = useArchiveUIStore.getState()
-      toggleSubEventExpand('subevent-1')
-      toggleSubEventExpand('subevent-1')
+      const { toggleEventExpand } = useArchiveUIStore.getState()
+      toggleEventExpand('subevent-1')
+      toggleEventExpand('subevent-1')
 
-      const { expandedSubEvent } = useArchiveUIStore.getState()
-      expect(expandedSubEvent).toBeNull()
+      const { expandedEvent } = useArchiveUIStore.getState()
+      expect(expandedEvent).toBeNull()
     })
   })
 
@@ -119,13 +119,13 @@ describe('Archive UI Store', () => {
 
       resetAllFilters()
 
-      const { searchQuery, sortBy, expandedTournament, expandedSubEvent } =
+      const { searchQuery, sortBy, expandedTournament, expandedEvent } =
         useArchiveUIStore.getState()
 
       expect(searchQuery).toBe('')
       expect(sortBy).toBe('date-desc')
       expect(expandedTournament).toBeNull()
-      expect(expandedSubEvent).toBeNull()
+      expect(expandedEvent).toBeNull()
     })
   })
 
@@ -159,11 +159,11 @@ describe('Archive UI Store', () => {
     })
 
     it('should open sub-event dialog with tournament ID', () => {
-      const { openSubEventDialog } = useArchiveUIStore.getState()
-      openSubEventDialog('tournament-1')
+      const { openEventDialog } = useArchiveUIStore.getState()
+      openEventDialog('tournament-1')
 
-      const { subEventDialog, selectedTournamentIdForDialog } = useArchiveUIStore.getState()
-      expect(subEventDialog.isOpen).toBe(true)
+      const { eventDialog, selectedTournamentIdForDialog } = useArchiveUIStore.getState()
+      expect(eventDialog.isOpen).toBe(true)
       expect(selectedTournamentIdForDialog).toBe('tournament-1')
     })
 
@@ -171,9 +171,9 @@ describe('Archive UI Store', () => {
       const { openStreamDialog } = useArchiveUIStore.getState()
       openStreamDialog('subevent-1')
 
-      const { streamDialog, selectedSubEventIdForDialog } = useArchiveUIStore.getState()
+      const { streamDialog, selectedEventIdForDialog } = useArchiveUIStore.getState()
       expect(streamDialog.isOpen).toBe(true)
-      expect(selectedSubEventIdForDialog).toBe('subevent-1')
+      expect(selectedEventIdForDialog).toBe('subevent-1')
     })
 
     it('should keep dayDialog in sync with streamDialog (backward compatibility)', () => {
