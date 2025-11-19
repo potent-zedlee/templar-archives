@@ -6,12 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-Templar Archives Index는 포커 영상을 자동으로 핸드 히스토리로 변환하고 분석하는 플랫폼입니다.
+Templar Archives는 포커 영상을 자동으로 핸드 히스토리로 변환하고 분석하는 프로덕션 플랫폼입니다.
 
 - **프로덕션**: https://templar-archives.vercel.app
 - **로컬**: http://localhost:3000
-- **Phase**: 40 완료 (2025-11-16)
-- **KAN Backend**: https://kan-backend-700566907563.us-central1.run.app
+- **Phase**: 41 완료 (2025-11-19)
+- **페이지 수**: 49개
 
 ---
 
@@ -49,6 +49,19 @@ npm run analyze
 supabase db push           # 프로덕션 적용
 supabase db reset          # 로컬 리셋
 supabase migration new migration_name
+```
+
+### 플레이어 데이터 관리
+
+```bash
+# Hendonmob 플레이어 Import
+node scripts/import-hendonmob-players.mjs
+
+# 여성 플레이어 gender 업데이트
+node scripts/update-female-players.mjs
+
+# DB 확인
+node scripts/check-players-db.mjs
 ```
 
 ### 유틸리티 스크립트
@@ -116,16 +129,23 @@ CSRF_SECRET=your-secure-random-string
 ### 1. 상태 관리
 
 **서버 상태 (React Query)**:
-- 위치: `lib/queries/*.ts` (6개 파일)
-- staleTime: 1-10분
+- 위치: `lib/queries/*.ts` (20개 파일)
+- staleTime: 1-10분 (데이터 특성별)
 - Optimistic Updates 적극 활용
 
+**주요 쿼리 파일**:
+- `archive-queries.ts` - Tournament/SubEvent/Stream/Hands
+- `players-queries.ts` - 플레이어 통계 및 프로필
+- `community-queries.ts` - 포스트/댓글
+- `kan-queries.ts` - KAN 분석 작업 모니터링
+
 ```typescript
+// Optimistic Update 패턴
 export function useLikePostMutation() {
   return useMutation({
     mutationFn: async (postId) => { /* ... */ },
     onMutate: async (postId) => {
-      // Optimistic Update
+      await queryClient.cancelQueries({ queryKey: ['post', postId] })
       queryClient.setQueryData(['post', postId], (old) => ({
         ...old,
         like_count: old.like_count + 1
@@ -138,18 +158,24 @@ export function useLikePostMutation() {
 **클라이언트 상태 (Zustand)**:
 - 위치: `stores/*.ts` (4개 파일)
 - persist 미들웨어 활용 (LocalStorage)
+- archive-ui-store, archive-form-store, hand-input-store, filter-store
 
 ### 2. Server Actions
 
 **모든 write 작업은 Server Actions 사용** (클라이언트 직접 Supabase 호출 금지)
 
-위치: `app/actions/*.ts`
+위치: `app/actions/*.ts` (7개 파일)
+
+**주요 Server Actions**:
+- `archive.ts` (19KB) - Tournament/SubEvent/Stream CRUD
+- `kan-analysis.ts` (27KB) - KAN 영상 분석 ⭐ 핵심
+- `hands-manual.ts` - 수동 핸드 입력
 
 ```typescript
 'use server'
 
 export async function createTournament(data: TournamentData) {
-  // 1. 인증 검증
+  // 1. 서버 사이드 인증 검증
   const user = await verifyAdmin()
   if (!user) return { success: false, error: 'Unauthorized' }
 
@@ -172,9 +198,12 @@ export async function createTournament(data: TournamentData) {
 ### 3. Archive 계층 구조 (4단계)
 
 ```
-Tournament → SubEvent → Stream → Hand
-                                  ├── HandPlayers
-                                  └── HandActions
+Tournament (토너먼트)
+  └── SubEvent (서브 이벤트)
+      └── Stream (일별 스트림)
+          └── Hand (핸드)
+              ├── HandPlayers (플레이어별 정보)
+              └── HandActions (시퀀스별 액션)
 ```
 
 **핵심 파일**:
@@ -182,13 +211,63 @@ Tournament → SubEvent → Stream → Hand
 - `app/archive/_components/` (5개 컴포넌트)
 - `lib/types/archive.ts`
 
-### 4. AI 통합
+**UI 패턴**: Accordion (한 번에 하나만 열림)
+
+### 4. 플레이어 시스템
+
+**데이터 구조**:
+- `players` 테이블 - 플레이어 마스터 (1,500+ players)
+- `player_stats_cache` 테이블 - 통계 캐시 (50-70% 성능 향상) ⭐
+- `player_claims` 테이블 - 플레이어 소유권 주장
+
+**통계 계산** (`lib/player-stats.ts`):
+- VPIP (Voluntarily Put In Pot) - 프리플롭 참여율
+- PFR (Pre-Flop Raise) - 프리플롭 레이즈율
+- 3BET - 3벳 비율
+- ATS (Attempt To Steal) - BTN/CO/SB 스틸 시도율
+- Win Rate, Avg Pot Size
+
+**캐싱 전략**:
+1. `player_stats_cache`에서 조회 시도
+2. 캐시 없으면 실시간 계산
+3. 계산 결과를 캐시에 저장
+4. `hand_actions` 변경 시 자동 무효화 (트리거)
+
+**플레이어 상세 페이지 컴포넌트**:
+- `AdvancedStatsCard` - VPIP, PFR, 3BET, ATS 표시
+- `PositionalStatsCard` - 포지션별 통계 차트
+- `PerformanceChartCard` - 승률 분석
+
+### 5. AI 통합
 
 **KAN (Khalai Archive Network)** - 영상 분석:
-- 위치: `lib/ai/gemini.ts`, `app/actions/kan-analysis.ts`
+- 위치: `app/actions/kan-analysis.ts` (27KB)
 - Gemini 2.0 Flash 기반
-- 자동 핸드 히스토리 추출
-- TimeSegment 시스템 (초 단위)
+- YouTube 영상 → 구조화된 핸드 히스토리 자동 추출
+
+**분석 파이프라인** (4단계):
+```
+Frontend → Server Action → Gemini API → DB 저장
+              ↓
+    YouTube 다운로드 (yt-dlp)
+              ↓
+    프레임 추출 (ffmpeg)
+              ↓
+    Gemini 영상 분석
+              ↓
+    JSON 핸드 추출
+```
+
+**지원 플랫폼**:
+- EPT (European Poker Tour) - 기본값
+- Triton Poker
+- WSOP (World Series of Poker)
+- PokerStars
+- Hustler Casino Live
+
+**자동 분할 처리**:
+- 1시간 초과 영상 → 자동 세그먼트 분할
+- 순차 처리 → 결과 병합
 
 **자연어 검색**:
 - 위치: `app/api/natural-search/route.ts`
@@ -267,7 +346,7 @@ async function verifyAdmin() {
 supabase migration new migration_name
 
 # 2. SQL 작성
-# supabase/migrations/20251103000001_add_feature.sql
+# supabase/migrations/20251118000001_add_feature.sql
 
 # 3. 로컬 테스트
 supabase db reset
@@ -276,6 +355,13 @@ supabase db reset
 supabase db push --dry-run
 supabase db push
 ```
+
+**주의사항**:
+1. 로컬 테스트 필수 (`supabase db reset`)
+2. 프로덕션 백업 확인
+3. 인덱스는 `CONCURRENTLY` 사용 (off-peak 시간)
+4. RLS 정책 모든 테이블에 적용
+5. 마이그레이션 순서 의존성 고려
 
 ### 커밋 규칙
 
@@ -298,7 +384,7 @@ test(e2e): add archive CRUD tests
 2. ❌ **`any` 타입 사용**: `unknown` 또는 구체적 타입
 3. ❌ **SQL Injection 위험**: Prepared Statements, JSON 필터만
 4. ❌ **민감 정보 노출**: 환경 변수, API 키 하드코딩
-5. ❌ **pnpm 사용**: npm만 사용
+5. ❌ **pnpm 사용**: npm만 사용 (package.json engines 설정)
 
 ### 필수 사항
 
@@ -326,13 +412,16 @@ rm -rf .next && npm run build
 
 1. `.env.local` 확인
 2. Supabase Dashboard → Settings → API
-3. RLS 정책 확인
+3. RLS 정책 확인 (테이블별)
 
 ### React Query 캐시
 
 ```typescript
+// 특정 쿼리 무효화
 queryClient.invalidateQueries({ queryKey: ['tournaments'] })
-queryClient.invalidateQueries() // 전체 무효화
+
+// 모든 쿼리 무효화
+queryClient.invalidateQueries()
 ```
 
 ---
@@ -431,6 +520,20 @@ queryClient.invalidateQueries() // 전체 무효화
 | `amount` | 베팅 금액 (cents) | `300000` |
 | `pot_after` | 액션 후 팟 (cents) | `650000` |
 
+#### players 테이블
+
+| DB 컬럼 | 설명 | 예시 |
+|---------|------|------|
+| `name` | 플레이어 이름 | `"Kristen Foxen"` |
+| `country` | 국가 | `"Canada"` |
+| `gender` | 성별 | `"female"`, `"male"`, `"other"` |
+| `total_winnings` | 총 상금 (cents) | `402060300` ($4,020,603) |
+| `photo_url` | 프로필 사진 URL | Supabase Storage URL |
+
+**여성 플레이어 필터**:
+- Women's Elite Board: `gender='female'`
+- 500명 여성 플레이어 데이터 보유
+
 ### KAN 분석 체크리스트
 
 **분석 전**:
@@ -497,44 +600,6 @@ queryClient.invalidateQueries() // 전체 무효화
 
 ---
 
-## Agent 시스템
-
-### Supabase Expert Agent
-
-**위치**: `.claude/agents/supabase-expert.md`
-
-**전문 분야**:
-- Supabase CLI 마스터
-- 마이그레이션 관리 (생성, 적용, 롤백)
-- RLS 정책 설계 및 디버깅
-- 인덱스 최적화 (부분 인덱스, CONCURRENTLY)
-- Realtime Publication 관리
-
-**사용 예시**:
-```
-"supabase expert를 사용해서 hands 테이블의 인덱스를 최적화해줘"
-"analysis_jobs 테이블에 Realtime을 활성화해줘"
-```
-
-### Vercel Expert Agent
-
-**위치**: `.claude/agents/vercel-expert.md`
-
-**전문 분야**:
-- Vercel CLI 마스터
-- 배포 관리 (Production, Preview, Development)
-- 환경 변수 설정 및 관리
-- 도메인 및 DNS 설정
-- 로그 모니터링 및 디버깅
-
-**사용 예시**:
-```
-"vercel expert를 사용해서 프로덕션 배포해줘"
-"GOOGLE_API_KEY 환경 변수를 모든 환경에 추가해줘"
-```
-
----
-
 ## 핵심 파일 위치
 
 ### 아키텍처
@@ -543,6 +608,15 @@ queryClient.invalidateQueries() // 전체 무효화
 - **Archive 컴포넌트**: `app/archive/_components/` (5개 파일)
 - **Archive 타입**: `lib/types/archive.ts`
 - **Archive Stores**: `stores/archive-*.ts` (3개 파일)
+
+### 플레이어 시스템
+
+- **플레이어 메인**: `app/(main)/players/page.tsx`
+- **플레이어 상세**: `app/(main)/players/[id]/page.tsx`
+- **플레이어 컴포넌트**: `app/(main)/players/_components/`
+- **플레이어 통계**: `components/player-stats.tsx` ⭐ 신규
+- **통계 계산**: `lib/player-stats.ts`
+- **통계 쿼리**: `lib/queries/player-stats-queries.ts`
 
 ### 인증 & 보안
 
@@ -556,11 +630,13 @@ queryClient.invalidateQueries() // 전체 무효화
 - **Gemini**: `lib/ai/gemini.ts`
 - **KAN Prompts**: `lib/ai/prompts.ts`
 - **KAN Actions**: `app/actions/kan-analysis.ts`
+- **Natural Search**: `app/api/natural-search/route.ts`
 
 ### React Query
 
 - **Archive**: `lib/queries/archive-queries.ts`
 - **Players**: `lib/queries/players-queries.ts`
+- **Player Stats**: `lib/queries/player-stats-queries.ts` ⭐
 - **Community**: `lib/queries/community-queries.ts`
 - **Notifications**: `lib/queries/notification-queries.ts`
 
@@ -570,16 +646,21 @@ queryClient.invalidateQueries() // 전체 무효화
 
 - **README.md**: Quick Start 가이드
 - **PRD.md**: 제품 요구사항 문서
-- **ROADMAP.md**: 통합 로드맵 (Part 1: Templar Archives)
+- **ROADMAP.md**: 통합 로드맵
 - **WORK_LOG.md**: 일별 작업 로그
-- **PAGES_STRUCTURE.md**: 43개 페이지 구조
+- **PAGES_STRUCTURE.md**: 49개 페이지 구조
 - **docs/REACT_QUERY_GUIDE.md**: 데이터 페칭 패턴
 - **docs/HAND_IMPORT_API.md**: 핸드 Import API
 - **docs/FLOWBITE_GUIDE.md**: Flowbite UI 컴포넌트 라이브러리 가이드
+- **docs/DESIGN_SYSTEM.md**: 포스트모던 디자인 시스템
 
 ---
 
 **마지막 업데이트**: 2025-11-18
-**문서 버전**: 2.0 (압축 버전 - 1357줄 → 900줄)
+**문서 버전**: 2.1
 **현재 Phase**: 40 완료
 **보안 등급**: A
+**주요 업데이트**:
+- 플레이어 통계 시스템 추가 (VPIP, 3BET, ATS)
+- 여성 플레이어 500명 gender 정보 업데이트
+- 플레이어 데이터 관리 스크립트 추가

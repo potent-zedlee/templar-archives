@@ -23,10 +23,10 @@ export type Tournament = {
   end_date: string
   game_type?: 'tournament' | 'cash-game'
   created_at?: string
-  sub_events?: SubEvent[]
+  events?: Event[] // 변경: sub_events → events
 }
 
-export type SubEvent = {
+export type Event = {
   id: string
   tournament_id: string
   name: string
@@ -45,9 +45,12 @@ export type SubEvent = {
   days?: Stream[] // UI alias for streams (mapped in archive-helpers.ts)
 }
 
+// Legacy type alias for backward compatibility (deprecated)
+export type SubEvent = Event
+
 export type Stream = {
   id: string
-  sub_event_id: string
+  event_id: string // DB 테이블명은 sub_event_id 유지
   name: string
   description?: string
   video_url?: string

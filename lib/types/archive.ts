@@ -94,7 +94,7 @@ export interface Event {
 
 export interface Stream {
   id: string
-  sub_event_id: string
+  event_id: string // DB: sub_event_id (테이블명 유지)
   name: string
   description?: string
   video_url?: string
@@ -441,7 +441,7 @@ export function isEvent(item: unknown): item is Event {
  * 타입 가드: Stream 확인
  */
 export function isStream(item: unknown): item is Stream {
-  return typeof item === "object" && item !== null && "sub_event_id" in item && "video_source" in item
+  return typeof item === "object" && item !== null && "event_id" in item && "video_source" in item
 }
 
 /**

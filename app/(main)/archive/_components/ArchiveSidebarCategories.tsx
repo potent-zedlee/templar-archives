@@ -101,23 +101,15 @@ export function ArchiveSidebarCategories({
         type="button"
         onClick={() => onCategoryChange('All')}
         className={cn(
-          "w-full flex items-center gap-3 px-4 h-12 max-h-12 text-sm font-medium rounded-lg transition-colors min-w-0 overflow-hidden",
+          "w-full flex items-center gap-3 px-4 h-12 text-sm font-medium rounded-lg transition-colors overflow-hidden",
           selectedCategory === 'All'
             ? "bg-gold-600 text-white"
             : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
         )}
-        style={{ maxHeight: '48px' }}
       >
         <LayoutGrid className="w-5 h-5 flex-shrink-0" />
         <span
-          className="flex-1 text-left min-w-0"
-          style={{
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            display: 'block',
-            lineHeight: '1.5rem'
-          }}
+          className="flex-1 text-left truncate min-w-0"
         >
           All Categories
         </span>
@@ -157,12 +149,11 @@ export function ArchiveSidebarCategories({
                   type="button"
                   onClick={() => onCategoryChange(category.id)}
                   className={cn(
-                    "flex-1 flex items-center gap-3 px-3 h-11 max-h-11 text-sm font-medium rounded-lg transition-colors min-w-0 overflow-hidden",
+                    "flex-1 flex items-center gap-3 px-3 h-11 text-sm font-medium rounded-lg transition-colors overflow-hidden",
                     isSelected
                       ? "bg-gold-600 text-white"
                       : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   )}
-                  style={{ maxHeight: '44px' }}
                 >
                   <CategoryLogo
                     category={category}
@@ -171,14 +162,7 @@ export function ArchiveSidebarCategories({
                     fallback="text"
                   />
                   <span
-                    className="flex-1 text-left min-w-0"
-                    style={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      display: 'block',
-                      lineHeight: '1.25rem'
-                    }}
+                    className="flex-1 text-left truncate min-w-0"
                     title={category.display_name}
                   >
                     {category.display_name}
@@ -197,12 +181,11 @@ export function ArchiveSidebarCategories({
                           type="button"
                           onClick={() => onCategoryChange(child.id)}
                           className={cn(
-                            "w-full flex items-center gap-2.5 px-3 h-9 max-h-9 text-sm rounded-lg transition-colors min-w-0 overflow-hidden",
+                            "w-full flex items-center gap-2.5 px-3 h-9 text-sm rounded-lg transition-colors overflow-hidden",
                             isChildSelected
                               ? "bg-gold-600 text-white font-medium"
                               : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
                           )}
-                          style={{ maxHeight: '36px' }}
                         >
                           <CategoryLogo
                             category={child}
@@ -211,14 +194,7 @@ export function ArchiveSidebarCategories({
                             fallback="text"
                           />
                           <span
-                            className="flex-1 text-left min-w-0"
-                            style={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                              display: 'block',
-                              lineHeight: '1rem'
-                            }}
+                            className="flex-1 text-left truncate min-w-0"
                             title={child.display_name}
                           >
                             {child.display_name}

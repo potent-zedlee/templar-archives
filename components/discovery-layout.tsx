@@ -36,6 +36,11 @@ export function DiscoveryLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [middlePanelCollapsed, setMiddlePanelCollapsed] = useState(false)
 
+  // Tailwind cannot generate classes from dynamic width strings,
+  // so rely on inline styles for predictable sizing.
+  const sidebarStyle = sidebarCollapsed ? { width: 0 } : { width: sidebarWidth }
+  const middlePanelStyle = middlePanelCollapsed ? { width: 0 } : { width: middlePanelWidth }
+
   return (
     <div className={cn("flex h-[calc(100vh-4rem)] overflow-hidden", className)}>
       {/* Mobile: Sidebar Sheet */}
@@ -59,9 +64,10 @@ export function DiscoveryLayout({
       {/* Desktop: Sidebar */}
       <div
         className={cn(
-          "hidden lg:flex flex-col border-r bg-sidebar transition-all duration-300",
-          sidebarCollapsed ? "w-0" : `w-[${sidebarWidth}]`
+          "hidden lg:flex flex-col border-r bg-sidebar transition-all duration-300 overflow-hidden",
+          sidebarCollapsed && "border-transparent"
         )}
+        style={sidebarStyle}
       >
         {!sidebarCollapsed && sidebar}
       </div>
@@ -105,8 +111,9 @@ export function DiscoveryLayout({
           <div
             className={cn(
               "hidden lg:flex flex-col h-full border-r bg-card transition-all duration-300",
-              middlePanelCollapsed ? "w-0" : `w-[${middlePanelWidth}]`
+              middlePanelCollapsed && "border-transparent"
             )}
+            style={middlePanelStyle}
           >
             {!middlePanelCollapsed && middlePanel}
           </div>
@@ -117,8 +124,9 @@ export function DiscoveryLayout({
             size="icon"
             className={cn(
               "hidden lg:flex absolute top-20 z-40 h-8 w-8",
-              sidebarCollapsed ? "left-0" : `left-[${sidebarWidth}]`
+              "left-0"
             )}
+            style={!sidebarCollapsed ? { left: sidebarWidth } : undefined}
             onClick={() => setMiddlePanelCollapsed(!middlePanelCollapsed)}
           >
             {middlePanelCollapsed ? (
