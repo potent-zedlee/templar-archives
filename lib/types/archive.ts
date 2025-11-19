@@ -154,6 +154,10 @@ export interface Hand {
   // Raw AI extraction data
   raw_data?: Record<string, unknown>
 
+  // PokerKit integration (Phase 44)
+  pokerkit_format?: string                     // PokerKit-compatible text format
+  hand_history_format?: HandHistoryPokerKitFormat  // Structured hand history data
+
   favorite?: boolean
   thumbnail_url?: string
   likes_count?: number
@@ -486,3 +490,115 @@ export const INITIAL_STREAM_FORM: StreamFormData = {
   upload_file: null,
   published_at: "",
 }
+
+// ==================== PokerKit Integration (Phase 44) ====================
+
+/**
+ * PokerKit-compatible hand history format
+ *
+ * PokerKit은 Python 기반 포커 시뮬레이션 라이브러리로,
+ * 표준화된 핸드 히스토리 형식을 사용합니다.
+ *
+ * @example
+ * {
+ *   gameNumber: 1,
+ *   stakes: "$50K/$100K",
+ *   gameType: "No Limit Hold'em",
+ *   seats: [
+ *     { number: 1, playerName: "BRZEZINSKI", stackSize: 9600000 },
+ *     { number: 2, playerName: "OSTASH", stackSize: 13580000 }
+ *   ],
+ *   buttonSeat: 1,
+ *   sections: {
+ *     holeCards: ["BRZEZINSKI: [Jh 9h]", "OSTASH: [9c 5c]"],
+ *     preflop: ["OSTASH: posts small blind $50,000", "BRZEZINSKI: raises to $300,000"],
+ *     flop: ["[9d 6s 3c]", "OSTASH: checks", "BRZEZINSKI: bets $125,000"],
+ *     turn: ["[9d 6s 3c] [As]", "OSTASH: checks"],
+ *     river: ["[9d 6s 3c As] [2h]", "OSTASH: bets $275,000"],
+ *     showdown: ["OSTASH wins $950,000"]
+ *   },
+ *   rawText: "***** Hand #1 *****\n..."
+ * }
+ */
+export interface HandHistoryPokerKitFormat {
+  /** 핸드 번호 (게임 번호) */
+  gameNumber: number
+
+  /** 스테이크 표기 (예: "$50K/$100K", "50K/100K/100K ante") */
+  stakes: string
+
+  /** 게임 종류 */
+  gameType: 'No Limit Hold\'em' | 'Pot Limit Omaha' | 'Limit Hold\'em'
+
+  /** 플레이어 좌석 정보 */
+  seats: Array<{
+    /** 좌석 번호 (1-9) */
+    number: number
+    /** 플레이어 이름 */
+    playerName: string
+    /** 시작 스택 (cents) */
+    stackSize: number
+  }>
+
+  /** 버튼 위치 (좌석 번호) */
+  buttonSeat: number
+
+  /** 스트리트별 섹션 */
+  sections: {
+    /** 홀 카드 (예: "BRZEZINSKI: [Jh 9h]") */
+    holeCards: string[]
+    /** 프리플랍 액션 */
+    preflop: string[]
+    /** 플랍 액션 (보드 카드 포함) */
+    flop?: string[]
+    /** 턴 액션 (보드 카드 포함) */
+    turn?: string[]
+    /** 리버 액션 (보드 카드 포함) */
+    river?: string[]
+    /** 쇼다운 (승자 및 팟) */
+    showdown?: string[]
+  }
+
+  /** PokerKit 텍스트 형식 원본 */
+  rawText?: string
+}
+
+/**
+ * PokerKit 카드 표기법
+ *
+ * Rank: A, K, Q, J, T (10), 9-2
+ * Suit: s (♠), h (♥), d (♦), c (♣)
+ *
+ * @example
+ * "Ah" = Ace of hearts
+ * "Ks" = King of spades
+ * "Td" = Ten of diamonds
+ *
+ * PokerKit 형식: [Ah Kd]
+ * JSON 배열: ["Ah", "Kd"]
+ */
+export type PokerKitCard = string
+
+/**
+ * PokerKit 액션 타입
+ *
+ * PokerKit 표준 액션 형식:
+ * - "posts small blind $50,000"
+ * - "raises to $300,000"
+ * - "calls $250,000"
+ * - "checks"
+ * - "folds"
+ * - "bets $125,000"
+ * - "all-in $9,600,000"
+ */
+export type PokerKitAction = string
+
+/**
+ * PokerKit 보드 카드 표기
+ *
+ * @example
+ * Flop: "[9d 6s 3c]"
+ * Turn: "[9d 6s 3c] [As]"
+ * River: "[9d 6s 3c As] [2h]"
+ */
+export type PokerKitBoard = string

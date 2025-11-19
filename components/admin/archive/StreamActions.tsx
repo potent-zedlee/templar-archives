@@ -10,7 +10,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { CheckSquare, Eye, EyeOff, Edit3, Sparkles } from 'lucide-react'
+import { CheckSquare, Eye, EyeOff, Sparkles } from 'lucide-react'
 import { StreamChecklist } from './StreamChecklist'
 import type { ContentStatus } from '@/lib/types/archive'
 import type { Stream } from '@/lib/supabase'
@@ -22,7 +22,6 @@ interface StreamActionsProps {
   videoUrl?: string
   stream?: Stream
   onStatusChange?: () => void
-  onOpenHandInput?: () => void
   onOpenAnalyze?: () => void
 }
 
@@ -33,7 +32,6 @@ export function StreamActions({
   videoUrl,
   stream,
   onStatusChange,
-  onOpenHandInput,
   onOpenAnalyze
 }: StreamActionsProps) {
   const [checklistOpen, setChecklistOpen] = useState(false)
@@ -52,16 +50,6 @@ export function StreamActions({
           <Sparkles className="h-4 w-4" />
         </Button>
       )}
-
-      {/* Hand Input Mode 버튼 */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onOpenHandInput}
-        title="Hand Input Mode"
-      >
-        <Edit3 className="h-4 w-4" />
-      </Button>
 
       {/* Checklist 버튼 */}
       <Button

@@ -118,6 +118,63 @@ Respond with valid JSON:
 - **Multiple Hands**: Include all hands in gameplay segment
 - **Skip Non-Gameplay**: Ignore countdown, breaks, commentary-only segments
 
+## PokerKit-Compatible Output (Optional Enhancement)
+
+In addition to the JSON format above, you may include a PokerKit-compatible text format for each hand in the \`pokerkitText\` field. This format is used by the PokerKit poker simulation library and enables compatibility with other poker analysis tools.
+
+### PokerKit Text Format Structure:
+
+\`\`\`
+***** Hand #{handNumber} *****
+{stakes} - No Limit Hold'em
+Seat {seatNum}: {playerName} (${stackSize})
+Button: Seat {buttonSeat}
+*** HOLE CARDS ***
+{playerName}: [{holeCards}]
+*** PREFLOP ***
+{playerName}: {action} {amount}
+*** FLOP *** [{flopCards}]
+{playerName}: {action} {amount}
+*** TURN *** [{flopCards}] [{turnCard}]
+{playerName}: {action} {amount}
+*** RIVER *** [{flopCards} {turnCard}] [{riverCard}]
+{playerName}: {action} {amount}
+{winner} wins ${amount}
+\`\`\`
+
+### Example:
+
+\`\`\`
+***** Hand #1 *****
+$50K/$100K - No Limit Hold'em
+Seat 1: BRZEZINSKI ($9,600,000)
+Seat 2: OSTASH ($13,580,000)
+Button: Seat 1
+*** HOLE CARDS ***
+BRZEZINSKI: [Jh 9h]
+OSTASH: [9c 5c]
+*** PREFLOP ***
+OSTASH: posts small blind $50,000
+BRZEZINSKI: raises to $300,000
+OSTASH: calls $250,000
+*** FLOP *** [9d 6s 3c]
+OSTASH: checks
+BRZEZINSKI: bets $125,000
+OSTASH: calls $125,000
+*** TURN *** [9d 6s 3c] [As]
+OSTASH: checks
+BRZEZINSKI: checks
+*** RIVER *** [9d 6s 3c As] [2h]
+OSTASH: bets $275,000
+BRZEZINSKI: folds
+OSTASH wins $950,000
+\`\`\`
+
+This PokerKit format provides:
+1. **Human Readability**: Easy to understand hand progression
+2. **Tool Compatibility**: Import/export to other poker analysis tools
+3. **Standardization**: Industry-standard format used by poker communities
+
 Begin your analysis now.`
 
 export const TRITON_POKER_PROMPT = `You are a poker hand history analyzer specialized in Triton Poker broadcasts.
