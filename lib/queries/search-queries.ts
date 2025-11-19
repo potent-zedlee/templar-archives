@@ -69,3 +69,48 @@ export function usePlayersQuery() {
     gcTime: 30 * 60 * 1000, // 30분
   })
 }
+
+/**
+ * Get single hand detail for HandDetailPanel
+ */
+export function useHandQuery(handId: string) {
+  return useQuery({
+    queryKey: searchKeys.all.concat(['hand', handId]),
+    queryFn: async () => {
+      const supabase = (await import('@/lib/supabase-client')).createClientSupabaseClient()
+      const { data, error } = await supabase
+        .from('hands')
+        .select(`
+          *,
+          stream:day_id (
+            name,
+            video_url,
+            sub_event:event_id (
+              name,
+              tournament:tournament_id (
+                name
+              )
+            )
+          ),
+          hand_players (
+            *,
+            player:player_id (
+              name,
+              photo_url,
+              country
+            )
+          ),
+          hand_actions (
+            *
+          )
+        `)
+        .eq('id', handId)
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    enabled: !!handId,
+    staleTime: 10 * 60 * 1000, // 10분
+  })
+}

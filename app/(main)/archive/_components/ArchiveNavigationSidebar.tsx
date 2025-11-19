@@ -9,9 +9,7 @@
  */
 
 import { useState } from 'react'
-import { Avatar } from 'flowbite-react'
-import { AvatarImage } from '@/components/ui/avatar'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import {
   Accordion,
   AccordionContent,
@@ -60,7 +58,7 @@ export function ArchiveNavigationSidebar({
       </div>
 
       {/* 스크롤 영역 */}
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-y-auto">
         <div className="p-2">
           <Accordion type="single" collapsible className="space-y-1">
             {filteredTournaments.map(tournament => (
@@ -72,8 +70,11 @@ export function ArchiveNavigationSidebar({
                 {/* Tournament Header */}
                 <AccordionTrigger className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md hover:no-underline">
                   <div className="flex items-center gap-2 text-left w-full">
-                    <Avatar size="sm" className="rounded">
+                    <Avatar className="w-8 h-8 rounded">
                       <AvatarImage src={tournament.category_logo_url} alt={tournament.name} />
+                      <AvatarFallback className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
+                        {tournament.name.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
@@ -167,7 +168,7 @@ export function ArchiveNavigationSidebar({
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   )
 }

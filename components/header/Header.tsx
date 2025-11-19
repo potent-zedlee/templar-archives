@@ -75,14 +75,9 @@ export function Header() {
   const navLinks: NavLink[] = [
     { href: "/news", label: "NEWS" },
     { href: "/live-reporting", label: "LIVE" },
-    {
-      label: "ARCHIVE",
-      subItems: [
-        { href: "/search", label: "Search" },
-        { href: "/archive/tournament", label: "Tournament" },
-        { href: "/archive/cash-game", label: "Cash Game" },
-      ]
-    },
+    { href: "/search", label: "SEARCH" },
+    { href: "/archive/tournament", label: "TOURNAMENT" },
+    { href: "/archive/cash-game", label: "CASH GAME" },
     { href: "/players", label: "PLAYER" },
     { href: "/community", label: "FORUM" },
   ]
