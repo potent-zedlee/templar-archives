@@ -43,6 +43,7 @@ import { useRouter } from 'next/navigation'
 import { getCategoryByAlias } from '@/lib/tournament-categories'
 import { StreamStatusBadge } from '@/components/admin/archive/StreamStatusBadge'
 import { StreamActions } from '@/components/admin/archive/StreamActions'
+import { StreamProgressIndicator } from '@/components/admin/archive/StreamProgressIndicator'
 import { StatusFilter } from '@/components/admin/archive/StatusFilter'
 import { BulkActions } from '@/components/admin/archive/BulkActions'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
@@ -889,9 +890,12 @@ export default function AdminArchivePage() {
                                   </TableCell>
 
                                   <TableCell className="w-32 text-xs py-2">
-                                    <Badge variant="outline" className="text-xs">
-                                      {stream.hand_count || 0} hands
-                                    </Badge>
+                                    <div className="flex flex-col gap-1">
+                                      <Badge variant="outline" className="text-xs">
+                                        {stream.hand_count || 0} hands
+                                      </Badge>
+                                      <StreamProgressIndicator streamId={stream.id} />
+                                    </div>
                                   </TableCell>
                                   <TableCell className="w-40 py-2" />
                                   <TableCell className="w-48 text-xs py-2">

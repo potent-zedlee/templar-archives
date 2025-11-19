@@ -243,8 +243,10 @@ async function checkDuplicateAnalysis(
       if (seg.start < 0 || seg.end <= seg.start) {
         return { isDuplicate: false, error: 'Invalid segment range' }
       }
-      if (seg.end - seg.start > 7200) { // Max 2 hours
-        return { isDuplicate: false, error: 'Segment too long (max 2 hours)' }
+      // KAN 백엔드가 자동으로 1시간씩 세그먼트 분할 처리하므로
+      // 프론트엔드에서는 10시간까지 허용 (대부분의 포커 영상 커버)
+      if (seg.end - seg.start > 36000) { // Max 10 hours
+        return { isDuplicate: false, error: 'Segment too long (max 10 hours)' }
       }
     }
 
