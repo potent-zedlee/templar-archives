@@ -1,62 +1,47 @@
 "use client"
 
 /**
- * Archive Cash Game Page - Phase 42 Refactor
+ * Archive Cash Game Page - Redesigned (Players Page Style)
  *
- * Discovery Layout 제거 → 단일 페이지 Accordion 구조
- * Flowbite 컴포넌트 100% 사용
+ * 플레이어 페이지와 동일한 레이아웃 및 색상 팔레트 적용:
+ * - Fixed search bar (top)
+ * - Scrollable grid content (middle)
+ * - Fixed pagination (bottom)
+ * - Green accent color (player page style)
  */
 
-import { useState, useMemo } from "react"
-import { TextInput, Dropdown, Button, Badge, Spinner } from "flowbite-react"
-import { DollarSign, Search, Plus } from "lucide-react"
-import { useAuth } from "@/components/auth-provider"
+import { useState, useMemo, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { StaggerContainer, StaggerItem } from "@/components/page-transition"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Search, ChevronLeft, ChevronRight, DollarSign } from "lucide-react"
 import { ErrorBoundary } from "@/components/error-boundary"
-import { PageTransition } from "@/components/page-transition"
-import { ArchiveAccordion } from "../_components/ArchiveAccordion"
+import { TournamentCard } from "../_components/TournamentCard"
 import { useTournamentsQuery } from "@/lib/queries/archive-queries"
-import type { Tournament, Hand } from "@/lib/types/archive"
+// import type { Tournament } from "@/lib/types/archive"
+import { GridSkeleton } from "@/components/skeletons/grid-skeleton"
+import { EmptyState } from "@/components/empty-state"
 
 type SortOption = "date-desc" | "date-asc" | "name-asc" | "name-desc" | "most-hands"
 
 export default function ArchiveCashGamePage() {
-  // ============================================================
-  // 1. Auth & User
-  // ============================================================
-  const { user } = useAuth()
-  const isAdmin = user?.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL
+  const router = useRouter()
 
   // ============================================================
-  // 2. Data Fetching (React Query)
+  // 1. Data Fetching (React Query)
   // ============================================================
-  const { data: tournaments = [], isLoading: tournamentsLoading } = useTournamentsQuery("cash-game")
+  const { data: tournaments = [], isLoading } = useTournamentsQuery("cash-game")
 
   // ============================================================
-  // 3. UI State (Local)
+  // 2. UI State (Local)
   // ============================================================
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState<SortOption>("date-desc")
-  const [selectedCategory, setSelectedCategory] = useState("All")
+  const [currentPage, setCurrentPage] = useState(1)
+  const TOURNAMENTS_PER_PAGE = 12
 
   // ============================================================
-  // 4. Hands Data (Map - streamId → hands[])
-  // ============================================================
-  const allStreams = useMemo(() => {
-    return tournaments.flatMap((t) =>
-      (t.events || []).flatMap((e) => e.streams || [])
-    )
-  }, [tournaments])
-
-  const handsMap = useMemo(() => {
-    const map = new Map<string, Hand[]>()
-    allStreams.forEach((stream) => {
-      map.set(stream.id, stream.hands || [])
-    })
-    return map
-  }, [allStreams])
-
-  // ============================================================
-  // 5. Filtered & Sorted Tournaments
+  // 3. Filtered & Sorted Tournaments
   // ============================================================
   const filteredTournaments = useMemo(() => {
     let filtered = [...tournaments]
@@ -67,191 +52,186 @@ export default function ArchiveCashGamePage() {
       filtered = filtered.filter(
         (t) =>
           t.name.toLowerCase().includes(query) ||
-          t.location?.toLowerCase().includes(query)
+          t.location?.toLowerCase().includes(query) ||
+          t.category?.toLowerCase().includes(query)
       )
-    }
-
-    // 카테고리 필터
-    if (selectedCategory !== "All") {
-      filtered = filtered.filter((t) => t.category === selectedCategory)
     }
 
     // 정렬
     filtered.sort((a, b) => {
       switch (sortBy) {
         case "date-desc":
-          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+          return new Date(b.start_date || b.created_at || 0).getTime() -
+                 new Date(a.start_date || a.created_at || 0).getTime()
         case "date-asc":
-          return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+          return new Date(a.start_date || a.created_at || 0).getTime() -
+                 new Date(b.start_date || b.created_at || 0).getTime()
         case "name-asc":
           return a.name.localeCompare(b.name)
         case "name-desc":
           return b.name.localeCompare(a.name)
-        case "most-hands":
-          const aHands = (a.events || []).reduce((sum, e) =>
-            sum + (e.streams || []).reduce((s, st) => s + (st.hands?.length || 0), 0), 0
-          )
-          const bHands = (b.events || []).reduce((sum, e) =>
-            sum + (e.streams || []).reduce((s, st) => s + (st.hands?.length || 0), 0), 0
-          )
-          return bHands - aHands
+        case "most-hands": {
+          // hand_count는 서버에서 계산된 값 사용
+          return (b.hand_count || 0) - (a.hand_count || 0)
+        }
         default:
           return 0
       }
     })
 
     return filtered
-  }, [tournaments, searchQuery, selectedCategory, sortBy])
+  }, [tournaments, searchQuery, sortBy])
 
   // ============================================================
-  // 6. Categories (from data)
+  // 4. Pagination
   // ============================================================
-  const categories = useMemo(() => {
-    const cats = new Set<string>()
-    tournaments.forEach((t) => {
-      if (t.category) cats.add(t.category)
-    })
-    return ["All", ...Array.from(cats)]
-  }, [tournaments])
+  const totalPages = Math.ceil(filteredTournaments.length / TOURNAMENTS_PER_PAGE)
+  const startIndex = (currentPage - 1) * TOURNAMENTS_PER_PAGE
+  const endIndex = startIndex + TOURNAMENTS_PER_PAGE
+  const paginatedTournaments = filteredTournaments.slice(startIndex, endIndex)
+
+  // Reset to page 1 when search or sort changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, sortBy])
 
   // ============================================================
-  // 7. Event Handlers
+  // 5. Event Handlers
   // ============================================================
-  const handleAddTournament = () => {
-    console.log("Add Cash Game")
-  }
-
-  const handleAddEvent = (tournamentId: string) => {
-    console.log("Add Event to cash game:", tournamentId)
-  }
-
-  const handleAddStream = (eventId: string) => {
-    console.log("Add Stream to event:", eventId)
-  }
-
-  const handleHandClick = (hand: Hand) => {
-    console.log("Hand clicked:", hand)
-  }
-
-  const handleSeekToTime = (timeString: string) => {
-    console.log("Seek to time:", timeString)
+  const handleTournamentClick = (tournamentId: string) => {
+    router.push(`/archive/cash-game?selected=${tournamentId}`)
   }
 
   // ============================================================
-  // 8. Loading State
+  // 6. Loading State
   // ============================================================
-  if (tournamentsLoading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="xl" />
-        <span className="ml-3 text-lg">Loading cash games...</span>
+      <div className="p-6">
+        <GridSkeleton count={12} columns={4} />
       </div>
     )
   }
 
   // ============================================================
-  // 9. Main Render
+  // 7. Main Render
   // ============================================================
   return (
     <ErrorBoundary>
-      <PageTransition variant="slideUp">
-        <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
-            <div className="flex items-center gap-3">
-              <DollarSign className="w-10 h-10 text-green-500" />
-              <div>
-                <h1 className="text-4xl font-bold text-gold-400">Cash Game Archive</h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  {filteredTournaments.length} cash games • {allStreams.length} streams
-                </p>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-wrap gap-3">
-              <TextInput
-                type="search"
-                placeholder="Search cash games..."
-                icon={Search}
-                className="w-full lg:w-64"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-
-              <Dropdown label="Sort by" dismissOnClick={false}>
-                <Dropdown.Item onClick={() => setSortBy("date-desc")}>
-                  Most Recent
-                </Dropdown.Item>
-                <Dropdown.Item onClick={() => setSortBy("date-asc")}>
-                  Oldest First
-                </Dropdown.Item>
-                <Dropdown.Item onClick={() => setSortBy("name-asc")}>
-                  Name (A-Z)
-                </Dropdown.Item>
-                <Dropdown.Item onClick={() => setSortBy("name-desc")}>
-                  Name (Z-A)
-                </Dropdown.Item>
-                <Dropdown.Item onClick={() => setSortBy("most-hands")}>
-                  Most Hands
-                </Dropdown.Item>
-              </Dropdown>
-
-              <Dropdown label={selectedCategory} dismissOnClick={false}>
-                {categories.map((cat) => (
-                  <Dropdown.Item key={cat} onClick={() => setSelectedCategory(cat)}>
-                    {cat}
-                  </Dropdown.Item>
-                ))}
-              </Dropdown>
-
-              {isAdmin && (
-                <Button color="warning" onClick={handleAddTournament}>
-                  <Plus className="w-5 h-5 mr-2" />
-                  Add Cash Game
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Stats Bar */}
-          <div className="flex gap-4 mb-6">
-            <Badge color="info" size="lg">
-              {filteredTournaments.length} Cash Games
-            </Badge>
-            <Badge color="success" size="lg">
-              {filteredTournaments.reduce((sum, t) => sum + (t.events?.length || 0), 0)} Events
-            </Badge>
-            <Badge color="warning" size="lg">
-              {allStreams.length} Streams
-            </Badge>
-          </div>
-
-          {/* Main Content - ArchiveAccordion */}
-          {filteredTournaments.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-gray-500">
-              <DollarSign className="w-16 h-16 mb-4 opacity-50" />
-              <p className="text-lg">No cash games found</p>
-              {isAdmin && (
-                <Button color="light" className="mt-4" onClick={handleAddTournament}>
-                  <Plus className="w-5 h-5 mr-2" />
-                  Create First Cash Game
-                </Button>
-              )}
-            </div>
-          ) : (
-            <ArchiveAccordion
-              tournaments={filteredTournaments}
-              hands={handsMap}
-              onAddEvent={handleAddEvent}
-              onAddStream={handleAddStream}
-              onHandClick={handleHandClick}
-              onSeekToTime={handleSeekToTime}
-              isAdmin={isAdmin}
+      <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+        {/* Search Bar - Fixed at top */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:p-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+            <input
+              type="text"
+              placeholder="캐시 게임 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all"
             />
-          )}
+          </div>
+
+          {/* Filters */}
+          <div className="mt-4 flex gap-2 flex-wrap">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-md border-none focus:outline-none focus:ring-2 focus:ring-green-400"
+            >
+              <option value="date-desc">최신순</option>
+              <option value="date-asc">오래된순</option>
+              <option value="name-asc">이름 (A-Z)</option>
+              <option value="name-desc">이름 (Z-A)</option>
+              <option value="most-hands">핸드 많은순</option>
+            </select>
+          </div>
+
+          {/* Results Count */}
+          <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+            <span className="font-semibold text-gray-900 dark:text-gray-100">
+              {startIndex + 1}-{Math.min(endIndex, filteredTournaments.length)}
+            </span>
+            {' '}/ {filteredTournaments.length} 캐시 게임
+          </div>
         </div>
-      </PageTransition>
+
+        {/* Cash Games Grid - Scrollable */}
+        <ScrollArea className="flex-1">
+          <div className="p-4 md:p-6">
+            <StaggerContainer
+              key={`${currentPage}-${filteredTournaments.length}`}
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
+              staggerDelay={0.05}
+            >
+              {paginatedTournaments.map((tournament) => (
+                <StaggerItem key={tournament.id}>
+                  <TournamentCard
+                    tournament={tournament}
+                    onClick={() => handleTournamentClick(tournament.id)}
+                  />
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
+
+            {paginatedTournaments.length === 0 && (
+              <EmptyState
+                icon={DollarSign}
+                title={searchQuery ? "검색 결과 없음" : "캐시 게임 없음"}
+                description={searchQuery ? "검색 조건을 변경해보세요" : "아직 등록된 캐시 게임이 없습니다"}
+                variant="inline"
+              />
+            )}
+          </div>
+        </ScrollArea>
+
+        {/* Pagination - Fixed at bottom */}
+        {totalPages > 1 && (
+          <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <button
+                className="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  return page === 1 ||
+                         page === totalPages ||
+                         Math.abs(page - currentPage) <= 1
+                })
+                .map((page, index, arr) => {
+                  const showEllipsisBefore = index > 0 && page - arr[index - 1] > 1
+                  return (
+                    <div key={page} className="flex items-center gap-2">
+                      {showEllipsisBefore && <span className="text-gray-400 dark:text-gray-500">...</span>}
+                      <button
+                        className={currentPage === page
+                          ? "px-4 py-2 bg-green-600 dark:bg-green-700 text-white font-medium rounded-lg text-sm"
+                          : "px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        }
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    </div>
+                  )
+                })}
+
+              <button
+                className="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </ErrorBoundary>
   )
 }
