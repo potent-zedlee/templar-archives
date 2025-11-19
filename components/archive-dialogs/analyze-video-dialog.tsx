@@ -24,7 +24,7 @@ import type { VideoSegment } from "@/lib/types/video-segments"
 import { timeStringToSeconds } from "@/lib/types/video-segments"
 import { PlayerMatchResults } from "@/components/player-match-results"
 import { VideoPlayerWithTimestamp } from "@/components/video-player-with-timestamp"
-import { startKanAnalysis } from "@/app/actions/kan-analysis"
+import { startKanAnalysis, saveHandsFromJob } from "@/app/actions/kan-analysis"
 import type { TimeSegment } from "@/types/segments"
 import { formatTime } from "@/types/segments"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
@@ -165,6 +165,20 @@ export function AnalyzeVideoDialog({
             const message = `분석 완료! ${job.hands_found || 0}개의 핸드가 발견되었습니다`
             setProgress(message)
             toast.success(message)
+
+            // Save hands to database
+            if (job.id) {
+              console.log('[AnalyzeVideoDialog] Saving hands from job:', job.id)
+              saveHandsFromJob(job.id).then((result) => {
+                if (result.success) {
+                  console.log(`[AnalyzeVideoDialog] Successfully saved ${result.saved} hands`)
+                  toast.success(`${result.saved}개 핸드가 DB에 저장되었습니다`)
+                } else {
+                  console.error('[AnalyzeVideoDialog] Failed to save hands:', result.error)
+                  toast.error(`핸드 저장 실패: ${result.error}`)
+                }
+              })
+            }
 
             // Auto close after delay
             setTimeout(() => {

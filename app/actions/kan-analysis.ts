@@ -716,6 +716,176 @@ export async function getKanJob(jobId: string) {
 }
 
 /**
+ * Save hands from completed KAN job to database
+ */
+export async function saveHandsFromJob(jobId: string): Promise<{ success: boolean; saved: number; error?: string }> {
+  try {
+    console.log('[saveHandsFromJob] Starting for job:', jobId)
+
+    const supabase = await createServerSupabaseClient()
+
+    // Get job data
+    const { data: job, error: jobError } = await supabase
+      .from('analysis_jobs')
+      .select('*')
+      .eq('id', jobId)
+      .single()
+
+    if (jobError || !job) {
+      return { success: false, saved: 0, error: 'Job not found' }
+    }
+
+    // Check if hands data exists in result
+    if (!job.result?.hands || !Array.isArray(job.result.hands)) {
+      return { success: false, saved: 0, error: 'No hands data in job result' }
+    }
+
+    const hands = job.result.hands as KanHand[]
+    console.log(`[saveHandsFromJob] Found ${hands.length} hands in job result`)
+
+    // Get stream info for thumbnail
+    const { data: streamData } = await supabase
+      .from('streams')
+      .select('video_url, video_source')
+      .eq('id', job.stream_id)
+      .single()
+
+    const thumbnailUrl = streamData
+      ? getHandThumbnailUrl(
+          streamData.video_url || undefined,
+          (streamData.video_source as 'youtube' | 'upload' | 'nas' | undefined) || undefined
+        )
+      : null
+
+    let savedCount = 0
+    const errors: string[] = []
+
+    // Save each hand
+    for (const handData of hands) {
+      try {
+        // Find or create players
+        const playerIdMap = new Map<string, string>()
+
+        if (handData.players) {
+          for (const playerData of handData.players) {
+            const playerId = await findOrCreatePlayer(supabase, playerData.name)
+            playerIdMap.set(playerData.name, playerId)
+          }
+        }
+
+        // Prepare players data
+        const playersData: Record<string, unknown>[] = []
+        if (handData.players) {
+          for (const playerData of handData.players) {
+            const playerId = playerIdMap.get(playerData.name)
+            if (!playerId) continue
+
+            const winner = handData.winners?.find((w) => w.name === playerData.name)
+
+            let holeCardsArray: string[] | null = null
+            if (playerData.holeCards) {
+              if (Array.isArray(playerData.holeCards)) {
+                holeCardsArray = playerData.holeCards
+              } else if (typeof playerData.holeCards === 'string') {
+                holeCardsArray = playerData.holeCards.split(/[\s,]+/).filter(Boolean)
+              }
+            }
+
+            playersData.push({
+              player_id: playerId,
+              poker_position: playerData.position,
+              starting_stack: playerData.stackSize || 0,
+              ending_stack: playerData.stackSize || 0,
+              hole_cards: holeCardsArray,
+              cards: holeCardsArray ? holeCardsArray.join(' ') : null,
+              final_amount: winner?.amount || 0,
+              is_winner: !!winner,
+              hand_description: winner?.hand || null,
+            })
+          }
+        }
+
+        // Prepare actions data
+        const actionsData: Record<string, unknown>[] = []
+        if (handData.actions) {
+          for (let idx = 0; idx < handData.actions.length; idx++) {
+            const action = handData.actions[idx]
+            const playerId = playerIdMap.get(action.player)
+            if (!playerId) continue
+
+            actionsData.push({
+              player_id: playerId,
+              action_order: idx + 1,
+              street: action.street.toLowerCase(),
+              action_type: action.action.toLowerCase(),
+              amount: action.amount || 0,
+            })
+          }
+        }
+
+        // Get segment start time from job segments (use first segment)
+        const segment = job.segments?.[0]
+        const videoTimestampStart = segment?.start || 0
+
+        // Call RPC to save hand
+        const { error: rpcError } = await supabase.rpc(
+          'save_hand_with_players_actions',
+          {
+            p_day_id: job.stream_id,
+            p_job_id: jobId,
+            p_number: String(handData.handNumber || savedCount + 1),
+            p_description: handData.description || `Hand #${handData.handNumber || savedCount + 1}`,
+            p_timestamp: formatTimestamp(videoTimestampStart),
+            p_video_timestamp_start: videoTimestampStart,
+            p_video_timestamp_end: videoTimestampStart + 300, // Default 5 minutes
+            p_stakes: handData.stakes || 'Unknown',
+            p_board_flop: handData.board?.flop || [],
+            p_board_turn: handData.board?.turn || '',
+            p_board_river: handData.board?.river || '',
+            p_pot_size: handData.pot || 0,
+            p_raw_data: JSON.parse(JSON.stringify(handData)),
+            p_players: JSON.parse(JSON.stringify(playersData)),
+            p_actions: JSON.parse(JSON.stringify(actionsData)),
+            p_small_blind: handData.small_blind || null,
+            p_big_blind: handData.big_blind || null,
+            p_ante: handData.ante || 0,
+            p_pot_preflop: handData.pot_preflop || null,
+            p_pot_flop: handData.pot_flop || null,
+            p_pot_turn: handData.pot_turn || null,
+            p_pot_river: handData.pot_river || null,
+            p_thumbnail_url: thumbnailUrl || '',
+          }
+        )
+
+        if (rpcError) {
+          errors.push(`Hand ${handData.handNumber}: ${rpcError.message}`)
+        } else {
+          savedCount++
+        }
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+        errors.push(`Hand ${handData.handNumber}: ${errorMsg}`)
+      }
+    }
+
+    console.log(`[saveHandsFromJob] Saved ${savedCount}/${hands.length} hands`)
+
+    return {
+      success: savedCount > 0,
+      saved: savedCount,
+      error: errors.length > 0 ? errors.join('; ') : undefined
+    }
+  } catch (error) {
+    console.error('[saveHandsFromJob] Error:', error)
+    return {
+      success: false,
+      saved: 0,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
+/**
  * Create KAN analysis request with auto-generated draft stream
  * Used by admin KAN management pages
  */
