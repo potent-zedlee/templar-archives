@@ -243,6 +243,18 @@ export function InteractiveTimeline({
     }
   }
 
+  // 전체 영상 선택
+  const handleSelectFullVideo = () => {
+    const fullSegment: VideoSegment = {
+      id: 'full-video',
+      type: 'gameplay',
+      startTime: '00:00',
+      endTime: secondsToTimeString(maxSeconds, maxSeconds > 3600),
+    }
+    onChange([fullSegment])
+    setSelectedId(fullSegment.id)
+  }
+
   // 템플릿 불러오기
   const handleLoadTemplate = () => {
     const template: VideoSegment[] = [
@@ -266,8 +278,11 @@ export function InteractiveTimeline({
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-medium">영상 구간 설정</h4>
           <div className="flex gap-2">
+            <Button variant="default" size="sm" onClick={handleSelectFullVideo}>
+              전체 영상
+            </Button>
             <Button variant="outline" size="sm" onClick={handleLoadTemplate}>
-              템플릿 불러오기
+              템플릿
             </Button>
             <Button variant="outline" size="sm" onClick={handleAddSegment}>
               <Plus className="h-4 w-4 mr-1" />

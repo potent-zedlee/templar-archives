@@ -262,13 +262,30 @@ export function AnalyzeVideoDialog({
       console.log('[AnalyzeVideoDialog] Valid players:', validPlayers)
 
       // Convert VideoSegment[] to TimeSegment[]
-      const timeSegments: TimeSegment[] = segments.map(seg => ({
-        id: seg.id,
-        type: seg.type,
-        start: timeStringToSeconds(seg.startTime),
-        end: timeStringToSeconds(seg.endTime),
-        label: seg.type
-      }))
+      // If no segments selected, analyze entire video (0 to videoDuration)
+      let timeSegments: TimeSegment[]
+
+      if (segments.length === 0) {
+        // No segments - analyze entire video
+        const fullDuration = videoDuration || 36000 // Default 10 hours max
+        console.log('[AnalyzeVideoDialog] No segments selected, using full video:', fullDuration, 'seconds')
+        timeSegments = [{
+          id: 'full-video',
+          type: 'gameplay',
+          start: 0,
+          end: fullDuration,
+          label: 'Full Video'
+        }]
+      } else {
+        // User-selected segments
+        timeSegments = segments.map(seg => ({
+          id: seg.id,
+          type: seg.type,
+          start: timeStringToSeconds(seg.startTime),
+          end: timeStringToSeconds(seg.endTime),
+          label: seg.type
+        }))
+      }
 
       console.log('[AnalyzeVideoDialog] Time segments:', timeSegments)
       console.log('[AnalyzeVideoDialog] Calling startKanAnalysis...')
