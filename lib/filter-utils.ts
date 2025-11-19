@@ -216,8 +216,19 @@ export interface ExtendedSearchFilters {
 
   // Hole Cards
   holeCards?: string[]
+  holeCardSelection?: {
+    card1: string
+    card2: string
+    suited: boolean
+  } | null
 
-  // Hand Strength
+  // Hand Value
+  handValueSelection?: {
+    handType: string | null
+    matchType: 'exact' | 'at-least' | 'at-most'
+  } | null
+
+  // Hand Strength (deprecated - 호환성 유지)
   handStrength?: string | null
 
   // Actions & Streets
@@ -321,7 +332,41 @@ export function applyExtendedSearchFilters<T extends {
     })
   }
 
-  // Hole Cards filter
+  // Hole Card Selection filter (new dialog-based)
+  if (filters.holeCardSelection) {
+    const { card1, card2, suited } = filters.holeCardSelection
+
+    if (card1 !== '?' && card2 !== '?') {
+      filtered = filtered.filter(hand => {
+        if (!hand.hand_players) return false
+        return hand.hand_players.some((hp: any) => {
+          if (!hp.hole_cards || hp.hole_cards.length !== 2) return false
+
+          const [holeCard1, holeCard2] = hp.hole_cards
+          const rank1 = holeCard1.charAt(0)
+          const rank2 = holeCard2.charAt(0)
+          const suit1 = holeCard1.charAt(1)
+          const suit2 = holeCard2.charAt(1)
+
+          // Rank 매칭 (순서 무관)
+          const rankMatch =
+            (rank1 === card1 && rank2 === card2) ||
+            (rank1 === card2 && rank2 === card1)
+
+          if (!rankMatch) return false
+
+          // Suited 체크
+          if (suited) {
+            return suit1 === suit2
+          }
+
+          return true
+        })
+      })
+    }
+  }
+
+  // Hole Cards filter (legacy)
   if (filters.holeCards && filters.holeCards.length > 0) {
     filtered = filtered.filter(hand => {
       if (!hand.hand_players) return false
@@ -332,7 +377,54 @@ export function applyExtendedSearchFilters<T extends {
     })
   }
 
-  // Hand Strength filter
+  // Hand Value filter (new dialog-based)
+  if (filters.handValueSelection?.handType) {
+    const { handType, matchType } = filters.handValueSelection
+
+    const handRanking: Record<string, number> = {
+      'Royal Flush': 10,
+      'Straight Flush': 9,
+      'Four of a Kind': 8,
+      'Full House': 7,
+      'Flush': 6,
+      'Straight': 5,
+      'Three of a Kind': 4,
+      'Two Pair': 3,
+      'Pair': 2,
+      'High card': 1
+    }
+
+    const targetRank = handRanking[handType]
+
+    filtered = filtered.filter(hand => {
+      const handDesc = hand.hand_players?.find((hp: any) => hp.is_winner)?.hand_description
+      if (!handDesc) return false
+
+      // hand_description에서 핸드 타입 추출
+      let currentRank = 0
+      for (const [type, rank] of Object.entries(handRanking)) {
+        if (handDesc.toLowerCase().includes(type.toLowerCase())) {
+          currentRank = rank
+          break
+        }
+      }
+
+      if (currentRank === 0) return false
+
+      switch (matchType) {
+        case 'exact':
+          return currentRank === targetRank
+        case 'at-least':
+          return currentRank >= targetRank
+        case 'at-most':
+          return currentRank <= targetRank
+        default:
+          return false
+      }
+    })
+  }
+
+  // Hand Strength filter (legacy)
   if (filters.handStrength) {
     filtered = filtered.filter(hand => {
       if (!hand.hand_players) return false

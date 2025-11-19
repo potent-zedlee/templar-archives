@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { useTournamentsQuery, usePlayersQuery } from "@/lib/queries/search-queries"
 import { CardSelector } from "@/components/CardSelector"
+import { HoleCardDialog } from "./HoleCardDialog"
+import { HandValueDialog } from "./HandValueDialog"
 
 export interface SearchFilters {
   searchType: "natural" | "basic"
@@ -51,8 +53,19 @@ export interface SearchFilters {
 
   // Hole Cards
   holeCards: string[]
+  holeCardSelection: {
+    card1: string
+    card2: string
+    suited: boolean
+  } | null
 
-  // Hand Strength
+  // Hand Value
+  handValueSelection: {
+    handType: string | null
+    matchType: 'exact' | 'at-least' | 'at-most'
+  } | null
+
+  // Hand Strength (deprecated - 호환성 유지)
   handStrength: string | null
 
   // Actions & Streets
@@ -103,6 +116,8 @@ const DEFAULT_FILTERS: SearchFilters = {
   boardRiver: null,
   boardTexture: null,
   holeCards: [],
+  holeCardSelection: null,
+  handValueSelection: null,
   handStrength: null,
   actionTypes: [],
   street: null,
@@ -124,6 +139,8 @@ interface SearchFilterSidebarProps {
 
 export function SearchFilterSidebar({ onApplyFilters }: SearchFilterSidebarProps) {
   const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS)
+  const [showHoleCardDialog, setShowHoleCardDialog] = useState(false)
+  const [showHandValueDialog, setShowHandValueDialog] = useState(false)
 
   // Load saved filters from localStorage
   useEffect(() => {
@@ -449,49 +466,62 @@ export function SearchFilterSidebar({ onApplyFilters }: SearchFilterSidebarProps
             <AccordionTrigger className="text-sm font-semibold">
               Hole Cards
             </AccordionTrigger>
-            <AccordionContent className="space-y-4 pt-2">
-              <CardSelector
-                label="Hole Cards"
-                description="최대 2장 선택"
-                selected={filters.holeCards}
-                onSelect={(cards) => saveFilters({ ...filters, holeCards: cards })}
-                maxCards={2}
-              />
+            <AccordionContent className="space-y-2 pt-2">
+              <Button
+                variant="outline"
+                className="w-full justify-between h-9 text-sm"
+                onClick={() => setShowHoleCardDialog(true)}
+              >
+                <span>
+                  {filters.holeCardSelection
+                    ? `${filters.holeCardSelection.card1}${filters.holeCardSelection.card2}${filters.holeCardSelection.suited ? 's' : 'o'}`
+                    : 'Any Cards'
+                  }
+                </span>
+              </Button>
+
+              {filters.holeCardSelection && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => saveFilters({ ...filters, holeCardSelection: null })}
+                >
+                  Clear
+                </Button>
+              )}
             </AccordionContent>
           </AccordionItem>
 
-          {/* Hand Strength */}
-          <AccordionItem value="hand-strength">
+          {/* Hand Value */}
+          <AccordionItem value="hand-value">
             <AccordionTrigger className="text-sm font-semibold">
-              Hand Strength
+              Hand Value
             </AccordionTrigger>
-            <AccordionContent className="space-y-4 pt-2">
-              <div className="space-y-2">
-                <Label className="text-xs">Hand Rank</Label>
-                <Select
-                  value={filters.handStrength || "all"}
-                  onValueChange={(value) =>
-                    saveFilters({ ...filters, handStrength: value === "all" ? null : value })
+            <AccordionContent className="space-y-2 pt-2">
+              <Button
+                variant="outline"
+                className="w-full justify-between h-auto py-2 text-sm"
+                onClick={() => setShowHandValueDialog(true)}
+              >
+                <span className="text-left">
+                  {filters.handValueSelection?.handType
+                    ? `${filters.handValueSelection.handType} (${filters.handValueSelection.matchType.replace('-', ' ')})`
+                    : 'Any Cards'
                   }
+                </span>
+              </Button>
+
+              {filters.handValueSelection?.handType && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => saveFilters({ ...filters, handValueSelection: null })}
                 >
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="royal-flush">Royal Flush</SelectItem>
-                    <SelectItem value="straight-flush">Straight Flush</SelectItem>
-                    <SelectItem value="four-of-a-kind">Four of a Kind</SelectItem>
-                    <SelectItem value="full-house">Full House</SelectItem>
-                    <SelectItem value="flush">Flush</SelectItem>
-                    <SelectItem value="straight">Straight</SelectItem>
-                    <SelectItem value="three-of-a-kind">Three of a Kind</SelectItem>
-                    <SelectItem value="two-pair">Two Pair</SelectItem>
-                    <SelectItem value="one-pair">One Pair</SelectItem>
-                    <SelectItem value="high-card">High Card</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                  Clear
+                </Button>
+              )}
             </AccordionContent>
           </AccordionItem>
 
@@ -745,6 +775,19 @@ export function SearchFilterSidebar({ onApplyFilters }: SearchFilterSidebarProps
           초기화
         </Button>
       </div>
+
+      {/* Dialogs */}
+      <HoleCardDialog
+        open={showHoleCardDialog}
+        onOpenChange={setShowHoleCardDialog}
+        onSelect={(selection) => saveFilters({ ...filters, holeCardSelection: selection })}
+      />
+
+      <HandValueDialog
+        open={showHandValueDialog}
+        onOpenChange={setShowHandValueDialog}
+        onSelect={(selection) => saveFilters({ ...filters, handValueSelection: selection })}
+      />
     </div>
   )
 }
