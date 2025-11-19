@@ -13,33 +13,39 @@ import { Badge, Avatar, Button } from 'flowbite-react'
 import { Heart, MessageCircle, Eye, Play } from 'lucide-react'
 import type { Hand } from '@/lib/types/archive'
 import { formatDistanceToNow } from 'date-fns'
+import { formatTime } from '@/types/segments'
 
 interface HandListItemProps {
   hand: Hand
   onClick?: (hand: Hand) => void
   onSeekToTime?: (timeString: string) => void
+  onDetailClick?: () => void
+  isSelected?: boolean
 }
 
 export const HandListItem = memo(function HandListItem({
   hand,
   onClick,
-  onSeekToTime
+  onDetailClick,
+  isSelected = false
 }: HandListItemProps) {
-  const handleClick = () => {
+  const handleCardClick = () => {
     onClick?.(hand)
   }
 
-  const handleSeek = (e: React.MouseEvent) => {
+  const handleDetailClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (onSeekToTime && hand.timestamp) {
-      onSeekToTime(hand.timestamp)
-    }
+    onDetailClick?.()
   }
 
   return (
     <div
-      className="card-postmodern hand-list-item mb-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-lg transition-all cursor-pointer"
-      onClick={handleClick}
+      className={`card-postmodern hand-list-item mb-3 p-4 rounded-lg hover:shadow-lg transition-all cursor-pointer ${
+        isSelected
+          ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500 dark:border-green-600'
+          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+      }`}
+      onClick={handleCardClick}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
@@ -47,16 +53,11 @@ export const HandListItem = memo(function HandListItem({
           <Badge color="warning" className="font-mono">
             #{hand.number}
           </Badge>
-          {hand.timestamp && (
-            <Button
-              size="xs"
-              color="light"
-              onClick={handleSeek}
-              className="gap-1"
-            >
+          {hand.video_timestamp_start !== undefined && hand.video_timestamp_end !== undefined && (
+            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono text-gray-700 dark:text-gray-300">
               <Play className="w-3 h-3" />
-              {hand.timestamp}
-            </Button>
+              {formatTime(hand.video_timestamp_start)} ~ {formatTime(hand.video_timestamp_end)}
+            </div>
           )}
         </div>
         <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -132,11 +133,22 @@ export const HandListItem = memo(function HandListItem({
           </div>
         </div>
 
-        {hand.pot_river && (
-          <div className="text-sm font-semibold text-gray-900 dark:text-white">
-            Pot: ${(hand.pot_river / 100).toLocaleString()}
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {hand.pot_river && (
+            <div className="text-sm font-semibold text-gray-900 dark:text-white">
+              Pot: ${(hand.pot_river / 100).toLocaleString()}
+            </div>
+          )}
+          {onDetailClick && (
+            <Button
+              size="xs"
+              color="gray"
+              onClick={handleDetailClick}
+            >
+              상세보기
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   )

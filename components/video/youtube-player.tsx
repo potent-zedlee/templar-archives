@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react"
 import { formatTime } from "@/types/segments"
 
 interface YouTubePlayerProps {
@@ -11,6 +11,14 @@ interface YouTubePlayerProps {
   className?: string
 }
 
+export interface YouTubePlayerHandle {
+  seekTo: (seconds: number) => void
+  getCurrentTime: () => number
+  getDuration: () => number
+  play: () => void
+  pause: () => void
+}
+
 declare global {
   interface Window {
     YT: any
@@ -18,12 +26,34 @@ declare global {
   }
 }
 
-export function YouTubePlayer({ videoId, onTimeUpdate, onDurationChange, startTime, className }: YouTubePlayerProps) {
-  const playerRef = useRef<any>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [isReady, setIsReady] = useState(false)
+export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>(
+  function YouTubePlayer({ videoId, onTimeUpdate, onDurationChange, startTime, className }, ref) {
+    const playerRef = useRef<any>(null)
+    const containerRef = useRef<HTMLDivElement>(null)
+    const [currentTime, setCurrentTime] = useState(0)
+    const [duration, setDuration] = useState(0)
+    const [isReady, setIsReady] = useState(false)
+
+    // Expose methods via ref
+    useImperativeHandle(ref, () => ({
+      seekTo: (seconds: number) => {
+        if (playerRef.current && playerRef.current.seekTo) {
+          playerRef.current.seekTo(seconds, true)
+        }
+      },
+      getCurrentTime: () => {
+        return playerRef.current?.getCurrentTime?.() || 0
+      },
+      getDuration: () => {
+        return playerRef.current?.getDuration?.() || 0
+      },
+      play: () => {
+        playerRef.current?.playVideo?.()
+      },
+      pause: () => {
+        playerRef.current?.pauseVideo?.()
+      }
+    }))
 
   useEffect(() => {
     // YouTube IFrame API 로드
@@ -86,12 +116,6 @@ export function YouTubePlayer({ videoId, onTimeUpdate, onDurationChange, startTi
     })
   }
 
-  const seekTo = (seconds: number) => {
-    if (playerRef.current && playerRef.current.seekTo) {
-      playerRef.current.seekTo(seconds, true)
-    }
-  }
-
   return (
     <div className={className}>
       <div className="aspect-video bg-black rounded-lg overflow-hidden">
@@ -107,6 +131,8 @@ export function YouTubePlayer({ videoId, onTimeUpdate, onDurationChange, startTi
       )}
     </div>
   )
-}
+})
+
+YouTubePlayer.displayName = 'YouTubePlayer'
 
 export default YouTubePlayer

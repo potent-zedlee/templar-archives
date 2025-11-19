@@ -74,7 +74,26 @@ export default function ArchiveCashGamePage() {
   }, [tournaments])
 
   // ============================================================
-  // 4. Filtered Tournaments
+  // 4. Selected Stream
+  // ============================================================
+  const selectedStream = useMemo(() => {
+    if (!selectedStreamId) return null
+
+    for (const tournament of tournaments) {
+      if (tournament.events) {
+        for (const event of tournament.events) {
+          if (event.streams) {
+            const stream = event.streams.find(s => s.id === selectedStreamId)
+            if (stream) return stream
+          }
+        }
+      }
+    }
+    return null
+  }, [selectedStreamId, tournaments])
+
+  // ============================================================
+  // 5. Filtered Tournaments
   // ============================================================
   const filteredTournaments = useMemo(() => {
     let filtered = [...tournaments]
@@ -174,8 +193,8 @@ export default function ArchiveCashGamePage() {
 
           {/* 3. Right: Main Panel (flex-1) */}
           <main className="hidden lg:flex flex-1 overflow-hidden">
-            {selectedStreamId ? (
-              <HandsListPanel streamId={selectedStreamId} />
+            {selectedStreamId && selectedStream ? (
+              <HandsListPanel streamId={selectedStreamId} stream={selectedStream} />
             ) : (
               <ArchiveDashboard tournaments={filteredTournaments} />
             )}

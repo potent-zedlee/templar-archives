@@ -4,12 +4,13 @@
  * Hands List Panel
  *
  * 선택된 스트림의 핸드 리스트 표시
+ * - YouTube 플레이어 통합 (상단 고정)
+ * - 핸드 클릭 시 플레이어 타임코드 이동
  * - 플레이어 이름 검색
  * - 페이지네이션
- * - HandListItem 재사용
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search, Inbox, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
@@ -19,7 +20,9 @@ import { GridSkeleton } from '@/components/skeletons/grid-skeleton'
 import { EmptyState } from '@/components/empty-state'
 import { StaggerContainer, StaggerItem } from '@/components/page-transition'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
+import { YouTubePlayer, type YouTubePlayerHandle } from '@/components/video/youtube-player'
 import type { Stream } from '@/lib/supabase'
+import type { Hand } from '@/lib/types/archive'
 
 interface HandsListPanelProps {
   streamId: string
@@ -28,16 +31,40 @@ interface HandsListPanelProps {
 
 const HANDS_PER_PAGE = 20
 
+/**
+ * YouTube URL에서 video ID 추출
+ */
+function extractVideoId(url?: string): string | null {
+  if (!url) return null
+
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /^([a-zA-Z0-9_-]{11})$/
+  ]
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match) return match[1]
+  }
+
+  return null
+}
+
 export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
+  const [selectedHand, setSelectedHand] = useState<Hand | null>(null)
+  const playerRef = useRef<YouTubePlayerHandle>(null)
 
   // React Query
   const { data: hands = [], isLoading } = useHandsQuery(streamId)
 
   // Zustand Store
   const openAnalyzeDialog = useArchiveUIStore(state => state.openAnalyzeDialog)
+
+  // YouTube Video ID
+  const videoId = useMemo(() => extractVideoId(stream.video_url), [stream.video_url])
 
   // 필터링
   const filteredHands = useMemo(() => {
@@ -64,17 +91,51 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
     setCurrentPage(1)
   }
 
-  const handleHandClick = (handId: string) => {
+  /**
+   * 핸드 클릭 핸들러
+   * - 핸드 선택 상태 업데이트
+   * - YouTube 플레이어를 해당 타임코드로 이동
+   */
+  const handleHandClick = (hand: Hand) => {
+    setSelectedHand(hand)
+
+    // YouTube 플레이어가 있고 타임스탬프가 있으면 해당 시간으로 이동
+    if (playerRef.current && hand.video_timestamp_start) {
+      playerRef.current.seekTo(hand.video_timestamp_start)
+    }
+  }
+
+  /**
+   * 핸드 상세 페이지로 이동
+   */
+  const handleHandDetail = (handId: string) => {
     router.push(`/hands/${handId}`)
   }
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 w-full">
+      {/* YouTube 플레이어 (상단 고정) */}
+      {videoId && (
+        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+          <YouTubePlayer
+            ref={playerRef}
+            videoId={videoId}
+            startTime={selectedHand?.video_timestamp_start}
+            className="w-full"
+          />
+        </div>
+      )}
+
       {/* 헤더 + 검색바 */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Hand History
+            {selectedHand && (
+              <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                - Hand #{selectedHand.number}
+              </span>
+            )}
           </h2>
           <button
             onClick={() => openAnalyzeDialog(stream)}
@@ -106,7 +167,7 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-2">
           {isLoading ? (
-            <GridSkeleton count={10} columns={1} />
+            <GridSkeleton count={10} />
           ) : paginatedHands.length === 0 ? (
             <EmptyState
               icon={Inbox}
@@ -128,7 +189,9 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
                 <StaggerItem key={hand.id}>
                   <HandListItem
                     hand={hand}
-                    onClick={() => handleHandClick(hand.id)}
+                    onClick={() => handleHandClick(hand)}
+                    onDetailClick={() => handleHandDetail(hand.id)}
+                    isSelected={selectedHand?.id === hand.id}
                   />
                 </StaggerItem>
               ))}
