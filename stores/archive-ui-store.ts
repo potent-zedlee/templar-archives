@@ -21,20 +21,6 @@ import type {
 } from '@/lib/types/archive'
 
 interface ArchiveUIState {
-  // Expansion State (Tree View) - Single Mode
-  expandedTournament: string | null
-  expandedEvent: string | null
-
-  // Search & Sort
-  searchQuery: string
-  sortBy: SortOption
-
-  // Category Filter
-  selectedCategory: string
-
-  // Advanced Filters
-  advancedFilters: AdvancedFilters
-
   // Dialogs
   tournamentDialog: DialogState
   eventDialog: DialogState
@@ -70,17 +56,6 @@ interface ArchiveUIState {
   viewingPayouts: any[]
   loadingViewingPayouts: boolean
   isEditingViewingPayouts: boolean
-
-  // Actions - Expansion (Tree View) - Single Mode
-  toggleTournamentExpand: (id: string) => void
-  toggleEventExpand: (id: string) => void
-
-  // Actions - Search & Sort
-  setSearchQuery: (query: string) => void
-  setSortBy: (sort: SortOption) => void
-  setSelectedCategory: (category: string) => void
-  setAdvancedFilters: (filters: AdvancedFilters) => void
-  resetAllFilters: () => void
 
   // Actions - Dialogs
   openTournamentDialog: (editingId?: string) => void
@@ -134,37 +109,10 @@ interface ArchiveUIState {
   setIsEditingViewingPayouts: (editing: boolean) => void
 }
 
-const INITIAL_ADVANCED_FILTERS: AdvancedFilters = {
-  dateRange: {
-    start: undefined,
-    end: undefined,
-  },
-  handCountRange: [0, 1000],
-  videoSources: {
-    youtube: true,
-    upload: true,
-  },
-  hasHandsOnly: false,
-  tournamentName: undefined,
-  playerName: undefined,
-  holeCards: undefined,
-  handValue: undefined,
-}
-
 export const useArchiveUIStore = create<ArchiveUIState>()(
   devtools(
     persist(
       (set, get) => ({
-        // Initial State - Expansion (Tree View) - Single Mode
-        expandedTournament: null,
-        expandedEvent: null,
-
-        // Initial State - Search & Sort
-        searchQuery: '',
-        sortBy: 'date-desc',
-        selectedCategory: 'All',
-        advancedFilters: INITIAL_ADVANCED_FILTERS,
-
         // Initial State - Dialogs
         tournamentDialog: { isOpen: false, editingId: null },
         eventDialog: { isOpen: false, editingId: null },
@@ -203,35 +151,6 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
         viewingPayouts: [],
         loadingViewingPayouts: false,
         isEditingViewingPayouts: false,
-
-        // Actions - Expansion (Tree View) - Single Mode
-        toggleTournamentExpand: (id) =>
-          set((state) => ({
-            // Toggle: same ID → close (null), different ID → open new one
-            expandedTournament: state.expandedTournament === id ? null : id,
-            // Close Event when Tournament changes
-            expandedEvent: state.expandedTournament === id ? state.expandedEvent : null,
-          })),
-
-        toggleEventExpand: (id) =>
-          set((state) => ({
-            // Toggle: same ID → close (null), different ID → open new one
-            expandedEvent: state.expandedEvent === id ? null : id,
-          })),
-
-        // Actions - Search & Sort
-        setSearchQuery: (query) => set({ searchQuery: query }),
-        setSortBy: (sort) => set({ sortBy: sort }),
-        setSelectedCategory: (category) => set({ selectedCategory: category }),
-        setAdvancedFilters: (filters) => set({ advancedFilters: filters }),
-        resetAllFilters: () =>
-          set({
-            searchQuery: '',
-            sortBy: 'date-desc',
-            advancedFilters: INITIAL_ADVANCED_FILTERS,
-            expandedTournament: null,
-            expandedEvent: null,
-          }),
 
         // Actions - Dialogs
         openTournamentDialog: (editingId) =>
@@ -400,11 +319,8 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
       }),
       {
         name: 'ArchiveUIStore',
-        // Persist only certain fields
-        partialize: (state) => ({
-          selectedCategory: state.selectedCategory,
-          sortBy: state.sortBy,
-        }),
+        // No persistence needed (all state is managed locally)
+        partialize: (state) => ({}),
       }
     ),
     { name: 'ArchiveUIStore' }

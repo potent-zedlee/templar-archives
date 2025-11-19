@@ -1,21 +1,20 @@
 "use client"
 
 /**
- * Archive Accordion Component
+ * Archive Accordion Component - Phase 42
  *
- * Flowbite Accordion을 사용한 계층 구조:
+ * HTML details/summary 기반 Accordion:
  * Tournament → Event → Stream → Hand
  *
  * Features:
- * - Single mode (한 번에 하나만 열림)
+ * - Native HTML Accordion (details/summary)
  * - Virtual scrolling for hands
  * - Postmodern design
  */
 
-import { useState } from 'react'
-import { Accordion, Badge, Button } from 'flowbite-react'
-import { Calendar, MapPin, Trophy, Video, Plus } from 'lucide-react'
-import type { Tournament, Event, Stream, Hand } from '@/lib/types/archive'
+import { Badge, Button } from 'flowbite-react'
+import { Calendar, MapPin, Trophy, Video, Plus, ChevronRight } from 'lucide-react'
+import type { Tournament, Hand } from '@/lib/types/archive'
 import { VirtualHandList } from './VirtualHandList'
 
 interface ArchiveAccordionProps {
@@ -37,82 +36,83 @@ export function ArchiveAccordion({
   onSeekToTime,
   isAdmin = false
 }: ArchiveAccordionProps) {
-  const [openTournamentId, setOpenTournamentId] = useState<string | null>(null)
-  const [openEventId, setOpenEventId] = useState<string | null>(null)
-  const [openStreamId, setOpenStreamId] = useState<string | null>(null)
 
   if (tournaments.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12 text-muted-foreground">
+      <div className="flex items-center justify-center py-12 text-gray-500 dark:text-gray-400">
         <p className="text-sm">No tournaments available</p>
       </div>
     )
   }
 
   return (
-    <Accordion collapseAll>
+    <div className="space-y-4">
       {tournaments.map((tournament) => (
-        <Accordion.Panel key={tournament.id}>
-          <Accordion.Title>
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-3">
-                <Trophy className="w-5 h-5 text-yellow-500" />
-                <div>
-                  <h3 className="text-lg font-bold">{tournament.name}</h3>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                    <MapPin className="w-4 h-4" />
-                    <span>{tournament.location}</span>
-                    <Calendar className="w-4 h-4 ml-2" />
-                    <span>{tournament.start_date}</span>
-                  </div>
+        <details key={tournament.id} className="group bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+          <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <div className="flex items-center gap-3">
+              <ChevronRight className="w-5 h-5 transition-transform group-open:rotate-90" />
+              <Trophy className="w-5 h-5 text-yellow-500" />
+              <div>
+                <h3 className="text-lg font-bold">{tournament.name}</h3>
+                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <MapPin className="w-4 h-4" />
+                  <span>{tournament.location}</span>
+                  <Calendar className="w-4 h-4 ml-2" />
+                  <span>{tournament.start_date}</span>
                 </div>
               </div>
-              <Badge color="info">{tournament.events?.length || 0} Events</Badge>
             </div>
-          </Accordion.Title>
-          <Accordion.Content>
+            <Badge color="info">{tournament.events?.length || 0} Events</Badge>
+          </summary>
+
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
             {/* Events */}
             {tournament.events && tournament.events.length > 0 ? (
-              <Accordion collapseAll>
+              <div className="space-y-3">
                 {tournament.events.map((event) => (
-                  <Accordion.Panel key={event.id}>
-                    <Accordion.Title>
-                      <div className="flex items-center justify-between w-full">
+                  <details key={event.id} className="group/event bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden">
+                    <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <ChevronRight className="w-4 h-4 transition-transform group-open/event:rotate-90" />
                         <div>
                           <h4 className="font-semibold">{event.name}</h4>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             {event.date} • {event.buy_in || 'N/A'}
                           </p>
                         </div>
-                        <Badge color="success">{event.streams?.length || 0} Streams</Badge>
                       </div>
-                    </Accordion.Title>
-                    <Accordion.Content>
+                      <Badge color="success">{event.streams?.length || 0} Streams</Badge>
+                    </summary>
+
+                    <div className="p-3 border-t border-gray-200 dark:border-gray-700">
                       {/* Streams */}
                       {event.streams && event.streams.length > 0 ? (
-                        <Accordion collapseAll>
+                        <div className="space-y-2">
                           {event.streams.map((stream) => (
-                            <Accordion.Panel key={stream.id}>
-                              <Accordion.Title>
+                            <details key={stream.id} className="group/stream bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
+                              <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                                 <div className="flex items-center gap-2">
+                                  <ChevronRight className="w-4 h-4 transition-transform group-open/stream:rotate-90" />
                                   <Video className="w-4 h-4" />
-                                  <span>{stream.name}</span>
-                                  <Badge size="sm" color="warning">
-                                    {hands.get(stream.id)?.length || 0} Hands
-                                  </Badge>
+                                  <span className="font-medium">{stream.name}</span>
                                 </div>
-                              </Accordion.Title>
-                              <Accordion.Content>
+                                <Badge size="sm" color="warning">
+                                  {hands.get(stream.id)?.length || 0} Hands
+                                </Badge>
+                              </summary>
+
+                              <div className="p-3 border-t border-gray-200 dark:border-gray-700">
                                 {/* Virtual Hand List */}
                                 <VirtualHandList
                                   hands={hands.get(stream.id) || []}
                                   onHandClick={onHandClick}
                                   onSeekToTime={onSeekToTime}
                                 />
-                              </Accordion.Content>
-                            </Accordion.Panel>
+                              </div>
+                            </details>
                           ))}
-                        </Accordion>
+                        </div>
                       ) : (
                         <div className="text-center py-8 text-gray-500">
                           <p className="text-sm">No streams available</p>
@@ -129,10 +129,10 @@ export function ArchiveAccordion({
                           )}
                         </div>
                       )}
-                    </Accordion.Content>
-                  </Accordion.Panel>
+                    </div>
+                  </details>
                 ))}
-              </Accordion>
+              </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <p className="text-sm">No events available</p>
@@ -149,9 +149,9 @@ export function ArchiveAccordion({
                 )}
               </div>
             )}
-          </Accordion.Content>
-        </Accordion.Panel>
+          </div>
+        </details>
       ))}
-    </Accordion>
+    </div>
   )
 }
