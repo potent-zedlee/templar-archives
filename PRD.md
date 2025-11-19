@@ -1,9 +1,9 @@
 # Templar Archives Index - Product Requirements Document (PRD)
 
-**Version**: 2.0 (압축)
-**Last Updated**: 2025-11-12
+**Version**: 2.1
+**Last Updated**: 2025-11-19
 **Document Owner**: Product Team
-**Status**: Phase 0-35 Completed
+**Status**: Phase 0-43 Completed
 
 ---
 
@@ -47,8 +47,8 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 - ✅ **프로덕션**: https://templar-archives.vercel.app
 - ✅ **기술 스택**: React 19.2.0, Next.js 16.0.1, TypeScript 5.9.3
 - ✅ **AI**: Gemini 2.0 Flash (v1.29.0) + Claude 3.5 Sonnet
-- ✅ **데이터베이스**: Supabase (73개 마이그레이션, 27개 테이블)
-- ✅ **Phase 35 완료**: 보안 & 안정성 강화
+- ✅ **데이터베이스**: Supabase (90+ 마이그레이션, 27개 테이블)
+- ✅ **Phase 43 완료**: SubEvent → Event 용어 통일 + Flowbite 전면 도입
 
 ---
 
@@ -57,10 +57,11 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 ### Core Features
 
 #### Archive (영상 아카이브 관리)
-- 4단계 계층 (Tournament → SubEvent → Stream → Hands)
+- 4단계 계층 (Tournament → Event → Stream → Hands)
 - YouTube 영상 소스
 - Quick Upload (YouTube URL 자동 파싱)
 - 카테고리 로고 업로드
+- Flowbite UI 컴포넌트 전면 적용
 
 #### KAN (Khalai Archive Network)
 - Gemini 2.0 Flash 기반 AI 영상 분석
@@ -161,10 +162,12 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 | 기능 ID | 설명 | Priority | Status |
 |---|---|---|---|
 | FR-A1 | Tournament CRUD (관리자) | P0 | ✅ |
-| FR-A2 | SubEvent CRUD (관리자) | P0 | ✅ |
+| FR-A2 | Event CRUD (관리자) | P0 | ✅ |
 | FR-A3 | Stream CRUD (관리자) | P0 | ✅ |
 | FR-A4 | Quick Upload (YouTube 자동 파싱) | P1 | ✅ |
 | FR-A5 | Category Logo Upload | P1 | ✅ |
+| FR-A6 | Flowbite UI 전면 도입 | P1 | ✅ |
+| FR-A7 | Virtual Scrolling | P1 | ✅ |
 
 ### HAE (Hand Analysis Engine)
 
@@ -276,7 +279,7 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 
 **ERD (간략)**:
 ```
-tournaments (1) ──< (N) sub_events
+tournaments (1) ──< (N) sub_events (Events, 테이블명 유지)
                          │
                          └──< (N) streams
                                    │
@@ -404,7 +407,7 @@ users (1) ──< (N) posts ──< (N) comments
 ```
 ┌──────────────────────────────────────────┐
 │ 1. Archive 페이지 접속                    │
-│    Tournament → SubEvent → Stream 선택   │
+│    Tournament → Event → Stream 선택      │
 └────────────┬─────────────────────────────┘
              │
              ▼
@@ -500,19 +503,26 @@ users (1) ──< (N) posts ──< (N) comments
 
 ### Current Phase (완료)
 
-**Phase 35: 보안 & 안정성 강화** (2025-11-12)
-- ✅ HAE 권한 체크 정상화
-- ✅ Next.js 16.0 Proxy 시스템 마이그레이션
-- ✅ Console 로그 정리 (프로덕션 최적화)
-- ✅ CSRF 토큰 검증 시스템 완성
-- ✅ Deprecated 타입 제거 (Day → Stream)
-- ✅ profiles 테이블 참조 오류 수정
+**Phase 43: SubEvent → Event 전역 용어 통일** (2025-11-19)
+- ✅ 모든 문서에서 SubEvent → Event 변경
+- ✅ PAGES_STRUCTURE.md 계층 구조 업데이트
+- ✅ DATABASE_SCHEMA.md 설명 개선 (테이블명 유지)
+- ✅ Phase 정보 41 → 43 업데이트
+
+**Phase 42: Archive 페이지 Flowbite 전면 도입** (2025-11-18)
+- ✅ Accordion, Button, Dropdown Flowbite 컴포넌트 적용
+- ✅ 포스트모던 디자인 시스템 일관성 확보
+- ✅ UI 일관성 및 유지보수성 대폭 개선
+
+**Phase 41: Virtual Scrolling 성능 최적화** (2025-11-17)
+- ✅ 대용량 핸드 리스트 렌더링 최적화
+- ✅ 100개 이상 핸드에서 부드러운 스크롤 보장
 
 ### Future Phases
 
 상세 로드맵은 [Archive/ROADMAP.md](../ROADMAP.md)의 **"Part 1: Templar Archives 로드맵"** 섹션 참조
 
-**Phase 36+**: Advanced Analytics, AI Chat Assistant, Live Streaming Integration, Social Features 등
+**Phase 44+**: Advanced Analytics, AI Chat Assistant, Live Streaming Integration, Social Features 등
 
 ---
 
@@ -526,7 +536,7 @@ users (1) ──< (N) posts ──< (N) comments
 | **RLS** | Row Level Security (행 수준 보안) |
 | **RBAC** | Role-Based Access Control (역할 기반 접근 제어) |
 | **Tournament** | 포커 토너먼트 (예: WSOP Main Event) |
-| **SubEvent** | 토너먼트 내 개별 이벤트 (예: Event #1: $10K Main Event) |
+| **Event** | 토너먼트 내 개별 이벤트 (예: Event #1: $10K Main Event) |
 | **Stream** | 이벤트 내 개별 Day/Stream (예: Day 1A) |
 | **Hand** | 포커 핸드 히스토리 (1개의 게임) |
 
@@ -577,6 +587,6 @@ NEXT_PUBLIC_APP_URL=https://templar-archives.vercel.app
 
 **END OF DOCUMENT**
 
-**마지막 업데이트**: 2025-11-12
-**버전**: 2.0 (압축 버전 - 1159줄 → 600줄)
-**Status**: Phase 0-35 Completed
+**마지막 업데이트**: 2025-11-19
+**버전**: 2.1
+**Status**: Phase 0-43 Completed (SubEvent → Event 용어 통일)

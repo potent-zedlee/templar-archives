@@ -68,16 +68,16 @@
 #### 계층 구조
 ```
 Tournament (토너먼트)
-├── Sub Event (서브 이벤트)
-│   ├── Day 1
-│   ├── Day 2
-│   └── Day 3 (Final Table)
+├── Event (이벤트)
+│   ├── Stream 1
+│   ├── Stream 2
+│   └── Stream 3 (Final Table)
 ```
 
 #### 각 레벨별 기능
-- **Tournament**: ⋮ 메뉴 (수정, Sub Event 추가, 삭제), 카테고리, 위치, 날짜
-- **Sub Event**: ⋮ 메뉴 (수정, Day 추가, 삭제), 이벤트명, 총 상금, 우승자
-- **Day**: ⋮ 메뉴 (수정, 삭제), Day 이름, 비디오 소스 (YouTube/Upload/NAS)
+- **Tournament**: ⋮ 메뉴 (수정, Event 추가, 삭제), 카테고리, 위치, 날짜
+- **Event**: ⋮ 메뉴 (수정, Stream 추가, 삭제), 이벤트명, 총 상금, 우승자
+- **Stream**: ⋮ 메뉴 (수정, 삭제), Stream 이름, 비디오 소스 (YouTube/Upload/NAS)
 
 #### 카테고리
 WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
@@ -183,7 +183,7 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 
 #### 주요 기능
 - 포스트 작성 (제목, 내용, 카테고리)
-- 핸드 첨부 (Tournament → SubEvent → Day → Hand 4단계 선택)
+- 핸드 첨부 (Tournament → Event → Stream → Hand 4단계 선택)
 - 포스트 카드 (작성자, 카테고리, 좋아요/댓글/조회수, 작성 시간)
 - 좋아요 토글
 - 검색 기능 (Full-Text Search)
@@ -425,8 +425,8 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 ### 테이블 관계도
 ```
 tournaments
-    ├── sub_events
-    │     └── days
+    ├── sub_events (Events)
+    │     └── streams
     │           └── hands
     │                 ├── hand_players → players
     │                 ├── hand_likes
@@ -445,10 +445,10 @@ users
 ```
 
 ### 주요 테이블
-- **tournaments**: name, category, location, start_date, end_date, game_type (Phase 23)
-- **sub_events**: tournament_id, name, date, total_prize, winner, event_number (Phase 30)
-- **days**: sub_event_id, name, video_url/file/nas_path, video_source, published_at (Phase 30)
-- **hands**: day_id, number, timestamp, description, confidence, summary
+- **tournaments**: name, category, location, start_date, end_date, game_type
+- **sub_events**: tournament_id, name, date, total_prize, winner, event_number (테이블명은 유지, Events를 의미)
+- **streams**: sub_event_id, name, video_url/file/nas_path, video_source, published_at
+- **hands**: stream_id, number, timestamp, description, confidence, summary
 - **hand_actions**: hand_id, player_id, street, action_type, amount, sequence_number (Phase 18)
 - **players**: name, photo_url, country, total_winnings
 - **hand_players**: hand_id, player_id, position, cards
@@ -557,15 +557,15 @@ users
 
 ---
 
-**마지막 업데이트**: 2025-10-24
-**버전**: 5.0
-**상태**: Phase 0-32 완료 (모든 핵심 기능 + 보안 강화)
-**총 페이지**: 32개 (유저 18개, Reporter 2개, 관리자 7개, 인증 2개, API 3개)
+**마지막 업데이트**: 2025-11-19
+**버전**: 6.0
+**상태**: Phase 43 완료 (SubEvent → Event 용어 통일 + Flowbite 전면 도입)
+**총 페이지**: 49개 (유저 18개, Reporter 2개, 관리자 7개, 인증 2개, API 3개)
 
-**최근 주요 추가**:
-- Phase 32: Comprehensive Security Enhancement (8가지 보안 개선, 보안 등급 A)
-- Phase 31: Archive Security & Admin Management Page (Server Actions)
-- Phase 30: Archive Event Management Enhancement (Event Number, From Unsorted)
-- Phase 22: News & Live Reporting System (Reporter 역할)
-- Phase 20: Notification System (8가지 알림 타입)
-- Phase 18: Manual Hand Action Input System
+**최근 주요 업데이트**:
+- Phase 43: SubEvent → Event 전역 용어 변경
+- Phase 42: Archive 페이지 Flowbite 전면 도입
+- Phase 41: Virtual Scrolling 성능 최적화
+- Phase 40: 플레이어 통계 시스템 고도화 (VPIP, 3BET, ATS)
+- Phase 32: Comprehensive Security Enhancement (보안 등급 A)
+- Phase 22: News & Live Reporting System

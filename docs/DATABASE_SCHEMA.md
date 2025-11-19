@@ -2,9 +2,9 @@
 
 > **Templar Archives** 데이터베이스 구조 및 설계 가이드
 
-**마지막 업데이트**: 2025-11-02
+**마지막 업데이트**: 2025-11-19
 **데이터베이스**: PostgreSQL 15 (Supabase)
-**총 테이블 수**: 20개
+**총 테이블 수**: 27개
 
 ---
 
@@ -24,7 +24,7 @@
 Templar Archives는 포커 핸드 데이터를 체계적으로 관리하고 분석하는 시스템입니다.
 
 ### 핵심 엔티티
-- **Archive (Tournament → SubEvent → Stream → Hand)**: 4단계 계층 구조
+- **Archive (Tournament → Event → Stream → Hand)**: 4단계 계층 구조
 - **Player**: 플레이어 정보 및 통계
 - **Community**: 포스트, 댓글, 좋아요
 - **System**: 사용자, 알림, 보안
@@ -32,7 +32,7 @@ Templar Archives는 포커 핸드 데이터를 체계적으로 관리하고 분�
 ### 데이터베이스 설계 원칙
 1. **정규화**: 3NF (제3정규형) 준수, 데이터 중복 최소화
 2. **캐싱**: 통계 데이터 캐시 테이블 (player_stats_cache)
-3. **계층 구조**: Tournament → SubEvent → Stream → Hand (4단계)
+3. **계층 구조**: Tournament → Event → Stream → Hand (4단계)
 4. **보안 우선**: Row Level Security (RLS) 전면 적용
 
 ---
@@ -45,8 +45,8 @@ Templar Archives는 포커 핸드 데이터를 체계적으로 관리하고 분�
 | 테이블명 | 역할 | 레벨 |
 |---------|------|------|
 | `tournaments` | 토너먼트 메인 | Level 1 |
-| `sub_events` | 토너먼트 하위 이벤트 | Level 2 |
-| `streams` | 비디오 스트림/Day | Level 3 |
+| `sub_events` | Events (이벤트) - 테이블명 유지 | Level 2 |
+| `streams` | 비디오 스트림 | Level 3 |
 | `hands` | 핸드 데이터 | Level 4 |
 | `tournament_categories` | 카테고리 정보 (36개) | Reference |
 
@@ -157,13 +157,15 @@ player_stats_cache (1) [캐시]
 
 ---
 
-### 2. sub_events
-**목적**: 토너먼트 하위 이벤트 (예: Event #1, Day 1A)
+### 2. sub_events (Events)
+**목적**: Events (이벤트) - 토너먼트 내 개별 이벤트 (예: Event #1: $10K Main Event)
+
+**참고**: 테이블명은 `sub_events`로 유지되지만, 개념적으로는 "Event"를 의미합니다.
 
 **주요 컬럼**:
 - `id` (UUID, PK)
 - `tournament_id` (UUID, FK → tournaments)
-- `name` (TEXT)
+- `name` (TEXT) - 이벤트명
 - `event_number` (TEXT) - 이벤트 번호 (#1, 1A 등)
 - `date` (DATE)
 - `buy_in`, `entry_count`, `total_prize` (통계 정보)
@@ -178,20 +180,22 @@ player_stats_cache (1) [캐시]
 
 ---
 
-### 3. streams (구 days)
-**목적**: 비디오 스트림 (YouTube, 로컬 파일, NAS)
+### 3. streams
+**목적**: Streams (스트림) - 비디오 영상 (YouTube, 로컬 파일, NAS)
+
+**설명**: 각 Event 내의 개별 영상/스트림을 의미합니다 (예: Day 1A, Final Table).
 
 **주요 컬럼**:
 - `id` (UUID, PK)
-- `sub_event_id` (UUID, FK → sub_events)
-- `name` (TEXT)
+- `sub_event_id` (UUID, FK → sub_events, Event를 의미)
+- `name` (TEXT) - 스트림명
 - `video_url`, `video_file`, `video_nas_path` (3가지 소스)
 - `video_source` (TEXT) - 'youtube' | 'upload' | 'nas'
 - `published_at` (TIMESTAMPTZ)
 - `is_organized` (BOOLEAN) - 정리 여부
 
 **관계**:
-- N:1 → `sub_events`
+- N:1 → `sub_events` (Events)
 - 1:N → `hands`
 
 **인덱스**:
@@ -475,7 +479,7 @@ Full-Text Search 및 배열 검색
 
 ### 주요 정책
 
-#### 1. Archive 테이블 (tournaments, sub_events, streams, hands)
+#### 1. Archive 테이블 (tournaments, sub_events (Events), streams, hands)
 - **SELECT**: 모든 인증된 사용자
 - **INSERT/UPDATE/DELETE**: Admin 전용
 
@@ -601,6 +605,7 @@ SELECT cleanup_old_audit_logs(); -- 180일 이상
 
 | 날짜 | 버전 | 변경 내용 |
 |------|------|----------|
+| 2025-11-19 | 1.1 | SubEvent → Event 용어 통일, 테이블 설명 개선 |
 | 2025-11-02 | 1.0 | 초기 문서 생성, player_stats_cache 추가 |
 | 2024-10-30 | 0.9 | hands 테이블 analysis_metadata 추가 |
 | 2024-10-25 | 0.8 | days → streams 테이블 리네임 |
