@@ -140,7 +140,7 @@ WHERE role IN ('high_templar', 'reporter', 'admin');
 ### 환경 변수
 ```bash
 # KAN 백엔드
-KHALAI_ARCHIVE_NETWORK_URL=https://kan-backend-700566907563.us-central1.run.app
+KHALAI_ARCHIVE_NETWORK_URL=https://kan-backend-26yea7ixra-uc.a.run.app
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co

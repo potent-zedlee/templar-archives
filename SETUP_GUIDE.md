@@ -73,7 +73,7 @@ Vercel 배포 시 KAN Backend Cloud Run URL을 사용하도록 설정
 
    **Value (값)**:
    ```
-   https://kan-backend-700566907563.us-central1.run.app
+   https://kan-backend-26yea7ixra-uc.a.run.app
    ```
 
    **Environment (환경)**:

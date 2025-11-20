@@ -16,7 +16,7 @@ HAE(Hand Analysis Engine) → KAN(Khalai Archive Network) 리브랜딩 완료 �
 ### 1.1 Cloud Run 서비스
 
 - ✅ **kan-backend 배포 상태**: 정상
-  - URL: `https://kan-backend-700566907563.us-central1.run.app`
+  - URL: `https://kan-backend-26yea7ixra-uc.a.run.app`
   - Version: 1.0.0
   - Environment: production
 
@@ -84,7 +84,7 @@ HAE(Hand Analysis Engine) → KAN(Khalai Archive Network) 리브랜딩 완료 �
 
 - ✅ **.env.local 업데이트**: 완료
   ```bash
-  KHALAI_ARCHIVE_NETWORK_URL=https://kan-backend-700566907563.us-central1.run.app
+  KHALAI_ARCHIVE_NETWORK_URL=https://kan-backend-26yea7ixra-uc.a.run.app
   ```
 
 - ✅ **.env.production 업데이트**: 완료
@@ -370,7 +370,7 @@ vercel --prod
 **Google Cloud 프로젝트**:
 - 프로젝트 ID: `ggvault-ai`
 - 리전: `us-central1`
-- KAN 백엔드: https://kan-backend-700566907563.us-central1.run.app
+- KAN 백엔드: https://kan-backend-26yea7ixra-uc.a.run.app
 
 **Vercel 프로젝트**:
 - 팀: `zedlees-projects-6d92fb47`
