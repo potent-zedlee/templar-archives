@@ -24,13 +24,16 @@ Templar Archives는 포커 영상을 자동으로 핸드 히스토리로 변환�
 # 개발 서버
 npm run dev                # http://localhost:3000
 
+# Trigger.dev 로컬 개발 (영상 분석 테스트 시 필수)
+npx trigger.dev@latest dev --port 3001
+
 # 빌드
 npm run build
 npm run lint
 
 # 테스트
 npm run test               # Vitest 전체
-npm run test -- path/to/file.test.ts  # 단일 파일
+npm run test lib/filter-utils.test.ts  # 단일 파일
 npm run test:ui            # Vitest UI
 npm run test:coverage
 
@@ -93,7 +96,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 GOOGLE_API_KEY=your-key              # Gemini AI
-TRIGGER_SECRET_KEY=your-key          # Trigger.dev v3 (영상 분석)
+TRIGGER_SECRET_KEY=your-key          # Trigger.dev v3 (영상 분석 필수!)
 ANTHROPIC_API_KEY=sk-ant-...         # Claude (선택)
 
 # 선택
@@ -101,6 +104,67 @@ UPSTASH_REDIS_REST_URL=your-url      # Rate Limiting
 UPSTASH_REDIS_REST_TOKEN=your-token
 YOUTUBE_API_KEY=your-key
 CSRF_SECRET=your-secure-random-string
+```
+
+**Trigger.dev 설정 (영상 분석 필수)**:
+1. https://cloud.trigger.dev/ 가입
+2. 프로젝트 생성 (`proj_oeniovgjdjmalhpsigaa`)
+3. Settings → API Keys → Secret Key 발급
+4. `.env.local`에 `TRIGGER_SECRET_KEY` 추가
+5. 로컬 개발: `npx trigger.dev@latest dev --port 3001`
+6. 프로덕션: Vercel 환경 변수에 추가
+
+---
+
+## 프로젝트 구조
+
+```
+templar-archives/
+├── app/
+│   ├── (main)/
+│   │   ├── archive/              # Archive 페이지 (3-Column)
+│   │   │   ├── tournament/       # 토너먼트 아카이브
+│   │   │   ├── cash-game/        # 캐시게임 아카이브
+│   │   │   └── _components/      # Archive 전용 컴포넌트
+│   │   ├── search/               # Search 페이지 (3-Column)
+│   │   │   └── _components/      # Search 전용 컴포넌트
+│   │   ├── players/              # Players 페이지
+│   │   │   ├── [id]/             # 플레이어 상세
+│   │   │   └── _components/      # Player 전용 컴포넌트
+│   │   └── community/            # Community 페이지
+│   ├── actions/                  # Server Actions (7개)
+│   │   ├── kan-trigger.ts        # KAN 영상 분석 ⭐
+│   │   ├── archive.ts            # Archive CRUD
+│   │   └── kan-analysis.ts       # KAN 분석 (legacy)
+│   └── api/
+│       ├── natural-search/       # Claude 자연어 검색
+│       └── trigger/              # Trigger.dev 상태 조회
+├── trigger/
+│   └── video-analysis.ts         # Trigger.dev Task (KAN) ⭐
+├── lib/
+│   ├── video/                    # YouTube/FFmpeg/Gemini ⭐
+│   │   ├── youtube-downloader.ts
+│   │   ├── ffmpeg-processor.ts
+│   │   └── gemini-analyzer.ts
+│   ├── queries/                  # React Query (20개 파일)
+│   ├── hooks/                    # React Hooks
+│   │   └── use-trigger-job.ts    # Trigger.dev 폴링 ⭐
+│   ├── types/                    # TypeScript 타입
+│   ├── ai/                       # AI 통합
+│   │   ├── gemini.ts
+│   │   └── prompts.ts            # KAN Prompts
+│   ├── auth-utils.ts             # 인증
+│   ├── security.ts               # 보안
+│   └── filter-utils.ts           # 필터 로직
+├── components/                   # 공통 컴포넌트
+│   ├── ui/                       # shadcn/ui
+│   ├── trigger-job-monitor.tsx   # Trigger.dev 진행률 ⭐
+│   └── player-stats.tsx          # 플레이어 통계
+├── stores/                       # Zustand (4개 파일)
+├── supabase/
+│   └── migrations/               # DB 마이그레이션
+├── e2e/                          # Playwright 테스트
+└── scripts/                      # 유틸리티 스크립트
 ```
 
 ---
@@ -522,6 +586,82 @@ queryClient.invalidateQueries({ queryKey: ['tournaments'] })
 queryClient.invalidateQueries()
 ```
 
+### Trigger.dev (KAN 영상 분석)
+
+**로컬 개발 문제**:
+```bash
+# Trigger.dev CLI가 실행 중인지 확인
+npx trigger.dev@latest dev --port 3001
+
+# 작업 실행 테스트
+# Archive 페이지에서 영상 분석 시작 → 진행률 확인
+
+# Trigger.dev Dashboard에서 작업 상태 확인
+# https://cloud.trigger.dev/
+```
+
+**프로덕션 문제**:
+```bash
+# 1. Vercel 환경 변수 확인
+# TRIGGER_SECRET_KEY 설정 필요
+
+# 2. Trigger.dev Dashboard에서 실행 로그 확인
+# https://cloud.trigger.dev/projects/proj_oeniovgjdjmalhpsigaa/runs
+
+# 3. 작업 상태 조회 API 테스트
+curl https://templar-archives.vercel.app/api/trigger/status/[jobId]
+```
+
+**일반적인 에러**:
+- **401 Unauthorized**: `TRIGGER_SECRET_KEY` 누락 또는 잘못됨
+- **Task not found**: `trigger/video-analysis.ts` 배포 안 됨 (재배포 필요)
+- **Timeout**: 영상이 너무 길거나 네트워크 문제 (자동 재시도 3회)
+- **Gemini API Error**: `GOOGLE_API_KEY` 문제 또는 할당량 초과
+
+---
+
+## Trigger.dev 배포 (프로덕션)
+
+KAN 영상 분석을 프로덕션에서 사용하려면 Trigger.dev Task를 배포해야 합니다.
+
+### 배포 절차
+
+```bash
+# 1. Trigger.dev CLI 설치 (전역)
+npm install -g @trigger.dev/cli@latest
+
+# 2. 배포
+npx trigger.dev@latest deploy
+
+# 3. 배포 확인
+# Trigger.dev Dashboard → Deployments 확인
+# https://cloud.trigger.dev/projects/proj_oeniovgjdjmalhpsigaa/deployments
+```
+
+### Vercel 통합
+
+Vercel에 배포 시 자동으로 Trigger.dev Task가 배포됩니다:
+
+1. **환경 변수 설정** (Vercel Dashboard):
+   ```bash
+   TRIGGER_SECRET_KEY=tr_prod_xxx...
+   ```
+
+2. **Git Push 후 자동 배포**:
+   ```bash
+   git push origin main
+   ```
+
+3. **배포 확인**:
+   - Vercel Dashboard에서 배포 상태 확인
+   - Trigger.dev Dashboard에서 새 Task 배포 확인
+
+### 주의사항
+
+- **TRIGGER_SECRET_KEY**는 프로덕션 환경에만 설정 (개발 환경은 로컬 CLI 사용)
+- Trigger.dev 무료 플랜: 월 100시간 제한
+- 유료 플랜 ($20/월): 무제한 실행 시간
+
 ---
 
 ## 포커 도메인 지식
@@ -771,10 +911,17 @@ queryClient.invalidateQueries()
 ---
 
 **마지막 업데이트**: 2025-11-21
-**문서 버전**: 2.3
+**문서 버전**: 2.4
 **현재 Phase**: 44 완료
 **보안 등급**: A
-**주요 업데이트** (v2.3):
+**주요 업데이트** (v2.4):
+- 📚 **프로젝트 구조 섹션 추가**: 디렉토리 구조 시각화
+- 🔧 **Trigger.dev 개발/배포 가이드 추가**: 로컬 개발 및 프로덕션 배포 절차
+- 🐛 **디버깅 섹션 강화**: Trigger.dev 문제 해결 가이드
+- 🧪 **테스트 명령어 정확화**: Vitest 단일 파일 실행 명령 수정
+- 📝 **환경 변수 가이드 개선**: Trigger.dev 설정 단계별 안내
+
+**이전 업데이트** (v2.3):
 - ⚡ **KAN 전면 재설계**: Python → TypeScript + Trigger.dev v3 전환
 - 🎬 영상 분석 파이프라인 완전 재작성 (단일 스택)
 - 📦 새 의존성: @trigger.dev/sdk, @distube/ytdl-core, fluent-ffmpeg
