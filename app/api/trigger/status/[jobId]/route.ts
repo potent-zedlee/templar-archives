@@ -19,29 +19,19 @@ export async function GET(
       )
     }
 
-    // TODO: Trigger.dev v3 SDK를 사용하여 실제 작업 상태 조회
-    // import { tasks } from "@trigger.dev/sdk/v3";
-    // const run = await tasks.getRun(jobId);
-    //
-    // return NextResponse.json({
-    //   id: run.id,
-    //   status: run.status,
-    //   output: run.output,
-    //   createdAt: run.createdAt,
-    //   startedAt: run.startedAt,
-    //   completedAt: run.completedAt
-    // });
+    // Trigger.dev v3 SDK를 사용하여 실제 작업 상태 조회
+    const { runs } = await import("@trigger.dev/sdk/v3");
+    const run = await runs.retrieve(jobId);
 
-    // 임시 응답 (개발용)
     return NextResponse.json({
-      id: jobId,
-      status: 'PENDING', // PENDING | EXECUTING | SUCCESS | FAILURE
-      progress: 0,
-      output: null,
-      error: null,
-      createdAt: new Date().toISOString(),
-      startedAt: null,
-      completedAt: null
+      id: run.id,
+      status: run.status,
+      progress: run.status === 'PENDING' ? 0 : run.status === 'EXECUTING' ? 50 : run.status === 'SUCCESS' ? 100 : 0,
+      output: run.output,
+      error: run.error,
+      createdAt: run.createdAt,
+      startedAt: run.startedAt,
+      completedAt: run.completedAt
     })
 
   } catch (error) {

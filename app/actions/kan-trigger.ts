@@ -79,21 +79,17 @@ export async function startKanAnalysisWithTrigger(
       end: seg.end
     }))
 
-    // TODO: Trigger.dev v3 작업 트리거
-    // 현재는 Trigger.dev SDK의 정확한 사용법을 확인해야 함
-    //
-    // 예상되는 코드:
-    // const handle = await tasks.trigger("kan-video-analysis", {
-    //   youtubeUrl: videoUrl,
-    //   segments: formattedSegments,
-    //   platform,
-    //   streamId
-    // });
-    //
-    // const jobId = handle.id;
+    // Trigger.dev v3 작업 트리거
+    const { tasks } = await import("@trigger.dev/sdk/v3");
 
-    // 임시: 작업 ID 생성 (실제로는 Trigger.dev에서 반환)
-    const jobId = `trigger_${Date.now()}`
+    const handle = await tasks.trigger("kan-video-analysis", {
+      youtubeUrl: videoUrl,
+      segments: formattedSegments,
+      platform,
+      streamId
+    });
+
+    const jobId = handle.id;
 
     console.log(`[KAN-Trigger] Job started: ${jobId}`)
 
@@ -132,22 +128,19 @@ export async function startKanAnalysisWithTrigger(
  */
 export async function getTriggerJobStatus(jobId: string) {
   try {
-    // TODO: Trigger.dev v3에서 작업 상태 조회
-    // const run = await tasks.getRun(jobId);
-    //
-    // return {
-    //   id: run.id,
-    //   status: run.status, // "PENDING" | "EXECUTING" | "SUCCESS" | "FAILURE"
-    //   output: run.output,
-    //   error: run.error
-    // };
+    // Trigger.dev v3에서 작업 상태 조회
+    const { runs } = await import("@trigger.dev/sdk/v3");
 
-    // 임시 응답
+    const run = await runs.retrieve(jobId);
+
     return {
-      id: jobId,
-      status: 'PENDING',
-      output: null,
-      error: null
+      id: run.id,
+      status: run.status, // "PENDING" | "EXECUTING" | "SUCCESS" | "FAILURE"
+      output: run.output,
+      error: run.error,
+      createdAt: run.createdAt,
+      startedAt: run.startedAt,
+      completedAt: run.completedAt
     }
 
   } catch (error) {
