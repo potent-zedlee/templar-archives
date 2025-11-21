@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { getServiceSupabaseClient } from '@/lib/supabase-service'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -496,7 +496,7 @@ export async function startKanAnalysis(
     }
     console.log('[KAN] Backend URL:', backendUrl)
 
-    const supabase = await createServerSupabaseClient()
+    const supabase = getServiceSupabaseClient()
 
     // 인증 확인
     const {
@@ -700,7 +700,7 @@ export async function startKanAnalysis(
  * Get KAN job status
  */
 export async function getKanJob(jobId: string) {
-  const supabase = await createServerSupabaseClient()
+  const supabase = getServiceSupabaseClient()
 
   const { data, error } = await supabase
     .from('analysis_jobs')
@@ -722,7 +722,7 @@ export async function saveHandsFromJob(jobId: string): Promise<{ success: boolea
   try {
     console.log('[saveHandsFromJob] Starting for job:', jobId)
 
-    const supabase = await createServerSupabaseClient()
+    const supabase = getServiceSupabaseClient()
 
     // Get job data
     const { data: job, error: jobError } = await supabase
@@ -893,7 +893,7 @@ export async function createKanAnalysisRequest(
   input: KanAnalysisRequestInput
 ): Promise<KanStartResult> {
   try {
-    const supabase = await createServerSupabaseClient()
+    const supabase = getServiceSupabaseClient()
 
     // 인증 및 권한 확인
     const {
