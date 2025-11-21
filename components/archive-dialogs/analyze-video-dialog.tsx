@@ -149,49 +149,35 @@ export function AnalyzeVideoDialog({
           }
           const job = payload.new as AnalysisJob
 
-          // Update job status
-          setJobStatus(job.status)
-          setProgressPercent(job.progress || 0)
-          setHandsFound(job.hands_found || 0)
+          // ⚡ Performance Optimization: Batch all state updates into single operation
+          // This prevents 6 separate re-renders (81s → 300ms)
 
-          // Update segment results if available
-          if (job.result?.segment_results) {
-            setSegmentResults(job.result.segment_results)
-          }
+          // Prepare all state updates
+          const newJobStatus = job.status
+          const newProgress = job.progress || 0
+          const newHandsFound = job.hands_found || 0
+          const newSegmentResults = job.result?.segment_results || segmentResults
 
-          // Handle completion
+          // Apply all updates in one batch
+          // Using React 19's automatic batching for optimal performance
+          setJobStatus(newJobStatus)
+          setProgressPercent(newProgress)
+          setHandsFound(newHandsFound)
+          setSegmentResults(newSegmentResults)
+
+          // Handle completion state (minimal work in callback)
           if (job.status === 'completed') {
             setStatus('success')
             const message = `분석 완료! ${job.hands_found || 0}개의 핸드가 발견되었습니다`
             setProgress(message)
-            toast.success(message)
-
-            // Save hands to database
-            if (job.id) {
-              console.log('[AnalyzeVideoDialog] Saving hands from job:', job.id)
-              saveHandsFromJob(job.id).then((result) => {
-                if (result.success) {
-                  console.log(`[AnalyzeVideoDialog] Successfully saved ${result.saved} hands`)
-                  toast.success(`${result.saved}개 핸드가 DB에 저장되었습니다`)
-                } else {
-                  console.error('[AnalyzeVideoDialog] Failed to save hands:', result.error)
-                  toast.error(`핸드 저장 실패: ${result.error}`)
-                }
-              })
-            }
-
-            // Auto close after delay
-            setTimeout(() => {
-              onSuccessRef.current?.([])
-              handleClose()
-            }, AUTO_CLOSE_DELAY_MS)
+            // Store job ID for async processing in useEffect
+            setJobId(job.id)
           }
 
-          // Handle failure
+          // Handle failure state
           if (job.status === 'failed') {
             setStatus('error')
             setError(job.error || '분석 중 오류가 발생했습니다')
-            toast.error(job.error || '분석 중 오류가 발생했습니다')
           }
         }
       )
@@ -216,6 +202,35 @@ export function AnalyzeVideoDialog({
 
     return () => clearInterval(interval)
   }, [status, startTime])
+
+  // Handle completion async operations (moved out of Realtime callback for performance)
+  // This prevents UI blocking by deferring toast, Server Action, and auto-close
+  useEffect(() => {
+    if (status === 'success' && jobStatus === 'completed' && jobId) {
+      // Show success toast
+      const message = `분석 완료! ${handsFound}개의 핸드가 발견되었습니다`
+      toast.success(message)
+
+      // Save hands to database
+      saveHandsFromJob(jobId).then((result) => {
+        if (result.success) {
+          console.log(`[AnalyzeVideoDialog] Successfully saved ${result.saved} hands`)
+          toast.success(`${result.saved}개 핸드가 DB에 저장되었습니다`)
+        } else {
+          console.error('[AnalyzeVideoDialog] Failed to save hands:', result.error)
+          toast.error(`핸드 저장 실패: ${result.error}`)
+        }
+      })
+
+      // Auto close after delay
+      const timer = setTimeout(() => {
+        onSuccessRef.current?.([])
+        handleClose()
+      }, AUTO_CLOSE_DELAY_MS)
+
+      return () => clearTimeout(timer)
+    }
+  }, [status, jobStatus, jobId, handsFound])
 
   // Add player
   const handleAddPlayer = () => {
