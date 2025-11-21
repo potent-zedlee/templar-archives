@@ -93,6 +93,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 GOOGLE_API_KEY=your-key              # Gemini AI
+TRIGGER_SECRET_KEY=your-key          # Trigger.dev v3 (영상 분석)
 ANTHROPIC_API_KEY=sk-ant-...         # Claude (선택)
 
 # 선택
@@ -116,7 +117,11 @@ CSRF_SECRET=your-secure-random-string
   "zustand": "5.0.2",
   "@supabase/supabase-js": "2.48.0",
   "@anthropic-ai/sdk": "0.30.1",
-  "@google/genai": "1.29.0"
+  "@google/genai": "1.29.0",
+  "@trigger.dev/sdk": "3.3.17",
+  "@distube/ytdl-core": "4.16.12",
+  "fluent-ffmpeg": "2.1.3",
+  "@ffmpeg-installer/ffmpeg": "1.1.0"
 }
 ```
 
@@ -311,22 +316,45 @@ Tournament (토너먼트)
 ### 6. AI 통합
 
 **KAN (Khalai Archive Network)** - 영상 분석:
-- 위치: `app/actions/kan-analysis.ts` (27KB)
-- Gemini 2.0 Flash 기반
+- **새 아키텍처**: Trigger.dev v3 + TypeScript 전환 완료 (2025-11-21)
+- **Server Actions**: `app/actions/kan-trigger.ts`
+- **Trigger.dev Task**: `trigger/video-analysis.ts`
+- **진행률 모니터링**: React Query 폴링 (2초 간격)
+- Gemini 2.5 Flash 기반
 - YouTube 영상 → 구조화된 핸드 히스토리 자동 추출
 
-**분석 파이프라인** (4단계):
+**분석 파이프라인** (Trigger.dev 기반):
 ```
-Frontend → Server Action → Gemini API → DB 저장
-              ↓
-    YouTube 다운로드 (yt-dlp)
-              ↓
-    프레임 추출 (ffmpeg)
-              ↓
-    Gemini 영상 분석
-              ↓
-    JSON 핸드 추출
+Frontend → Server Action → Trigger.dev v3 → TypeScript Pipeline
+              ↓                  ↓
+    UI 업데이트          Task: kan-video-analysis
+              ↓                  ↓
+    폴링 (2초)          YouTube URL 가져오기 (@distube/ytdl-core)
+              ↓                  ↓
+    진행률 표시         FFmpeg 구간 추출 (in-memory, fluent-ffmpeg)
+              ↓                  ↓
+    완료 콜백           Gemini 2.5 Flash File API 업로드 & 분석
+                                 ↓
+                        JSON 핸드 파싱
+                                 ↓
+                        결과 반환 (output)
+                                 ↓
+                 Server Action이 DB 저장
 ```
+
+**핵심 모듈** (TypeScript):
+- `lib/video/youtube-downloader.ts` - YouTube 스트림 URL 추출
+- `lib/video/ffmpeg-processor.ts` - 인메모리 영상 구간 추출
+- `lib/video/gemini-analyzer.ts` - Gemini File API 업로드 및 분석
+- `lib/hooks/use-trigger-job.ts` - React Query 폴링 훅
+- `components/trigger-job-monitor.tsx` - 진행률 UI
+
+**장점**:
+- ⚡ 단일 TypeScript 스택 (Python 제거)
+- ☁️ 무제한 실행 시간 (Trigger.dev maxDuration: 3600s)
+- 🔄 자동 재시도 (3회, exponential backoff)
+- 📊 실시간 진행률 표시
+- 💾 인메모리 처리 (임시 파일 없음)
 
 **지원 플랫폼**:
 - EPT (European Poker Tour) - 기본값
@@ -742,13 +770,15 @@ queryClient.invalidateQueries()
 
 ---
 
-**마지막 업데이트**: 2025-11-19
-**문서 버전**: 2.2
+**마지막 업데이트**: 2025-11-21
+**문서 버전**: 2.3
 **현재 Phase**: 44 완료
 **보안 등급**: A
-**주요 업데이트**:
-- 3-Column 레이아웃 통일 (Tournament, Cash Game, Search)
-- Search 필터 확장 (21개 세밀한 필터)
-- Hole Card 및 Hand Value 다이얼로그 추가
-- 헤더 네비게이션 구조 변경 (Archive 드롭다운 제거)
-- 데스크톱 전용 처리 (lg+ 브레이크포인트)
+**주요 업데이트** (v2.3):
+- ⚡ **KAN 전면 재설계**: Python → TypeScript + Trigger.dev v3 전환
+- 🎬 영상 분석 파이프라인 완전 재작성 (단일 스택)
+- 📦 새 의존성: @trigger.dev/sdk, @distube/ytdl-core, fluent-ffmpeg
+- 🔄 실시간 진행률 모니터링 (React Query 폴링)
+- 💾 인메모리 처리 (디스크 I/O 제거)
+- ☁️ 무제한 실행 시간 (Trigger.dev maxDuration: 3600s)
+- 🚀 Python 백엔드 완전 제거 (kan/backend 삭제)
