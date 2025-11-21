@@ -156,7 +156,20 @@ export function AnalyzeVideoDialog({
           const newJobStatus = job.status
           const newProgress = job.progress || 0
           const newHandsFound = job.hands_found || 0
-          const newSegmentResults = job.result?.segment_results || segmentResults
+          let newSegmentResults = job.result?.segment_results || segmentResults
+
+          // Segment synchronization: Update segment count if backend split segments
+          // Backend auto-splits segments >30min, so actual count may differ from initial
+          if (job.result?.segments_processed && job.result.segments_processed !== segmentResults.length) {
+            const actualSegmentCount = job.result.segments_processed
+            console.log(`[AnalyzeVideoDialog] Segment count mismatch: expected ${segmentResults.length}, actual ${actualSegmentCount}`)
+
+            // Re-initialize segment results with correct count
+            newSegmentResults = Array.from({ length: actualSegmentCount }, (_, idx) => ({
+              status: 'pending' as const,
+              segment_id: `seg_${idx}`,
+            }))
+          }
 
           // Apply all updates in one batch
           // Using React 19's automatic batching for optimal performance
@@ -191,17 +204,24 @@ export function AnalyzeVideoDialog({
     }
   }, [jobId]) // Only depend on jobId, not status
 
-  // Update processing time
+  // Update processing time with timeout detection
   useEffect(() => {
     if (status !== "processing" || !startTime) return
 
     const interval = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000)
       setProcessingTime(elapsed)
+
+      // Timeout detection: 5 minutes with 0% progress
+      const TIMEOUT_SECONDS = 300 // 5 minutes
+      if (elapsed >= TIMEOUT_SECONDS && progressPercent === 0) {
+        console.warn(`[AnalyzeVideoDialog] Timeout detected: ${elapsed}s with 0% progress`)
+        toast.error('분석이 5분 이상 진행되지 않습니다. Worker가 응답하지 않을 수 있습니다. 창을 닫고 다시 시도해주세요.')
+      }
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [status, startTime])
+  }, [status, startTime, progressPercent])
 
   // Handle completion async operations (moved out of Realtime callback for performance)
   // This prevents UI blocking by deferring toast, Server Action, and auto-close
@@ -371,9 +391,24 @@ export function AnalyzeVideoDialog({
     setStartTime(null)
   }
 
-  // Handle close
+  // Handle close with force close option
   const handleClose = () => {
+    // Allow close if not in active processing state
     if (status !== "analyzing" && status !== "processing") {
+      onOpenChange(false)
+      resetDialog()
+      return
+    }
+
+    // Force close with confirmation if in processing state
+    const confirmed = window.confirm(
+      '분석이 진행 중입니다. 정말로 창을 닫으시겠습니까?\n\n' +
+      '작업은 백그라운드에서 계속 진행되며, 나중에 결과를 확인할 수 있습니다.'
+    )
+
+    if (confirmed) {
+      console.log('[AnalyzeVideoDialog] Force close confirmed')
+      toast.info('분석은 백그라운드에서 계속 진행됩니다.')
       onOpenChange(false)
       resetDialog()
     }
