@@ -6,7 +6,6 @@
 
 import fs from 'fs/promises'
 import path from 'path'
-import { createWorker, Worker } from 'tesseract.js'
 
 /**
  * 임시 디렉토리 삭제
@@ -55,20 +54,6 @@ export async function cleanupTempFiles(filePaths: string[]): Promise<void> {
 }
 
 /**
- * Tesseract Worker 정리
- */
-export async function cleanupOcrWorker(worker: Worker | null): Promise<void> {
-  if (worker) {
-    try {
-      await worker.terminate()
-      console.log(`[cleanup] Terminated OCR worker`)
-    } catch (error) {
-      console.error(`[cleanup] Failed to terminate OCR worker:`, error)
-    }
-  }
-}
-
-/**
  * /tmp 디렉토리의 오래된 파일 정리 (1시간 이상)
  */
 export async function cleanupOldTempFiles(maxAgeMs: number = 3600000): Promise<void> {
@@ -105,7 +90,6 @@ export async function cleanupOldTempFiles(maxAgeMs: number = 3600000): Promise<v
 export class CleanupContext {
   private tempDirs: Set<string> = new Set()
   private tempFiles: Set<string> = new Set()
-  private ocrWorkers: Set<Worker> = new Set()
 
   /**
    * 임시 디렉토리 등록
@@ -122,21 +106,10 @@ export class CleanupContext {
   }
 
   /**
-   * OCR Worker 등록
-   */
-  registerOcrWorker(worker: Worker): void {
-    this.ocrWorkers.add(worker)
-  }
-
-  /**
    * 모든 리소스 정리
    */
   async cleanup(): Promise<void> {
-    console.log(`[cleanup] Starting cleanup: ${this.tempDirs.size} dirs, ${this.tempFiles.size} files, ${this.ocrWorkers.size} workers`)
-
-    // OCR Workers 먼저 정리
-    await Promise.all(Array.from(this.ocrWorkers).map((worker) => cleanupOcrWorker(worker)))
-    this.ocrWorkers.clear()
+    console.log(`[cleanup] Starting cleanup: ${this.tempDirs.size} dirs, ${this.tempFiles.size} files`)
 
     // 파일 정리
     await cleanupTempFiles(Array.from(this.tempFiles))

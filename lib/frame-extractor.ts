@@ -8,11 +8,30 @@ import ffmpeg from 'fluent-ffmpeg'
 import ffmpegInstaller from '@ffmpeg-installer/ffmpeg'
 import path from 'path'
 import fs from 'fs/promises'
-import type { Frame } from '@/lib/types/ocr'
 import { CleanupContext } from '@/lib/cleanup-utils'
 
 // FFmpeg 경로 설정
 ffmpeg.setFfmpegPath(ffmpegInstaller.path)
+
+/**
+ * 추출된 비디오 프레임
+ */
+export interface Frame {
+  /** 프레임 번호 */
+  number: number
+  /** 타임스탬프 (HH:MM:SS) */
+  timestamp: string
+  /** 타임스탬프 (초) */
+  timestampSeconds: number
+  /** 프레임 이미지 버퍼 */
+  buffer: Buffer
+  /** 프레임 이미지 Blob (브라우저 호환) */
+  blob: Blob
+  /** 이미지 너비 */
+  width: number
+  /** 이미지 높이 */
+  height: number
+}
 
 export interface FrameExtractionOptions {
   /** 시작 시간 (초) */
@@ -140,6 +159,7 @@ export async function extractFrames(
           timestamp,
           timestampSeconds,
           buffer,
+          blob: new Blob([buffer], { type: 'image/jpeg' }),
           width,
           height,
         }
