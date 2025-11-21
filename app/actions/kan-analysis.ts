@@ -1,5 +1,6 @@
 'use server'
 
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { getServiceSupabaseClient } from '@/lib/supabase-service'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
@@ -496,19 +497,21 @@ export async function startKanAnalysis(
     }
     console.log('[KAN] Backend URL:', backendUrl)
 
-    const supabase = getServiceSupabaseClient()
-
-    // 인증 확인
+    // 인증 확인 - Server Client 사용 (사용자 세션 포함)
+    const authSupabase = await createServerSupabaseClient()
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser()
+    } = await authSupabase.auth.getUser()
     if (authError || !user) {
       console.error('[KAN] Auth error:', authError)
       return { success: false, error: '로그인이 필요합니다' }
     }
 
     console.log('[KAN] User authenticated:', user.id)
+
+    // DB 작업용 - Service Role Client 사용 (RLS 우회)
+    const supabase = getServiceSupabaseClient()
 
     // Rate Limiting 체크
     console.log('[KAN] Checking rate limit...')
@@ -700,6 +703,17 @@ export async function startKanAnalysis(
  * Get KAN job status
  */
 export async function getKanJob(jobId: string) {
+  // 인증 확인 - Server Client 사용 (사용자 세션 포함)
+  const authSupabase = await createServerSupabaseClient()
+  const {
+    data: { user },
+    error: authError,
+  } = await authSupabase.auth.getUser()
+  if (authError || !user) {
+    return { data: null, error: { message: '로그인이 필요합니다' } }
+  }
+
+  // DB 작업용 - Service Role Client 사용 (RLS 우회)
   const supabase = getServiceSupabaseClient()
 
   const { data, error } = await supabase
@@ -722,6 +736,17 @@ export async function saveHandsFromJob(jobId: string): Promise<{ success: boolea
   try {
     console.log('[saveHandsFromJob] Starting for job:', jobId)
 
+    // 인증 확인 - Server Client 사용 (사용자 세션 포함)
+    const authSupabase = await createServerSupabaseClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await authSupabase.auth.getUser()
+    if (authError || !user) {
+      return { success: false, saved: 0, error: '로그인이 필요합니다' }
+    }
+
+    // DB 작업용 - Service Role Client 사용 (RLS 우회)
     const supabase = getServiceSupabaseClient()
 
     // Get job data
@@ -893,16 +918,18 @@ export async function createKanAnalysisRequest(
   input: KanAnalysisRequestInput
 ): Promise<KanStartResult> {
   try {
-    const supabase = getServiceSupabaseClient()
-
-    // 인증 및 권한 확인
+    // 인증 확인 - Server Client 사용 (사용자 세션 포함)
+    const authSupabase = await createServerSupabaseClient()
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser()
+    } = await authSupabase.auth.getUser()
     if (authError || !user) {
       return { success: false, error: '로그인이 필요합니다' }
     }
+
+    // DB 작업용 - Service Role Client 사용 (RLS 우회)
+    const supabase = getServiceSupabaseClient()
 
     // 권한 체크
     const { data: profile, error: profileError } = await supabase
