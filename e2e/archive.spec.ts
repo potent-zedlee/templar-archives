@@ -25,19 +25,19 @@ test.describe('Archive Page', () => {
     }
   })
 
-  test('should display Select a Day message or streams', async ({ page }) => {
+  test('should display archive dashboard or streams', async ({ page }) => {
     // Wait for data to load
     await page.waitForTimeout(2000)
 
-    // Either "Select a Day" message is shown, or streams are available
-    const selectDayMessage = page.getByText(/Select a Day/i)
+    // Either archive dashboard is shown, or streams are available
+    const archiveDashboard = page.locator('[data-testid="archive-dashboard"]')
     const streamItems = page.locator('[data-testid="stream-item"]')
 
-    const hasSelectMessage = await selectDayMessage.isVisible({ timeout: 5000 }).catch(() => false)
+    const hasDashboard = await archiveDashboard.isVisible({ timeout: 5000 }).catch(() => false)
     const hasStreams = await streamItems.count() > 0
 
     // One of these should be true
-    expect(hasSelectMessage || hasStreams).toBeTruthy()
+    expect(hasDashboard || hasStreams).toBeTruthy()
   })
 
   test('should have search functionality', async ({ page }) => {

@@ -78,15 +78,15 @@ test.describe('KAN AI Analysis - Functional Tests', () => {
     await expect(page).toHaveTitle(/Templar Archives/)
   })
 
-  test('should display "Select a Day" when no stream selected', async ({ page }) => {
+  test('should display archive dashboard when no stream selected', async ({ page }) => {
     await mockAllAPIs(page)
     await page.goto('/archive/tournament')
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(3000)
 
-    // "Select a Day" message should be visible
-    const selectDayMessage = page.getByText(/Select a Day/i)
-    await expect(selectDayMessage).toBeVisible({ timeout: 15000 })
+    // Archive dashboard should be visible (data-testid 기반)
+    const archiveDashboard = page.locator('[data-testid="archive-dashboard"]')
+    await expect(archiveDashboard).toBeVisible({ timeout: 15000 })
   })
 
   test('should handle streams API error gracefully', async ({ page }) => {
@@ -110,14 +110,14 @@ test.describe('KAN AI Analysis - Component Tests', () => {
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(3000)
 
-    // Check for stream items or select day message
+    // Check for stream items or archive dashboard
     const streamItems = page.locator('[data-testid="stream-item"]')
-    const selectDayMessage = page.getByText(/Select a Day/i)
+    const archiveDashboard = page.locator('[data-testid="archive-dashboard"]')
 
     const hasStreams = await streamItems.count() > 0
-    const hasSelectMessage = await selectDayMessage.isVisible({ timeout: 5000 }).catch(() => false)
+    const hasDashboard = await archiveDashboard.isVisible({ timeout: 5000 }).catch(() => false)
 
-    expect(hasStreams || hasSelectMessage).toBeTruthy()
+    expect(hasStreams || hasDashboard).toBeTruthy()
   })
 
   test('should handle page navigation without crashes', async ({ page }) => {
@@ -144,18 +144,18 @@ test.describe('KAN AI Analysis - E2E Flow', () => {
     // Capture screenshot for debugging
     await page.screenshot({ path: 'test-results/archive-initial.png', fullPage: true })
 
-    // Check for stream items
+    // Check for stream items or archive dashboard
     const streamItems = page.locator('[data-testid="stream-item"]')
-    const selectMessage = page.getByText(/Select a Day/i)
+    const archiveDashboard = page.locator('[data-testid="archive-dashboard"]')
 
     if (await streamItems.count() > 0) {
       // Click stream item
       await streamItems.first().click({ force: true })
       await page.waitForTimeout(2000)
       await page.screenshot({ path: 'test-results/archive-stream-selected.png' })
-    } else if (await selectMessage.isVisible({ timeout: 5000 }).catch(() => false)) {
-      // Expected if no streams available
-      await expect(selectMessage).toBeVisible()
+    } else if (await archiveDashboard.isVisible({ timeout: 5000 }).catch(() => false)) {
+      // Expected if no streams available - archive dashboard is shown
+      await expect(archiveDashboard).toBeVisible()
     }
 
     // Test passed

@@ -67,12 +67,12 @@ async function mockSupabaseAPIs(page: Page) {
 }
 
 test.describe('KAN AI Analysis - Core UI', () => {
-  test('should display "Select a Day" message when no stream is selected', async ({ page }) => {
+  test('should display archive dashboard when no stream is selected', async ({ page }) => {
     await navigateToArchive(page)
 
-    // "Select a Day" 메시지 확인
-    const selectDayMessage = page.getByText(/Select a Day/i)
-    await expect(selectDayMessage).toBeVisible({ timeout: 15000 })
+    // Archive Dashboard 확인 (data-testid 기반)
+    const archiveDashboard = page.locator('[data-testid="archive-dashboard"]')
+    await expect(archiveDashboard).toBeVisible({ timeout: 15000 })
   })
 
   test('should load archive page without errors', async ({ page }) => {
@@ -98,17 +98,17 @@ test.describe('KAN AI Analysis - With Mock Data', () => {
     await expect(page.locator('body')).toBeVisible()
   })
 
-  test('should find stream items or select day message', async ({ page }) => {
+  test('should find stream items or archive dashboard', async ({ page }) => {
     await navigateToArchive(page)
 
-    // Either stream items exist or "Select a Day" message
+    // Either stream items exist or archive dashboard is shown
     const streamItems = page.locator('[data-testid="stream-item"]')
-    const selectDayMessage = page.getByText(/Select a Day/i)
+    const archiveDashboard = page.locator('[data-testid="archive-dashboard"]')
 
     const hasStreams = await streamItems.count() > 0
-    const hasSelectMessage = await selectDayMessage.isVisible({ timeout: 5000 }).catch(() => false)
+    const hasDashboard = await archiveDashboard.isVisible({ timeout: 5000 }).catch(() => false)
 
-    expect(hasStreams || hasSelectMessage).toBeTruthy()
+    expect(hasStreams || hasDashboard).toBeTruthy()
   })
 
   test('should handle click on stream item', async ({ page }) => {
