@@ -10,7 +10,7 @@
  * - 재시도 로직
  */
 
-import { GoogleGenerativeAI, GenerativeModel } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { EPT_PROMPT, TRITON_POKER_PROMPT } from '../ai/prompts';
 
 export interface ExtractedHand {
@@ -49,8 +49,8 @@ export interface AnalysisResult {
 export type Platform = 'ept' | 'triton' | 'wsop';
 
 export class GeminiAnalyzer {
-  private genAI: GoogleGenerativeAI;
-  private model: GenerativeModel;
+  private genAI: GoogleGenAI;
+  private modelName = 'gemini-2.5-flash';
 
   constructor() {
     const apiKey = process.env.GOOGLE_API_KEY;
@@ -58,12 +58,7 @@ export class GeminiAnalyzer {
       throw new Error('GOOGLE_API_KEY environment variable is required');
     }
 
-    this.genAI = new GoogleGenerativeAI(apiKey);
-
-    // Gemini 2.5 Flash 사용
-    this.model = this.genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-    });
+    this.genAI = new GoogleGenAI({ apiKey });
   }
 
   /**
@@ -88,20 +83,20 @@ export class GeminiAnalyzer {
     try {
       console.log(`[GeminiAnalyzer] Uploading video to Gemini File API (${(videoBuffer.length / 1024 / 1024).toFixed(2)}MB)`);
 
-      // File API 업로드
-      const file = await this.genAI.files.upload({
-        file: videoBuffer,
-        mimeType: 'video/mp4',
+      // @google/genai SDK의 File API 업로드
+      const uploadResult = await this.genAI.files.upload({
+        file: new Blob([videoBuffer], { type: 'video/mp4' }),
+        config: { mimeType: 'video/mp4' },
       });
 
-      console.log(`[GeminiAnalyzer] Upload complete. File URI: ${file.uri}`);
+      console.log(`[GeminiAnalyzer] Upload complete. File name: ${uploadResult.name}`);
 
       // 파일 처리 대기
-      let processingFile = await this.genAI.files.get(file.name);
+      let processingFile = await this.genAI.files.get({ name: uploadResult.name });
       while (processingFile.state === 'PROCESSING') {
         console.log('[GeminiAnalyzer] Waiting for file processing...');
         await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 대기
-        processingFile = await this.genAI.files.get(file.name);
+        processingFile = await this.genAI.files.get({ name: uploadResult.name });
       }
 
       if (processingFile.state === 'FAILED') {
@@ -109,7 +104,7 @@ export class GeminiAnalyzer {
       }
 
       console.log('[GeminiAnalyzer] File processing complete');
-      return file.uri;
+      return uploadResult.uri || '';
 
     } catch (error) {
       console.error('[GeminiAnalyzer] Error uploading video:', error);
@@ -139,25 +134,31 @@ export class GeminiAnalyzer {
         // 2. Gemini 분석 실행
         console.log('[GeminiAnalyzer] Sending analysis request to Gemini 2.5 Flash...');
 
-        const result = await this.model.generateContent([
-          {
-            fileData: {
-              fileUri: fileUri,
-              mimeType: 'video/mp4'
+        const result = await this.genAI.models.generateContent({
+          model: this.modelName,
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                {
+                  fileData: {
+                    fileUri: fileUri,
+                    mimeType: 'video/mp4'
+                  }
+                },
+                {
+                  text: prompt
+                }
+              ]
             }
-          },
-          {
-            text: prompt
-          }
-        ], {
-          generationConfig: {
+          ],
+          config: {
             temperature: 0.1,
             responseMimeType: 'application/json',
           }
         });
 
-        const response = result.response;
-        const text = response.text();
+        const text = result.text || '';
 
         console.log('[GeminiAnalyzer] Response received');
 
@@ -206,21 +207,24 @@ export class GeminiAnalyzer {
         console.log(`[GeminiAnalyzer] Time range: ${startTime}s - ${endTime}s`);
       }
 
-      const result = await this.model.generateContent([
-        {
-          text: youtubeUrl
-        },
-        {
-          text: prompt
-        }
-      ], {
-        generationConfig: {
+      const result = await this.genAI.models.generateContent({
+        model: this.modelName,
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: youtubeUrl },
+              { text: prompt }
+            ]
+          }
+        ],
+        config: {
           temperature: 0.1,
           responseMimeType: 'application/json',
         }
       });
 
-      const text = result.response.text();
+      const text = result.text || '';
       const parsed: AnalysisResult = JSON.parse(text);
 
       console.log(`[GeminiAnalyzer] Analysis complete. Hands extracted: ${parsed.hands.length}`);
