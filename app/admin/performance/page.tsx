@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
-import { MetricsCard } from "@/components/admin/metrics-card"
+import { MetricsCard } from "@/components/admin/MetricsCard"
 import { Card } from "@/components/ui/card"
 
 // Dynamic import for heavy chart component
 const PerformanceChart = dynamic(
-  () => import("@/components/admin/performance-chart").then(mod => ({ default: mod.PerformanceChart })),
+  () => import("@/components/admin/PerformanceChart").then(mod => ({ default: mod.PerformanceChart })),
   {
     ssr: false,
     loading: () => <div className="h-64 flex items-center justify-center text-muted-foreground">차트 로딩 중...</div>

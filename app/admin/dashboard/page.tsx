@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
-import { StatsCard } from "@/components/admin/stats-card"
-import { ActivityFeed } from "@/components/admin/activity-feed"
+import { StatsCard } from "@/components/admin/StatsCard"
+import { ActivityFeed } from "@/components/admin/ActivityFeed"
 import { CardSkeleton } from "@/components/skeletons/card-skeleton"
 import {
   Users,
