@@ -162,15 +162,11 @@ export class GeminiAnalyzer {
 
         console.log('[GeminiAnalyzer] Response received');
 
-        // 3. JSON 파싱
-        const parsed: AnalysisResult = JSON.parse(text);
+        // 3. JSON 파싱 (Self-Healing)
+        const hands = this.parseAndValidateResponse(text);
 
-        if (!parsed.hands || !Array.isArray(parsed.hands)) {
-          throw new Error('Invalid response structure: missing hands array');
-        }
-
-        console.log(`[GeminiAnalyzer] Analysis complete. Hands extracted: ${parsed.hands.length}`);
-        return parsed.hands;
+        console.log(`[GeminiAnalyzer] Analysis complete. Hands extracted: ${hands.length}`);
+        return hands;
 
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');
@@ -187,6 +183,75 @@ export class GeminiAnalyzer {
 
     // 모든 시도 실패
     throw new Error(`Analysis failed after ${maxRetries} attempts: ${lastError?.message}`);
+  }
+
+  /**
+   * Self-Healing JSON 파싱 및 검증
+   * Gemini 응답이 올바르지 않으면 복구 시도
+   */
+  private parseAndValidateResponse(text: string): ExtractedHand[] {
+    // 1. JSON 마크다운 블록 제거 (```json ... ```)
+    let cleanText = text.trim();
+    if (cleanText.startsWith('```json')) {
+      cleanText = cleanText.slice(7);
+    } else if (cleanText.startsWith('```')) {
+      cleanText = cleanText.slice(3);
+    }
+    if (cleanText.endsWith('```')) {
+      cleanText = cleanText.slice(0, -3);
+    }
+    cleanText = cleanText.trim();
+
+    // 2. JSON 파싱 시도
+    let parsed: AnalysisResult;
+    try {
+      parsed = JSON.parse(cleanText);
+    } catch (jsonError) {
+      console.error('[GeminiAnalyzer] JSON parse error, attempting recovery...');
+
+      // JSON 복구 시도: 첫 번째 { 부터 마지막 } 까지 추출
+      const firstBrace = cleanText.indexOf('{');
+      const lastBrace = cleanText.lastIndexOf('}');
+
+      if (firstBrace !== -1 && lastBrace > firstBrace) {
+        const extractedJson = cleanText.substring(firstBrace, lastBrace + 1);
+        try {
+          parsed = JSON.parse(extractedJson);
+          console.log('[GeminiAnalyzer] JSON recovery successful');
+        } catch {
+          throw new Error(`Invalid JSON response: ${jsonError}`);
+        }
+      } else {
+        throw new Error(`Invalid JSON response: ${jsonError}`);
+      }
+    }
+
+    // 3. 구조 검증
+    if (!parsed.hands || !Array.isArray(parsed.hands)) {
+      // hands가 없으면 빈 배열 반환 (에러 대신)
+      console.warn('[GeminiAnalyzer] Missing hands array, returning empty');
+      return [];
+    }
+
+    // 4. 핸드 데이터 정제 및 검증
+    const validHands = parsed.hands.filter((hand, index) => {
+      // 필수 필드 체크
+      if (!hand.players || !Array.isArray(hand.players)) {
+        console.warn(`[GeminiAnalyzer] Hand ${index + 1}: missing players, skipping`);
+        return false;
+      }
+      if (!hand.board) {
+        console.warn(`[GeminiAnalyzer] Hand ${index + 1}: missing board, skipping`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validHands.length < parsed.hands.length) {
+      console.warn(`[GeminiAnalyzer] Filtered ${parsed.hands.length - validHands.length} invalid hands`);
+    }
+
+    return validHands;
   }
 
   /**
