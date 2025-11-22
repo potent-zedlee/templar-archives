@@ -237,5 +237,22 @@ export class GeminiAnalyzer {
   }
 }
 
-// 싱글톤 인스턴스
-export const geminiAnalyzer = new GeminiAnalyzer();
+// 싱글톤 인스턴스 (지연 초기화)
+let _geminiAnalyzer: GeminiAnalyzer | null = null;
+
+export const geminiAnalyzer = {
+  get instance(): GeminiAnalyzer {
+    if (!_geminiAnalyzer) {
+      _geminiAnalyzer = new GeminiAnalyzer();
+    }
+    return _geminiAnalyzer;
+  },
+
+  analyzeVideo: (...args: Parameters<GeminiAnalyzer['analyzeVideo']>) => {
+    return geminiAnalyzer.instance.analyzeVideo(...args);
+  },
+
+  analyzeYouTubeUrl: (...args: Parameters<GeminiAnalyzer['analyzeYouTubeUrl']>) => {
+    return geminiAnalyzer.instance.analyzeYouTubeUrl(...args);
+  },
+};
