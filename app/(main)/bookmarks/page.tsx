@@ -3,9 +3,9 @@
 import { useEffect, useState, useMemo } from "react"
 import { useRouter} from "next/navigation"
 import { Bookmark, Trash2, FolderOpen, Calendar, Edit } from "lucide-react"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/components/AuthProvider"
 import { type HandBookmarkWithDetails } from "@/lib/hand-bookmarks"
-import { BookmarkDialog } from "@/components/bookmark-dialog"
+import { BookmarkDialog } from "@/components/BookmarkDialog"
 import { toast } from "sonner"
 import Link from "next/link"
 import {

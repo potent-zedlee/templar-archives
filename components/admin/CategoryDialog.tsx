@@ -41,7 +41,7 @@ import { uploadCategoryLogo } from "@/lib/tournament-categories"
 import Image from "next/image"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { LogoPicker } from "@/components/logo-picker"
+import { LogoPicker } from "@/components/LogoPicker"
 import { useDropzone } from "react-dropzone"
 import { cn } from "@/lib/utils"
 

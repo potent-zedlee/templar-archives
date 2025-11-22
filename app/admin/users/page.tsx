@@ -13,7 +13,7 @@ import {
   Download,
   Shield
 } from "lucide-react"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/components/AuthProvider"
 import { isAdmin, type AdminRole } from "@/lib/admin"
 import {
   useUsersQuery,

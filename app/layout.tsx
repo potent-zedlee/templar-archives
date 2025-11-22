@@ -4,11 +4,11 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { WebVitalsReporter } from "@/components/analytics/WebVitals"
-import { Footer } from "@/components/footer"
-import { CookieConsentBanner } from "@/components/cookie-consent-banner"
+import { Footer } from "@/components/Footer"
+import { CookieConsentBanner } from "@/components/CookieConsentBanner"
 import "./globals.css"
-import { Providers } from "@/components/providers"
-import { FlowbiteInitializer } from "@/components/flowbite-initializer"
+import { Providers } from "@/components/Providers"
+import { FlowbiteInitializer } from "@/components/FlowbiteInitializer"
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://templar-archives.vercel.app'),

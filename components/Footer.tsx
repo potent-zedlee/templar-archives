@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { CookieSettingsDialog } from "./cookie-settings-dialog"
+import { CookieSettingsDialog } from "./CookieSettingsDialog"
 
 export function Footer() {
   const currentYear = new Date().getFullYear()

@@ -1,6 +1,6 @@
 "use client"
 
-import { PostComments } from "@/components/post-comments"
+import { PostComments } from "@/components/PostComments"
 
 interface CommentSectionProps {
   entityType: 'post' | 'hand'

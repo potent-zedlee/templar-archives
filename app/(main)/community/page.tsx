@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import dynamic from "next/dynamic"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { StaggerContainer, StaggerItem } from "@/components/page-transition"
+import { StaggerContainer, StaggerItem } from "@/components/PageTransition"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,22 +13,22 @@ import { MessageSquare, TrendingUp, Clock, Star, ThumbsUp, Link2, X } from "luci
 import Link from "next/link"
 import { fetchPosts, togglePostLike, type Post } from "@/lib/supabase-community"
 import { toast } from "sonner"
-import { CardSkeleton } from "@/components/skeletons/card-skeleton"
-import { ErrorBoundary } from "@/components/error-boundary"
+import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createPost } from "@/lib/supabase-community"
-import { CommunitySearchBar } from "@/components/community-search-bar"
-import { CommunityFilters } from "@/components/community-filters"
-import { useAuth } from "@/components/auth-provider"
-import { ReportButton } from "@/components/report-button"
+import { CommunitySearchBar } from "@/components/CommunitySearchBar"
+import { CommunityFilters } from "@/components/CommunityFilters"
+import { useAuth } from "@/components/AuthProvider"
+import { ReportButton } from "@/components/ReportButton"
 
 // Dynamic imports for heavy components
 const PopularPostsSidebar = dynamic(
-  () => import("@/components/popular-posts-sidebar").then(mod => ({ default: mod.PopularPostsSidebar })),
+  () => import("@/components/PopularPostsSidebar").then(mod => ({ default: mod.PopularPostsSidebar })),
   {
     ssr: false,
     loading: () => <CardSkeleton count={3} variant="compact" />
@@ -36,7 +36,7 @@ const PopularPostsSidebar = dynamic(
 )
 
 const HandSearchDialog = dynamic(
-  () => import("@/components/hand-search-dialog").then(mod => ({ default: mod.HandSearchDialog })),
+  () => import("@/components/HandSearchDialog").then(mod => ({ default: mod.HandSearchDialog })),
   {
     ssr: false
   }

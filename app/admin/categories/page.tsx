@@ -14,7 +14,7 @@ import {
   useReorderCategoriesMutation,
   useAllCategoryUsageQuery,
 } from "@/lib/queries/category-queries"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/components/AuthProvider"
 import { isAdmin } from "@/lib/admin"
 import { toast } from "sonner"
 import type { TournamentCategory } from "@/lib/tournament-categories"

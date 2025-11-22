@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/components/AuthProvider"
 import { useRouter } from "next/navigation"
 import { Edit, ChevronRight, ChevronLeft } from "lucide-react"
 import { createEditRequest, getHandDataForEdit, type EditType } from "@/lib/hand-edit-requests"

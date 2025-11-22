@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/components/AuthProvider"
 import { createReport, type ReportReason } from "@/lib/content-moderation"
 import { Flag } from "lucide-react"
 import { useRouter } from "next/navigation"

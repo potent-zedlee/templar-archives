@@ -25,7 +25,7 @@ import { X } from "lucide-react"
 import { toast } from "sonner"
 import type { Tournament } from "@/lib/supabase"
 import { createTournament, updateTournament } from "@/app/actions/archive"
-import { LogoPicker } from "@/components/logo-picker"
+import { LogoPicker } from "@/components/LogoPicker"
 
 interface TournamentDialogProps {
   isOpen: boolean

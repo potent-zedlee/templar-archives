@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { RotateCcw } from "lucide-react"
-import { FilterPanel } from "@/components/filter-panel"
+import { FilterPanel } from "@/components/FilterPanel"
 
 interface SearchSidebarProps {
   onApplyFilters?: () => void

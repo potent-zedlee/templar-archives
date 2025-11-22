@@ -2,14 +2,14 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { StaggerContainer, StaggerItem } from "@/components/page-transition"
-import { AnimatedCard } from "@/components/animated-card"
+import { StaggerContainer, StaggerItem } from "@/components/PageTransition"
+import { AnimatedCard } from "@/components/AnimatedCard"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Search, ChevronLeft, ChevronRight, Users } from "lucide-react"
 import type { Player } from "@/lib/supabase"
 import { GridSkeleton } from "@/components/skeletons/GridSkeleton"
-import { EmptyState } from "@/components/empty-state"
+import { EmptyState } from "@/components/EmptyState"
 
 type PlayerWithHandCount = Player & {
   hand_count: number

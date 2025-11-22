@@ -3,9 +3,9 @@
 import { Button } from "@/components/ui/button"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
-import { NotificationBell } from "@/components/notification-bell"
+import { NotificationBell } from "@/components/NotificationBell"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/components/AuthProvider"
 
 export function AdminHeader() {
   const { theme, setTheme } = useTheme()

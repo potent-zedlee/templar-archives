@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, Check, X } from "lucide-react"
 import { checkNicknameAvailable, updateProfile } from "@/lib/user-profile"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/components/AuthProvider"
 import { toast } from "sonner"
 
 type NicknameSetupModalProps = {

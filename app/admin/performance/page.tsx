@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Trash2, RefreshCcw, Activity, Zap, Eye } from "lucide-react"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/components/AuthProvider"
 import { isAdmin } from "@/lib/admin"
 import { toast } from "sonner"
 import {

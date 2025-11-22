@@ -14,9 +14,9 @@ import {
   Bookmark
 } from "lucide-react"
 import Link from "next/link"
-import { useAuth } from "@/components/auth-provider"
-import { CardSkeleton } from "@/components/skeletons/card-skeleton"
-import { EditProfileDialog } from "@/components/edit-profile-dialog"
+import { useAuth } from "@/components/AuthProvider"
+import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
+import { EditProfileDialog } from "@/components/EditProfileDialog"
 import { toast } from "sonner"
 import {
   useProfileQuery,

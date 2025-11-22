@@ -2,14 +2,14 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { PageTransition } from "@/components/page-transition"
+import { PageTransition } from "@/components/PageTransition"
 import { SearchFilterSidebar, type SearchFilters } from "./_components/SearchFilterSidebar"
 import { SearchResultsList, type HandWithDetails } from "./_components/SearchResultsList"
 import { HandDetailPanel } from "./_components/HandDetailPanel"
 import { fetchHandsWithDetails } from "@/lib/queries"
 import { toast } from "sonner"
-import { ErrorBoundary } from "@/components/error-boundary"
-import { EmptyState } from "@/components/empty-state"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { EmptyState } from "@/components/EmptyState"
 import { Search, Monitor } from "lucide-react"
 import { applyExtendedSearchFilters } from "@/lib/filter-utils"
 

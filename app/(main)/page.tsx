@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { PageTransition } from "@/components/page-transition"
-import { OnThisDay } from "@/components/on-this-day"
+import { PageTransition } from "@/components/PageTransition"
+import { OnThisDay } from "@/components/OnThisDay"
 import { StatsCounter } from "@/components/main/StatsCounter"
 import { WeeklyHighlights } from "@/components/main/WeeklyHighlights"
 import { LatestPosts } from "@/components/main/LatestPosts"

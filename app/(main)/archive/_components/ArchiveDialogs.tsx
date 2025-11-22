@@ -21,7 +21,7 @@ import type { FolderItem, Event } from '@/lib/types/archive'
 import type { Stream } from '@/lib/supabase'
 
 // Dynamic imports for all dialogs (only load when needed)
-const TournamentDialog = dynamic(() => import('@/components/tournament-dialog').then(mod => ({ default: mod.TournamentDialog })), {
+const TournamentDialog = dynamic(() => import('@/components/TournamentDialog').then(mod => ({ default: mod.TournamentDialog })), {
   ssr: false,
 })
 const SubEventDialog = dynamic(() => import('@/components/archive-dialogs/sub-event-dialog').then(mod => ({ default: mod.SubEventDialog })), {
@@ -33,7 +33,7 @@ const SubEventInfoDialog = dynamic(() => import('@/components/archive-dialogs/su
 const DayDialog = dynamic(() => import('@/components/archive-dialogs/day-dialog').then(mod => ({ default: mod.DayDialog })), {
   ssr: false,
 })
-const VideoPlayerDialog = dynamic(() => import('@/components/video-player-dialog').then(mod => ({ default: mod.VideoPlayerDialog })), {
+const VideoPlayerDialog = dynamic(() => import('@/components/VideoPlayer-dialog').then(mod => ({ default: mod.VideoPlayerDialog })), {
   ssr: false,
 })
 const RenameDialog = dynamic(() => import('@/components/archive-dialogs/rename-dialog').then(mod => ({ default: mod.RenameDialog })), {

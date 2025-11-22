@@ -8,8 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowLeft, ChevronDown, ChevronRight, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { isAdmin } from "@/lib/auth-utils"
-import { ClaimPlayerDialog } from "@/components/claim-player-dialog"
-import { useAuth } from "@/components/auth-provider"
+import { ClaimPlayerDialog } from "@/components/ClaimPlayerDialog"
+import { useAuth } from "@/components/AuthProvider"
 import {
   usePlayerQuery,
   usePlayerHandsQuery,
@@ -18,28 +18,28 @@ import {
   usePlayerClaimQuery,
   useUpdatePlayerPhotoMutation
 } from "@/lib/queries/players-queries"
-import { HandListAccordion } from "@/components/hand-list-accordion"
+import { HandListAccordion } from "@/components/HandListAccordion"
 
 // Dynamic imports for chart components (Recharts is heavy)
-const PrizeHistoryChart = dynamic(() => import("@/components/player-charts").then(mod => ({ default: mod.PrizeHistoryChart })), {
+const PrizeHistoryChart = dynamic(() => import("@/components/PlayerCharts").then(mod => ({ default: mod.PrizeHistoryChart })), {
   ssr: false,
   loading: () => <div className="h-64 flex items-center justify-center">차트 로딩 중...</div>
 })
-const TournamentCategoryChart = dynamic(() => import("@/components/player-charts").then(mod => ({ default: mod.TournamentCategoryChart })), {
+const TournamentCategoryChart = dynamic(() => import("@/components/PlayerCharts").then(mod => ({ default: mod.TournamentCategoryChart })), {
   ssr: false,
   loading: () => <div className="h-64 flex items-center justify-center">차트 로딩 중...</div>
 })
 
 // Dynamic imports for stats cards
-const AdvancedStatsCard = dynamic(() => import("@/components/player-stats").then(mod => ({ default: mod.AdvancedStatsCard })), {
+const AdvancedStatsCard = dynamic(() => import("@/components/PlayerStats").then(mod => ({ default: mod.AdvancedStatsCard })), {
   ssr: false,
   loading: () => <div className="h-48 flex items-center justify-center">통계 로딩 중...</div>
 })
-const PositionalStatsCard = dynamic(() => import("@/components/player-stats").then(mod => ({ default: mod.PositionalStatsCard })), {
+const PositionalStatsCard = dynamic(() => import("@/components/PlayerStats").then(mod => ({ default: mod.PositionalStatsCard })), {
   ssr: false,
   loading: () => <div className="h-64 flex items-center justify-center">통계 로딩 중...</div>
 })
-const PerformanceChartCard = dynamic(() => import("@/components/player-stats").then(mod => ({ default: mod.PerformanceChartCard })), {
+const PerformanceChartCard = dynamic(() => import("@/components/PlayerStats").then(mod => ({ default: mod.PerformanceChartCard })), {
   ssr: false,
   loading: () => <div className="h-64 flex items-center justify-center">차트 로딩 중...</div>
 })

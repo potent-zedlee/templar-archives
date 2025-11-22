@@ -16,7 +16,7 @@ import { MoreVertical, Edit, Trash, FolderPlus, FolderInput, CheckSquare } from 
 import { motion } from "framer-motion"
 import type { FolderItem } from "@/lib/types/archive"
 import Image from "next/image"
-import { ArchiveEventCard } from "@/components/archive-event-card"
+import { ArchiveEventCard } from "@/components/ArchiveEventCard"
 
 interface ArchiveGridViewProps {
   items: FolderItem[]

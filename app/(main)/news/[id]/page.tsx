@@ -3,7 +3,7 @@
 import { use } from "react"
 import { useRouter } from "next/navigation"
 import { useNewsDetailQuery } from "@/lib/queries/news-queries"
-import { CardSkeleton } from "@/components/skeletons/card-skeleton"
+import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
 import { Calendar, User, ExternalLink, ArrowLeft } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 

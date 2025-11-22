@@ -10,10 +10,10 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Plus, X } from "lucide-react"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/components/AuthProvider"
 import { useHandTagsQuery, useRemoveHandTagMutation } from "@/lib/queries/hand-tags-queries"
 import { getTagColor } from "@/lib/types/hand-tags"
-import { HandTagDialog } from "@/components/hand-tag-dialog"
+import { HandTagDialog } from "@/components/HandTagDialog"
 import { toast } from "sonner"
 
 type HandTagBadgesProps = {

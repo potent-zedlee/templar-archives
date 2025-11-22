@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/components/AuthProvider"
 import { isAdmin } from "@/lib/admin"
 import { type Report } from "@/lib/content-moderation"
 import {

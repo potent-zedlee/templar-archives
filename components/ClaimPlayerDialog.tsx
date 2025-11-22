@@ -23,7 +23,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
 import { requestPlayerClaim, type VerificationMethod } from "@/lib/player-claims"
-import { useAuth } from "@/components/auth-provider"
+import { useAuth } from "@/components/AuthProvider"
 import type { Player } from "@/lib/supabase"
 
 type ClaimPlayerDialogProps = {
