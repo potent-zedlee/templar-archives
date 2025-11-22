@@ -7,14 +7,42 @@
  * - 특정 시간 구간 추출 (stream copy, 재인코딩 없음)
  * - 메모리 내 처리 (디스크 I/O 없음)
  * - MP4 스트리밍 최적화
+ *
+ * 배포 환경:
+ * - Trigger.dev: FFmpeg extension이 FFMPEG_PATH 환경 변수 설정
+ * - 로컬: @ffmpeg-installer/ffmpeg 패키지 사용
  */
 
 import ffmpeg from 'fluent-ffmpeg';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { Readable, PassThrough } from 'stream';
 
-// FFmpeg 바이너리 경로 설정
-ffmpeg.setFfmpegPath(ffmpegPath.path);
+// FFmpeg 바이너리 경로 설정 (지연 초기화)
+let ffmpegInitialized = false;
+
+function initializeFfmpeg(): void {
+  if (ffmpegInitialized) return;
+
+  // 1. 환경 변수에서 FFmpeg 경로 확인 (Trigger.dev extension)
+  if (process.env.FFMPEG_PATH) {
+    console.log(`[FFmpegProcessor] Using FFMPEG_PATH: ${process.env.FFMPEG_PATH}`);
+    ffmpeg.setFfmpegPath(process.env.FFMPEG_PATH);
+    ffmpegInitialized = true;
+    return;
+  }
+
+  // 2. 로컬 개발 환경: @ffmpeg-installer/ffmpeg 사용
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+    console.log(`[FFmpegProcessor] Using @ffmpeg-installer/ffmpeg: ${ffmpegInstaller.path}`);
+    ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+    ffmpegInitialized = true;
+  } catch {
+    console.warn('[FFmpegProcessor] @ffmpeg-installer/ffmpeg not found, using system ffmpeg');
+    // 시스템 ffmpeg 사용 (PATH에 있다고 가정)
+    ffmpegInitialized = true;
+  }
+}
 
 export interface FFmpegExtractOptions {
   startTime: number;      // 시작 시간 (초)
@@ -36,6 +64,9 @@ export class FFmpegProcessor {
     inputUrl: string,
     options: FFmpegExtractOptions
   ): Promise<Buffer> {
+    // FFmpeg 초기화 (지연 로딩)
+    initializeFfmpeg();
+
     const {
       startTime,
       duration,
@@ -109,6 +140,9 @@ export class FFmpegProcessor {
     inputStream: Readable,
     options: Omit<FFmpegExtractOptions, 'startTime'> & { startTime?: number }
   ): Promise<Buffer> {
+    // FFmpeg 초기화 (지연 로딩)
+    initializeFfmpeg();
+
     const {
       startTime,
       duration,
@@ -173,6 +207,9 @@ export class FFmpegProcessor {
    * FFmpeg 버전 확인
    */
   async getVersion(): Promise<string> {
+    // FFmpeg 초기화 (지연 로딩)
+    initializeFfmpeg();
+
     return new Promise((resolve, reject) => {
       ffmpeg.getAvailableFormats((err, formats) => {
         if (err) {
