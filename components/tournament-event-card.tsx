@@ -11,7 +11,7 @@
 
 import { format } from 'date-fns'
 import { Checkbox } from '@/components/ui/checkbox'
-import { CategoryLogo } from '@/components/category-logo'
+import { CategoryLogo } from '@/components/CategoryLogo'
 import { getCategoryById } from '@/lib/tournament-categories'
 import { cn } from '@/lib/utils'
 

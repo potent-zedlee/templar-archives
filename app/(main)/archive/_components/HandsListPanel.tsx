@@ -17,7 +17,7 @@ import { Search, Inbox, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react
 import { useHandsQuery } from '@/lib/queries/archive-queries'
 import { HandListItem } from './HandListItem'
 import { GridSkeleton } from '@/components/skeletons/grid-skeleton'
-import { EmptyState } from '@/components/empty-state'
+import { EmptyState } from '@/components/EmptyState'
 import { StaggerContainer, StaggerItem } from '@/components/page-transition'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { YouTubePlayer, type YouTubePlayerHandle } from '@/components/video/youtube-player'

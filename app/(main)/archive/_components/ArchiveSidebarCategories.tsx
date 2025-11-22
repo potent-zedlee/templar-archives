@@ -11,7 +11,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { CategoryLogo } from '@/components/category-logo'
+import { CategoryLogo } from '@/components/CategoryLogo'
 import { useActiveCategoriesQuery } from '@/lib/queries/category-queries'
 import type { GameType } from '@/lib/tournament-categories'
 import { ChevronRight, LayoutGrid } from 'lucide-react'
