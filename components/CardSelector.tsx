@@ -6,11 +6,17 @@ import { cn } from "@/lib/utils"
 import { X } from "lucide-react"
 
 interface CardSelectorProps {
-  selected: string[]
-  onSelect: (cards: string[]) => void
+  // Primary API
+  selected?: string[]
+  onSelect?: (cards: string[]) => void
+  // Alternative API (for compatibility)
+  value?: string[]
+  onChange?: (cards: string[]) => void
+  // Common props
   maxCards?: number
-  label: string
+  label?: string
   description?: string
+  className?: string
 }
 
 const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2']
@@ -24,20 +30,27 @@ const SUITS = [
 export function CardSelector({
   selected,
   onSelect,
+  value,
+  onChange,
   maxCards = 1,
   label,
-  description
+  description,
+  className
 }: CardSelectorProps) {
+  // Support both APIs: selected/onSelect and value/onChange
+  const cards = selected ?? value ?? []
+  const setCards = onSelect ?? onChange ?? (() => {})
+
   const handleCardClick = (card: string) => {
-    if (selected.includes(card)) {
-      onSelect(selected.filter(c => c !== card))
-    } else if (selected.length < maxCards) {
-      onSelect([...selected, card])
+    if (cards.includes(card)) {
+      setCards(cards.filter(c => c !== card))
+    } else if (cards.length < maxCards) {
+      setCards([...cards, card])
     }
   }
 
   const handleClear = () => {
-    onSelect([])
+    setCards([])
   }
 
   const getSuitColor = (suitSymbol: string) => {
@@ -51,17 +64,18 @@ export function CardSelector({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <Label className="text-sm font-medium">{label}</Label>
-          {description && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {description}
-            </p>
-          )}
-        </div>
-        {selected.length > 0 && (
+    <div className={cn("space-y-3", className)}>
+      {label && (
+        <div className="flex items-center justify-between">
+          <div>
+            <Label className="text-sm font-medium">{label}</Label>
+            {description && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {description}
+              </p>
+            )}
+          </div>
+          {cards.length > 0 && (
           <Button
             type="button"
             variant="ghost"
@@ -73,12 +87,13 @@ export function CardSelector({
             Clear
           </Button>
         )}
-      </div>
+        </div>
+      )}
 
       {/* 선택된 카드 표시 */}
-      {selected.length > 0 && (
+      {cards.length > 0 && (
         <div className="flex gap-2 flex-wrap p-2 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-800">
-          {selected.map(card => {
+          {cards.map(card => {
             const rank = card.slice(0, -1)
             const suit = card.slice(-1)
             return (
@@ -100,8 +115,8 @@ export function CardSelector({
           <div key={suit.symbol} className="space-y-1">
             {RANKS.map(rank => {
               const card = `${rank}${suit.symbol}`
-              const isSelected = selected.includes(card)
-              const isDisabled = !isSelected && selected.length >= maxCards
+              const isSelected = cards.includes(card)
+              const isDisabled = !isSelected && cards.length >= maxCards
 
               return (
                 <button

@@ -20,8 +20,7 @@ import { HandsListPanel } from "../_components/HandsListPanel"
 import { useTournamentsQuery } from "@/lib/queries/archive-queries"
 import type { TournamentCategory } from "@/lib/types/archive"
 import { GridSkeleton } from "@/components/skeletons/grid-skeleton"
-import { EmptyState } from "@/components/empty-state"
-import { Monitor } from "lucide-react"
+import { MobileArchiveView } from "../_components/MobileArchiveView"
 
 export default function ArchiveCashGamePage() {
   // ============================================================
@@ -201,13 +200,11 @@ export default function ArchiveCashGamePage() {
           </main>
         </>
 
-        {/* Mobile: Desktop-only message */}
-        <div className="lg:hidden flex items-center justify-center h-full w-full p-8">
-          <EmptyState
-            icon={Monitor}
-            title="데스크톱 전용 기능"
-            description="이 페이지는 넓은 화면에서 최적화되어 있습니다. 데스크톱 브라우저에서 이용해주세요."
-            variant="inline"
+        {/* Mobile: Card-based tournament list */}
+        <div className="lg:hidden h-full w-full">
+          <MobileArchiveView
+            tournaments={filteredTournaments}
+            isLoading={isLoading}
           />
         </div>
       </div>
