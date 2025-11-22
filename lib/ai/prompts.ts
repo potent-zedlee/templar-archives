@@ -127,7 +127,7 @@ In addition to the JSON format above, you may include a PokerKit-compatible text
 \`\`\`
 ***** Hand #{handNumber} *****
 {stakes} - No Limit Hold'em
-Seat {seatNum}: {playerName} (${stackSize})
+Seat {seatNum}: {playerName} (\${stackSize})
 Button: Seat {buttonSeat}
 *** HOLE CARDS ***
 {playerName}: [{holeCards}]
@@ -139,7 +139,7 @@ Button: Seat {buttonSeat}
 {playerName}: {action} {amount}
 *** RIVER *** [{flopCards} {turnCard}] [{riverCard}]
 {playerName}: {action} {amount}
-{winner} wins ${amount}
+{winner} wins \${amount}
 \`\`\`
 
 ### Example:
