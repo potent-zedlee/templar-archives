@@ -23,7 +23,14 @@
     "logo:delete": "tsx scripts/logo-management.ts delete",
     "logo:validate": "tsx scripts/logo-management.ts validate",
     "thumbnails:generate": "tsx scripts/generate-hand-thumbnails.ts",
-    "thumbnails:generate:day": "tsx scripts/generate-hand-thumbnails.ts --day-id="
+    "thumbnails:generate:day": "tsx scripts/generate-hand-thumbnails.ts --day-id=",
+    "admin": "npx tsx scripts/admin-cli.ts",
+    "ops:check-jobs": "node scripts/operations/check-analysis-status.mjs",
+    "ops:cleanup-jobs": "node scripts/operations/cleanup-stuck-job.mjs",
+    "ops:check-db": "node scripts/operations/check-db.mjs",
+    "ops:check-rls": "node scripts/operations/check-rls-policies.mjs",
+    "ops:import-players": "node scripts/operations/import-hendonmob-players.mjs",
+    "ops:update-role": "node scripts/operations/update-user-role.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",
