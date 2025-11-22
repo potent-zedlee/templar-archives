@@ -6,11 +6,11 @@ import { NextRequest, NextResponse } from 'next/server'
  * GET /api/trigger/status/[jobId]
  */
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { jobId: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
-    const { jobId } = params
+    const { jobId } = await params
 
     if (!jobId) {
       return NextResponse.json(
@@ -23,15 +23,27 @@ export async function GET(
     const { runs } = await import("@trigger.dev/sdk/v3");
     const run = await runs.retrieve(jobId);
 
+    // Trigger.dev 상태 매핑: QUEUED, EXECUTING, COMPLETED, FAILED 등
+    const progress = run.status === 'QUEUED' ? 0
+      : run.status === 'EXECUTING' ? 50
+      : run.status === 'COMPLETED' ? 100
+      : 0;
+
+    // 프론트엔드에서 사용하는 상태 값으로 변환
+    const mappedStatus = run.status === 'COMPLETED' ? 'SUCCESS'
+      : run.status === 'FAILED' || run.status === 'CRASHED' ? 'FAILURE'
+      : run.status === 'QUEUED' ? 'PENDING'
+      : run.status;
+
     return NextResponse.json({
       id: run.id,
-      status: run.status,
-      progress: run.status === 'PENDING' ? 0 : run.status === 'EXECUTING' ? 50 : run.status === 'SUCCESS' ? 100 : 0,
+      status: mappedStatus,
+      progress,
       output: run.output,
       error: run.error,
       createdAt: run.createdAt,
       startedAt: run.startedAt,
-      completedAt: run.completedAt
+      completedAt: run.finishedAt
     })
 
   } catch (error) {

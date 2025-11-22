@@ -24,10 +24,10 @@ import type { VideoSegment } from "@/lib/types/video-segments"
 import { timeStringToSeconds } from "@/lib/types/video-segments"
 import { PlayerMatchResults } from "@/components/player-match-results"
 import { VideoPlayerWithTimestamp } from "@/components/video-player-with-timestamp"
-import { startKanAnalysis, saveHandsFromJob } from "@/app/actions/kan-analysis"
+import { startKanAnalysisWithTrigger, saveTriggerJobResults } from "@/app/actions/kan-trigger"
+import { useTriggerJob } from "@/lib/hooks/use-trigger-job"
 import type { TimeSegment } from "@/types/segments"
 import { formatTime } from "@/types/segments"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
 
 interface AnalyzeVideoDialogProps {
   isOpen: boolean
@@ -43,7 +43,6 @@ interface PlayerInput {
 
 type Platform = "ept" | "triton" | "pokerstars" | "wsop" | "hustler"
 type AnalysisStatus = "idle" | "analyzing" | "processing" | "success" | "error"
-type JobStatus = "pending" | "processing" | "completed" | "failed"
 
 interface PlayerMatchResult {
   inputName: string
@@ -60,19 +59,6 @@ interface SegmentResult {
   hands_found?: number
   error?: string
   processing_time?: number
-}
-
-interface AnalysisJob {
-  id: string
-  status: JobStatus
-  progress: number
-  hands_found: number
-  result?: {
-    segment_results?: SegmentResult[]
-  }
-  error?: string
-  created_at: string
-  updated_at: string
 }
 
 // Constants
@@ -95,8 +81,7 @@ export function AnalyzeVideoDialog({
   const [, setCurrentVideoTime] = useState(0)
   const [videoDuration, setVideoDuration] = useState(0)
 
-  // Realtime progress tracking
-  const [jobStatus, setJobStatus] = useState<JobStatus>("pending")
+  // Progress tracking
   const [progressPercent, setProgressPercent] = useState(0)
   const [handsFound, setHandsFound] = useState(0)
   const [segmentResults, setSegmentResults] = useState<SegmentResult[]>([])
@@ -121,88 +106,55 @@ export function AnalyzeVideoDialog({
     console.log('============================================')
   }, [isOpen, day])
 
-  // Subscribe to analysis job updates via Supabase Realtime
+  // Trigger.dev 작업 상태 폴링 (React Query 기반)
+  const { data: triggerJobData } = useTriggerJob(jobId, {
+    enabled: !!jobId && status === "processing",
+    refetchInterval: 2000, // 2초마다 폴링
+  })
+
+  // Trigger.dev 작업 상태 변경 처리
   useEffect(() => {
-    if (!jobId) return
-    // Don't subscribe if already in terminal state
-    if (status === "success") return
+    if (!triggerJobData || !jobId) return
+    if (status !== "processing") return
 
-    const supabase = createClientSupabaseClient()
+    console.log('[AnalyzeVideoDialog] Trigger.dev status update:', triggerJobData)
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[AnalyzeVideoDialog] Setting up Realtime subscription for job:', jobId)
-    }
+    // 진행률 업데이트
+    setProgressPercent(triggerJobData.progress || 0)
 
-    const channel = supabase
-      .channel(`analysis-job-${jobId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'analysis_jobs',
-          filter: `id=eq.${jobId}`,
-        },
-        (payload) => {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[AnalyzeVideoDialog] Realtime update received:', payload)
-          }
-          const job = payload.new as AnalysisJob
+    // 완료 처리
+    if (triggerJobData.status === 'SUCCESS') {
+      const output = triggerJobData.output
+      const handsCount = output?.handCount || output?.hands?.length || 0
 
-          // ⚡ Performance Optimization: Batch all state updates into single operation
-          // This prevents 6 separate re-renders (81s → 300ms)
+      setStatus('success')
+      setHandsFound(handsCount)
+      setProgress(`분석 완료! ${handsCount}개의 핸드가 발견되었습니다`)
 
-          // Prepare all state updates
-          const newJobStatus = job.status
-          const newProgress = job.progress || 0
-          const newHandsFound = job.hands_found || 0
-          let newSegmentResults = job.result?.segment_results || segmentResults
+      // 성공 토스트
+      toast.success(`분석 완료! ${handsCount}개의 핸드가 발견되었습니다`)
 
-          // Segment synchronization: Update segment count if backend split segments
-          // Backend auto-splits segments >30min, so actual count may differ from initial
-          if (job.result?.segments_processed && job.result.segments_processed !== segmentResults.length) {
-            const actualSegmentCount = job.result.segments_processed
-            console.log(`[AnalyzeVideoDialog] Segment count mismatch: expected ${segmentResults.length}, actual ${actualSegmentCount}`)
+      console.log('[AnalyzeVideoDialog] Analysis complete:', output)
 
-            // Re-initialize segment results with correct count
-            newSegmentResults = Array.from({ length: actualSegmentCount }, (_, idx) => ({
-              status: 'pending' as const,
-              segment_id: `seg_${idx}`,
-            }))
-          }
-
-          // Apply all updates in one batch
-          // Using React 19's automatic batching for optimal performance
-          setJobStatus(newJobStatus)
-          setProgressPercent(newProgress)
-          setHandsFound(newHandsFound)
-          setSegmentResults(newSegmentResults)
-
-          // Handle completion state (minimal work in callback)
-          if (job.status === 'completed') {
-            setStatus('success')
-            const message = `분석 완료! ${job.hands_found || 0}개의 핸드가 발견되었습니다`
-            setProgress(message)
-            // Store job ID for async processing in useEffect
-            setJobId(job.id)
-          }
-
-          // Handle failure state
-          if (job.status === 'failed') {
-            setStatus('error')
-            setError(job.error || '분석 중 오류가 발생했습니다')
-          }
+      // DB에 핸드 저장
+      saveTriggerJobResults(jobId).then((result) => {
+        if (result.success) {
+          console.log(`[AnalyzeVideoDialog] Successfully saved ${result.saved} hands`)
+          toast.success(`${result.saved}개 핸드가 DB에 저장되었습니다`)
+        } else {
+          console.error('[AnalyzeVideoDialog] Failed to save hands:', result.error)
+          toast.error(`핸드 저장 실패: ${result.error}`)
         }
-      )
-      .subscribe()
-
-    return () => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[AnalyzeVideoDialog] Cleaning up Realtime subscription for job:', jobId)
-      }
-      supabase.removeChannel(channel)
+      })
     }
-  }, [jobId]) // Only depend on jobId, not status
+
+    // 실패 처리
+    if (triggerJobData.status === 'FAILURE') {
+      setStatus('error')
+      setError(triggerJobData.error || '분석 중 오류가 발생했습니다')
+      toast.error(triggerJobData.error || '분석 중 오류가 발생했습니다')
+    }
+  }, [triggerJobData, jobId, status])
 
   // Update processing time with timeout detection
   useEffect(() => {
@@ -223,25 +175,9 @@ export function AnalyzeVideoDialog({
     return () => clearInterval(interval)
   }, [status, startTime, progressPercent])
 
-  // Handle completion async operations (moved out of Realtime callback for performance)
-  // This prevents UI blocking by deferring toast, Server Action, and auto-close
+  // Handle completion - auto close after success
   useEffect(() => {
-    if (status === 'success' && jobStatus === 'completed' && jobId) {
-      // Show success toast
-      const message = `분석 완료! ${handsFound}개의 핸드가 발견되었습니다`
-      toast.success(message)
-
-      // Save hands to database
-      saveHandsFromJob(jobId).then((result) => {
-        if (result.success) {
-          console.log(`[AnalyzeVideoDialog] Successfully saved ${result.saved} hands`)
-          toast.success(`${result.saved}개 핸드가 DB에 저장되었습니다`)
-        } else {
-          console.error('[AnalyzeVideoDialog] Failed to save hands:', result.error)
-          toast.error(`핸드 저장 실패: ${result.error}`)
-        }
-      })
-
+    if (status === 'success' && jobId) {
       // Auto close after delay
       const timer = setTimeout(() => {
         onSuccessRef.current?.([])
@@ -250,7 +186,8 @@ export function AnalyzeVideoDialog({
 
       return () => clearTimeout(timer)
     }
-  }, [status, jobStatus, jobId, handsFound])
+    return // Explicit return for TypeScript
+  }, [status, jobId])
 
   // Add player
   const handleAddPlayer = () => {
@@ -337,18 +274,17 @@ export function AnalyzeVideoDialog({
       }
 
       console.log('[AnalyzeVideoDialog] Time segments:', timeSegments)
-      console.log('[AnalyzeVideoDialog] Calling startKanAnalysis...')
+      console.log('[AnalyzeVideoDialog] Calling startKanAnalysisWithTrigger (Trigger.dev v3)...')
 
-      // Use KAN analysis system
-      const result = await startKanAnalysis({
+      // Use Trigger.dev v3 for analysis
+      const result = await startKanAnalysisWithTrigger({
         videoUrl: day.video_url,
         segments: timeSegments,
-        players: validPlayers.length > 0 ? validPlayers : undefined,
-        streamId: day.id, // Pass stream (day) ID for linking hands
-        platform
+        platform: platform as 'ept' | 'triton' | 'wsop',
+        streamId: day.id
       })
 
-      console.log('[AnalyzeVideoDialog] startKanAnalysis result:', result)
+      console.log('[AnalyzeVideoDialog] startKanAnalysisWithTrigger result:', result)
 
       if (!result.success) {
         throw new Error(result.error || "분석에 실패했습니다")
@@ -383,7 +319,6 @@ export function AnalyzeVideoDialog({
     setError("")
     setJobId(null)
     setMatchResults([])
-    setJobStatus("pending")
     setProgressPercent(0)
     setHandsFound(0)
     setSegmentResults([])

@@ -170,7 +170,7 @@ export async function saveTriggerJobResults(jobId: string) {
     }
 
     // 결과 파싱
-    const { streamId, hands, platform } = jobStatus.output || {}
+    const { streamId, hands } = jobStatus.output || {}
 
     if (!streamId || !hands || !Array.isArray(hands)) {
       return {
