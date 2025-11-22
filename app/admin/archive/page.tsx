@@ -29,7 +29,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, Search, Loader2, ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 // Tabs removed - using custom tabs
-import { TournamentDialog } from '@/components/tournament-dialog'
+import { TournamentDialog } from '@/components/TournamentDialog'
 import { DeleteDialog } from '@/components/archive-dialogs/DeleteDialog'
 import { SubEventDialog } from '@/components/archive-dialogs/SubEventDialog'
 import { DayDialog } from '@/components/archive-dialogs/DayDialog'

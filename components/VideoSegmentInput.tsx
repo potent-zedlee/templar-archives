@@ -26,7 +26,7 @@ import {
   validateSegment,
   secondsToTimeString,
 } from '@/lib/types/video-segments'
-import { VideoSegmentTimeline } from '@/components/video-segment-timeline'
+import { VideoSegmentTimeline } from '@/components/VideoSegmentTimeline'
 
 interface VideoSegmentInputProps {
   segments: VideoSegment[]
