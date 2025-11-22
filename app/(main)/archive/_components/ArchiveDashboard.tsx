@@ -47,12 +47,12 @@ export function ArchiveDashboard({ tournaments }: ArchiveDashboardProps) {
   }, [tournaments])
 
   return (
-    <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 p-6">
+    <div data-testid="archive-dashboard" className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Archive Dashboard</h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <p data-testid="dashboard-hint" className="text-sm text-gray-600 dark:text-gray-400 mt-1">
             왼쪽에서 스트림을 선택하면 핸드 히스토리를 확인할 수 있습니다.
           </p>
         </div>
