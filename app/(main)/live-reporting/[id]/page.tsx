@@ -3,7 +3,7 @@
 import { use } from "react"
 import { useRouter } from "next/navigation"
 import { useLiveReportDetailQuery } from "@/lib/queries/live-reports-queries"
-import { CardSkeleton } from "@/components/skeletons/card-skeleton"
+import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
 import { Calendar, User, ExternalLink, ArrowLeft, Radio } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 

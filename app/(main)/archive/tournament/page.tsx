@@ -20,7 +20,7 @@ import { HandsListPanel } from "../_components/HandsListPanel"
 import { useTournamentsQuery } from "@/lib/queries/archive-queries"
 import type { TournamentCategory } from "@/lib/types/archive"
 import type { Stream } from "@/lib/supabase"
-import { GridSkeleton } from "@/components/skeletons/grid-skeleton"
+import { GridSkeleton } from "@/components/skeletons/GridSkeleton"
 import { MobileArchiveView } from "../_components/MobileArchiveView"
 
 export default function ArchiveTournamentPage() {

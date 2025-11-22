@@ -10,8 +10,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft, ChevronLeft, ChevronRight, Download, BookmarkPlus, Sparkles, MessageSquare } from 'lucide-react'
 import { PokerTable } from '@/components/poker/PokerTable'
 import { ActionTimeline, type HandAction } from '@/components/poker/ActionTimeline'
-import { YouTubePlayer } from '@/components/video/youtube-player'
-import { CommentSection } from '@/components/community/comment-section'
+import { YouTubePlayer } from '@/components/video/YouTubePlayer'
+import { CommentSection } from '@/components/community/CommentSection'
 import type { PlayerSeatData } from '@/components/poker/PlayerSeat'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

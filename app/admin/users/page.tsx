@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { CardSkeleton } from "@/components/skeletons/card-skeleton"
+import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
 import {
   Search,
   ChevronLeft,

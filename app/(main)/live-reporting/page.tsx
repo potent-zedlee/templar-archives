@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useLiveReportsQuery } from "@/lib/queries/live-reports-queries"
-import { CardSkeleton } from "@/components/skeletons/card-skeleton"
+import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
 import { Radio, Calendar, User } from "lucide-react"
 
 const LIVE_CATEGORIES = ['All', 'Tournament Update', 'Chip Counts', 'Breaking News', 'Results', 'Other'] as const

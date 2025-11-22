@@ -16,7 +16,7 @@ import {
 } from "@/lib/queries/hand-actions-queries"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
-import { CardSkeleton } from "@/components/skeletons/card-skeleton"
+import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
 import Link from "next/link"
 
 type Hand = {
