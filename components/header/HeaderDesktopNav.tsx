@@ -92,6 +92,7 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
           <Link
             key={link.href}
             href={link.href!}
+            data-testid={`nav-link-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
             className={cn(
               "text-sm font-bold uppercase tracking-wide transition-colors hover:text-gold-400 relative",
               isActive

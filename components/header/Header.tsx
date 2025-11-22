@@ -114,6 +114,7 @@ export function Header() {
                 ) : (
                   <button
                     type="button"
+                    data-testid="login-button"
                     className="hidden md:inline-flex text-gray-100 bg-transparent border border-gray-600 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-700 font-medium rounded-lg text-sm px-4 py-2 transition-colors"
                     onClick={() => router.push("/auth/login")}
                   >

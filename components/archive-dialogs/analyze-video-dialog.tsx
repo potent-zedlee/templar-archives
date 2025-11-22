@@ -351,7 +351,7 @@ export function AnalyzeVideoDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-full !max-w-[60vw] h-auto max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent data-testid="analyze-video-dialog" className="w-full !max-w-[60vw] h-auto max-h-[90vh] flex flex-col p-0 gap-0">
         <DialogHeader className="px-6 py-4 border-b shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-500" />
@@ -390,7 +390,7 @@ export function AnalyzeVideoDialog({
             <div className="space-y-2">
               <Label>플랫폼 선택</Label>
               <Select value={platform} onValueChange={(v) => setPlatform(v as Platform)}>
-                <SelectTrigger>
+                <SelectTrigger data-testid="platform-select">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -505,10 +505,10 @@ export function AnalyzeVideoDialog({
         {status === "idle" && (
           <div className="px-6 py-4 border-t shrink-0 bg-muted/10">
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={handleClose}>
+              <Button variant="outline" onClick={handleClose} data-testid="cancel-analysis-button">
                 취소
               </Button>
-              <Button onClick={handleAnalyze} disabled={!day?.video_url}>
+              <Button onClick={handleAnalyze} disabled={!day?.video_url} data-testid="start-analysis-button">
                 <Sparkles className="h-4 w-4 mr-2" />
                 분석 시작
               </Button>
