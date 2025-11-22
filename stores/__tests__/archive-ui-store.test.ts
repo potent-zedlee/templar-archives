@@ -6,126 +6,31 @@ describe('Archive UI Store', () => {
   beforeEach(() => {
     // Reset store state before each test
     useArchiveUIStore.setState({
-      expandedTournament: null,
-      expandedEvent: null,
-      searchQuery: '',
-      sortBy: 'date-desc',
-      selectedCategory: 'All',
       tournamentDialog: { isOpen: false, editingId: null },
       eventDialog: { isOpen: false, editingId: null },
+      eventInfoDialog: { isOpen: false, editingId: null },
       streamDialog: { isOpen: false, editingId: null },
-      analyzeDialog: { isOpen: false, editingId: null },
+      dayDialog: { isOpen: false, editingId: null },
       videoDialog: { isOpen: false, startTime: '', stream: null },
+      analyzeDialog: { isOpen: false, editingId: null },
+      renameDialog: { isOpen: false, editingId: null },
+      deleteDialog: { isOpen: false, editingId: null },
+      editEventDialog: { isOpen: false, editingId: null },
+      moveToEventDialog: { isOpen: false, editingId: null },
+      moveToNewEventDialog: { isOpen: false, editingId: null },
+      infoDialog: { isOpen: false, editingId: null },
+      uploadState: { uploading: false, progress: 0, file: null },
       selectedVideoIds: new Set<string>(),
       selectedTournamentIdForDialog: '',
       selectedEventIdForDialog: '',
-      analyzeDayForDialog: null,
+      selectedEventIdForEdit: null,
+      analyzeStreamForDialog: null,
       openMenuId: '',
-    })
-  })
-
-  describe('Expansion State (Single Mode)', () => {
-    it('should expand tournament', () => {
-      const { toggleTournamentExpand } = useArchiveUIStore.getState()
-      toggleTournamentExpand('tournament-1')
-
-      const { expandedTournament } = useArchiveUIStore.getState()
-      expect(expandedTournament).toBe('tournament-1')
-    })
-
-    it('should collapse tournament when clicked again', () => {
-      const { toggleTournamentExpand } = useArchiveUIStore.getState()
-      toggleTournamentExpand('tournament-1')
-      toggleTournamentExpand('tournament-1')
-
-      const { expandedTournament } = useArchiveUIStore.getState()
-      expect(expandedTournament).toBeNull()
-    })
-
-    it('should close previous tournament when opening new one (Single Mode)', () => {
-      const { toggleTournamentExpand } = useArchiveUIStore.getState()
-      toggleTournamentExpand('tournament-1')
-      toggleTournamentExpand('tournament-2')
-
-      const { expandedTournament } = useArchiveUIStore.getState()
-      expect(expandedTournament).toBe('tournament-2')
-    })
-
-    it('should close SubEvent when Tournament changes', () => {
-      const { toggleTournamentExpand, toggleEventExpand } = useArchiveUIStore.getState()
-
-      toggleTournamentExpand('tournament-1')
-      toggleEventExpand('subevent-1')
-      toggleTournamentExpand('tournament-2')
-
-      const { expandedEvent } = useArchiveUIStore.getState()
-      expect(expandedEvent).toBeNull()
-    })
-
-    it('should expand sub-event', () => {
-      const { toggleEventExpand } = useArchiveUIStore.getState()
-      toggleEventExpand('subevent-1')
-
-      const { expandedEvent } = useArchiveUIStore.getState()
-      expect(expandedEvent).toBe('subevent-1')
-    })
-
-    it('should collapse sub-event when clicked again', () => {
-      const { toggleEventExpand } = useArchiveUIStore.getState()
-      toggleEventExpand('subevent-1')
-      toggleEventExpand('subevent-1')
-
-      const { expandedEvent } = useArchiveUIStore.getState()
-      expect(expandedEvent).toBeNull()
-    })
-  })
-
-  describe('Search & Sort', () => {
-    it('should set search query', () => {
-      const { setSearchQuery } = useArchiveUIStore.getState()
-      setSearchQuery('poker hands')
-
-      const { searchQuery } = useArchiveUIStore.getState()
-      expect(searchQuery).toBe('poker hands')
-    })
-
-    it('should set sort option', () => {
-      const { setSortBy } = useArchiveUIStore.getState()
-      setSortBy('name-asc')
-
-      const { sortBy } = useArchiveUIStore.getState()
-      expect(sortBy).toBe('name-asc')
-    })
-
-    it('should set selected category', () => {
-      const { setSelectedCategory } = useArchiveUIStore.getState()
-      setSelectedCategory('WSOP')
-
-      const { selectedCategory } = useArchiveUIStore.getState()
-      expect(selectedCategory).toBe('WSOP')
-    })
-
-    it('should reset all filters', () => {
-      const {
-        setSearchQuery,
-        setSortBy,
-        toggleTournamentExpand,
-        resetAllFilters,
-      } = useArchiveUIStore.getState()
-
-      setSearchQuery('test')
-      setSortBy('name-asc')
-      toggleTournamentExpand('tournament-1')
-
-      resetAllFilters()
-
-      const { searchQuery, sortBy, expandedTournament, expandedEvent } =
-        useArchiveUIStore.getState()
-
-      expect(searchQuery).toBe('')
-      expect(sortBy).toBe('date-desc')
-      expect(expandedTournament).toBeNull()
-      expect(expandedEvent).toBeNull()
+      viewingEventId: '',
+      viewingEvent: null,
+      viewingPayouts: [],
+      loadingViewingPayouts: false,
+      isEditingViewingPayouts: false,
     })
   })
 
@@ -158,7 +63,7 @@ describe('Archive UI Store', () => {
       expect(tournamentDialog.editingId).toBeNull()
     })
 
-    it('should open sub-event dialog with tournament ID', () => {
+    it('should open event dialog with tournament ID', () => {
       const { openEventDialog } = useArchiveUIStore.getState()
       openEventDialog('tournament-1')
 
@@ -167,18 +72,28 @@ describe('Archive UI Store', () => {
       expect(selectedTournamentIdForDialog).toBe('tournament-1')
     })
 
-    it('should open stream dialog with sub-event ID', () => {
+    it('should close event dialog', () => {
+      const { openEventDialog, closeEventDialog } = useArchiveUIStore.getState()
+      openEventDialog('tournament-1')
+      closeEventDialog()
+
+      const { eventDialog, selectedTournamentIdForDialog } = useArchiveUIStore.getState()
+      expect(eventDialog.isOpen).toBe(false)
+      expect(selectedTournamentIdForDialog).toBe('')
+    })
+
+    it('should open stream dialog with event ID', () => {
       const { openStreamDialog } = useArchiveUIStore.getState()
-      openStreamDialog('subevent-1')
+      openStreamDialog('event-1')
 
       const { streamDialog, selectedEventIdForDialog } = useArchiveUIStore.getState()
       expect(streamDialog.isOpen).toBe(true)
-      expect(selectedEventIdForDialog).toBe('subevent-1')
+      expect(selectedEventIdForDialog).toBe('event-1')
     })
 
     it('should keep dayDialog in sync with streamDialog (backward compatibility)', () => {
       const { openStreamDialog } = useArchiveUIStore.getState()
-      openStreamDialog('subevent-1')
+      openStreamDialog('event-1')
 
       const { streamDialog, dayDialog } = useArchiveUIStore.getState()
       expect(streamDialog.isOpen).toBe(dayDialog.isOpen)
@@ -188,7 +103,7 @@ describe('Archive UI Store', () => {
     it('should open video dialog with stream and start time', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        sub_event_id: 'subevent-1',
+        sub_event_id: 'event-1',
         name: 'Test Stream',
         video_source: 'youtube',
         video_url: 'https://youtube.com/watch?v=test',
@@ -209,7 +124,7 @@ describe('Archive UI Store', () => {
     it('should close video dialog and clear start time', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        sub_event_id: 'subevent-1',
+        sub_event_id: 'event-1',
         name: 'Test Stream',
         video_source: 'youtube',
         video_url: 'https://youtube.com/watch?v=test',
@@ -230,7 +145,7 @@ describe('Archive UI Store', () => {
     it('should open analyze dialog with stream', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        sub_event_id: 'subevent-1',
+        sub_event_id: 'event-1',
         name: 'Test Stream',
         video_source: 'youtube',
         video_url: 'https://youtube.com/watch?v=test',
@@ -242,15 +157,15 @@ describe('Archive UI Store', () => {
       const { openAnalyzeDialog } = useArchiveUIStore.getState()
       openAnalyzeDialog(mockStream)
 
-      const { analyzeDialog, analyzeDayForDialog } = useArchiveUIStore.getState()
+      const { analyzeDialog, analyzeStreamForDialog } = useArchiveUIStore.getState()
       expect(analyzeDialog.isOpen).toBe(true)
-      expect(analyzeDayForDialog).toBe(mockStream)
+      expect(analyzeStreamForDialog).toBe(mockStream)
     })
 
     it('should close analyze dialog and clear stream', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        sub_event_id: 'subevent-1',
+        sub_event_id: 'event-1',
         name: 'Test Stream',
         video_source: 'youtube',
         video_url: 'https://youtube.com/watch?v=test',
@@ -263,9 +178,44 @@ describe('Archive UI Store', () => {
       openAnalyzeDialog(mockStream)
       closeAnalyzeDialog()
 
-      const { analyzeDialog, analyzeDayForDialog } = useArchiveUIStore.getState()
+      const { analyzeDialog, analyzeStreamForDialog } = useArchiveUIStore.getState()
       expect(analyzeDialog.isOpen).toBe(false)
-      expect(analyzeDayForDialog).toBeNull()
+      expect(analyzeStreamForDialog).toBeNull()
+    })
+
+    it('should open and close rename dialog', () => {
+      const { openRenameDialog, closeRenameDialog } = useArchiveUIStore.getState()
+      openRenameDialog('item-1')
+
+      let { renameDialog } = useArchiveUIStore.getState()
+      expect(renameDialog.isOpen).toBe(true)
+      expect(renameDialog.editingId).toBe('item-1')
+
+      closeRenameDialog()
+      renameDialog = useArchiveUIStore.getState().renameDialog
+      expect(renameDialog.isOpen).toBe(false)
+    })
+
+    it('should open and close delete dialog', () => {
+      const { openDeleteDialog, closeDeleteDialog } = useArchiveUIStore.getState()
+      openDeleteDialog('item-1')
+
+      let { deleteDialog } = useArchiveUIStore.getState()
+      expect(deleteDialog.isOpen).toBe(true)
+      expect(deleteDialog.editingId).toBe('item-1')
+
+      closeDeleteDialog()
+      deleteDialog = useArchiveUIStore.getState().deleteDialog
+      expect(deleteDialog.isOpen).toBe(false)
+    })
+
+    it('should open event info dialog', () => {
+      const { openEventInfoDialog } = useArchiveUIStore.getState()
+      openEventInfoDialog('event-1')
+
+      const { eventInfoDialog, viewingEventId } = useArchiveUIStore.getState()
+      expect(eventInfoDialog.isOpen).toBe(true)
+      expect(viewingEventId).toBe('event-1')
     })
   })
 
@@ -368,6 +318,50 @@ describe('Archive UI Store', () => {
 
       const { openMenuId } = useArchiveUIStore.getState()
       expect(openMenuId).toBe('menu-2')
+    })
+  })
+
+  describe('Viewing Event State', () => {
+    it('should set viewing event ID', () => {
+      const { setViewingEventId } = useArchiveUIStore.getState()
+      setViewingEventId('event-1')
+
+      const { viewingEventId } = useArchiveUIStore.getState()
+      expect(viewingEventId).toBe('event-1')
+    })
+
+    it('should set viewing event', () => {
+      const mockEvent = { id: 'event-1', name: 'Test Event' }
+      const { setViewingEvent } = useArchiveUIStore.getState()
+      setViewingEvent(mockEvent)
+
+      const { viewingEvent } = useArchiveUIStore.getState()
+      expect(viewingEvent).toBe(mockEvent)
+    })
+
+    it('should set viewing payouts', () => {
+      const mockPayouts = [{ place: 1, amount: 1000 }]
+      const { setViewingPayouts } = useArchiveUIStore.getState()
+      setViewingPayouts(mockPayouts)
+
+      const { viewingPayouts } = useArchiveUIStore.getState()
+      expect(viewingPayouts).toBe(mockPayouts)
+    })
+
+    it('should set loading viewing payouts', () => {
+      const { setLoadingViewingPayouts } = useArchiveUIStore.getState()
+      setLoadingViewingPayouts(true)
+
+      const { loadingViewingPayouts } = useArchiveUIStore.getState()
+      expect(loadingViewingPayouts).toBe(true)
+    })
+
+    it('should set is editing viewing payouts', () => {
+      const { setIsEditingViewingPayouts } = useArchiveUIStore.getState()
+      setIsEditingViewingPayouts(true)
+
+      const { isEditingViewingPayouts } = useArchiveUIStore.getState()
+      expect(isEditingViewingPayouts).toBe(true)
     })
   })
 })
