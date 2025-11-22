@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { getUser, onAuthStateChange, type AuthUser } from '@/lib/auth'
 import { getCurrentUserProfile } from '@/lib/user-profile'
-import { NicknameSetupModal } from '@/components/nickname-setup-modal'
+import { NicknameSetupModal } from '@/components/NicknameSetupModal'
 import type { UserProfile } from '@/lib/user-profile'
 
 type AuthContextType = {
