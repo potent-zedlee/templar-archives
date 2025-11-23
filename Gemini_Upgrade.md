@@ -1,102 +1,66 @@
-Templar Archives Index: 구조적 무결성 확보 및 표준화 계획 (Final)
+데이터베이스 관리 전략: Baseline & Increment (2025)
 
 작성일: 2025년 11월 23일
-작성자: AI Lead Architect
-목표: 파일 중복 제거(De-duplication), 네이밍 표준화, FSD(Feature-Sliced Design) 아키텍처 확립
 
-1. [CRITICAL] 유령 파일 제거 (Ghost Busting)
+전략: Baseline Pattern (베이스라인 패턴)
+도구: Supabase CLI
 
-상황: CardSelector.tsx와 card-selector.tsx가 공존하는 등 파일 시스템 오염 발생.
-조치: 하나의 스타일로 통일하고 나머지는 즉시 삭제해야 함.
+1. 핵심 철학
 
-✅ 결정된 표준: PascalCase
+"DB 스키마는 역사가 아니라, 현재의 상태(State)가 중요하다."
+수십 개의 자잘한 수정 파일은 배포 속도를 늦추고 에러 추적을 어렵게 합니다. 우리는 주기적으로 역사를 압축(Squash)하여 관리합니다.
 
-React 컴포넌트는 PascalCase (MyComponent.tsx)를 표준으로 합니다. (단, components/ui/ 내부의 shadcn 라이브러리 파일은 kebab-case 유지)
+2. 적용 프로세스
 
-실행 가이드
+Step 1: 베이스라인(Baseline) 수립
 
-components/ 루트에 있는 모든 .tsx 파일 삭제. (폴더는 유지)
+현재 시점의 완벽한 DB 스냅샷을 단 하나의 SQL 파일로 만듭니다. 이것이 우리의 '창세기(Genesis)'가 됩니다.
 
-중복된 파일 중 PascalCase인 것만 남기고 kebab-case는 삭제.
+파일명: 20251123000000_release_v1_baseline.sql
 
-삭제: components/card-selector.tsx, components/poker-table.tsx 등
+내용: users, tournaments, hands 등 모든 테이블과 RLS 정책 생성 구문.
 
-유지/이동: components/features/hand/CardSelector.tsx
+기존 파일: supabase/migrations/archive/ 폴더로 이동하여 참조용으로만 보관 (실행 X).
 
-2. 디렉토리 구조 재편 (FSD Lite 패턴)
+Step 2: 이후 변경사항은 "증분(Incremental)" 관리
 
-Next.js 15 App Router에 최적화된 "기능 중심(Feature-First)" 구조로 완전 이주합니다.
+베이스라인 생성 이후의 변경 사항은 다시 새로운 파일로 관리합니다.
 
-2.1. components 폴더 최종 구조안
+예: 핸드 분석 기능에 새 컬럼이 필요하다면?
 
-/components
-├── /ui             # (유지) Shadcn UI 컴포넌트 (button.tsx, card.tsx...)
-├── /layout         # (이동) Header, Footer, Sidebar, PageTransition
-├── /common         # (이동) 앱 전역에서 쓰이는 재사용 컴포넌트 (CardSelector, LogoPicker)
-└── /features       # (핵심) 비즈니스 로직 단위로 그룹화
-    ├── /hand       # HandCard, HandList, ActionEditor...
-    ├── /player     # PlayerCard, PlayerStats, Profile...
-    ├── /tournament # TournamentCard, Bracket...
-    ├── /community  # CommentSection, PostList...
-    ├── /poker      # PokerTable, PlayingCard (시각화 전용)
-    └── /video      # VideoPlayer, Timeline...
+20251201000000_add_ai_confidence_score.sql 생성.
 
+이렇게 파일이 또 10~20개 쌓이면? -> 다시 Step 1을 수행하여 "v2 Baseline"을 만듭니다.
 
-2.2. scripts 폴더 최종 구조안
+Step 3: 데이터 시딩(Seeding) 분리 (중요!)
 
-/scripts
-├── admin-cli.ts        # (유일한 진입점) 모든 관리 기능의 시작점
-├── /operations         # (모듈) 실제 로직을 담은 TS 파일들
-│   ├── db-check.ts
-│   ├── job-manager.ts
-│   └── ...
-└── /legacy             # (창고) 더 이상 안 쓰지만 지우기 아까운 .mjs 파일들
+마이그레이션 파일에는 **"구조(Schema)"**만 남기고, **"초기 데이터(Data)"**는 분리해야 합니다.
+현재 seed-tournament-categories.ts 같은 스크립트가 있는데, 이를 supabase/seed.sql 또는 전용 시딩 스크립트로 명확히 분리합니다.
 
+Migration (.sql): CREATE TABLE categories ...
 
-3. 코드 및 설정 표준화 (Modernization)
+Seed (seed.sql): INSERT INTO categories VALUES ('WSOP', ...)
 
-3.1. 배럴 파일(Barrel Files) 전략 수정
+3. 실행 가이드 (Action Plan)
 
-Next.js 15의 Tree-shaking 성능을 위해, 무분별한 index.ts 사용을 자제하고 명시적 경로를 사용합니다.
+로컬 DB 동기화: 현재 로컬 DB가 운영 서버와 동일한지 확인합니다.
 
-Bad: import { HandCard } from "@/components/features/hand" (index.ts가 모든걸 export 할 경우)
+덤프(Dump) 실행: npx supabase db dump --local > supabase/migrations/20251123000000_v1_baseline.sql
 
-Good: import HandCard from "@/components/features/hand/HandCard"
+기존 파일 이동: 2024...sql ~ 20251122...sql 파일들을 archive 폴더로 이동.
 
-3.2. TypeScript Strict Mode 강화
+운영 서버 마킹 (Production Repair):
 
-tsconfig.json에서 엄격한 규칙을 적용하여 런타임 에러를 방지합니다.
+운영 서버 배포 시, Supabase가 "이 v1_baseline 파일은 실행된 셈 치자"라고 인식하게 만듭니다.
 
-{
-  "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "forceConsistentCasingInFileNames": true  // <--- 이 옵션이 대소문자 충돌 방지에 필수
-  }
-}
+npx supabase migration repair --status applied 20251123000000_v1_baseline.sql
 
+4. 왜 이 방법이 최고인가요?
 
-4. 단계별 실행 스크립트 (Action Steps)
+CI/CD 속도: GitHub Actions에서 테스트 DB를 띄울 때 60번 파일을 실행하는 것보다 1번 파일을 실행하는 것이 20배 이상 빠릅니다.
 
-AI 에이전트에게 다음 순서대로 지시하여 휴먼 에러를 방지하세요.
+협업 용이성: 나중에 다른 개발자가 합류했을 때, v1_baseline.sql 하나만 보면 DB 구조를 한눈에 이해할 수 있습니다.
 
-Step 1: 중복 및 루트 파일 정리
+AI 친화적: Claude나 Gemini에게 DB 구조를 설명할 때, 60개 파일을 주는 것보다 잘 정리된 1개 파일을 주는 것이 훨씬 정확한 답변을 줍니다.
 
-"components 폴더 루트에 있는 모든 .tsx 파일을 분석해줘. 만약 하위 폴더(features, common 등)에 같은 역할의 파일이 있다면 루트에 있는 파일은 삭제해. 그리고 PascalCase와 kebab-case가 중복된 경우 PascalCase만 남기고 삭제해."
-
-Step 2: 잔존 폴더 이동
-
-"아직 루트에 있는 components/poker, components/video 등의 폴더를 components/features/ 하위로 이동시키고, 내부 파일명을 모두 PascalCase로 변경해줘."
-
-Step 3: Import 경로 수리
-
-"파일 이동으로 인해 깨진 import 경로를 프로젝트 전체에서 스캔하여 수정해줘. npm run build가 성공할 수 있도록."
-
-Step 4: 스크립트 폴더 마무리
-
-"scripts 폴더 루트에 있는 모든 .mjs 파일을 scripts/legacy로 이동시켜. admin-cli.ts만 루트에 남겨둬."
-
-5. 결론
-
-지금 상태는 **"이사 가려고 짐은 쌌는데, 옛날 집 열쇠와 새 집 열쇠가 섞여 있는 상태"**입니다.
-이 [중복 제거] 작업을 오늘 끝내야만, 내일부터 마음 편하게 KAN 분석 기능을 고도화하거나 수익화 기능을 붙일 수 있습니다.
+결론: 리팩토링의 마무리는 **"복잡함의 제거"**입니다. 하나로 합치세요.
