@@ -64,8 +64,22 @@ npm run test lib/filter-utils.test.ts     # 단일 파일
 npm run test:e2e                          # Playwright 전체
 npx playwright test e2e/archive.spec.ts   # 단일 파일
 
-# Admin CLI (시스템 진단)
-npm run admin -- --action=diagnose
+# 데이터베이스 마이그레이션
+supabase db push                          # 프로덕션 적용
+supabase db reset                         # 로컬 리셋
+supabase migration new migration_name     # 새 마이그레이션
+
+# Trigger.dev 프로덕션 배포
+npx trigger.dev@latest deploy
+
+# 번들 분석
+npm run analyze
+
+# Admin CLI
+npm run admin -- --action=diagnose        # 전체 시스템 진단
+npm run admin -- --action=check-db        # DB 상태
+npm run admin -- --action=check-jobs      # KAN 작업 상태
+npm run admin -- --action=cleanup-jobs    # STUCK 작업 정리
 ```
 
 ---
@@ -78,7 +92,7 @@ npm run admin -- --action=diagnose
 | Styling | Tailwind CSS 4.1 |
 | State | React Query 5, Zustand 5 |
 | Database | Supabase (PostgreSQL) |
-| AI | Gemini 2.5 Flash, Claude 3.5 Sonnet |
+| AI | Gemini 2.5 Flash, Claude 4.5 Sonnet |
 | Background Jobs | Trigger.dev v3 |
 | Video | @distube/ytdl-core, fluent-ffmpeg |
 
@@ -129,15 +143,31 @@ Tournament → Event → Stream → Hand
 ### KAN 영상 분석 파이프라인
 
 ```
-Frontend → Server Action → Trigger.dev v3
-                              ↓
-                YouTube URL → FFmpeg 구간 추출 → Gemini 분석 → DB 저장
+사용자 (분석 시작)
+    → Server Action (app/actions/kan-trigger.ts)
+    → Trigger.dev Task (trigger/video-analysis.ts)
+        ├─ YouTube URL 추출 (@distube/ytdl-core)
+        ├─ FFmpeg 구간 추출 (인메모리, Stream Copy)
+        └─ Gemini 2.5 Flash 분석 (File API)
+    → JSON 핸드 데이터 파싱 (Self-Healing)
+    → DB 저장 (hands → hand_players → hand_actions)
 ```
 
 **핵심 모듈**:
-- `trigger/video-analysis.ts` - Trigger.dev Task
-- `lib/video/*.ts` - YouTube, FFmpeg, Gemini
-- `lib/hooks/use-trigger-job.ts` - 진행률 폴링
+| 파일 | 역할 |
+|------|------|
+| `app/actions/kan-trigger.ts` | Server Action - 분석 시작, 결과 저장 |
+| `trigger/video-analysis.ts` | Trigger.dev Task - 실제 분석 (최대 3600초) |
+| `lib/video/youtube-downloader.ts` | YouTube 스트림 URL 추출 |
+| `lib/video/ffmpeg-processor.ts` | FFmpeg 인메모리 영상 추출 |
+| `lib/video/gemini-analyzer.ts` | Gemini AI 분석 및 JSON 파싱 |
+| `lib/ai/prompts.ts` | Platform별 AI 프롬프트 (EPT/Triton) |
+| `lib/hooks/use-trigger-job.ts` | React Query 폴링 (2초 간격) |
+
+**특징**:
+- 1시간 초과 영상 → 자동 30분 분할
+- 재시도: 5회, Exponential Backoff
+- 인메모리 처리 (디스크 I/O 없음)
 
 ---
 
@@ -206,4 +236,4 @@ rm -rf .next && npm run build
 ---
 
 **마지막 업데이트**: 2025-11-23
-**문서 버전**: 3.0
+**문서 버전**: 3.1
