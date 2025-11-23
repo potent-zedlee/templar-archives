@@ -67,7 +67,7 @@ function parseArgs(): Args {
 async function showHelp() {
   console.log(`
 ╔════════════════════════════════════════════════════════════════════════════╗
-║                    Templar Archives Admin CLI v1.0                         ║
+║                    Templar Archives Admin CLI v2.0                         ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 
 사용법:
@@ -91,11 +91,19 @@ async function showHelp() {
                      - 테이블별 레코드 수 확인
                      - 최근 사용자 목록
 
+  👥 check-players   플레이어 DB 상태 확인
+                     - 전체 플레이어 수, 국가별 분포
+                     - Top 플레이어 목록
+
+  🔍 diagnose        전체 시스템 진단
+                     - DB, RLS, KAN 작업 한 번에 확인
+
   ❓ help            이 도움말 표시
 
 예시:
   npm run admin -- --action=check-jobs
   npm run admin -- --action=cleanup-jobs
+  npm run admin -- --action=diagnose
 `);
 }
 
@@ -348,6 +356,154 @@ async function checkDB() {
   console.log("\n" + "═".repeat(80));
 }
 
+async function checkPlayers() {
+  console.log("\n👥 플레이어 DB 상태 확인");
+  console.log("═".repeat(80));
+
+  // Total count
+  const { count: totalCount, error: countError } = await supabase
+    .from("players")
+    .select("*", { count: "exact", head: true });
+
+  if (countError) {
+    console.error("❌ players 조회 실패:", countError.message);
+    return;
+  }
+
+  console.log(`\n📊 전체 플레이어 수: ${totalCount?.toLocaleString() || 0}명`);
+
+  // Players without country
+  const { data: noCountryPlayers, error: noCountryError } = await supabase
+    .from("players")
+    .select("id, name")
+    .is("country", null);
+
+  if (!noCountryError) {
+    console.log(`📍 국가 정보 없는 플레이어: ${noCountryPlayers?.length || 0}명`);
+  }
+
+  // Country distribution (top 10)
+  const { data: countries, error: countriesError } = await supabase
+    .from("players")
+    .select("country")
+    .not("country", "is", null);
+
+  if (!countriesError && countries) {
+    const countryMap: Record<string, number> = {};
+    countries.forEach((p) => {
+      if (p.country) {
+        countryMap[p.country] = (countryMap[p.country] || 0) + 1;
+      }
+    });
+
+    const sortedCountries = Object.entries(countryMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+
+    console.log("\n🌍 국가별 분포 (Top 10):");
+    for (const [country, count] of sortedCountries) {
+      console.log(`   ${country.padEnd(20)} ${count.toString().padStart(5)}명`);
+    }
+  }
+
+  // Top players by winnings
+  const { data: topPlayers, error: topError } = await supabase
+    .from("players")
+    .select("name, country, total_winnings")
+    .order("total_winnings", { ascending: false, nullsFirst: false })
+    .limit(5);
+
+  if (!topError && topPlayers && topPlayers.length > 0) {
+    console.log("\n🏆 상금 Top 5 플레이어:");
+    topPlayers.forEach((p, i) => {
+      const winnings = p.total_winnings
+        ? `$${(p.total_winnings / 100).toLocaleString()}`
+        : "$0";
+      console.log(`   ${i + 1}. ${p.name} (${p.country || "N/A"}) - ${winnings}`);
+    });
+  }
+
+  // Gender distribution
+  const { data: genderData, error: genderError } = await supabase
+    .from("players")
+    .select("gender");
+
+  if (!genderError && genderData) {
+    const genderMap: Record<string, number> = { male: 0, female: 0, other: 0, unknown: 0 };
+    genderData.forEach((p) => {
+      const g = p.gender || "unknown";
+      genderMap[g] = (genderMap[g] || 0) + 1;
+    });
+
+    console.log("\n👤 성별 분포:");
+    console.log(`   남성: ${genderMap.male}명`);
+    console.log(`   여성: ${genderMap.female}명`);
+    console.log(`   기타/미설정: ${genderMap.other + genderMap.unknown}명`);
+  }
+
+  console.log("\n" + "═".repeat(80));
+}
+
+async function diagnose() {
+  console.log("\n🔍 전체 시스템 진단");
+  console.log("═".repeat(80));
+  console.log("DB, RLS, KAN 작업 상태를 순차 확인합니다.\n");
+
+  // 1. DB 상태
+  await checkDB();
+
+  // 2. RLS 상태 (간략)
+  console.log("\n🔒 RLS 정책 점검 (간략)");
+  console.log("─".repeat(40));
+
+  const rlsTables = ["tournaments", "sub_events", "streams", "hands"];
+  for (const table of rlsTables) {
+    const { count, error } = await supabase
+      .from(table)
+      .select("*", { count: "exact", head: true });
+
+    if (error) {
+      console.log(`   ${table.padEnd(15)} ❌ ${error.message}`);
+    } else {
+      console.log(`   ${table.padEnd(15)} ✅ OK (${count || 0} rows)`);
+    }
+  }
+
+  // 3. KAN 작업 상태 (간략)
+  console.log("\n📊 KAN 작업 상태 (간략)");
+  console.log("─".repeat(40));
+
+  const { data: jobs, error: jobsError } = await supabase
+    .from("analysis_jobs")
+    .select("status")
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (jobsError) {
+    console.log("   ❌ analysis_jobs 조회 실패");
+  } else if (jobs && jobs.length > 0) {
+    const statusCount: Record<string, number> = {};
+    jobs.forEach((j) => {
+      statusCount[j.status] = (statusCount[j.status] || 0) + 1;
+    });
+
+    console.log("   최근 10개 작업 상태:");
+    for (const [status, count] of Object.entries(statusCount)) {
+      const emoji =
+        status === "success" ? "✅" :
+        status === "failed" ? "❌" :
+        status === "processing" ? "🔄" :
+        "⚪";
+      console.log(`     ${emoji} ${status}: ${count}개`);
+    }
+  } else {
+    console.log("   ⚪ 분석 작업 없음");
+  }
+
+  console.log("\n" + "═".repeat(80));
+  console.log("✅ 진단 완료\n");
+}
+
 // ============================================================================
 // Main
 // ============================================================================
@@ -372,6 +528,12 @@ async function main() {
       break;
     case "check-db":
       await checkDB();
+      break;
+    case "check-players":
+      await checkPlayers();
+      break;
+    case "diagnose":
+      await diagnose();
       break;
     case "help":
     default:
