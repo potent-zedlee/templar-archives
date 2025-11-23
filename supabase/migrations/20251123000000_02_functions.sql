@@ -42,7 +42,7 @@ BEGIN
     WHEN 'board' THEN
       UPDATE hands
       SET
-        board_flop = COALESCE(v_request.proposed_data->>'board_flop', board_flop),
+        board_flop = COALESCE((v_request.proposed_data->'board_flop')::text[], board_flop),
         board_turn = COALESCE(v_request.proposed_data->>'board_turn', board_turn),
         board_river = COALESCE(v_request.proposed_data->>'board_river', board_river),
         updated_at = NOW()
@@ -2404,7 +2404,7 @@ BEGIN
       pot_flop = COALESCE((p_hand->>'pot_flop')::BIGINT, pot_flop),
       pot_turn = COALESCE((p_hand->>'pot_turn')::BIGINT, pot_turn),
       pot_river = COALESCE((p_hand->>'pot_river')::BIGINT, pot_river),
-      board_flop = COALESCE(p_hand->>'board_flop', board_flop),
+      board_flop = COALESCE((p_hand->'board_flop')::text[], board_flop),
       board_turn = COALESCE(p_hand->>'board_turn', board_turn),
       board_river = COALESCE(p_hand->>'board_river', board_river),
       video_timestamp_start = COALESCE(p_hand->>'video_timestamp_start', video_timestamp_start),
