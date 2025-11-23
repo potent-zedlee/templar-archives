@@ -17,7 +17,7 @@ import {
   type NotificationType,
 } from "@/lib/notifications"
 import { useAuth } from "@/components/layout/AuthProvider"
-import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
+import { CardSkeleton } from "@/components/ui/skeletons/CardSkeleton"
 
 const notificationTypeLabels: Record<NotificationType, string> = {
   comment: "Comment",

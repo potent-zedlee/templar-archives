@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 import { StatsCard } from "@/components/admin/StatsCard"
 import { ActivityFeed } from "@/components/admin/ActivityFeed"
-import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
+import { CardSkeleton } from "@/components/ui/skeletons/CardSkeleton"
 import {
   Users,
   FileText,

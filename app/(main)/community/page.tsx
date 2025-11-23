@@ -13,7 +13,7 @@ import { MessageSquare, TrendingUp, Clock, Star, ThumbsUp, Link2, X } from "luci
 import Link from "next/link"
 import { fetchPosts, togglePostLike, type Post } from "@/lib/supabase-community"
 import { toast } from "sonner"
-import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
+import { CardSkeleton } from "@/components/ui/skeletons/CardSkeleton"
 import { ErrorBoundary } from "@/components/common/ErrorBoundary"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"

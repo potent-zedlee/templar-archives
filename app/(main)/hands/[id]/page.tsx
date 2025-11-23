@@ -8,11 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft, ChevronLeft, ChevronRight, Download, BookmarkPlus, Sparkles, MessageSquare } from 'lucide-react'
-import { PokerTable } from '@/components/poker/PokerTable'
-import { ActionTimeline, type HandAction } from '@/components/poker/ActionTimeline'
-import { YouTubePlayer } from '@/components/video/YouTubePlayer'
-import { CommentSection } from '@/components/community/CommentSection'
-import type { PlayerSeatData } from '@/components/poker/PlayerSeat'
+import { PokerTable } from '@/components/features/poker/PokerTable'
+import { ActionTimeline, type HandAction } from '@/components/features/poker/ActionTimeline'
+import { YouTubePlayer } from '@/components/features/video/YouTubePlayer'
+import { CommentSection } from '@/components/features/community/CommentSection'
+import type { PlayerSeatData } from '@/components/features/poker/PlayerSeat'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params

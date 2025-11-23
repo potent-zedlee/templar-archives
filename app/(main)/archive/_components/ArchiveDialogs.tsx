@@ -24,31 +24,31 @@ import type { Stream } from '@/lib/supabase'
 const TournamentDialog = dynamic(() => import('@/components/features/archive/TournamentDialog').then(mod => ({ default: mod.TournamentDialog })), {
   ssr: false,
 })
-const SubEventDialog = dynamic(() => import('@/components/archive-dialogs/sub-event-dialog').then(mod => ({ default: mod.SubEventDialog })), {
+const SubEventDialog = dynamic(() => import('@/components/features/archive/dialogs/SubEventDialog').then(mod => ({ default: mod.SubEventDialog })), {
   ssr: false,
 })
-const SubEventInfoDialog = dynamic(() => import('@/components/archive-dialogs/sub-event-info-dialog').then(mod => ({ default: mod.SubEventInfoDialog })), {
+const SubEventInfoDialog = dynamic(() => import('@/components/features/archive/dialogs/SubEventInfoDialog').then(mod => ({ default: mod.SubEventInfoDialog })), {
   ssr: false,
 })
-const DayDialog = dynamic(() => import('@/components/archive-dialogs/day-dialog').then(mod => ({ default: mod.DayDialog })), {
+const DayDialog = dynamic(() => import('@/components/features/archive/dialogs/DayDialog').then(mod => ({ default: mod.DayDialog })), {
   ssr: false,
 })
 const VideoPlayerDialog = dynamic(() => import('@/components/features/video/VideoPlayerDialog').then(mod => ({ default: mod.VideoPlayerDialog })), {
   ssr: false,
 })
-const RenameDialog = dynamic(() => import('@/components/archive-dialogs/rename-dialog').then(mod => ({ default: mod.RenameDialog })), {
+const RenameDialog = dynamic(() => import('@/components/features/archive/dialogs/RenameDialog').then(mod => ({ default: mod.RenameDialog })), {
   ssr: false,
 })
-const DeleteDialog = dynamic(() => import('@/components/archive-dialogs/delete-dialog').then(mod => ({ default: mod.DeleteDialog })), {
+const DeleteDialog = dynamic(() => import('@/components/features/archive/dialogs/DeleteDialog').then(mod => ({ default: mod.DeleteDialog })), {
   ssr: false,
 })
 const EditEventDialog = dynamic(() => import('@/components/edit-event-dialog').then(mod => ({ default: mod.EditEventDialog })), {
   ssr: false,
 })
-const MoveToExistingEventDialog = dynamic(() => import('@/components/archive-dialogs/move-to-existing-event-dialog').then(mod => ({ default: mod.MoveToExistingEventDialog })), {
+const MoveToExistingEventDialog = dynamic(() => import('@/components/features/archive/dialogs/MoveToExistingEventDialog').then(mod => ({ default: mod.MoveToExistingEventDialog })), {
   ssr: false,
 })
-const MoveToNewEventDialog = dynamic(() => import('@/components/archive-dialogs/move-to-new-event-dialog').then(mod => ({ default: mod.MoveToNewEventDialog })), {
+const MoveToNewEventDialog = dynamic(() => import('@/components/features/archive/dialogs/MoveToNewEventDialog').then(mod => ({ default: mod.MoveToNewEventDialog })), {
   ssr: false,
 })
 const ArchiveInfoDialog = dynamic(() => import('@/components/features/archive/ArchiveInfoDialog').then(mod => ({ default: mod.ArchiveInfoDialog })), {

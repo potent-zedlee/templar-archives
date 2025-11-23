@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useNewsQuery } from "@/lib/queries/news-queries"
-import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
+import { CardSkeleton } from "@/components/ui/skeletons/CardSkeleton"
 import { Newspaper, Calendar, User } from "lucide-react"
 
 const NEWS_CATEGORIES = ['All', 'Tournament', 'Player News', 'Industry', 'General', 'Other'] as const

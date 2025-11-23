@@ -7,7 +7,7 @@ import { Loader2, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { EmptyState } from "@/components/common/EmptyState"
 import { Search } from "lucide-react"
-import { YouTubePlayer } from "@/components/video/YouTubePlayer"
+import { YouTubePlayer } from "@/components/features/video/YouTubePlayer"
 
 const supabase = createClientSupabaseClient()
 

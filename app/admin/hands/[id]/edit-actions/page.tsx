@@ -9,14 +9,14 @@ import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Save, Trash2 } from "lucide-react"
 import { useAuth } from "@/components/layout/AuthProvider"
 import { isAdmin } from "@/lib/admin"
-import { ActionEditor } from "@/components/hand-actions/ActionEditor"
+import { ActionEditor } from "@/components/features/hand/actions/ActionEditor"
 import {
   useBulkCreateHandActionsMutation,
   useDeleteAllHandActionsMutation,
 } from "@/lib/queries/hand-actions-queries"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
-import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
+import { CardSkeleton } from "@/components/ui/skeletons/CardSkeleton"
 import Link from "next/link"
 
 type Hand = {
