@@ -59,13 +59,25 @@ supabase migration new migration_name
 
 ```bash
 # Hendonmob 플레이어 Import
-node scripts/import-hendonmob-players.mjs
+node scripts/operations/import-hendonmob-players.mjs
 
 # 여성 플레이어 gender 업데이트
-node scripts/update-female-players.mjs
+node scripts/operations/update-female-players.mjs
+```
 
-# DB 확인
-node scripts/check-players-db.mjs
+### Admin CLI (v2.0)
+
+```bash
+# 전체 시스템 진단 (권장)
+npm run admin -- --action=diagnose
+
+# 개별 명령
+npm run admin -- --action=check-db       # DB 상태 확인
+npm run admin -- --action=check-players  # 플레이어 DB 상태
+npm run admin -- --action=check-jobs     # KAN 작업 상태
+npm run admin -- --action=cleanup-jobs   # STUCK 작업 정리
+npm run admin -- --action=check-rls      # RLS 정책 점검
+npm run admin -- --action=help           # 도움말
 ```
 
 ### 유틸리티 스크립트
@@ -80,11 +92,10 @@ npm run logo:validate
 npm run thumbnails:generate
 npm run thumbnails:generate:day --day-id=<uuid>
 
-# DB 관리
-node scripts/check-analysis-status.mjs
-node scripts/update-user-role.mjs
-node scripts/cleanup-stuck-job.mjs
-node scripts/create-unsorted-stream.mjs
+# 기타 운영
+node scripts/operations/update-user-role.mjs
+node scripts/operations/cleanup-stuck-job.mjs
+node scripts/operations/create-unsorted-stream.mjs
 ```
 
 ### 환경 변수
@@ -910,11 +921,16 @@ Vercel에 배포 시 자동으로 Trigger.dev Task가 배포됩니다:
 
 ---
 
-**마지막 업데이트**: 2025-11-21
-**문서 버전**: 2.4
+**마지막 업데이트**: 2025-11-23
+**문서 버전**: 2.5
 **현재 Phase**: 44 완료
 **보안 등급**: A
-**주요 업데이트** (v2.4):
+**주요 업데이트** (v2.5):
+- 🛠️ **Admin CLI v2.0**: check-players, diagnose action 추가
+- 🧹 **스크립트 정리**: 13개 중복 check-*.mjs 스크립트 삭제
+- 📁 **컴포넌트 리네임**: archive-dialogs 폴더 PascalCase 완료
+
+**이전 업데이트** (v2.4):
 - 📚 **프로젝트 구조 섹션 추가**: 디렉토리 구조 시각화
 - 🔧 **Trigger.dev 개발/배포 가이드 추가**: 로컬 개발 및 프로덕션 배포 절차
 - 🐛 **디버깅 섹션 강화**: Trigger.dev 문제 해결 가이드
