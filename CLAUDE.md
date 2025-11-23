@@ -9,14 +9,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 Templar-Archives-Index-Claude/
 ├── app/                       # Next.js App Router
-├── components/                # React 컴포넌트
+├── components/                # React 컴포넌트 (FSD 아키텍처)
+│   ├── features/              # 비즈니스 로직 단위 (hand, player, archive, video, poker)
+│   ├── common/                # 공용 컴포넌트
+│   ├── layout/                # 레이아웃 (Header, Footer, Providers)
+│   ├── dialogs/               # 다이얼로그
+│   ├── ui/                    # shadcn/ui (kebab-case)
+│   └── admin/                 # 어드민 패널
 ├── lib/                       # 유틸리티, 타입, 쿼리
 ├── stores/                    # Zustand 상태 관리
 ├── trigger/                   # Trigger.dev Tasks
-├── supabase/                  # DB 마이그레이션
-├── docs/                      # 문서
-├── work-logs/                 # 개발 로그
-└── scripts/                   # 운영 스크립트
+├── supabase/migrations/       # DB 스키마 (분리된 SQL 파일)
+│   ├── *_00_types.sql         # ENUM 타입
+│   ├── *_01_tables.sql        # 테이블 정의
+│   ├── *_02_functions.sql     # RPC 함수
+│   ├── *_03_indexes.sql       # 인덱스
+│   ├── *_04_policies.sql      # RLS 정책
+│   └── *_05_triggers.sql      # 트리거/권한
+├── scripts/                   # 운영 스크립트
+│   ├── admin-cli.ts           # 메인 CLI (npm run admin)
+│   └── operations/            # 운영 스크립트 모음
+└── docs/                      # 문서
 ```
 
 ---
