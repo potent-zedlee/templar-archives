@@ -20,25 +20,25 @@ import { HandListAccordion } from "@/components/features/hand/HandListAccordion"
 import type { Player } from "@/lib/supabase"
 
 // Dynamic imports for chart components
-const PrizeHistoryChart = dynamic(() => import("@/components/PlayerCharts").then(mod => ({ default: mod.PrizeHistoryChart })), {
+const PrizeHistoryChart = dynamic(() => import("@/components/features/player/PlayerCharts").then(mod => ({ default: mod.PrizeHistoryChart })), {
   ssr: false,
   loading: () => <div className="h-64 flex items-center justify-center">차트 로딩 중...</div>
 })
-const TournamentCategoryChart = dynamic(() => import("@/components/PlayerCharts").then(mod => ({ default: mod.TournamentCategoryChart })), {
+const TournamentCategoryChart = dynamic(() => import("@/components/features/player/PlayerCharts").then(mod => ({ default: mod.TournamentCategoryChart })), {
   ssr: false,
   loading: () => <div className="h-64 flex items-center justify-center">차트 로딩 중...</div>
 })
 
 // Dynamic imports for stats cards
-const AdvancedStatsCard = dynamic(() => import("@/components/PlayerStats").then(mod => ({ default: mod.AdvancedStatsCard })), {
+const AdvancedStatsCard = dynamic(() => import("@/components/features/player/PlayerStats").then(mod => ({ default: mod.AdvancedStatsCard })), {
   ssr: false,
   loading: () => <div className="h-48 flex items-center justify-center">통계 로딩 중...</div>
 })
-const PositionalStatsCard = dynamic(() => import("@/components/PlayerStats").then(mod => ({ default: mod.PositionalStatsCard })), {
+const PositionalStatsCard = dynamic(() => import("@/components/features/player/PlayerStats").then(mod => ({ default: mod.PositionalStatsCard })), {
   ssr: false,
   loading: () => <div className="h-64 flex items-center justify-center">통계 로딩 중...</div>
 })
-const PerformanceChartCard = dynamic(() => import("@/components/PlayerStats").then(mod => ({ default: mod.PerformanceChartCard })), {
+const PerformanceChartCard = dynamic(() => import("@/components/features/player/PlayerStats").then(mod => ({ default: mod.PerformanceChartCard })), {
   ssr: false,
   loading: () => <div className="h-64 flex items-center justify-center">차트 로딩 중...</div>
 })

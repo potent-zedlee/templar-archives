@@ -8,8 +8,8 @@
 import { useMemo } from 'react'
 import { useHandPlayersQuery } from '@/lib/queries/hand-players-queries'
 import { useHandActionsQuery } from '@/lib/queries/hand-actions-queries'
-import { PositionBadge } from '@/components/PositionBadge'
-import { PlayerHoverCard } from '@/components/PlayerHoverCard'
+import { PositionBadge } from '@/components/common/PositionBadge'
+import { PlayerHoverCard } from '@/components/features/player/PlayerHoverCard'
 import { cn } from '@/lib/utils'
 import type { HandAction, Street } from '@/lib/hand-actions'
 

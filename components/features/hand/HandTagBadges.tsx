@@ -13,7 +13,7 @@ import { Plus, X } from "lucide-react"
 import { useAuth } from "@/components/layout/AuthProvider"
 import { useHandTagsQuery, useRemoveHandTagMutation } from "@/lib/queries/hand-tags-queries"
 import { getTagColor } from "@/lib/types/hand-tags"
-import { HandTagDialog } from "@/components/HandTagDialog"
+import { HandTagDialog } from "@/components/features/hand/HandTagDialog"
 import { toast } from "sonner"
 
 type HandTagBadgesProps = {

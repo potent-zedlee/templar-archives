@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import dynamic from "next/dynamic"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { StaggerContainer, StaggerItem } from "@/components/PageTransition"
+import { StaggerContainer, StaggerItem } from "@/components/layout/PageTransition"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -24,11 +24,11 @@ import { createPost } from "@/lib/supabase-community"
 import { CommunitySearchBar } from "@/components/features/community/CommunitySearchBar"
 import { CommunityFilters } from "@/components/features/community/CommunityFilters"
 import { useAuth } from "@/components/layout/AuthProvider"
-import { ReportButton } from "@/components/ReportButton"
+import { ReportButton } from "@/components/dialogs/ReportButton"
 
 // Dynamic imports for heavy components
 const PopularPostsSidebar = dynamic(
-  () => import("@/components/PopularPostsSidebar").then(mod => ({ default: mod.PopularPostsSidebar })),
+  () => import("@/components/home/PopularPostsSidebar").then(mod => ({ default: mod.PopularPostsSidebar })),
   {
     ssr: false,
     loading: () => <CardSkeleton count={3} variant="compact" />

@@ -13,7 +13,7 @@
 import { useArchiveDataStore } from '@/stores/archive-data-store'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
-import { ArchiveFolderList } from '@/components/ArchiveFolderList'
+import { ArchiveFolderList } from '@/components/features/archive/ArchiveFolderList'
 import { Button } from '@/components/ui/button'
 import { isAdmin } from '@/lib/auth-utils'
 import { parseTimeToSeconds } from '@/lib/utils/time-parser'

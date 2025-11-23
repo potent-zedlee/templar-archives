@@ -21,7 +21,7 @@ import type { FolderItem, Event } from '@/lib/types/archive'
 import type { Stream } from '@/lib/supabase'
 
 // Dynamic imports for all dialogs (only load when needed)
-const TournamentDialog = dynamic(() => import('@/components/TournamentDialog').then(mod => ({ default: mod.TournamentDialog })), {
+const TournamentDialog = dynamic(() => import('@/components/features/archive/TournamentDialog').then(mod => ({ default: mod.TournamentDialog })), {
   ssr: false,
 })
 const SubEventDialog = dynamic(() => import('@/components/archive-dialogs/sub-event-dialog').then(mod => ({ default: mod.SubEventDialog })), {
@@ -33,7 +33,7 @@ const SubEventInfoDialog = dynamic(() => import('@/components/archive-dialogs/su
 const DayDialog = dynamic(() => import('@/components/archive-dialogs/day-dialog').then(mod => ({ default: mod.DayDialog })), {
   ssr: false,
 })
-const VideoPlayerDialog = dynamic(() => import('@/components/VideoPlayer-dialog').then(mod => ({ default: mod.VideoPlayerDialog })), {
+const VideoPlayerDialog = dynamic(() => import('@/components/features/video/VideoPlayerDialog').then(mod => ({ default: mod.VideoPlayerDialog })), {
   ssr: false,
 })
 const RenameDialog = dynamic(() => import('@/components/archive-dialogs/rename-dialog').then(mod => ({ default: mod.RenameDialog })), {
@@ -51,10 +51,10 @@ const MoveToExistingEventDialog = dynamic(() => import('@/components/archive-dia
 const MoveToNewEventDialog = dynamic(() => import('@/components/archive-dialogs/move-to-new-event-dialog').then(mod => ({ default: mod.MoveToNewEventDialog })), {
   ssr: false,
 })
-const ArchiveInfoDialog = dynamic(() => import('@/components/archive-info-dialog').then(mod => ({ default: mod.ArchiveInfoDialog })), {
+const ArchiveInfoDialog = dynamic(() => import('@/components/features/archive/ArchiveInfoDialog').then(mod => ({ default: mod.ArchiveInfoDialog })), {
   ssr: false,
 })
-const AnalyzeVideoDialog = dynamic(() => import('@/components/archive-dialogs/analyze-video-dialog').then(mod => ({ default: mod.AnalyzeVideoDialog })), {
+const AnalyzeVideoDialog = dynamic(() => import('@/components/features/archive/dialogs/AnalyzeVideoDialog').then(mod => ({ default: mod.AnalyzeVideoDialog })), {
   ssr: false,
 })
 

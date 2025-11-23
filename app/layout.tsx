@@ -7,7 +7,7 @@ import { WebVitalsReporter } from "@/components/analytics/WebVitals"
 import { Footer } from "@/components/layout/Footer"
 import { CookieConsentBanner } from "@/components/dialogs/CookieConsentBanner"
 import "./globals.css"
-import { Providers } from "@/components/Providers"
+import { Providers } from "@/components/layout/Providers"
 import { FlowbiteInitializer } from "@/components/layout/FlowbiteInitializer"
 
 export const metadata: Metadata = {

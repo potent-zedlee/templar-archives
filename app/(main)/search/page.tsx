@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { PageTransition } from "@/components/PageTransition"
+import { PageTransition } from "@/components/layout/PageTransition"
 import { SearchFilterSidebar, type SearchFilters } from "./_components/SearchFilterSidebar"
 import { SearchResultsList, type HandWithDetails } from "./_components/SearchResultsList"
 import { HandDetailPanel } from "./_components/HandDetailPanel"

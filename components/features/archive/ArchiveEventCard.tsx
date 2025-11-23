@@ -16,7 +16,7 @@ import {
   ChevronDown,
   MoreVertical
 } from "lucide-react"
-import { ArchiveStatsBadge } from "@/components/ArchiveStatsBadge"
+import { ArchiveStatsBadge } from "@/components/features/archive/ArchiveStatsBadge"
 import { Progress } from "@/components/ui/progress"
 import type { FolderItem } from "@/lib/types/archive"
 import { cn } from "@/lib/utils"
@@ -27,7 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CategoryLogo } from "@/components/CategoryLogo"
+import { CategoryLogo } from "@/components/common/CategoryLogo"
 
 interface ArchiveEventCardProps {
   item: FolderItem

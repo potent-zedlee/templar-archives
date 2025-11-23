@@ -14,8 +14,8 @@ import { Folder, AlertCircle } from 'lucide-react'
 import { useArchiveData } from './ArchiveDataContext'
 import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { useArchiveDataStore } from '@/stores/archive-data-store'
-import { HandCard } from '@/components/HandCard'
-import { HandHistoryDialog } from '@/components/HandHistoryDialog'
+import { HandCard } from '@/components/features/hand/HandCard'
+import { HandHistoryDialog } from '@/components/features/hand/HandHistoryDialog'
 import type { Hand } from '@/lib/types/archive'
 
 interface ArchiveHandHistoryProps {

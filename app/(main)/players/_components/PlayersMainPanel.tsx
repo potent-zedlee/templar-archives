@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { StaggerContainer, StaggerItem } from "@/components/PageTransition"
+import { StaggerContainer, StaggerItem } from "@/components/layout/PageTransition"
 import { AnimatedCard } from "@/components/common/AnimatedCard"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"

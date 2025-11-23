@@ -29,7 +29,7 @@ import {
   formatNotificationTime,
   type Notification,
 } from "@/lib/notifications"
-import { useAuth } from "./AuthProvider"
+import { useAuth } from "@/components/layout/AuthProvider"
 
 export function NotificationBell() {
   const { user } = useAuth()

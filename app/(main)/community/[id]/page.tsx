@@ -9,8 +9,8 @@ import { usePostQuery, useLikePostMutation } from "@/lib/queries/community-queri
 import { toast } from "sonner"
 import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
 import { useAuth } from "@/components/layout/AuthProvider"
-import { ReportButton } from "@/components/ReportButton"
-import { PostComments } from "@/components/PostComments"
+import { ReportButton } from "@/components/dialogs/ReportButton"
+import { PostComments } from "@/components/features/community/PostComments"
 import { Badge } from "@/components/ui/badge"
 
 const categoryColors: Record<string, string> = {
