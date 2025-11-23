@@ -26,6 +26,15 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# testing
+/test-results/
+/playwright-report/
+/coverage/
+
+# temp files
+/temp/
+/vercel log/
+
 # macOS
 .DS_Store
 
@@ -41,4 +50,3 @@ credentials*.json
 *secret*.json
 *.pem
 *.key
-coverage/
