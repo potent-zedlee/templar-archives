@@ -14,7 +14,7 @@ import { ContentEditor } from "@/components/reporter/ContentEditor"
 import { toast } from "sonner"
 import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
 import { isReporterOrAdmin } from "@/lib/admin"
-import { useAuth } from "@/components/AuthProvider"
+import { useAuth } from "@/components/layout/AuthProvider"
 
 export default function ReporterLivePage() {
   const router = useRouter()

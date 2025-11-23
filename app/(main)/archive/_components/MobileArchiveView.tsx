@@ -23,7 +23,7 @@ import {
   Search,
   Filter
 } from "lucide-react"
-import { CategoryLogo } from "@/components/CategoryLogo"
+import { CategoryLogo } from "@/components/common/CategoryLogo"
 import type { TournamentWithDetails } from "@/lib/types/archive"
 
 interface MobileArchiveViewProps {

@@ -7,8 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, ChevronDown, ChevronRight, Upload, X } from "lucide-react"
 import { toast } from "sonner"
 import { isAdmin } from "@/lib/auth-utils"
-import { ClaimPlayerDialog } from "@/components/ClaimPlayerDialog"
-import { useAuth } from "@/components/AuthProvider"
+import { ClaimPlayerDialog } from "@/components/features/player/ClaimPlayerDialog"
+import { useAuth } from "@/components/layout/AuthProvider"
 import {
   usePlayerHandsQuery,
   usePlayerStatsQuery,
@@ -16,7 +16,7 @@ import {
   usePlayerClaimQuery,
   useUpdatePlayerPhotoMutation
 } from "@/lib/queries/players-queries"
-import { HandListAccordion } from "@/components/HandListAccordion"
+import { HandListAccordion } from "@/components/features/hand/HandListAccordion"
 import type { Player } from "@/lib/supabase"
 
 // Dynamic imports for chart components

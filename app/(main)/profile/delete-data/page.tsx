@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle, Trash2, ArrowLeft, CheckCircle, XCircle, Clock } from "lucide-react"
-import { useAuth } from "@/components/AuthProvider"
+import { useAuth } from "@/components/layout/AuthProvider"
 import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
 

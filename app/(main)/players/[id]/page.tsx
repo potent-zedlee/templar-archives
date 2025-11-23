@@ -8,8 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { ArrowLeft, ChevronDown, ChevronRight, Upload } from "lucide-react"
 import { toast } from "sonner"
 import { isAdmin } from "@/lib/auth-utils"
-import { ClaimPlayerDialog } from "@/components/ClaimPlayerDialog"
-import { useAuth } from "@/components/AuthProvider"
+import { ClaimPlayerDialog } from "@/components/features/player/ClaimPlayerDialog"
+import { useAuth } from "@/components/layout/AuthProvider"
 import {
   usePlayerQuery,
   usePlayerHandsQuery,
@@ -18,7 +18,7 @@ import {
   usePlayerClaimQuery,
   useUpdatePlayerPhotoMutation
 } from "@/lib/queries/players-queries"
-import { HandListAccordion } from "@/components/HandListAccordion"
+import { HandListAccordion } from "@/components/features/hand/HandListAccordion"
 
 // Dynamic imports for chart components (Recharts is heavy)
 const PrizeHistoryChart = dynamic(() => import("@/components/PlayerCharts").then(mod => ({ default: mod.PrizeHistoryChart })), {

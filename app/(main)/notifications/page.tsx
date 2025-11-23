@@ -16,7 +16,7 @@ import {
   formatNotificationTime,
   type NotificationType,
 } from "@/lib/notifications"
-import { useAuth } from "@/components/AuthProvider"
+import { useAuth } from "@/components/layout/AuthProvider"
 import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
 
 const notificationTypeLabels: Record<NotificationType, string> = {

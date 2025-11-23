@@ -8,8 +8,8 @@ import { SearchResultsList, type HandWithDetails } from "./_components/SearchRes
 import { HandDetailPanel } from "./_components/HandDetailPanel"
 import { fetchHandsWithDetails } from "@/lib/queries"
 import { toast } from "sonner"
-import { ErrorBoundary } from "@/components/ErrorBoundary"
-import { EmptyState } from "@/components/EmptyState"
+import { ErrorBoundary } from "@/components/common/ErrorBoundary"
+import { EmptyState } from "@/components/common/EmptyState"
 import { Search, Monitor } from "lucide-react"
 import { applyExtendedSearchFilters } from "@/lib/filter-utils"
 

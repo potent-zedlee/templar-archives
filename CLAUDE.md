@@ -6,23 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 저장소 구조
 
-이 저장소는 **모노레포** 구조입니다:
-
 ```
-Templar-Archives-Index-Claude/     # 루트 (문서, 설정)
-├── templar-archives/              # 서브모듈 (실제 애플리케이션 코드)
-│   ├── app/                       # Next.js App Router
-│   ├── components/                # React 컴포넌트
-│   ├── lib/                       # 유틸리티, 타입, 쿼리
-│   ├── stores/                    # Zustand 상태 관리
-│   ├── trigger/                   # Trigger.dev Tasks
-│   └── supabase/                  # DB 마이그레이션
-├── docs/                          # 문서
-├── work-logs/                     # 개발 로그
-└── scripts/                       # 운영 스크립트
+Templar-Archives-Index-Claude/
+├── app/                       # Next.js App Router
+├── components/                # React 컴포넌트
+├── lib/                       # 유틸리티, 타입, 쿼리
+├── stores/                    # Zustand 상태 관리
+├── trigger/                   # Trigger.dev Tasks
+├── supabase/                  # DB 마이그레이션
+├── docs/                      # 문서
+├── work-logs/                 # 개발 로그
+└── scripts/                   # 운영 스크립트
 ```
-
-**개발 작업**은 `templar-archives/` 디렉토리에서 수행합니다.
 
 ---
 
@@ -39,8 +34,6 @@ Templar Archives는 포커 영상을 자동으로 핸드 히스토리로 변환�
 ## 빠른 시작
 
 ```bash
-cd templar-archives
-
 # 개발 서버
 npm run dev
 
@@ -136,7 +129,7 @@ Frontend → Server Action → Trigger.dev v3
 
 ## 환경 변수
 
-`templar-archives/.env.local`:
+`.env.local`:
 
 ```bash
 # 필수

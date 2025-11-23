@@ -26,7 +26,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Check, X, Clock, CheckCircle2, XCircle, Trash2 } from "lucide-react"
 import { toast } from "sonner"
-import { useAuth } from "@/components/AuthProvider"
+import { useAuth } from "@/components/layout/AuthProvider"
 import { useRouter } from "next/navigation"
 import { isAdmin } from "@/lib/auth-utils"
 import type { DeletionRequestWithUser } from "@/lib/data-deletion-requests"

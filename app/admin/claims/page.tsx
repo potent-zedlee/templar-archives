@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react"
 import { Check, X, ExternalLink, Clock, CheckCircle2, XCircle } from "lucide-react"
 import { toast } from "sonner"
-import { useAuth } from "@/components/AuthProvider"
+import { useAuth } from "@/components/layout/AuthProvider"
 import { useRouter } from "next/navigation"
 import { isAdmin } from "@/lib/auth-utils"
 import { type PlayerClaimWithDetails } from "@/lib/player-claims"

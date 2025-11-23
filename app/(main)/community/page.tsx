@@ -14,16 +14,16 @@ import Link from "next/link"
 import { fetchPosts, togglePostLike, type Post } from "@/lib/supabase-community"
 import { toast } from "sonner"
 import { CardSkeleton } from "@/components/skeletons/CardSkeleton"
-import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { ErrorBoundary } from "@/components/common/ErrorBoundary"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createPost } from "@/lib/supabase-community"
-import { CommunitySearchBar } from "@/components/CommunitySearchBar"
-import { CommunityFilters } from "@/components/CommunityFilters"
-import { useAuth } from "@/components/AuthProvider"
+import { CommunitySearchBar } from "@/components/features/community/CommunitySearchBar"
+import { CommunityFilters } from "@/components/features/community/CommunityFilters"
+import { useAuth } from "@/components/layout/AuthProvider"
 import { ReportButton } from "@/components/ReportButton"
 
 // Dynamic imports for heavy components
@@ -36,7 +36,7 @@ const PopularPostsSidebar = dynamic(
 )
 
 const HandSearchDialog = dynamic(
-  () => import("@/components/HandSearchDialog").then(mod => ({ default: mod.HandSearchDialog })),
+  () => import("@/components/features/hand/HandSearchDialog").then(mod => ({ default: mod.HandSearchDialog })),
   {
     ssr: false
   }

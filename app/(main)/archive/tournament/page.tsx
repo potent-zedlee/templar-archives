@@ -12,7 +12,7 @@
  */
 
 import { useState, useMemo } from "react"
-import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { ErrorBoundary } from "@/components/common/ErrorBoundary"
 import { ArchiveFilterSidebar } from "../_components/ArchiveFilterSidebar"
 import { ArchiveNavigationSidebar } from "../_components/ArchiveNavigationSidebar"
 import { ArchiveDashboard } from "../_components/ArchiveDashboard"

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Menu, X } from "lucide-react"
-import { useAuth } from "@/components/AuthProvider"
+import { useAuth } from "@/components/layout/AuthProvider"
 import { signOut } from "@/lib/auth"
 import { isAdmin, isReporterOrAdmin } from "@/lib/admin"
 import { NotificationBell } from "@/components/NotificationBell"

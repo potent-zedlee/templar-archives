@@ -14,7 +14,7 @@ import { CalendarIcon, RotateCcw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { useTournamentsQuery, usePlayersQuery } from "@/lib/queries/search-queries"
-import { CardSelector } from "@/components/CardSelector"
+import { CardSelector } from "@/components/common/CardSelector"
 import { HoleCardDialog } from "./HoleCardDialog"
 import { HandValueDialog } from "./HandValueDialog"
 

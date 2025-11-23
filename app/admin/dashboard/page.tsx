@@ -22,7 +22,7 @@ import {
   BarChart3,
   PieChart as PieChartIcon,
 } from "lucide-react"
-import { useAuth } from "@/components/AuthProvider"
+import { useAuth } from "@/components/layout/AuthProvider"
 import { isAdmin } from "@/lib/admin"
 import { useDashboardStatsQuery, useRecentActivityQuery } from "@/lib/queries/admin-queries"
 import { toast } from "sonner"

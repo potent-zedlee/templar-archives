@@ -1,6 +1,6 @@
 "use client"
 
-import { AnimatedCard } from "@/components/AnimatedCard"
+import { AnimatedCard } from "@/components/common/AnimatedCard"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, MapPin, Trophy, Video, Hash } from "lucide-react"
 import type { Tournament } from "@/lib/types/archive"

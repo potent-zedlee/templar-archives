@@ -5,7 +5,7 @@ import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Loader2, ExternalLink } from "lucide-react"
 import Link from "next/link"
-import { EmptyState } from "@/components/EmptyState"
+import { EmptyState } from "@/components/common/EmptyState"
 import { Search } from "lucide-react"
 import { YouTubePlayer } from "@/components/video/YouTubePlayer"
 

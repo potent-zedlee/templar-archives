@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, Check, X, AlertTriangle, Trash2 } from "lucide-react"
-import { useAuth } from "@/components/AuthProvider"
+import { useAuth } from "@/components/layout/AuthProvider"
 import { toast } from "sonner"
 import {
   useCurrentUserProfileQuery,

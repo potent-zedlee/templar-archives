@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
-import { EmptyState } from "@/components/EmptyState"
+import { EmptyState } from "@/components/common/EmptyState"
 import { Search } from "lucide-react"
 
 export interface HandWithDetails {
