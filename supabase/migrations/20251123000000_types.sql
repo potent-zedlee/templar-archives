@@ -10,6 +10,11 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 
+-- Extensions
+CREATE EXTENSION IF NOT EXISTS "pg_trgm" WITH SCHEMA "public";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
+
+
 CREATE SCHEMA IF NOT EXISTS "public";
 
 

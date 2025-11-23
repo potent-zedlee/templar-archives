@@ -50,3 +50,4 @@ credentials*.json
 *secret*.json
 *.pem
 *.key
+supabase/.branches/
