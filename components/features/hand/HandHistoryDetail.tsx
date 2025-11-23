@@ -27,7 +27,7 @@ import { getHandLikeStatus, toggleHandLike, type HandLikeStatus } from "@/lib/ha
 import { isHandBookmarked, addHandBookmark, removeHandBookmark } from "@/lib/hand-bookmarks"
 import { EditHandDialog } from "@/components/EditHandDialog"
 import { EditRequestDialog } from "@/components/EditRequestDialog"
-import { BookmarkDialog } from "@/components/dialogs/BookmarkDialog"
+import { BookmarkDialog } from "@/components/BookmarkDialog"
 import { isAdmin } from "@/lib/auth-utils"
 import { HandComments } from "@/components/HandComments"
 import { HandTagBadges } from "@/components/HandTagBadges"

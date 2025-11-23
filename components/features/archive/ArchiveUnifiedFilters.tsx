@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { AdvancedFilters } from "@/lib/types/archive"
-import { CategoryLogo } from "@/components/common/CategoryLogo"
-import { CardSelector } from "@/components/common/CardSelector"
+import { CategoryLogo } from "@/components/CategoryLogo"
+import { CardSelector } from "@/components/CardSelector"
 import {
   TOURNAMENT_CATEGORIES,
   POPULAR_CATEGORIES,

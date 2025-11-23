@@ -8,7 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
-import { HandHistoryDetail } from "@/components/HandHistoryDetail"
+import { HandHistoryDetail } from "@/components/features/hand/HandHistoryDetail"
 import { Play, ThumbsUp, ThumbsDown, MessageCircle } from "lucide-react"
 import { useAuth } from "@/components/layout/AuthProvider"
 import type { HandHistory } from "@/lib/types/hand-history"

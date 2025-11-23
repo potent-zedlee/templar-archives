@@ -27,7 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CategoryLogo } from "@/components/common/CategoryLogo"
+import { CategoryLogo } from "@/components/CategoryLogo"
 
 interface ArchiveEventCardProps {
   item: FolderItem

@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Edit, Trash2, Calendar, MapPin, DollarSign, Users, Video, Hash, ExternalLink } from "lucide-react"
-import { CategoryLogo } from "@/components/common/CategoryLogo"
+import { CategoryLogo } from "@/components/CategoryLogo"
 import { format } from "date-fns"
 import type { FolderItem, Tournament, Event, Stream } from "@/lib/types/archive"
 
