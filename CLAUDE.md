@@ -20,12 +20,13 @@ Templar-Archives-Index-Claude/
 ├── stores/                    # Zustand 상태 관리
 ├── trigger/                   # Trigger.dev Tasks
 ├── supabase/migrations/       # DB 스키마 (분리된 SQL 파일)
-│   ├── *_00_types.sql         # ENUM 타입
-│   ├── *_01_tables.sql        # 테이블 정의
-│   ├── *_02_functions.sql     # RPC 함수
-│   ├── *_03_indexes.sql       # 인덱스
-│   ├── *_04_policies.sql      # RLS 정책
-│   └── *_05_triggers.sql      # 트리거/권한
+│   ├── *_types.sql            # Extensions + ENUM 타입
+│   ├── *_tables.sql           # 테이블 정의
+│   ├── *_functions.sql        # RPC 함수
+│   ├── *_views.sql            # VIEW 정의
+│   ├── *_indexes.sql          # 인덱스
+│   ├── *_policies.sql         # RLS 정책
+│   └── *_triggers.sql         # 트리거/FK/권한
 ├── scripts/                   # 운영 스크립트
 │   ├── admin-cli.ts           # 메인 CLI (npm run admin)
 │   └── operations/            # 운영 스크립트 모음
