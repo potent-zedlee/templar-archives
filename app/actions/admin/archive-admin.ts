@@ -567,7 +567,7 @@ export async function validateStreamChecklist(
     }
 
     // 4. 핸드 개수 확인
-    const { data: hands, error: handsError } = await supabase
+    const { data: hands } = await supabase
       .from('hands')
       .select('id')
       .eq('day_id', streamId)

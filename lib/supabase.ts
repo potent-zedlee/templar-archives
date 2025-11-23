@@ -81,6 +81,7 @@ export type Player = {
   name: string
   photo_url?: string
   country?: string
+  gender?: 'male' | 'female' | 'other'
   total_winnings?: number
   created_at?: string
 }

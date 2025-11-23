@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { StaggerContainer, StaggerItem } from "@/components/layout/PageTransition"
 import { AnimatedCard } from "@/components/common/AnimatedCard"

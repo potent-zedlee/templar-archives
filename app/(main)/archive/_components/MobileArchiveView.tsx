@@ -11,7 +11,6 @@
 import { useState } from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -20,14 +19,13 @@ import {
   MapPin,
   Trophy,
   ChevronRight,
-  Search,
-  Filter
+  Search
 } from "lucide-react"
 import { CategoryLogo } from "@/components/common/CategoryLogo"
-import type { TournamentWithDetails } from "@/lib/types/archive"
+import type { Tournament } from "@/lib/types/archive"
 
 interface MobileArchiveViewProps {
-  tournaments: TournamentWithDetails[]
+  tournaments: Tournament[]
   isLoading?: boolean
 }
 
@@ -42,7 +40,7 @@ export function MobileArchiveView({ tournaments, isLoading }: MobileArchiveViewP
   )
 
   // 핸드 수 계산
-  const getTotalHands = (tournament: TournamentWithDetails): number => {
+  const getTotalHands = (tournament: Tournament): number => {
     let total = 0
     tournament.events?.forEach(event => {
       event.streams?.forEach(stream => {

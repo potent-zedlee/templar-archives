@@ -64,9 +64,10 @@ export function ArchiveSidebarCategories({
     // Find if selected category is a child and auto-expand its parent
     const selectedCat = allCategories.find(cat => cat.id === selectedCategory)
     if (selectedCat?.parent_id) {
+      const parentId = selectedCat.parent_id
       setExpandedParentIds(prev => {
         const newSet = new Set(prev)
-        newSet.add(selectedCat.parent_id)
+        newSet.add(parentId)
         return newSet
       })
     }

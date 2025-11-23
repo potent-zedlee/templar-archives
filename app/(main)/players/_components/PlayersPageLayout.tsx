@@ -29,7 +29,7 @@ export function PlayersPageLayout({ players, loading }: PlayersPageLayoutProps) 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // Load selected player data if ID exists
-  const { data: selectedPlayer, isLoading: playerLoading } = usePlayerQuery(selectedPlayerId || '')
+  const { data: selectedPlayer } = usePlayerQuery(selectedPlayerId || '')
 
   // Get unique countries with player counts
   const countries = Array.from(new Set(players.map(p => p.country).filter(Boolean))).sort() as string[]

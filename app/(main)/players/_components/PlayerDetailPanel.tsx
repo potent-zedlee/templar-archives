@@ -99,7 +99,7 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
     const eventsMap = new Map<string, number>()
     const categoriesMap = new Map<string, number>()
 
-    tournaments.forEach((tournament) => {
+    tournaments.forEach((tournament: any) => {
       let tournamentHandCount = 0
 
       tournament.sub_events?.forEach((subEvent: any) => {
@@ -183,7 +183,7 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
     }))
   }
 
-  const toggleSubEvent = (tournamentId: string, subEventId: string) => {
+  const toggleSubEvent = (_tournamentId: string, subEventId: string) => {
     setExpandedSubEvents((prev) => ({
       ...prev,
       [subEventId]: !(prev[subEventId] ?? false)
@@ -379,7 +379,7 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
               </div>
             ) : (
               <div className="space-y-1">
-                {tournaments.map((tournament) => (
+                {tournaments.map((tournament: any) => (
                   <div key={tournament.id}>
                     {/* Tournament Level */}
                     <div

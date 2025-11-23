@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useMemo, useEffect } from "react"
+import { useState, useRef, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { useParams, useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -99,11 +99,11 @@ export default function PlayerDetailClient() {
   const userClaim = claimData?.userClaim || null
 
   // Calculate tournaments from hands data (useMemo to prevent hydration mismatch)
-  const tournaments = useMemo(() => {
-    return handsData.map((tournament: any) => ({
+  const tournaments: Tournament[] = useMemo(() => {
+    return handsData.map((tournament: Tournament) => ({
       ...tournament,
       expanded: expandedTournaments[tournament.id] ?? true,
-      sub_events: tournament.sub_events.map((event: any) => ({
+      sub_events: tournament.sub_events.map((event: Event) => ({
         ...event,
         expanded: expandedEvents[event.id] ?? false,
       })),
@@ -210,7 +210,7 @@ export default function PlayerDetailClient() {
     }))
   }
 
-  const toggleEvent = (tournamentId: string, eventId: string) => {
+  const toggleEvent = (_tournamentId: string, eventId: string) => {
     setExpandedEvents((prev) => ({
       ...prev,
       [eventId]: !(prev[eventId] ?? false)

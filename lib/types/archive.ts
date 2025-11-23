@@ -105,6 +105,7 @@ export interface Stream {
   is_organized?: boolean // DEPRECATED: use status instead
   organized_at?: string
   player_count?: number
+  hand_count?: number // Computed: count of hands in this stream
   // Publication status
   status?: ContentStatus
   published_by?: string

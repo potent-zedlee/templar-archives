@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
 import { PageTransition } from "@/components/layout/PageTransition"
 import { SearchFilterSidebar, type SearchFilters } from "./_components/SearchFilterSidebar"
 import { SearchResultsList, type HandWithDetails } from "./_components/SearchResultsList"
@@ -14,9 +13,6 @@ import { Search, Monitor } from "lucide-react"
 import { applyExtendedSearchFilters } from "@/lib/filter-utils"
 
 export default function SearchPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
   // State
   const [hands, setHands] = useState<HandWithDetails[]>([])
   const [loading, setLoading] = useState(false)
