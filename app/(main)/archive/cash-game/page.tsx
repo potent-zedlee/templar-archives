@@ -186,7 +186,7 @@ export default function ArchiveCashGamePage() {
             <ArchiveNavigationSidebar
               tournaments={filteredTournaments}
               selectedStreamId={selectedStreamId}
-              onStreamSelect={setSelectedStreamId}
+              onStreamSelect={(streamId) => setSelectedStreamId(streamId)}
             />
           </aside>
 
