@@ -2,9 +2,9 @@
 
 > **Templar Archives** 데이터베이스 구조 및 설계 가이드
 
-**마지막 업데이트**: 2025-11-19
+**마지막 업데이트**: 2025-11-23
 **데이터베이스**: PostgreSQL 15 (Supabase)
-**총 테이블 수**: 27개
+**총 테이블 수**: 28개
 
 ---
 
@@ -92,6 +92,7 @@ Templar Archives는 포커 핸드 데이터를 체계적으로 관리하고 분�
 | `security_events` | 보안 이벤트 로그 |
 | `audit_logs` | 감사 로그 |
 | `unsorted_videos` | 미분류 비디오 (임시) |
+| `analysis_jobs` | KAN 영상 분석 작업 (Trigger.dev) ⭐ 신규 |
 
 ---
 
@@ -410,7 +411,38 @@ player_stats_cache (1) [캐시]
 
 ---
 
-### 12. notifications
+### 12. analysis_jobs ⭐ 신규
+**목적**: KAN 영상 분석 작업 추적 (Trigger.dev v3)
+
+**주요 컬럼**:
+- `id` (UUID, PK)
+- `stream_id` (UUID, FK → streams)
+- `status` (TEXT) - 'pending' | 'processing' | 'completed' | 'failed'
+- `progress` (INTEGER) - 진행률 (0-100)
+- `error` (TEXT) - 에러 메시지
+- `trigger_run_id` (TEXT) - Trigger.dev 실행 ID
+- `platform` (TEXT) - 'ept' | 'triton' | 'wsop' | 'pokerstars' | 'hustler'
+- `segment_start` (INTEGER) - 세그먼트 시작 시간 (초)
+- `segment_end` (INTEGER) - 세그먼트 종료 시간 (초)
+- `result` (JSONB) - 분석 결과 (핸드 데이터)
+- `created_at`, `updated_at` (TIMESTAMPTZ)
+
+**관계**:
+- N:1 → `streams`
+
+**인덱스**:
+- `idx_analysis_jobs_stream_id` (stream_id)
+- `idx_analysis_jobs_status` (status)
+- `idx_analysis_jobs_trigger_run_id` (trigger_run_id)
+
+**사용 패턴**:
+1. Server Action에서 작업 생성
+2. Trigger.dev Task에서 진행률/상태 업데이트
+3. React Query 폴링 (2초 간격)으로 UI 업데이트
+
+---
+
+### 13. notifications
 **목적**: 실시간 알림 시스템
 
 **주요 컬럼**:
@@ -605,6 +637,7 @@ SELECT cleanup_old_audit_logs(); -- 180일 이상
 
 | 날짜 | 버전 | 변경 내용 |
 |------|------|----------|
+| 2025-11-23 | 1.2 | analysis_jobs 테이블 추가 (Trigger.dev KAN 작업 추적) |
 | 2025-11-19 | 1.1 | SubEvent → Event 용어 통일, 테이블 설명 개선 |
 | 2025-11-02 | 1.0 | 초기 문서 생성, player_stats_cache 추가 |
 | 2024-10-30 | 0.9 | hands 테이블 analysis_metadata 추가 |

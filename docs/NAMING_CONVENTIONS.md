@@ -2,8 +2,8 @@
 
 > **Templar Archives** 프로젝트의 일관된 네이밍 규칙
 
-**마지막 업데이트**: 2025-11-02
-**버전**: 1.0
+**마지막 업데이트**: 2025-11-23
+**버전**: 1.1
 
 ---
 
@@ -424,15 +424,19 @@
 
 ### 컴포넌트 파일
 
-**패턴**: kebab-case.tsx
+**패턴**: PascalCase.tsx (2025-11 업데이트)
 
 ```bash
-✅ player-stats-card.tsx
-✅ archive-toolbar.tsx
+✅ PlayerStatsCard.tsx
+✅ ArchiveToolbar.tsx
+✅ HandDetailPanel.tsx
 
-❌ PlayerStatsCard.tsx (PascalCase 금지)
+❌ player-stats-card.tsx (kebab-case 금지 - 과거 방식)
 ❌ player_stats_card.tsx (snake_case 금지)
 ```
+
+**참고**: 2025-11 업데이트로 컴포넌트 파일명은 PascalCase를 사용합니다.
+이는 컴포넌트 이름과 파일명의 일관성을 위한 것입니다.
 
 ### 라이브러리 파일
 
@@ -441,6 +445,8 @@
 ```bash
 ✅ player-stats.ts
 ✅ hand-bookmarks.ts
+✅ filter-utils.ts
+✅ auth-utils.ts
 
 ❌ playerStats.ts (camelCase 금지)
 ```
@@ -530,6 +536,7 @@
 
 | 날짜 | 버전 | 변경 내용 |
 |------|------|----------|
+| 2025-11-23 | 1.1 | 컴포넌트 파일명 PascalCase 규칙 업데이트 |
 | 2025-11-02 | 1.0 | 초기 문서 생성 |
 
 ---

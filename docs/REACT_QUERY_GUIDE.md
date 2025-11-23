@@ -2,8 +2,8 @@
 
 > Templar Archives에서 React Query를 사용한 데이터 페칭 패턴
 
-**마지막 업데이트**: 2025-10-20
-**버전**: 1.0
+**마지막 업데이트**: 2025-11-23
+**버전**: 1.1
 
 ---
 
@@ -23,7 +23,7 @@
 
 ## 개요
 
-Templar Archives는 **@tanstack/react-query 5.x**를 사용하여 서버 상태를 관리합니다.
+Templar Archives는 **@tanstack/react-query 5.90.5**를 사용하여 서버 상태를 관리합니다.
 
 ### 왜 React Query?
 
@@ -97,13 +97,24 @@ React Query DevTools는 개발 환경에서만 렌더링됩니다:
 
 ```
 lib/queries/
-├── community-queries.ts      # 커뮤니티 포스트 (89줄)
-├── search-queries.ts          # 검색 및 필터 (68줄)
-├── players-queries.ts         # 플레이어 관련 (203줄)
-├── profile-queries.ts         # 유저 프로필 (163줄)
-├── bookmarks-queries.ts       # 북마크 (79줄)
-└── edit-requests-queries.ts   # 핸드 수정 제안 (38줄)
+├── archive-queries.ts         # Tournament/SubEvent/Stream/Hands
+├── category-queries.ts        # 카테고리 조회
+├── community-queries.ts       # 커뮤니티 포스트
+├── search-queries.ts          # 검색 및 필터
+├── players-queries.ts         # 플레이어 관련
+├── player-stats-queries.ts    # 플레이어 통계 ⭐
+├── profile-queries.ts         # 유저 프로필
+├── bookmarks-queries.ts       # 북마크
+├── edit-requests-queries.ts   # 핸드 수정 제안
+├── kan-queries.ts             # KAN 분석 작업 모니터링 ⭐
+├── notification-queries.ts    # 알림
+└── ... (총 20개 파일)
 ```
+
+**주요 쿼리 파일**:
+- `archive-queries.ts` - Tournament/SubEvent/Stream/Hands 계층 조회
+- `players-queries.ts` - 플레이어 통계 및 프로필
+- `kan-queries.ts` - Trigger.dev 작업 상태 폴링
 
 ### 파일 구조 패턴
 
@@ -598,6 +609,15 @@ onSuccess: () => {
 
 ---
 
+## 변경 이력
+
+| 날짜 | 버전 | 변경 내용 |
+|------|------|----------|
+| 2025-11-23 | 1.1 | React Query 5.90.5 버전 업데이트, 쿼리 파일 목록 갱신 |
+| 2025-10-20 | 1.0 | 초기 문서 생성 |
+
+---
+
 **작성자**: Claude Code
 **프로젝트**: Templar Archives
-**버전**: 1.0 (2025-10-20)
+**버전**: 1.1 (2025-11-23)
