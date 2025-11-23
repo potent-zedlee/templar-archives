@@ -12,6 +12,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // React 19 Compiler - 자동 메모이제이션 (useMemo/useCallback 불필요)
+  reactCompiler: true,
   // Empty turbopack config to silence webpack/turbopack conflict warning
   turbopack: {},
   webpack: (config, { isServer }) => {
