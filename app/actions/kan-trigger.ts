@@ -80,7 +80,12 @@ export async function startKanAnalysisWithTrigger(
     }))
 
     // Trigger.dev v4 작업 트리거
-    const { tasks } = await import("@trigger.dev/sdk");
+    const { tasks, configure } = await import("@trigger.dev/sdk");
+
+    // Server Action에서 SDK 사용 시 configure 필요
+    configure({
+      secretKey: process.env.TRIGGER_SECRET_KEY,
+    });
 
     const handle = await tasks.trigger("kan-video-analysis", {
       youtubeUrl: videoUrl,
@@ -129,7 +134,11 @@ export async function startKanAnalysisWithTrigger(
 export async function getTriggerJobStatus(jobId: string) {
   try {
     // Trigger.dev v4에서 작업 상태 조회
-    const { runs } = await import("@trigger.dev/sdk");
+    const { runs, configure } = await import("@trigger.dev/sdk");
+
+    configure({
+      secretKey: process.env.TRIGGER_SECRET_KEY,
+    });
 
     const run = await runs.retrieve(jobId);
 
