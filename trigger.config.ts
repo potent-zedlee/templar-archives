@@ -1,5 +1,5 @@
 import { defineConfig } from "@trigger.dev/sdk";
-import { ffmpeg } from "@trigger.dev/build/extensions/core";
+import { ffmpeg, syncEnvVars } from "@trigger.dev/build/extensions/core";
 
 export default defineConfig({
   project: "proj_oeniovgjdjmalhpsigaa",
@@ -24,6 +24,24 @@ export default defineConfig({
     // FFmpeg extension for video processing
     extensions: [
       ffmpeg({ version: "7" }),
+      // Sync environment variables to Trigger.dev
+      syncEnvVars(async (ctx) => {
+        // Required environment variables for video analysis
+        return [
+          {
+            name: "NEXT_PUBLIC_SUPABASE_URL",
+            value: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+          },
+          {
+            name: "SUPABASE_SERVICE_ROLE_KEY",
+            value: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+          },
+          {
+            name: "GOOGLE_API_KEY",
+            value: process.env.GOOGLE_API_KEY || "",
+          },
+        ];
+      }),
     ],
   },
 });
