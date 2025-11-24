@@ -82,10 +82,27 @@ export async function startKanAnalysisWithTrigger(
     // Trigger.dev v4 작업 트리거
     const { tasks, configure } = await import("@trigger.dev/sdk");
 
+    // 환경 변수 디버깅
+    const secretKey = process.env.TRIGGER_SECRET_KEY;
+    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY exists: ${!!secretKey}`);
+    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY length: ${secretKey?.length || 0}`);
+    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY prefix: ${secretKey?.substring(0, 10) || 'N/A'}...`);
+
+    if (!secretKey) {
+      console.error('[KAN-Trigger] TRIGGER_SECRET_KEY is not set!');
+      return {
+        success: false,
+        error: 'TRIGGER_SECRET_KEY is not configured'
+      };
+    }
+
     // Server Action에서 SDK 사용 시 configure 필요
     configure({
-      secretKey: process.env.TRIGGER_SECRET_KEY,
+      secretKey: secretKey,
     });
+
+    console.log('[KAN-Trigger] Triggering task: kan-video-analysis');
+    console.log('[KAN-Trigger] Payload:', JSON.stringify({ youtubeUrl: videoUrl, segments: formattedSegments, platform, streamId }));
 
     const handle = await tasks.trigger("kan-video-analysis", {
       youtubeUrl: videoUrl,
@@ -94,6 +111,7 @@ export async function startKanAnalysisWithTrigger(
       streamId
     });
 
+    console.log('[KAN-Trigger] Handle received:', JSON.stringify(handle));
     const jobId = handle.id;
 
     console.log(`[KAN-Trigger] Job started: ${jobId}`)
