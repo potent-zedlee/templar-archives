@@ -4,7 +4,7 @@
  * Python google-generativeai → @google/genai (TypeScript) 전환
  *
  * 주요 기능:
- * - Gemini 2.5 Flash 영상 분석
+ * - Gemini 3 Pro Preview 영상 분석
  * - 플랫폼별 프롬프트 (EPT, Triton, WSOP)
  * - 구조화된 JSON 응답
  * - 재시도 로직
@@ -50,7 +50,7 @@ export type Platform = 'ept' | 'triton' | 'wsop';
 
 export class GeminiAnalyzer {
   private genAI: GoogleGenAI;
-  private modelName = 'gemini-2.5-flash';
+  private modelName = 'gemini-3-pro-preview';
 
   constructor() {
     const apiKey = process.env.GOOGLE_API_KEY;
@@ -132,7 +132,7 @@ export class GeminiAnalyzer {
         const fileUri = await this.uploadVideo(videoBuffer);
 
         // 2. Gemini 분석 실행
-        console.log('[GeminiAnalyzer] Sending analysis request to Gemini 2.5 Flash...');
+        console.log('[GeminiAnalyzer] Sending analysis request to Gemini 3 Pro Preview...');
 
         const result = await this.genAI.models.generateContent({
           model: this.modelName,
