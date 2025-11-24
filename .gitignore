@@ -52,3 +52,4 @@ credentials*.json
 *.pem
 *.key
 supabase/.branches/
+.vercel
