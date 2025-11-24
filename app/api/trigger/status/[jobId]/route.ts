@@ -35,12 +35,20 @@ export async function GET(
       : run.status === 'QUEUED' ? 'PENDING'
       : run.status;
 
+    const errorMessage =
+      typeof run.error === 'string'
+        ? run.error
+        : run.error && typeof run.error === 'object'
+          ? (run.error as { message?: string }).message ?? JSON.stringify(run.error)
+          : null
+
     return NextResponse.json({
       id: run.id,
       status: mappedStatus,
       progress,
       output: run.output,
-      error: run.error,
+      error: errorMessage,
+      errorDetail: run.error ?? null,
       createdAt: run.createdAt,
       startedAt: run.startedAt,
       completedAt: run.finishedAt

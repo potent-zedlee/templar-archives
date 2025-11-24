@@ -150,9 +150,16 @@ export function AnalyzeVideoDialog({
 
     // 실패 처리
     if (triggerJobData.status === 'FAILURE') {
+      const errorMessage =
+        typeof triggerJobData.error === 'string'
+          ? triggerJobData.error
+          : triggerJobData.error && typeof triggerJobData.error === 'object'
+            ? (triggerJobData.error as { message?: string }).message ?? '분석 중 오류가 발생했습니다'
+            : '분석 중 오류가 발생했습니다'
+
       setStatus('error')
-      setError(triggerJobData.error || '분석 중 오류가 발생했습니다')
-      toast.error(triggerJobData.error || '분석 중 오류가 발생했습니다')
+      setError(errorMessage)
+      toast.error(errorMessage)
     }
   }, [triggerJobData, jobId, status])
 
