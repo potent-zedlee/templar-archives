@@ -36,6 +36,9 @@ next-env.d.ts
 /temp/
 /vercel log/
 
+# Trigger.dev build artifacts
+.trigger/
+
 # macOS
 .DS_Store
 
