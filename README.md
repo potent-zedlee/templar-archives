@@ -177,6 +177,9 @@ TRIGGER_SECRET_KEY=your-key          # Trigger.dev v3
 # 선택
 ANTHROPIC_API_KEY=sk-ant-...         # Claude
 UPSTASH_REDIS_REST_URL=your-url      # Rate Limiting
+YTDL_COOKIE=VISITOR_INFO1_LIVE=xxx;__Secure-3PSID=xxx
+YTDL_USER_AGENT="Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15"
+YTDL_ACCEPT_LANGUAGE=en-US,en;q=0.9
 ```
 
 ---

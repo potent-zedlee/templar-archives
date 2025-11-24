@@ -39,6 +39,9 @@
 | `UPSTASH_REDIS_REST_URL` | Rate Limiting | https://console.upstash.com |
 | `UPSTASH_REDIS_REST_TOKEN` | Rate Limiting | https://console.upstash.com |
 | `YOUTUBE_API_KEY` | YouTube Data API | Google Cloud Console |
+| `YTDL_COOKIE` | YouTube Bot 차단 우회를 위한 쿠키 문자열 | 브라우저 개발자도구 → Network |
+| `YTDL_USER_AGENT` | YouTube 요청에 사용할 User-Agent | 동일 |
+| `YTDL_ACCEPT_LANGUAGE` | YouTube Accept-Language 헤더 | 기본: `en-US,en;q=0.9` |
 | `CSRF_SECRET` | CSRF 보호용 시크릿 | 랜덤 문자열 생성 |
 
 ---

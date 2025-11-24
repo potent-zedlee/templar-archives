@@ -40,6 +40,18 @@ export default defineConfig({
             name: "GOOGLE_API_KEY",
             value: process.env.GOOGLE_API_KEY || "",
           },
+          {
+            name: "YTDL_COOKIE",
+            value: process.env.YTDL_COOKIE || "",
+          },
+          {
+            name: "YTDL_USER_AGENT",
+            value: process.env.YTDL_USER_AGENT || "",
+          },
+          {
+            name: "YTDL_ACCEPT_LANGUAGE",
+            value: process.env.YTDL_ACCEPT_LANGUAGE || "",
+          },
         ];
       }),
     ],
