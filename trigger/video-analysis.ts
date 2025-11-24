@@ -1,4 +1,4 @@
-import { task, retry, metadata, AbortTaskRunError } from "@trigger.dev/sdk/v3";
+import { task, retry, metadata, AbortTaskRunError } from "@trigger.dev/sdk";
 import { z } from "zod";
 import { youtubeDownloader } from "../lib/video/youtube-downloader";
 import { ffmpegProcessor } from "../lib/video/ffmpeg-processor";
