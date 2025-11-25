@@ -40,6 +40,8 @@ export interface UseGcsUploadReturn {
 
 interface UploadState {
   uploadUrl: string
+  uploadId: string  // 추가: complete-upload API에 필요
+  gcsUri: string    // 추가: 완료 시 반환
   fileName: string
   fileSize: number
   uploadedBytes: number
@@ -139,9 +141,10 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
 
   /**
    * 업로드 초기화
+   * @returns { uploadUrl, uploadId, gcsUri }
    */
   const initUpload = useCallback(
-    async (file: File): Promise<string> => {
+    async (file: File): Promise<{ uploadUrl: string; uploadId: string; gcsUri: string }> => {
       const response = await fetch('/api/gcs/init-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -159,7 +162,11 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
       }
 
       const data = await response.json()
-      return data.uploadUrl
+      return {
+        uploadUrl: data.uploadUrl,
+        uploadId: data.uploadId,
+        gcsUri: data.gcsUri,
+      }
     },
     [streamId]
   )
@@ -229,15 +236,15 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
 
   /**
    * 업로드 완료
+   * @param uploadId - video_uploads 테이블의 레코드 ID
    */
   const completeUpload = useCallback(
-    async (uploadUrl: string): Promise<string> => {
+    async (uploadId: string): Promise<string> => {
       const response = await fetch('/api/gcs/complete-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uploadUrl,
-          streamId,
+          uploadId,  // uploadUrl이 아닌 uploadId 사용
         }),
       })
 
@@ -249,7 +256,7 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
       const data = await response.json()
       return data.gcsUri
     },
-    [streamId]
+    []
   )
 
   // ==================== Public Methods ====================
@@ -270,22 +277,32 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
         // 저장된 상태 확인
         const savedState = loadUploadState()
         let uploadUrl: string
+        let uploadId: string
+        let gcsUri: string
         let startByte = 0
 
         if (
           savedState &&
           savedState.fileName === file.name &&
-          savedState.fileSize === file.size
+          savedState.fileSize === file.size &&
+          savedState.uploadId  // uploadId가 있는 경우에만 재개
         ) {
           // 재개
           uploadUrl = savedState.uploadUrl
+          uploadId = savedState.uploadId
+          gcsUri = savedState.gcsUri
           startByte = savedState.uploadedBytes
           uploadStateRef.current = savedState
         } else {
           // 새로운 업로드
-          uploadUrl = await initUpload(file)
+          const initResult = await initUpload(file)
+          uploadUrl = initResult.uploadUrl
+          uploadId = initResult.uploadId
+          gcsUri = initResult.gcsUri
           uploadStateRef.current = {
             uploadUrl,
+            uploadId,
+            gcsUri,
             fileName: file.name,
             fileSize: file.size,
             uploadedBytes: 0,
@@ -305,11 +322,11 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
 
         // 완료
         if (uploadedBytes === file.size) {
-          const gcsUri = await completeUpload(uploadUrl)
+          const resultGcsUri = await completeUpload(uploadId)
           setStatus('completed')
           setProgress(100)
           clearUploadState()
-          onComplete?.(gcsUri)
+          onComplete?.(resultGcsUri)
         }
       } catch (err) {
         const error = err instanceof Error ? err : new Error('업로드 실패')
