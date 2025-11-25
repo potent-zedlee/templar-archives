@@ -16,6 +16,9 @@
  * 3. 분석 완료 후 임시 세그먼트 삭제
  */
 
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 import { gcsClient } from '../gcs/client';
 import { ffmpegProcessor } from './ffmpeg-processor';
 
@@ -175,8 +178,16 @@ export class GCSSegmentExtractor {
       `[GCSSegmentExtractor] Total sub-segments to extract: ${allSubSegments.length}`
     );
 
-    // 4. 각 세그먼트 추출 및 업로드
+    // 4. 각 세그먼트 추출 및 업로드 (파일 기반 - 메모리 효율적)
     const extractedSegments: ExtractedSegment[] = [];
+
+    // 임시 디렉토리 생성
+    const tempDir = path.join(os.tmpdir(), `gcs-segments-${streamId}`);
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+
+    console.log(`[GCSSegmentExtractor] Using temp directory: ${tempDir}`);
 
     for (let i = 0; i < allSubSegments.length; i++) {
       const subSeg = allSubSegments[i];
@@ -186,37 +197,61 @@ export class GCSSegmentExtractor {
         `[GCSSegmentExtractor] Extracting segment ${i + 1}/${allSubSegments.length}: ${subSeg.start}s-${subSeg.end}s (${duration}s)`
       );
 
-      // FFmpeg로 구간 추출
-      const buffer = await ffmpegProcessor.extractSegment(signedUrl, {
-        startTime: subSeg.start,
-        duration: duration,
-        videoCodec: 'copy',
-        audioCodec: 'copy',
-        format: 'mp4',
-      });
+      // 로컬 임시 파일 경로
+      const tempFilePath = path.join(tempDir, `segment_${i}_${subSeg.start}s-${subSeg.end}s.mp4`);
 
-      console.log(
-        `[GCSSegmentExtractor] Extracted ${(buffer.length / 1024 / 1024).toFixed(2)}MB`
-      );
+      try {
+        // FFmpeg로 구간 추출 → 파일로 직접 저장 (메모리 버퍼링 없음)
+        const { filePath, size } = await ffmpegProcessor.extractSegmentToFile(signedUrl, {
+          startTime: subSeg.start,
+          duration: duration,
+          videoCodec: 'copy',
+          audioCodec: 'copy',
+          format: 'mp4',
+          outputPath: tempFilePath,
+        });
 
-      // GCS 임시 경로에 업로드
-      const segmentPath = `temp-segments/${streamId}/segment_${i}_${subSeg.start}s-${subSeg.end}s.mp4`;
+        console.log(
+          `[GCSSegmentExtractor] Extracted ${(size / 1024 / 1024).toFixed(2)}MB to ${filePath}`
+        );
 
-      const gcsUri = await gcsClient.uploadBuffer(
-        segmentPath,
-        buffer,
-        'video/mp4'
-      );
+        // GCS 임시 경로에 업로드 (스트림 기반)
+        const segmentPath = `temp-segments/${streamId}/segment_${i}_${subSeg.start}s-${subSeg.end}s.mp4`;
 
-      console.log(`[GCSSegmentExtractor] Uploaded to ${gcsUri}`);
+        const gcsUri = await gcsClient.uploadFile(
+          segmentPath,
+          filePath,
+          'video/mp4'
+        );
 
-      extractedSegments.push({
-        gcsUri,
-        gcsPath: segmentPath,
-        start: subSeg.start,
-        end: subSeg.end,
-        size: buffer.length,
-      });
+        console.log(`[GCSSegmentExtractor] Uploaded to ${gcsUri}`);
+
+        extractedSegments.push({
+          gcsUri,
+          gcsPath: segmentPath,
+          start: subSeg.start,
+          end: subSeg.end,
+          size,
+        });
+      } finally {
+        // 로컬 임시 파일 삭제 (업로드 성공/실패 관계없이)
+        if (fs.existsSync(tempFilePath)) {
+          try {
+            fs.unlinkSync(tempFilePath);
+            console.log(`[GCSSegmentExtractor] Deleted temp file: ${tempFilePath}`);
+          } catch (err) {
+            console.warn(`[GCSSegmentExtractor] Failed to delete temp file: ${tempFilePath}`, err);
+          }
+        }
+      }
+    }
+
+    // 임시 디렉토리 정리
+    try {
+      fs.rmdirSync(tempDir);
+      console.log(`[GCSSegmentExtractor] Removed temp directory: ${tempDir}`);
+    } catch {
+      // 디렉토리 삭제 실패는 무시 (OS가 나중에 정리)
     }
 
     const totalDuration = Date.now() - startTime;

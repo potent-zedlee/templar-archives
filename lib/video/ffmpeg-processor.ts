@@ -15,6 +15,8 @@
 
 import ffmpeg from 'fluent-ffmpeg';
 import { Readable, PassThrough } from 'stream';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // FFmpeg 바이너리 경로 설정 (지연 초기화)
 let ffmpegInitialized = false;
@@ -126,6 +128,89 @@ export class FFmpegProcessor {
 
       // 스트림 파이프 연결
       command.pipe(outputStream, { end: true });
+    });
+  }
+
+  /**
+   * 스트림 URL에서 특정 구간 추출 (파일 기반 처리)
+   *
+   * 대용량 영상 처리 시 메모리 부족을 방지하기 위해
+   * /tmp 디렉토리에 직접 파일로 출력합니다.
+   *
+   * @param inputUrl 입력 스트림 URL (GCS Signed URL 등)
+   * @param options 추출 옵션 (outputPath 포함)
+   * @returns Promise<{ filePath: string; size: number }>
+   */
+  async extractSegmentToFile(
+    inputUrl: string,
+    options: FFmpegExtractOptions & { outputPath: string }
+  ): Promise<{ filePath: string; size: number }> {
+    // FFmpeg 초기화 (지연 로딩)
+    initializeFfmpeg();
+
+    const {
+      startTime,
+      duration,
+      videoCodec = 'copy',
+      audioCodec = 'copy',
+      format = 'mp4',
+      outputPath
+    } = options;
+
+    // 출력 디렉토리 생성
+    const outputDir = path.dirname(outputPath);
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    console.log(`[FFmpegProcessor] Extracting segment to file: ${startTime}s - ${startTime + duration}s`);
+    console.log(`[FFmpegProcessor] Output path: ${outputPath}`);
+
+    return new Promise((resolve, reject) => {
+      // FFmpeg 명령 생성
+      const command = ffmpeg(inputUrl)
+        .setStartTime(startTime)
+        .setDuration(duration)
+        .videoCodec(videoCodec)
+        .audioCodec(audioCodec)
+        .format(format);
+
+      // MP4 최적화 옵션
+      if (format === 'mp4') {
+        command.outputOptions([
+          '-movflags', 'frag_keyframe+empty_moov',
+          '-frag_duration', '1000000'
+        ]);
+      }
+
+      // 이벤트 핸들러
+      command
+        .on('start', (commandLine) => {
+          console.log(`[FFmpegProcessor] Command: ${commandLine}`);
+        })
+        .on('progress', (progress) => {
+          if (progress.percent) {
+            console.log(`[FFmpegProcessor] Progress: ${progress.percent.toFixed(1)}%`);
+          }
+        })
+        .on('error', (error) => {
+          console.error('[FFmpegProcessor] Error:', error);
+          // 실패 시 임시 파일 정리
+          if (fs.existsSync(outputPath)) {
+            try { fs.unlinkSync(outputPath); } catch { /* ignore */ }
+          }
+          reject(new Error(`FFmpeg processing failed: ${error.message}`));
+        })
+        .on('end', () => {
+          // 파일 크기 확인
+          const stats = fs.statSync(outputPath);
+          const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
+          console.log(`[FFmpegProcessor] Extraction complete: ${sizeMB}MB -> ${outputPath}`);
+          resolve({ filePath: outputPath, size: stats.size });
+        });
+
+      // 파일로 직접 출력 (메모리 버퍼링 없음)
+      command.save(outputPath);
     });
   }
 

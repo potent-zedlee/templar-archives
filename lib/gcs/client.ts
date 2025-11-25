@@ -13,6 +13,7 @@
  */
 
 import { Storage } from '@google-cloud/storage';
+import * as fs from 'fs';
 import type {
   ResumableUploadSession,
   FileMetadata,
@@ -265,6 +266,80 @@ export class GCSClient {
       );
     }
   }
+
+  /**
+   * 로컬 파일 스트림 업로드 (대용량 파일용)
+   *
+   * 메모리에 전체 파일을 로드하지 않고 스트림으로 GCS에 업로드합니다.
+   * FFmpeg로 추출한 임시 파일을 업로드할 때 사용합니다.
+   *
+   * @param gcsPath - GCS 내 파일 경로 (예: "segments/video-123/segment-0.mp4")
+   * @param localFilePath - 로컬 파일 경로 (예: "/tmp/segment-0.mp4")
+   * @param contentType - MIME 타입 (예: "video/mp4")
+   * @returns GCS URI (gs://bucket/path)
+   *
+   * @example
+   * ```ts
+   * const gcsUri = await gcsClient.uploadFile(
+   *   'segments/job-123/segment-0.mp4',
+   *   '/tmp/segment-0.mp4',
+   *   'video/mp4'
+   * );
+   * // gs://bucket-name/segments/job-123/segment-0.mp4
+   * ```
+   */
+  async uploadFile(
+    gcsPath: string,
+    localFilePath: string,
+    contentType: string
+  ): Promise<string> {
+    try {
+      // 파일 존재 확인
+      if (!fs.existsSync(localFilePath)) {
+        throw new Error(`로컬 파일을 찾을 수 없습니다: ${localFilePath}`);
+      }
+
+      const stats = fs.statSync(localFilePath);
+      const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
+
+      console.log(`[GCSClient] 파일 스트림 업로드 시작: ${localFilePath} (${sizeMB}MB)`);
+
+      const file = this.storage.bucket(this.bucketName).file(gcsPath);
+
+      // 스트림으로 업로드 (메모리 효율적)
+      await new Promise<void>((resolve, reject) => {
+        const readStream = fs.createReadStream(localFilePath);
+        const writeStream = file.createWriteStream({
+          resumable: true, // 대용량 파일 재시도 지원
+          contentType,
+          metadata: {
+            contentType,
+          },
+        });
+
+        readStream
+          .pipe(writeStream)
+          .on('error', (error) => {
+            console.error('[GCSClient] 스트림 업로드 에러:', error);
+            reject(error);
+          })
+          .on('finish', () => {
+            resolve();
+          });
+      });
+
+      const gcsUri = `gs://${this.bucketName}/${gcsPath}`;
+
+      console.log(`[GCSClient] 파일 스트림 업로드 완료: ${gcsUri} (${sizeMB}MB)`);
+
+      return gcsUri;
+    } catch (error) {
+      console.error('[GCSClient] 파일 업로드 실패:', error);
+      throw new Error(
+        `파일 업로드 실패: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
 }
 
 // 싱글톤 인스턴스
@@ -302,5 +377,9 @@ export const gcsClient = {
 
   uploadBuffer: (...args: Parameters<GCSClient['uploadBuffer']>) => {
     return gcsClient.instance.uploadBuffer(...args);
+  },
+
+  uploadFile: (...args: Parameters<GCSClient['uploadFile']>) => {
+    return gcsClient.instance.uploadFile(...args);
   },
 };
