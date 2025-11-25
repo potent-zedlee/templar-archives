@@ -187,9 +187,12 @@ export class FFmpegProcessor {
     console.log(`[FFmpegProcessor] Extracting segment to file: ${startTime}s - ${startTime + duration}s`);
     console.log(`[FFmpegProcessor] Output path: ${outputPath}`);
 
-    // FFmpeg 인자 구성 (최소한의 옵션만 사용)
+    // FFmpeg 인자 구성 (HTTP 재연결 옵션 포함)
     const args = [
       '-y',                                    // 출력 파일 덮어쓰기
+      '-reconnect', '1',                       // HTTP 재연결 활성화
+      '-reconnect_streamed', '1',              // 스트리밍 중 재연결
+      '-reconnect_delay_max', '5',             // 최대 재연결 지연 5초
       '-ss', String(startTime),                // 입력 seeking (입력 전)
       '-i', inputUrl,                          // 입력 URL
       '-t', String(duration),                  // 출력 지속 시간

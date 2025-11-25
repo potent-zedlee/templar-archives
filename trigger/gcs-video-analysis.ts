@@ -59,6 +59,9 @@ function isRetryableError(error: unknown): boolean {
 
 export const gcsVideoAnalysisTask = task({
   id: "gcs-video-analysis",
+  // 머신 프리셋: 2 vCPU, 4GB RAM (FFmpeg 메모리 요구량 충족)
+  // 기본값 small-1x (0.5GB)로는 메모리 부족 → OOM Killer → SIGSEGV 발생
+  machine: { preset: "medium-2x" },
   // 최대 실행 시간 2시간
   maxDuration: 7200,
   // 재시도 설정
