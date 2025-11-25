@@ -147,9 +147,9 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           streamId,
-          fileName: file.name,
+          filename: file.name,
           fileSize: file.size,
-          contentType: file.type,
+          contentType: file.type || 'video/mp4',
         }),
       })
 
