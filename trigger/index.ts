@@ -5,5 +5,4 @@
  * CLI가 자동으로 이 파일들을 검색하고 등록합니다.
  */
 
-export * from "./video-analysis";
 export * from "./gcs-video-analysis";
