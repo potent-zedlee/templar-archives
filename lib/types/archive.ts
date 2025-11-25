@@ -110,6 +110,13 @@ export interface Stream {
   status?: ContentStatus
   published_by?: string
   published_at?: string
+  // GCS Upload (Phase 55)
+  gcs_path?: string // GCS 객체 경로
+  gcs_uri?: string // gs://bucket/path 형식
+  gcs_file_size?: number // 파일 크기 (bytes)
+  gcs_uploaded_at?: string // 업로드 완료 시각
+  upload_status?: 'none' | 'uploading' | 'uploaded' | 'analyzing' | 'completed' | 'failed'
+  video_duration?: number // 영상 길이 (초)
   // UI state (클라이언트 전용)
   selected?: boolean
 }
@@ -414,6 +421,26 @@ export interface VideoActions {
   organize: (videoId: string, targetId: string) => Promise<void>
   organizeMultiple: (videoIds: string[], targetId: string) => Promise<void>
   delete: (videoId: string) => Promise<void>
+}
+
+// ==================== Video Upload Types (Phase 55) ====================
+
+export type UploadStatus = 'pending' | 'uploading' | 'paused' | 'completed' | 'failed' | 'cancelled'
+
+export interface VideoUpload {
+  id: string
+  stream_id: string
+  user_id: string
+  filename: string
+  file_size: number
+  gcs_path?: string
+  upload_url?: string
+  status: UploadStatus
+  progress: number
+  error_message?: string
+  started_at: string
+  completed_at?: string
+  created_at: string
 }
 
 // ==================== Utility Types ====================
