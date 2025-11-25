@@ -77,10 +77,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 3.5. 오래된 uploading 상태 정리 (5분 이상 된 항목)
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    // 3.5. 오래된 uploading 상태 정리 (24시간 이상 된 항목)
+    // 대용량 영상(8시간 영상 ~16GB)도 업로드 완료될 수 있도록 충분한 시간 확보
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
-    // 같은 stream에서 5분 이상 된 uploading 상태의 video_uploads를 failed로 변경
+    // 같은 stream에서 24시간 이상 된 uploading 상태의 video_uploads를 failed로 변경
     const { error: cleanupError } = await serviceSupabase
       .from('video_uploads' as 'streams')
       .update({
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
       } as never)
       .eq('stream_id', streamId)
       .eq('status', 'uploading')
-      .lt('created_at', fiveMinutesAgo)
+      .lt('created_at', twentyFourHoursAgo)
 
     if (cleanupError) {
       console.log('[GCS Init Upload] Stale upload cleanup failed:', cleanupError)
