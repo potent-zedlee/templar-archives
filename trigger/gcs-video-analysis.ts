@@ -2,20 +2,23 @@
  * GCS 기반 Vertex AI 영상 분석 Task
  *
  * GCS에 저장된 영상을 Vertex AI Gemini로 직접 분석하는 Task입니다.
- * YouTube 다운로드 → FFmpeg 추출 과정 없이 GCS gs:// URI를 직접 사용합니다.
  *
  * 특징:
- * - GCS gs:// URI 직접 전달 (더 빠름, 대용량 최적화)
- * - 30분 초과 세그먼트 자동 분할
+ * - FFmpeg로 30분 단위 세그먼트 실제 추출
+ * - 세그먼트별 GCS 업로드 후 Vertex AI 분석
  * - 재시도 및 메타데이터 실시간 업데이트
+ * - 분석 완료 후 임시 세그먼트 자동 정리
  *
+ * @see lib/video/gcs-segment-extractor.ts
  * @see lib/video/vertex-analyzer.ts
  */
 
 import { task, retry, metadata, AbortTaskRunError } from "@trigger.dev/sdk";
 import { z } from "zod";
 import { vertexAnalyzer } from "../lib/video/vertex-analyzer";
+import { gcsSegmentExtractor } from "../lib/video/gcs-segment-extractor";
 import type { ExtractedHand } from "../lib/video/vertex-analyzer";
+import type { ExtractedSegment } from "../lib/video/gcs-segment-extractor";
 
 // 입력 스키마 정의
 const GCSVideoAnalysisInput = z.object({
@@ -107,65 +110,60 @@ export const gcsVideoAnalysisTask = task({
     }
 
     const allHands: ExtractedHand[] = [];
+    let extractedSegments: ExtractedSegment[] = [];
 
-    // 세그먼트별 처리
-    metadata.set("status", "processing");
+    try {
+      // ============================================
+      // Phase 1: FFmpeg로 세그먼트 실제 추출
+      // ============================================
+      metadata.set("status", "extracting");
+      console.log(`[GCS-KAN] Phase 1: Extracting segments with FFmpeg...`);
 
-    for (let i = 0; i < segments.length; i++) {
-      const segment = segments[i];
-      const segmentDuration = segment.end - segment.start;
+      const extractionResult = await gcsSegmentExtractor.extractSegments({
+        sourceGcsUri: gcsUri,
+        segments: segments,
+        streamId: streamId,
+        maxSegmentDuration: 1800, // 30분
+      });
 
-      console.log(`[GCS-KAN] Processing segment ${i + 1}/${segments.length}`);
+      extractedSegments = extractionResult.extractedSegments;
+
       console.log(
-        `[GCS-KAN] Time range: ${segment.start}s - ${segment.end}s (${segmentDuration}s)`
+        `[GCS-KAN] Extraction complete: ${extractedSegments.length} segments extracted in ${(extractionResult.totalDuration / 1000).toFixed(1)}s`
       );
-      metadata.set("currentSegment", i + 1);
 
-      // 30분 초과 세그먼트 자동 분할
-      const MAX_SEGMENT_DURATION = 1800; // 30 minutes
-      const subSegments: Array<{ start: number; end: number }> = [];
+      metadata
+        .set("extractedSegments", extractedSegments.length)
+        .set("extractionTime", extractionResult.totalDuration);
 
-      if (segmentDuration > MAX_SEGMENT_DURATION) {
-        let currentStart = segment.start;
-        while (currentStart < segment.end) {
-          const currentEnd = Math.min(
-            currentStart + MAX_SEGMENT_DURATION,
-            segment.end
-          );
-          subSegments.push({ start: currentStart, end: currentEnd });
-          currentStart = currentEnd;
-        }
-        console.log(
-          `[GCS-KAN] Split into ${subSegments.length} sub-segments (30min each)`
-        );
-      } else {
-        subSegments.push(segment);
-      }
+      // ============================================
+      // Phase 2: 각 세그먼트를 Vertex AI로 분석
+      // ============================================
+      metadata.set("status", "analyzing");
+      console.log(`[GCS-KAN] Phase 2: Analyzing ${extractedSegments.length} segments with Vertex AI...`);
 
-      // 각 서브 세그먼트 처리 (개별 재시도)
-      for (let j = 0; j < subSegments.length; j++) {
-        const subSeg = subSegments[j];
+      for (let i = 0; i < extractedSegments.length; i++) {
+        const segment = extractedSegments[i];
 
         console.log(
-          `[GCS-KAN] Processing sub-segment ${j + 1}/${subSegments.length}: ${subSeg.start}s-${subSeg.end}s`
+          `[GCS-KAN] Analyzing segment ${i + 1}/${extractedSegments.length}: ${segment.start}s-${segment.end}s`
         );
-        metadata.set("currentSubSegment", `${subSeg.start}s-${subSeg.end}s`);
+        metadata
+          .set("currentSegment", i + 1)
+          .set("currentSegmentRange", `${segment.start}s-${segment.end}s`);
 
-        // Vertex AI Gemini로 분석 (재시도 + Self-Healing)
-        console.log(`[GCS-KAN] Analyzing with Vertex AI Gemini...`);
-
+        // Vertex AI Gemini로 분석 (세그먼트 URI 사용, 전체 영상 분석)
         const hands = await retry.onThrow(
           async () => {
+            // 분할된 세그먼트 URI를 전달 (startTime/endTime 불필요)
             const result = await vertexAnalyzer.analyzeVideoFromGCS(
-              gcsUri,
-              platform,
-              subSeg.start,
-              subSeg.end
+              segment.gcsUri,
+              platform
             );
 
             // Self-Healing: 빈 결과일 경우 재시도 유도
             if (!result || result.length === 0) {
-              console.warn(`[GCS-KAN] Empty result, retrying...`);
+              console.warn(`[GCS-KAN] Empty result for segment ${i + 1}, retrying...`);
               throw new Error(
                 "Empty analysis result, retrying with different approach"
               );
@@ -177,23 +175,40 @@ export const gcsVideoAnalysisTask = task({
         );
 
         console.log(
-          `[GCS-KAN] Extracted ${hands.length} hands from sub-segment`
+          `[GCS-KAN] Extracted ${hands.length} hands from segment ${i + 1}`
         );
         allHands.push(...hands);
 
-        // 핸드 수 메타데이터 업데이트
-        metadata.set("handsFound", allHands.length);
+        // 진행률 업데이트
+        const progress = ((i + 1) / extractedSegments.length) * 100;
+        console.log(`[GCS-KAN] Analysis progress: ${progress.toFixed(1)}%`);
+        metadata
+          .set("progress", Math.round(progress))
+          .set("processedSegments", i + 1)
+          .set("handsFound", allHands.length);
       }
 
-      // 진행률 업데이트
-      const progress = ((i + 1) / segments.length) * 100;
-      console.log(`[GCS-KAN] Progress: ${progress.toFixed(1)}%`);
-      metadata.set("progress", Math.round(progress)).set("processedSegments", i + 1);
-    }
+      console.log(
+        `[GCS-KAN] Analysis complete! Total hands extracted: ${allHands.length}`
+      );
 
-    console.log(
-      `[GCS-KAN] Analysis complete! Total hands extracted: ${allHands.length}`
-    );
+    } finally {
+      // ============================================
+      // Phase 3: 임시 세그먼트 파일 정리
+      // ============================================
+      if (extractedSegments.length > 0) {
+        metadata.set("status", "cleaning");
+        console.log(`[GCS-KAN] Phase 3: Cleaning up ${extractedSegments.length} temporary segments...`);
+
+        try {
+          await gcsSegmentExtractor.cleanupSegments(extractedSegments);
+          console.log(`[GCS-KAN] Cleanup complete`);
+        } catch (cleanupError) {
+          console.warn(`[GCS-KAN] Cleanup warning:`, cleanupError);
+          // 정리 실패는 무시 (분석 결과에 영향 없음)
+        }
+      }
+    }
 
     // 완료 메타데이터 설정
     metadata
