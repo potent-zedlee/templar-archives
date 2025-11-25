@@ -11,7 +11,6 @@
  */
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import { createClientSupabaseClient } from '@/lib/supabase-client'
 import { isAdmin } from '@/lib/auth-utils'
 import { Button } from '@/components/ui/button'
@@ -40,13 +39,11 @@ import type { SubEvent, Stream } from '@/lib/supabase'
 import type { AdminArchiveSortField, SortDirection } from '@/lib/types/sorting'
 import { getSortAriaProps } from '@/hooks/useSorting'
 import { useRouter } from 'next/navigation'
-import { getCategoryByAlias } from '@/lib/tournament-categories'
 import { StreamStatusBadge } from '@/components/admin/archive/StreamStatusBadge'
 import { StreamActions } from '@/components/admin/archive/StreamActions'
 import { StreamProgressIndicator } from '@/components/admin/archive/StreamProgressIndicator'
 import { StatusFilter } from '@/components/admin/archive/StatusFilter'
 import { BulkActions } from '@/components/admin/archive/BulkActions'
-import { useArchiveUIStore } from '@/stores/archive-ui-store'
 
 export default function AdminArchivePage() {
   const [loading, setLoading] = useState(true)

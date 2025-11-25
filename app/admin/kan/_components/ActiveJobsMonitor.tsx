@@ -15,6 +15,16 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatTime } from '@/types/segments'
 
+// Type for segment results from JSON
+interface SegmentResult {
+  segment_id: string
+  segment_index: number
+  status: 'pending' | 'processing' | 'success' | 'failed'
+  hands_found?: number
+  error?: string
+  processing_time?: number
+}
+
 export function ActiveJobsMonitor() {
   const searchParams = useSearchParams()
   const highlightJobId = searchParams.get('job')
@@ -197,10 +207,12 @@ export function ActiveJobsMonitor() {
                     <div className="text-xs text-muted-foreground">세그먼트</div>
                     <div className="text-2xl font-bold">
                       {(() => {
-                        const segmentResults = job.result?.segment_results || []
-                        const total = job.segments?.length || 0
+                        const jobResult = job.result as { segment_results?: SegmentResult[] } | null
+                        const segmentResults = jobResult?.segment_results || []
+                        const jobSegments = job.segments as unknown[] | null
+                        const total = jobSegments?.length || 0
                         const processed = segmentResults.filter(
-                          (s) => s.status === 'success' || s.status === 'failed'
+                          (s: SegmentResult) => s.status === 'success' || s.status === 'failed'
                         ).length
                         return (
                           <>
@@ -221,12 +233,16 @@ export function ActiveJobsMonitor() {
                 </div>
 
                 {/* Segment Results */}
-                {job.result?.segment_results && job.result.segment_results.length > 0 && (
+                {(() => {
+                  const jobResult = job.result as { segment_results?: SegmentResult[] } | null
+                  const segmentResults = jobResult?.segment_results || []
+                  if (segmentResults.length === 0) return null
+                  return (
                   <div className="space-y-2">
                     <div className="text-sm font-medium">세그먼트 처리 상태</div>
                     <ScrollArea className="max-h-[200px]">
                       <div className="space-y-2">
-                        {job.result.segment_results.map((segment, idx) => (
+                        {segmentResults.map((segment: SegmentResult, idx: number) => (
                           <div
                             key={idx}
                             className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"
@@ -282,7 +298,8 @@ export function ActiveJobsMonitor() {
                       </div>
                     </ScrollArea>
                   </div>
-                )}
+                  )
+                })()}
 
                 {/* Job ID */}
                 <div className="text-xs text-muted-foreground">

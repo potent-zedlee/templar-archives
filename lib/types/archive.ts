@@ -17,7 +17,7 @@ export type TournamentCategory =
 
 export type VideoSource = "youtube" | "upload" | "nas"
 
-export type ContentStatus = "draft" | "published" | "archived"
+export type ContentStatus = "draft" | "published" | "archived" | "analyzing" | "completed"
 
 export type ViewMode = "list" | "grid" | "timeline"
 

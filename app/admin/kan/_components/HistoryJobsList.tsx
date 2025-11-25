@@ -36,6 +36,16 @@ import {
 } from '@/components/ui/collapsible'
 import { formatTime } from '@/types/segments'
 
+// Type for segment results from JSON
+interface SegmentResult {
+  segment_id: string
+  segment_index: number
+  status: 'pending' | 'processing' | 'success' | 'failed'
+  hands_found?: number
+  error?: string
+  processing_time?: number
+}
+
 type StatusFilter = 'all' | 'completed' | 'failed'
 
 export function HistoryJobsList() {
@@ -147,9 +157,10 @@ export function HistoryJobsList() {
       <div className="space-y-4">
         {jobs.map((job) => {
           const isExpanded = expandedJobs.has(job.id)
-          const segmentResults = job.result?.segment_results || []
-          const successCount = segmentResults.filter((s) => s.status === 'success').length
-          const failedCount = segmentResults.filter((s) => s.status === 'failed').length
+          const jobResult = job.result as { segment_results?: SegmentResult[] } | null
+          const segmentResults = jobResult?.segment_results || []
+          const successCount = segmentResults.filter((s: SegmentResult) => s.status === 'success').length
+          const failedCount = segmentResults.filter((s: SegmentResult) => s.status === 'failed').length
 
           return (
             <Collapsible key={job.id} open={isExpanded}>
@@ -273,7 +284,7 @@ export function HistoryJobsList() {
                         <div className="text-sm font-medium">세그먼트 처리 결과</div>
                         <ScrollArea className="max-h-[300px]">
                           <div className="space-y-2">
-                            {segmentResults.map((segment, idx) => (
+                            {segmentResults.map((segment: SegmentResult, idx: number) => (
                               <div
                                 key={idx}
                                 className="flex items-center gap-3 p-3 rounded-lg bg-muted/50"

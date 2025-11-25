@@ -28,7 +28,6 @@ import { useDashboardStatsQuery, useRecentActivityQuery } from "@/lib/queries/ad
 import { toast } from "sonner"
 import {
   useUserGrowthData,
-  useContentDistribution,
   useSecurityEvents,
 } from "@/hooks/admin/useDashboardChartData"
 import Link from "next/link"
@@ -47,18 +46,8 @@ const UserGrowthChart = dynamic(
   }
 )
 
-const ContentDistributionChart = dynamic(
-  () => import("@/components/admin/dashboard/ContentDistributionChart").then(mod => ({ default: mod.ContentDistributionChart })),
-  {
-    loading: () => (
-      <div className="card-postmodern p-6">
-        <div className="flex items-center justify-center h-[300px]">
-          <div className="animate-pulse text-muted-foreground">LOADING CHART...</div>
-        </div>
-      </div>
-    ),
-  }
-)
+// ContentDistributionChart removed - not currently used in layout
+// TODO: Re-enable when dashboard redesign is complete
 
 const SecurityEventsPanel = dynamic(
   () => import("@/components/admin/dashboard/SecurityEventsPanel").then(mod => ({ default: mod.SecurityEventsPanel })),
@@ -84,7 +73,6 @@ export default function DashboardPage() {
 
   // Chart data hooks
   const { data: userGrowthData, isLoading: userGrowthLoading } = useUserGrowthData()
-  const { data: contentDistribution, isLoading: contentLoading } = useContentDistribution()
   const { data: securityEvents, isLoading: securityLoading } = useSecurityEvents(10)
 
   const loading = statsLoading || activitiesLoading

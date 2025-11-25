@@ -551,7 +551,7 @@ export async function startKanAnalysis(
 
     console.log('[KAN] User role:', profile.role)
 
-    const hasValidRole = allowedRoles.includes(profile.role)
+    const hasValidRole = profile.role ? allowedRoles.includes(profile.role) : false
 
     if (!hasValidRole) {
       console.warn('[KAN] Permission denied - insufficient role:', profile.role)
@@ -659,7 +659,7 @@ export async function startKanAnalysis(
         stream_id: input.streamId || null,
         platform: dbPlatform,
         status: 'pending',
-        segments: gameplaySegments,
+        segments: JSON.parse(JSON.stringify(gameplaySegments)),
         progress: 0,
         ai_provider: 'gemini',
         submitted_players: input.players || null,
@@ -760,19 +760,27 @@ export async function saveHandsFromJob(jobId: string): Promise<{ success: boolea
       return { success: false, saved: 0, error: 'Job not found' }
     }
 
+    // Check if stream_id exists
+    if (!job.stream_id) {
+      return { success: false, saved: 0, error: 'No stream_id associated with this job' }
+    }
+
+    const streamId = job.stream_id // Now guaranteed to be string
+
     // Check if hands data exists in result
-    if (!job.result?.hands || !Array.isArray(job.result.hands)) {
+    const jobResult = job.result as Record<string, unknown> | null
+    if (!jobResult || !jobResult.hands || !Array.isArray(jobResult.hands)) {
       return { success: false, saved: 0, error: 'No hands data in job result' }
     }
 
-    const hands = job.result.hands as KanHand[]
+    const hands = jobResult.hands as KanHand[]
     console.log(`[saveHandsFromJob] Found ${hands.length} hands in job result`)
 
     // Get stream info for thumbnail
     const { data: streamData } = await supabase
       .from('streams')
       .select('video_url, video_source')
-      .eq('id', job.stream_id)
+      .eq('id', streamId)
       .single()
 
     const thumbnailUrl = streamData
@@ -849,14 +857,15 @@ export async function saveHandsFromJob(jobId: string): Promise<{ success: boolea
         }
 
         // Get segment start time from job segments (use first segment)
-        const segment = job.segments?.[0]
+        const jobSegments = job.segments as TimeSegment[] | null
+        const segment = jobSegments?.[0]
         const videoTimestampStart = segment?.start || 0
 
         // Call RPC to save hand
         const { error: rpcError } = await supabase.rpc(
           'save_hand_with_players_actions',
           {
-            p_day_id: job.stream_id,
+            p_day_id: streamId,
             p_job_id: jobId,
             p_number: String(handData.handNumber || savedCount + 1),
             p_description: handData.description || `Hand #${handData.handNumber || savedCount + 1}`,
@@ -939,7 +948,7 @@ export async function createKanAnalysisRequest(
       .single()
 
     const allowedRoles = ['high_templar', 'reporter', 'admin']
-    if (profileError || !profile || !allowedRoles.includes(profile.role)) {
+    if (profileError || !profile || !profile.role || !allowedRoles.includes(profile.role)) {
       return {
         success: false,
         error: 'KAN 분석 권한이 없습니다 (High Templar 이상 필요)',
@@ -965,33 +974,26 @@ export async function createKanAnalysisRequest(
       .eq('youtube_id', videoId)
       .single()
 
-    let dbVideoId: string
+    // Create video record if not exists (required for analysis tracking)
     if (!existingVideo) {
-      const { data: newVideo, error: videoError } = await supabase
+      const { error: videoError } = await supabase
         .from('videos')
         .insert({
           url: input.youtubeUrl,
           youtube_id: videoId,
           platform: 'youtube',
         })
-        .select('id')
-        .single()
 
-      if (videoError || !newVideo) {
+      if (videoError) {
         return {
           success: false,
-          error: `Failed to create video record: ${videoError?.message}`,
+          error: `Failed to create video record: ${videoError.message}`,
         }
       }
-      dbVideoId = newVideo.id
-    } else {
-      dbVideoId = existingVideo.id
     }
 
     // Create draft stream if requested
-    let streamId = input.createDraftStream
-      ? undefined
-      : undefined // Will be created below
+    let streamId: string | undefined = undefined
 
     if (input.createDraftStream) {
       const streamName = input.streamName || `KAN Analysis - ${new Date().toLocaleDateString()}`
