@@ -84,8 +84,16 @@ export class FFmpegProcessor {
       const outputStream = new PassThrough();
 
       // FFmpeg 명령 생성
+      // 중요: -ss를 입력 전에 설정하여 입력 seeking 활성화 (메모리 효율적)
       const command = ffmpeg(inputUrl)
-        .setStartTime(startTime)
+        .inputOptions([
+          '-ss', String(startTime),           // 입력 seeking (입력 전 = 빠름)
+          '-analyzeduration', '20000000',     // 분석 시간 제한 (20초)
+          '-probesize', '20000000',           // 프로브 크기 제한 (20MB)
+          '-reconnect', '1',                  // HTTP 재연결 활성화
+          '-reconnect_streamed', '1',         // 스트리밍 중 재연결
+          '-reconnect_delay_max', '5'         // 최대 재연결 지연 5초
+        ])
         .setDuration(duration)
         .videoCodec(videoCodec)
         .audioCodec(audioCodec)
@@ -96,7 +104,8 @@ export class FFmpegProcessor {
         command
           .outputOptions([
             '-movflags', 'frag_keyframe+empty_moov',  // 스트리밍 최적화
-            '-frag_duration', '1000000'                // 1초 프래그먼트
+            '-frag_duration', '1000000',               // 1초 프래그먼트
+            '-max_muxing_queue_size', '1024'           // 멀티플렉싱 큐 제한
           ]);
       }
 
@@ -168,9 +177,17 @@ export class FFmpegProcessor {
 
     return new Promise((resolve, reject) => {
       // FFmpeg 명령 생성
+      // 중요: -ss를 입력 전에 설정하여 입력 seeking 활성화 (메모리 효율적)
       const command = ffmpeg(inputUrl)
-        .setStartTime(startTime)
-        .setDuration(duration)
+        .inputOptions([
+          '-ss', String(startTime),           // 입력 seeking (입력 전 = 빠름)
+          '-analyzeduration', '20000000',     // 분석 시간 제한 (20초)
+          '-probesize', '20000000',           // 프로브 크기 제한 (20MB)
+          '-reconnect', '1',                  // HTTP 재연결 활성화
+          '-reconnect_streamed', '1',         // 스트리밍 중 재연결
+          '-reconnect_delay_max', '5'         // 최대 재연결 지연 5초
+        ])
+        .setDuration(duration)                // -t 출력 지속 시간
         .videoCodec(videoCodec)
         .audioCodec(audioCodec)
         .format(format);
@@ -179,7 +196,8 @@ export class FFmpegProcessor {
       if (format === 'mp4') {
         command.outputOptions([
           '-movflags', 'frag_keyframe+empty_moov',
-          '-frag_duration', '1000000'
+          '-frag_duration', '1000000',
+          '-max_muxing_queue_size', '1024'    // 멀티플렉싱 큐 제한
         ]);
       }
 
