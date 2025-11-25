@@ -24,10 +24,13 @@ import type { VideoSegment } from "@/lib/types/video-segments"
 import { timeStringToSeconds } from "@/lib/types/video-segments"
 import { PlayerMatchResults } from "@/components/features/player/PlayerMatchResults"
 import { VideoPlayerWithTimestamp } from "@/components/features/video/VideoPlayerWithTimestamp"
-import { startKanAnalysisWithTrigger, saveTriggerJobResults } from "@/app/actions/kan-trigger"
+import { startGcsAnalysis, saveGcsAnalysisResults } from "@/app/actions/gcs-analysis"
 import { useTriggerJob } from "@/lib/hooks/use-trigger-job"
 import type { TimeSegment } from "@/types/segments"
 import { formatTime } from "@/types/segments"
+import { VideoUploader } from "@/components/features/video/upload/VideoUploader"
+import { UploadProgress } from "@/components/features/video/upload/UploadProgress"
+import { useGcsUpload } from "@/lib/hooks/use-gcs-upload"
 
 interface AnalyzeVideoDialogProps {
   isOpen: boolean
@@ -88,6 +91,29 @@ export function AnalyzeVideoDialog({
   const [processingTime, setProcessingTime] = useState(0)
   const [startTime, setStartTime] = useState<Date | null>(null)
 
+  // GCS Upload Hook
+  const {
+    upload,
+    pause,
+    resume,
+    cancel,
+    progress: uploadProgress,
+    status: uploadStatus,
+    error: uploadError,
+    uploadSpeed,
+    remainingTime: uploadRemainingTime,
+  } = useGcsUpload({
+    streamId: day?.id || '',
+    onComplete: (gcsUri) => {
+      console.log('[AnalyzeVideoDialog] Upload completed:', gcsUri)
+      toast.success('업로드가 완료되었습니다!')
+    },
+    onError: (error) => {
+      console.error('[AnalyzeVideoDialog] Upload error:', error)
+      toast.error(`업로드 실패: ${error.message}`)
+    },
+  })
+
   // useRef to manage onSuccess callback without causing re-subscriptions
   const onSuccessRef = useRef(onSuccess)
 
@@ -137,7 +163,7 @@ export function AnalyzeVideoDialog({
       console.log('[AnalyzeVideoDialog] Analysis complete:', output)
 
       // DB에 핸드 저장
-      saveTriggerJobResults(jobId).then((result) => {
+      saveGcsAnalysisResults(jobId).then((result) => {
         if (result.success) {
           console.log(`[AnalyzeVideoDialog] Successfully saved ${result.saved} hands`)
           toast.success(`${result.saved}개 핸드가 DB에 저장되었습니다`)
@@ -221,21 +247,27 @@ export function AnalyzeVideoDialog({
 
   // Start analysis
   const handleAnalyze = async () => {
-    // Very visible console logs
     console.log('============================================')
     console.log('[AnalyzeVideoDialog] handleAnalyze called')
     console.log('[AnalyzeVideoDialog] Timestamp:', new Date().toISOString())
     console.log('[AnalyzeVideoDialog] day:', day)
     console.log('============================================')
 
-    // Show toast to confirm button click
     toast.info("분석 요청을 처리하고 있습니다...")
 
-    if (!day?.video_url) {
-      console.error('[AnalyzeVideoDialog] No video URL')
+    if (!day?.gcs_uri) {
+      console.error('[AnalyzeVideoDialog] No GCS URI')
       setStatus("error")
-      setError("영상 URL이 없습니다")
-      toast.error("영상 URL이 없습니다")
+      setError("GCS URI가 없습니다")
+      toast.error("GCS URI가 없습니다")
+      return
+    }
+
+    if (day.upload_status !== 'uploaded') {
+      console.error('[AnalyzeVideoDialog] Video not uploaded')
+      setStatus("error")
+      setError("영상이 업로드되지 않았습니다")
+      toast.error("영상이 업로드되지 않았습니다")
       return
     }
 
@@ -281,17 +313,18 @@ export function AnalyzeVideoDialog({
       }
 
       console.log('[AnalyzeVideoDialog] Time segments:', timeSegments)
-      console.log('[AnalyzeVideoDialog] Calling startKanAnalysisWithTrigger (Trigger.dev v3)...')
+      console.log('[AnalyzeVideoDialog] Calling startGcsAnalysis (Trigger.dev v4)...')
 
-      // Use Trigger.dev v3 for analysis
-      const result = await startKanAnalysisWithTrigger({
-        videoUrl: day.video_url,
+      // Use Trigger.dev v4 for GCS-based analysis
+      const result = await startGcsAnalysis({
+        streamId: day.id,
+        gcsUri: day.gcs_uri,
         segments: timeSegments,
         platform: platform as 'ept' | 'triton' | 'wsop',
-        streamId: day.id
+        players: validPlayers
       })
 
-      console.log('[AnalyzeVideoDialog] startKanAnalysisWithTrigger result:', result)
+      console.log('[AnalyzeVideoDialog] startGcsAnalysis result:', result)
 
       if (!result.success) {
         throw new Error(result.error || "분석에 실패했습니다")
@@ -391,8 +424,59 @@ export function AnalyzeVideoDialog({
               />
             </div>
 
-            {/* Right Column: Form */}
+            {/* Right Column: Upload + Form */}
             <div className="flex-1 md:flex-[2] space-y-6 overflow-y-auto">
+            {/* Upload Section */}
+            <div className="space-y-3">
+              <Label>영상 업로드</Label>
+
+              {day?.upload_status === 'none' && (
+                <VideoUploader
+                  onFileSelect={(file) => {
+                    console.log('[AnalyzeVideoDialog] File selected:', file.name)
+                    upload(file)
+                  }}
+                  disabled={uploadStatus === 'uploading'}
+                />
+              )}
+
+              {day?.upload_status === 'uploading' && (
+                <UploadProgress
+                  fileName={day?.video_file || '알 수 없는 파일'}
+                  fileSize={0} // TODO: Add file_size to streams table
+                  progress={uploadProgress}
+                  status={uploadStatus === 'idle' ? 'uploading' : uploadStatus}
+                  uploadSpeed={uploadSpeed}
+                  remainingTime={uploadRemainingTime}
+                  error={uploadError?.message}
+                  onPause={pause}
+                  onResume={resume}
+                  onCancel={cancel}
+                />
+              )}
+
+              {day?.upload_status === 'uploaded' && (
+                <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-3">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  <span className="text-sm font-medium text-green-400">
+                    업로드 완료
+                  </span>
+                </div>
+              )}
+
+              {day?.upload_status === 'error' && (
+                <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3">
+                  <AlertCircle className="h-5 w-5 text-red-500" />
+                  <span className="text-sm font-medium text-red-400">
+                    업로드 실패
+                  </span>
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                GCS에 영상을 업로드한 후 분석을 시작할 수 있습니다
+              </p>
+            </div>
             {/* Platform Selection */}
             <div className="space-y-2">
               <Label>플랫폼 선택</Label>
@@ -515,7 +599,11 @@ export function AnalyzeVideoDialog({
               <Button variant="outline" onClick={handleClose} data-testid="cancel-analysis-button">
                 취소
               </Button>
-              <Button onClick={handleAnalyze} disabled={!day?.video_url} data-testid="start-analysis-button">
+              <Button
+                onClick={handleAnalyze}
+                disabled={day?.upload_status !== 'uploaded' || !day?.gcs_uri}
+                data-testid="start-analysis-button"
+              >
                 <Sparkles className="h-4 w-4 mr-2" />
                 분석 시작
               </Button>

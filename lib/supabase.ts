@@ -62,7 +62,11 @@ export type Stream = {
   is_organized?: boolean
   organized_at?: string
   player_count?: number
-  status?: 'draft' | 'published' | 'archived'
+  status?: 'draft' | 'published' | 'archived' | 'analyzing' | 'completed'
+  upload_status?: 'none' | 'uploading' | 'uploaded' | 'error'
+  gcs_uri?: string
+  gcs_bucket?: string
+  gcs_object_name?: string
 }
 
 
