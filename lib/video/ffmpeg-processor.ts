@@ -340,7 +340,7 @@ export class FFmpegProcessor {
       args.push(
         '-vf', `scale=${targetResolution.width}:${targetResolution.height}`,
         '-c:v', 'libx264',                     // H.264 인코딩
-        '-preset', 'fast',                     // 속도-품질 균형
+        '-preset', 'ultrafast',                // 최고 속도 (품질 약간 저하, 3-4배 빠름)
         '-crf', '23'                           // 품질 (18-28, 낮을수록 고품질)
       );
     } else {
