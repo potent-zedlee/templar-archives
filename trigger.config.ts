@@ -1,5 +1,5 @@
 import { defineConfig } from "@trigger.dev/sdk";
-import { ffmpeg, syncEnvVars } from "@trigger.dev/build/extensions/core";
+import { aptGet, syncEnvVars } from "@trigger.dev/build/extensions/core";
 
 export default defineConfig({
   project: "proj_oeniovgjdjmalhpsigaa",
@@ -21,9 +21,9 @@ export default defineConfig({
   },
   dirs: ["./trigger"],
   build: {
-    // FFmpeg extension for video processing
+    // FFmpeg via apt (시스템 패키지) - johnvansickle static build의 TLS 버그 회피
     extensions: [
-      ffmpeg({ version: "7" }),
+      aptGet({ packages: ["ffmpeg"] }),
       // Sync environment variables to Trigger.dev
       syncEnvVars(async (ctx) => {
         // Required environment variables for video analysis
