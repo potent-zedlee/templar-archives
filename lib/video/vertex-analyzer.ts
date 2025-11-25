@@ -1,7 +1,7 @@
 /**
  * Vertex AI Gemini 영상 분석기
  *
- * GCS 저장 영상을 Gemini로 직접 분석 (File API 대신 gs:// URI 사용)
+ * GCS 저장 영상을 Gemini로 직접 분석 (gs:// URI 사용)
  *
  * 주요 기능:
  * - GCS gs:// URI를 Gemini에 직접 전달 (별도 업로드 불필요)
@@ -10,12 +10,14 @@
  * - 구조화된 JSON 응답
  * - 재시도 로직
  *
- * Gemini File API vs Vertex AI:
- * - File API: Buffer 업로드 → 파일 처리 대기 → URI 생성
- * - Vertex AI: GCS gs:// URI 직접 전달 (더 빠름, 대용량 최적화)
+ * SDK 마이그레이션 (2025-11):
+ * - @google-cloud/vertexai (deprecated) → @google/genai
+ * - location: 'global'로 1M 토큰 지원
+ *
+ * @see https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash
  */
 
-import { VertexAI } from '@google-cloud/vertexai';
+import { GoogleGenAI } from '@google/genai';
 import { EPT_PROMPT, TRITON_POKER_PROMPT } from '../ai/prompts';
 
 /**
@@ -59,8 +61,10 @@ export type Platform = 'ept' | 'triton' | 'wsop';
 /**
  * Vertex AI 분석기 클래스
  *
+ * @google/genai SDK 사용 (Vertex AI 모드)
+ *
  * Gemini 2.5 Flash 모델 사용 (GA 버전)
- * - 최대 입력 토큰: 1,048,576
+ * - 최대 입력 토큰: 1,048,576 (1M)
  * - 최대 출력 토큰: 65,535
  * - 비디오: 최대 10개, 약 45분~1시간
  * - 구조화된 JSON 출력 지원
@@ -68,13 +72,15 @@ export type Platform = 'ept' | 'triton' | 'wsop';
  * @see https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash
  */
 export class VertexAnalyzer {
-  private vertexAI: VertexAI;
-  private modelName = 'gemini-2.5-flash'; // GA 버전 (gemini-2.0-flash-exp → gemini-2.5-flash)
+  private ai: GoogleGenAI;
+  private modelName = 'gemini-2.5-flash'; // GA 버전
   private location: string;
+  private projectId: string;
 
   constructor() {
     const projectId = process.env.GCS_PROJECT_ID;
-    const location = process.env.VERTEX_AI_LOCATION || 'us-central1'; // 1M 토큰 지원 리전
+    // global 로케이션: Gemini 2.5 모델이 1M 토큰 지원
+    const location = process.env.VERTEX_AI_LOCATION || 'global';
     const clientEmail = process.env.GCS_CLIENT_EMAIL;
     const privateKey = process.env.GCS_PRIVATE_KEY;
 
@@ -82,11 +88,13 @@ export class VertexAnalyzer {
       throw new Error('GCS_PROJECT_ID 환경 변수가 필요합니다');
     }
 
+    this.projectId = projectId;
     this.location = location;
 
-    // Vertex AI 클라이언트 초기화 (명시적 credentials 전달)
-    // Trigger.dev 클라우드에서는 ADC를 사용할 수 없으므로 서비스 계정 credentials 필요
-    const vertexConfig: {
+    // Google Gen AI SDK with Vertex AI mode 초기화
+    // location: 'global'에서 Gemini 2.5 Flash가 1M 토큰 지원
+    const aiOptions: {
+      vertexai: boolean;
       project: string;
       location: string;
       googleAuthOptions?: {
@@ -96,13 +104,15 @@ export class VertexAnalyzer {
         };
       };
     } = {
+      vertexai: true,
       project: projectId,
       location: this.location,
     };
 
     // 서비스 계정 credentials가 있으면 명시적으로 전달
+    // Trigger.dev 클라우드에서는 ADC를 사용할 수 없으므로 서비스 계정 credentials 필요
     if (clientEmail && privateKey) {
-      vertexConfig.googleAuthOptions = {
+      aiOptions.googleAuthOptions = {
         credentials: {
           client_email: clientEmail,
           private_key: privateKey.replace(/\\n/g, '\n'),
@@ -113,10 +123,10 @@ export class VertexAnalyzer {
       console.log('[VertexAnalyzer] ADC(Application Default Credentials) 사용');
     }
 
-    this.vertexAI = new VertexAI(vertexConfig);
+    this.ai = new GoogleGenAI(aiOptions);
 
     console.log(
-      `[VertexAnalyzer] 초기화 완료: ${projectId} / ${location} / ${this.modelName}`
+      `[VertexAnalyzer] 초기화 완료 (@google/genai): ${projectId} / ${location} / ${this.modelName}`
     );
   }
 
@@ -230,25 +240,14 @@ export class VertexAnalyzer {
           );
         }
 
-        // Vertex AI Gemini 모델 가져오기
         // Gemini 2.5 Flash 최적 설정:
         // - maxOutputTokens: 65535 (최대값, 복잡한 핸드 히스토리 대응)
         // - temperature: 0.1 (낮은 값으로 정확성 우선)
         // - topP: 0.95 (다양성과 일관성 균형)
         // - topK: 40 (토큰 선택 범위 제한)
-        const generativeModel = this.vertexAI.getGenerativeModel({
+        // - responseMimeType: 'application/json' (구조화된 JSON 응답)
+        const response = await this.ai.models.generateContent({
           model: this.modelName,
-          generationConfig: {
-            temperature: 0.1,
-            topP: 0.95,
-            topK: 40,
-            maxOutputTokens: 65535,
-            responseMimeType: 'application/json',
-          },
-        });
-
-        // GCS URI로 분석 실행
-        const request = {
           contents: [
             {
               role: 'user',
@@ -265,18 +264,37 @@ export class VertexAnalyzer {
               ],
             },
           ],
-        };
+          config: {
+            temperature: 0.1,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 65535,
+            responseMimeType: 'application/json',
+          },
+        });
 
-        console.log('[VertexAnalyzer] Gemini 분석 요청 전송...');
+        console.log('[VertexAnalyzer] Gemini 분석 요청 완료');
 
-        const result = await generativeModel.generateContent(request);
-        const response = result.response;
-
+        // 응답에서 텍스트 추출
         if (!response || !response.candidates || response.candidates.length === 0) {
           throw new Error('Gemini 응답이 비어있습니다');
         }
 
-        const text = response.candidates[0].content.parts[0].text || '';
+        const candidate = response.candidates[0];
+        if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+          throw new Error('Gemini 응답에 content가 없습니다');
+        }
+
+        // parts에서 text 추출
+        const textPart = candidate.content.parts.find(
+          (part): part is { text: string } => 'text' in part && typeof part.text === 'string'
+        );
+
+        if (!textPart) {
+          throw new Error('Gemini 응답에 텍스트가 없습니다');
+        }
+
+        const text = textPart.text;
 
         console.log('[VertexAnalyzer] 응답 수신 완료');
 

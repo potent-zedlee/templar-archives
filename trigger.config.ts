@@ -48,7 +48,7 @@ export default defineConfig({
           },
           {
             name: "VERTEX_AI_LOCATION",
-            value: process.env.VERTEX_AI_LOCATION || "us-central1", // 1M 토큰 지원 리전
+            value: process.env.VERTEX_AI_LOCATION || "global", // global: Gemini 2.5 모델 1M 토큰 지원
           },
           {
             name: "GCS_CLIENT_EMAIL",
