@@ -4,37 +4,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
-## 저장소 구조
-
-```
-Templar-Archives-Index-Claude/
-├── app/                       # Next.js App Router
-├── components/                # React 컴포넌트 (FSD 아키텍처)
-│   ├── features/              # 비즈니스 로직 단위 (hand, player, archive, video, poker)
-│   ├── common/                # 공용 컴포넌트
-│   ├── layout/                # 레이아웃 (Header, Footer, Providers)
-│   ├── dialogs/               # 다이얼로그
-│   ├── ui/                    # shadcn/ui (kebab-case)
-│   └── admin/                 # 어드민 패널
-├── lib/                       # 유틸리티, 타입, 쿼리
-├── stores/                    # Zustand 상태 관리
-├── trigger/                   # Trigger.dev Tasks
-├── supabase/migrations/       # DB 스키마 (분리된 SQL 파일)
-│   ├── *_types.sql            # Extensions + ENUM 타입
-│   ├── *_tables.sql           # 테이블 정의
-│   ├── *_functions.sql        # RPC 함수
-│   ├── *_views.sql            # VIEW 정의
-│   ├── *_indexes.sql          # 인덱스
-│   ├── *_policies.sql         # RLS 정책
-│   └── *_triggers.sql         # 트리거/FK/권한
-├── scripts/                   # 운영 스크립트
-│   ├── admin-cli.ts           # 메인 CLI (npm run admin)
-│   └── operations/            # 운영 스크립트 모음
-└── docs/                      # 문서
-```
-
----
-
 ## 프로젝트 개요
 
 Templar Archives는 포커 영상을 자동으로 핸드 히스토리로 변환하고 분석하는 프로덕션 플랫폼입니다.
@@ -92,9 +61,9 @@ npm run admin -- --action=cleanup-jobs    # STUCK 작업 정리
 | Styling | Tailwind CSS 4.1 |
 | State | React Query 5, Zustand 5 |
 | Database | Supabase (PostgreSQL) |
-| AI | Gemini 2.5 Flash, Claude 4.5 Sonnet |
-| Background Jobs | Trigger.dev v3 |
-| Video | @distube/ytdl-core, fluent-ffmpeg |
+| AI | Vertex AI Gemini 2.5 Flash |
+| Background Jobs | Trigger.dev v4 (`@trigger.dev/sdk`) |
+| Video | GCS 직접 업로드, fluent-ffmpeg |
 
 **Node.js**: >=22.0.0
 **패키지 매니저**: npm (pnpm 사용 금지)
@@ -140,15 +109,14 @@ Tournament → Event → Stream → Hand
                               └── HandActions
 ```
 
-### KAN 영상 분석 파이프라인
+### KAN 영상 분석 파이프라인 (GCS + Vertex AI)
 
 ```
 사용자 (분석 시작)
     → Server Action (app/actions/kan-trigger.ts)
-    → Trigger.dev Task (trigger/video-analysis.ts)
-        ├─ YouTube URL 추출 (@distube/ytdl-core)
-        ├─ FFmpeg 구간 추출 (인메모리, Stream Copy)
-        └─ Gemini 2.5 Flash 분석 (File API)
+    → GCS 업로드 (gs://bucket/videos/xxx.mp4)
+    → Trigger.dev Task (trigger/gcs-video-analysis.ts)
+        └─ Vertex AI Gemini 분석 (gs:// URI 직접 전달)
     → JSON 핸드 데이터 파싱 (Self-Healing)
     → DB 저장 (hands → hand_players → hand_actions)
 ```
@@ -157,17 +125,17 @@ Tournament → Event → Stream → Hand
 | 파일 | 역할 |
 |------|------|
 | `app/actions/kan-trigger.ts` | Server Action - 분석 시작, 결과 저장 |
-| `trigger/video-analysis.ts` | Trigger.dev Task - 실제 분석 (최대 3600초) |
-| `lib/video/youtube-downloader.ts` | YouTube 스트림 URL 추출 |
-| `lib/video/ffmpeg-processor.ts` | FFmpeg 인메모리 영상 추출 |
-| `lib/video/gemini-analyzer.ts` | Gemini AI 분석 및 JSON 파싱 |
+| `trigger/gcs-video-analysis.ts` | Trigger.dev Task - GCS 영상 분석 (최대 7200초) |
+| `lib/video/vertex-analyzer.ts` | Vertex AI Gemini 분석 및 JSON 파싱 |
+| `lib/video/ffmpeg-processor.ts` | FFmpeg 영상 처리 |
 | `lib/ai/prompts.ts` | Platform별 AI 프롬프트 (EPT/Triton) |
 | `lib/hooks/use-trigger-job.ts` | React Query 폴링 (2초 간격) |
 
 **특징**:
-- 1시간 초과 영상 → 자동 30분 분할
-- 재시도: 5회, Exponential Backoff
-- 인메모리 처리 (디스크 I/O 없음)
+- GCS gs:// URI 직접 전달 (File API 대비 대용량 최적화)
+- 30분 초과 세그먼트 자동 분할
+- 재시도: 3회, Exponential Backoff
+- Vertex AI 서울 리전 (asia-northeast3)
 
 ---
 
@@ -180,15 +148,16 @@ Tournament → Event → Stream → Hand
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-GOOGLE_API_KEY=your-key              # Gemini AI
-TRIGGER_SECRET_KEY=your-key          # Trigger.dev v3
+TRIGGER_SECRET_KEY=your-key          # Trigger.dev v4
+
+# Vertex AI / GCS (영상 분석 시 필수)
+GCS_PROJECT_ID=your-project-id       # Google Cloud 프로젝트 ID
+VERTEX_AI_LOCATION=asia-northeast3   # 리전 (기본: 서울)
+GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
 
 # 선택
 ANTHROPIC_API_KEY=sk-ant-...         # Claude
 UPSTASH_REDIS_REST_URL=your-url      # Rate Limiting
-YTDL_COOKIE=VISITOR_INFO1_LIVE=xxx;__Secure-3PSID=xxx
-YTDL_USER_AGENT="Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15"
-YTDL_ACCEPT_LANGUAGE=en-US,en;q=0.9
 ```
 
 ---
@@ -231,12 +200,12 @@ rm -rf .next && npm run build
 | 문서 | 설명 |
 |------|------|
 | `docs/POKER_DOMAIN.md` | 포커 도메인 지식 |
+| `docs/DATABASE_SCHEMA.md` | DB 스키마 상세 |
 | `docs/REACT_QUERY_GUIDE.md` | 데이터 페칭 패턴 |
 | `docs/DESIGN_SYSTEM.md` | 디자인 시스템 |
-| `CHANGELOG.md` | 버전별 변경사항 |
-| `work-logs/` | 개발 로그 |
+| `docs/DEPLOYMENT.md` | 배포 가이드 |
 
 ---
 
-**마지막 업데이트**: 2025-11-23
-**문서 버전**: 3.1
+**마지막 업데이트**: 2025-11-25
+**문서 버전**: 3.2
