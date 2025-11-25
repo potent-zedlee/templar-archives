@@ -187,9 +187,15 @@ export class FFmpegProcessor {
     console.log(`[FFmpegProcessor] Extracting segment to file: ${startTime}s - ${startTime + duration}s`);
     console.log(`[FFmpegProcessor] Output path: ${outputPath}`);
 
-    // FFmpeg 인자 구성 (HTTP 재연결 옵션 포함)
+    // 입력 URL 로그 (보안을 위해 서명 파라미터 제외)
+    const urlForLog = inputUrl.split('?')[0];
+    console.log(`[FFmpegProcessor] Input URL (base): ${urlForLog}`);
+    console.log(`[FFmpegProcessor] Input URL has query params: ${inputUrl.includes('?')}`);
+
+    // FFmpeg 인자 구성 (디버그 로깅 + HTTP 재연결 옵션 포함)
     const args = [
       '-y',                                    // 출력 파일 덮어쓰기
+      '-loglevel', 'verbose',                  // 상세 로그 출력
       '-reconnect', '1',                       // HTTP 재연결 활성화
       '-reconnect_streamed', '1',              // 스트리밍 중 재연결
       '-reconnect_delay_max', '5',             // 최대 재연결 지연 5초
@@ -232,7 +238,7 @@ export class FFmpegProcessor {
       ffmpegProcess.on('close', (code, signal) => {
         if (signal) {
           console.error(`[FFmpegProcessor] FFmpeg killed by signal: ${signal}`);
-          console.error(`[FFmpegProcessor] Stderr: ${stderr.slice(-2000)}`);
+          console.error(`[FFmpegProcessor] Stderr (last 5000 chars): ${stderr.slice(-5000)}`);
           // 실패 시 임시 파일 정리
           if (fs.existsSync(outputPath)) {
             try { fs.unlinkSync(outputPath); } catch { /* ignore */ }
