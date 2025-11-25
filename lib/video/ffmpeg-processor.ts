@@ -53,9 +53,123 @@ export interface FFmpegExtractOptions {
   videoCodec?: string;    // 기본: 'copy' (재인코딩 없음)
   audioCodec?: string;    // 기본: 'copy'
   format?: string;        // 기본: 'mp4'
+  /** 타겟 해상도 (다운스케일용) - 원본이 이보다 크면 리사이즈 */
+  targetResolution?: { width: number; height: number };
+}
+
+export interface VideoInfo {
+  /** 비디오 너비 (픽셀) */
+  width: number;
+  /** 비디오 높이 (픽셀) */
+  height: number;
+  /** 영상 길이 (초) */
+  duration: number;
 }
 
 export class FFmpegProcessor {
+  /**
+   * 비디오 정보 조회 (ffprobe 사용)
+   *
+   * @param inputUrl 입력 URL (GCS Signed URL, HTTP URL 등)
+   * @returns Promise<VideoInfo> 비디오 메타데이터
+   *
+   * @example
+   * ```ts
+   * const info = await ffmpegProcessor.getVideoInfo(signedUrl);
+   * console.log(`Resolution: ${info.width}x${info.height}`);
+   * console.log(`Duration: ${info.duration}s`);
+   * ```
+   */
+  async getVideoInfo(inputUrl: string): Promise<VideoInfo> {
+    // FFprobe 바이너리 경로 결정
+    let ffprobePath = 'ffprobe';
+    if (process.env.FFPROBE_PATH) {
+      ffprobePath = process.env.FFPROBE_PATH;
+    } else if (process.env.FFMPEG_PATH) {
+      // FFMPEG_PATH가 있으면 같은 디렉토리에서 ffprobe 찾기
+      const ffmpegDir = path.dirname(process.env.FFMPEG_PATH);
+      const possibleFfprobe = path.join(ffmpegDir, 'ffprobe');
+      if (fs.existsSync(possibleFfprobe)) {
+        ffprobePath = possibleFfprobe;
+      }
+    } else {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
+        ffprobePath = ffprobeInstaller.path;
+      } catch {
+        // 시스템 ffprobe 사용
+      }
+    }
+
+    console.log(`[FFmpegProcessor] Using ffprobe: ${ffprobePath}`);
+
+    // ffprobe 인자 구성 (JSON 출력)
+    const args = [
+      '-v', 'quiet',
+      '-print_format', 'json',
+      '-show_streams',
+      '-select_streams', 'v:0',  // 비디오 스트림만
+      inputUrl
+    ];
+
+    return new Promise((resolve, reject) => {
+      const ffprobeProcess = spawn(ffprobePath, args, {
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      ffprobeProcess.stdout?.on('data', (data: Buffer) => {
+        stdout += data.toString();
+      });
+
+      ffprobeProcess.stderr?.on('data', (data: Buffer) => {
+        stderr += data.toString();
+      });
+
+      ffprobeProcess.on('error', (error) => {
+        console.error('[FFmpegProcessor] ffprobe spawn error:', error);
+        reject(new Error(`ffprobe spawn failed: ${error.message}`));
+      });
+
+      ffprobeProcess.on('close', (code) => {
+        if (code !== 0) {
+          console.error(`[FFmpegProcessor] ffprobe exited with code: ${code}`);
+          console.error(`[FFmpegProcessor] Stderr: ${stderr}`);
+          reject(new Error(`ffprobe exited with code ${code}`));
+          return;
+        }
+
+        try {
+          const data = JSON.parse(stdout);
+          const videoStream = data.streams?.[0];
+
+          if (!videoStream) {
+            reject(new Error('No video stream found'));
+            return;
+          }
+
+          const width = videoStream.width || 0;
+          const height = videoStream.height || 0;
+          // duration은 여러 소스에서 시도
+          const duration = parseFloat(videoStream.duration) ||
+                          parseFloat(data.format?.duration) ||
+                          0;
+
+          console.log(`[FFmpegProcessor] Video info: ${width}x${height}, ${duration.toFixed(1)}s`);
+
+          resolve({ width, height, duration });
+        } catch (parseError) {
+          console.error('[FFmpegProcessor] ffprobe JSON parse error:', parseError);
+          console.error('[FFmpegProcessor] Raw output:', stdout);
+          reject(new Error(`ffprobe output parse failed: ${parseError}`));
+        }
+      });
+    });
+  }
+
   /**
    * 스트림 URL에서 특정 구간 추출 (메모리 내 처리)
    *
@@ -150,6 +264,17 @@ export class FFmpegProcessor {
    * @param inputUrl 입력 스트림 URL (GCS Signed URL 등)
    * @param options 추출 옵션 (outputPath 포함)
    * @returns Promise<{ filePath: string; size: number }>
+   *
+   * @example
+   * ```ts
+   * // 1080p → 720p 다운스케일
+   * await ffmpegProcessor.extractSegmentToFile(url, {
+   *   startTime: 0,
+   *   duration: 1800,
+   *   targetResolution: { width: 1280, height: 720 },
+   *   outputPath: '/tmp/segment.mp4'
+   * });
+   * ```
    */
   async extractSegmentToFile(
     inputUrl: string,
@@ -160,6 +285,7 @@ export class FFmpegProcessor {
       duration,
       videoCodec = 'copy',
       audioCodec = 'copy',
+      targetResolution,
       outputPath
     } = options;
 
@@ -192,20 +318,43 @@ export class FFmpegProcessor {
     console.log(`[FFmpegProcessor] Input URL (base): ${urlForLog}`);
     console.log(`[FFmpegProcessor] Input URL has query params: ${inputUrl.includes('?')}`);
 
+    // 다운스케일 여부 결정
+    const needsDownscale = targetResolution !== undefined;
+    if (needsDownscale) {
+      console.log(`[FFmpegProcessor] Downscaling to ${targetResolution.width}x${targetResolution.height}`);
+    }
+
     // FFmpeg 인자 구성 (최소 옵션 - static build 호환성)
     // 주의: johnvansickle static build에서 -reconnect 옵션이 SIGSEGV를 유발할 수 있음
-    const args = [
+    const args: string[] = [
       '-y',                                    // 출력 파일 덮어쓰기
       '-loglevel', 'verbose',                  // 상세 로그 출력
       '-ss', String(startTime),                // 입력 seeking (입력 전)
       '-i', inputUrl,                          // 입력 URL
       '-t', String(duration),                  // 출력 지속 시간
-      '-c:v', videoCodec,                      // 비디오 코덱
+    ];
+
+    // 비디오 코덱 및 스케일링 설정
+    if (needsDownscale) {
+      // 다운스케일: 재인코딩 필요
+      args.push(
+        '-vf', `scale=${targetResolution.width}:${targetResolution.height}`,
+        '-c:v', 'libx264',                     // H.264 인코딩
+        '-preset', 'fast',                     // 속도-품질 균형
+        '-crf', '23'                           // 품질 (18-28, 낮을수록 고품질)
+      );
+    } else {
+      // 원본 유지: 스트림 복사 (빠름)
+      args.push('-c:v', videoCodec);
+    }
+
+    // 오디오 및 출력 설정
+    args.push(
       '-c:a', audioCodec,                      // 오디오 코덱
       '-movflags', 'frag_keyframe+empty_moov', // MP4 스트리밍 최적화
       '-f', 'mp4',                             // 출력 포맷
       outputPath                               // 출력 파일
-    ];
+    );
 
     console.log(`[FFmpegProcessor] Command: ${ffmpegPath} ${args.join(' ')}`);
 

@@ -167,6 +167,24 @@ export class GCSSegmentExtractor {
 
     console.log(`[GCSSegmentExtractor] Signed URL generated (4h valid)`);
 
+    // 원본 해상도 확인 (다운스케일 필요 여부 판단)
+    let targetResolution: { width: number; height: number } | undefined;
+    try {
+      const videoInfo = await ffmpegProcessor.getVideoInfo(signedUrl);
+      console.log(`[GCSSegmentExtractor] Source resolution: ${videoInfo.width}x${videoInfo.height}`);
+
+      // 720p 초과면 720p로 다운스케일 (토큰 절감)
+      if (videoInfo.height > 720) {
+        targetResolution = { width: 1280, height: 720 };
+        console.log(`[GCSSegmentExtractor] Will downscale to 1280x720 for token optimization`);
+      } else {
+        console.log(`[GCSSegmentExtractor] Resolution <= 720p, keeping original`);
+      }
+    } catch (probeError) {
+      // ffprobe 실패 시 원본 유지 (안전한 폴백)
+      console.warn(`[GCSSegmentExtractor] Failed to get video info, keeping original resolution:`, probeError);
+    }
+
     // 3. 모든 세그먼트를 30분 단위로 분할
     const allSubSegments: SegmentInfo[] = [];
     for (const segment of segments) {
@@ -202,12 +220,14 @@ export class GCSSegmentExtractor {
 
       try {
         // FFmpeg로 구간 추출 → 파일로 직접 저장 (메모리 버퍼링 없음)
+        // targetResolution이 있으면 다운스케일, 없으면 원본 유지
         const { filePath, size } = await ffmpegProcessor.extractSegmentToFile(signedUrl, {
           startTime: subSeg.start,
           duration: duration,
-          videoCodec: 'copy',
+          videoCodec: 'copy',  // targetResolution이 있으면 extractSegmentToFile에서 재정의됨
           audioCodec: 'copy',
           format: 'mp4',
+          targetResolution,    // 1080p+ → 720p 다운스케일
           outputPath: tempFilePath,
         });
 
