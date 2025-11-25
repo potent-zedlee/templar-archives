@@ -48,7 +48,7 @@ export default defineConfig({
           },
           {
             name: "VERTEX_AI_LOCATION",
-            value: process.env.VERTEX_AI_LOCATION || "asia-northeast3",
+            value: process.env.VERTEX_AI_LOCATION || "us-central1", // 1M 토큰 지원 리전
           },
           {
             name: "GCS_CLIENT_EMAIL",
