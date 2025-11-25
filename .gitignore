@@ -54,5 +54,9 @@ credentials*.json
 *secret*.json
 *.pem
 *.key
+
+# GCS service account keys (sensitive)
+gcs-service-account-key.json
+*-service-account*.json
 supabase/.branches/
 .vercel
