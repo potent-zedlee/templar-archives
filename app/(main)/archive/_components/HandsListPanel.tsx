@@ -11,11 +11,11 @@
  */
 
 import { useState, useMemo, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search, Inbox, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 import { useHandsQuery } from '@/lib/queries/archive-queries'
 import { HandListItem } from './HandListItem'
+import { HandDetailDialog } from './HandDetailDialog'
 import { GridSkeleton } from '@/components/ui/skeletons/GridSkeleton'
 import { EmptyState } from '@/components/common/EmptyState'
 import { StaggerContainer, StaggerItem } from '@/components/layout/PageTransition'
@@ -51,10 +51,11 @@ function extractVideoId(url?: string): string | null {
 }
 
 export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
-  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedHand, setSelectedHand] = useState<Hand | null>(null)
+  const [detailHandId, setDetailHandId] = useState<string | null>(null)
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false)
   const playerRef = useRef<YouTubePlayerHandle>(null)
 
   // React Query
@@ -106,10 +107,11 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
   }
 
   /**
-   * 핸드 상세 페이지로 이동
+   * 핸드 상세 다이얼로그 열기
    */
   const handleHandDetail = (handId: string) => {
-    router.push(`/hands/${handId}`)
+    setDetailHandId(handId)
+    setDetailDialogOpen(true)
   }
 
   return (
@@ -253,6 +255,13 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
           </div>
         </div>
       )}
+
+      {/* 핸드 상세 다이얼로그 */}
+      <HandDetailDialog
+        handId={detailHandId}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+      />
     </div>
   )
 }
