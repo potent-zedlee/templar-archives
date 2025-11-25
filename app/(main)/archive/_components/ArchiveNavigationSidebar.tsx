@@ -119,7 +119,7 @@ export function ArchiveNavigationSidebar({
                             {event.streams && event.streams.length > 0 ? (
                               <div className="space-y-1">
                                 {event.streams.map(stream => {
-                                  const handCount = 0 // TODO: hand_count 필드 추가 필요
+                                  const handCount = (stream as any).hand_count || 0
 
                                   return (
                                     <button

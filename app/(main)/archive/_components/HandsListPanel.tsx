@@ -164,7 +164,7 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
       </div>
 
       {/* 핸드 리스트 */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-4 space-y-2">
           {isLoading ? (
             <GridSkeleton count={10} />

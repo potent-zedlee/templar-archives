@@ -42,7 +42,7 @@ async function getHandDetails(handId: string) {
       created_at,
       job_id,
       day_id,
-      days (
+      streams (
         id,
         name,
         video_url,
@@ -150,7 +150,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
     notFound()
   }
 
-  const dayData = Array.isArray(hand.days) ? hand.days[0] : hand.days
+  const dayData = Array.isArray(hand.streams) ? hand.streams[0] : hand.streams
   const subEventData = Array.isArray(dayData?.sub_events) ? dayData?.sub_events[0] : dayData?.sub_events
   const tournament = Array.isArray(subEventData?.tournaments) ? subEventData?.tournaments[0] : subEventData?.tournaments
   const subEvent = subEventData

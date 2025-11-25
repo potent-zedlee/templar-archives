@@ -136,7 +136,10 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
         tournament_categories!category_id(logo_url),
         sub_events(
           *,
-          streams(*)
+          streams(
+            *,
+            hands(count)
+          )
         )
       `)
       .order('start_date', { ascending: false })
@@ -228,9 +231,10 @@ export async function fetchTournamentsTree(gameType?: 'tournament' | 'cash-game'
               return dateB - dateA // Descending order
             })
 
-            // Add player counts
+            // Add player counts and hand counts
             event.streams.forEach((day: any) => {
               day.player_count = playerCountsByDayId[day.id] || 0
+              day.hand_count = day.hands?.[0]?.count || 0
             })
           }
         })
