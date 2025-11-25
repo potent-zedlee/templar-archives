@@ -31,6 +31,7 @@ export interface UseGcsUploadReturn {
   pause: () => void
   resume: () => void
   cancel: () => void
+  cleanup: () => void  // 다이얼로그 닫힐 때 호출
   progress: number
   status: 'idle' | 'uploading' | 'paused' | 'completed' | 'error'
   error: Error | null
@@ -332,6 +333,31 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
         const error = err instanceof Error ? err : new Error('업로드 실패')
         setError(error)
         setStatus('error')
+
+        // LocalStorage 정리
+        clearUploadState()
+
+        // DB 상태 롤백 API 호출
+        if (uploadStateRef.current?.uploadId) {
+          try {
+            await fetch('/api/gcs/rollback-upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                uploadId: uploadStateRef.current.uploadId,
+                errorMessage: error.message
+              }),
+            })
+            console.log('[useGcsUpload] Rollback completed')
+          } catch (rollbackError) {
+            console.error('[useGcsUpload] Rollback failed:', rollbackError)
+          }
+        }
+
+        // 상태 초기화
+        fileRef.current = null
+        uploadStateRef.current = null
+
         onError?.(error)
       }
     },
@@ -379,6 +405,27 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
     uploadStateRef.current = null
   }, [clearUploadState])
 
+  /**
+   * 정리 (다이얼로그 닫힐 때 호출)
+   * 진행 중인 업로드를 취소하고 모든 상태를 초기화합니다.
+   */
+  const cleanup = useCallback(() => {
+    // 진행 중인 업로드가 있으면 취소
+    if (status === 'uploading' || status === 'paused') {
+      abortControllerRef.current?.abort()
+    }
+
+    // LocalStorage 정리
+    clearUploadState()
+
+    // 상태 초기화
+    setStatus('idle')
+    setProgress(0)
+    setError(null)
+    fileRef.current = null
+    uploadStateRef.current = null
+  }, [status, clearUploadState])
+
   // ==================== Cleanup ====================
 
   useEffect(() => {
@@ -392,6 +439,7 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
     pause,
     resume,
     cancel,
+    cleanup,
     progress,
     status,
     error,

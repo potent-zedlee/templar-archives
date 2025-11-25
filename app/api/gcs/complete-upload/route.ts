@@ -96,6 +96,12 @@ export async function POST(request: NextRequest) {
         } as never)
         .eq('id', uploadId)
 
+      // streams.upload_status도 'failed'로 업데이트
+      await serviceSupabase
+        .from('streams')
+        .update({ upload_status: 'failed' } as never)
+        .eq('id', upload.stream_id)
+
       return NextResponse.json(
         { error: 'GCS에서 파일을 찾을 수 없습니다.' },
         { status: 400 }

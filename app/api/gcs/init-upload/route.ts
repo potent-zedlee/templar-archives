@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     const serviceSupabase = getServiceSupabaseClient()
     const { data: stream, error: streamError } = await serviceSupabase
       .from('streams')
-      .select('id, name')
+      .select('id, name, upload_status')
       .eq('id', streamId)
       .single()
 
@@ -75,6 +75,42 @@ export async function POST(request: NextRequest) {
         { error: '유효하지 않은 스트림 ID입니다.' },
         { status: 404 }
       )
+    }
+
+    // 3.5. 오래된 uploading 상태 정리 (5분 이상 된 항목)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+
+    // 같은 stream에서 5분 이상 된 uploading 상태의 video_uploads를 failed로 변경
+    const { error: cleanupError } = await serviceSupabase
+      .from('video_uploads' as 'streams')
+      .update({
+        status: 'failed',
+        error_message: 'Superseded by new upload',
+        completed_at: new Date().toISOString(),
+      } as never)
+      .eq('stream_id', streamId)
+      .eq('status', 'uploading')
+      .lt('created_at', fiveMinutesAgo)
+
+    if (cleanupError) {
+      console.log('[GCS Init Upload] Stale upload cleanup failed:', cleanupError)
+    } else {
+      console.log('[GCS Init Upload] Cleaned up stale uploads for stream:', streamId)
+    }
+
+    // streams.upload_status가 'uploading'이지만 활성 video_uploads가 없으면 'none'으로 리셋
+    const { data: activeUploads } = await serviceSupabase
+      .from('video_uploads' as 'streams')
+      .select('id')
+      .eq('stream_id', streamId)
+      .eq('status', 'uploading')
+
+    if ((!activeUploads || activeUploads.length === 0) && stream.upload_status === 'uploading') {
+      await serviceSupabase
+        .from('streams')
+        .update({ upload_status: 'none' } as never)
+        .eq('id', streamId)
+      console.log('[GCS Init Upload] Reset stale stream upload_status to none:', streamId)
     }
 
     // 4. GCS 경로 생성: uploads/{streamId}/{timestamp}_{filename}

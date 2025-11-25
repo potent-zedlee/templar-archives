@@ -97,6 +97,7 @@ export function AnalyzeVideoDialog({
     pause,
     resume,
     cancel,
+    cleanup: uploadCleanup,
     progress: uploadProgress,
     status: uploadStatus,
     error: uploadError,
@@ -131,6 +132,36 @@ export function AnalyzeVideoDialog({
     console.log('[AnalyzeVideoDialog] day?.video_url:', day?.video_url)
     console.log('============================================')
   }, [isOpen, day])
+
+  // 다이얼로그가 열릴 때 상태 초기화
+  useEffect(() => {
+    if (isOpen) {
+      console.log('[AnalyzeVideoDialog] Dialog opened - resetting state')
+      resetDialog()
+      uploadCleanup()
+    }
+  }, [isOpen])
+
+  // day가 바뀌면 업로드 상태 정리
+  useEffect(() => {
+    if (day?.id) {
+      console.log('[AnalyzeVideoDialog] Day changed - cleaning up upload state')
+      uploadCleanup()
+    }
+  }, [day?.id])
+
+  // DB 상태와 LocalStorage 상태 동기화
+  useEffect(() => {
+    if (!isOpen || !day?.id) return
+
+    // DB는 'none'인데 LocalStorage에 상태가 있으면 정리
+    const savedState = localStorage.getItem(`gcs_upload_${day.id}`)
+
+    if (day.upload_status === 'none' && savedState) {
+      localStorage.removeItem(`gcs_upload_${day.id}`)
+      console.log('[AnalyzeVideoDialog] Cleared stale LocalStorage state')
+    }
+  }, [isOpen, day?.id, day?.upload_status])
 
   // Trigger.dev 작업 상태 폴링 (React Query 기반)
   const { data: triggerJobData } = useTriggerJob(jobId, {
@@ -368,6 +399,11 @@ export function AnalyzeVideoDialog({
 
   // Handle close with force close option
   const handleClose = () => {
+    // 진행 중인 업로드가 있으면 정리
+    if (uploadStatus === 'uploading' || uploadStatus === 'paused') {
+      uploadCleanup()
+    }
+
     // Allow close if not in active processing state
     if (status !== "analyzing" && status !== "processing") {
       onOpenChange(false)
