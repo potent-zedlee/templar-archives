@@ -135,7 +135,7 @@ Tournament → Event → Stream → Hand
 - GCS gs:// URI 직접 전달 (File API 대비 대용량 최적화)
 - 30분 초과 세그먼트 자동 분할
 - 재시도: 3회, Exponential Backoff
-- Vertex AI 서울 리전 (asia-northeast3)
+- Vertex AI global 리전 (Gemini 2.5 모델 1M 토큰 지원)
 
 ---
 
@@ -152,7 +152,7 @@ TRIGGER_SECRET_KEY=your-key          # Trigger.dev v4
 
 # Vertex AI / GCS (영상 분석 시 필수)
 GCS_PROJECT_ID=your-project-id       # Google Cloud 프로젝트 ID
-VERTEX_AI_LOCATION=asia-northeast3   # 리전 (기본: 서울)
+VERTEX_AI_LOCATION=global            # global: Gemini 2.5 모델 1M 토큰 지원
 GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
 
 # 선택
