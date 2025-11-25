@@ -6,3 +6,4 @@
  */
 
 export * from "./video-analysis";
+export * from "./gcs-video-analysis";
