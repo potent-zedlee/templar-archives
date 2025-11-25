@@ -14,6 +14,7 @@
  */
 
 import ffmpeg from 'fluent-ffmpeg';
+import { spawn } from 'child_process';
 import { Readable, PassThrough } from 'stream';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -141,10 +142,10 @@ export class FFmpegProcessor {
   }
 
   /**
-   * 스트림 URL에서 특정 구간 추출 (파일 기반 처리)
+   * 스트림 URL에서 특정 구간 추출 (파일 기반 처리 - Native FFmpeg)
    *
-   * 대용량 영상 처리 시 메모리 부족을 방지하기 위해
-   * /tmp 디렉토리에 직접 파일로 출력합니다.
+   * fluent-ffmpeg 대신 child_process.spawn을 직접 사용하여
+   * SIGSEGV 문제를 회피합니다.
    *
    * @param inputUrl 입력 스트림 URL (GCS Signed URL 등)
    * @param options 추출 옵션 (outputPath 포함)
@@ -154,15 +155,11 @@ export class FFmpegProcessor {
     inputUrl: string,
     options: FFmpegExtractOptions & { outputPath: string }
   ): Promise<{ filePath: string; size: number }> {
-    // FFmpeg 초기화 (지연 로딩)
-    initializeFfmpeg();
-
     const {
       startTime,
       duration,
       videoCodec = 'copy',
       audioCodec = 'copy',
-      format = 'mp4',
       outputPath
     } = options;
 
@@ -172,63 +169,97 @@ export class FFmpegProcessor {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
+    // FFmpeg 바이너리 경로 결정
+    let ffmpegPath = 'ffmpeg';
+    if (process.env.FFMPEG_PATH) {
+      ffmpegPath = process.env.FFMPEG_PATH;
+    } else {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+        ffmpegPath = ffmpegInstaller.path;
+      } catch {
+        // 시스템 ffmpeg 사용
+      }
+    }
+
+    console.log(`[FFmpegProcessor] Using FFmpeg: ${ffmpegPath}`);
     console.log(`[FFmpegProcessor] Extracting segment to file: ${startTime}s - ${startTime + duration}s`);
     console.log(`[FFmpegProcessor] Output path: ${outputPath}`);
 
+    // FFmpeg 인자 구성 (최소한의 옵션만 사용)
+    const args = [
+      '-y',                                    // 출력 파일 덮어쓰기
+      '-ss', String(startTime),                // 입력 seeking (입력 전)
+      '-i', inputUrl,                          // 입력 URL
+      '-t', String(duration),                  // 출력 지속 시간
+      '-c:v', videoCodec,                      // 비디오 코덱
+      '-c:a', audioCodec,                      // 오디오 코덱
+      '-movflags', 'frag_keyframe+empty_moov', // MP4 스트리밍 최적화
+      '-f', 'mp4',                             // 출력 포맷
+      outputPath                               // 출력 파일
+    ];
+
+    console.log(`[FFmpegProcessor] Command: ${ffmpegPath} ${args.join(' ')}`);
+
     return new Promise((resolve, reject) => {
-      // FFmpeg 명령 생성
-      // 중요: -ss를 입력 전에 설정하여 입력 seeking 활성화 (메모리 효율적)
-      const command = ffmpeg(inputUrl)
-        .inputOptions([
-          '-ss', String(startTime),           // 입력 seeking (입력 전 = 빠름)
-          '-analyzeduration', '20000000',     // 분석 시간 제한 (20초)
-          '-probesize', '20000000',           // 프로브 크기 제한 (20MB)
-          '-reconnect', '1',                  // HTTP 재연결 활성화
-          '-reconnect_streamed', '1',         // 스트리밍 중 재연결
-          '-reconnect_delay_max', '5'         // 최대 재연결 지연 5초
-        ])
-        .setDuration(duration)                // -t 출력 지속 시간
-        .videoCodec(videoCodec)
-        .audioCodec(audioCodec)
-        .format(format);
+      const ffmpegProcess = spawn(ffmpegPath, args, {
+        stdio: ['ignore', 'pipe', 'pipe']  // stdin 무시, stdout/stderr 캡처
+      });
 
-      // MP4 최적화 옵션
-      if (format === 'mp4') {
-        command.outputOptions([
-          '-movflags', 'frag_keyframe+empty_moov',
-          '-frag_duration', '1000000',
-          '-max_muxing_queue_size', '1024'    // 멀티플렉싱 큐 제한
-        ]);
-      }
+      let stderr = '';
 
-      // 이벤트 핸들러
-      command
-        .on('start', (commandLine) => {
-          console.log(`[FFmpegProcessor] Command: ${commandLine}`);
-        })
-        .on('progress', (progress) => {
-          if (progress.percent) {
-            console.log(`[FFmpegProcessor] Progress: ${progress.percent.toFixed(1)}%`);
+      ffmpegProcess.stderr?.on('data', (data: Buffer) => {
+        const line = data.toString();
+        stderr += line;
+        // 진행률 로그 (frame= 포함 라인만)
+        if (line.includes('frame=') || line.includes('time=')) {
+          const timeMatch = line.match(/time=(\d{2}:\d{2}:\d{2})/);
+          if (timeMatch) {
+            console.log(`[FFmpegProcessor] Progress: ${timeMatch[1]}`);
           }
-        })
-        .on('error', (error) => {
-          console.error('[FFmpegProcessor] Error:', error);
+        }
+      });
+
+      ffmpegProcess.on('error', (error) => {
+        console.error('[FFmpegProcessor] Spawn error:', error);
+        reject(new Error(`FFmpeg spawn failed: ${error.message}`));
+      });
+
+      ffmpegProcess.on('close', (code, signal) => {
+        if (signal) {
+          console.error(`[FFmpegProcessor] FFmpeg killed by signal: ${signal}`);
+          console.error(`[FFmpegProcessor] Stderr: ${stderr.slice(-2000)}`);
           // 실패 시 임시 파일 정리
           if (fs.existsSync(outputPath)) {
             try { fs.unlinkSync(outputPath); } catch { /* ignore */ }
           }
-          reject(new Error(`FFmpeg processing failed: ${error.message}`));
-        })
-        .on('end', () => {
-          // 파일 크기 확인
-          const stats = fs.statSync(outputPath);
-          const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
-          console.log(`[FFmpegProcessor] Extraction complete: ${sizeMB}MB -> ${outputPath}`);
-          resolve({ filePath: outputPath, size: stats.size });
-        });
+          reject(new Error(`FFmpeg was killed with signal ${signal}`));
+          return;
+        }
 
-      // 파일로 직접 출력 (메모리 버퍼링 없음)
-      command.save(outputPath);
+        if (code !== 0) {
+          console.error(`[FFmpegProcessor] FFmpeg exited with code: ${code}`);
+          console.error(`[FFmpegProcessor] Stderr: ${stderr.slice(-2000)}`);
+          // 실패 시 임시 파일 정리
+          if (fs.existsSync(outputPath)) {
+            try { fs.unlinkSync(outputPath); } catch { /* ignore */ }
+          }
+          reject(new Error(`FFmpeg exited with code ${code}`));
+          return;
+        }
+
+        // 성공
+        if (!fs.existsSync(outputPath)) {
+          reject(new Error('FFmpeg completed but output file not found'));
+          return;
+        }
+
+        const stats = fs.statSync(outputPath);
+        const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
+        console.log(`[FFmpegProcessor] Extraction complete: ${sizeMB}MB -> ${outputPath}`);
+        resolve({ filePath: outputPath, size: stats.size });
+      });
     });
   }
 
