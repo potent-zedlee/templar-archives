@@ -91,6 +91,9 @@ export function AnalyzeVideoDialog({
   const [processingTime, setProcessingTime] = useState(0)
   const [startTime, setStartTime] = useState<Date | null>(null)
 
+  // Selected file tracking (for immediate UI feedback)
+  const [selectedFile, setSelectedFile] = useState<{ name: string; size: number } | null>(null)
+
   // GCS Upload Hook
   const {
     upload,
@@ -395,6 +398,7 @@ export function AnalyzeVideoDialog({
     setSegmentResults([])
     setProcessingTime(0)
     setStartTime(null)
+    setSelectedFile(null)
   }
 
   // Handle close with force close option
@@ -466,20 +470,22 @@ export function AnalyzeVideoDialog({
             <div className="space-y-3">
               <Label>영상 업로드</Label>
 
-              {day?.upload_status === 'none' && (
+              {/* 업로드 가능 상태: DB가 none이고 훅도 idle일 때 */}
+              {day?.upload_status === 'none' && uploadStatus === 'idle' && (
                 <VideoUploader
                   onFileSelect={(file) => {
                     console.log('[AnalyzeVideoDialog] File selected:', file.name)
+                    setSelectedFile({ name: file.name, size: file.size })
                     upload(file)
                   }}
-                  disabled={uploadStatus === 'uploading'}
                 />
               )}
 
-              {day?.upload_status === 'uploading' && (
+              {/* 업로드 진행 중: 훅 상태가 uploading이거나 DB가 uploading일 때 */}
+              {(uploadStatus === 'uploading' || uploadStatus === 'paused' || day?.upload_status === 'uploading') && (
                 <UploadProgress
-                  fileName={day?.video_file || '알 수 없는 파일'}
-                  fileSize={0} // TODO: Add file_size to streams table
+                  fileName={selectedFile?.name || day?.video_file || '업로드 중...'}
+                  fileSize={selectedFile?.size || 0}
                   progress={uploadProgress}
                   status={uploadStatus === 'idle' ? 'uploading' : uploadStatus}
                   uploadSpeed={uploadSpeed}
