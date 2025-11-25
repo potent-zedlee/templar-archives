@@ -28,6 +28,7 @@ export default defineConfig({
       syncEnvVars(async (ctx) => {
         // Required environment variables for video analysis
         return [
+          // Supabase
           {
             name: "NEXT_PUBLIC_SUPABASE_URL",
             value: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
@@ -36,6 +37,28 @@ export default defineConfig({
             name: "SUPABASE_SERVICE_ROLE_KEY",
             value: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
           },
+          // GCS / Vertex AI
+          {
+            name: "GCS_PROJECT_ID",
+            value: process.env.GCS_PROJECT_ID || "",
+          },
+          {
+            name: "GCS_BUCKET_NAME",
+            value: process.env.GCS_BUCKET_NAME || "",
+          },
+          {
+            name: "VERTEX_AI_LOCATION",
+            value: process.env.VERTEX_AI_LOCATION || "asia-northeast3",
+          },
+          {
+            name: "GCS_CLIENT_EMAIL",
+            value: process.env.GCS_CLIENT_EMAIL || "",
+          },
+          {
+            name: "GCS_PRIVATE_KEY",
+            value: process.env.GCS_PRIVATE_KEY || "",
+          },
+          // Legacy (YouTube download - deprecated)
           {
             name: "GOOGLE_API_KEY",
             value: process.env.GOOGLE_API_KEY || "",

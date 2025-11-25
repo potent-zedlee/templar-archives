@@ -75,6 +75,8 @@ export class VertexAnalyzer {
   constructor() {
     const projectId = process.env.GCS_PROJECT_ID;
     const location = process.env.VERTEX_AI_LOCATION || 'asia-northeast3'; // 서울 리전
+    const clientEmail = process.env.GCS_CLIENT_EMAIL;
+    const privateKey = process.env.GCS_PRIVATE_KEY;
 
     if (!projectId) {
       throw new Error('GCS_PROJECT_ID 환경 변수가 필요합니다');
@@ -82,11 +84,36 @@ export class VertexAnalyzer {
 
     this.location = location;
 
-    // Vertex AI 클라이언트 초기화
-    this.vertexAI = new VertexAI({
+    // Vertex AI 클라이언트 초기화 (명시적 credentials 전달)
+    // Trigger.dev 클라우드에서는 ADC를 사용할 수 없으므로 서비스 계정 credentials 필요
+    const vertexConfig: {
+      project: string;
+      location: string;
+      googleAuthOptions?: {
+        credentials: {
+          client_email: string;
+          private_key: string;
+        };
+      };
+    } = {
       project: projectId,
       location: this.location,
-    });
+    };
+
+    // 서비스 계정 credentials가 있으면 명시적으로 전달
+    if (clientEmail && privateKey) {
+      vertexConfig.googleAuthOptions = {
+        credentials: {
+          client_email: clientEmail,
+          private_key: privateKey.replace(/\\n/g, '\n'),
+        },
+      };
+      console.log(`[VertexAnalyzer] 서비스 계정 인증 사용: ${clientEmail}`);
+    } else {
+      console.log('[VertexAnalyzer] ADC(Application Default Credentials) 사용');
+    }
+
+    this.vertexAI = new VertexAI(vertexConfig);
 
     console.log(
       `[VertexAnalyzer] 초기화 완료: ${projectId} / ${location} / ${this.modelName}`
