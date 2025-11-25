@@ -58,10 +58,18 @@ export type Platform = 'ept' | 'triton' | 'wsop';
 
 /**
  * Vertex AI 분석기 클래스
+ *
+ * Gemini 2.5 Flash 모델 사용 (GA 버전)
+ * - 최대 입력 토큰: 1,048,576
+ * - 최대 출력 토큰: 65,535
+ * - 비디오: 최대 10개, 약 45분~1시간
+ * - 구조화된 JSON 출력 지원
+ *
+ * @see https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash
  */
 export class VertexAnalyzer {
   private vertexAI: VertexAI;
-  private modelName = 'gemini-2.0-flash-exp';
+  private modelName = 'gemini-2.5-flash'; // GA 버전 (gemini-2.0-flash-exp → gemini-2.5-flash)
   private location: string;
 
   constructor() {
@@ -196,10 +204,18 @@ export class VertexAnalyzer {
         }
 
         // Vertex AI Gemini 모델 가져오기
+        // Gemini 2.5 Flash 최적 설정:
+        // - maxOutputTokens: 65535 (최대값, 복잡한 핸드 히스토리 대응)
+        // - temperature: 0.1 (낮은 값으로 정확성 우선)
+        // - topP: 0.95 (다양성과 일관성 균형)
+        // - topK: 40 (토큰 선택 범위 제한)
         const generativeModel = this.vertexAI.getGenerativeModel({
           model: this.modelName,
           generationConfig: {
             temperature: 0.1,
+            topP: 0.95,
+            topK: 40,
+            maxOutputTokens: 65535,
             responseMimeType: 'application/json',
           },
         });
