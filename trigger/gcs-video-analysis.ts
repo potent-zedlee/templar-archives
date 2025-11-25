@@ -126,7 +126,7 @@ export const gcsVideoAnalysisTask = task({
         sourceGcsUri: gcsUri,
         segments: segments,
         streamId: streamId,
-        maxSegmentDuration: 1800, // 30분
+        maxSegmentDuration: 1800, // 30분 (us-central1 리전: 1M 토큰)
       });
 
       extractedSegments = extractionResult.extractedSegments;

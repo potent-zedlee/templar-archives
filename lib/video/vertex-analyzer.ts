@@ -74,7 +74,7 @@ export class VertexAnalyzer {
 
   constructor() {
     const projectId = process.env.GCS_PROJECT_ID;
-    const location = process.env.VERTEX_AI_LOCATION || 'asia-northeast3'; // 서울 리전
+    const location = process.env.VERTEX_AI_LOCATION || 'us-central1'; // 1M 토큰 지원 리전
     const clientEmail = process.env.GCS_CLIENT_EMAIL;
     const privateKey = process.env.GCS_PRIVATE_KEY;
 
