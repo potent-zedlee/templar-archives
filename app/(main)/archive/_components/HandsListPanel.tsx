@@ -12,14 +12,13 @@
 
 import { useState, useMemo, useRef } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Search, Inbox, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
+import { Search, Inbox, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useHandsQuery } from '@/lib/queries/archive-queries'
 import { HandListItem } from './HandListItem'
 import { HandDetailDialog } from './HandDetailDialog'
 import { GridSkeleton } from '@/components/ui/skeletons/GridSkeleton'
 import { EmptyState } from '@/components/common/EmptyState'
 import { StaggerContainer, StaggerItem } from '@/components/layout/PageTransition'
-import { useArchiveUIStore } from '@/stores/archive-ui-store'
 import { YouTubePlayer, type YouTubePlayerHandle } from '@/components/features/video/YouTubePlayer'
 import type { Stream } from '@/lib/supabase'
 import type { Hand } from '@/lib/types/archive'
@@ -61,8 +60,6 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
   // React Query
   const { data: hands = [], isLoading } = useHandsQuery(streamId)
 
-  // Zustand Store
-  const openAnalyzeDialog = useArchiveUIStore(state => state.openAnalyzeDialog)
 
   // YouTube Video ID
   const videoId = useMemo(() => extractVideoId(stream.video_url), [stream.video_url])
@@ -139,13 +136,6 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
               </span>
             )}
           </h2>
-          <button
-            onClick={() => openAnalyzeDialog(stream)}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            <Sparkles className="w-4 h-4" />
-            분석 시작
-          </button>
         </div>
 
         <div className="relative">
