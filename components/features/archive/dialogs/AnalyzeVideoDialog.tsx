@@ -506,12 +506,17 @@ export function AnalyzeVideoDialog({
                 </div>
               )}
 
-              {day?.upload_status === 'error' && (
+              {(day?.upload_status === 'error' || uploadStatus === 'error') && (
                 <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3">
                   <AlertCircle className="h-5 w-5 text-red-500" />
-                  <span className="text-sm font-medium text-red-400">
-                    업로드 실패
-                  </span>
+                  <div>
+                    <span className="text-sm font-medium text-red-400">
+                      업로드 실패
+                    </span>
+                    {uploadError && (
+                      <p className="text-xs text-red-400/80 mt-1">{uploadError.message}</p>
+                    )}
+                  </div>
                 </div>
               )}
 
