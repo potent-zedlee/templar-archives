@@ -46,9 +46,8 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 ### Current Status
 - ✅ **프로덕션**: https://templar-archives.vercel.app
 - ✅ **기술 스택**: React 19.2.0, Next.js 16.0.1, TypeScript 5.9.3
-- ✅ **AI**: Gemini 2.0 Flash (v1.29.0) + Claude 3.5 Sonnet
+- ✅ **AI**: Gemini 2.5 Flash
 - ✅ **데이터베이스**: Supabase (90+ 마이그레이션, 27개 테이블)
-- ✅ **Phase 43 완료**: SubEvent → Event 용어 통일 + Flowbite 전면 도입
 
 ---
 

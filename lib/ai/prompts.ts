@@ -9,14 +9,14 @@ Analyze the provided EPT poker video segment and extract detailed hand histories
 Each player card displays:
 - **Player Name**: UPPERCASE format (e.g., "BRZEZINSKI", "OSTASH")
 - **Position**: SB (Small Blind), BB (Big Blind), BTN (Button), UTG, MP, CO, HJ
-- **Hole Cards**: Two cards with suit symbols (e.g., J♥ 9♥)
+- **Hole Cards**: Two cards with suit symbols (e.g., Jh 9h)
 - **Win Probability**: Percentage displayed next to cards (e.g., "72%")
 - **Stack Size**: In millions format (e.g., "9.60M" = 9,600,000 chips)
 - **Current Action**: Text like "BET 125,000" or "125,000 TO CALL"
 - **SPLIT Probability**: Shown at top if applicable (e.g., "SPLIT 8%")
 
 ### RIGHT PANEL (Board & Pot)
-- **Board Cards**: Up to 5 cards displayed with suit symbols (9♦ 6♠ 3♣)
+- **Board Cards**: Up to 5 cards displayed with suit symbols (9d 6s 3c)
 - **Empty Slots**: Future streets shown as blank card outlines
 - **POT**: Total pot size prominently displayed (e.g., "POT 500,000")
 
@@ -37,7 +37,6 @@ Each player card displays:
 For each visible player:
 - **Name**: EXACT uppercase name from left panel
 - **Position**: SB/BB/BTN/UTG/MP/CO/HJ
-- **Seat**: Assign 1-9 based on visual position
 - **Stack Size**: Convert M notation to numeric (9.60M → 9600000)
 - **Hole Cards**: Array format ["Jh", "9h"] using lowercase suit letters (s=spades, h=hearts, d=diamonds, c=clubs)
 

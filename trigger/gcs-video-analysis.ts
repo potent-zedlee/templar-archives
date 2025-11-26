@@ -17,6 +17,7 @@ import { task, retry, metadata, AbortTaskRunError } from "@trigger.dev/sdk";
 import { z } from "zod";
 import { vertexAnalyzer } from "../lib/video/vertex-analyzer";
 import { gcsSegmentExtractor } from "../lib/video/gcs-segment-extractor";
+import { saveHandsToDatabase, updateStreamStatus } from "../lib/database/hand-saver";
 import type { ExtractedHand } from "../lib/video/vertex-analyzer";
 import type { ExtractedSegment } from "../lib/video/gcs-segment-extractor";
 
@@ -233,6 +234,26 @@ export const gcsVideoAnalysisTask = task({
         `[GCS-KAN] Analysis complete! Total hands extracted: ${allHands.length}`
       );
 
+      // ============================================
+      // Phase 2.5: DB에 핸드 직접 저장
+      // ============================================
+      metadata.set("status", "saving");
+      console.log(`[GCS-KAN] Phase 2.5: Saving ${allHands.length} hands to database...`);
+
+      const saveResult = await saveHandsToDatabase(streamId, allHands);
+
+      if (saveResult.success) {
+        console.log(`[GCS-KAN] DB save complete: ${saveResult.saved} saved, ${saveResult.errors} errors`);
+        metadata.set("savedHands", saveResult.saved);
+      } else {
+        console.error(`[GCS-KAN] DB save failed: ${saveResult.error}`);
+        metadata.set("saveError", saveResult.error);
+      }
+
+      // 스트림 상태 업데이트 (완료)
+      await updateStreamStatus(streamId, 'completed');
+      console.log(`[GCS-KAN] Stream status updated to 'completed'`);
+
     } finally {
       // ============================================
       // Phase 3: 임시 세그먼트 파일 정리
@@ -258,12 +279,12 @@ export const gcsVideoAnalysisTask = task({
       .set("handsFound", allHands.length)
       .set("completedAt", new Date().toISOString());
 
-    // 결과 반환 (Server Action에서 DB 저장 처리)
+    // 결과 반환 (DB 저장은 이미 완료됨)
     return {
       success: true,
       streamId,
-      hands: allHands,
       handCount: allHands.length,
+      savedToDb: true,
     };
   },
 });

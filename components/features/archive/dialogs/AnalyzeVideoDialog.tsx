@@ -24,7 +24,7 @@ import type { VideoSegment } from "@/lib/types/video-segments"
 import { timeStringToSeconds } from "@/lib/types/video-segments"
 import { PlayerMatchResults } from "@/components/features/player/PlayerMatchResults"
 import { VideoPlayerWithTimestamp } from "@/components/features/video/VideoPlayerWithTimestamp"
-import { startGcsAnalysis, saveGcsAnalysisResults } from "@/app/actions/gcs-analysis"
+import { startGcsAnalysis } from "@/app/actions/gcs-analysis"
 import { useTriggerJob } from "@/lib/hooks/use-trigger-job"
 import type { TimeSegment } from "@/types/segments"
 import { formatTime } from "@/types/segments"
@@ -222,27 +222,16 @@ export function AnalyzeVideoDialog({
     // 완료 처리
     if (triggerJobData.status === 'SUCCESS') {
       const output = triggerJobData.output
-      const handsCount = output?.handCount || output?.hands?.length || 0
+      const handsCount = output?.handCount || 0
 
       setStatus('success')
       setHandsFound(handsCount)
       setProgress(`분석 완료! ${handsCount}개의 핸드가 발견되었습니다`)
 
-      // 성공 토스트
-      toast.success(`분석 완료! ${handsCount}개의 핸드가 발견되었습니다`)
+      // 성공 토스트 (DB 저장은 Trigger.dev task에서 자동 완료)
+      toast.success(`분석 완료! ${handsCount}개의 핸드가 DB에 저장되었습니다`)
 
       console.log('[AnalyzeVideoDialog] Analysis complete:', output)
-
-      // DB에 핸드 저장
-      saveGcsAnalysisResults(jobId).then((result) => {
-        if (result.success) {
-          console.log(`[AnalyzeVideoDialog] Successfully saved ${result.saved} hands`)
-          toast.success(`${result.saved}개 핸드가 DB에 저장되었습니다`)
-        } else {
-          console.error('[AnalyzeVideoDialog] Failed to save hands:', result.error)
-          toast.error(`핸드 저장 실패: ${result.error}`)
-        }
-      })
     }
 
     // 실패 처리
