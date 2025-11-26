@@ -19,7 +19,7 @@ export function AdminHeader() {
 
         {/* Title */}
         <div className="flex-1">
-          <h1 className="text-lg font-semibold">Templar Archives Admin</h1>
+          <h1 className="text-lg font-semibold">Templar Archives Index Admin</h1>
         </div>
 
         {/* Right Actions */}
