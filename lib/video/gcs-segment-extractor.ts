@@ -167,23 +167,10 @@ export class GCSSegmentExtractor {
 
     console.log(`[GCSSegmentExtractor] Signed URL generated (4h valid)`);
 
-    // 원본 해상도 확인 (다운스케일 필요 여부 판단)
-    let targetResolution: { width: number; height: number } | undefined;
-    try {
-      const videoInfo = await ffmpegProcessor.getVideoInfo(signedUrl);
-      console.log(`[GCSSegmentExtractor] Source resolution: ${videoInfo.width}x${videoInfo.height}`);
-
-      // 720p 초과면 720p로 다운스케일 (토큰 절감)
-      if (videoInfo.height > 720) {
-        targetResolution = { width: 1280, height: 720 };
-        console.log(`[GCSSegmentExtractor] Will downscale to 1280x720 for token optimization`);
-      } else {
-        console.log(`[GCSSegmentExtractor] Resolution <= 720p, keeping original`);
-      }
-    } catch (probeError) {
-      // ffprobe 실패 시 원본 유지 (안전한 폴백)
-      console.warn(`[GCSSegmentExtractor] Failed to get video info, keeping original resolution:`, probeError);
-    }
+    // 다운스케일 비활성화: Gemini는 시간 기반 토큰 계산 (해상도 무관)
+    // stream copy 사용으로 FFmpeg 속도 40-50배 향상
+    const targetResolution: { width: number; height: number } | undefined = undefined;
+    console.log(`[GCSSegmentExtractor] Using stream copy (no downscale) for faster extraction`);
 
     // 3. 모든 세그먼트를 30분 단위로 분할
     const allSubSegments: SegmentInfo[] = [];
