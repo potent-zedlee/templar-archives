@@ -268,6 +268,48 @@ export async function saveTriggerJobResults(jobId: string) {
 }
 
 /**
+ * 초 단위 타임스탬프를 표시용 문자열로 변환
+ * @param seconds 초 단위 숫자
+ * @returns "HH:MM:SS" 형식 (10시간 이상 영상 대응)
+ */
+function formatSecondsToTimestamp(seconds: number): string {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
+
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+}
+
+/**
+ * 핸드의 타임코드를 표시용 문자열로 포맷팅
+ * @param hand 핸드 데이터 (absolute_timestamp_start/end 포함)
+ * @returns "35:30 ~ 38:45" 형식 또는 기본값 "00:00"
+ */
+function formatTimestampDisplay(hand: any): string {
+  const start = hand.absolute_timestamp_start
+  const end = hand.absolute_timestamp_end
+
+  if (typeof start === 'number' && typeof end === 'number') {
+    return `${formatSecondsToTimestamp(start)} ~ ${formatSecondsToTimestamp(end)}`
+  }
+
+  if (typeof start === 'number') {
+    return formatSecondsToTimestamp(start)
+  }
+
+  // fallback: AI가 추출한 상대 타임코드 사용
+  if (hand.timestamp_start && hand.timestamp_end) {
+    return `${hand.timestamp_start} ~ ${hand.timestamp_end}`
+  }
+
+  if (hand.timestamp_start) {
+    return hand.timestamp_start
+  }
+
+  return '00:00'
+}
+
+/**
  * 단일 핸드를 데이터베이스에 저장
  */
 async function saveHandToDatabase(
@@ -282,7 +324,9 @@ async function saveHandToDatabase(
       day_id: streamId, // streams 테이블의 FK
       number: String(hand.handNumber),
       description: generateHandDescription(hand),
-      timestamp: '00:00', // 타임스탬프는 나중에 업데이트 가능
+      timestamp: formatTimestampDisplay(hand), // 사용자 표시용 타임코드
+      video_timestamp_start: hand.absolute_timestamp_start ?? null, // 초 단위
+      video_timestamp_end: hand.absolute_timestamp_end ?? null, // 초 단위
       pot_size: hand.pot || 0,
       board_cards: formatBoardCards(hand.board),
       // 블라인드 정보 파싱 (stakes에서)

@@ -36,6 +36,31 @@ const GCSVideoAnalysisInput = z.object({
 
 export type GCSVideoAnalysisPayload = z.infer<typeof GCSVideoAnalysisInput>;
 
+/**
+ * MM:SS 또는 HH:MM:SS 형식의 타임스탬프를 초 단위로 변환
+ * @param timestamp "05:30" 또는 "1:05:30" 형식
+ * @returns 초 단위 숫자, 파싱 실패시 null
+ */
+function parseTimestampToSeconds(timestamp?: string): number | null {
+  if (!timestamp) return null;
+
+  const parts = timestamp.split(':').map(Number);
+
+  if (parts.some(isNaN)) return null;
+
+  if (parts.length === 2) {
+    // MM:SS 형식
+    const [minutes, seconds] = parts;
+    return minutes * 60 + seconds;
+  } else if (parts.length === 3) {
+    // HH:MM:SS 형식
+    const [hours, minutes, seconds] = parts;
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+
+  return null;
+}
+
 // 에러 타입 분류
 function isRetryableError(error: unknown): boolean {
   if (!(error instanceof Error)) return true;
@@ -179,6 +204,20 @@ export const gcsVideoAnalysisTask = task({
         console.log(
           `[GCS-KAN] Extracted ${hands.length} hands from segment ${i + 1}`
         );
+
+        // 세그먼트 오프셋을 적용하여 절대 타임코드 계산
+        for (const hand of hands) {
+          const startSeconds = parseTimestampToSeconds(hand.timestamp_start);
+          const endSeconds = parseTimestampToSeconds(hand.timestamp_end);
+
+          if (startSeconds !== null) {
+            hand.absolute_timestamp_start = segment.start + startSeconds;
+          }
+          if (endSeconds !== null) {
+            hand.absolute_timestamp_end = segment.start + endSeconds;
+          }
+        }
+
         allHands.push(...hands);
 
         // 진행률 업데이트

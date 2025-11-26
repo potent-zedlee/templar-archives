@@ -53,12 +53,18 @@ export const HandListItem = memo(function HandListItem({
           <Badge color="warning" className="font-mono">
             #{hand.number}
           </Badge>
-          {hand.video_timestamp_start !== undefined && hand.video_timestamp_end !== undefined && (
+          {/* 타임코드 표시: video_timestamp가 있으면 사용, 없으면 timestamp 필드 fallback */}
+          {(hand.video_timestamp_start !== undefined && hand.video_timestamp_end !== undefined) ? (
             <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono text-gray-700 dark:text-gray-300">
               <Play className="w-3 h-3" />
               {formatTime(hand.video_timestamp_start)} ~ {formatTime(hand.video_timestamp_end)}
             </div>
-          )}
+          ) : hand.timestamp && hand.timestamp !== '00:00' ? (
+            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono text-gray-700 dark:text-gray-300">
+              <Play className="w-3 h-3" />
+              {hand.timestamp}
+            </div>
+          ) : null}
         </div>
         <span className="text-xs text-gray-500 dark:text-gray-400">
           {hand.created_at && formatDistanceToNow(new Date(hand.created_at), { addSuffix: true })}
