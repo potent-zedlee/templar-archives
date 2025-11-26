@@ -82,8 +82,23 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 4. GCS에서 파일 존재 확인
-    const fileExists = await gcsClient.fileExists(upload.gcs_path)
+    // 4. GCS에서 파일 존재 확인 (재시도 로직)
+    // 대용량 파일은 GCS에 완전히 반영되기까지 시간이 걸릴 수 있음
+    let fileExists = false
+    const maxRetries = 3
+    const retryDelayMs = 2000
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      fileExists = await gcsClient.fileExists(upload.gcs_path)
+      if (fileExists) {
+        console.log(`[GCS Complete Upload] 파일 존재 확인: 시도 ${attempt}/${maxRetries}`)
+        break
+      }
+      if (attempt < maxRetries) {
+        console.log(`[GCS Complete Upload] 파일 미발견, ${retryDelayMs}ms 후 재시도 (${attempt}/${maxRetries})`)
+        await new Promise(resolve => setTimeout(resolve, retryDelayMs))
+      }
+    }
 
     if (!fileExists) {
       // 파일이 없으면 실패 상태로 업데이트
