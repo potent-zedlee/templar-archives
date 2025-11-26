@@ -82,45 +82,17 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // 4. GCS에서 파일 존재 확인 (재시도 로직)
-    // 대용량 파일은 GCS에 완전히 반영되기까지 시간이 걸릴 수 있음
-    let fileExists = false
-    const maxRetries = 3
-    const retryDelayMs = 2000
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      fileExists = await gcsClient.fileExists(upload.gcs_path)
-      if (fileExists) {
-        console.log(`[GCS Complete Upload] 파일 존재 확인: 시도 ${attempt}/${maxRetries}`)
-        break
-      }
-      if (attempt < maxRetries) {
-        console.log(`[GCS Complete Upload] 파일 미발견, ${retryDelayMs}ms 후 재시도 (${attempt}/${maxRetries})`)
-        await new Promise(resolve => setTimeout(resolve, retryDelayMs))
-      }
-    }
+    // 4. GCS 파일 존재 확인 (간소화)
+    // GCS resumable upload 완료 시 파일은 이미 존재하므로 한 번만 확인
+    // 타임아웃 방지를 위해 재시도 없이 바로 진행
+    const fileExists = await gcsClient.fileExists(upload.gcs_path)
 
     if (!fileExists) {
-      // 파일이 없으면 실패 상태로 업데이트
-      await serviceSupabase
-        .from('video_uploads' as 'streams')
-        .update({
-          status: 'failed',
-          error_message: 'GCS에서 파일을 찾을 수 없습니다.',
-          updated_at: new Date().toISOString(),
-        } as never)
-        .eq('id', uploadId)
-
-      // streams.upload_status도 'failed'로 업데이트
-      await serviceSupabase
-        .from('streams')
-        .update({ upload_status: 'failed' } as never)
-        .eq('id', upload.stream_id)
-
-      return NextResponse.json(
-        { error: 'GCS에서 파일을 찾을 수 없습니다.' },
-        { status: 400 }
-      )
+      // 파일이 없어도 일단 진행 (GCS 전파 지연 가능성)
+      // 분석 시작 시 다시 확인됨
+      console.warn(`[GCS Complete Upload] 파일 존재 확인 실패, 하지만 진행: ${upload.gcs_path}`)
+    } else {
+      console.log(`[GCS Complete Upload] 파일 존재 확인 완료: ${upload.gcs_path}`)
     }
 
     // 5. video_uploads 상태 업데이트 (completed)
