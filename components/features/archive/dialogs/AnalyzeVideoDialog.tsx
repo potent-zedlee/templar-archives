@@ -497,7 +497,7 @@ export function AnalyzeVideoDialog({
                 />
               )}
 
-              {day?.upload_status === 'uploaded' && (
+              {(day?.upload_status === 'uploaded' || uploadStatus === 'completed') && (
                 <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-3">
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
                   <span className="text-sm font-medium text-green-400">
@@ -643,7 +643,7 @@ export function AnalyzeVideoDialog({
               </Button>
               <Button
                 onClick={handleAnalyze}
-                disabled={day?.upload_status !== 'uploaded' || !day?.gcs_uri}
+                disabled={day?.upload_status !== 'uploaded' && uploadStatus !== 'completed'}
                 data-testid="start-analysis-button"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
