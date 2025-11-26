@@ -364,15 +364,22 @@ export class FFmpegProcessor {
       });
 
       let stderr = '';
+      let lastLogSeconds = -30; // 첫 로그는 즉시 출력되도록
 
       ffmpegProcess.stderr?.on('data', (data: Buffer) => {
         const line = data.toString();
         stderr += line;
-        // 진행률 로그 (frame= 포함 라인만)
-        if (line.includes('frame=') || line.includes('time=')) {
+        // 진행률 로그 (30초마다 한 번만)
+        if (line.includes('time=')) {
           const timeMatch = line.match(/time=(\d{2}:\d{2}:\d{2})/);
           if (timeMatch) {
-            console.log(`[FFmpegProcessor] Progress: ${timeMatch[1]}`);
+            const [h, m, s] = timeMatch[1].split(':').map(Number);
+            const currentSeconds = h * 3600 + m * 60 + s;
+            // 30초 간격으로만 로그 출력
+            if (currentSeconds - lastLogSeconds >= 30) {
+              console.log(`[FFmpegProcessor] Progress: ${timeMatch[1]}`);
+              lastLogSeconds = currentSeconds;
+            }
           }
         }
       });
