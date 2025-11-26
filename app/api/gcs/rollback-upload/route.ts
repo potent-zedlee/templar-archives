@@ -61,17 +61,27 @@ export async function POST(request: NextRequest) {
       console.error('[rollback-upload] Failed to update video_uploads:', uploadUpdateError)
     }
 
-    // 3. streams.upload_status를 'none'으로 롤백
+    // 3. streams 업데이트 전 gcs_uri 확인
+    // gcs_uri가 이미 존재하면 파일이 성공적으로 업로드된 것이므로 'uploaded'로 설정
+    const { data: stream } = await supabase
+      .from('streams')
+      .select('gcs_uri')
+      .eq('id', upload.stream_id)
+      .single()
+
+    // gcs_uri가 있으면 'uploaded'로, 없으면 'none'으로
+    const newStatus = stream?.gcs_uri ? 'uploaded' : 'none'
+
     const { error: streamUpdateError } = await supabase
       .from('streams')
-      .update({ upload_status: 'none' })
+      .update({ upload_status: newStatus })
       .eq('id', upload.stream_id)
 
     if (streamUpdateError) {
       console.error('[rollback-upload] Failed to update streams:', streamUpdateError)
     }
 
-    console.log('[rollback-upload] Rollback completed for upload:', uploadId)
+    console.log(`[rollback-upload] Stream status set to '${newStatus}' (gcs_uri exists: ${!!stream?.gcs_uri})`)
 
     return NextResponse.json({ success: true })
   } catch (error) {

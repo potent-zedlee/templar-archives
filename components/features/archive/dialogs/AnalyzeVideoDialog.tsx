@@ -297,7 +297,8 @@ export function AnalyzeVideoDialog({
       return
     }
 
-    if (day.upload_status !== 'uploaded') {
+    // gcs_uri가 있으면 upload_status와 관계없이 분석 허용
+    if (day.upload_status !== 'uploaded' && !day.gcs_uri) {
       console.error('[AnalyzeVideoDialog] Video not uploaded')
       setStatus("error")
       setError("영상이 업로드되지 않았습니다")
@@ -470,8 +471,8 @@ export function AnalyzeVideoDialog({
             <div className="space-y-3">
               <Label>영상 업로드</Label>
 
-              {/* 업로드 가능 상태: DB가 none이고 훅도 idle일 때 */}
-              {day?.upload_status === 'none' && uploadStatus === 'idle' && (
+              {/* 업로드 가능 상태: DB가 none이고 gcs_uri가 없고 훅도 idle일 때 */}
+              {day?.upload_status === 'none' && !day?.gcs_uri && uploadStatus === 'idle' && (
                 <VideoUploader
                   onFileSelect={(file) => {
                     console.log('[AnalyzeVideoDialog] File selected:', file.name)
@@ -497,7 +498,7 @@ export function AnalyzeVideoDialog({
                 />
               )}
 
-              {(day?.upload_status === 'uploaded' || uploadStatus === 'completed') && (
+              {(day?.upload_status === 'uploaded' || day?.gcs_uri || uploadStatus === 'completed') && (
                 <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-3">
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
                   <span className="text-sm font-medium text-green-400">
@@ -648,7 +649,7 @@ export function AnalyzeVideoDialog({
               </Button>
               <Button
                 onClick={handleAnalyze}
-                disabled={day?.upload_status !== 'uploaded' && uploadStatus !== 'completed'}
+                disabled={!day?.gcs_uri && day?.upload_status !== 'uploaded' && uploadStatus !== 'completed'}
                 data-testid="start-analysis-button"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
