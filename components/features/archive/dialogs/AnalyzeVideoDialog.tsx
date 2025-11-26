@@ -179,8 +179,45 @@ export function AnalyzeVideoDialog({
 
     console.log('[AnalyzeVideoDialog] Trigger.dev status update:', triggerJobData)
 
-    // 진행률 업데이트
-    setProgressPercent(triggerJobData.progress || 0)
+    // 메타데이터에서 실시간 진행 상황 읽기
+    const meta = triggerJobData.metadata
+    if (meta) {
+      // 진행률 업데이트 (metadata.progress 우선)
+      setProgressPercent(meta.progress ?? triggerJobData.progress ?? 0)
+
+      // 발견된 핸드 수 업데이트 (실시간)
+      if (meta.handsFound !== undefined) {
+        setHandsFound(meta.handsFound)
+      }
+
+      // segmentResults 동적 업데이트
+      const totalSegs = meta.totalSegments ?? 0
+      const processedSegs = meta.processedSegments ?? 0
+
+      if (totalSegs > 0) {
+        setSegmentResults(prevResults => {
+          // 세그먼트 수가 변경된 경우에만 재생성
+          if (prevResults.length !== totalSegs) {
+            return Array.from({ length: totalSegs }, (_, i) => ({
+              status: i < processedSegs ? 'success' as const
+                : i === processedSegs ? 'processing' as const
+                : 'pending' as const,
+              segment_id: `seg_${i}`,
+            }))
+          }
+          // 진행 상황만 업데이트
+          return prevResults.map((seg, i) => ({
+            ...seg,
+            status: i < processedSegs ? 'success' as const
+              : i === processedSegs ? 'processing' as const
+              : 'pending' as const,
+          }))
+        })
+      }
+    } else {
+      // 메타데이터가 없으면 기존 progress 사용
+      setProgressPercent(triggerJobData.progress || 0)
+    }
 
     // 완료 처리
     if (triggerJobData.status === 'SUCCESS') {
@@ -507,7 +544,7 @@ export function AnalyzeVideoDialog({
                 </div>
               )}
 
-              {(day?.upload_status === 'error' || uploadStatus === 'error') && (
+              {(day?.upload_status === 'failed' || uploadStatus === 'error') && (
                 <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3">
                   <AlertCircle className="h-5 w-5 text-red-500" />
                   <div>

@@ -1,11 +1,27 @@
 import { useQuery } from '@tanstack/react-query'
 
+/**
+ * Trigger.dev 메타데이터 타입
+ */
+export interface TriggerJobMetadata {
+  status?: string
+  progress?: number
+  totalSegments?: number
+  processedSegments?: number
+  currentSegment?: number
+  currentSegmentRange?: string
+  handsFound?: number
+  streamId?: string
+  gcsUri?: string
+}
+
 export interface TriggerJobStatus {
   id: string
   status: 'PENDING' | 'EXECUTING' | 'SUCCESS' | 'FAILURE'
   progress?: number
   output?: any
   error?: string | null
+  metadata?: TriggerJobMetadata | null
   createdAt: string
   startedAt?: string | null
   completedAt?: string | null

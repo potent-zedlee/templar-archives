@@ -23,9 +23,11 @@ export async function GET(
     const { runs } = await import("@trigger.dev/sdk/v3");
     const run = await runs.retrieve(jobId);
 
-    // Trigger.dev 상태 매핑: QUEUED, EXECUTING, COMPLETED, FAILED 등
-    const progress = run.status === 'QUEUED' ? 0
-      : run.status === 'EXECUTING' ? 50
+    // 메타데이터에서 실제 진행률 읽기
+    const metadata = run.metadata as Record<string, unknown> | undefined
+    const progress = metadata?.progress
+      ? Number(metadata.progress)
+      : run.status === 'QUEUED' ? 0
       : run.status === 'COMPLETED' ? 100
       : 0;
 
@@ -49,6 +51,7 @@ export async function GET(
       output: run.output,
       error: errorMessage,
       errorDetail: run.error ?? null,
+      metadata: metadata ?? null,
       createdAt: run.createdAt,
       startedAt: run.startedAt,
       completedAt: run.finishedAt
