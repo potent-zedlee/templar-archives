@@ -60,7 +60,7 @@ export async function toastPromise<T>(
     error?: string | ((error: unknown) => string)
   }
 ): Promise<T> {
-  return toast.promise(promise, {
+  toast.promise(promise, {
     loading: messages.loading,
     success: (data: T) => {
       return typeof messages.success === "function"
@@ -81,6 +81,8 @@ export async function toastPromise<T>(
         : "작업 실행 중 오류가 발생했습니다"
     },
   })
+
+  return promise
 }
 
 /**

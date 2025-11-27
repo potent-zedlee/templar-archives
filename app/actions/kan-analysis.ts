@@ -9,6 +9,9 @@
 
 import { adminFirestore } from '@/lib/firebase-admin'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'
+import type { ExtractedHand } from '@/lib/video/vertex-analyzer'
+
+export type KanHand = ExtractedHand
 import type {
   FirestoreStream,
   FirestoreHand,

@@ -79,13 +79,11 @@ export type Platform = 'ept' | 'triton' | 'wsop';
  */
 export class VertexAnalyzer {
   private ai: GoogleGenAI;
-  private modelName = 'gemini-2.5-flash'; // GA 버전
+  private modelName = 'gemini-2.5-flash';
   private location: string;
-  private projectId: string;
 
   constructor() {
     const projectId = process.env.GCS_PROJECT_ID;
-    // global 로케이션: Gemini 2.5 모델이 1M 토큰 지원
     const location = process.env.VERTEX_AI_LOCATION || 'global';
     const clientEmail = process.env.GCS_CLIENT_EMAIL;
     const privateKey = process.env.GCS_PRIVATE_KEY;
@@ -94,7 +92,6 @@ export class VertexAnalyzer {
       throw new Error('GCS_PROJECT_ID 환경 변수가 필요합니다');
     }
 
-    this.projectId = projectId;
     this.location = location;
 
     // Google Gen AI SDK with Vertex AI mode 초기화

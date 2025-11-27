@@ -395,7 +395,7 @@ export type UserComment = {
 /**
  * 사용자의 댓글 목록 조회
  */
-export async function fetchUserComments(userId: string, limit: number = 10): Promise<UserComment[]> {
+export async function fetchUserComments(_userId: string, _limit: number = 10): Promise<UserComment[]> {
   try {
     // Firestore는 컬렉션 그룹 쿼리 필요
     // 모든 posts/{postId}/comments를 검색
@@ -486,7 +486,7 @@ export async function fetchUserActivity(userId: string) {
  * TODO: Firebase Storage로 변경 필요
  * 현재는 임시로 에러 반환
  */
-export async function uploadAvatar(userId: string, file: File): Promise<string> {
+export async function uploadAvatar(_userId: string, file: File): Promise<string> {
   // File size validation (max 5MB)
   const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB in bytes
   if (file.size > MAX_FILE_SIZE) {

@@ -504,11 +504,10 @@ export class FFmpegProcessor {
    * FFmpeg 버전 확인
    */
   async getVersion(): Promise<string> {
-    // FFmpeg 초기화 (지연 로딩)
     initializeFfmpeg();
 
     return new Promise((resolve, reject) => {
-      ffmpeg.getAvailableFormats((err, formats) => {
+      ffmpeg.getAvailableFormats((err, _formats) => {
         if (err) {
           reject(err);
         } else {

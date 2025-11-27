@@ -123,12 +123,11 @@ export async function withFfmpegRetry<T>(
   options: Partial<RetryOptions> = {}
 ): Promise<T> {
   return withRetry(fn, {
-    maxRetries: 2, // FFmpeg는 2회까지만 재시도
+    maxRetries: 2,
     retryDelay: 2000,
-    exponentialBackoff: false,
+    exponentialBackoff: 1,
     shouldRetry: (error) => {
       const message = error.message.toLowerCase()
-      // FFmpeg 일시적 에러만 재시도
       return (
         message.includes('timeout') ||
         message.includes('connection') ||
@@ -147,11 +146,10 @@ export async function withOcrRetry<T>(
   options: Partial<RetryOptions> = {}
 ): Promise<T> {
   return withRetry(fn, {
-    maxRetries: 2, // OCR도 2회까지만
+    maxRetries: 2,
     retryDelay: 1000,
-    exponentialBackoff: false,
+    exponentialBackoff: 1,
     shouldRetry: (error) => {
-      // OCR 일시적 에러만 재시도
       return isTransientError(error)
     },
     ...options,
@@ -168,9 +166,8 @@ export async function withClaudeRetry<T>(
   return withRetry(fn, {
     maxRetries: 3,
     retryDelay: 2000,
-    exponentialBackoff: true,
+    exponentialBackoff: 2,
     shouldRetry: (error) => {
-      // Claude API 특정 에러 체크
       const message = error.message.toLowerCase()
       return (
         isTransientError(error) ||
