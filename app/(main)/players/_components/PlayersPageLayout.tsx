@@ -8,12 +8,7 @@ import { PlayerDetailPanel } from "./PlayerDetailPanel"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
-import type { Player } from "@/lib/supabase"
-import { usePlayerQuery } from "@/lib/queries/players-queries"
-
-type PlayerWithHandCount = Player & {
-  hand_count: number
-}
+import { usePlayerQuery, type PlayerWithHandCount } from "@/lib/queries/players-queries"
 
 interface PlayersPageLayoutProps {
   players: PlayerWithHandCount[]

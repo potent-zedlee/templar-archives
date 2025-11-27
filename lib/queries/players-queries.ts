@@ -1,32 +1,208 @@
 /**
- * Players React Query Hooks
+ * Players React Query Hooks (Firestore Version)
  *
  * Players 페이지의 데이터 페칭을 위한 React Query hooks
+ * Firestore를 데이터 소스로 사용
+ *
+ * @module lib/queries/players-queries
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  fetchPlayersWithHandCount,
-  fetchPlayerHandsGrouped,
-  fetchPlayerPrizeHistory,
-} from '@/lib/queries'
-import { createClientSupabaseClient } from '@/lib/supabase-client'
-import { calculatePlayerStatistics } from '@/lib/player-stats'
-import { getPlayerClaimInfo, checkUserPlayerClaim } from '@/lib/player-claims'
-import type { Player } from '@/lib/supabase'
+import type { PlayerStats } from '@/lib/firestore-types'
+
+// ==================== Types ====================
+
+/**
+ * 플레이어 목록 조회 결과 (핸드 수 포함)
+ * 기존 Supabase 코드와 호환을 위해 snake_case 사용
+ */
+export interface PlayerWithHandCount {
+  id: string
+  name: string
+  normalized_name: string
+  photo_url?: string
+  country?: string
+  gender?: 'male' | 'female' | 'other'
+  is_pro?: boolean
+  bio?: string
+  total_winnings?: number
+  aliases?: string[]
+  stats?: PlayerStats
+  hand_count: number
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * 플레이어 상세 정보 (snake_case - 기존 호환)
+ */
+export interface PlayerDetail {
+  id: string
+  name: string
+  normalized_name: string
+  photo_url?: string
+  country?: string
+  gender?: 'male' | 'female' | 'other'
+  is_pro?: boolean
+  bio?: string
+  total_winnings?: number
+  aliases?: string[]
+  stats?: PlayerStats
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * 플레이어 핸드 그룹 (토너먼트별)
+ */
+export interface PlayerHandGroup {
+  tournamentId: string
+  tournamentName: string
+  category: string
+  events: {
+    eventId: string
+    eventName: string
+    hands: {
+      id: string
+      number: string
+      description: string
+      timestamp: string
+      position?: string
+      cards?: string[]
+      isWinner?: boolean
+    }[]
+  }[]
+}
+
+/**
+ * 플레이어 상금 기록
+ */
+export interface PlayerPrizeRecord {
+  eventName: string
+  tournamentName: string
+  category: string
+  date: string
+  rank: number
+  prize: number
+}
+
+/**
+ * 플레이어 클레임 정보
+ */
+export interface PlayerClaimInfo {
+  claimed: boolean
+  claimerId?: string
+  claimerName?: string
+}
+
+/**
+ * 플레이어 통계 타입
+ */
+export interface PlayerStatistics {
+  vpip: number
+  pfr: number
+  threeBet: number
+  ats: number
+  winRate: number
+  avgPotSize: number
+  showdownWinRate: number
+  totalHands: number
+  handsWon: number
+}
 
 // ==================== Query Keys ====================
 
 export const playersKeys = {
   all: ['players'] as const,
   lists: () => [...playersKeys.all, 'list'] as const,
-  list: (filters?: any) => [...playersKeys.lists(), filters] as const,
+  list: (filters?: Record<string, unknown>) => [...playersKeys.lists(), filters] as const,
   details: () => [...playersKeys.all, 'detail'] as const,
   detail: (playerId: string) => [...playersKeys.details(), playerId] as const,
   hands: (playerId: string) => [...playersKeys.detail(playerId), 'hands'] as const,
   stats: (playerId: string) => [...playersKeys.detail(playerId), 'stats'] as const,
   prizes: (playerId: string) => [...playersKeys.detail(playerId), 'prizes'] as const,
   claim: (playerId: string, userId?: string) => [...playersKeys.detail(playerId), 'claim', userId] as const,
+}
+
+// ==================== Server Action Imports ====================
+// Note: 실제 Server Actions는 app/actions/players.ts에서 정의됨
+
+async function fetchPlayersFromServer(): Promise<PlayerWithHandCount[]> {
+  const response = await fetch('/api/players', {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!response.ok) throw new Error('Failed to fetch players')
+  const data = await response.json()
+  return data.players
+}
+
+async function fetchPlayerFromServer(playerId: string): Promise<PlayerDetail> {
+  const response = await fetch(`/api/players/${playerId}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!response.ok) throw new Error('Failed to fetch player')
+  const data = await response.json()
+  return data.player
+}
+
+async function fetchPlayerHandsFromServer(playerId: string): Promise<PlayerHandGroup[]> {
+  const response = await fetch(`/api/players/${playerId}/hands`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!response.ok) throw new Error('Failed to fetch player hands')
+  const data = await response.json()
+  return data.handGroups
+}
+
+async function fetchPlayerStatsFromServer(playerId: string): Promise<PlayerStatistics> {
+  const response = await fetch(`/api/players/${playerId}/stats`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!response.ok) throw new Error('Failed to fetch player stats')
+  const data = await response.json()
+  return data.stats
+}
+
+async function fetchPlayerPrizesFromServer(playerId: string): Promise<PlayerPrizeRecord[]> {
+  const response = await fetch(`/api/players/${playerId}/prizes`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!response.ok) throw new Error('Failed to fetch player prizes')
+  const data = await response.json()
+  return data.prizes
+}
+
+async function fetchPlayerClaimFromServer(playerId: string, userId?: string): Promise<{
+  claimInfo: PlayerClaimInfo
+  userClaim: { status: string } | null
+}> {
+  const url = userId
+    ? `/api/players/${playerId}/claim?userId=${userId}`
+    : `/api/players/${playerId}/claim`
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!response.ok) throw new Error('Failed to fetch player claim')
+  return response.json()
+}
+
+async function updatePlayerPhotoOnServer(playerId: string, file: File): Promise<string> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(`/api/players/${playerId}/photo`, {
+    method: 'POST',
+    body: formData,
+  })
+  if (!response.ok) throw new Error('Failed to update player photo')
+  const data = await response.json()
+  return data.photoUrl
 }
 
 // ==================== Queries ====================
@@ -45,7 +221,59 @@ export function usePlayersQuery(filters?: {
   return useQuery({
     queryKey: playersKeys.list(filters),
     queryFn: async () => {
-      return await fetchPlayersWithHandCount()
+      const players = await fetchPlayersFromServer()
+
+      // 클라이언트 사이드 필터링
+      // TODO: 검색 기능은 Algolia 또는 Typesense로 마이그레이션 필요
+      let filteredPlayers = players
+
+      if (filters?.search) {
+        const searchLower = filters.search.toLowerCase()
+        filteredPlayers = filteredPlayers.filter(
+          (p) =>
+            p.name.toLowerCase().includes(searchLower) ||
+            p.normalized_name.includes(searchLower) ||
+            p.aliases?.some((alias) => alias.toLowerCase().includes(searchLower))
+        )
+      }
+
+      if (filters?.country) {
+        filteredPlayers = filteredPlayers.filter((p) => p.country === filters.country)
+      }
+
+      if (filters?.minWinnings !== undefined) {
+        filteredPlayers = filteredPlayers.filter(
+          (p) => (p.total_winnings || 0) >= filters.minWinnings!
+        )
+      }
+
+      if (filters?.maxWinnings !== undefined) {
+        filteredPlayers = filteredPlayers.filter(
+          (p) => (p.total_winnings || 0) <= filters.maxWinnings!
+        )
+      }
+
+      // 정렬
+      if (filters?.sortBy) {
+        switch (filters.sortBy) {
+          case 'name':
+            filteredPlayers.sort((a, b) => a.name.localeCompare(b.name))
+            break
+          case 'handCount':
+          case 'hand_count':
+            filteredPlayers.sort((a, b) => b.hand_count - a.hand_count)
+            break
+          case 'winnings':
+          case 'total_winnings':
+            filteredPlayers.sort((a, b) => (b.total_winnings || 0) - (a.total_winnings || 0))
+            break
+          default:
+            // 기본: 핸드 수 내림차순
+            filteredPlayers.sort((a, b) => b.hand_count - a.hand_count)
+        }
+      }
+
+      return filteredPlayers
     },
     staleTime: 10 * 60 * 1000, // 10분 (플레이어 목록은 자주 변경되지 않음)
     gcTime: 30 * 60 * 1000, // 30분 (메모리에 더 오래 유지)
@@ -59,15 +287,7 @@ export function usePlayerQuery(playerId: string) {
   return useQuery({
     queryKey: playersKeys.detail(playerId),
     queryFn: async () => {
-      const supabase = createClientSupabaseClient()
-      const { data, error } = await supabase
-        .from('players')
-        .select('*')
-        .eq('id', playerId)
-        .single()
-
-      if (error) throw error
-      return data as Player
+      return await fetchPlayerFromServer(playerId)
     },
     staleTime: 10 * 60 * 1000, // 10분
     gcTime: 30 * 60 * 1000, // 30분
@@ -83,7 +303,7 @@ export function usePlayerHandsQuery(playerId: string) {
   return useQuery({
     queryKey: playersKeys.hands(playerId),
     queryFn: async () => {
-      return await fetchPlayerHandsGrouped(playerId)
+      return await fetchPlayerHandsFromServer(playerId)
     },
     staleTime: 5 * 60 * 1000, // 5분 (핸드 데이터는 자주 변경되지 않음)
     gcTime: 15 * 60 * 1000, // 15분 (메모리에 더 오래 유지)
@@ -99,11 +319,7 @@ export function usePlayerStatsQuery(playerId: string) {
   return useQuery({
     queryKey: playersKeys.stats(playerId),
     queryFn: async () => {
-      // Get player hands first
-      // Calculate statistics
-      const stats = await calculatePlayerStatistics(playerId)
-
-      return stats
+      return await fetchPlayerStatsFromServer(playerId)
     },
     staleTime: 10 * 60 * 1000, // 10분 (통계는 계산 비용이 크고 자주 변경되지 않음)
     gcTime: 30 * 60 * 1000, // 30분 (메모리에 더 오래 유지)
@@ -118,7 +334,7 @@ export function usePlayerPrizesQuery(playerId: string) {
   return useQuery({
     queryKey: playersKeys.prizes(playerId),
     queryFn: async () => {
-      return await fetchPlayerPrizeHistory(playerId)
+      return await fetchPlayerPrizesFromServer(playerId)
     },
     staleTime: 10 * 60 * 1000, // 10분
     gcTime: 30 * 60 * 1000, // 30분
@@ -133,22 +349,7 @@ export function usePlayerClaimQuery(playerId: string, userId?: string) {
   return useQuery({
     queryKey: playersKeys.claim(playerId, userId),
     queryFn: async () => {
-      // Get claim info for the player
-      const claimInfo = await getPlayerClaimInfo(playerId)
-
-      // If userId provided, check if this user has claimed this player
-      let userClaim = null
-      if (userId) {
-        const userClaimResult = await checkUserPlayerClaim(userId, playerId)
-        if (userClaimResult.claim) {
-          userClaim = userClaimResult.claim
-        }
-      }
-
-      return {
-        claimInfo,
-        userClaim,
-      }
+      return await fetchPlayerClaimFromServer(playerId, userId)
     },
     staleTime: 2 * 60 * 1000, // 2분
     gcTime: 5 * 60 * 1000, // 5분
@@ -166,33 +367,7 @@ export function useUpdatePlayerPhotoMutation(playerId: string) {
 
   return useMutation({
     mutationFn: async (file: File) => {
-      const supabase = createClientSupabaseClient()
-
-      // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${playerId}-${Date.now()}.${fileExt}`
-      const filePath = `player-photos/${fileName}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('player-photos')
-        .upload(filePath, file, { upsert: true })
-
-      if (uploadError) throw uploadError
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('player-photos')
-        .getPublicUrl(filePath)
-
-      // Update player photo_url
-      const { error: updateError } = await supabase
-        .from('players')
-        .update({ photo_url: publicUrl })
-        .eq('id', playerId)
-
-      if (updateError) throw updateError
-
-      return publicUrl
+      return await updatePlayerPhotoOnServer(playerId, file)
     },
     onSuccess: () => {
       // Invalidate player detail query

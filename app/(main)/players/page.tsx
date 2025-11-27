@@ -1,16 +1,11 @@
 "use client"
 
 import { PlayersPageLayout } from "./_components/PlayersPageLayout"
-import { usePlayersQuery } from "@/lib/queries/players-queries"
+import { usePlayersQuery, type PlayerWithHandCount } from "@/lib/queries/players-queries"
 import { toast } from "sonner"
-import type { Player } from "@/lib/supabase"
-
-type PlayerWithHandCount = Player & {
-  hand_count: number
-}
 
 export default function PlayersClient() {
-  // React Query hook
+  // React Query hook (Firestore)
   const { data: playersData = [], isLoading: loading, error } = usePlayersQuery()
   const players = playersData as PlayerWithHandCount[]
 
