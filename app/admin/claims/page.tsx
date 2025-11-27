@@ -1,5 +1,11 @@
 "use client"
 
+/**
+ * Admin Claims Page
+ *
+ * Player profile claim management.
+ * Migrated from Supabase to Firebase Auth
+ */
 
 import { useState, useEffect } from "react"
 import { Check, X, ExternalLink, Clock, CheckCircle2, XCircle } from "lucide-react"
@@ -18,7 +24,6 @@ import {
 export default function ClaimsClient() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [userEmail, setUserEmail] = useState<string | null>(null)
   const [selectedClaim, setSelectedClaim] = useState<PlayerClaimWithDetails | null>(null)
   const [actionDialogOpen, setActionDialogOpen] = useState(false)
   const [actionType, setActionType] = useState<"approve" | "reject">("approve")
@@ -35,21 +40,20 @@ export default function ClaimsClient() {
   const loading = pendingLoading || allLoading
 
   useEffect(() => {
-    async function getUser() {
-      const { data: { user } } = await (await import("@/lib/supabase")).supabase.auth.getUser()
-      setUserEmail(user?.email || null)
-    }
-    getUser()
-  }, [])
-
-  useEffect(() => {
     if (authLoading) return
 
-    if (userEmail && !isAdmin(userEmail)) {
+    // Check if user is authenticated and is admin
+    if (!user) {
+      router.push("/auth/login")
+      return
+    }
+
+    // user.email comes from Firebase Auth via AuthProvider
+    if (user.email && !isAdmin(user.email)) {
       router.push("/")
       toast.error("Admin access only")
     }
-  }, [userEmail, authLoading])
+  }, [user, authLoading, router])
 
   function handleActionClick(claim: PlayerClaimWithDetails, type: "approve" | "reject") {
     setSelectedClaim(claim)
@@ -354,7 +358,7 @@ export default function ClaimsClient() {
               <h2 className="text-heading">
                 {actionType === "approve" ? "APPROVE CLAIM" : "REJECT CLAIM"}
               </h2>
-              <button onClick={() => setActionDialogOpen(false)} className="btn-ghost text-2xl">×</button>
+              <button onClick={() => setActionDialogOpen(false)} className="btn-ghost text-2xl">x</button>
             </div>
 
             <p className="text-text-secondary mb-4">

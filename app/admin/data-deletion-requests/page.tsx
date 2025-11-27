@@ -1,5 +1,12 @@
 "use client"
 
+/**
+ * Admin Data Deletion Requests Page
+ *
+ * GDPR/CCPA/PIPL compliance: Review and process user data deletion requests.
+ * Migrated from Supabase to Firebase Auth
+ */
+
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -41,7 +48,6 @@ import {
 export default function DataDeletionRequestsPage() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [userEmail, setUserEmail] = useState<string | null>(null)
   const [selectedRequest, setSelectedRequest] = useState<DeletionRequestWithUser | null>(null)
   const [actionDialogOpen, setActionDialogOpen] = useState(false)
   const [actionType, setActionType] = useState<"approve" | "reject" | "complete">("approve")
@@ -58,22 +64,21 @@ export default function DataDeletionRequestsPage() {
   const loading = pendingLoading || allLoading
 
   useEffect(() => {
-    async function getUser() {
-      const { data: { user } } = await (await import("@/lib/supabase")).supabase.auth.getUser()
-      setUserEmail(user?.email || null)
-    }
-    getUser()
-  }, [])
-
-  useEffect(() => {
     // Wait for auth loading to complete
     if (authLoading) return
 
-    if (userEmail && !isAdmin(userEmail)) {
+    // Check if user is authenticated and is admin
+    if (!user) {
+      router.push("/auth/login")
+      return
+    }
+
+    // user.email comes from Firebase Auth via AuthProvider
+    if (user.email && !isAdmin(user.email)) {
       router.push("/")
       toast.error("Admin access only")
     }
-  }, [userEmail, authLoading, router])
+  }, [user, authLoading, router])
 
   function handleActionClick(
     request: DeletionRequestWithUser,

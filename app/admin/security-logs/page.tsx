@@ -2,6 +2,7 @@
  * Admin Security Logs Page
  *
  * View and monitor security events logged by the system.
+ * Migrated from Supabase to Firestore
  */
 
 'use client'
@@ -25,27 +26,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Shield, AlertTriangle, Info, XCircle, ChevronLeft, ChevronRight, RefreshCw, Download } from 'lucide-react'
 import { toast } from 'sonner'
-import { createBrowserSupabaseClient } from '@/lib/supabase'
+import { firestore, auth } from '@/lib/firebase'
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  where,
+  Timestamp,
+  startAfter,
+  DocumentSnapshot,
+  getCountFromServer,
+} from 'firebase/firestore'
 import { isAdmin } from '@/lib/auth-utils'
 import { exportSecurityLogs } from '@/lib/export-utils'
 
 type SecurityEvent = {
   id: string
-  event_type: string
+  eventType: string
   severity: 'low' | 'medium' | 'high' | 'critical'
-  user_id: string | null
-  ip_address: string | null
-  user_agent: string | null
-  request_method: string | null
-  request_path: string | null
-  response_status: number | null
-  details: Record<string, any> | null
-  created_at: string
-  users: {
+  userId: string | null
+  ipAddress: string | null
+  userAgent: string | null
+  requestMethod: string | null
+  requestPath: string | null
+  responseStatus: number | null
+  details: Record<string, unknown> | null
+  createdAt: string
+  user: {
     id: string
     email: string
     name: string | null
@@ -70,7 +82,7 @@ const SEVERITY_COLORS: Record<string, string> = {
   critical: 'bg-red-100 text-red-800',
 }
 
-const SEVERITY_ICONS: Record<string, any> = {
+const SEVERITY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   low: Info,
   medium: AlertTriangle,
   high: AlertTriangle,
@@ -84,11 +96,11 @@ export default function SecurityLogsPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(50)
+  const [pageSnapshots, setPageSnapshots] = useState<(DocumentSnapshot | null)[]>([null])
 
   // Filters
   const [eventTypeFilter, setEventTypeFilter] = useState<string>('all')
   const [severityFilter, setSeverityFilter] = useState<string>('all')
-  const [searchQuery, setSearchQuery] = useState('')
 
   // Stats
   const [stats, setStats] = useState<{
@@ -101,23 +113,14 @@ export default function SecurityLogsPage() {
   // Check admin access
   useEffect(() => {
     const checkAccess = async () => {
-      const supabase = createBrowserSupabaseClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const currentUser = auth.currentUser
 
-      if (!user) {
+      if (!currentUser) {
         router.push('/auth/login')
         return
       }
 
-      const { data: dbUser } = await supabase
-        .from('users')
-        .select('email')
-        .eq('id', user.id)
-        .single()
-
-      if (!dbUser || !isAdmin(dbUser.email)) {
+      if (!isAdmin(currentUser.email)) {
         router.push('/')
         toast.error('관리자 권한이 필요합니다')
         return
@@ -127,37 +130,116 @@ export default function SecurityLogsPage() {
       loadStats()
     }
 
-    checkAccess()
-  }, [router, currentPage, eventTypeFilter, severityFilter])
+    // Wait for auth state to be ready
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        checkAccess()
+      } else {
+        router.push('/auth/login')
+      }
+    })
+
+    return () => unsubscribe()
+  }, [router])
+
+  // Reload when filters or page changes
+  useEffect(() => {
+    if (auth.currentUser && isAdmin(auth.currentUser.email)) {
+      loadSecurityEvents()
+    }
+  }, [currentPage, eventTypeFilter, severityFilter])
 
   const loadSecurityEvents = async () => {
     setLoading(true)
     try {
-      const supabase = createBrowserSupabaseClient()
+      const securityEventsRef = collection(firestore, 'securityEvents')
 
-      let query = supabase
-        .from('security_events')
-        .select('*, users(id, email, name)', { count: 'exact' })
+      // Build query constraints
+      const constraints: Parameters<typeof query>[1][] = []
 
-      // Apply filters
       if (eventTypeFilter !== 'all') {
-        query = query.eq('event_type', eventTypeFilter)
+        constraints.push(where('eventType', '==', eventTypeFilter))
       }
 
       if (severityFilter !== 'all') {
-        query = query.eq('severity', severityFilter)
+        constraints.push(where('severity', '==', severityFilter))
       }
 
-      // Order and paginate
-      const offset = (currentPage - 1) * pageSize
-      query = query.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1)
+      constraints.push(orderBy('createdAt', 'desc'))
+      constraints.push(limit(pageSize))
 
-      const { data, error, count } = await query
+      // Add pagination cursor if not first page
+      if (currentPage > 1 && pageSnapshots[currentPage - 1]) {
+        constraints.push(startAfter(pageSnapshots[currentPage - 1]))
+      }
 
-      if (error) throw error
+      const q = query(securityEventsRef, ...constraints)
+      const snapshot = await getDocs(q)
 
-      setEvents(data || [])
-      setTotalCount(count || 0)
+      // Store the last document for next page
+      if (snapshot.docs.length > 0) {
+        const newLastDoc = snapshot.docs[snapshot.docs.length - 1]
+
+        // Store snapshot for this page
+        const newPageSnapshots = [...pageSnapshots]
+        newPageSnapshots[currentPage] = newLastDoc
+        setPageSnapshots(newPageSnapshots)
+      }
+
+      // Fetch user info for each event
+      const eventsData: SecurityEvent[] = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+          const data = doc.data()
+
+          // Try to get user info
+          let userInfo: SecurityEvent['user'] = null
+          if (data.userId) {
+            try {
+              const usersRef = collection(firestore, 'users')
+              const userQuery = query(usersRef, where('__name__', '==', data.userId), limit(1))
+              const userSnapshot = await getDocs(userQuery)
+              if (!userSnapshot.empty) {
+                const userData = userSnapshot.docs[0].data()
+                userInfo = {
+                  id: userSnapshot.docs[0].id,
+                  email: userData.email || '',
+                  name: userData.nickname || null,
+                }
+              }
+            } catch {
+              // User not found, ignore
+            }
+          }
+
+          return {
+            id: doc.id,
+            eventType: data.eventType || '',
+            severity: data.severity || 'low',
+            userId: data.userId || null,
+            ipAddress: data.ipAddress || null,
+            userAgent: data.userAgent || null,
+            requestMethod: data.requestMethod || null,
+            requestPath: data.requestPath || null,
+            responseStatus: data.responseStatus || null,
+            details: data.details || null,
+            createdAt: data.createdAt instanceof Timestamp
+              ? data.createdAt.toDate().toISOString()
+              : data.createdAt || new Date().toISOString(),
+            user: userInfo,
+          }
+        })
+      )
+
+      setEvents(eventsData)
+
+      // Get total count
+      const countQuery = query(
+        securityEventsRef,
+        ...(eventTypeFilter !== 'all' ? [where('eventType', '==', eventTypeFilter)] : []),
+        ...(severityFilter !== 'all' ? [where('severity', '==', severityFilter)] : [])
+      )
+      const countSnapshot = await getCountFromServer(countQuery)
+      setTotalCount(countSnapshot.data().count)
     } catch (error) {
       console.error('Failed to load security events:', error)
       toast.error('보안 이벤트를 불러오는데 실패했습니다')
@@ -168,38 +250,46 @@ export default function SecurityLogsPage() {
 
   const loadStats = async () => {
     try {
-      const supabase = createBrowserSupabaseClient()
+      const securityEventsRef = collection(firestore, 'securityEvents')
 
       // Get total count
-      const { count: total } = await supabase
-        .from('security_events')
-        .select('*', { count: 'exact', head: true })
+      const totalSnapshot = await getCountFromServer(securityEventsRef)
+      const total = totalSnapshot.data().count
 
-      // Get count by severity
-      const { data: allEvents } = await supabase.from('security_events').select('severity')
-
+      // Get count by severity (sample approach - fetch limited docs)
+      const severitySnapshot = await getDocs(query(securityEventsRef, limit(500)))
       const bySeverity: Record<string, number> = { low: 0, medium: 0, high: 0, critical: 0 }
-      allEvents?.forEach((event: any) => {
-        bySeverity[event.severity] = (bySeverity[event.severity] || 0) + 1
+      severitySnapshot.forEach((doc) => {
+        const data = doc.data()
+        if (data.severity) {
+          bySeverity[data.severity] = (bySeverity[data.severity] || 0) + 1
+        }
       })
 
       // Get count in last 24 hours
-      const { count: recent24h } = await supabase
-        .from('security_events')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      const now = new Date()
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      const recent24hQuery = query(
+        securityEventsRef,
+        where('createdAt', '>=', Timestamp.fromDate(twentyFourHoursAgo))
+      )
+      const recent24hSnapshot = await getCountFromServer(recent24hQuery)
+      const recent24h = recent24hSnapshot.data().count
 
       // Get count in last 7 days
-      const { count: recent7d } = await supabase
-        .from('security_events')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const recent7dQuery = query(
+        securityEventsRef,
+        where('createdAt', '>=', Timestamp.fromDate(sevenDaysAgo))
+      )
+      const recent7dSnapshot = await getCountFromServer(recent7dQuery)
+      const recent7d = recent7dSnapshot.data().count
 
       setStats({
-        total: total || 0,
+        total,
         by_severity: bySeverity,
-        recent_24h: recent24h || 0,
-        recent_7d: recent7d || 0,
+        recent_24h: recent24h,
+        recent_7d: recent7d,
       })
     } catch (error) {
       console.error('Failed to load stats:', error)
@@ -223,6 +313,73 @@ export default function SecurityLogsPage() {
   }
 
   const totalPages = Math.ceil(totalCount / pageSize)
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return
+
+    // If going back, we need to reset the snapshots
+    if (newPage < currentPage) {
+      setPageSnapshots(pageSnapshots.slice(0, newPage))
+    }
+
+    setCurrentPage(newPage)
+  }
+
+  const handleExportCSV = () => {
+    if (events.length === 0) {
+      toast.error('내보낼 데이터가 없습니다')
+      return
+    }
+    // Convert camelCase back to snake_case for export compatibility
+    const exportData = events.map(event => ({
+      id: event.id,
+      event_type: event.eventType,
+      severity: event.severity,
+      user_id: event.userId,
+      ip_address: event.ipAddress,
+      user_agent: event.userAgent,
+      request_method: event.requestMethod,
+      request_path: event.requestPath,
+      response_status: event.responseStatus,
+      details: event.details,
+      created_at: event.createdAt,
+      users: event.user ? {
+        id: event.user.id,
+        email: event.user.email,
+        name: event.user.name
+      } : null
+    }))
+    exportSecurityLogs(exportData, 'csv')
+    toast.success('CSV 파일이 다운로드되었습니다')
+  }
+
+  const handleExportJSON = () => {
+    if (events.length === 0) {
+      toast.error('내보낼 데이터가 없습니다')
+      return
+    }
+    // Convert camelCase back to snake_case for export compatibility
+    const exportData = events.map(event => ({
+      id: event.id,
+      event_type: event.eventType,
+      severity: event.severity,
+      user_id: event.userId,
+      ip_address: event.ipAddress,
+      user_agent: event.userAgent,
+      request_method: event.requestMethod,
+      request_path: event.requestPath,
+      response_status: event.responseStatus,
+      details: event.details,
+      created_at: event.createdAt,
+      users: event.user ? {
+        id: event.user.id,
+        email: event.user.email,
+        name: event.user.name
+      } : null
+    }))
+    exportSecurityLogs(exportData, 'json')
+    toast.success('JSON 파일이 다운로드되었습니다')
+  }
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-6">
@@ -293,6 +450,8 @@ export default function SecurityLogsPage() {
             variant="outline"
             size="sm"
             onClick={() => {
+              setCurrentPage(1)
+              setPageSnapshots([null])
               loadSecurityEvents()
               loadStats()
             }}
@@ -305,14 +464,7 @@ export default function SecurityLogsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                if (events.length === 0) {
-                  toast.error('내보낼 데이터가 없습니다')
-                  return
-                }
-                exportSecurityLogs(events as any, 'csv')
-                toast.success('CSV 파일이 다운로드되었습니다')
-              }}
+              onClick={handleExportCSV}
             >
               <Download className="w-4 h-4 mr-2" />
               Export CSV
@@ -320,14 +472,7 @@ export default function SecurityLogsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                if (events.length === 0) {
-                  toast.error('내보낼 데이터가 없습니다')
-                  return
-                }
-                exportSecurityLogs(events as any, 'json')
-                toast.success('JSON 파일이 다운로드되었습니다')
-              }}
+              onClick={handleExportJSON}
             >
               <Download className="w-4 h-4 mr-2" />
               Export JSON
@@ -367,11 +512,11 @@ export default function SecurityLogsPage() {
               events.map((event) => (
                 <TableRow key={event.id}>
                   <TableCell className="font-mono text-xs">
-                    {formatDate(event.created_at)}
+                    {formatDate(event.createdAt)}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">
-                      {EVENT_TYPE_LABELS[event.event_type] || event.event_type}
+                      {EVENT_TYPE_LABELS[event.eventType] || event.eventType}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -383,20 +528,20 @@ export default function SecurityLogsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {event.users ? (
+                    {event.user ? (
                       <div className="text-sm">
-                        <div className="font-medium">{event.users.name || 'Unknown'}</div>
-                        <div className="text-muted-foreground">{event.users.email}</div>
+                        <div className="font-medium">{event.user.name || 'Unknown'}</div>
+                        <div className="text-muted-foreground">{event.user.email}</div>
                       </div>
                     ) : (
                       <span className="text-muted-foreground">Anonymous</span>
                     )}
                   </TableCell>
                   <TableCell className="font-mono text-xs">
-                    {event.ip_address || '-'}
+                    {event.ipAddress || '-'}
                   </TableCell>
                   <TableCell className="font-mono text-xs">
-                    {event.request_method} {event.request_path || '-'}
+                    {event.requestMethod} {event.requestPath || '-'}
                   </TableCell>
                   <TableCell>
                     {event.details && (
@@ -427,7 +572,7 @@ export default function SecurityLogsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -436,7 +581,7 @@ export default function SecurityLogsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
             >
               Next

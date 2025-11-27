@@ -2,6 +2,7 @@
  * Admin Audit Logs Page
  *
  * View and monitor all user and admin actions for auditing.
+ * Migrated from Supabase to Firestore
  */
 
 'use client'
@@ -35,23 +36,36 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { FileText, ChevronLeft, ChevronRight, RefreshCw, Download, Eye } from 'lucide-react'
 import { toast } from 'sonner'
-import { createBrowserSupabaseClient } from '@/lib/supabase'
+import { firestore } from '@/lib/firebase'
+import { auth } from '@/lib/firebase'
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  where,
+  Timestamp,
+  startAfter,
+  DocumentSnapshot,
+  getCountFromServer,
+} from 'firebase/firestore'
 import { isAdmin } from '@/lib/auth-utils'
 import { exportAuditLogs } from '@/lib/export-utils'
 
 type AuditLog = {
   id: string
-  user_id: string | null
+  userId: string | null
   action: string
-  resource_type: string | null
-  resource_id: string | null
-  old_value: Record<string, any> | null
-  new_value: Record<string, any> | null
-  ip_address: string | null
-  user_agent: string | null
-  metadata: Record<string, any> | null
-  created_at: string
-  users: {
+  resourceType: string | null
+  resourceId: string | null
+  oldValue: Record<string, unknown> | null
+  newValue: Record<string, unknown> | null
+  ipAddress: string | null
+  userAgent: string | null
+  metadata: Record<string, unknown> | null
+  createdAt: string
+  user: {
     id: string
     email: string
     name: string | null
@@ -93,6 +107,8 @@ export default function AuditLogsPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(50)
+  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null)
+  const [pageSnapshots, setPageSnapshots] = useState<(DocumentSnapshot | null)[]>([null])
 
   // Filters
   const [actionFilter, setActionFilter] = useState<string>('all')
@@ -113,23 +129,14 @@ export default function AuditLogsPage() {
   // Check admin access
   useEffect(() => {
     const checkAccess = async () => {
-      const supabase = createBrowserSupabaseClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const currentUser = auth.currentUser
 
-      if (!user) {
+      if (!currentUser) {
         router.push('/auth/login')
         return
       }
 
-      const { data: dbUser } = await supabase
-        .from('users')
-        .select('email')
-        .eq('id', user.id)
-        .single()
-
-      if (!dbUser || !isAdmin(dbUser.email)) {
+      if (!isAdmin(currentUser.email)) {
         router.push('/')
         toast.error('관리자 권한이 필요합니다')
         return
@@ -139,37 +146,117 @@ export default function AuditLogsPage() {
       loadStats()
     }
 
-    checkAccess()
-  }, [router, currentPage, actionFilter, resourceTypeFilter])
+    // Wait for auth state to be ready
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        checkAccess()
+      } else {
+        router.push('/auth/login')
+      }
+    })
+
+    return () => unsubscribe()
+  }, [router])
+
+  // Reload when filters or page changes
+  useEffect(() => {
+    if (auth.currentUser && isAdmin(auth.currentUser.email)) {
+      loadAuditLogs()
+    }
+  }, [currentPage, actionFilter, resourceTypeFilter])
 
   const loadAuditLogs = async () => {
     setLoading(true)
     try {
-      const supabase = createBrowserSupabaseClient()
+      const auditLogsRef = collection(firestore, 'auditLogs')
 
-      let query = supabase
-        .from('audit_logs')
-        .select('*, users(id, email, name)', { count: 'exact' })
+      // Build query constraints
+      const constraints: Parameters<typeof query>[1][] = []
 
-      // Apply filters
       if (actionFilter !== 'all') {
-        query = query.eq('action', actionFilter)
+        constraints.push(where('action', '==', actionFilter))
       }
 
       if (resourceTypeFilter !== 'all') {
-        query = query.eq('resource_type', resourceTypeFilter)
+        constraints.push(where('resourceType', '==', resourceTypeFilter))
       }
 
-      // Order and paginate
-      const offset = (currentPage - 1) * pageSize
-      query = query.order('created_at', { ascending: false }).range(offset, offset + pageSize - 1)
+      constraints.push(orderBy('createdAt', 'desc'))
+      constraints.push(limit(pageSize))
 
-      const { data, error, count } = await query
+      // Add pagination cursor if not first page
+      if (currentPage > 1 && pageSnapshots[currentPage - 1]) {
+        constraints.push(startAfter(pageSnapshots[currentPage - 1]))
+      }
 
-      if (error) throw error
+      const q = query(auditLogsRef, ...constraints)
+      const snapshot = await getDocs(q)
 
-      setLogs(data || [])
-      setTotalCount(count || 0)
+      // Store the last document for next page
+      if (snapshot.docs.length > 0) {
+        const newLastDoc = snapshot.docs[snapshot.docs.length - 1]
+        setLastDoc(newLastDoc)
+
+        // Store snapshot for this page
+        const newPageSnapshots = [...pageSnapshots]
+        newPageSnapshots[currentPage] = newLastDoc
+        setPageSnapshots(newPageSnapshots)
+      }
+
+      // Fetch user info for each log
+      const logsData: AuditLog[] = await Promise.all(
+        snapshot.docs.map(async (doc) => {
+          const data = doc.data()
+
+          // Try to get user info
+          let userInfo: AuditLog['user'] = null
+          if (data.userId) {
+            try {
+              const usersRef = collection(firestore, 'users')
+              const userQuery = query(usersRef, where('__name__', '==', data.userId), limit(1))
+              const userSnapshot = await getDocs(userQuery)
+              if (!userSnapshot.empty) {
+                const userData = userSnapshot.docs[0].data()
+                userInfo = {
+                  id: userSnapshot.docs[0].id,
+                  email: userData.email || '',
+                  name: userData.nickname || null,
+                }
+              }
+            } catch {
+              // User not found, ignore
+            }
+          }
+
+          return {
+            id: doc.id,
+            userId: data.userId || null,
+            action: data.action || '',
+            resourceType: data.resourceType || null,
+            resourceId: data.resourceId || null,
+            oldValue: data.oldValue || null,
+            newValue: data.newValue || null,
+            ipAddress: data.ipAddress || null,
+            userAgent: data.userAgent || null,
+            metadata: data.metadata || null,
+            createdAt: data.createdAt instanceof Timestamp
+              ? data.createdAt.toDate().toISOString()
+              : data.createdAt || new Date().toISOString(),
+            user: userInfo,
+          }
+        })
+      )
+
+      setLogs(logsData)
+
+      // Get total count
+      const countQuery = query(
+        auditLogsRef,
+        ...(actionFilter !== 'all' ? [where('action', '==', actionFilter)] : []),
+        ...(resourceTypeFilter !== 'all' ? [where('resourceType', '==', resourceTypeFilter)] : [])
+      )
+      const countSnapshot = await getCountFromServer(countQuery)
+      setTotalCount(countSnapshot.data().count)
     } catch (error) {
       console.error('Failed to load audit logs:', error)
       toast.error('Audit 로그를 불러오는데 실패했습니다')
@@ -180,39 +267,45 @@ export default function AuditLogsPage() {
 
   const loadStats = async () => {
     try {
-      const supabase = createBrowserSupabaseClient()
+      const auditLogsRef = collection(firestore, 'auditLogs')
 
       // Get total count
-      const { count: total } = await supabase
-        .from('audit_logs')
-        .select('*', { count: 'exact', head: true })
+      const totalSnapshot = await getCountFromServer(auditLogsRef)
+      const total = totalSnapshot.data().count
 
       // Get count in last 24 hours
-      const { count: recent24h } = await supabase
-        .from('audit_logs')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      const now = new Date()
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      const recent24hQuery = query(
+        auditLogsRef,
+        where('createdAt', '>=', Timestamp.fromDate(twentyFourHoursAgo))
+      )
+      const recent24hSnapshot = await getCountFromServer(recent24hQuery)
+      const recent24h = recent24hSnapshot.data().count
 
       // Get count in last 7 days
-      const { count: recent7d } = await supabase
-        .from('audit_logs')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      const recent7dQuery = query(
+        auditLogsRef,
+        where('createdAt', '>=', Timestamp.fromDate(sevenDaysAgo))
+      )
+      const recent7dSnapshot = await getCountFromServer(recent7dQuery)
+      const recent7d = recent7dSnapshot.data().count
 
-      // Get count by resource type
-      const { data: allLogs } = await supabase.from('audit_logs').select('resource_type')
-
+      // Get count by resource type (sample approach - fetch limited docs)
+      const resourceTypeSnapshot = await getDocs(query(auditLogsRef, limit(500)))
       const byResourceType: Record<string, number> = {}
-      allLogs?.forEach((log: any) => {
-        if (log.resource_type) {
-          byResourceType[log.resource_type] = (byResourceType[log.resource_type] || 0) + 1
+      resourceTypeSnapshot.forEach((doc) => {
+        const data = doc.data()
+        if (data.resourceType) {
+          byResourceType[data.resourceType] = (byResourceType[data.resourceType] || 0) + 1
         }
       })
 
       setStats({
-        total: total || 0,
-        recent_24h: recent24h || 0,
-        recent_7d: recent7d || 0,
+        total,
+        recent_24h: recent24h,
+        recent_7d: recent7d,
         by_resource_type: byResourceType,
       })
     } catch (error) {
@@ -225,7 +318,26 @@ export default function AuditLogsPage() {
       toast.error('내보낼 데이터가 없습니다')
       return
     }
-    exportAuditLogs(logs as any, 'csv')
+    // Convert camelCase back to snake_case for export compatibility
+    const exportData = logs.map(log => ({
+      id: log.id,
+      user_id: log.userId,
+      action: log.action,
+      resource_type: log.resourceType,
+      resource_id: log.resourceId,
+      old_value: log.oldValue,
+      new_value: log.newValue,
+      ip_address: log.ipAddress,
+      user_agent: log.userAgent,
+      metadata: log.metadata,
+      created_at: log.createdAt,
+      users: log.user ? {
+        id: log.user.id,
+        email: log.user.email,
+        name: log.user.name
+      } : null
+    }))
+    exportAuditLogs(exportData, 'csv')
     toast.success('CSV 파일이 다운로드되었습니다')
   }
 
@@ -241,6 +353,17 @@ export default function AuditLogsPage() {
   }
 
   const totalPages = Math.ceil(totalCount / pageSize)
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > totalPages) return
+
+    // If going back, we need to reset the snapshots
+    if (newPage < currentPage) {
+      setPageSnapshots(pageSnapshots.slice(0, newPage))
+    }
+
+    setCurrentPage(newPage)
+  }
 
   return (
     <div className="container mx-auto py-8 px-4 space-y-6">
@@ -319,6 +442,8 @@ export default function AuditLogsPage() {
             variant="outline"
             size="sm"
             onClick={() => {
+              setCurrentPage(1)
+              setPageSnapshots([null])
               loadAuditLogs()
               loadStats()
             }}
@@ -358,13 +483,13 @@ export default function AuditLogsPage() {
               logs.map((log) => (
                 <TableRow key={log.id}>
                   <TableCell className="font-mono text-xs">
-                    {formatDate(log.created_at)}
+                    {formatDate(log.createdAt)}
                   </TableCell>
                   <TableCell>
-                    {log.users ? (
+                    {log.user ? (
                       <div className="text-sm">
-                        <div className="font-medium">{log.users.name || 'Unknown'}</div>
-                        <div className="text-muted-foreground">{log.users.email}</div>
+                        <div className="font-medium">{log.user.name || 'Unknown'}</div>
+                        <div className="text-muted-foreground">{log.user.email}</div>
                       </div>
                     ) : (
                       <span className="text-muted-foreground">System</span>
@@ -376,14 +501,14 @@ export default function AuditLogsPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {log.resource_type && (
+                    {log.resourceType && (
                       <div className="flex items-center gap-2">
-                        <Badge className={RESOURCE_TYPE_COLORS[log.resource_type] || ''}>
-                          {log.resource_type}
+                        <Badge className={RESOURCE_TYPE_COLORS[log.resourceType] || ''}>
+                          {log.resourceType}
                         </Badge>
-                        {log.resource_id && (
+                        {log.resourceId && (
                           <span className="text-xs text-muted-foreground font-mono">
-                            {log.resource_id.slice(0, 8)}...
+                            {log.resourceId.slice(0, 8)}...
                           </span>
                         )}
                       </div>
@@ -419,7 +544,7 @@ export default function AuditLogsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -428,7 +553,7 @@ export default function AuditLogsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
             >
               Next
@@ -444,7 +569,7 @@ export default function AuditLogsPage() {
           <DialogHeader>
             <DialogTitle>Audit Log Details</DialogTitle>
             <DialogDescription>
-              {selectedLog && formatDate(selectedLog.created_at)}
+              {selectedLog && formatDate(selectedLog.createdAt)}
             </DialogDescription>
           </DialogHeader>
 
@@ -453,11 +578,11 @@ export default function AuditLogsPage() {
               {/* User Info */}
               <div>
                 <h3 className="font-semibold mb-2">User</h3>
-                {selectedLog.users ? (
+                {selectedLog.user ? (
                   <div>
-                    <div>{selectedLog.users.name || 'Unknown'}</div>
+                    <div>{selectedLog.user.name || 'Unknown'}</div>
                     <div className="text-sm text-muted-foreground">
-                      {selectedLog.users.email}
+                      {selectedLog.user.email}
                     </div>
                   </div>
                 ) : (
@@ -472,16 +597,16 @@ export default function AuditLogsPage() {
               </div>
 
               {/* Resource Info */}
-              {selectedLog.resource_type && (
+              {selectedLog.resourceType && (
                 <div>
                   <h3 className="font-semibold mb-2">Resource</h3>
                   <div className="flex items-center gap-2">
-                    <Badge className={RESOURCE_TYPE_COLORS[selectedLog.resource_type] || ''}>
-                      {selectedLog.resource_type}
+                    <Badge className={RESOURCE_TYPE_COLORS[selectedLog.resourceType] || ''}>
+                      {selectedLog.resourceType}
                     </Badge>
-                    {selectedLog.resource_id && (
+                    {selectedLog.resourceId && (
                       <code className="text-xs bg-muted px-2 py-1 rounded">
-                        {selectedLog.resource_id}
+                        {selectedLog.resourceId}
                       </code>
                     )}
                   </div>
@@ -489,21 +614,21 @@ export default function AuditLogsPage() {
               )}
 
               {/* Old Value */}
-              {selectedLog.old_value && (
+              {selectedLog.oldValue && (
                 <div>
                   <h3 className="font-semibold mb-2">Before</h3>
                   <pre className="p-4 bg-muted rounded text-xs overflow-auto">
-                    {JSON.stringify(selectedLog.old_value, null, 2)}
+                    {JSON.stringify(selectedLog.oldValue, null, 2)}
                   </pre>
                 </div>
               )}
 
               {/* New Value */}
-              {selectedLog.new_value && (
+              {selectedLog.newValue && (
                 <div>
                   <h3 className="font-semibold mb-2">After</h3>
                   <pre className="p-4 bg-muted rounded text-xs overflow-auto">
-                    {JSON.stringify(selectedLog.new_value, null, 2)}
+                    {JSON.stringify(selectedLog.newValue, null, 2)}
                   </pre>
                 </div>
               )}
@@ -522,16 +647,16 @@ export default function AuditLogsPage() {
               <div>
                 <h3 className="font-semibold mb-2">Technical Info</h3>
                 <div className="space-y-1 text-sm">
-                  {selectedLog.ip_address && (
+                  {selectedLog.ipAddress && (
                     <div>
                       <span className="text-muted-foreground">IP: </span>
-                      <code className="text-xs">{selectedLog.ip_address}</code>
+                      <code className="text-xs">{selectedLog.ipAddress}</code>
                     </div>
                   )}
-                  {selectedLog.user_agent && (
+                  {selectedLog.userAgent && (
                     <div>
                       <span className="text-muted-foreground">User Agent: </span>
-                      <code className="text-xs">{selectedLog.user_agent}</code>
+                      <code className="text-xs">{selectedLog.userAgent}</code>
                     </div>
                   )}
                 </div>

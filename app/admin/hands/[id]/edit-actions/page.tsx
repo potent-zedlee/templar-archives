@@ -1,5 +1,12 @@
 "use client"
 
+/**
+ * Admin Edit Hand Actions Page
+ *
+ * Edit hand actions for admin users.
+ * Migrated from Supabase to Firestore
+ */
+
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -14,7 +21,10 @@ import {
   useBulkCreateHandActionsMutation,
   useDeleteAllHandActionsMutation,
 } from "@/lib/queries/hand-actions-queries"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
+import { firestore } from "@/lib/firebase"
+import { doc, getDoc } from "firebase/firestore"
+import { COLLECTION_PATHS } from "@/lib/firestore-types"
+import type { FirestoreHand, FirestoreTournament, FirestoreEvent, FirestoreStream } from "@/lib/firestore-types"
 import { toast } from "sonner"
 import { CardSkeleton } from "@/components/ui/skeletons/CardSkeleton"
 import Link from "next/link"
@@ -59,7 +69,7 @@ export default function EditHandActionsPage() {
   const [handPlayers, setHandPlayers] = useState<HandPlayer[]>([])
 
   // Pending actions from ActionEditor
-  const [pendingActions, setPendingActions] = useState<any[]>([])
+  const [pendingActions, setPendingActions] = useState<unknown[]>([])
 
   // Mutations
   const handPlayerIds = handPlayers.map(hp => hp.player_id)
@@ -101,53 +111,92 @@ export default function EditHandActionsPage() {
   }
 
   async function loadHandData() {
-    const supabase = createClientSupabaseClient()
-
     try {
       setLoading(true)
 
-      // Fetch hand info
-      const { data: handData, error: handError } = await supabase
-        .from('hands')
-        .select(`
-          id,
-          number,
-          description,
-          day:days!inner(
-            id,
-            name,
-            sub_event:sub_events!inner(
-              name,
-              tournament:tournaments!inner(
-                name
-              )
-            )
+      // Fetch hand info from Firestore
+      const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+      const handSnap = await getDoc(handRef)
+
+      if (!handSnap.exists()) {
+        throw new Error("Hand not found")
+      }
+
+      const handData = handSnap.data() as FirestoreHand
+
+      // Fetch stream, event, and tournament info
+      let streamName = ""
+      let eventName = ""
+      let tournamentName = ""
+
+      if (handData.streamId && handData.eventId && handData.tournamentId) {
+        try {
+          // Get tournament
+          const tournamentRef = doc(firestore, COLLECTION_PATHS.TOURNAMENTS, handData.tournamentId)
+          const tournamentSnap = await getDoc(tournamentRef)
+          if (tournamentSnap.exists()) {
+            const tournamentData = tournamentSnap.data() as FirestoreTournament
+            tournamentName = tournamentData.name
+          }
+
+          // Get event
+          const eventRef = doc(
+            firestore,
+            COLLECTION_PATHS.EVENTS(handData.tournamentId),
+            handData.eventId
           )
-        `)
-        .eq('id', handId)
-        .single()
+          const eventSnap = await getDoc(eventRef)
+          if (eventSnap.exists()) {
+            const eventData = eventSnap.data() as FirestoreEvent
+            eventName = eventData.name
+          }
 
-      if (handError) throw handError
-      setHand(handData as any)
-
-      // Fetch hand players
-      const { data: playersData, error: playersError } = await supabase
-        .from('hand_players')
-        .select(`
-          id,
-          hand_id,
-          player_id,
-          position,
-          hole_cards,
-          player:players!inner(
-            id,
-            name
+          // Get stream
+          const streamRef = doc(
+            firestore,
+            COLLECTION_PATHS.STREAMS(handData.tournamentId, handData.eventId),
+            handData.streamId
           )
-        `)
-        .eq('hand_id', handId)
+          const streamSnap = await getDoc(streamRef)
+          if (streamSnap.exists()) {
+            const streamData = streamSnap.data() as FirestoreStream
+            streamName = streamData.name
+          }
+        } catch (err) {
+          console.error("Error fetching hierarchy info:", err)
+        }
+      }
 
-      if (playersError) throw playersError
-      setHandPlayers(playersData as any)
+      setHand({
+        id: handSnap.id,
+        number: handData.number,
+        description: handData.description || "",
+        day: {
+          id: handData.streamId || "",
+          name: streamName || "Unknown Stream",
+          sub_event: {
+            name: eventName || "Unknown Event",
+            tournament: {
+              name: tournamentName || "Unknown Tournament",
+            },
+          },
+        },
+      })
+
+      // Fetch hand players from embedded data
+      const players: HandPlayer[] = (handData.players || []).map((p, index) => ({
+        id: `${handId}-player-${index}`,
+        hand_id: handId,
+        player_id: p.playerId,
+        position: p.position || null,
+        hole_cards: p.cards ? p.cards.join(" ") : null,
+        player: {
+          id: p.playerId,
+          name: p.name,
+        },
+      }))
+
+      setHandPlayers(players)
     } catch (error) {
       console.error("Failed to load hand data:", error)
       toast.error("Failed to load hand data")
@@ -163,11 +212,11 @@ export default function EditHandActionsPage() {
     }
 
     const actionsToSave = pendingActions.map(action => ({
-      ...action,
+      ...(action as Record<string, unknown>),
       hand_id: handId,
     }))
 
-    bulkCreateMutation.mutate(actionsToSave, {
+    bulkCreateMutation.mutate(actionsToSave as Parameters<typeof bulkCreateMutation.mutate>[0], {
       onSuccess: () => {
         toast.success("Actions saved successfully!")
         setPendingActions([])
@@ -253,9 +302,9 @@ export default function EditHandActionsPage() {
               </p>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <span>{hand.day.sub_event.tournament.name}</span>
-                <span>›</span>
+                <span>&gt;</span>
                 <span>{hand.day.sub_event.name}</span>
-                <span>›</span>
+                <span>&gt;</span>
                 <span>{hand.day.name}</span>
               </div>
             </div>
