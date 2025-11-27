@@ -1,12 +1,8 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Switch } from "@/components/ui/switch"
-import { Slider } from "@/components/ui/slider"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Input } from "@/components/ui/input"
@@ -21,9 +17,8 @@ import {
   TOURNAMENT_CATEGORIES,
   POPULAR_CATEGORIES,
   CATEGORIES_BY_REGION,
-  type TournamentCategory
+  searchCategories,
 } from "@/lib/tournament-categories-static"
-import { searchCategories } from "@/lib/tournament-categories"
 
 interface ArchiveUnifiedFiltersProps {
   selectedCategory: string
@@ -182,7 +177,7 @@ export function ArchiveUnifiedFilters({
           <div className="flex items-center justify-between py-5">
             <Button
               variant="outline"
-              size="default"
+              size="sm"
               onClick={toggleOpen}
               className="gap-2 hover:bg-gradient-to-r hover:from-primary/10 hover:to-purple-500/5 hover:scale-105 hover:shadow-md transition-all duration-200"
             >
