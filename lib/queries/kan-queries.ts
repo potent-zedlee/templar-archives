@@ -1,33 +1,104 @@
 /**
- * KAN Analysis Queries
+ * KAN Analysis Queries (Firestore Version)
  * React Query hooks for KAN analysis jobs
+ *
+ * Migrated from Supabase to Firestore
+ *
+ * @module lib/queries/kan-queries
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createClientSupabaseClient } from '@/lib/supabase-client'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  getCountFromServer,
+  Timestamp,
+  type DocumentSnapshot,
+} from 'firebase/firestore'
+import { firestore } from '@/lib/firebase'
 import { toast } from 'sonner'
-import type { Database } from '@/lib/database.types'
+import type {
+  FirestoreAnalysisJob,
+  AnalysisJobStatus,
+} from '@/lib/firestore-types'
 
-type AnalysisJob = Database['public']['Tables']['analysis_jobs']['Row']
-type AnalysisJobInsert = Database['public']['Tables']['analysis_jobs']['Insert']
+// ============================================
+// Types
+// ============================================
 
-export interface AnalysisJobWithRelations extends AnalysisJob {
-  video?: {
-    id: string
-    url: string
-    youtube_id: string | null
-    title: string | null
-  }
-  stream?: {
-    id: string
-    name: string
-    tournament_id: string
-  }
-  creator?: {
-    id: string
-    email: string
-    username: string | null
-  }
+/**
+ * 스트림 참조 정보 (조인 대체)
+ */
+export interface StreamRef {
+  id: string
+  name: string
+  eventId?: string
+  tournamentId?: string
+}
+
+/**
+ * 비디오 참조 정보
+ */
+export interface VideoRef {
+  id: string
+  title?: string
+  url?: string
+  youtubeId?: string
+}
+
+/**
+ * 사용자 참조 정보
+ */
+export interface CreatorRef {
+  id: string
+  email: string
+  username?: string
+}
+
+/**
+ * 분석 작업 + 관계 데이터
+ *
+ * 기존 Supabase snake_case 필드명과 camelCase 필드명 모두 지원
+ * 컴포넌트 호환성 유지
+ */
+export interface AnalysisJobWithRelations {
+  id: string
+  streamId: string
+  userId: string
+  status: AnalysisJobStatus
+  progress: number
+
+  // camelCase (Firestore 표준)
+  errorMessage?: string
+  result?: FirestoreAnalysisJob['result']
+  createdAt: Date
+  startedAt?: Date
+  completedAt?: Date
+
+  // snake_case (기존 컴포넌트 호환)
+  error_message?: string
+  created_at?: string
+  started_at?: string
+  completed_at?: string
+  hands_found?: number
+  processing_time?: number
+
+  // 추가 필드 (KAN 분석 관련)
+  platform?: string
+  ai_provider?: string
+  segments?: unknown[]
+
+  // 관계 데이터
+  stream?: StreamRef
+  video?: VideoRef
+  creator?: CreatorRef
 }
 
 // ============================================
@@ -43,59 +114,188 @@ export const kanQueryKeys = {
 }
 
 // ============================================
+// Helper Functions
+// ============================================
+
+/**
+ * Firestore Timestamp을 Date로 변환
+ */
+function toDate(timestamp: Timestamp | undefined): Date | undefined {
+  return timestamp?.toDate()
+}
+
+/**
+ * 확장된 Firestore AnalysisJob 타입 (추가 필드 포함)
+ */
+interface ExtendedFirestoreAnalysisJob extends FirestoreAnalysisJob {
+  handsFound?: number
+  processingTime?: number
+  platform?: string
+  aiProvider?: string
+  segments?: unknown[]
+  // 비디오 정보 (비정규화된 경우)
+  videoTitle?: string
+  videoUrl?: string
+  // 스트림 정보 (비정규화된 경우)
+  streamName?: string
+  tournamentId?: string
+  eventId?: string
+}
+
+/**
+ * Firestore 문서를 AnalysisJobWithRelations로 변환
+ */
+function docToAnalysisJob(
+  docSnap: DocumentSnapshot
+): AnalysisJobWithRelations | null {
+  if (!docSnap.exists()) return null
+
+  const data = docSnap.data() as ExtendedFirestoreAnalysisJob
+
+  const createdAt = data.createdAt.toDate()
+  const startedAt = toDate(data.startedAt)
+  const completedAt = toDate(data.completedAt)
+
+  // 처리 시간 계산 (completedAt - startedAt)
+  let processingTime = data.processingTime
+  if (!processingTime && startedAt && completedAt) {
+    processingTime = Math.floor((completedAt.getTime() - startedAt.getTime()) / 1000)
+  }
+
+  // 발견된 핸드 수
+  const handsFound = data.handsFound ?? data.result?.totalHands ?? 0
+
+  return {
+    id: docSnap.id,
+    streamId: data.streamId,
+    userId: data.userId,
+    status: data.status,
+    progress: data.progress,
+
+    // camelCase
+    errorMessage: data.errorMessage,
+    result: data.result,
+    createdAt,
+    startedAt,
+    completedAt,
+
+    // snake_case (컴포넌트 호환)
+    error_message: data.errorMessage,
+    created_at: createdAt.toISOString(),
+    started_at: startedAt?.toISOString(),
+    completed_at: completedAt?.toISOString(),
+    hands_found: handsFound,
+    processing_time: processingTime,
+
+    // 추가 필드
+    platform: data.platform,
+    ai_provider: data.aiProvider,
+    segments: data.segments,
+
+    // 관계 데이터 (비정규화된 경우)
+    video: data.videoTitle
+      ? {
+          id: data.streamId,
+          title: data.videoTitle,
+          url: data.videoUrl,
+        }
+      : undefined,
+    stream: data.streamName
+      ? {
+          id: data.streamId,
+          name: data.streamName,
+          eventId: data.eventId,
+          tournamentId: data.tournamentId,
+        }
+      : undefined,
+  }
+}
+
+// NOTE: 스트림 정보는 analysisJob 문서에 비정규화되어 저장됨
+// Firestore에서는 조인 없이 단일 문서에서 모든 정보를 조회
+// 스트림 정보가 필요한 경우 analysisJob 생성 시 비정규화 권장
+
+// ============================================
 // Query Functions
 // ============================================
 
 /**
- * Get single analysis job
+ * 단일 분석 작업 조회
  */
-async function getAnalysisJob(jobId: string): Promise<AnalysisJobWithRelations | null> {
-  const supabase = createClientSupabaseClient()
+async function getAnalysisJob(
+  jobId: string
+): Promise<AnalysisJobWithRelations | null> {
+  try {
+    const jobRef = doc(firestore, 'analysisJobs', jobId)
+    const jobSnap = await getDoc(jobRef)
 
-  const { data, error } = await supabase
-    .from('analysis_jobs')
-    .select(`
-      *,
-      video:videos(id, url, youtube_id, title),
-      stream:streams(id, name, sub_event_id)
-    `)
-    .eq('id', jobId)
-    .single()
+    if (!jobSnap.exists()) {
+      return null
+    }
 
-  if (error) {
+    const job = docToAnalysisJob(jobSnap)
+    if (!job) return null
+
+    // 스트림 정보 조회 (선택적)
+    // job.stream = await fetchStreamInfo(job.streamId)
+
+    return job
+  } catch (error) {
     console.error('[getAnalysisJob] Error:', error)
     throw error
   }
-
-  return data
 }
 
 /**
- * Get active analysis jobs (pending or processing)
+ * 활성 분석 작업 조회 (pending 또는 processing)
  */
 async function getActiveAnalysisJobs(): Promise<AnalysisJobWithRelations[]> {
-  const supabase = createClientSupabaseClient()
+  try {
+    const jobsRef = collection(firestore, 'analysisJobs')
 
-  const { data, error} = await supabase
-    .from('analysis_jobs')
-    .select(`
-      *,
-      video:videos(id, url, youtube_id, title),
-      stream:streams(id, name, sub_event_id)
-    `)
-    .in('status', ['pending', 'processing'])
-    .order('created_at', { ascending: false })
+    // pending 상태 작업 조회
+    const pendingQuery = query(
+      jobsRef,
+      where('status', '==', 'pending'),
+      orderBy('createdAt', 'desc')
+    )
 
-  if (error) {
+    // processing 상태 작업 조회
+    const processingQuery = query(
+      jobsRef,
+      where('status', '==', 'processing'),
+      orderBy('createdAt', 'desc')
+    )
+
+    const [pendingSnap, processingSnap] = await Promise.all([
+      getDocs(pendingQuery),
+      getDocs(processingQuery),
+    ])
+
+    const jobs: AnalysisJobWithRelations[] = []
+
+    pendingSnap.forEach((docSnap) => {
+      const job = docToAnalysisJob(docSnap)
+      if (job) jobs.push(job)
+    })
+
+    processingSnap.forEach((docSnap) => {
+      const job = docToAnalysisJob(docSnap)
+      if (job) jobs.push(job)
+    })
+
+    // createdAt 기준 내림차순 정렬
+    jobs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+
+    return jobs
+  } catch (error) {
     console.error('[getActiveAnalysisJobs] Error:', error)
     throw error
   }
-
-  return data || []
 }
 
 /**
- * Get analysis job history (completed or failed)
+ * 히스토리 작업 조회 옵션
  */
 interface GetHistoryJobsOptions {
   page?: number
@@ -103,6 +303,9 @@ interface GetHistoryJobsOptions {
   status?: 'completed' | 'failed' | 'all'
 }
 
+/**
+ * 분석 작업 히스토리 조회 (completed 또는 failed)
+ */
 async function getHistoryAnalysisJobs(
   options: GetHistoryJobsOptions = {}
 ): Promise<{
@@ -110,43 +313,104 @@ async function getHistoryAnalysisJobs(
   total: number
   hasMore: boolean
 }> {
-  const { page = 1, limit = 20, status = 'all' } = options
-  const supabase = createClientSupabaseClient()
+  const { page = 1, limit: pageLimit = 20, status = 'all' } = options
 
-  let query = supabase
-    .from('analysis_jobs')
-    .select(`
-      *,
-      video:videos(id, url, youtube_id, title),
-      stream:streams(id, name, sub_event_id)
-    `, { count: 'exact' })
+  try {
+    const jobsRef = collection(firestore, 'analysisJobs')
 
-  // Filter by status
-  if (status === 'completed') {
-    query = query.eq('status', 'completed')
-  } else if (status === 'failed') {
-    query = query.eq('status', 'failed')
-  } else {
-    query = query.in('status', ['completed', 'failed'])
-  }
+    // 상태별 쿼리 구성
+    let countQuery
+    let dataQuery
 
-  // Pagination
-  const from = (page - 1) * limit
-  const to = from + limit - 1
+    if (status === 'completed') {
+      countQuery = query(jobsRef, where('status', '==', 'completed'))
+      dataQuery = query(
+        jobsRef,
+        where('status', '==', 'completed'),
+        orderBy('createdAt', 'desc'),
+        limit(pageLimit * page) // 페이지네이션을 위해 더 많이 가져옴
+      )
+    } else if (status === 'failed') {
+      countQuery = query(jobsRef, where('status', '==', 'failed'))
+      dataQuery = query(
+        jobsRef,
+        where('status', '==', 'failed'),
+        orderBy('createdAt', 'desc'),
+        limit(pageLimit * page)
+      )
+    } else {
+      // 'all' - completed와 failed 모두 조회
+      // Firestore는 OR 쿼리를 직접 지원하지 않으므로 두 번 조회
+      const completedQuery = query(
+        jobsRef,
+        where('status', '==', 'completed'),
+        orderBy('createdAt', 'desc')
+      )
+      const failedQuery = query(
+        jobsRef,
+        where('status', '==', 'failed'),
+        orderBy('createdAt', 'desc')
+      )
 
-  const { data, error, count } = await query
-    .order('created_at', { ascending: false })
-    .range(from, to)
+      const [completedSnap, failedSnap] = await Promise.all([
+        getDocs(completedQuery),
+        getDocs(failedQuery),
+      ])
 
-  if (error) {
+      const allJobs: AnalysisJobWithRelations[] = []
+
+      completedSnap.forEach((docSnap) => {
+        const job = docToAnalysisJob(docSnap)
+        if (job) allJobs.push(job)
+      })
+
+      failedSnap.forEach((docSnap) => {
+        const job = docToAnalysisJob(docSnap)
+        if (job) allJobs.push(job)
+      })
+
+      // 정렬 및 페이지네이션
+      allJobs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+
+      const total = allJobs.length
+      const from = (page - 1) * pageLimit
+      const to = from + pageLimit
+      const paginatedJobs = allJobs.slice(from, to)
+
+      return {
+        jobs: paginatedJobs,
+        total,
+        hasMore: total > to,
+      }
+    }
+
+    // 단일 상태 쿼리의 경우
+    const [countSnap, dataSnap] = await Promise.all([
+      getCountFromServer(countQuery),
+      getDocs(dataQuery),
+    ])
+
+    const total = countSnap.data().count
+    const allJobs: AnalysisJobWithRelations[] = []
+
+    dataSnap.forEach((docSnap) => {
+      const job = docToAnalysisJob(docSnap)
+      if (job) allJobs.push(job)
+    })
+
+    // 페이지네이션 적용
+    const from = (page - 1) * pageLimit
+    const to = from + pageLimit
+    const paginatedJobs = allJobs.slice(from, to)
+
+    return {
+      jobs: paginatedJobs,
+      total,
+      hasMore: total > to,
+    }
+  } catch (error) {
     console.error('[getHistoryAnalysisJobs] Error:', error)
     throw error
-  }
-
-  return {
-    jobs: data || [],
-    total: count || 0,
-    hasMore: count ? count > to + 1 : false,
   }
 }
 
@@ -155,7 +419,9 @@ async function getHistoryAnalysisJobs(
 // ============================================
 
 /**
- * Get single job
+ * 단일 분석 작업 조회 훅
+ *
+ * 활성 상태(pending/processing)일 때 2초마다 자동 갱신
  */
 export function useAnalysisJob(jobId: string | null) {
   return useQuery({
@@ -164,7 +430,7 @@ export function useAnalysisJob(jobId: string | null) {
     enabled: !!jobId,
     refetchInterval: (query) => {
       const job = query.state.data
-      // Refetch every 2 seconds if job is active
+      // 활성 상태일 때 2초마다 갱신
       if (job && (job.status === 'pending' || job.status === 'processing')) {
         return 2000
       }
@@ -174,18 +440,20 @@ export function useAnalysisJob(jobId: string | null) {
 }
 
 /**
- * Get active jobs (auto-refresh every 2 seconds)
+ * 활성 작업 목록 조회 훅
+ *
+ * 2초마다 자동 갱신
  */
 export function useActiveJobs() {
   return useQuery({
     queryKey: kanQueryKeys.activeJobs(),
     queryFn: getActiveAnalysisJobs,
-    refetchInterval: 2000, // Auto-refresh every 2 seconds
+    refetchInterval: 2000,
   })
 }
 
 /**
- * Get history jobs
+ * 히스토리 작업 목록 조회 훅
  */
 export function useHistoryJobs(options: GetHistoryJobsOptions = {}) {
   return useQuery({
@@ -199,44 +467,28 @@ export function useHistoryJobs(options: GetHistoryJobsOptions = {}) {
 // ============================================
 
 /**
- * Retry failed job
+ * 실패한 작업 재시도 뮤테이션
  */
 export function useRetryJobMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (jobId: string) => {
-      const supabase = createClientSupabaseClient()
+      const jobRef = doc(firestore, 'analysisJobs', jobId)
 
-      // Get original job data
-      const { data: job, error: fetchError } = await supabase
-        .from('analysis_jobs')
-        .select('*')
-        .eq('id', jobId)
-        .single()
-
-      if (fetchError) throw fetchError
-
-      // Reset job status
-      const { error: updateError } = await supabase
-        .from('analysis_jobs')
-        .update({
-          status: 'pending',
-          progress: 0,
-          hands_found: 0,
-          error_message: null,
-          result: null,
-          started_at: null,
-          completed_at: null,
-          processing_time: null,
-        })
-        .eq('id', jobId)
-
-      if (updateError) throw updateError
+      // 작업 상태 초기화
+      await updateDoc(jobRef, {
+        status: 'pending' as AnalysisJobStatus,
+        progress: 0,
+        errorMessage: null,
+        result: null,
+        startedAt: null,
+        completedAt: null,
+      })
 
       return jobId
     },
-    onSuccess: (jobId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: kanQueryKeys.jobs() })
       toast.success('작업이 재시작되었습니다')
     },
@@ -248,29 +500,24 @@ export function useRetryJobMutation() {
 }
 
 /**
- * Cancel running job
+ * 실행 중인 작업 취소 뮤테이션
  */
 export function useCancelJobMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (jobId: string) => {
-      const supabase = createClientSupabaseClient()
+      const jobRef = doc(firestore, 'analysisJobs', jobId)
 
-      const { error } = await supabase
-        .from('analysis_jobs')
-        .update({
-          status: 'failed',
-          error_message: '사용자가 취소했습니다',
-          completed_at: new Date().toISOString(),
-        })
-        .eq('id', jobId)
-
-      if (error) throw error
+      await updateDoc(jobRef, {
+        status: 'failed' as AnalysisJobStatus,
+        errorMessage: '사용자가 취소했습니다',
+        completedAt: Timestamp.now(),
+      })
 
       return jobId
     },
-    onSuccess: (jobId) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: kanQueryKeys.jobs() })
       toast.success('작업이 취소되었습니다')
     },
