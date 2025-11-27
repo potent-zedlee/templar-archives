@@ -1,19 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { getServiceSupabaseClient } from '@/lib/supabase-service'
+import { adminFirestore } from '@/lib/firebase-admin'
 import { gcsClient } from '@/lib/gcs/client'
-
-/**
- * video_uploads 조회 결과 타입
- * (DB 마이그레이션 후 database.types.ts에 자동 생성됨)
- */
-interface VideoUploadRow {
-  id: string
-  stream_id: string
-  gcs_path: string
-  gcs_uri: string
-  status: 'pending' | 'uploading' | 'completed' | 'failed'
-}
+import { COLLECTION_PATHS, type UploadStatus } from '@/lib/firestore-types'
+import { FieldValue } from 'firebase-admin/firestore'
 
 /**
  * GCS 업로드 완료 콜백 API
@@ -21,7 +10,9 @@ interface VideoUploadRow {
  * POST /api/gcs/complete-upload
  *
  * 요청 body:
- * - uploadId: string - 업로드 레코드 ID
+ * - uploadId: string - 스트림 ID (init-upload에서 반환된 값)
+ * - tournamentId: string - 토너먼트 ID
+ * - eventId: string - 이벤트 ID
  * - duration?: number - 영상 길이 (초, 선택사항)
  *
  * 응답:
@@ -30,114 +21,75 @@ interface VideoUploadRow {
  */
 export async function POST(request: NextRequest) {
   try {
-    // 1. 인증 확인
-    const supabase = await createServerSupabaseClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: '인증이 필요합니다.' },
-        { status: 401 }
-      )
-    }
-
-    // 2. 요청 body 파싱
+    // 1. 요청 body 파싱
     const body = await request.json()
-    const { uploadId, duration } = body
+    const { uploadId, tournamentId, eventId, duration } = body
 
-    if (!uploadId) {
+    if (!uploadId || !tournamentId || !eventId) {
       return NextResponse.json(
-        { error: 'uploadId가 필요합니다.' },
+        { error: 'uploadId, tournamentId, eventId가 필요합니다.' },
         { status: 400 }
       )
     }
 
-    // 3. video_uploads에서 uploadId로 조회
-    // NOTE: video_uploads 테이블은 마이그레이션으로 생성 필요
-    const serviceSupabase = getServiceSupabaseClient()
-    const { data: rawUpload, error: fetchError } = await serviceSupabase
-      .from('video_uploads' as 'streams')
-      .select('id, stream_id, gcs_path, gcs_uri, status')
-      .eq('id', uploadId)
-      .single()
+    // 2. Firestore에서 Stream 문서 조회
+    const streamPath = `${COLLECTION_PATHS.STREAMS(tournamentId, eventId)}/${uploadId}`
+    const streamRef = adminFirestore.doc(streamPath)
+    const streamDoc = await streamRef.get()
 
-    if (fetchError || !rawUpload) {
+    if (!streamDoc.exists) {
       return NextResponse.json(
-        { error: '업로드 레코드를 찾을 수 없습니다.' },
+        { error: '스트림을 찾을 수 없습니다.' },
         { status: 404 }
       )
     }
 
-    const upload = rawUpload as unknown as VideoUploadRow
+    const streamData = streamDoc.data()
+    const uploadStatus = streamData?.uploadStatus as UploadStatus | undefined
+    const gcsPath = streamData?.gcsPath as string | undefined
+    const gcsUri = streamData?.gcsUri as string | undefined
 
     // 이미 완료된 경우
-    if (upload.status === 'completed') {
+    if (uploadStatus === 'uploaded' || uploadStatus === 'completed') {
       return NextResponse.json({
         success: true,
-        gcsUri: upload.gcs_uri,
+        gcsUri: gcsUri || '',
         message: '이미 완료된 업로드입니다.',
       })
     }
 
-    // 4. GCS 파일 존재 확인 (간소화)
+    // 3. GCS 파일 존재 확인 (간소화)
     // GCS resumable upload 완료 시 파일은 이미 존재하므로 한 번만 확인
-    // 타임아웃 방지를 위해 재시도 없이 바로 진행
-    const fileExists = await gcsClient.fileExists(upload.gcs_path)
+    if (gcsPath) {
+      const fileExists = await gcsClient.fileExists(gcsPath)
 
-    if (!fileExists) {
-      // 파일이 없어도 일단 진행 (GCS 전파 지연 가능성)
-      // 분석 시작 시 다시 확인됨
-      console.warn(`[GCS Complete Upload] 파일 존재 확인 실패, 하지만 진행: ${upload.gcs_path}`)
-    } else {
-      console.log(`[GCS Complete Upload] 파일 존재 확인 완료: ${upload.gcs_path}`)
+      if (!fileExists) {
+        // 파일이 없어도 일단 진행 (GCS 전파 지연 가능성)
+        // 분석 시작 시 다시 확인됨
+        console.warn(`[GCS Complete Upload] 파일 존재 확인 실패, 하지만 진행: ${gcsPath}`)
+      } else {
+        console.log(`[GCS Complete Upload] 파일 존재 확인 완료: ${gcsPath}`)
+      }
     }
 
-    // 5. video_uploads 상태 업데이트 (completed)
-    const { error: uploadUpdateError } = await serviceSupabase
-      .from('video_uploads' as 'streams')
-      .update({
-        status: 'completed',
-        progress: 100,
-        completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as never)
-      .eq('id', uploadId)
-
-    if (uploadUpdateError) {
-      console.error('[GCS Complete Upload] video_uploads 업데이트 실패:', uploadUpdateError)
+    // 4. Firestore Stream 문서 업데이트
+    const updateData: Record<string, unknown> = {
+      uploadStatus: 'uploaded' as UploadStatus,
+      updatedAt: FieldValue.serverTimestamp(),
     }
 
-    // 6. streams 테이블 업데이트
-    // NOTE: gcs_uri, gcs_path, upload_status, video_duration 컬럼은 마이그레이션으로 추가 필요
-    const streamUpdateData: Record<string, unknown> = {
-      gcs_uri: upload.gcs_uri,
-      gcs_path: upload.gcs_path,
-      upload_status: 'uploaded',
-    }
-
-    // duration이 있으면 video_duration도 업데이트
+    // duration이 있으면 videoDuration도 업데이트
     if (duration !== undefined && duration !== null) {
-      streamUpdateData.video_duration = duration
+      updateData.videoDuration = duration
     }
 
-    const { error: streamUpdateError } = await serviceSupabase
-      .from('streams')
-      .update(streamUpdateData as never)
-      .eq('id', upload.stream_id)
+    await streamRef.update(updateData)
 
-    if (streamUpdateError) {
-      console.error('[GCS Complete Upload] streams 업데이트 실패:', streamUpdateError)
-      // streams 업데이트 실패는 치명적이지 않으므로 계속 진행
-    }
-
-    console.log(`[GCS Complete Upload] 업로드 완료: uploadId=${uploadId}, gcsUri=${upload.gcs_uri}`)
+    console.log(`[GCS Complete Upload] 업로드 완료: streamId=${uploadId}, gcsUri=${gcsUri}`)
 
     return NextResponse.json({
       success: true,
-      gcsUri: upload.gcs_uri,
+      gcsUri: gcsUri || '',
     })
   } catch (error) {
     console.error('[GCS Complete Upload] Error:', error)
