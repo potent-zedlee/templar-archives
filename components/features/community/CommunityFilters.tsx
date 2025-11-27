@@ -6,26 +6,26 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
-import type { Post } from "@/lib/supabase-community"
+import type { PostCategory } from "@/lib/queries/community-queries"
 
 interface CommunityFiltersProps {
-  selectedCategory?: Post['category']
+  selectedCategory?: PostCategory
   dateFrom?: string
   dateTo?: string
-  onCategoryChange: (category?: Post['category']) => void
+  onCategoryChange: (category?: PostCategory) => void
   onDateFromChange: (date: string) => void
   onDateToChange: (date: string) => void
   onReset: () => void
 }
 
-const categoryColors: Record<Post['category'], string> = {
+const categoryColors: Record<PostCategory, string> = {
   "analysis": "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800",
   "strategy": "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-800",
   "hand-review": "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-800",
   "general": "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
 }
 
-const categoryLabels: Record<Post['category'], string> = {
+const categoryLabels: Record<PostCategory, string> = {
   "analysis": "Analysis",
   "strategy": "Strategy",
   "hand-review": "Hand Review",
@@ -72,7 +72,7 @@ export function CommunityFilters({
                   if (selectedCategory === category) {
                     onCategoryChange(undefined)
                   } else {
-                    onCategoryChange(category as Post['category'])
+                    onCategoryChange(category as PostCategory)
                   }
                 }}
                 className={`
@@ -81,7 +81,7 @@ export function CommunityFilters({
                   ${selectedCategory === category ? 'ring-2 ring-blue-400 dark:ring-blue-500' : ''}
                 `}
               >
-                {categoryLabels[category as Post['category']]}
+                {categoryLabels[category as PostCategory]}
               </button>
             ))}
           </div>

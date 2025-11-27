@@ -11,7 +11,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { MessageSquare, TrendingUp, Clock, Star, ThumbsUp, Link2, X } from "lucide-react"
 import Link from "next/link"
-import { fetchPosts, togglePostLike, type Post } from "@/lib/supabase-community"
+import {
+  fetchPosts,
+  togglePostLike,
+  createPost,
+  type Post,
+  type PostCategory,
+} from "@/lib/queries/community-queries"
 import { toast } from "sonner"
 import { CardSkeleton } from "@/components/ui/skeletons/CardSkeleton"
 import { ErrorBoundary } from "@/components/common/ErrorBoundary"
@@ -20,7 +26,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createPost } from "@/lib/supabase-community"
 import { CommunitySearchBar } from "@/components/features/community/CommunitySearchBar"
 import { CommunityFilters } from "@/components/features/community/CommunityFilters"
 import { useAuth } from "@/components/layout/AuthProvider"
@@ -42,7 +47,7 @@ const HandSearchDialog = dynamic(
   }
 )
 
-const categoryColors: Record<Post['category'], string> = {
+const categoryColors: Record<PostCategory, string> = {
   "analysis": "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300",
   "strategy": "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300",
   "hand-review": "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300",
@@ -58,7 +63,7 @@ export default function communityClient() {
   // New post form
   const [newTitle, setNewTitle] = useState("")
   const [newContent, setNewContent] = useState("")
-  const [newCategory, setNewCategory] = useState<Post['category']>("general")
+  const [newCategory, setNewCategory] = useState<PostCategory>("general")
 
   // Hand attachment
   const [selectedHand, setSelectedHand] = useState<{
@@ -73,7 +78,7 @@ export default function communityClient() {
   // Search and filters
   const [searchQuery, setSearchQuery] = useState("")
   const [showFilters, setShowFilters] = useState(false)
-  const [filterCategory, setFilterCategory] = useState<Post['category'] | undefined>(undefined)
+  const [filterCategory, setFilterCategory] = useState<PostCategory | undefined>(undefined)
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
 
@@ -97,7 +102,7 @@ export default function communityClient() {
     setDateTo("")
   }, [])
 
-  const handleCategoryClick = useCallback((category: Post['category']) => {
+  const handleCategoryClick = useCallback((category: PostCategory) => {
     setFilterCategory(category)
     setShowFilters(true)
   }, [])
@@ -116,7 +121,7 @@ export default function communityClient() {
         (old: Post[] = []) =>
           old.map(p =>
             p.id === postId
-              ? { ...p, likes_count: p.likes_count + 1 }
+              ? { ...p, stats: { ...p.stats, likesCount: p.stats.likesCount + 1 } }
               : p
           )
       )
@@ -175,8 +180,10 @@ export default function communityClient() {
       title: newTitle,
       content: newContent,
       category: newCategory,
-      author_id: user.id,
-      hand_id: selectedHand?.id
+      authorId: user.id,
+      authorName: (user.user_metadata?.full_name as string | undefined) || user.email || 'Anonymous',
+      authorAvatarUrl: (user.user_metadata?.avatar_url as string | undefined) || undefined,
+      handId: selectedHand?.id
     })
   }, [user, newTitle, newContent, newCategory, selectedHand, createPostMutation])
 
@@ -241,7 +248,7 @@ export default function communityClient() {
 
                     <div className="space-y-2">
                       <Label htmlFor="category">Category</Label>
-                      <Select value={newCategory} onValueChange={(v) => setNewCategory(v as Post['category'])}>
+                      <Select value={newCategory} onValueChange={(v) => setNewCategory(v as PostCategory)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -390,9 +397,9 @@ export default function communityClient() {
                         <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200">
                           <div className="flex gap-4">
                         <Avatar className="h-12 w-12 rounded-full">
-                          <AvatarImage src={post.author_avatar} alt={post.author_name} />
+                          <AvatarImage src={post.author.avatarUrl} alt={post.author.name} />
                           <AvatarFallback className="rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold">
-                            {post.author_name.split(' ').map(n => n[0]).join('')}
+                            {post.author.name.split(' ').map(n => n[0]).join('')}
                           </AvatarFallback>
                         </Avatar>
 
@@ -403,9 +410,9 @@ export default function communityClient() {
                                 {post.title}
                               </h3>
                               <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                <span>{post.author_name}</span>
-                                <span>•</span>
-                                <span>{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                <span>{post.author.name}</span>
+                                <span>-</span>
+                                <span>{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                               </div>
                             </div>
                             <Badge className={categoryColors[post.category]}>
@@ -447,12 +454,12 @@ export default function communityClient() {
                               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400"
                             >
                               <ThumbsUp className="w-4 h-4" />
-                              <span className="font-mono">{post.likes_count}</span>
+                              <span className="font-mono">{post.stats.likesCount}</span>
                             </button>
 
                             <Link href={`/community/${post.id}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400">
                               <MessageSquare className="w-4 h-4" />
-                              <span className="font-mono">{post.comments_count}</span>
+                              <span className="font-mono">{post.stats.commentsCount}</span>
                             </Link>
 
                             <div className="ml-auto">

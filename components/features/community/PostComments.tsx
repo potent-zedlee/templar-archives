@@ -13,7 +13,7 @@ import {
   createComment,
   toggleCommentLike,
   type Comment,
-} from "@/lib/supabase-community"
+} from "@/lib/queries/community-queries"
 
 type PostCommentsProps = {
   postId?: string
@@ -73,7 +73,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     )
 
     try {
-      const replies = await fetchReplies(commentId)
+      const replies = await fetchReplies(commentId, postId, handId)
       setComments((prev) =>
         prev.map((c) =>
           c.id === commentId
@@ -107,9 +107,11 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     setSubmitting(true)
     try {
       await createComment({
-        post_id: postId,
-        hand_id: handId,
-        author_id: user.id,
+        postId,
+        handId,
+        authorId: user.id,
+        authorName: (user.user_metadata?.full_name as string | undefined) || user.email || 'Anonymous',
+        authorAvatarUrl: (user.user_metadata?.avatar_url as string | undefined) || undefined,
         content: newComment.trim(),
       })
 
@@ -140,10 +142,12 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     setSubmitting(true)
     try {
       await createComment({
-        post_id: postId,
-        hand_id: handId,
-        parent_comment_id: parentCommentId,
-        author_id: user.id,
+        postId,
+        handId,
+        parentId: parentCommentId,
+        authorId: user.id,
+        authorName: (user.user_metadata?.full_name as string | undefined) || user.email || 'Anonymous',
+        authorAvatarUrl: (user.user_metadata?.avatar_url as string | undefined) || undefined,
         content: content.trim(),
       })
 
@@ -167,7 +171,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     }
 
     try {
-      const liked = await toggleCommentLike(commentId, user.id)
+      const liked = await toggleCommentLike(commentId, user.id, postId, handId)
 
       // Optimistic UI update
       setComments((prev) =>
@@ -175,7 +179,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
           if (c.id === commentId) {
             return {
               ...c,
-              likes_count: c.likes_count + (liked ? 1 : -1),
+              likesCount: c.likesCount + (liked ? 1 : -1),
               hasLiked: liked,
             }
           }
@@ -185,7 +189,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
               r.id === commentId
                 ? {
                     ...r,
-                    likes_count: r.likes_count + (liked ? 1 : -1),
+                    likesCount: r.likesCount + (liked ? 1 : -1),
                     hasLiked: liked,
                   }
                 : r
@@ -211,17 +215,17 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
       >
         <div className="flex gap-3">
           <Avatar className="h-8 w-8 rounded-full">
-            <AvatarImage src={comment.author_avatar} alt={comment.author_name} />
+            <AvatarImage src={comment.author.avatarUrl} alt={comment.author.name} />
             <AvatarFallback className="rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold">
-              {comment.author_name.split(" ").map((n) => n[0]).join("")}
+              {comment.author.name.split(" ").map((n) => n[0]).join("")}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{comment.author_name}</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{comment.author.name}</span>
               <span className="text-xs text-gray-600 dark:text-gray-400">
-                {new Date(comment.created_at).toLocaleDateString("en-US", {
+                {new Date(comment.createdAt).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
@@ -241,7 +245,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
                 className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400"
               >
                 <ThumbsUp className="h-3 w-3" />
-                <span className="font-mono">{comment.likes_count}</span>
+                <span className="font-mono">{comment.likesCount}</span>
               </button>
 
               {!isReply && (

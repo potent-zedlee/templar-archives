@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, ThumbsUp, Share2, Link2 } from "lucide-react"
 import Link from "next/link"
-import { usePostQuery, useLikePostMutation } from "@/lib/queries/community-queries"
+import { usePostQuery, useLikePostMutation, type PostCategory } from "@/lib/queries/community-queries"
 import { toast } from "sonner"
 import { CardSkeleton } from "@/components/ui/skeletons/CardSkeleton"
 import { useAuth } from "@/components/layout/AuthProvider"
@@ -13,7 +13,7 @@ import { ReportButton } from "@/components/dialogs/ReportButton"
 import { PostComments } from "@/components/features/community/PostComments"
 import { Badge } from "@/components/ui/badge"
 
-const categoryColors: Record<string, string> = {
+const categoryColors: Record<PostCategory, string> = {
   "analysis": "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300",
   "strategy": "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300",
   "hand-review": "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300",
@@ -33,8 +33,8 @@ export default function PostDetailPage() {
   const likePostMutation = useLikePostMutation(user?.id || "")
 
   // Set initial comments count from post data
-  if (post && commentsCount === 0 && post.comments_count > 0) {
-    setCommentsCount(post.comments_count)
+  if (post && commentsCount === 0 && post.stats.commentsCount > 0) {
+    setCommentsCount(post.stats.commentsCount)
   }
 
   // Handle query error
@@ -117,9 +117,9 @@ export default function PostDetailPage() {
           {/* Header */}
           <div className="flex items-start gap-4 mb-6">
             <Avatar className="h-12 w-12 rounded-full">
-              <AvatarImage src={post.author_avatar} alt={post.author_name} />
+              <AvatarImage src={post.author.avatarUrl} alt={post.author.name} />
               <AvatarFallback className="rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold">
-                {post.author_name.split(' ').map(n => n[0]).join('')}
+                {post.author.name.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
 
@@ -127,10 +127,10 @@ export default function PostDetailPage() {
               <div className="flex items-start justify-between gap-4 mb-2">
                 <div>
                   <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                    {post.author_name}
+                    {post.author.name}
                   </h3>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    <span>{new Date(post.created_at).toLocaleDateString('en-US', {
+                    <span>{new Date(post.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
@@ -189,7 +189,7 @@ export default function PostDetailPage() {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400"
             >
               <ThumbsUp className="h-5 w-5" />
-              <span className="font-mono">{post.likes_count}</span>
+              <span className="font-mono">{post.stats.likesCount}</span>
             </button>
 
             <button
