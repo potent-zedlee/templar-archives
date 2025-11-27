@@ -63,9 +63,9 @@ export async function loadTournamentsHelper(
 
     const tournamentsWithUIState = tournamentsData.map((tournament) => ({
       ...tournament,
-      sub_events: tournament.sub_events?.map((subEvent) => ({
-        ...subEvent,
-        days: subEvent.streams?.map((day) => ({ ...day, selected: false })),
+      events: tournament.events?.map((event) => ({
+        ...event,
+        streams: event.streams?.map((stream) => ({ ...stream, selected: false })),
         expanded: false,
       })),
       expanded: true,
@@ -162,12 +162,12 @@ export function toggleSubEventHelper(
   setTournaments: (fn: (prev: unknown[]) => unknown[]) => void,
 ): void {
   setTournaments((prev) =>
-    prev.map((t: { id: string; sub_events?: Array<{ id: string; expanded?: boolean }> }) =>
+    prev.map((t: { id: string; events?: Array<{ id: string; expanded?: boolean }> }) =>
       t.id === tournamentId
         ? {
             ...t,
-            sub_events: t.sub_events?.map((se) =>
-              se.id === subEventId ? { ...se, expanded: !se.expanded } : se,
+            events: t.events?.map((e) =>
+              e.id === subEventId ? { ...e, expanded: !e.expanded } : e,
             ),
           }
         : t,
@@ -192,17 +192,17 @@ export function selectDayHelper(
     prev.map(
       (t: {
         id: string
-        sub_events?: Array<{
+        events?: Array<{
           id: string
-          days?: Array<{ id: string; selected?: boolean }>
+          streams?: Array<{ id: string; selected?: boolean }>
         }>
       }) => ({
         ...t,
-        sub_events: t.sub_events?.map((se) => ({
-          ...se,
-          days: se.days?.map((d) => ({
-            ...d,
-            selected: d.id === streamId,
+        events: t.events?.map((e) => ({
+          ...e,
+          streams: e.streams?.map((s) => ({
+            ...s,
+            selected: s.id === streamId,
           })),
         })),
       }),
@@ -392,10 +392,10 @@ export async function deleteSubEventHelper(
       prev.map(
         (t: {
           id: string
-          sub_events?: Array<{ id: string }>
+          events?: Array<{ id: string }>
         }) => ({
           ...t,
-          sub_events: t.sub_events?.filter((se) => se.id !== subEventId),
+          events: t.events?.filter((e) => e.id !== subEventId),
         }),
       ),
     )
@@ -477,15 +477,15 @@ export async function deleteDayHelper(
       prev.map(
         (t: {
           id: string
-          sub_events?: Array<{
+          events?: Array<{
             id: string
-            days?: Array<{ id: string }>
+            streams?: Array<{ id: string }>
           }>
         }) => ({
           ...t,
-          sub_events: t.sub_events?.map((se) => ({
-            ...se,
-            days: se.days?.filter((d) => d.id !== streamId),
+          events: t.events?.map((e) => ({
+            ...e,
+            streams: e.streams?.filter((s) => s.id !== streamId),
           })),
         }),
       ),

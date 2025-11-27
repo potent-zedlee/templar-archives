@@ -79,7 +79,7 @@ export function useArchiveData() {
             location: tournamentData.location,
             start_date: tournamentData.startDate?.toDate?.()?.toISOString(),
             end_date: tournamentData.endDate?.toDate?.()?.toISOString(),
-            sub_events: subEvents,
+            events: subEvents,
             expanded: true,
           }
         })

@@ -47,7 +47,7 @@ export interface StreamChecklistMetadata {
  */
 export interface ContentStatusAudit {
   id: string
-  table_name: 'tournaments' | 'sub_events' | 'streams'
+  table_name: 'tournaments' | 'events' | 'streams'
   record_id: string
   old_status: ContentStatus | null
   new_status: ContentStatus

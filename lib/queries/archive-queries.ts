@@ -286,7 +286,7 @@ async function fetchTournamentsTreeFirestore(
 }
 
 /**
- * Fetch tournaments with sub_events and days
+ * Fetch tournaments with events and streams
  * Optimized: Increased staleTime as tournament hierarchy changes infrequently
  * Firestore 버전으로 전환됨
  *

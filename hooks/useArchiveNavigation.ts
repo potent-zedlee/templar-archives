@@ -51,11 +51,11 @@ export function useArchiveNavigation({
 
     if (navigationLevel === 'event') {
       const tournament = tournaments.find(t => t.id === currentTournamentId)
-      const subEvent = tournament?.sub_events?.find((se: any) => se.id === currentSubEventId)
-      if (subEvent) {
+      const event = tournament?.events?.find((e: any) => e.id === currentSubEventId)
+      if (event) {
         items.push({
-          id: subEvent.id,
-          name: subEvent.name,
+          id: event.id,
+          name: event.name,
           type: 'event'
         })
       }
@@ -74,33 +74,33 @@ export function useArchiveNavigation({
         id: tournament.id,
         name: tournament.name,
         type: 'tournament' as const,
-        itemCount: tournament.sub_events?.length || 0,
+        itemCount: tournament.events?.length || 0,
         data: tournament
       }))
 
       items = tournamentItems
     } else if (navigationLevel === 'tournament') {
-      // Show sub-events of current tournament
+      // Show events of current tournament
       const tournament = tournaments.find(t => t.id === currentTournamentId)
-      const subEvents = tournament?.sub_events || []
+      const events = tournament?.events || []
 
-      items = subEvents.map((subEvent: any) => ({
-        id: subEvent.id,
-        name: subEvent.name,
+      items = events.map((event: any) => ({
+        id: event.id,
+        name: event.name,
         type: 'event' as const,
-        itemCount: subEvent.streams?.length || 0,
-        date: subEvent.date,
-        data: subEvent
+        itemCount: event.streams?.length || 0,
+        date: event.date,
+        data: event
       }))
     } else if (navigationLevel === 'event') {
-      // Show days of current sub-event
+      // Show streams of current event
       const tournament = tournaments.find(t => t.id === currentTournamentId)
-      const subEvent = tournament?.sub_events?.find((se: any) => se.id === currentSubEventId)
-      items = subEvent?.days?.map((day: any) => ({
-        id: day.id,
-        name: day.name,
+      const event = tournament?.events?.find((e: any) => e.id === currentSubEventId)
+      items = event?.streams?.map((stream: any) => ({
+        id: stream.id,
+        name: stream.name,
         type: 'day' as const,
-        data: day
+        data: stream
       })) || []
     }
 

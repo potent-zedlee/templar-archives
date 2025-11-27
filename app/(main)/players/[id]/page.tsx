@@ -50,7 +50,7 @@ interface TournamentView {
   name: string
   category: string
   location?: string
-  sub_events: EventView[]
+  events: EventView[]
   expanded: boolean
 }
 
@@ -120,7 +120,7 @@ export default function PlayerDetailClient() {
     return (handsData as unknown as TournamentView[]).map((tournament) => ({
       ...tournament,
       expanded: expandedTournaments[tournament.id] ?? true,
-      sub_events: tournament.sub_events.map((event) => ({
+      events: tournament.events.map((event) => ({
         ...event,
         expanded: expandedEvents[event.id] ?? false,
       })),
@@ -130,7 +130,7 @@ export default function PlayerDetailClient() {
   // Calculate total hands count
   const totalHandsCount = useMemo(() => {
     return handsData.reduce((total: number, tournament: any) => {
-      return total + tournament.sub_events.reduce((subTotal: number, event: any) => {
+      return total + tournament.events.reduce((subTotal: number, event: any) => {
         return subTotal + event.days.reduce((dayTotal: number, day: any) => {
           return dayTotal + day.hands.length
         }, 0)
@@ -146,7 +146,7 @@ export default function PlayerDetailClient() {
     tournaments.forEach((tournament) => {
       let tournamentHandCount = 0
 
-      tournament.sub_events?.forEach((event) => {
+      tournament.events?.forEach((event) => {
         let eventHandCount = 0
 
         event.days?.forEach((day) => {
@@ -474,7 +474,7 @@ export default function PlayerDetailClient() {
                     {/* Event Level */}
                     {tournament.expanded && (
                       <div className="ml-8">
-                        {tournament.sub_events?.map((event) => (
+                        {tournament.events?.map((event) => (
                           <div key={event.id}>
                             <div
                               className="flex items-center gap-3 py-2 px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700"

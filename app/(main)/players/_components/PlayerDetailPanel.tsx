@@ -77,9 +77,9 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
     return handsData.map((tournament: any) => ({
       ...tournament,
       expanded: expandedTournaments[tournament.id] ?? true,
-      sub_events: tournament.sub_events.map((subEvent: any) => ({
-        ...subEvent,
-        expanded: expandedSubEvents[subEvent.id] ?? false,
+      events: tournament.events.map((event: any) => ({
+        ...event,
+        expanded: expandedSubEvents[event.id] ?? false,
       })),
     }))
   }, [handsData, expandedTournaments, expandedSubEvents])
@@ -87,8 +87,8 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
   // Calculate total hands count
   const totalHandsCount = useMemo(() => {
     return handsData.reduce((total: number, tournament: any) => {
-      return total + tournament.sub_events.reduce((subTotal: number, subEvent: any) => {
-        return subTotal + subEvent.days.reduce((dayTotal: number, day: any) => {
+      return total + tournament.events.reduce((subTotal: number, event: any) => {
+        return subTotal + event.days.reduce((dayTotal: number, day: any) => {
           return dayTotal + day.hands.length
         }, 0)
       }, 0)
@@ -103,18 +103,18 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
     tournaments.forEach((tournament: any) => {
       let tournamentHandCount = 0
 
-      tournament.sub_events?.forEach((subEvent: any) => {
-        let subEventHandCount = 0
+      tournament.events?.forEach((event: any) => {
+        let eventHandCount = 0
 
-        subEvent.days?.forEach((day: any) => {
+        event.days?.forEach((day: any) => {
           day.hands?.forEach((_hand: any) => {
-            subEventHandCount++
+            eventHandCount++
             tournamentHandCount++
           })
         })
 
-        if (subEventHandCount > 0) {
-          eventsMap.set(subEvent.name, subEventHandCount)
+        if (eventHandCount > 0) {
+          eventsMap.set(event.name, eventHandCount)
         }
       })
 
@@ -400,32 +400,32 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
                       </span>
                     </div>
 
-                    {/* SubEvent Level */}
+                    {/* Event Level */}
                     {tournament.expanded && (
                       <div className="ml-8">
-                        {tournament.sub_events?.map((subEvent: any) => (
-                          <div key={subEvent.id}>
+                        {tournament.events?.map((event: any) => (
+                          <div key={event.id}>
                             <div
                               className="flex items-center gap-3 py-2 px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700"
-                              onClick={() => toggleSubEvent(tournament.id, subEvent.id)}
+                              onClick={() => toggleSubEvent(tournament.id, event.id)}
                             >
-                              {subEvent.expanded ? (
+                              {event.expanded ? (
                                 <ChevronDown className="h-4 w-4 text-green-500 dark:text-green-400" />
                               ) : (
                                 <ChevronRight className="h-4 w-4 text-green-500 dark:text-green-400" />
                               )}
                               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {subEvent.name}
+                                {event.name}
                               </span>
                               <div className="ml-auto inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded">
-                                {subEvent.days.reduce((total: number, day: any) => total + day.hands.length, 0)} hands
+                                {event.days.reduce((total: number, day: any) => total + day.hands.length, 0)} hands
                               </div>
                             </div>
 
                             {/* Day Level with Hands */}
-                            {subEvent.expanded && (
+                            {event.expanded && (
                               <div className="ml-8 mt-2">
-                                {subEvent.days?.map((day: any) => (
+                                {event.days?.map((day: any) => (
                                   <div key={day.id} className="mb-4">
                                     <div className="flex items-center gap-2 py-2 px-3 mb-2 bg-gray-50 dark:bg-gray-700 rounded">
                                       <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 font-mono">

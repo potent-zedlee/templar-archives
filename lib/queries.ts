@@ -115,7 +115,7 @@ export interface TournamentTreeItem {
   end_date: string
   status?: string
   game_type?: 'tournament' | 'cash-game'
-  sub_events?: EventTreeItem[]
+  events?: EventTreeItem[]
 }
 
 export interface EventTreeItem {
@@ -480,7 +480,7 @@ export async function fetchTournamentsTree(
         end_date: timestampToString(tournament.endDate as Timestamp) || '',
         status: tournament.status,
         game_type: tournament.gameType,
-        sub_events: subEvents,
+        events: subEvents,
       })
     }
 
