@@ -189,18 +189,18 @@ export class GCSClient {
       console.log(`[GCSClient] 메타데이터 조회: ${path}`);
 
       return {
-        name: metadata.name,
-        bucket: metadata.bucket,
-        generation: metadata.generation,
-        metageneration: metadata.metageneration,
-        contentType: metadata.contentType,
-        size: metadata.size,
-        md5Hash: metadata.md5Hash,
-        crc32c: metadata.crc32c,
-        etag: metadata.etag,
-        timeCreated: new Date(metadata.timeCreated),
-        updated: new Date(metadata.updated),
-        storageClass: metadata.storageClass,
+        name: metadata.name || '',
+        bucket: metadata.bucket || '',
+        generation: String(metadata.generation || ''),
+        metageneration: String(metadata.metageneration || ''),
+        contentType: metadata.contentType || '',
+        size: String(metadata.size || '0'),
+        md5Hash: metadata.md5Hash || '',
+        crc32c: metadata.crc32c || '',
+        etag: metadata.etag || '',
+        timeCreated: new Date(metadata.timeCreated || Date.now()),
+        updated: new Date(metadata.updated || Date.now()),
+        storageClass: metadata.storageClass || '',
       };
     } catch (error) {
       console.error('[GCSClient] 메타데이터 조회 실패:', error);

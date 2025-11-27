@@ -549,7 +549,7 @@ export async function fetchPlayerHands(playerId: string): Promise<{
     const handIds = playerHandsSnapshot.docs.map((doc) => doc.id)
 
     // 각 핸드 상세 정보 조회
-    const hands: HandHistory[] = await Promise.all(
+    const handsWithNull: (HandHistory | null)[] = await Promise.all(
       handIds.map(async (handId) => {
         const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
         const handDoc = await getDoc(handRef)
@@ -597,7 +597,7 @@ export async function fetchPlayerHands(playerId: string): Promise<{
     )
 
     // null 제거
-    const validHands = hands.filter((h): h is HandHistory => h !== null)
+    const validHands = handsWithNull.filter((h): h is HandHistory => h !== null)
 
     return {
       hands: validHands,

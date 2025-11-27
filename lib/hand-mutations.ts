@@ -10,14 +10,10 @@
 import {
   doc,
   getDoc,
-  setDoc,
   updateDoc,
-  deleteDoc,
   writeBatch,
-  Timestamp,
   serverTimestamp,
   arrayUnion,
-  arrayRemove,
 } from 'firebase/firestore'
 import { firestore } from './firebase'
 import {
@@ -114,7 +110,7 @@ export async function updateHandBasicInfo(
     const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
 
     // Firestore 형식으로 변환
-    const updateData: Partial<FirestoreHand> & { updatedAt: ReturnType<typeof serverTimestamp> } = {
+    const updateData: any = {
       updatedAt: serverTimestamp(),
     }
 
@@ -419,7 +415,7 @@ export async function updateHandComplete(
     const hand = handDoc.data() as FirestoreHand
 
     // 업데이트 데이터 준비
-    const updateData: Partial<FirestoreHand> & { updatedAt: ReturnType<typeof serverTimestamp> } = {
+    const updateData: any = {
       updatedAt: serverTimestamp(),
     }
 

@@ -25,14 +25,13 @@ import {
 } from "firebase/firestore"
 import { COLLECTION_PATHS } from "@/lib/firestore-types"
 import type { FirestorePost } from "@/lib/firestore-types"
-
-type PostCategory = "analysis" | "strategy" | "hand-review" | "general"
+import type { PostCategory } from "@/lib/queries/community-queries"
 
 interface PopularPostsSidebarProps {
   onCategoryClick?: (category: PostCategory) => void
 }
 
-const categoryColors: Record<PostCategory, string> = {
+const categoryColors: Record<string, string> = {
   "analysis": "bg-blue-100 text-blue-700 hover:bg-blue-200",
   "strategy": "bg-green-100 text-green-700 hover:bg-green-200",
   "hand-review": "bg-purple-100 text-purple-700 hover:bg-purple-200",
@@ -215,10 +214,10 @@ export function PopularPostsSidebar({ onCategoryClick }: PopularPostsSidebarProp
           {categories.map(({ category, count }) => (
             <button
               key={category}
-              onClick={() => onCategoryClick?.(category as Post['category'])}
+              onClick={() => onCategoryClick?.(category as PostCategory)}
               className={`
                 w-full flex items-center justify-between p-2 rounded-lg transition-colors text-left
-                ${categoryColors[category as Post['category']] || 'hover:bg-gray-50'}
+                ${categoryColors[category] || 'hover:bg-gray-50'}
               `}
             >
               <span className="text-sm capitalize text-gray-900">

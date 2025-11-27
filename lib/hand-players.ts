@@ -14,7 +14,6 @@ import {
   getDocs,
   setDoc,
   updateDoc,
-  deleteDoc,
   query,
   where,
   orderBy,
@@ -547,7 +546,7 @@ export async function updatePlayer(
   try {
     const playerRef = doc(firestore, COLLECTION_PATHS.PLAYERS, playerId)
 
-    const updateData: Partial<FirestorePlayer> & { updatedAt: ReturnType<typeof serverTimestamp> } = {
+    const updateData: any = {
       updatedAt: serverTimestamp(),
     }
 

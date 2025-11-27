@@ -88,7 +88,9 @@ export function HandListAccordion({
                       className="inline-flex items-center justify-center h-7 w-7 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation()
-                        onPlayHand(hand.startTime)
+                        if (hand.startTime) {
+                          onPlayHand(hand.startTime)
+                        }
                       }}
                       title="이 핸드 재생"
                     >

@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { db } from '@/lib/firebase'
+import { firestore } from '@/lib/firebase'
 import {
   collection,
   query,
@@ -41,7 +41,7 @@ export function useAdminTournamentsQuery(statusFilter: ContentStatus | 'all' = '
   return useQuery({
     queryKey: adminArchiveKeys.tournaments(statusFilter),
     queryFn: async () => {
-      const tournamentsRef = collection(db, 'tournaments') as CollectionReference
+      const tournamentsRef = collection(firestore, 'tournaments') as CollectionReference
       const constraints: QueryConstraint[] = [
         orderBy('end_date', 'desc')
       ]
@@ -95,7 +95,7 @@ export function useAdminEventsQuery(
   return useQuery({
     queryKey: adminArchiveKeys.events(tournamentId, statusFilter),
     queryFn: async () => {
-      const eventsRef = collection(db, 'sub_events') as CollectionReference
+      const eventsRef = collection(firestore, 'sub_events') as CollectionReference
       const constraints: QueryConstraint[] = [
         where('tournament_id', '==', tournamentId),
         orderBy('date', 'desc')
@@ -148,7 +148,7 @@ export function useAdminStreamsQuery(
   return useQuery({
     queryKey: adminArchiveKeys.streams(eventId, statusFilter),
     queryFn: async () => {
-      const streamsRef = collection(db, 'streams') as CollectionReference
+      const streamsRef = collection(firestore, 'streams') as CollectionReference
       const constraints: QueryConstraint[] = [
         where('sub_event_id', '==', eventId),
         orderBy('published_at', 'desc')
@@ -194,7 +194,7 @@ export function useAdminStreamsQuery(
         const chunkSize = 30
         for (let i = 0; i < streamIds.length; i += chunkSize) {
           const chunk = streamIds.slice(i, i + chunkSize)
-          const handsRef = collection(db, 'hands')
+          const handsRef = collection(firestore, 'hands')
           const handsQuery = query(handsRef, where('day_id', 'in', chunk))
           const handsSnapshot = await getDocs(handsQuery)
 
