@@ -114,7 +114,7 @@ lib/queries/
 **주요 쿼리 파일**:
 - `archive-queries.ts` - Tournament/SubEvent/Stream/Hands 계층 조회
 - `players-queries.ts` - 플레이어 통계 및 프로필
-- `kan-queries.ts` - Trigger.dev 작업 상태 폴링
+- `kan-queries.ts` - Cloud Run 영상 분석 작업 상태 폴링
 
 ### 파일 구조 패턴
 

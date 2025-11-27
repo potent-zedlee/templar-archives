@@ -56,8 +56,6 @@ credentials*.json
 gcs-service-account-key.json
 *-service-account*.json
 
-# Trigger.dev logs (레거시)
-trigger/trigger_logs/
 
 # Migration artifacts
 scripts/migration/id-mappings-*.json

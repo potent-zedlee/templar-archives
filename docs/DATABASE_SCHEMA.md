@@ -92,7 +92,7 @@ Templar Archives는 포커 핸드 데이터를 체계적으로 관리하고 분�
 | `security_events` | 보안 이벤트 로그 |
 | `audit_logs` | 감사 로그 |
 | `unsorted_videos` | 미분류 비디오 (임시) |
-| `analysis_jobs` | KAN 영상 분석 작업 (Trigger.dev) ⭐ 신규 |
+| `analysis_jobs` | KAN 영상 분석 작업 (Cloud Run) ⭐ 신규 |
 
 ---
 
@@ -412,7 +412,7 @@ player_stats_cache (1) [캐시]
 ---
 
 ### 12. analysis_jobs ⭐ 신규
-**목적**: KAN 영상 분석 작업 추적 (Trigger.dev v3)
+**목적**: KAN 영상 분석 작업 추적 (Cloud Run)
 
 **주요 컬럼**:
 - `id` (UUID, PK)
