@@ -4,16 +4,23 @@
  * KAN Analysis - Trigger.dev Integration
  *
  * Python 백엔드를 대체하는 Trigger.dev 기반 분석 시스템
+ * Firestore 기반 데이터베이스 사용
  */
 
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { adminFirestore } from '@/lib/firebase-admin'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
+import type {
+  FirestoreStream,
+  FirestoreHand,
+  HandPlayerEmbedded,
+  HandActionEmbedded,
+  PokerPosition,
+  PokerActionType,
+  PokerStreet,
+} from '@/lib/firestore-types'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
-
-// Trigger.dev v3에서 작업을 트리거하는 방법
-// TODO: @trigger.dev/sdk/v3에서 실제 클라이언트 import 필요
-// import { tasks } from "@trigger.dev/sdk/v3";
-// import { videoAnalysisTask } from "@/trigger/video-analysis";
+import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 
 export type KanPlatform = 'ept' | 'triton' | 'wsop'
 
@@ -22,6 +29,8 @@ export interface TriggerKanAnalysisInput {
   segments: TimeSegment[]
   platform?: KanPlatform
   streamId?: string
+  tournamentId?: string
+  eventId?: string
 }
 
 export interface TriggerKanAnalysisResult {
@@ -41,7 +50,7 @@ export async function startKanAnalysisWithTrigger(
   input: TriggerKanAnalysisInput
 ): Promise<TriggerKanAnalysisResult> {
   try {
-    const { videoUrl, segments, platform = 'ept', streamId } = input
+    const { videoUrl, segments, platform = 'ept', streamId, tournamentId, eventId } = input
 
     console.log('[KAN-Trigger] Starting analysis with Trigger.dev')
     console.log(`[KAN-Trigger] URL: ${videoUrl}`)
@@ -49,81 +58,84 @@ export async function startKanAnalysisWithTrigger(
     console.log(`[KAN-Trigger] Platform: ${platform}`)
 
     // Stream ID 검증
-    if (!streamId) {
+    if (!streamId || !tournamentId || !eventId) {
       return {
         success: false,
-        error: 'Stream ID is required'
+        error: 'Stream ID, Tournament ID, and Event ID are required',
       }
     }
-
-    // Supabase 클라이언트 생성
-    const supabase = await createServerSupabaseClient()
 
     // Stream 존재 확인
-    const { data: stream, error: streamError } = await supabase
-      .from('streams')
-      .select('id, name, status')
-      .eq('id', streamId)
-      .single()
+    const streamRef = adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(tournamentId)
+      .collection('events')
+      .doc(eventId)
+      .collection('streams')
+      .doc(streamId)
 
-    if (streamError || !stream) {
+    const streamDoc = await streamRef.get()
+
+    if (!streamDoc.exists) {
       return {
         success: false,
-        error: `Stream not found: ${streamId}`
+        error: `Stream not found: ${streamId}`,
       }
     }
 
+    const stream = streamDoc.data() as FirestoreStream
+
     // 세그먼트를 { start, end } 형식으로 변환
-    const formattedSegments = segments.map(seg => ({
+    const formattedSegments = segments.map((seg) => ({
       start: seg.start,
-      end: seg.end
+      end: seg.end,
     }))
 
     // Trigger.dev v4 작업 트리거
-    const { tasks, configure } = await import("@trigger.dev/sdk");
+    const { tasks, configure } = await import('@trigger.dev/sdk')
 
     // 환경 변수 디버깅
-    const secretKey = process.env.TRIGGER_SECRET_KEY;
-    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY exists: ${!!secretKey}`);
-    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY length: ${secretKey?.length || 0}`);
-    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY prefix: ${secretKey?.substring(0, 10) || 'N/A'}...`);
+    const secretKey = process.env.TRIGGER_SECRET_KEY
+    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY exists: ${!!secretKey}`)
+    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY length: ${secretKey?.length || 0}`)
+    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY prefix: ${secretKey?.substring(0, 10) || 'N/A'}...`)
 
     if (!secretKey) {
-      console.error('[KAN-Trigger] TRIGGER_SECRET_KEY is not set!');
+      console.error('[KAN-Trigger] TRIGGER_SECRET_KEY is not set!')
       return {
         success: false,
-        error: 'TRIGGER_SECRET_KEY is not configured'
-      };
+        error: 'TRIGGER_SECRET_KEY is not configured',
+      }
     }
 
     // Server Action에서 SDK 사용 시 configure 필요
     configure({
       secretKey: secretKey,
-    });
+    })
 
-    console.log('[KAN-Trigger] Triggering task: kan-video-analysis');
-    console.log('[KAN-Trigger] Payload:', JSON.stringify({ youtubeUrl: videoUrl, segments: formattedSegments, platform, streamId }));
+    console.log('[KAN-Trigger] Triggering task: kan-video-analysis')
+    console.log(
+      '[KAN-Trigger] Payload:',
+      JSON.stringify({ youtubeUrl: videoUrl, segments: formattedSegments, platform, streamId })
+    )
 
-    const handle = await tasks.trigger("kan-video-analysis", {
+    const handle = await tasks.trigger('kan-video-analysis', {
       youtubeUrl: videoUrl,
       segments: formattedSegments,
       platform,
-      streamId
-    });
+      streamId,
+    })
 
-    console.log('[KAN-Trigger] Handle received:', JSON.stringify(handle));
-    const jobId = handle.id;
+    console.log('[KAN-Trigger] Handle received:', JSON.stringify(handle))
+    const jobId = handle.id
 
     console.log(`[KAN-Trigger] Job started: ${jobId}`)
 
     // Stream 상태 업데이트 (분석 중)
-    await supabase
-      .from('streams')
-      .update({
-        status: 'analyzing',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', streamId)
+    await streamRef.update({
+      status: 'analyzing',
+      updatedAt: FieldValue.serverTimestamp(),
+    })
 
     // 캐시 무효화
     revalidatePath('/archive')
@@ -131,14 +143,13 @@ export async function startKanAnalysisWithTrigger(
     return {
       success: true,
       jobId,
-      streamId
+      streamId,
     }
-
   } catch (error) {
     console.error('[KAN-Trigger] Error:', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     }
   }
 }
@@ -152,13 +163,13 @@ export async function startKanAnalysisWithTrigger(
 export async function getTriggerJobStatus(jobId: string) {
   try {
     // Trigger.dev v4에서 작업 상태 조회
-    const { runs, configure } = await import("@trigger.dev/sdk");
+    const { runs, configure } = await import('@trigger.dev/sdk')
 
     configure({
       secretKey: process.env.TRIGGER_SECRET_KEY,
-    });
+    })
 
-    const run = await runs.retrieve(jobId);
+    const run = await runs.retrieve(jobId)
 
     return {
       id: run.id,
@@ -167,9 +178,8 @@ export async function getTriggerJobStatus(jobId: string) {
       error: run.error,
       createdAt: run.createdAt,
       startedAt: run.startedAt,
-      completedAt: run.isCompleted ? new Date() : undefined
+      completedAt: run.isCompleted ? new Date() : undefined,
     }
-
   } catch (error) {
     console.error('[KAN-Trigger] Error getting job status:', error)
     throw error
@@ -177,58 +187,60 @@ export async function getTriggerJobStatus(jobId: string) {
 }
 
 /**
- * Trigger.dev 작업 결과를 Supabase에 저장
+ * Trigger.dev 작업 결과를 Firestore에 저장
  *
  * @param jobId 작업 ID
  * @returns 저장 결과
  */
 export async function saveTriggerJobResults(jobId: string) {
   try {
-    const supabase = await createServerSupabaseClient()
-
     // 작업 상태 조회
     const jobStatus = await getTriggerJobStatus(jobId)
 
     if (jobStatus.status !== 'COMPLETED') {
       return {
         success: false,
-        error: `Job not completed: ${jobStatus.status}`
+        error: `Job not completed: ${jobStatus.status}`,
       }
     }
 
     // 결과 파싱
-    const { streamId, hands } = jobStatus.output || {}
+    const { streamId, tournamentId, eventId, hands } = jobStatus.output || {}
 
-    if (!streamId || !hands || !Array.isArray(hands)) {
+    if (!streamId || !tournamentId || !eventId || !hands || !Array.isArray(hands)) {
       return {
         success: false,
-        error: 'Invalid job output'
+        error: 'Invalid job output: missing streamId, tournamentId, eventId, or hands',
       }
     }
 
     console.log(`[KAN-Trigger] Saving ${hands.length} hands to stream ${streamId}`)
 
     // Stream 존재 확인
-    const { data: stream } = await supabase
-      .from('streams')
-      .select('id, sub_event_id')
-      .eq('id', streamId)
-      .single()
+    const streamRef = adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(tournamentId)
+      .collection('events')
+      .doc(eventId)
+      .collection('streams')
+      .doc(streamId)
 
-    if (!stream) {
+    const streamDoc = await streamRef.get()
+
+    if (!streamDoc.exists) {
       return {
         success: false,
-        error: `Stream not found: ${streamId}`
+        error: `Stream not found: ${streamId}`,
       }
     }
 
     let savedCount = 0
     let errorCount = 0
 
-    // 각 핸드를 개별적으로 저장 (트랜잭션 대신 개별 처리)
+    // 각 핸드를 개별적으로 저장
     for (const hand of hands) {
       try {
-        await saveHandToDatabase(supabase, streamId, hand)
+        await saveHandToDatabase(streamId, tournamentId, eventId, hand)
         savedCount++
         console.log(`[KAN-Trigger] Saved hand ${hand.handNumber} (${savedCount}/${hands.length})`)
       } catch (error) {
@@ -240,13 +252,11 @@ export async function saveTriggerJobResults(jobId: string) {
     console.log(`[KAN-Trigger] Save complete: ${savedCount} saved, ${errorCount} errors`)
 
     // Stream 상태 업데이트 (완료)
-    await supabase
-      .from('streams')
-      .update({
-        status: 'completed',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', streamId)
+    await streamRef.update({
+      status: 'completed',
+      updatedAt: FieldValue.serverTimestamp(),
+      'stats.handsCount': FieldValue.increment(savedCount),
+    })
 
     // 캐시 무효화
     revalidatePath('/archive')
@@ -255,14 +265,13 @@ export async function saveTriggerJobResults(jobId: string) {
       success: true,
       saved: savedCount,
       errors: errorCount,
-      total: hands.length
+      total: hands.length,
     }
-
   } catch (error) {
     console.error('[KAN-Trigger] Error saving results:', error)
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : 'Unknown error',
     }
   }
 }
@@ -310,129 +319,132 @@ function formatTimestampDisplay(hand: any): string {
 }
 
 /**
- * 단일 핸드를 데이터베이스에 저장
+ * 단일 핸드를 Firestore에 저장
  */
 async function saveHandToDatabase(
-  supabase: any,
   streamId: string,
+  tournamentId: string,
+  eventId: string,
   hand: any
 ) {
-  // 1. Hands 테이블에 저장
-  const { data: insertedHand, error: handError } = await supabase
-    .from('hands')
-    .insert({
-      day_id: streamId, // streams 테이블의 FK
-      number: String(hand.handNumber),
-      description: generateHandDescription(hand),
-      timestamp: formatTimestampDisplay(hand), // 사용자 표시용 타임코드
-      video_timestamp_start: hand.absolute_timestamp_start ?? null, // 초 단위
-      video_timestamp_end: hand.absolute_timestamp_end ?? null, // 초 단위
-      pot_size: hand.pot || 0,
-      board_cards: formatBoardCards(hand.board),
-      // 블라인드 정보 파싱 (stakes에서)
-      small_blind: parseBlindFromStakes(hand.stakes, 'sb'),
-      big_blind: parseBlindFromStakes(hand.stakes, 'bb'),
-      ante: parseBlindFromStakes(hand.stakes, 'ante'),
-    })
-    .select()
-    .single()
+  // 플레이어 정보 처리
+  const players: HandPlayerEmbedded[] = []
+  const playerIdMap = new Map<string, string>()
 
-  if (handError || !insertedHand) {
-    throw new Error(`Failed to insert hand: ${handError?.message}`)
-  }
-
-  const handId = insertedHand.id
-
-  // 2. Players 확인 및 생성, Hand_players 저장
   for (const player of hand.players || []) {
     try {
       // 플레이어 이름 정규화 (소문자, 공백 제거)
       const normalizedName = player.name.toLowerCase().replace(/[^a-z0-9]/g, '')
 
-      // 플레이어 조회 (normalized_name으로)
-      let { data: existingPlayer } = await supabase
-        .from('players')
-        .select('id, name')
-        .eq('normalized_name', normalizedName)
-        .single()
+      // 플레이어 조회 또는 생성
+      const playersRef = adminFirestore.collection(COLLECTION_PATHS.PLAYERS)
+      const existingPlayerQuery = await playersRef
+        .where('normalizedName', '==', normalizedName)
+        .limit(1)
+        .get()
 
-      // 플레이어가 없으면 생성
-      if (!existingPlayer) {
-        const { data: newPlayer, error: playerError } = await supabase
-          .from('players')
-          .insert({
-            name: player.name,
-            normalized_name: normalizedName,
-          })
-          .select()
-          .single()
+      let playerId: string
 
-        if (playerError) {
-          console.error(`[KAN-Trigger] Error creating player ${player.name}:`, playerError)
-          continue
-        }
-
-        existingPlayer = newPlayer
+      if (existingPlayerQuery.empty) {
+        // 플레이어 생성
+        const newPlayerRef = await playersRef.add({
+          name: player.name,
+          normalizedName,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        })
+        playerId = newPlayerRef.id
+        console.log(`[KAN-Trigger] Created new player: ${player.name}`)
+      } else {
+        playerId = existingPlayerQuery.docs[0].id
       }
 
-      const playerId = existingPlayer.id
+      playerIdMap.set(normalizedName, playerId)
 
       // Winner 확인
-      const isWinner = hand.winners?.some((w: any) =>
-        w.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normalizedName
-      ) || false
+      const isWinner =
+        hand.winners?.some(
+          (w: any) => w.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normalizedName
+        ) || false
 
-      // Hand_players 저장
-      await supabase
-        .from('hand_players')
-        .insert({
-          hand_id: handId,
-          player_id: playerId,
-          poker_position: player.position,
-          hole_cards: player.holeCards, // ["As", "Kd"] 형식
-          starting_stack: player.stackSize || 0,
-          ending_stack: player.stackSize || 0, // 초기값
-          seat: player.seat,
-          is_winner: isWinner,
-        })
-
+      // HandPlayerEmbedded 생성
+      players.push({
+        playerId,
+        name: player.name,
+        position: player.position as PokerPosition,
+        seat: player.seat,
+        cards: player.holeCards, // ["As", "Kd"] 형식
+        startStack: player.stackSize || 0,
+        endStack: player.stackSize || 0, // 초기값
+        isWinner,
+      })
     } catch (error) {
-      console.error(`[KAN-Trigger] Error saving player ${player.name}:`, error)
+      console.error(`[KAN-Trigger] Error processing player ${player.name}:`, error)
     }
   }
 
-  // 3. Hand_actions 저장
+  // 액션 정보 처리
+  const actions: HandActionEmbedded[] = []
   let sequence = 1
+
   for (const action of hand.actions || []) {
     try {
-      // 플레이어 이름으로 player_id 조회
       const normalizedName = action.player.toLowerCase().replace(/[^a-z0-9]/g, '')
-      const { data: player } = await supabase
-        .from('players')
-        .select('id')
-        .eq('normalized_name', normalizedName)
-        .single()
+      const playerId = playerIdMap.get(normalizedName)
 
-      if (!player) {
+      if (!playerId) {
         console.warn(`[KAN-Trigger] Player not found for action: ${action.player}`)
         continue
       }
 
-      await supabase
-        .from('hand_actions')
-        .insert({
-          hand_id: handId,
-          player_id: player.id,
-          street: action.street,
-          action_type: action.action,
-          amount: action.amount || 0,
-          sequence: sequence++,
-        })
-
+      actions.push({
+        playerId,
+        playerName: action.player,
+        street: action.street as PokerStreet,
+        sequence: sequence++,
+        actionType: action.action as PokerActionType,
+        amount: action.amount || 0,
+      })
     } catch (error) {
-      console.error(`[KAN-Trigger] Error saving action:`, error)
+      console.error(`[KAN-Trigger] Error processing action:`, error)
     }
   }
+
+  // 보드 카드 파싱
+  const boardFlop = hand.board?.flop || []
+  const boardTurn = hand.board?.turn || null
+  const boardRiver = hand.board?.river || null
+
+  // Hand 문서 생성
+  const handData: Partial<FirestoreHand> = {
+    streamId,
+    eventId,
+    tournamentId,
+    number: String(hand.handNumber),
+    description: generateHandDescription(hand),
+    timestamp: formatTimestampDisplay(hand), // 사용자 표시용 타임코드
+    videoTimestampStart: hand.absolute_timestamp_start ?? undefined, // 초 단위
+    videoTimestampEnd: hand.absolute_timestamp_end ?? undefined, // 초 단위
+    potSize: hand.pot || 0,
+    boardFlop: boardFlop.length > 0 ? boardFlop : undefined,
+    boardTurn: boardTurn || undefined,
+    boardRiver: boardRiver || undefined,
+    // 블라인드 정보 파싱 (stakes에서)
+    smallBlind: parseBlindFromStakes(hand.stakes, 'sb'),
+    bigBlind: parseBlindFromStakes(hand.stakes, 'bb'),
+    ante: parseBlindFromStakes(hand.stakes, 'ante'),
+    players,
+    actions,
+    engagement: {
+      likesCount: 0,
+      bookmarksCount: 0,
+    },
+    createdAt: FieldValue.serverTimestamp() as any,
+    updatedAt: FieldValue.serverTimestamp() as any,
+  }
+
+  // Hands 컬렉션에 저장
+  await adminFirestore.collection(COLLECTION_PATHS.HANDS).add(handData)
 }
 
 /**
@@ -448,22 +460,6 @@ function generateHandDescription(hand: any): string {
     .join(' / ')
 
   return descriptions || 'Hand'
-}
-
-/**
- * 보드 카드 포맷팅
- */
-function formatBoardCards(board: any): string {
-  if (!board) return ''
-
-  const cards: string[] = []
-  if (board.flop && Array.isArray(board.flop)) {
-    cards.push(...board.flop)
-  }
-  if (board.turn) cards.push(board.turn)
-  if (board.river) cards.push(board.river)
-
-  return cards.join(' ')
 }
 
 /**
