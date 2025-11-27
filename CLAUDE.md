@@ -65,10 +65,10 @@ npm run admin -- --action=check-jobs      # 분석 작업 상태
 | Auth | Firebase Auth (Google OAuth) |
 | Search | Algolia (전체텍스트 검색) |
 | AI | Vertex AI Gemini 2.5 Flash |
-| Background Jobs | Cloud Run + Cloud Tasks |
+| Background Jobs | Cloud Run + Cloud Tasks (primary), Trigger.dev (fallback) |
 | Video | GCS 직접 업로드, fluent-ffmpeg |
 | Functions | Firebase Cloud Functions (트리거) |
-| Hosting | Firebase Hosting (Cloud Build CI/CD) |
+| Hosting | Firebase Hosting (GitHub Actions CI/CD) |
 
 **Node.js**: >=22.0.0
 **패키지 매니저**: npm (pnpm 사용 금지)
@@ -140,7 +140,8 @@ Tournament → Event → Stream → Hand
 | `cloud-run/segment-analyzer/` | Cloud Run - FFmpeg + Gemini 분석 |
 | `lib/video/vertex-analyzer.ts` | Vertex AI Gemini 분석 및 JSON 파싱 |
 | `lib/ai/prompts.ts` | Platform별 AI 프롬프트 (EPT/Triton) |
-| `lib/hooks/use-analysis-job.ts` | React Query Firestore 폴링 (2초) |
+| `lib/hooks/use-cloud-run-job.ts` | Cloud Run 작업 진행률 폴링 |
+| `lib/hooks/use-trigger-job.ts` | Trigger.dev 작업 폴링 (fallback) |
 
 **특징**:
 - GCS gs:// URI 직접 전달 (대용량 최적화)
@@ -212,6 +213,29 @@ UPSTASH_REDIS_REST_URL=your-url      # Rate Limiting
 
 ---
 
+## CI/CD
+
+**GitHub Actions** (`main` 브랜치 push 시 자동 배포):
+```
+.github/workflows/firebase-deploy.yml
+```
+
+**배포 흐름**:
+```
+Git Push (main) → GitHub Actions → npm ci → npm run build → firebase deploy
+                                                              ↓
+                               https://templar-archives-index.web.app
+```
+
+**GitHub Secrets 필요**:
+- `FIREBASE_TOKEN`, `FIREBASE_SERVICE_ACCOUNT`
+- `GOOGLE_APPLICATION_CREDENTIALS`
+- `NEXT_PUBLIC_FIREBASE_*` (6개)
+- `NEXT_PUBLIC_SUPABASE_*` (legacy, 3개)
+- `CLOUD_RUN_ORCHESTRATOR_URL`, `TRIGGER_SECRET_KEY`, `GOOGLE_API_KEY`
+
+---
+
 ## 디버깅
 
 ```bash
@@ -227,6 +251,10 @@ firebase functions:log
 # Cloud Run 로그
 gcloud run services logs read video-orchestrator --region=asia-northeast3
 gcloud run services logs read segment-analyzer --region=asia-northeast3
+
+# GitHub Actions 로그
+gh run list
+gh run view <run-id> --log-failed
 ```
 
 ---
@@ -245,4 +273,4 @@ gcloud run services logs read segment-analyzer --region=asia-northeast3
 ---
 
 **마지막 업데이트**: 2025-11-27
-**문서 버전**: 4.1 (Firebase Hosting + Cloud Build)
+**문서 버전**: 4.2 (Firebase Hosting + GitHub Actions CI/CD)
