@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, Newspaper, Radio, Folder, Archive } from "lucide-react"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
+import type { AuthUser } from "@/lib/auth"
 import type { Profile } from "@/lib/types/profile"
 
 interface HeaderUserMenuProps {
-  user: SupabaseUser
+  user: AuthUser
   profile: Profile | null
   isUserAdmin: boolean
   isUserReporter: boolean

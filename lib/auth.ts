@@ -33,6 +33,16 @@ export type AuthUser = {
   displayName: string | null
   /** 프로필 사진 URL */
   photoURL: string | null
+  /**
+   * Supabase 호환용 user_metadata
+   * 기존 컴포넌트에서 user.user_metadata.avatar_url 등으로 접근 가능
+   */
+  user_metadata?: {
+    avatar_url?: string | null
+    full_name?: string | null
+    name?: string | null
+    picture?: string | null
+  }
 }
 
 /**
@@ -63,6 +73,13 @@ function toAuthUser(user: User | null): AuthUser | null {
     email: user.email,
     displayName: user.displayName,
     photoURL: user.photoURL,
+    // Supabase 호환용 user_metadata 매핑
+    user_metadata: {
+      avatar_url: user.photoURL,
+      full_name: user.displayName,
+      name: user.displayName,
+      picture: user.photoURL,
+    },
   }
 }
 

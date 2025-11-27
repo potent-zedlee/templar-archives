@@ -42,7 +42,7 @@ export type UploadStatus = 'none' | 'uploading' | 'uploaded' | 'analyzing' | 'co
 /**
  * 사용자 역할
  */
-export type UserRole = 'admin' | 'high_templar' | 'arbiter' | 'user'
+export type UserRole = 'admin' | 'high_templar' | 'arbiter' | 'reporter' | 'user'
 
 /**
  * 포커 포지션

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, Newspaper, Radio, Folder, Archive } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
+import type { AuthUser } from "@/lib/auth"
 import type { Profile } from "@/lib/types/profile"
 import type { NavLink } from "./HeaderDesktopNav"
 
@@ -14,7 +14,7 @@ interface HeaderMobileMenuProps {
   isOpen: boolean
   onClose: () => void
   navLinks: NavLink[]
-  user: SupabaseUser | null
+  user: AuthUser | null
   profile: Profile | null
   isUserAdmin: boolean
   isUserReporter: boolean
