@@ -8,10 +8,25 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { adminFirestore } from '@/lib/firebase-admin'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  type Timestamp,
+  serverTimestamp,
+  type QueryConstraint,
+  getCountFromServer
+} from 'firebase/firestore'
+import { firestore } from '@/lib/firebase'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'
 import type { FirestoreCategory } from '@/lib/firestore-types'
-import type { Timestamp } from 'firebase-admin/firestore'
 import { toast } from 'sonner'
 
 // ==================== Types ====================
@@ -60,18 +75,20 @@ export interface CategoryUpdateInput extends Partial<Omit<CategoryInput, 'id'>> 
 /**
  * Firestore Timestamp을 ISO 문자열로 변환
  */
-function timestampToString(timestamp: Timestamp | undefined): string {
+function timestampToString(timestamp: any): string {
   if (!timestamp) return new Date().toISOString()
-  return timestamp.toDate().toISOString()
+  if (timestamp?.toDate) return timestamp.toDate().toISOString()
+  if (timestamp instanceof Date) return timestamp.toISOString()
+  return new Date().toISOString()
 }
 
 /**
  * FirestoreCategory을 TournamentCategory로 변환
  */
-function mapFirestoreCategory(doc: FirebaseFirestore.DocumentSnapshot): TournamentCategory {
-  const data = doc.data() as any
+function mapFirestoreCategory(snapshot: any): TournamentCategory {
+  const data = snapshot.data()
   return {
-    id: doc.id,
+    id: snapshot.id,
     name: data.name || '',
     display_name: data.displayName || data.name || '',
     short_name: data.shortName || null,
@@ -98,19 +115,18 @@ async function getAllCategoriesFirestore(
   gameType?: GameType
 ): Promise<TournamentCategory[]> {
   try {
-    let query = adminFirestore
-      .collection(COLLECTION_PATHS.CATEGORIES)
-      .orderBy('name', 'asc')
+    const constraints: QueryConstraint[] = [orderBy('name', 'asc')]
 
     if (!includeInactive) {
-      query = query.where('isActive', '==', true) as FirebaseFirestore.Query
+      constraints.push(where('isActive', '==', true))
     }
 
     if (gameType) {
-      query = query.where('gameType', 'in', [gameType, 'both']) as FirebaseFirestore.Query
+      constraints.push(where('gameType', 'in', [gameType, 'both']))
     }
 
-    const snapshot = await query.get()
+    const q = query(collection(firestore, COLLECTION_PATHS.CATEGORIES), ...constraints)
+    const snapshot = await getDocs(q)
     return snapshot.docs.map(mapFirestoreCategory)
   } catch (error) {
     console.error('Error fetching categories from Firestore:', error)
@@ -141,13 +157,14 @@ async function getCategoriesByRegionFirestore(
  */
 async function getCategoryByIdFirestore(id: string): Promise<TournamentCategory | null> {
   try {
-    const doc = await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(id).get()
+    const docRef = doc(firestore, COLLECTION_PATHS.CATEGORIES, id)
+    const docSnap = await getDoc(docRef)
 
-    if (!doc.exists) {
+    if (!docSnap.exists()) {
       return null
     }
 
-    return mapFirestoreCategory(doc)
+    return mapFirestoreCategory(docSnap)
   } catch (error) {
     console.error('Error fetching category by ID from Firestore:', error)
     throw error
@@ -159,12 +176,11 @@ async function getCategoryByIdFirestore(id: string): Promise<TournamentCategory 
  */
 async function getCategoryUsageCountFirestore(categoryId: string): Promise<number> {
   try {
-    const snapshot = await adminFirestore
-      .collection(COLLECTION_PATHS.TOURNAMENTS)
-      .where('categoryInfo.id', '==', categoryId)
-      .count()
-      .get()
-
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.TOURNAMENTS),
+      where('categoryInfo.id', '==', categoryId)
+    )
+    const snapshot = await getCountFromServer(q)
     return snapshot.data().count
   } catch (error) {
     console.error('Error fetching category usage count from Firestore:', error)
@@ -177,14 +193,12 @@ async function getCategoryUsageCountFirestore(categoryId: string): Promise<numbe
  */
 async function getAllCategoryUsageCountsFirestore(): Promise<Record<string, number>> {
   try {
-    const snapshot = await adminFirestore
-      .collection(COLLECTION_PATHS.TOURNAMENTS)
-      .select('categoryInfo.id')
-      .get()
+    const q = query(collection(firestore, COLLECTION_PATHS.TOURNAMENTS))
+    const snapshot = await getDocs(q)
 
     const counts: Record<string, number> = {}
-    snapshot.docs.forEach((doc) => {
-      const data = doc.data()
+    snapshot.docs.forEach((docSnap) => {
+      const data = docSnap.data()
       const categoryId = data?.categoryInfo?.id
       if (categoryId) {
         counts[categoryId] = (counts[categoryId] || 0) + 1
@@ -201,17 +215,18 @@ async function getAllCategoryUsageCountsFirestore(): Promise<Record<string, numb
 /**
  * 검색 (이름, display_name, aliases로 검색)
  */
-async function searchCategoriesFirestore(query: string): Promise<TournamentCategory[]> {
+async function searchCategoriesFirestore(searchQuery: string): Promise<TournamentCategory[]> {
   try {
-    if (!query.trim()) return []
+    if (!searchQuery.trim()) return []
 
-    const lowerQuery = query.toLowerCase()
+    const lowerQuery = searchQuery.toLowerCase()
 
     // Firestore는 부분 일치 검색을 직접 지원하지 않으므로 모든 활성 카테고리를 가져와서 필터링
-    const snapshot = await adminFirestore
-      .collection(COLLECTION_PATHS.CATEGORIES)
-      .where('isActive', '==', true)
-      .get()
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.CATEGORIES),
+      where('isActive', '==', true)
+    )
+    const snapshot = await getDocs(q)
 
     const categories = snapshot.docs.map(mapFirestoreCategory)
 
@@ -241,7 +256,6 @@ async function createCategoryFirestore(input: CategoryInput): Promise<Tournament
       throw new Error(`카테고리 ID "${input.id}"가 이미 존재합니다.`)
     }
 
-    const now = new Date()
     const categoryData = {
       name: input.name,
       displayName: input.display_name,
@@ -255,14 +269,15 @@ async function createCategoryFirestore(input: CategoryInput): Promise<Tournament
       themeText: input.theme_text || null,
       themeShadow: input.theme_shadow || null,
       order: 0, // 기본값
-      createdAt: now,
-      updatedAt: now,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     }
 
-    await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(input.id).set(categoryData)
+    const docRef = doc(firestore, COLLECTION_PATHS.CATEGORIES, input.id)
+    await setDoc(docRef, categoryData)
 
-    const doc = await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(input.id).get()
-    return mapFirestoreCategory(doc)
+    const docSnap = await getDoc(docRef)
+    return mapFirestoreCategory(docSnap)
   } catch (error) {
     console.error('Error creating category in Firestore:', error)
     throw error
@@ -278,7 +293,7 @@ async function updateCategoryFirestore(
 ): Promise<TournamentCategory> {
   try {
     const updateData: any = {
-      updatedAt: new Date(),
+      updatedAt: serverTimestamp(),
     }
 
     if (input.name !== undefined) updateData.name = input.name
@@ -293,14 +308,15 @@ async function updateCategoryFirestore(
     if (input.theme_text !== undefined) updateData.themeText = input.theme_text || null
     if (input.theme_shadow !== undefined) updateData.themeShadow = input.theme_shadow || null
 
-    await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(id).update(updateData)
+    const docRef = doc(firestore, COLLECTION_PATHS.CATEGORIES, id)
+    await updateDoc(docRef, updateData)
 
-    const doc = await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(id).get()
-    if (!doc.exists) {
+    const docSnap = await getDoc(docRef)
+    if (!docSnap.exists()) {
       throw new Error(`카테고리 ID "${id}"를 찾을 수 없습니다.`)
     }
 
-    return mapFirestoreCategory(doc)
+    return mapFirestoreCategory(docSnap)
   } catch (error) {
     console.error('Error updating category in Firestore:', error)
     throw error
@@ -318,7 +334,8 @@ async function deleteCategoryFirestore(id: string): Promise<void> {
       throw new Error(`카테고리가 ${usageCount}개의 토너먼트에서 사용 중이므로 삭제할 수 없습니다.`)
     }
 
-    await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(id).delete()
+    const docRef = doc(firestore, COLLECTION_PATHS.CATEGORIES, id)
+    await deleteDoc(docRef)
   } catch (error) {
     console.error('Error deleting category from Firestore:', error)
     throw error

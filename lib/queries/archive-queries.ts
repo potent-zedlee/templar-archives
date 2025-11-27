@@ -7,8 +7,23 @@
  * @module lib/queries/archive-queries
  */
 
+'use client'
+
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
-import { adminFirestore } from '@/lib/firebase-admin'
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  doc,
+  getDoc,
+  updateDoc,
+  limit,
+  startAfter,
+  Timestamp,
+} from 'firebase/firestore'
+import { firestore as db } from '@/lib/firebase'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'
 import type {
   FirestoreTournament,
@@ -18,28 +33,35 @@ import type {
 } from '@/lib/firestore-types'
 import type { Tournament, Hand, UnsortedVideo, Event, Stream } from '@/lib/types/archive'
 import type { ServerSortParams } from '@/lib/types/sorting'
-import type { Timestamp } from 'firebase-admin/firestore'
 
 // ==================== Helper Functions ====================
+
+import type { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase/firestore'
 
 /**
  * Firestore Timestamp을 ISO 문자열로 변환
  */
-function timestampToString(timestamp: Timestamp | undefined): string | undefined {
+function timestampToString(timestamp: Timestamp | { toDate: () => Date } | undefined | null): string | undefined {
   if (!timestamp) return undefined
-  return timestamp.toDate().toISOString()
+  if (timestamp instanceof Timestamp) {
+    return timestamp.toDate().toISOString()
+  }
+  if (typeof timestamp === 'object' && 'toDate' in timestamp) {
+    return timestamp.toDate().toISOString()
+  }
+  return undefined
 }
 
 /**
  * FirestoreTournament을 Tournament 타입으로 변환
  */
 function mapFirestoreTournament(
-  doc: FirebaseFirestore.DocumentSnapshot,
+  docSnap: DocumentSnapshot | QueryDocumentSnapshot,
   events: Event[] = []
 ): Tournament {
-  const data = doc.data() as FirestoreTournament
+  const data = docSnap.data() as FirestoreTournament
   return {
-    id: doc.id,
+    id: docSnap.id,
     name: data.name,
     category: data.category,
     category_id: data.categoryInfo?.id,
@@ -63,13 +85,13 @@ function mapFirestoreTournament(
  * FirestoreEvent을 Event 타입으로 변환
  */
 function mapFirestoreEvent(
-  doc: FirebaseFirestore.DocumentSnapshot,
+  docSnap: DocumentSnapshot | QueryDocumentSnapshot,
   tournamentId: string,
   streams: Stream[] = []
 ): Event {
-  const data = doc.data() as FirestoreEvent
+  const data = docSnap.data() as FirestoreEvent
   return {
-    id: doc.id,
+    id: docSnap.id,
     tournament_id: tournamentId,
     name: data.name,
     date: timestampToString(data.date) || '',
@@ -93,12 +115,12 @@ function mapFirestoreEvent(
  * FirestoreStream을 Stream 타입으로 변환
  */
 function mapFirestoreStream(
-  doc: FirebaseFirestore.DocumentSnapshot,
+  docSnap: DocumentSnapshot | QueryDocumentSnapshot,
   eventId: string
 ): Stream {
-  const data = doc.data() as FirestoreStream
+  const data = docSnap.data() as FirestoreStream
   return {
-    id: doc.id,
+    id: docSnap.id,
     event_id: eventId,
     name: data.name,
     description: data.description,
@@ -122,10 +144,10 @@ function mapFirestoreStream(
 /**
  * FirestoreHand을 Hand 타입으로 변환
  */
-function mapFirestoreHand(doc: FirebaseFirestore.DocumentSnapshot): Hand {
-  const data = doc.data() as FirestoreHand
+function mapFirestoreHand(docSnap: DocumentSnapshot | QueryDocumentSnapshot): Hand {
+  const data = docSnap.data() as FirestoreHand
   return {
-    id: doc.id,
+    id: docSnap.id,
     day_id: data.streamId,
     number: data.number,
     description: data.description,
@@ -152,7 +174,7 @@ function mapFirestoreHand(doc: FirebaseFirestore.DocumentSnapshot): Hand {
     created_at: timestampToString(data.createdAt),
     hand_players: data.players?.map((p) => ({
       id: p.playerId,
-      hand_id: doc.id,
+      hand_id: docSnap.id,
       player_id: p.playerId,
       poker_position: p.position,
       seat: p.seat,
@@ -201,16 +223,12 @@ async function fetchTournamentsTreeFirestore(
 ): Promise<Tournament[]> {
   try {
     // 1. 토너먼트 목록 조회
-    let tournamentsQuery = adminFirestore
-      .collection(COLLECTION_PATHS.TOURNAMENTS)
-      .orderBy('startDate', 'desc')
+    const tournamentsRef = collection(db, COLLECTION_PATHS.TOURNAMENTS)
+    const tournamentsQuery = gameType
+      ? query(tournamentsRef, where('gameType', '==', gameType), orderBy('startDate', 'desc'))
+      : query(tournamentsRef, orderBy('startDate', 'desc'))
 
-    // gameType 필터 적용
-    if (gameType) {
-      tournamentsQuery = tournamentsQuery.where('gameType', '==', gameType) as FirebaseFirestore.Query
-    }
-
-    const tournamentsSnapshot = await tournamentsQuery.get()
+    const tournamentsSnapshot = await getDocs(tournamentsQuery)
 
     // 2. 각 토너먼트의 이벤트와 스트림을 병렬로 조회
     const tournamentPromises = tournamentsSnapshot.docs.map(async (tournamentDoc) => {
@@ -222,10 +240,9 @@ async function fetchTournamentsTreeFirestore(
       }
 
       // 이벤트 조회
-      const eventsSnapshot = await adminFirestore
-        .collection(COLLECTION_PATHS.EVENTS(tournamentDoc.id))
-        .orderBy('date', 'desc')
-        .get()
+      const eventsRef = collection(db, COLLECTION_PATHS.EVENTS(tournamentDoc.id))
+      const eventsQuery = query(eventsRef, orderBy('date', 'desc'))
+      const eventsSnapshot = await getDocs(eventsQuery)
 
       const events: Event[] = []
 
@@ -239,10 +256,9 @@ async function fetchTournamentsTreeFirestore(
         }
 
         // 스트림 조회
-        const streamsSnapshot = await adminFirestore
-          .collection(COLLECTION_PATHS.STREAMS(tournamentDoc.id, eventDoc.id))
-          .orderBy('publishedAt', 'desc')
-          .get()
+        const streamsRef = collection(db, COLLECTION_PATHS.STREAMS(tournamentDoc.id, eventDoc.id))
+        const streamsQuery = query(streamsRef, orderBy('publishedAt', 'desc'))
+        const streamsSnapshot = await getDocs(streamsQuery)
 
         const streams: Stream[] = streamsSnapshot.docs
           .map((streamDoc) => {
@@ -351,11 +367,9 @@ export function useTournamentsQuery(
  */
 async function fetchHandsByStreamFirestore(streamId: string): Promise<Hand[]> {
   try {
-    const handsSnapshot = await adminFirestore
-      .collection(COLLECTION_PATHS.HANDS)
-      .where('streamId', '==', streamId)
-      .orderBy('createdAt', 'asc')
-      .get()
+    const handsRef = collection(db, COLLECTION_PATHS.HANDS)
+    const handsQuery = query(handsRef, where('streamId', '==', streamId), orderBy('createdAt', 'asc'))
+    const handsSnapshot = await getDocs(handsQuery)
 
     return handsSnapshot.docs.map(mapFirestoreHand)
   } catch (error) {
@@ -398,24 +412,30 @@ export function useHandsInfiniteQuery(streamId: string | null) {
       if (!streamId) return { hands: [], nextCursor: null }
 
       // Firestore 페이지네이션: startAfter 사용
-      let query = adminFirestore
-        .collection(COLLECTION_PATHS.HANDS)
-        .where('streamId', '==', streamId)
-        .orderBy('createdAt', 'asc')
-        .limit(HANDS_PER_PAGE)
+      const handsRef = collection(db, COLLECTION_PATHS.HANDS)
+      let handsQuery = query(
+        handsRef,
+        where('streamId', '==', streamId),
+        orderBy('createdAt', 'asc'),
+        limit(HANDS_PER_PAGE)
+      )
 
       // 이전 페이지의 마지막 문서부터 시작
       if (pageParam) {
-        const lastDoc = await adminFirestore
-          .collection(COLLECTION_PATHS.HANDS)
-          .doc(pageParam as string)
-          .get()
-        if (lastDoc.exists) {
-          query = query.startAfter(lastDoc)
+        const lastDocRef = doc(db, COLLECTION_PATHS.HANDS, pageParam as string)
+        const lastDocSnap = await getDoc(lastDocRef)
+        if (lastDocSnap.exists()) {
+          handsQuery = query(
+            handsRef,
+            where('streamId', '==', streamId),
+            orderBy('createdAt', 'asc'),
+            startAfter(lastDocSnap),
+            limit(HANDS_PER_PAGE)
+          )
         }
       }
 
-      const snapshot = await query.get()
+      const snapshot = await getDocs(handsQuery)
       const hands = snapshot.docs.map(mapFirestoreHand)
 
       // 다음 페이지 커서: 마지막 문서 ID
@@ -446,15 +466,14 @@ export function useHandsInfiniteQuery(streamId: string | null) {
 async function fetchUnsortedVideosFirestore(): Promise<UnsortedVideo[]> {
   try {
     // unsortedVideos 컬렉션 조회 (eventId가 없는 스트림)
-    const snapshot = await adminFirestore
-      .collection('unsortedVideos')
-      .orderBy('createdAt', 'desc')
-      .get()
+    const unsortedRef = collection(db, 'unsortedVideos')
+    const unsortedQuery = query(unsortedRef, orderBy('createdAt', 'desc'))
+    const snapshot = await getDocs(unsortedQuery)
 
-    return snapshot.docs.map((doc) => {
-      const data = doc.data()
+    return snapshot.docs.map((docSnap) => {
+      const data = docSnap.data()
       return {
-        id: doc.id,
+        id: docSnap.id,
         name: data.name || '',
         video_url: data.videoUrl,
         video_file: data.videoFile,
@@ -551,7 +570,8 @@ export function useFavoriteHandMutation(streamId: string | null) {
   return useMutation({
     mutationFn: async ({ handId, favorite }: { handId: string; favorite: boolean }) => {
       // Firestore에서 핸드 문서 업데이트
-      await adminFirestore.collection(COLLECTION_PATHS.HANDS).doc(handId).update({
+      const handRef = doc(db, COLLECTION_PATHS.HANDS, handId)
+      await updateDoc(handRef, {
         favorite,
         updatedAt: new Date(),
       })
@@ -630,10 +650,9 @@ export function useStreamPlayersQuery(streamId: string | null) {
       if (!streamId) return []
 
       // 해당 스트림의 핸드 조회
-      const handsSnapshot = await adminFirestore
-        .collection(COLLECTION_PATHS.HANDS)
-        .where('streamId', '==', streamId)
-        .get()
+      const handsRef = collection(db, COLLECTION_PATHS.HANDS)
+      const handsQuery = query(handsRef, where('streamId', '==', streamId))
+      const handsSnapshot = await getDocs(handsQuery)
 
       // 플레이어 중복 제거 및 핸드 수 계산
       const playerMap = new Map<
@@ -658,10 +677,8 @@ export function useStreamPlayersQuery(streamId: string | null) {
             existing.hand_count++
           } else {
             // 플레이어 상세 정보 조회
-            const playerDoc = await adminFirestore
-              .collection(COLLECTION_PATHS.PLAYERS)
-              .doc(player.playerId)
-              .get()
+            const playerRef = doc(db, COLLECTION_PATHS.PLAYERS, player.playerId)
+            const playerDoc = await getDoc(playerRef)
 
             const playerData = playerDoc.data()
             playerMap.set(player.playerId, {

@@ -22,8 +22,7 @@ import {
   QueryDocumentSnapshot,
   serverTimestamp
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
-import { auth } from '@/lib/firebase'
+import { firestore as db, auth } from '@/lib/firebase'
 
 // Firestore converter for News
 const newsConverter = {

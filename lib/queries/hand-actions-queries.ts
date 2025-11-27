@@ -5,7 +5,7 @@
  * Firestore에서 actions는 hands 문서 내 embedded 배열
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tantml/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   getHandActions,
   getHandActionsByStreet,
@@ -20,7 +20,12 @@ import {
   type Street,
 } from '@/lib/hand-actions'
 import { playersKeys } from '@/lib/queries/players-queries'
-import { handsKeys } from '@/lib/queries/hands-queries'
+import { archiveKeys } from '@/lib/queries/archive-queries'
+
+// handsKeys alias for backward compatibility
+const handsKeys = {
+  byId: (handId: string) => [...archiveKeys.all, 'hand', handId] as const,
+}
 
 // ==================== Query Keys ====================
 

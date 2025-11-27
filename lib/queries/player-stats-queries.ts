@@ -1,16 +1,16 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type {
+  PlayerStatistics,
+  PositionStats,
+} from '@/lib/player-stats'
 import {
-  calculatePlayerStatistics,
-  calculatePositionStats,
   classifyPlayStyle,
   getPlayStyleDescription,
   getPlayStyleColor,
-  type PlayerStatistics,
-  type PositionStats,
   type PlayStyle,
-} from '@/lib/player-stats'
+} from '@/lib/player-stats-utils'
 
 /**
  * 플레이어 통계 조회 훅
