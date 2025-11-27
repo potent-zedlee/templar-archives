@@ -7,7 +7,6 @@
  * @module lib/notifications
  */
 
-import { adminFirestore } from '@/lib/firebase-admin'
 import { firestore } from '@/lib/firebase'
 import {
   collection,
