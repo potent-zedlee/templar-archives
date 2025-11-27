@@ -65,7 +65,8 @@ export function detectErrorCategory(error: Error): ErrorCategory {
   if (
     message.includes('database') ||
     message.includes('postgres') ||
-    message.includes('supabase') ||
+    message.includes('firebase') ||
+    message.includes('firestore') ||
     message.includes('sql')
   ) {
     return ErrorCategory.DATABASE
