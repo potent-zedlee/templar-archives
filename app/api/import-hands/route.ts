@@ -358,6 +358,7 @@ export async function POST(request: NextRequest) {
           boardFlop: hand.board_cards?.slice(0, 3),
           boardTurn: hand.board_cards?.[3],
           boardRiver: hand.board_cards?.[4],
+          playerIds: embeddedPlayers.map(p => p.playerId).filter(Boolean),
           players: embeddedPlayers,
           actions: embeddedActions,
           engagement: {
