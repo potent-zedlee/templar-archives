@@ -4,6 +4,7 @@
  * 선택된 Stream들에 대한 대량 작업
  * - Publish All
  * - Unpublish All
+ * - 여러 이벤트의 스트림들을 이벤트별로 그룹화하여 처리
  */
 
 'use client'
@@ -16,12 +17,14 @@ import { bulkPublishStreams, bulkUnpublishStreams } from '@/app/actions/admin/ar
 
 interface BulkActionsProps {
   selectedStreamIds: string[]
+  selectedStreamMeta: Map<string, {tournamentId: string, eventId: string}>
   onSuccess?: () => void
   onClearSelection?: () => void
 }
 
 export function BulkActions({
   selectedStreamIds,
+  selectedStreamMeta,
   onSuccess,
   onClearSelection
 }: BulkActionsProps) {
@@ -33,14 +36,45 @@ export function BulkActions({
   const handleBulkPublish = async () => {
     setPublishing(true)
     try {
-      const result = await bulkPublishStreams(selectedStreamIds)
+      // 이벤트별로 스트림 그룹화
+      const streamsByEvent = new Map<string, {tournamentId: string, eventId: string, streamIds: string[]}>()
 
-      if (result.success) {
-        toast.success(`${selectedStreamIds.length} streams published successfully`)
+      selectedStreamIds.forEach(streamId => {
+        const meta = selectedStreamMeta.get(streamId)
+        if (!meta) return
+
+        const key = `${meta.tournamentId}:${meta.eventId}`
+        if (!streamsByEvent.has(key)) {
+          streamsByEvent.set(key, {
+            tournamentId: meta.tournamentId,
+            eventId: meta.eventId,
+            streamIds: []
+          })
+        }
+        streamsByEvent.get(key)!.streamIds.push(streamId)
+      })
+
+      // 각 이벤트별로 bulk publish 실행
+      let successCount = 0
+      let errorCount = 0
+
+      for (const group of streamsByEvent.values()) {
+        const result = await bulkPublishStreams(group.tournamentId, group.eventId, group.streamIds)
+        if (result.success) {
+          successCount += group.streamIds.length
+        } else {
+          errorCount += group.streamIds.length
+          console.error('Failed to publish group:', result.error)
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} streams published successfully`)
         onSuccess?.()
         onClearSelection?.()
-      } else {
-        toast.error(result.error || 'Failed to publish streams')
+      }
+      if (errorCount > 0) {
+        toast.error(`Failed to publish ${errorCount} streams`)
       }
     } catch (error) {
       console.error('Error bulk publishing:', error)
@@ -53,14 +87,45 @@ export function BulkActions({
   const handleBulkUnpublish = async () => {
     setUnpublishing(true)
     try {
-      const result = await bulkUnpublishStreams(selectedStreamIds)
+      // 이벤트별로 스트림 그룹화
+      const streamsByEvent = new Map<string, {tournamentId: string, eventId: string, streamIds: string[]}>()
 
-      if (result.success) {
-        toast.success(`${selectedStreamIds.length} streams unpublished successfully`)
+      selectedStreamIds.forEach(streamId => {
+        const meta = selectedStreamMeta.get(streamId)
+        if (!meta) return
+
+        const key = `${meta.tournamentId}:${meta.eventId}`
+        if (!streamsByEvent.has(key)) {
+          streamsByEvent.set(key, {
+            tournamentId: meta.tournamentId,
+            eventId: meta.eventId,
+            streamIds: []
+          })
+        }
+        streamsByEvent.get(key)!.streamIds.push(streamId)
+      })
+
+      // 각 이벤트별로 bulk unpublish 실행
+      let successCount = 0
+      let errorCount = 0
+
+      for (const group of streamsByEvent.values()) {
+        const result = await bulkUnpublishStreams(group.tournamentId, group.eventId, group.streamIds)
+        if (result.success) {
+          successCount += group.streamIds.length
+        } else {
+          errorCount += group.streamIds.length
+          console.error('Failed to unpublish group:', result.error)
+        }
+      }
+
+      if (successCount > 0) {
+        toast.success(`${successCount} streams unpublished successfully`)
         onSuccess?.()
         onClearSelection?.()
-      } else {
-        toast.error(result.error || 'Failed to unpublish streams')
+      }
+      if (errorCount > 0) {
+        toast.error(`Failed to unpublish ${errorCount} streams`)
       }
     } catch (error) {
       console.error('Error bulk unpublishing:', error)

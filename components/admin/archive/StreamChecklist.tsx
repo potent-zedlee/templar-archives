@@ -174,9 +174,14 @@ export function StreamChecklist({
 
   // Publish 핸들러
   const handlePublish = async () => {
+    if (!tournamentId || !eventId) {
+      toast.error('Missing tournament or event information')
+      return
+    }
+
     setPublishing(true)
     try {
-      const result = await publishStream(streamId)
+      const result = await publishStream(tournamentId, eventId, streamId)
 
       if (result.success) {
         toast.success(`"${streamName}" published successfully`)
@@ -195,9 +200,14 @@ export function StreamChecklist({
 
   // Unpublish 핸들러
   const handleUnpublish = async () => {
+    if (!tournamentId || !eventId) {
+      toast.error('Missing tournament or event information')
+      return
+    }
+
     setPublishing(true)
     try {
-      const result = await unpublishStream(streamId)
+      const result = await unpublishStream(tournamentId, eventId, streamId)
 
       if (result.success) {
         toast.success(`"${streamName}" unpublished successfully`)

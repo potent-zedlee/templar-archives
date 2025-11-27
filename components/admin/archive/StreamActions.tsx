@@ -25,6 +25,8 @@ interface StreamActionsProps {
   streamId: string
   streamName: string
   currentStatus: ContentStatus
+  tournamentId: string
+  eventId: string
   videoUrl?: string
   stream?: Stream
   onStatusChange?: () => void
@@ -35,6 +37,8 @@ export function StreamActions({
   streamId,
   streamName,
   currentStatus,
+  tournamentId,
+  eventId,
   videoUrl,
   stream,
   onStatusChange,
@@ -98,6 +102,8 @@ export function StreamActions({
         streamId={streamId}
         streamName={streamName}
         currentStatus={currentStatus}
+        tournamentId={tournamentId}
+        eventId={eventId}
         onStatusChange={onStatusChange}
       />
     </div>

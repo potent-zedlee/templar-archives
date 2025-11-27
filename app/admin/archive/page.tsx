@@ -73,6 +73,7 @@ export default function AdminArchivePage() {
   const [gameTypeFilter, setGameTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState<ContentStatus | 'all'>('all')
   const [selectedStreamIds, setSelectedStreamIds] = useState<Set<string>>(new Set())
+  const [selectedStreamMeta, setSelectedStreamMeta] = useState<Map<string, {tournamentId: string, eventId: string}>>(new Map())
   const [sortField, setSortField] = useState<AdminArchiveSortField>('date')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [_userEmail, setUserEmail] = useState<string | null>(null)
@@ -592,6 +593,7 @@ export default function AdminArchivePage() {
       {selectedStreamIds.size > 0 && (
         <BulkActions
           selectedStreamIds={Array.from(selectedStreamIds)}
+          selectedStreamMeta={selectedStreamMeta}
           onSuccess={() => {
             // Reload streams for expanded subevents
             for (const subEventId of expandedSubEvents) {
@@ -603,7 +605,10 @@ export default function AdminArchivePage() {
               }
             }
           }}
-          onClearSelection={() => setSelectedStreamIds(new Set())}
+          onClearSelection={() => {
+            setSelectedStreamIds(new Set())
+            setSelectedStreamMeta(new Map())
+          }}
         />
       )}
 
@@ -945,12 +950,19 @@ export default function AdminArchivePage() {
                                       onChange={(e) => {
                                         e.stopPropagation()
                                         const newSelected = new Set(selectedStreamIds)
+                                        const newMeta = new Map(selectedStreamMeta)
                                         if (e.target.checked) {
                                           newSelected.add(stream.id)
+                                          newMeta.set(stream.id, {
+                                            tournamentId: tournament.id,
+                                            eventId: subEvent.id
+                                          })
                                         } else {
                                           newSelected.delete(stream.id)
+                                          newMeta.delete(stream.id)
                                         }
                                         setSelectedStreamIds(newSelected)
+                                        setSelectedStreamMeta(newMeta)
                                       }}
                                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                     />
@@ -989,6 +1001,8 @@ export default function AdminArchivePage() {
                                         streamId={stream.id}
                                         streamName={stream.name}
                                         currentStatus={streamStatus}
+                                        tournamentId={tournament.id}
+                                        eventId={subEvent.id}
                                         videoUrl={stream.video_url}
                                         stream={stream}
                                         onStatusChange={() => loadStreams(tournament.id, subEvent.id)}
