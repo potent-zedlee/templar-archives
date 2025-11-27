@@ -1,5 +1,15 @@
 "use client"
 
+/**
+ * Hand Comments Component
+ *
+ * 핸드에 대한 댓글 표시 및 작성
+ * Firestore 버전으로 마이그레이션됨
+ *
+ * Note: 댓글 기능은 아직 Firestore에 완전히 구현되지 않았으므로
+ * 임시로 빈 상태를 표시합니다.
+ */
+
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,13 +19,18 @@ import { ThumbsUp, MessageCircle, Send } from "lucide-react"
 import { useAuth } from "@/components/layout/AuthProvider"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import {
-  fetchComments,
-  fetchReplies,
-  createComment,
-  toggleCommentLike,
-  type Comment,
-} from "@/lib/supabase-community"
+
+// Comment type for display
+type Comment = {
+  id: string
+  content: string
+  authorId: string
+  authorName: string
+  authorAvatar?: string
+  likesCount: number
+  createdAt: string
+  parentCommentId?: string
+}
 
 type HandCommentsProps = {
   handId: string
@@ -53,11 +68,15 @@ export function HandComments({ handId, onCommentsCountChange }: HandCommentsProp
     }
   }, [comments, onCommentsCountChange])
 
+  // TODO: Firestore 댓글 컬렉션 구현 필요
+  // 현재는 스텁으로 빈 배열 반환
   const loadComments = async () => {
     setLoading(true)
     try {
-      const data = await fetchComments({ handId })
-      setComments(data)
+      // Firestore 댓글 로드 (아직 미구현)
+      // const commentsRef = collection(firestore, `hands/${handId}/comments`)
+      // const snapshot = await getDocs(query(commentsRef, orderBy('createdAt', 'desc')))
+      setComments([])
     } catch (error) {
       console.error('댓글 로드 실패:', error)
       toast.error('댓글을 불러오는데 실패했습니다.')
@@ -74,11 +93,11 @@ export function HandComments({ handId, onCommentsCountChange }: HandCommentsProp
     )
 
     try {
-      const replies = await fetchReplies(commentId)
+      // Firestore 답글 로드 (아직 미구현)
       setComments((prev) =>
         prev.map((c) =>
           c.id === commentId
-            ? { ...c, replies, isLoadingReplies: false }
+            ? { ...c, replies: [], isLoadingReplies: false }
             : c
         )
       )
@@ -107,15 +126,11 @@ export function HandComments({ handId, onCommentsCountChange }: HandCommentsProp
 
     setSubmitting(true)
     try {
-      await createComment({
-        hand_id: handId,
-        author_id: user.id,
-        content: newComment.trim(),
-      })
-
-      toast.success('댓글이 작성되었습니다.')
+      // TODO: Firestore 댓글 생성 구현
+      // const commentsRef = collection(firestore, `hands/${handId}/comments`)
+      // await addDoc(commentsRef, { ... })
+      toast.info('댓글 기능은 준비 중입니다.')
       setNewComment("")
-      loadComments()
     } catch (error) {
       console.error('댓글 작성 실패:', error)
       toast.error('댓글 작성에 실패했습니다.')
@@ -139,17 +154,10 @@ export function HandComments({ handId, onCommentsCountChange }: HandCommentsProp
 
     setSubmitting(true)
     try {
-      await createComment({
-        hand_id: handId,
-        parent_comment_id: parentCommentId,
-        author_id: user.id,
-        content: content.trim(),
-      })
-
-      toast.success('답글이 작성되었습니다.')
+      // TODO: Firestore 답글 생성 구현
+      toast.info('답글 기능은 준비 중입니다.')
       setReplyContent((prev) => ({ ...prev, [parentCommentId]: "" }))
       setReplyingTo(null)
-      loadReplies(parentCommentId)
     } catch (error) {
       console.error('답글 작성 실패:', error)
       toast.error('답글 작성에 실패했습니다.')
@@ -166,34 +174,8 @@ export function HandComments({ handId, onCommentsCountChange }: HandCommentsProp
     }
 
     try {
-      const liked = await toggleCommentLike(commentId, user.id)
-
-      // 낙관적 UI 업데이트
-      setComments((prev) =>
-        prev.map((c) => {
-          if (c.id === commentId) {
-            return {
-              ...c,
-              likes_count: c.likes_count + (liked ? 1 : -1),
-              hasLiked: liked,
-            }
-          }
-          // 답글도 업데이트
-          if (c.replies) {
-            const updatedReplies = c.replies.map((r) =>
-              r.id === commentId
-                ? {
-                    ...r,
-                    likes_count: r.likes_count + (liked ? 1 : -1),
-                    hasLiked: liked,
-                  }
-                : r
-            )
-            return { ...c, replies: updatedReplies }
-          }
-          return c
-        })
-      )
+      // TODO: Firestore 좋아요 토글 구현
+      toast.info('좋아요 기능은 준비 중입니다.')
     } catch (error) {
       console.error('좋아요 처리 실패:', error)
       toast.error('좋아요 처리에 실패했습니다.')
@@ -210,17 +192,17 @@ export function HandComments({ handId, onCommentsCountChange }: HandCommentsProp
       >
         <div className="flex gap-3">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={comment.author_avatar} alt={comment.author_name} />
+            <AvatarImage src={comment.authorAvatar} alt={comment.authorName} />
             <AvatarFallback>
-              {comment.author_name.split(" ").map((n) => n[0]).join("")}
+              {comment.authorName.split(" ").map((n) => n[0]).join("")}
             </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-body font-medium">{comment.author_name}</span>
+              <span className="text-body font-medium">{comment.authorName}</span>
               <span className="text-caption text-muted-foreground">
-                {new Date(comment.created_at).toLocaleDateString("ko-KR", {
+                {new Date(comment.createdAt).toLocaleDateString("ko-KR", {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
@@ -242,7 +224,7 @@ export function HandComments({ handId, onCommentsCountChange }: HandCommentsProp
                 onClick={() => handleLikeComment(comment.id)}
               >
                 <ThumbsUp className="h-3 w-3" />
-                <span>{comment.likes_count}</span>
+                <span>{comment.likesCount}</span>
               </Button>
 
               {!isReply && (

@@ -1,15 +1,38 @@
 "use client"
 
+/**
+ * On This Day Component
+ *
+ * 과거 같은 날 진행된 토너먼트 표시
+ * Firestore 버전으로 마이그레이션됨
+ */
+
 import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Calendar, Eye, Video } from "lucide-react"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
-import type { Tournament } from "@/lib/supabase"
+import { firestore } from "@/lib/firebase"
+import {
+  collection,
+  query,
+  getDocs,
+  orderBy,
+  limit,
+  where,
+  Timestamp,
+} from "firebase/firestore"
+import { COLLECTION_PATHS } from "@/lib/firestore-types"
+import type { FirestoreTournament, FirestoreHand } from "@/lib/firestore-types"
 import Link from "next/link"
 
-type HistoricalTournament = Tournament & {
-  hand_count: number
-  years_ago: number
+type HistoricalTournament = {
+  id: string
+  name: string
+  category: string
+  location: string
+  startDate: string
+  endDate: string
+  handCount: number
+  yearsAgo: number
 }
 
 export function OnThisDay() {
@@ -25,57 +48,39 @@ export function OnThisDay() {
   async function loadHistoricalTournaments() {
     setLoading(true)
     try {
-      const supabase = createClientSupabaseClient()
-      const currentMonth = today.getMonth() + 1
-      const currentDay = today.getDate()
-
-      // Get tournaments that started on this day in previous years
-      const { data: tournamentsData, error } = await supabase
-        .from('tournaments')
-        .select('*')
-        .lt('start_date', today.toISOString().split('T')[0])
-        .order('start_date', { ascending: false })
-        .limit(3)
-
-      if (error) throw error
+      // Get tournaments that started before today
+      const tournamentsRef = collection(firestore, COLLECTION_PATHS.TOURNAMENTS)
+      const q = query(
+        tournamentsRef,
+        where('startDate', '<', Timestamp.fromDate(today)),
+        orderBy('startDate', 'desc'),
+        limit(3)
+      )
+      const snapshot = await getDocs(q)
 
       // Calculate years ago and get hand counts
       const enrichedTournaments = await Promise.all(
-        (tournamentsData || []).map(async (tournament) => {
-          const startDate = new Date(tournament.start_date)
+        snapshot.docs.map(async (doc) => {
+          const data = doc.data() as FirestoreTournament
+          const tournamentId = doc.id
+          const startDate = data.startDate?.toDate?.() || new Date()
           const yearsAgo = today.getFullYear() - startDate.getFullYear()
 
-          // Count total hands in this tournament
-          const { data: subEvents } = await supabase
-            .from('sub_events')
-            .select('id')
-            .eq('tournament_id', tournament.id)
-
-          let totalHands = 0
-          if (subEvents) {
-            for (const subEvent of subEvents) {
-              const { data: days } = await supabase
-                .from('streams')
-                .select('id')
-                .eq('sub_event_id', subEvent.id)
-
-              if (days) {
-                for (const day of days) {
-                  const { count } = await supabase
-                    .from('hands')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('day_id', day.id)
-
-                  totalHands += count || 0
-                }
-              }
-            }
-          }
+          // Count hands for this tournament
+          const handsRef = collection(firestore, COLLECTION_PATHS.HANDS)
+          const handsQuery = query(handsRef, where('tournamentId', '==', tournamentId))
+          const handsSnap = await getDocs(handsQuery)
+          const handCount = handsSnap.size
 
           return {
-            ...tournament,
-            hand_count: totalHands,
-            years_ago: yearsAgo
+            id: tournamentId,
+            name: data.name,
+            category: data.category,
+            location: data.location,
+            startDate: startDate.toISOString(),
+            endDate: data.endDate?.toDate?.()?.toISOString() || startDate.toISOString(),
+            handCount,
+            yearsAgo,
           }
         })
       )
@@ -126,7 +131,7 @@ export function OnThisDay() {
                       {tournament.category}
                     </div>
                     <div className="absolute top-2 left-2 rounded-full bg-primary/90 px-3 py-1 text-xs font-bold text-primary-foreground">
-                      {tournament.years_ago} {tournament.years_ago === 1 ? 'year' : 'years'} ago
+                      {tournament.yearsAgo} {tournament.yearsAgo === 1 ? 'year' : 'years'} ago
                     </div>
                   </div>
 
@@ -135,13 +140,13 @@ export function OnThisDay() {
                       {tournament.name}
                     </h3>
                     <p className="mb-3 text-caption text-muted-foreground line-clamp-2">
-                      {tournament.location} • {formatDate(tournament.start_date)} - {formatDate(tournament.end_date)}
+                      {tournament.location} • {formatDate(tournament.startDate)} - {formatDate(tournament.endDate)}
                     </p>
                     <div className="flex items-center justify-between text-caption text-muted-foreground">
-                      <span>{formatDate(tournament.start_date)}</span>
+                      <span>{formatDate(tournament.startDate)}</span>
                       <span className="flex items-center gap-1">
                         <Eye className="h-3 w-3" />
-                        {tournament.hand_count} hands
+                        {tournament.handCount} hands
                       </span>
                     </div>
                   </div>

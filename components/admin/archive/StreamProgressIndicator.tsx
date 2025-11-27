@@ -2,14 +2,16 @@
  * Stream Progress Indicator Component
  *
  * 스트림 분석 진행률 실시간 표시
- * - analysis_jobs 테이블 Realtime 구독
+ * - Firestore analysisJobs 컬렉션 실시간 구독
  * - Progress Bar 및 상태 표시
  */
 
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientSupabaseClient } from '@/lib/supabase-client'
+import { firestore } from '@/lib/firebase'
+import { collection, query, where, orderBy, limit, onSnapshot } from 'firebase/firestore'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
 import { Loader2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
@@ -21,63 +23,46 @@ interface AnalysisJob {
   id: string
   status: 'pending' | 'processing' | 'completed' | 'failed'
   progress: number
-  hands_found: number
-  error_message?: string
+  handsFound: number
+  errorMessage?: string
 }
-
-const supabase = createClientSupabaseClient()
 
 export function StreamProgressIndicator({ streamId }: StreamProgressIndicatorProps) {
   const [job, setJob] = useState<AnalysisJob | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // 1. 현재 진행 중인 작업 확인
-    async function checkAnalysisJob() {
-      const { data, error } = await supabase
-        .from('analysis_jobs')
-        .select('id, status, progress, hands_found, error_message')
-        .eq('stream_id', streamId)
-        .in('status', ['pending', 'processing'])
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
+    // Firestore 실시간 구독 설정
+    const jobsRef = collection(firestore, COLLECTION_PATHS.ANALYSIS_JOBS)
+    const q = query(
+      jobsRef,
+      where('streamId', '==', streamId),
+      where('status', 'in', ['pending', 'processing']),
+      orderBy('createdAt', 'desc'),
+      limit(1)
+    )
 
-      if (!error && data) {
-        setJob(data as AnalysisJob)
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        const doc = snapshot.docs[0]
+        const data = doc.data()
+        setJob({
+          id: doc.id,
+          status: data.status,
+          progress: data.progress || 0,
+          handsFound: data.result?.totalHands || 0,
+          errorMessage: data.errorMessage,
+        })
+      } else {
+        setJob(null)
       }
       setLoading(false)
-    }
+    }, (error) => {
+      console.error('Error subscribing to analysis jobs:', error)
+      setLoading(false)
+    })
 
-    checkAnalysisJob()
-
-    // 2. Realtime 구독
-    const channel = supabase
-      .channel(`stream-progress-${streamId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'analysis_jobs',
-          filter: `stream_id=eq.${streamId}`
-        },
-        (payload) => {
-          const newJob = payload.new as AnalysisJob
-
-          if (newJob && ['pending', 'processing'].includes(newJob.status)) {
-            setJob(newJob)
-          } else if (newJob && ['completed', 'failed'].includes(newJob.status)) {
-            // 분석 완료/실패 시 job 제거 (진행률 숨김)
-            setJob(null)
-          }
-        }
-      )
-      .subscribe()
-
-    return () => {
-      channel.unsubscribe()
-    }
+    return () => unsubscribe()
   }, [streamId])
 
   if (loading || !job) {
@@ -102,9 +87,9 @@ export function StreamProgressIndicator({ streamId }: StreamProgressIndicatorPro
       )}
 
       {/* Hands Found */}
-      {job.hands_found > 0 && (
+      {job.handsFound > 0 && (
         <Badge variant="default" className="text-xs">
-          {job.hands_found} hands
+          {job.handsFound} hands
         </Badge>
       )}
     </div>

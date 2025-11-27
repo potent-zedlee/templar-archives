@@ -13,7 +13,13 @@ import { Button } from '@/components/ui/button'
 import { CheckSquare, Eye, EyeOff, Sparkles } from 'lucide-react'
 import { StreamChecklist } from './StreamChecklist'
 import type { ContentStatus } from '@/lib/types/archive'
-import type { Stream } from '@/lib/supabase'
+// Adapted Stream type for component props
+type Stream = {
+  id: string
+  name?: string
+  video_url?: string
+  video_source?: 'youtube' | 'upload' | 'nas'
+}
 
 interface StreamActionsProps {
   streamId: string

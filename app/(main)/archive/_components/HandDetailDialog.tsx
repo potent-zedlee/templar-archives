@@ -8,14 +8,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query"
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-} from "firebase/firestore"
+import { doc, getDoc } from "firebase/firestore"
 import { firestore as db } from "@/lib/firebase"
 import { COLLECTION_PATHS } from "@/lib/firestore-types"
 import type { FirestoreHand, FirestoreStream, FirestoreTournament, FirestoreEvent } from "@/lib/firestore-types"

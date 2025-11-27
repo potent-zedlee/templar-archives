@@ -1,7 +1,13 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import type { Stream } from "@/lib/supabase"
+// Adapted Stream type for component props
+type Stream = {
+  video_source?: 'youtube' | 'upload' | 'nas'
+  video_url?: string
+  video_file?: string
+  video_nas_path?: string
+}
 
 interface VideoPlayerProps {
   day: Stream | null

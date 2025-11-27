@@ -23,7 +23,12 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { X } from "lucide-react"
 import { toast } from "sonner"
-import type { Tournament } from "@/lib/supabase"
+import type { TournamentCategory } from "@/lib/firestore-types"
+
+// Local type for component props (using Firestore camelCase)
+type Tournament = {
+  category: TournamentCategory
+}
 import { createTournament, updateTournament } from "@/app/actions/archive"
 import { LogoPicker } from "@/components/common/LogoPicker"
 

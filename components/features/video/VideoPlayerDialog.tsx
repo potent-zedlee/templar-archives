@@ -4,7 +4,16 @@ import { useEffect, useRef, useState } from "react"
 import { Rnd } from "react-rnd"
 import { Button } from "@/components/ui/button"
 import { X, RotateCcw, PictureInPicture2 } from "lucide-react"
-import type { Stream } from "@/lib/supabase"
+import type { FirestoreStream } from "@/lib/firestore-types"
+
+// Adapted Stream type for component props
+type Stream = {
+  name?: string
+  video_source?: 'youtube' | 'upload' | 'nas'
+  video_url?: string
+  video_file?: string
+  video_nas_path?: string
+}
 import { parseTimeToSeconds } from "@/lib/utils/time-parser"
 import { toast } from "sonner"
 

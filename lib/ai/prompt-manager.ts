@@ -1,11 +1,15 @@
 /**
  * AI Prompt Manager
  *
- * Dynamically loads AI prompts from system_configs table with caching
+ * Dynamically loads AI prompts from systemConfigs collection with caching
  * Falls back to hardcoded prompts if DB fetch fails
+ *
+ * Firestore 버전으로 마이그레이션됨
  */
 
-import { createClientSupabaseClient } from '@/lib/supabase-client'
+import { firestore } from '@/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
 import { EPT_PROMPT, TRITON_POKER_PROMPT } from '@/lib/ai/prompts'
 
 type Platform = 'ept' | 'triton'
@@ -23,7 +27,7 @@ const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
  * Get AI prompt for specified platform
  *
  * 1. Check memory cache
- * 2. Fetch from database (system_configs table)
+ * 2. Fetch from database (systemConfigs collection)
  * 3. Fallback to hardcoded prompts if DB fails
  *
  * @param platform - 'ept' or 'triton'
@@ -39,20 +43,17 @@ export async function getPrompt(platform: Platform): Promise<string> {
   }
 
   try {
-    // 2. Fetch from database
-    const supabase = createClientSupabaseClient()
-    const { data, error } = await supabase
-      .from('system_configs')
-      .select('value')
-      .eq('key', cacheKey)
-      .single()
+    // 2. Fetch from Firestore
+    const configRef = doc(firestore, COLLECTION_PATHS.SYSTEM_CONFIGS, cacheKey)
+    const configSnap = await getDoc(configRef)
 
-    if (error || !data) {
-      console.warn(`[prompt-manager] Failed to fetch prompt for ${platform}, using fallback:`, error?.message)
+    if (!configSnap.exists()) {
+      console.warn(`[prompt-manager] Config not found for ${platform}, using fallback`)
       return getFallbackPrompt(platform)
     }
 
-    const content = data.value.content as string
+    const data = configSnap.data()
+    const content = data?.value?.content as string
 
     if (!content || typeof content !== 'string') {
       console.warn(`[prompt-manager] Invalid prompt content for ${platform}, using fallback`)

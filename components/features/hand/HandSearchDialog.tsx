@@ -1,5 +1,12 @@
 "use client"
 
+/**
+ * Hand Search Dialog
+ *
+ * 핸드 검색 다이얼로그
+ * Firestore 버전으로 마이그레이션됨
+ */
+
 import { useState, useEffect } from "react"
 import {
   Dialog,
@@ -14,20 +21,35 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Search, ChevronRight } from "lucide-react"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
+import { firestore } from "@/lib/firebase"
+import {
+  collection,
+  query,
+  getDocs,
+  orderBy,
+  where,
+  limit,
+} from "firebase/firestore"
+import { COLLECTION_PATHS } from "@/lib/firestore-types"
+import type {
+  FirestoreTournament,
+  FirestoreEvent,
+  FirestoreStream,
+  FirestoreHand,
+} from "@/lib/firestore-types"
 
 type Tournament = {
   id: string
   name: string
   category: string
   location: string
-  start_date: string
+  startDate: string
 }
 
 type SubEvent = {
   id: string
   name: string
-  buy_in?: string
+  buyIn?: string
 }
 
 type Day = {
@@ -74,19 +96,25 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
     }
   }, [open])
 
-  // 토너먼트 목록 로드
+  // 토너먼트 목록 로드 (Firestore)
   const loadTournaments = async () => {
     setIsLoading(true)
-    const supabase = createClientSupabaseClient()
     try {
-      const { data, error } = await supabase
-        .from('tournaments')
-        .select('id, name, category, location, start_date')
-        .order('start_date', { ascending: false })
-        .limit(20)
+      const tournamentsRef = collection(firestore, COLLECTION_PATHS.TOURNAMENTS)
+      const q = query(tournamentsRef, orderBy('startDate', 'desc'), limit(20))
+      const snapshot = await getDocs(q)
 
-      if (error) throw error
-      setTournaments(data || [])
+      const data = snapshot.docs.map((doc) => {
+        const d = doc.data() as FirestoreTournament
+        return {
+          id: doc.id,
+          name: d.name,
+          category: d.category,
+          location: d.location,
+          startDate: d.startDate?.toDate?.()?.toISOString() || '',
+        }
+      })
+      setTournaments(data)
     } catch (error) {
       console.error('토너먼트 로드 실패:', error)
     } finally {
@@ -94,19 +122,23 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
     }
   }
 
-  // Sub Event 목록 로드
+  // Sub Event 목록 로드 (Firestore)
   const loadSubEvents = async (tournamentId: string) => {
     setIsLoading(true)
-    const supabase = createClientSupabaseClient()
     try {
-      const { data, error } = await supabase
-        .from('sub_events')
-        .select('id, name, buy_in')
-        .eq('tournament_id', tournamentId)
-        .order('date', { ascending: false })
+      const eventsRef = collection(firestore, COLLECTION_PATHS.EVENTS(tournamentId))
+      const q = query(eventsRef, orderBy('date', 'desc'))
+      const snapshot = await getDocs(q)
 
-      if (error) throw error
-      setSubEvents(data || [])
+      const data = snapshot.docs.map((doc) => {
+        const d = doc.data() as FirestoreEvent
+        return {
+          id: doc.id,
+          name: d.name,
+          buyIn: d.buyIn,
+        }
+      })
+      setSubEvents(data)
     } catch (error) {
       console.error('Sub Event 로드 실패:', error)
     } finally {
@@ -114,19 +146,27 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
     }
   }
 
-  // Day 목록 로드
+  // Day 목록 로드 (Firestore)
   const loadDays = async (subEventId: string) => {
     setIsLoading(true)
-    const supabase = createClientSupabaseClient()
     try {
-      const { data, error } = await supabase
-        .from('streams')
-        .select('id, name')
-        .eq('sub_event_id', subEventId)
-        .order('name', { ascending: true })
+      if (!selectedTournament) return
 
-      if (error) throw error
-      setDays(data || [])
+      const streamsRef = collection(
+        firestore,
+        COLLECTION_PATHS.STREAMS(selectedTournament.id, subEventId)
+      )
+      const q = query(streamsRef, orderBy('name'))
+      const snapshot = await getDocs(q)
+
+      const data = snapshot.docs.map((doc) => {
+        const d = doc.data() as FirestoreStream
+        return {
+          id: doc.id,
+          name: d.name,
+        }
+      })
+      setDays(data)
     } catch (error) {
       console.error('Day 로드 실패:', error)
     } finally {
@@ -134,19 +174,28 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
     }
   }
 
-  // Hand 목록 로드
+  // Hand 목록 로드 (Firestore)
   const loadHands = async (streamId: string) => {
     setIsLoading(true)
-    const supabase = createClientSupabaseClient()
     try {
-      const { data, error } = await supabase
-        .from('hands')
-        .select('id, number, description, timestamp')
-        .eq('day_id', streamId)
-        .order('number', { ascending: true })
+      const handsRef = collection(firestore, COLLECTION_PATHS.HANDS)
+      const q = query(
+        handsRef,
+        where('streamId', '==', streamId),
+        orderBy('number')
+      )
+      const snapshot = await getDocs(q)
 
-      if (error) throw error
-      setHands(data || [])
+      const data = snapshot.docs.map((doc) => {
+        const d = doc.data() as FirestoreHand
+        return {
+          id: doc.id,
+          number: d.number,
+          description: d.description,
+          timestamp: d.timestamp,
+        }
+      })
+      setHands(data)
     } catch (error) {
       console.error('Hand 로드 실패:', error)
     } finally {
@@ -294,7 +343,7 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
                       <div>
                         <h3 className="text-body font-semibold">{tournament.name}</h3>
                         <p className="text-caption text-muted-foreground">
-                          {tournament.location} • {new Date(tournament.start_date).toLocaleDateString('ko-KR')}
+                          {tournament.location} • {new Date(tournament.startDate).toLocaleDateString('ko-KR')}
                         </p>
                       </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -312,8 +361,8 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-body font-semibold">{subEvent.name}</h3>
-                        {subEvent.buy_in && (
-                          <p className="text-caption text-muted-foreground">Buy-in: {subEvent.buy_in}</p>
+                        {subEvent.buyIn && (
+                          <p className="text-caption text-muted-foreground">Buy-in: {subEvent.buyIn}</p>
                         )}
                       </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground" />

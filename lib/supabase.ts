@@ -1,56 +1,53 @@
-import { createBrowserClient } from '@supabase/ssr'
+/**
+ * Supabase Stub Types and Functions
+ *
+ * 이 파일은 Firestore 마이그레이션 중 레거시 호환성을 위한 스텁입니다.
+ * 실제 Supabase 타입과 함수는 사용되지 않습니다.
+ *
+ * TODO: 전체 Firestore 마이그레이션 완료 후 이 파일과 관련 의존성 제거
+ *
+ * @deprecated Firestore로 마이그레이션됨. firestore-types.ts를 대신 사용하세요.
+ */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+import { createClientSupabaseClient, createBrowserSupabaseClient } from './supabase-client'
 
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+// Re-export deprecated functions
+export { createClientSupabaseClient, createBrowserSupabaseClient }
 
-// Helper function for creating a new Supabase client instance
-export function createBrowserSupabaseClient() {
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
-}
-
-// Type definitions for our database tables
+// Legacy type aliases - 이제 firestore-types.ts를 사용하세요
 export type Tournament = {
   id: string
   name: string
-  category: 'WSOP' | 'Triton' | 'EPT' | 'APT' | 'APL' | 'Hustler Casino Live' | 'WSOP Classic' | 'GGPOKER'
-  category_logo?: string
+  category: string
   location: string
   city?: string
   country?: string
   start_date: string
   end_date: string
-  game_type?: 'tournament' | 'cash-game'
+  total_prize?: string
+  status?: string
   created_at?: string
-  events?: Event[] // 변경: sub_events → events
+  updated_at?: string
 }
 
-export type Event = {
+export type SubEvent = {
   id: string
   tournament_id: string
   name: string
   event_number?: string
   date: string
+  buy_in?: string
   total_prize?: string
   winner?: string
-  buy_in?: string
   entry_count?: number
-  blind_structure?: string
-  level_duration?: number
-  starting_stack?: number
-  notes?: string
+  status?: string
   created_at?: string
-  streams?: Stream[]
-  days?: Stream[] // UI alias for streams (mapped in archive-helpers.ts)
+  updated_at?: string
 }
-
-// Legacy type alias for backward compatibility (deprecated)
-export type SubEvent = Event
 
 export type Stream = {
   id: string
-  event_id: string // DB 테이블명은 sub_event_id 유지
+  sub_event_id: string
   name: string
   description?: string
   video_url?: string
@@ -58,36 +55,50 @@ export type Stream = {
   video_source?: 'youtube' | 'upload' | 'nas'
   video_nas_path?: string
   published_at?: string
-  created_at?: string
-  is_organized?: boolean
-  organized_at?: string
-  player_count?: number
-  status?: 'draft' | 'published' | 'archived' | 'analyzing' | 'completed'
-  upload_status?: 'none' | 'uploading' | 'uploaded' | 'analyzing' | 'completed' | 'failed'
+  gcs_path?: string
   gcs_uri?: string
-  gcs_bucket?: string
-  gcs_object_name?: string
+  gcs_file_size?: number
+  gcs_uploaded_at?: string
+  upload_status?: string
+  video_duration?: number
+  status?: string
+  created_at?: string
+  updated_at?: string
 }
-
 
 export type Hand = {
   id: string
   day_id: string
   number: string
   description: string
+  ai_summary?: string
   timestamp: string
-  favorite: boolean
+  board_flop?: string[]
+  board_turn?: string
+  board_river?: string
+  pot_size?: number
+  small_blind?: number
+  big_blind?: number
+  ante?: number
+  video_timestamp_start?: number
+  video_timestamp_end?: number
+  favorite?: boolean
   created_at?: string
+  updated_at?: string
 }
 
 export type Player = {
   id: string
   name: string
+  normalized_name: string
+  aliases?: string[]
   photo_url?: string
   country?: string
-  gender?: 'male' | 'female' | 'other'
+  is_pro?: boolean
+  bio?: string
   total_winnings?: number
   created_at?: string
+  updated_at?: string
 }
 
 export type HandPlayer = {
@@ -95,6 +106,37 @@ export type HandPlayer = {
   hand_id: string
   player_id: string
   position?: string
-  cards?: string
+  seat?: number
+  cards?: string[]
+  start_stack?: number
+  end_stack?: number
+  is_winner?: boolean
+  hand_description?: string
+}
+
+export type HandAction = {
+  id: string
+  hand_id: string
+  player_id: string
+  street: string
+  sequence: number
+  action_type: string
+  amount?: number
+}
+
+export type User = {
+  id: string
+  email: string
+  nickname?: string
+  avatar_url?: string
+  role: string
   created_at?: string
+  updated_at?: string
+}
+
+// Database type stub for compatibility
+export type Database = {
+  public: {
+    Tables: Record<string, unknown>
+  }
 }
