@@ -98,13 +98,13 @@ describe('Toast Utils', () => {
         success: (data: { id: number }) => `Created item ${data.id}`,
       }
 
-      vi.mocked(toast.promise).mockImplementation(async (p: Promise<unknown>, opts: { success?: (data: unknown) => void }) => {
+      vi.mocked(toast.promise).mockImplementation((async (p: Promise<unknown>, opts: { success?: (data: unknown) => void }) => {
         const data: { id: number } = await p as { id: number }
         if (opts.success) {
           opts.success(data)
         }
-        return data as never
-      })
+        return data
+      }) as never)
 
       await toastPromise(promise, messages)
       expect(toast.promise).toHaveBeenCalled()
