@@ -1,6 +1,14 @@
 {
   "indexes": [
     {
+      "collectionGroup": "tournaments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "gameType", "order": "ASCENDING" },
+        { "fieldPath": "startDate", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "hands",
       "queryScope": "COLLECTION",
       "fields": [
