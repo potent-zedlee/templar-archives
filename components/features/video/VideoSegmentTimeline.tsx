@@ -101,7 +101,7 @@ export function VideoSegmentTimeline({
 
         {/* Timeline Bar */}
         <div className="relative h-12 bg-muted/30 rounded-lg overflow-hidden">
-          {segmentPositions.map((pos, index) => (
+          {segmentPositions.map((pos) => (
             <div
               key={pos.segment.id}
               className="absolute top-0 bottom-0 cursor-pointer transition-opacity hover:opacity-80 group"

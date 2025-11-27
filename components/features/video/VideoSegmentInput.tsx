@@ -17,7 +17,6 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type {
   VideoSegment,
-  SegmentType,
 } from '@/lib/types/video-segments'
 import {
   calculateSegmentDuration,

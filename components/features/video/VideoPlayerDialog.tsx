@@ -175,8 +175,8 @@ export function VideoPlayerDialog({
         <Rnd
           size={size}
           position={position}
-          onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
-          onResizeStop={(e, direction, ref, delta, position) => {
+          onDragStop={(_e, d) => setPosition({ x: d.x, y: d.y })}
+          onResizeStop={(_e, _direction, ref, _delta, position) => {
             setSize({
               width: parseInt(ref.style.width),
               height: parseInt(ref.style.height),
@@ -224,8 +224,8 @@ export function VideoPlayerDialog({
       <Rnd
         size={size}
         position={position}
-        onDragStop={(e, d) => setPosition({ x: d.x, y: d.y })}
-        onResizeStop={(e, direction, ref, delta, position) => {
+        onDragStop={(_e, d) => setPosition({ x: d.x, y: d.y })}
+        onResizeStop={(_e, _direction, ref, _delta, position) => {
           setSize({
             width: parseInt(ref.style.width),
             height: parseInt(ref.style.height),
