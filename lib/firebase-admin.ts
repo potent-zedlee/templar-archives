@@ -1,0 +1,131 @@
+/**
+ * Firebase Admin SDK 초기화 (서버 전용)
+ *
+ * Server Components, API Routes, Server Actions에서 사용됩니다.
+ * Admin SDK는 클라이언트에서 절대 사용하면 안 됩니다.
+ *
+ * @module lib/firebase-admin
+ */
+
+import {
+  initializeApp,
+  getApps,
+  getApp,
+  cert,
+  type App,
+  type ServiceAccount,
+} from 'firebase-admin/app'
+import { getFirestore, type Firestore } from 'firebase-admin/firestore'
+import { getAuth, type Auth } from 'firebase-admin/auth'
+
+/**
+ * Admin SDK 서비스 계정 설정
+ *
+ * 우선순위:
+ * 1. FIREBASE_ADMIN_SDK_KEY: JSON 문자열 (Vercel/Cloud Run 권장)
+ * 2. GOOGLE_APPLICATION_CREDENTIALS: 파일 경로 (로컬 개발)
+ */
+function getAdminCredential(): ServiceAccount | undefined {
+  // 환경변수에서 JSON 문자열로 제공된 경우
+  if (process.env.FIREBASE_ADMIN_SDK_KEY) {
+    try {
+      return JSON.parse(process.env.FIREBASE_ADMIN_SDK_KEY) as ServiceAccount
+    } catch (error) {
+      console.error('FIREBASE_ADMIN_SDK_KEY 파싱 실패:', error)
+      throw new Error('Invalid FIREBASE_ADMIN_SDK_KEY format')
+    }
+  }
+
+  // GOOGLE_APPLICATION_CREDENTIALS가 설정된 경우
+  // Firebase Admin SDK가 자동으로 읽어옴 (undefined 반환)
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    return undefined
+  }
+
+  throw new Error(
+    'Firebase Admin credentials not found. ' +
+    'Set FIREBASE_ADMIN_SDK_KEY or GOOGLE_APPLICATION_CREDENTIALS environment variable.'
+  )
+}
+
+/**
+ * Firebase Admin 앱 인스턴스 (싱글톤)
+ *
+ * 서버 환경에서 Hot Reload 시 중복 초기화 방지
+ */
+function getAdminApp(): App {
+  if (getApps().length > 0) {
+    return getApp()
+  }
+
+  const credential = getAdminCredential()
+
+  if (credential) {
+    return initializeApp({
+      credential: cert(credential),
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'templar-archives-index',
+    })
+  }
+
+  // GOOGLE_APPLICATION_CREDENTIALS 환경에서는 credential 없이 초기화
+  return initializeApp({
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'templar-archives-index',
+  })
+}
+
+/**
+ * Firebase Admin 앱 인스턴스
+ */
+export const adminApp: App = getAdminApp()
+
+/**
+ * Admin Firestore 인스턴스
+ *
+ * Server Components, API Routes, Server Actions에서 사용
+ * Security Rules를 우회하여 모든 문서에 접근 가능
+ *
+ * @example
+ * ```typescript
+ * import { adminFirestore } from '@/lib/firebase-admin'
+ *
+ * // Server Action에서 사용
+ * const snapshot = await adminFirestore.collection('tournaments').get()
+ * ```
+ */
+export const adminFirestore: Firestore = getFirestore(adminApp)
+
+/**
+ * Admin Auth 인스턴스
+ *
+ * 사용자 관리, 토큰 검증에 사용
+ *
+ * @example
+ * ```typescript
+ * import { adminAuth } from '@/lib/firebase-admin'
+ *
+ * // 토큰 검증
+ * const decodedToken = await adminAuth.verifyIdToken(idToken)
+ *
+ * // 사용자 생성
+ * const user = await adminAuth.createUser({ email, password })
+ * ```
+ */
+export const adminAuth: Auth = getAuth(adminApp)
+
+/**
+ * Admin SDK 초기화 상태 확인
+ *
+ * @returns 초기화 완료 여부
+ */
+export function isAdminInitialized(): boolean {
+  return getApps().length > 0
+}
+
+/**
+ * 서버용 Firestore 인스턴스 생성 (새 연결)
+ *
+ * @returns Admin Firestore 인스턴스
+ */
+export function createServerFirestore(): Firestore {
+  return getFirestore(getAdminApp())
+}

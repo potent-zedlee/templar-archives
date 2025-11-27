@@ -1,0 +1,171 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==================== Helper Functions ====================
+
+    /**
+     * 인증된 사용자인지 확인
+     */
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    /**
+     * 리소스 소유자인지 확인
+     * @param userId 확인할 사용자 ID
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * 현재 사용자의 역할 조회
+     * @returns 사용자 역할 (admin, high_templar, arbiter, user)
+     */
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    /**
+     * Admin 또는 High Templar 권한 확인
+     */
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() in ['admin', 'high_templar'];
+    }
+
+    /**
+     * Arbiter 이상의 권한 확인
+     */
+    function isArbiter() {
+      return isAuthenticated() && getUserRole() in ['admin', 'high_templar', 'arbiter'];
+    }
+
+    // ==================== Tournaments Collection ====================
+
+    /**
+     * 토너먼트: 모두 읽기 가능, Admin만 쓰기 가능
+     */
+    match /tournaments/{tournamentId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+
+      // Events 서브컬렉션
+      match /events/{eventId} {
+        allow read: if true;
+        allow create, update, delete: if isAdmin();
+
+        // Streams 서브컬렉션
+        match /streams/{streamId} {
+          allow read: if true;
+          allow create, update, delete: if isAdmin();
+        }
+      }
+    }
+
+    // ==================== Hands Collection ====================
+
+    /**
+     * 핸드: 모두 읽기 가능, Arbiter 이상만 쓰기 가능
+     */
+    match /hands/{handId} {
+      allow read: if true;
+      allow create, update, delete: if isArbiter();
+    }
+
+    // ==================== Players Collection ====================
+
+    /**
+     * 플레이어: 모두 읽기 가능, Admin만 쓰기 가능
+     */
+    match /players/{playerId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+
+      // 플레이어별 핸드 인덱스
+      match /hands/{handId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    // ==================== Users Collection ====================
+
+    /**
+     * 사용자: 모두 읽기 가능, 본인 또는 Admin만 수정 가능
+     */
+    match /users/{userId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+
+      // 알림: 본인만 접근 가능
+      match /notifications/{notificationId} {
+        allow read, update, delete: if isOwner(userId);
+        allow create: if isAuthenticated();
+      }
+
+      // 북마크: 본인만 접근 가능
+      match /bookmarks/{bookmarkId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // ==================== Community Collections ====================
+
+    /**
+     * 게시글: 모두 읽기 가능, 인증된 사용자만 생성, 작성자/Admin만 수정/삭제
+     */
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isOwner(resource.data.author.id) || isAdmin();
+
+      // 댓글
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isAuthenticated();
+        allow update, delete: if isOwner(resource.data.author.id) || isAdmin();
+      }
+
+      // 좋아요
+      match /likes/{likeId} {
+        allow read: if true;
+        allow create, delete: if isAuthenticated() && isOwner(likeId);
+      }
+    }
+
+    // ==================== Analysis Jobs Collection ====================
+
+    /**
+     * 분석 작업: 기존 Firestore 컬렉션 유지
+     */
+    match /analysisJobs/{jobId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    // ==================== Categories Collection ====================
+
+    /**
+     * 카테고리: 모두 읽기 가능, Admin만 쓰기 가능
+     */
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ==================== System Configs Collection ====================
+
+    /**
+     * 시스템 설정: Admin만 접근 가능
+     */
+    match /systemConfigs/{configId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+  }
+}
