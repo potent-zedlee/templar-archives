@@ -36,6 +36,7 @@ export type HandAction = {
   action_type: ActionType
   amount?: number
   action_order: number
+  sequence: number // Firestore 호환 (action_order와 동일)
   created_at: string
 }
 
@@ -46,6 +47,7 @@ export type HandActionInput = {
   action_type: ActionType
   amount?: number
   action_order: number
+  sequence: number // Firestore 호환 (action_order와 동일)
 }
 
 /**
@@ -64,6 +66,7 @@ function convertToLegacyFormat(
     action_type: action.actionType as ActionType,
     amount: action.amount,
     action_order: action.sequence,
+    sequence: action.sequence, // action_order와 동일한 값
     created_at: new Date().toISOString(),
   }
 }

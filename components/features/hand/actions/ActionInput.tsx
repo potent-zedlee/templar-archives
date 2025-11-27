@@ -85,6 +85,7 @@ export function ActionInput({
       street: street as any,
       action_type: actionType as ActionType,
       amount: needsAmount ? parseInt(amount) : 0,
+      action_order: sequence,
       sequence,
     })
 
