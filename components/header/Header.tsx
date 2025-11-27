@@ -35,7 +35,7 @@ export function Header() {
     }
   }
 
-  const getUserInitials = () => {
+  const getUserInitials = (): string => {
     if (profile?.nickname) {
       return profile.nickname.charAt(0).toUpperCase()
     }
@@ -44,14 +44,14 @@ export function Header() {
     return name.charAt(0).toUpperCase()
   }
 
-  const getDisplayName = () => {
+  const getDisplayName = (): string => {
     if (profile?.nickname) return profile.nickname
     return user?.user_metadata?.full_name || "User"
   }
 
-  const getAvatarUrl = () => {
+  const getAvatarUrl = (): string | undefined => {
     if (profile?.avatar_url) return profile.avatar_url
-    return user?.user_metadata?.avatar_url
+    return user?.user_metadata?.avatar_url || undefined
   }
 
   const navLinks: NavLink[] = [
