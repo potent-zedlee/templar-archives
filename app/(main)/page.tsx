@@ -31,20 +31,17 @@ export default function homeClient() {
         const [
           { count: totalHands },
           { count: totalTournaments },
-          { count: totalPlayers },
-          { count: totalUsers }
+          { count: totalPlayers }
         ] = await Promise.all([
           supabase.from('hands').select('*', { count: 'exact', head: true }),
           supabase.from('tournaments').select('*', { count: 'exact', head: true }),
-          supabase.from('players').select('*', { count: 'exact', head: true }),
-          supabase.from('users').select('*', { count: 'exact', head: true })
+          supabase.from('players').select('*', { count: 'exact', head: true })
         ])
 
         const stats = {
           totalHands: totalHands || 0,
           totalTournaments: totalTournaments || 0,
-          totalPlayers: totalPlayers || 0,
-          totalUsers: totalUsers || 0
+          totalPlayers: totalPlayers || 0
         }
 
         // Fetch weekly highlights

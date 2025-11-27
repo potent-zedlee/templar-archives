@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { getUser, onAuthStateChange, type AuthUser } from '@/lib/auth'
-import { getCurrentUserProfile } from '@/lib/user-profile'
+import { getCurrentUserProfile, createProfile } from '@/lib/user-profile'
 import { NicknameSetupModal } from '@/components/dialogs/NicknameSetupModal'
 import type { UserProfile } from '@/lib/user-profile'
 
@@ -25,7 +25,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [showNicknameModal, setShowNicknameModal] = useState(false)
 
   const loadProfile = async (currentUser: AuthUser) => {
-    const userProfile = await getCurrentUserProfile()
+    let userProfile = await getCurrentUserProfile()
+
+    // 프로필이 없으면 자동 생성
+    if (!userProfile && currentUser) {
+      userProfile = await createProfile({
+        uid: currentUser.uid,
+        email: currentUser.email,
+        displayName: currentUser.displayName,
+        photoURL: currentUser.photoURL,
+      })
+    }
+
     setProfile(userProfile)
 
     // Profile이 있고 임시 닉네임 형식이면 모달 표시

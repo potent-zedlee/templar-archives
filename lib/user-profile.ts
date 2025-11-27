@@ -81,13 +81,70 @@ export async function getProfile(userId: string): Promise<UserProfile | null> {
     const userSnap = await getDoc(userRef)
 
     if (!userSnap.exists()) {
-      console.error('프로필을 찾을 수 없습니다:', userId)
       return null
     }
 
     return firestoreUserToProfile(userSnap.id, userSnap.data() as FirestoreUser)
   } catch (error) {
     console.error('프로필 조회 실패:', error)
+    return null
+  }
+}
+
+/**
+ * 신규 사용자 프로필 생성
+ * Firebase Auth 정보를 기반으로 Firestore에 사용자 문서 생성
+ */
+export async function createProfile(user: {
+  uid: string
+  email: string | null
+  displayName: string | null
+  photoURL: string | null
+}): Promise<UserProfile | null> {
+  try {
+    const userRef = doc(firestore, COLLECTION_PATHS.USERS, user.uid)
+
+    // 이미 존재하는지 확인
+    const existing = await getDoc(userRef)
+    if (existing.exists()) {
+      return firestoreUserToProfile(existing.id, existing.data() as FirestoreUser)
+    }
+
+    // 임시 닉네임 생성 (user + 6자리 랜덤)
+    const randomSuffix = Math.random().toString(36).substring(2, 8)
+    const tempNickname = `user${randomSuffix}`
+
+    const newUser: FirestoreUser = {
+      email: user.email || '',
+      nickname: tempNickname,
+      avatarUrl: user.photoURL || undefined,
+      role: 'user',
+      emailVerified: true,
+      stats: {
+        postsCount: 0,
+        commentsCount: 0,
+      },
+      createdAt: serverTimestamp() as Timestamp,
+      updatedAt: serverTimestamp() as Timestamp,
+    }
+
+    await setDoc(userRef, newUser)
+
+    // 생성된 프로필 반환
+    return {
+      id: user.uid,
+      email: newUser.email,
+      nickname: tempNickname,
+      role: 'user',
+      avatar_url: newUser.avatarUrl,
+      posts_count: 0,
+      comments_count: 0,
+      likes_received: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+  } catch (error) {
+    console.error('프로필 생성 실패:', error)
     return null
   }
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
-import { TrendingUp, Users, PlaySquare, Trophy } from "lucide-react"
+import { Users, PlaySquare, Trophy } from "lucide-react"
 import type { PlatformStats } from "@/lib/main-page"
 
 interface StatsCounterProps {
@@ -11,7 +11,7 @@ interface StatsCounterProps {
 
 export function StatsCounter({ stats }: StatsCounterProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-3 gap-4">
       <StatCard
         icon={PlaySquare}
         label="Total Hands"
@@ -29,12 +29,6 @@ export function StatsCounter({ stats }: StatsCounterProps) {
         label="Players"
         value={stats.totalPlayers}
         color="text-green-500"
-      />
-      <StatCard
-        icon={TrendingUp}
-        label="Members"
-        value={stats.totalUsers}
-        color="text-purple-500"
       />
     </div>
   )

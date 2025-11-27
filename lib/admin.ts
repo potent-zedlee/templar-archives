@@ -1,5 +1,8 @@
 import { createClientSupabaseClient } from './supabase-client'
 import { escapeLikePattern } from './security/sql-sanitizer'
+import { doc, getDoc } from 'firebase/firestore'
+import { firestore, auth } from '@/lib/firebase'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
 
 export type AdminRole = 'user' | 'templar' | 'arbiter' | 'high_templar' | 'admin' | 'reporter'
 
@@ -30,66 +33,64 @@ export type DashboardStats = {
 }
 
 /**
- * Check if current user is admin
+ * Firestore에서 사용자 역할 조회
+ */
+async function getUserRole(userId: string): Promise<string | null> {
+  try {
+    const userRef = doc(firestore, COLLECTION_PATHS.USERS, userId)
+    const userSnap = await getDoc(userRef)
+
+    if (!userSnap.exists()) {
+      return null
+    }
+
+    return userSnap.data()?.role || 'user'
+  } catch (error) {
+    console.error('getUserRole 실패:', error)
+    return null
+  }
+}
+
+/**
+ * Check if current user is admin (Firestore)
  */
 export async function isAdmin(userId?: string): Promise<boolean> {
-  const supabase = createClientSupabaseClient()
-
   if (!userId) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return false
-    userId = user.id
+    const currentUser = auth.currentUser
+    if (!currentUser) return false
+    userId = currentUser.uid
   }
 
-  const { data } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', userId)
-    .single()
-
-  return data?.role === 'admin' || data?.role === 'high_templar'
+  const role = await getUserRole(userId)
+  return role === 'admin' || role === 'high_templar'
 }
 
 /**
- * Check if current user is reporter
+ * Check if current user is reporter (Firestore)
  */
 export async function isReporter(userId?: string): Promise<boolean> {
-  const supabase = createClientSupabaseClient()
-
   if (!userId) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return false
-    userId = user.id
+    const currentUser = auth.currentUser
+    if (!currentUser) return false
+    userId = currentUser.uid
   }
 
-  const { data } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', userId)
-    .single()
-
-  return data?.role === 'reporter'
+  const role = await getUserRole(userId)
+  return role === 'reporter'
 }
 
 /**
- * Check if current user is reporter or admin
+ * Check if current user is reporter or admin (Firestore)
  */
 export async function isReporterOrAdmin(userId?: string): Promise<boolean> {
-  const supabase = createClientSupabaseClient()
-
   if (!userId) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return false
-    userId = user.id
+    const currentUser = auth.currentUser
+    if (!currentUser) return false
+    userId = currentUser.uid
   }
 
-  const { data } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', userId)
-    .single()
-
-  return data?.role === 'reporter' || data?.role === 'admin' || data?.role === 'high_templar'
+  const role = await getUserRole(userId)
+  return role === 'reporter' || role === 'admin' || role === 'high_templar'
 }
 
 /**

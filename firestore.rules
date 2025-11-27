@@ -136,6 +136,16 @@ service cloud.firestore {
       }
     }
 
+    // ==================== Notifications Collection (Root) ====================
+
+    /**
+     * 알림: 수신자 본인만 읽기/수정/삭제 가능, 인증된 사용자만 생성 가능
+     */
+    match /notifications/{notificationId} {
+      allow read, update, delete: if isAuthenticated() && resource.data.recipientId == request.auth.uid;
+      allow create: if isAuthenticated();
+    }
+
     // ==================== Analysis Jobs Collection ====================
 
     /**
