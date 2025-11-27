@@ -1,13 +1,36 @@
 /**
- * Tournament Categories Database Operations
+ * Tournament Categories Database Operations (Firestore)
  *
  * 토너먼트 카테고리 CRUD 및 로고 업로드 함수
+ *
+ * @module lib/tournament-categories
  */
 
-import { createClientSupabaseClient } from './supabase-client'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  Timestamp,
+} from 'firebase/firestore'
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from 'firebase/storage'
+import { firestore, storage } from '@/lib/firebase'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
+import type { FirestoreTournamentCategory, GameType } from '@/lib/firestore-types'
 import { CATEGORY_ERRORS, CATEGORY_VALIDATIONS } from './constants/category-errors'
 
-export type GameType = 'tournament' | 'cash_game' | 'both'
+export type { GameType } from '@/lib/firestore-types'
 
 export interface TournamentCategory {
   id: string
@@ -44,34 +67,62 @@ export interface CategoryInput {
 export interface CategoryUpdateInput extends Partial<Omit<CategoryInput, 'id'>> {}
 
 /**
+ * Firestore 문서를 TournamentCategory로 변환
+ */
+function toTournamentCategory(id: string, data: FirestoreTournamentCategory): TournamentCategory {
+  return {
+    id,
+    name: data.name,
+    display_name: data.displayName,
+    short_name: data.shortName || null,
+    aliases: data.aliases || [],
+    logo_url: data.logoUrl || null,
+    is_active: data.isActive,
+    game_type: data.gameType,
+    parent_id: data.parentId || null,
+    theme_gradient: data.themeGradient || null,
+    theme_text: data.themeText || null,
+    theme_shadow: data.themeShadow || null,
+    created_at: data.createdAt.toDate().toISOString(),
+    updated_at: data.updatedAt.toDate().toISOString(),
+  }
+}
+
+/**
  * 모든 카테고리 조회 (Admin용)
  */
 export async function getAllCategories(
   includeInactive = false,
   gameType?: GameType
 ): Promise<TournamentCategory[]> {
-  const supabase = createClientSupabaseClient()
+  try {
+    let q = query(
+      collection(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES),
+      orderBy('name', 'asc')
+    )
 
-  let query = supabase
-    .from('tournament_categories')
-    .select('*')
-    .order('name', { ascending: true })
+    const snapshot = await getDocs(q)
 
-  if (!includeInactive) {
-    query = query.eq('is_active', true)
+    let categories = snapshot.docs.map((doc) =>
+      toTournamentCategory(doc.id, doc.data() as FirestoreTournamentCategory)
+    )
+
+    // 필터링 (Firestore 복합 쿼리 제한으로 클라이언트에서 처리)
+    if (!includeInactive) {
+      categories = categories.filter((cat) => cat.is_active)
+    }
+
+    if (gameType) {
+      categories = categories.filter(
+        (cat) => cat.game_type === gameType || cat.game_type === 'both'
+      )
+    }
+
+    return categories
+  } catch (error) {
+    console.error('getAllCategories 실패:', error)
+    throw new Error(CATEGORY_ERRORS.FETCH_FAILED((error as Error).message))
   }
-
-  if (gameType) {
-    query = query.or(`game_type.eq.${gameType},game_type.eq.both`)
-  }
-
-  const { data, error } = await query
-
-  if (error) {
-    throw new Error(CATEGORY_ERRORS.FETCH_FAILED(error.message))
-  }
-
-  return data || []
 }
 
 /**
@@ -85,26 +136,30 @@ export async function getActiveCategories(gameType?: GameType): Promise<Tourname
  * 최상위 카테고리만 조회 (parent_id가 null인 카테고리)
  */
 export async function getRootCategories(gameType?: GameType): Promise<TournamentCategory[]> {
-  const supabase = createClientSupabaseClient()
+  try {
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES),
+      where('isActive', '==', true),
+      orderBy('name', 'asc')
+    )
 
-  let query = supabase
-    .from('tournament_categories')
-    .select('*')
-    .is('parent_id', null)
-    .eq('is_active', true)
-    .order('name', { ascending: true })
+    const snapshot = await getDocs(q)
 
-  if (gameType) {
-    query = query.or(`game_type.eq.${gameType},game_type.eq.both`)
+    let categories = snapshot.docs
+      .map((doc) => toTournamentCategory(doc.id, doc.data() as FirestoreTournamentCategory))
+      .filter((cat) => !cat.parent_id) // parent_id가 없는 것만
+
+    if (gameType) {
+      categories = categories.filter(
+        (cat) => cat.game_type === gameType || cat.game_type === 'both'
+      )
+    }
+
+    return categories
+  } catch (error) {
+    console.error('getRootCategories 실패:', error)
+    throw new Error(CATEGORY_ERRORS.FETCH_FAILED((error as Error).message))
   }
-
-  const { data, error } = await query
-
-  if (error) {
-    throw new Error(CATEGORY_ERRORS.FETCH_FAILED(error.message))
-  }
-
-  return data || []
 }
 
 /**
@@ -114,26 +169,31 @@ export async function getChildCategories(
   parentId: string,
   gameType?: GameType
 ): Promise<TournamentCategory[]> {
-  const supabase = createClientSupabaseClient()
+  try {
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES),
+      where('parentId', '==', parentId),
+      where('isActive', '==', true),
+      orderBy('name', 'asc')
+    )
 
-  let query = supabase
-    .from('tournament_categories')
-    .select('*')
-    .eq('parent_id', parentId)
-    .eq('is_active', true)
-    .order('name', { ascending: true })
+    const snapshot = await getDocs(q)
 
-  if (gameType) {
-    query = query.or(`game_type.eq.${gameType},game_type.eq.both`)
+    let categories = snapshot.docs.map((doc) =>
+      toTournamentCategory(doc.id, doc.data() as FirestoreTournamentCategory)
+    )
+
+    if (gameType) {
+      categories = categories.filter(
+        (cat) => cat.game_type === gameType || cat.game_type === 'both'
+      )
+    }
+
+    return categories
+  } catch (error) {
+    console.error('getChildCategories 실패:', error)
+    throw new Error(CATEGORY_ERRORS.FETCH_FAILED((error as Error).message))
   }
-
-  const { data, error } = await query
-
-  if (error) {
-    throw new Error(CATEGORY_ERRORS.FETCH_FAILED(error.message))
-  }
-
-  return data || []
 }
 
 /**
@@ -152,84 +212,85 @@ export async function getCategoriesByRegion(
  * ID로 카테고리 조회
  */
 export async function getCategoryById(id: string): Promise<TournamentCategory | null> {
-  const supabase = createClientSupabaseClient()
+  try {
+    const docRef = doc(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES, id)
+    const docSnap = await getDoc(docRef)
 
-  const { data, error } = await supabase
-    .from('tournament_categories')
-    .select('*')
-    .eq('id', id)
-    .single()
-
-  if (error) {
-    if (error.code === 'PGRST116') {
-      return null // Not found
+    if (!docSnap.exists()) {
+      return null
     }
-    throw new Error(CATEGORY_ERRORS.FETCH_BY_ID_FAILED(error.message))
-  }
 
-  return data
+    return toTournamentCategory(docSnap.id, docSnap.data() as FirestoreTournamentCategory)
+  } catch (error) {
+    console.error('getCategoryById 실패:', error)
+    throw new Error(CATEGORY_ERRORS.FETCH_BY_ID_FAILED((error as Error).message))
+  }
 }
 
 /**
  * 별칭으로 카테고리 조회
  */
 export async function getCategoryByAlias(alias: string): Promise<TournamentCategory | null> {
-  const supabase = createClientSupabaseClient()
+  try {
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES),
+      where('aliases', 'array-contains', alias),
+      where('isActive', '==', true)
+    )
 
-  const { data, error } = await supabase
-    .from('tournament_categories')
-    .select('*')
-    .contains('aliases', [alias])
-    .eq('is_active', true)
-    .limit(1)
-    .single()
+    const snapshot = await getDocs(q)
 
-  if (error) {
-    if (error.code === 'PGRST116') {
-      return null // Not found
+    if (snapshot.empty) {
+      return null
     }
-    throw new Error(CATEGORY_ERRORS.FETCH_BY_ALIAS_FAILED(error.message))
-  }
 
-  return data
+    const doc = snapshot.docs[0]
+    return toTournamentCategory(doc.id, doc.data() as FirestoreTournamentCategory)
+  } catch (error) {
+    console.error('getCategoryByAlias 실패:', error)
+    throw new Error(CATEGORY_ERRORS.FETCH_BY_ALIAS_FAILED((error as Error).message))
+  }
 }
 
 /**
  * 카테고리 생성
  */
 export async function createCategory(input: CategoryInput): Promise<TournamentCategory> {
-  const supabase = createClientSupabaseClient()
+  try {
+    // ID 중복 확인
+    const existing = await getCategoryById(input.id)
+    if (existing) {
+      throw new Error(CATEGORY_ERRORS.DUPLICATE_ID(input.id))
+    }
 
-  // ID 중복 확인
-  const existing = await getCategoryById(input.id)
-  if (existing) {
-    throw new Error(CATEGORY_ERRORS.DUPLICATE_ID(input.id))
-  }
-
-  const { data, error } = await supabase
-    .from('tournament_categories')
-    .insert({
+    const now = Timestamp.now()
+    const categoryData: FirestoreTournamentCategory = {
       id: input.id,
       name: input.name,
-      display_name: input.display_name,
-      short_name: input.short_name || null,
+      displayName: input.display_name,
+      shortName: input.short_name,
       aliases: input.aliases || [],
-      logo_url: input.logo_url || null,
-      is_active: input.is_active ?? true,
-      game_type: input.game_type || 'both',
-      parent_id: input.parent_id || null,
-      theme_gradient: input.theme_gradient || null,
-      theme_text: input.theme_text || null,
-      theme_shadow: input.theme_shadow || null,
-    })
-    .select()
-    .single()
+      logoUrl: input.logo_url,
+      isActive: input.is_active ?? true,
+      gameType: input.game_type || 'both',
+      parentId: input.parent_id || undefined,
+      themeGradient: input.theme_gradient,
+      themeText: input.theme_text,
+      themeShadow: input.theme_shadow,
+      createdAt: now,
+      updatedAt: now,
+    }
 
-  if (error) {
-    throw new Error(CATEGORY_ERRORS.CREATE_FAILED(error.message))
+    await setDoc(doc(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES, input.id), categoryData)
+
+    return toTournamentCategory(input.id, categoryData)
+  } catch (error) {
+    console.error('createCategory 실패:', error)
+    if ((error as Error).message.includes('중복')) {
+      throw error
+    }
+    throw new Error(CATEGORY_ERRORS.CREATE_FAILED((error as Error).message))
   }
-
-  return data
 }
 
 /**
@@ -239,54 +300,58 @@ export async function updateCategory(
   id: string,
   input: CategoryUpdateInput
 ): Promise<TournamentCategory> {
-  const supabase = createClientSupabaseClient()
+  try {
+    const docRef = doc(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES, id)
 
-  const { data, error } = await supabase
-    .from('tournament_categories')
-    .update({
-      ...(input.name !== undefined && { name: input.name }),
-      ...(input.display_name !== undefined && { display_name: input.display_name }),
-      ...(input.short_name !== undefined && { short_name: input.short_name || null }),
-      ...(input.aliases !== undefined && { aliases: input.aliases }),
-      ...(input.logo_url !== undefined && { logo_url: input.logo_url || null }),
-      ...(input.is_active !== undefined && { is_active: input.is_active }),
-      ...(input.game_type !== undefined && { game_type: input.game_type }),
-      ...(input.parent_id !== undefined && { parent_id: input.parent_id }),
-      ...(input.theme_gradient !== undefined && { theme_gradient: input.theme_gradient || null }),
-      ...(input.theme_text !== undefined && { theme_text: input.theme_text || null }),
-      ...(input.theme_shadow !== undefined && { theme_shadow: input.theme_shadow || null }),
-    })
-    .eq('id', id)
-    .select()
-    .single()
+    const updateData: Record<string, unknown> = {
+      updatedAt: Timestamp.now(),
+    }
 
-  if (error) {
-    throw new Error(CATEGORY_ERRORS.UPDATE_FAILED(error.message))
+    if (input.name !== undefined) updateData.name = input.name
+    if (input.display_name !== undefined) updateData.displayName = input.display_name
+    if (input.short_name !== undefined) updateData.shortName = input.short_name || null
+    if (input.aliases !== undefined) updateData.aliases = input.aliases
+    if (input.logo_url !== undefined) updateData.logoUrl = input.logo_url || null
+    if (input.is_active !== undefined) updateData.isActive = input.is_active
+    if (input.game_type !== undefined) updateData.gameType = input.game_type
+    if (input.parent_id !== undefined) updateData.parentId = input.parent_id || null
+    if (input.theme_gradient !== undefined) updateData.themeGradient = input.theme_gradient || null
+    if (input.theme_text !== undefined) updateData.themeText = input.theme_text || null
+    if (input.theme_shadow !== undefined) updateData.themeShadow = input.theme_shadow || null
+
+    await updateDoc(docRef, updateData)
+
+    const updated = await getCategoryById(id)
+    if (!updated) {
+      throw new Error('Category not found after update')
+    }
+
+    return updated
+  } catch (error) {
+    console.error('updateCategory 실패:', error)
+    throw new Error(CATEGORY_ERRORS.UPDATE_FAILED((error as Error).message))
   }
-
-  return data
 }
 
 /**
  * 카테고리 삭제
- * (사용 중인 토너먼트가 있으면 트리거에서 에러 발생)
+ * (사용 중인 토너먼트가 있으면 에러 발생)
  */
 export async function deleteCategory(id: string): Promise<void> {
-  const supabase = createClientSupabaseClient()
+  try {
+    // 사용 여부 확인
+    const usageCount = await getCategoryUsageCount(id)
+    if (usageCount > 0) {
+      throw new Error(CATEGORY_ERRORS.DELETE_IN_USE(usageCount))
+    }
 
-  // 사용 여부 확인
-  const usageCount = await getCategoryUsageCount(id)
-  if (usageCount > 0) {
-    throw new Error(CATEGORY_ERRORS.DELETE_IN_USE(usageCount))
-  }
-
-  const { error } = await supabase
-    .from('tournament_categories')
-    .delete()
-    .eq('id', id)
-
-  if (error) {
-    throw new Error(CATEGORY_ERRORS.DELETE_FAILED(error.message))
+    await deleteDoc(doc(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES, id))
+  } catch (error) {
+    console.error('deleteCategory 실패:', error)
+    if ((error as Error).message.includes('사용 중')) {
+      throw error
+    }
+    throw new Error(CATEGORY_ERRORS.DELETE_FAILED((error as Error).message))
   }
 }
 
@@ -294,51 +359,47 @@ export async function deleteCategory(id: string): Promise<void> {
  * 카테고리 사용 개수 확인
  */
 export async function getCategoryUsageCount(categoryId: string): Promise<number> {
-  const supabase = createClientSupabaseClient()
+  try {
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.TOURNAMENTS),
+      where('category', '==', categoryId)
+    )
 
-  const { count, error } = await supabase
-    .from('tournaments')
-    .select('*', { count: 'exact', head: true })
-    .eq('category_id', categoryId)
-
-  if (error) {
-    throw new Error(CATEGORY_ERRORS.USAGE_COUNT_FAILED(error.message))
+    const snapshot = await getDocs(q)
+    return snapshot.size
+  } catch (error) {
+    console.error('getCategoryUsageCount 실패:', error)
+    throw new Error(CATEGORY_ERRORS.USAGE_COUNT_FAILED((error as Error).message))
   }
-
-  return count || 0
 }
 
 /**
  * 모든 카테고리의 사용 개수를 한 번에 조회 (N+1 쿼리 방지)
  */
 export async function getAllCategoryUsageCounts(): Promise<Record<string, number>> {
-  const supabase = createClientSupabaseClient()
+  try {
+    const snapshot = await getDocs(collection(firestore, COLLECTION_PATHS.TOURNAMENTS))
 
-  const { data, error } = await supabase
-    .from('tournaments')
-    .select('category_id')
+    // Count by category
+    const counts: Record<string, number> = {}
+    snapshot.docs.forEach((doc) => {
+      const category = doc.data().category
+      if (category) {
+        counts[category] = (counts[category] || 0) + 1
+      }
+    })
 
-  if (error) {
-    throw new Error(CATEGORY_ERRORS.USAGE_COUNTS_FAILED(error.message))
+    return counts
+  } catch (error) {
+    console.error('getAllCategoryUsageCounts 실패:', error)
+    throw new Error(CATEGORY_ERRORS.USAGE_COUNTS_FAILED((error as Error).message))
   }
-
-  // Count by category_id
-  const counts: Record<string, number> = {}
-  data?.forEach((tournament) => {
-    if (tournament.category_id) {
-      counts[tournament.category_id] = (counts[tournament.category_id] || 0) + 1
-    }
-  })
-
-  return counts
 }
 
 /**
  * 카테고리 활성화/비활성화 토글
  */
 export async function toggleCategoryActive(id: string): Promise<TournamentCategory> {
-  const supabase = createClientSupabaseClient()
-
   // 현재 상태 조회
   const category = await getCategoryById(id)
   if (!category) {
@@ -368,118 +429,108 @@ export async function uploadCategoryLogo(
   categoryId: string,
   file: File
 ): Promise<string> {
-  const supabase = createClientSupabaseClient()
-
   // 파일 크기 확인 (5MB)
   if (file.size > CATEGORY_VALIDATIONS.MAX_FILE_SIZE) {
     throw new Error(CATEGORY_ERRORS.FILE_TOO_LARGE)
   }
 
   // 파일 타입 확인
-  if (!CATEGORY_VALIDATIONS.ALLOWED_FILE_TYPES.includes(file.type as any)) {
+  if (!CATEGORY_VALIDATIONS.ALLOWED_FILE_TYPES.includes(file.type as 'image/png' | 'image/jpeg' | 'image/webp' | 'image/svg+xml')) {
     throw new Error(CATEGORY_ERRORS.INVALID_FILE_TYPE)
   }
 
   // 파일 확장자
   const fileExt = file.name.split('.').pop() || 'png'
   const fileName = `${categoryId}.${fileExt}`
-  const filePath = `${fileName}`
+  const filePath = `tournament-logos/${fileName}`
 
-  // 기존 로고 삭제 (있으면)
-  const category = await getCategoryById(categoryId)
-  if (category?.logo_url && category.logo_url.includes('tournament-logos')) {
-    const oldFileName = category.logo_url.split('/').pop()
-    if (oldFileName) {
-      await supabase.storage
-        .from('tournament-logos')
-        .remove([oldFileName])
+  try {
+    // 기존 로고 삭제 (있으면)
+    const category = await getCategoryById(categoryId)
+    if (category?.logo_url && category.logo_url.includes('tournament-logos')) {
+      try {
+        const oldFileName = category.logo_url.split('/').pop()?.split('?')[0]
+        if (oldFileName) {
+          const oldRef = ref(storage, `tournament-logos/${oldFileName}`)
+          await deleteObject(oldRef)
+        }
+      } catch (deleteError) {
+        // 기존 파일이 없어도 무시
+        console.warn('기존 로고 삭제 실패 (무시됨):', deleteError)
+      }
     }
-  }
 
-  // 새 로고 업로드
-  const { error: uploadError } = await supabase.storage
-    .from('tournament-logos')
-    .upload(filePath, file, {
-      cacheControl: '604800', // 7일 (로고는 자주 변경되지 않음)
-      upsert: true, // 같은 이름이면 덮어쓰기
+    // 새 로고 업로드
+    const storageRef = ref(storage, filePath)
+    await uploadBytes(storageRef, file, {
+      contentType: file.type,
+      cacheControl: 'public, max-age=604800', // 7일 캐시
     })
 
-  if (uploadError) {
-    throw new Error(CATEGORY_ERRORS.UPLOAD_FAILED(uploadError.message))
+    // Public URL 가져오기
+    const publicUrl = await getDownloadURL(storageRef)
+
+    // 카테고리의 logo_url 업데이트
+    await updateCategory(categoryId, { logo_url: publicUrl })
+
+    return publicUrl
+  } catch (error) {
+    console.error('uploadCategoryLogo 실패:', error)
+    throw new Error(CATEGORY_ERRORS.UPLOAD_FAILED((error as Error).message))
   }
-
-  // Public URL 가져오기
-  const { data: { publicUrl } } = supabase.storage
-    .from('tournament-logos')
-    .getPublicUrl(filePath)
-
-  // 카테고리의 logo_url 업데이트
-  await updateCategory(categoryId, { logo_url: publicUrl })
-
-  return publicUrl
 }
 
 /**
  * 로고 삭제
  */
 export async function deleteCategoryLogo(categoryId: string): Promise<void> {
-  const supabase = createClientSupabaseClient()
-
-  const category = await getCategoryById(categoryId)
-  if (!category || !category.logo_url) {
-    return // 로고가 없으면 아무것도 하지 않음
-  }
-
-  // Storage에서 삭제 (Supabase Storage URL인 경우만)
-  if (category.logo_url.includes('tournament-logos')) {
-    const fileName = category.logo_url.split('/').pop()
-    if (fileName) {
-      await supabase.storage
-        .from('tournament-logos')
-        .remove([fileName])
+  try {
+    const category = await getCategoryById(categoryId)
+    if (!category || !category.logo_url) {
+      return // 로고가 없으면 아무것도 하지 않음
     }
-  }
 
-  // 카테고리의 logo_url NULL로 설정
-  await updateCategory(categoryId, { logo_url: undefined })
+    // Storage에서 삭제 (Firebase Storage URL인 경우만)
+    if (category.logo_url.includes('tournament-logos')) {
+      try {
+        const fileName = category.logo_url.split('/').pop()?.split('?')[0]
+        if (fileName) {
+          const storageRef = ref(storage, `tournament-logos/${fileName}`)
+          await deleteObject(storageRef)
+        }
+      } catch (deleteError) {
+        // 파일이 없어도 무시
+        console.warn('로고 파일 삭제 실패 (무시됨):', deleteError)
+      }
+    }
+
+    // 카테고리의 logo_url NULL로 설정
+    await updateCategory(categoryId, { logo_url: undefined })
+  } catch (error) {
+    console.error('deleteCategoryLogo 실패:', error)
+    throw error
+  }
 }
 
 /**
- * 검색 (이름, display_name, aliases로 검색) - DB 쿼리로 최적화
+ * 검색 (이름, display_name, aliases로 검색)
  */
-export async function searchCategories(query: string): Promise<TournamentCategory[]> {
-  const supabase = createClientSupabaseClient()
+export async function searchCategories(searchQuery: string): Promise<TournamentCategory[]> {
+  try {
+    // Firestore는 전문 검색을 지원하지 않으므로 전체 조회 후 클라이언트에서 필터링
+    const allCategories = await getAllCategories(false)
 
-  const searchPattern = `%${query}%`
+    const lowerQuery = searchQuery.toLowerCase()
 
-  const { data, error } = await supabase
-    .from('tournament_categories')
-    .select('*')
-    .eq('is_active', true)
-    .or(`name.ilike.${searchPattern},display_name.ilike.${searchPattern},short_name.ilike.${searchPattern}`)
-    .order('name', { ascending: true })
-
-  if (error) {
-    throw new Error(CATEGORY_ERRORS.SEARCH_FAILED(error.message))
-  }
-
-  // Also check aliases (DB query doesn't cover aliases)
-  if (!data || data.length === 0) {
-    // If no results from DB, search all categories for alias matches
-    const { data: allData, error: allError } = await supabase
-      .from('tournament_categories')
-      .select('*')
-      .eq('is_active', true)
-
-    if (allError) {
-      throw new Error(CATEGORY_ERRORS.SEARCH_FAILED(allError.message))
-    }
-
-    const lowerQuery = query.toLowerCase()
-    return (allData || []).filter((cat) =>
-      cat.aliases.some((alias: string) => alias.toLowerCase().includes(lowerQuery))
+    return allCategories.filter(
+      (cat) =>
+        cat.name.toLowerCase().includes(lowerQuery) ||
+        cat.display_name.toLowerCase().includes(lowerQuery) ||
+        (cat.short_name && cat.short_name.toLowerCase().includes(lowerQuery)) ||
+        cat.aliases.some((alias) => alias.toLowerCase().includes(lowerQuery))
     )
+  } catch (error) {
+    console.error('searchCategories 실패:', error)
+    throw new Error(CATEGORY_ERRORS.SEARCH_FAILED((error as Error).message))
   }
-
-  return data
 }

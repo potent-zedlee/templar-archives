@@ -1,7 +1,29 @@
-import { createClientSupabaseClient } from "./supabase-client"
+/**
+ * Player Claims Database Operations (Firestore)
+ *
+ * 플레이어 클레임 요청 관리
+ *
+ * @module lib/player-claims
+ */
 
-export type ClaimStatus = "pending" | "approved" | "rejected"
-export type VerificationMethod = "social_media" | "email" | "admin" | "other"
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  Timestamp,
+} from 'firebase/firestore'
+import { firestore } from '@/lib/firebase'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
+import type { FirestorePlayerClaim, ClaimStatus, VerificationMethod } from '@/lib/firestore-types'
+
+export type { ClaimStatus, VerificationMethod } from '@/lib/firestore-types'
 
 export type PlayerClaim = {
   id: string
@@ -9,7 +31,7 @@ export type PlayerClaim = {
   player_id: string
   status: ClaimStatus
   verification_method: VerificationMethod
-  verification_data?: any
+  verification_data?: Record<string, unknown>
   admin_notes?: string
   claimed_at: string
   verified_at?: string
@@ -35,6 +57,51 @@ export type PlayerClaimWithDetails = PlayerClaim & {
 }
 
 /**
+ * Firestore 문서를 PlayerClaim으로 변환
+ */
+function toPlayerClaim(id: string, data: FirestorePlayerClaim): PlayerClaim {
+  return {
+    id,
+    user_id: data.userId,
+    player_id: data.playerId,
+    status: data.status,
+    verification_method: data.verificationMethod,
+    verification_data: data.verificationData,
+    admin_notes: data.adminNotes,
+    claimed_at: data.claimedAt.toDate().toISOString(),
+    verified_at: data.verifiedAt?.toDate().toISOString(),
+    verified_by: data.verifiedBy,
+    rejected_reason: data.rejectedReason,
+    created_at: data.createdAt.toDate().toISOString(),
+    updated_at: data.updatedAt.toDate().toISOString(),
+  }
+}
+
+/**
+ * Firestore 문서를 PlayerClaimWithDetails로 변환
+ */
+function toPlayerClaimWithDetails(id: string, data: FirestorePlayerClaim): PlayerClaimWithDetails {
+  const claim = toPlayerClaim(id, data)
+  return {
+    ...claim,
+    user: {
+      nickname: data.user?.nickname || 'Unknown',
+      email: data.user?.email || '',
+      avatar_url: data.user?.avatarUrl,
+    },
+    player: {
+      name: data.player?.name || 'Unknown',
+      photo_url: data.player?.photoUrl,
+    },
+    verified_by_user: data.verifiedBy
+      ? {
+          nickname: 'Admin', // 별도 조회 필요
+        }
+      : undefined,
+  }
+}
+
+/**
  * 플레이어 클레임 요청 생성
  */
 export async function requestPlayerClaim({
@@ -46,47 +113,73 @@ export async function requestPlayerClaim({
   userId: string
   playerId: string
   verificationMethod: VerificationMethod
-  verificationData?: any
-}): Promise<{ data: PlayerClaim | null; error: any }> {
-  const supabase = createClientSupabaseClient()
-
+  verificationData?: Record<string, unknown>
+}): Promise<{ data: PlayerClaim | null; error: Error | null }> {
   try {
     // 이미 클레임 요청이 있는지 확인
-    const { data: existingClaim, error: checkError } = await supabase
-      .from("player_claims")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("player_id", playerId)
-      .in("status", ["pending", "approved"])
-      .single()
+    const existingQuery = query(
+      collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
+      where('userId', '==', userId),
+      where('playerId', '==', playerId),
+      where('status', 'in', ['pending', 'approved'])
+    )
 
-    if (existingClaim) {
+    const existingSnapshot = await getDocs(existingQuery)
+
+    if (!existingSnapshot.empty) {
+      const existingData = existingSnapshot.docs[0].data() as FirestorePlayerClaim
       return {
         data: null,
         error: new Error(
-          existingClaim.status === "approved"
-            ? "이미 승인된 클레임이 있습니다."
-            : "이미 대기 중인 클레임 요청이 있습니다."
+          existingData.status === 'approved'
+            ? '이미 승인된 클레임이 있습니다.'
+            : '이미 대기 중인 클레임 요청이 있습니다.'
         ),
       }
     }
 
-    // 클레임 요청 생성
-    const { data, error } = await supabase
-      .from("player_claims")
-      .insert({
-        user_id: userId,
-        player_id: playerId,
-        verification_method: verificationMethod,
-        verification_data: verificationData,
-        status: "pending",
-      })
-      .select()
-      .single()
+    // 사용자 정보 조회
+    const userDoc = await getDoc(doc(firestore, COLLECTION_PATHS.USERS, userId))
+    const userData = userDoc.data()
 
-    return { data, error }
+    // 플레이어 정보 조회
+    const playerDoc = await getDoc(doc(firestore, COLLECTION_PATHS.PLAYERS, playerId))
+    const playerData = playerDoc.data()
+
+    const now = Timestamp.now()
+    const claimData: Omit<FirestorePlayerClaim, 'verifiedAt' | 'verifiedBy' | 'rejectedReason'> = {
+      userId,
+      playerId,
+      status: 'pending',
+      verificationMethod,
+      verificationData,
+      claimedAt: now,
+      user: userData
+        ? {
+            nickname: userData.nickname || 'Unknown',
+            email: userData.email || '',
+            avatarUrl: userData.avatarUrl,
+          }
+        : undefined,
+      player: playerData
+        ? {
+            name: playerData.name || 'Unknown',
+            photoUrl: playerData.photoUrl,
+          }
+        : undefined,
+      createdAt: now,
+      updatedAt: now,
+    }
+
+    const docRef = await addDoc(collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS), claimData)
+
+    return {
+      data: toPlayerClaim(docRef.id, claimData as FirestorePlayerClaim),
+      error: null,
+    }
   } catch (error) {
-    return { data: null, error }
+    console.error('requestPlayerClaim 실패:', error)
+    return { data: null, error: error as Error }
   }
 }
 
@@ -99,31 +192,26 @@ export async function getPlayerClaimInfo(
   claimed: boolean
   claim?: PlayerClaimWithDetails
 }> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from("player_claims")
-      .select(
-        `
-        *,
-        user:users!player_claims_user_id_fkey(nickname, email, avatar_url),
-        player:players!player_claims_player_id_fkey(name, photo_url)
-      `
-      )
-      .eq("player_id", playerId)
-      .eq("status", "approved")
-      .single()
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
+      where('playerId', '==', playerId),
+      where('status', '==', 'approved')
+    )
 
-    if (error || !data) {
+    const snapshot = await getDocs(q)
+
+    if (snapshot.empty) {
       return { claimed: false }
     }
 
+    const doc = snapshot.docs[0]
     return {
       claimed: true,
-      claim: data as unknown as PlayerClaimWithDetails,
+      claim: toPlayerClaimWithDetails(doc.id, doc.data() as FirestorePlayerClaim),
     }
   } catch (error) {
+    console.error('getPlayerClaimInfo 실패:', error)
     return { claimed: false }
   }
 }
@@ -133,27 +221,29 @@ export async function getPlayerClaimInfo(
  */
 export async function getUserClaimedPlayer(userId: string): Promise<{
   data: PlayerClaimWithDetails | null
-  error: any
+  error: Error | null
 }> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from("player_claims")
-      .select(
-        `
-        *,
-        user:users!player_claims_user_id_fkey(nickname, email, avatar_url),
-        player:players!player_claims_player_id_fkey(name, photo_url)
-      `
-      )
-      .eq("user_id", userId)
-      .eq("status", "approved")
-      .single()
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
+      where('userId', '==', userId),
+      where('status', '==', 'approved')
+    )
 
-    return { data: data as unknown as PlayerClaimWithDetails | null, error }
+    const snapshot = await getDocs(q)
+
+    if (snapshot.empty) {
+      return { data: null, error: null }
+    }
+
+    const doc = snapshot.docs[0]
+    return {
+      data: toPlayerClaimWithDetails(doc.id, doc.data() as FirestorePlayerClaim),
+      error: null,
+    }
   } catch (error) {
-    return { data: null, error }
+    console.error('getUserClaimedPlayer 실패:', error)
+    return { data: null, error: error as Error }
   }
 }
 
@@ -162,26 +252,25 @@ export async function getUserClaimedPlayer(userId: string): Promise<{
  */
 export async function getUserClaims(userId: string): Promise<{
   data: PlayerClaimWithDetails[]
-  error: any
+  error: Error | null
 }> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from("player_claims")
-      .select(
-        `
-        *,
-        user:users!player_claims_user_id_fkey(nickname, email, avatar_url),
-        player:players!player_claims_player_id_fkey(name, photo_url)
-      `
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    )
 
-    return { data: (data as unknown as PlayerClaimWithDetails[]) || [], error }
+    const snapshot = await getDocs(q)
+
+    const claims = snapshot.docs.map((doc) =>
+      toPlayerClaimWithDetails(doc.id, doc.data() as FirestorePlayerClaim)
+    )
+
+    return { data: claims, error: null }
   } catch (error) {
-    return { data: [], error }
+    console.error('getUserClaims 실패:', error)
+    return { data: [], error: error as Error }
   }
 }
 
@@ -190,26 +279,25 @@ export async function getUserClaims(userId: string): Promise<{
  */
 export async function getPendingClaims(): Promise<{
   data: PlayerClaimWithDetails[]
-  error: any
+  error: Error | null
 }> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from("player_claims")
-      .select(
-        `
-        *,
-        user:users!player_claims_user_id_fkey(nickname, email, avatar_url),
-        player:players!player_claims_player_id_fkey(name, photo_url)
-      `
-      )
-      .eq("status", "pending")
-      .order("created_at", { ascending: false })
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
+      where('status', '==', 'pending'),
+      orderBy('createdAt', 'desc')
+    )
 
-    return { data: (data as unknown as PlayerClaimWithDetails[]) || [], error }
+    const snapshot = await getDocs(q)
+
+    const claims = snapshot.docs.map((doc) =>
+      toPlayerClaimWithDetails(doc.id, doc.data() as FirestorePlayerClaim)
+    )
+
+    return { data: claims, error: null }
   } catch (error) {
-    return { data: [], error }
+    console.error('getPendingClaims 실패:', error)
+    return { data: [], error: error as Error }
   }
 }
 
@@ -218,26 +306,24 @@ export async function getPendingClaims(): Promise<{
  */
 export async function getAllClaims(): Promise<{
   data: PlayerClaimWithDetails[]
-  error: any
+  error: Error | null
 }> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from("player_claims")
-      .select(
-        `
-        *,
-        user:users!player_claims_user_id_fkey(nickname, email, avatar_url),
-        player:players!player_claims_player_id_fkey(name, photo_url),
-        verified_by_user:users!player_claims_verified_by_fkey(nickname)
-      `
-      )
-      .order("created_at", { ascending: false })
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
+      orderBy('createdAt', 'desc')
+    )
 
-    return { data: (data as unknown as PlayerClaimWithDetails[]) || [], error }
+    const snapshot = await getDocs(q)
+
+    const claims = snapshot.docs.map((doc) =>
+      toPlayerClaimWithDetails(doc.id, doc.data() as FirestorePlayerClaim)
+    )
+
+    return { data: claims, error: null }
   } catch (error) {
-    return { data: [], error }
+    console.error('getAllClaims 실패:', error)
+    return { data: [], error: error as Error }
   }
 }
 
@@ -252,25 +338,30 @@ export async function approvePlayerClaim({
   claimId: string
   adminId: string
   adminNotes?: string
-}): Promise<{ data: PlayerClaim | null; error: any }> {
-  const supabase = createClientSupabaseClient()
-
+}): Promise<{ data: PlayerClaim | null; error: Error | null }> {
   try {
-    const { data, error } = await supabase
-      .from("player_claims")
-      .update({
-        status: "approved",
-        verified_at: new Date().toISOString(),
-        verified_by: adminId,
-        admin_notes: adminNotes,
-      })
-      .eq("id", claimId)
-      .select()
-      .single()
+    const claimRef = doc(firestore, COLLECTION_PATHS.PLAYER_CLAIMS, claimId)
 
-    return { data, error }
+    await updateDoc(claimRef, {
+      status: 'approved',
+      verifiedAt: Timestamp.now(),
+      verifiedBy: adminId,
+      adminNotes: adminNotes || null,
+      updatedAt: Timestamp.now(),
+    })
+
+    const updatedDoc = await getDoc(claimRef)
+    if (!updatedDoc.exists()) {
+      return { data: null, error: new Error('Claim not found') }
+    }
+
+    return {
+      data: toPlayerClaim(updatedDoc.id, updatedDoc.data() as FirestorePlayerClaim),
+      error: null,
+    }
   } catch (error) {
-    return { data: null, error }
+    console.error('approvePlayerClaim 실패:', error)
+    return { data: null, error: error as Error }
   }
 }
 
@@ -287,26 +378,31 @@ export async function rejectPlayerClaim({
   adminId: string
   rejectedReason: string
   adminNotes?: string
-}): Promise<{ data: PlayerClaim | null; error: any }> {
-  const supabase = createClientSupabaseClient()
-
+}): Promise<{ data: PlayerClaim | null; error: Error | null }> {
   try {
-    const { data, error } = await supabase
-      .from("player_claims")
-      .update({
-        status: "rejected",
-        verified_at: new Date().toISOString(),
-        verified_by: adminId,
-        rejected_reason: rejectedReason,
-        admin_notes: adminNotes,
-      })
-      .eq("id", claimId)
-      .select()
-      .single()
+    const claimRef = doc(firestore, COLLECTION_PATHS.PLAYER_CLAIMS, claimId)
 
-    return { data, error }
+    await updateDoc(claimRef, {
+      status: 'rejected',
+      verifiedAt: Timestamp.now(),
+      verifiedBy: adminId,
+      rejectedReason,
+      adminNotes: adminNotes || null,
+      updatedAt: Timestamp.now(),
+    })
+
+    const updatedDoc = await getDoc(claimRef)
+    if (!updatedDoc.exists()) {
+      return { data: null, error: new Error('Claim not found') }
+    }
+
+    return {
+      data: toPlayerClaim(updatedDoc.id, updatedDoc.data() as FirestorePlayerClaim),
+      error: null,
+    }
   } catch (error) {
-    return { data: null, error }
+    console.error('rejectPlayerClaim 실패:', error)
+    return { data: null, error: error as Error }
   }
 }
 
@@ -316,20 +412,34 @@ export async function rejectPlayerClaim({
 export async function cancelPlayerClaim(
   claimId: string,
   userId: string
-): Promise<{ error: any }> {
-  const supabase = createClientSupabaseClient()
-
+): Promise<{ error: Error | null }> {
   try {
-    const { error } = await supabase
-      .from("player_claims")
-      .delete()
-      .eq("id", claimId)
-      .eq("user_id", userId)
-      .eq("status", "pending")
+    // 클레임 확인
+    const claimRef = doc(firestore, COLLECTION_PATHS.PLAYER_CLAIMS, claimId)
+    const claimDoc = await getDoc(claimRef)
 
-    return { error }
+    if (!claimDoc.exists()) {
+      return { error: new Error('Claim not found') }
+    }
+
+    const claimData = claimDoc.data() as FirestorePlayerClaim
+
+    // 본인 확인
+    if (claimData.userId !== userId) {
+      return { error: new Error('Unauthorized') }
+    }
+
+    // pending 상태 확인
+    if (claimData.status !== 'pending') {
+      return { error: new Error('Only pending claims can be cancelled') }
+    }
+
+    await deleteDoc(claimRef)
+
+    return { error: null }
   } catch (error) {
-    return { error }
+    console.error('cancelPlayerClaim 실패:', error)
+    return { error: error as Error }
   }
 }
 
@@ -343,23 +453,27 @@ export async function checkUserPlayerClaim(
   hasClaim: boolean
   claim?: PlayerClaim
 }> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from("player_claims")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("player_id", playerId)
-      .in("status", ["pending", "approved"])
-      .single()
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
+      where('userId', '==', userId),
+      where('playerId', '==', playerId),
+      where('status', 'in', ['pending', 'approved'])
+    )
 
-    if (error || !data) {
+    const snapshot = await getDocs(q)
+
+    if (snapshot.empty) {
       return { hasClaim: false }
     }
 
-    return { hasClaim: true, claim: data }
+    const doc = snapshot.docs[0]
+    return {
+      hasClaim: true,
+      claim: toPlayerClaim(doc.id, doc.data() as FirestorePlayerClaim),
+    }
   } catch (error) {
+    console.error('checkUserPlayerClaim 실패:', error)
     return { hasClaim: false }
   }
 }

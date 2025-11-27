@@ -1,7 +1,29 @@
-import { createClientSupabaseClient } from './supabase-client'
+/**
+ * Hand Edit Requests Database Operations (Firestore)
+ *
+ * 핸드 수정 요청 관리
+ *
+ * @module lib/hand-edit-requests
+ */
 
-export type EditType = 'basic_info' | 'players' | 'actions' | 'board'
-export type EditRequestStatus = 'pending' | 'approved' | 'rejected'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  Timestamp,
+} from 'firebase/firestore'
+import { firestore } from '@/lib/firebase'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
+import type { FirestoreHandEditRequest, EditType, EditRequestStatus } from '@/lib/firestore-types'
+
+export type { EditType, EditRequestStatus } from '@/lib/firestore-types'
 
 export type HandEditRequest = {
   id: string
@@ -9,14 +31,35 @@ export type HandEditRequest = {
   requester_id: string
   requester_name: string
   edit_type: EditType
-  original_data: any
-  proposed_data: any
+  original_data: Record<string, unknown>
+  proposed_data: Record<string, unknown>
   reason: string
   status: EditRequestStatus
   reviewed_by: string | null
   reviewed_at: string | null
   admin_comment: string | null
   created_at: string
+}
+
+/**
+ * Firestore 문서를 HandEditRequest로 변환
+ */
+function toHandEditRequest(id: string, data: FirestoreHandEditRequest): HandEditRequest {
+  return {
+    id,
+    hand_id: data.handId,
+    requester_id: data.requesterId,
+    requester_name: data.requesterName,
+    edit_type: data.editType,
+    original_data: data.originalData,
+    proposed_data: data.proposedData,
+    reason: data.reason,
+    status: data.status,
+    reviewed_by: data.reviewedBy || null,
+    reviewed_at: data.reviewedAt?.toDate().toISOString() || null,
+    admin_comment: data.adminComment || null,
+    created_at: data.createdAt.toDate().toISOString(),
+  }
 }
 
 /**
@@ -29,35 +72,52 @@ export async function createEditRequest({
   editType,
   originalData,
   proposedData,
-  reason
+  reason,
 }: {
   handId: string
   requesterId: string
   requesterName: string
   editType: EditType
-  originalData: any
-  proposedData: any
+  originalData: Record<string, unknown>
+  proposedData: Record<string, unknown>
   reason: string
 }) {
-  const supabase = createClientSupabaseClient()
+  try {
+    // 핸드 정보 조회 (임베딩용)
+    const handDoc = await getDoc(doc(firestore, COLLECTION_PATHS.HANDS, handId))
+    const handData = handDoc.exists() ? handDoc.data() : null
 
-  const { data, error } = await supabase
-    .from('hand_edit_requests')
-    .insert({
-      hand_id: handId,
-      requester_id: requesterId,
-      requester_name: requesterName,
-      edit_type: editType,
-      original_data: originalData,
-      proposed_data: proposedData,
+    const requestData: FirestoreHandEditRequest = {
+      handId,
+      requesterId,
+      requesterName,
+      editType,
+      originalData,
+      proposedData,
       reason,
-      status: 'pending'
-    })
-    .select()
-    .single()
+      status: 'pending',
+      hand: handData
+        ? {
+            number: handData.number,
+            description: handData.description,
+            streamName: handData.streamName,
+            eventName: handData.eventName,
+            tournamentName: handData.tournamentName,
+          }
+        : undefined,
+      createdAt: Timestamp.now(),
+    }
 
-  if (error) throw error
-  return data
+    const docRef = await addDoc(
+      collection(firestore, COLLECTION_PATHS.HAND_EDIT_REQUESTS),
+      requestData
+    )
+
+    return toHandEditRequest(docRef.id, requestData)
+  } catch (error) {
+    console.error('createEditRequest 실패:', error)
+    throw error
+  }
 }
 
 /**
@@ -65,55 +125,58 @@ export async function createEditRequest({
  */
 export async function fetchEditRequests({
   status,
-  limit = 50
+  limit: limitCount = 50,
 }: {
   status?: EditRequestStatus
   limit?: number
 } = {}) {
-  const supabase = createClientSupabaseClient()
+  try {
+    let q = query(
+      collection(firestore, COLLECTION_PATHS.HAND_EDIT_REQUESTS),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    )
 
-  let query = supabase
-    .from('hand_edit_requests')
-    .select(`
-      id,
-      hand_id,
-      requester_id,
-      requester_name,
-      edit_type,
-      original_data,
-      proposed_data,
-      reason,
-      status,
-      reviewed_by,
-      reviewed_at,
-      admin_comment,
-      created_at,
-      hand:hand_id (
-        id,
-        number,
-        description,
-        day:day_id (
-          name,
-          sub_event:sub_event_id (
-            name,
-            tournament:tournament_id (
-              name
-            )
-          )
-        )
+    if (status) {
+      q = query(
+        collection(firestore, COLLECTION_PATHS.HAND_EDIT_REQUESTS),
+        where('status', '==', status),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
       )
-    `)
-    .order('created_at', { ascending: false })
-    .limit(limit)
+    }
 
-  if (status) {
-    query = query.eq('status', status)
+    const snapshot = await getDocs(q)
+
+    return snapshot.docs.map((docSnap) => {
+      const data = docSnap.data() as FirestoreHandEditRequest
+      const request = toHandEditRequest(docSnap.id, data)
+
+      // 핸드 정보 (임베딩된 데이터 사용)
+      return {
+        ...request,
+        hand: data.hand
+          ? {
+              id: data.handId,
+              number: data.hand.number,
+              description: data.hand.description,
+              day: {
+                name: data.hand.streamName || 'N/A',
+                sub_event: {
+                  name: data.hand.eventName || 'N/A',
+                  tournament: {
+                    name: data.hand.tournamentName || 'N/A',
+                  },
+                },
+              },
+            }
+          : null,
+      }
+    })
+  } catch (error) {
+    console.error('fetchEditRequests 실패:', error)
+    throw error
   }
-
-  const { data, error } = await query
-
-  if (error) throw error
-  return data || []
 }
 
 /**
@@ -122,54 +185,60 @@ export async function fetchEditRequests({
 export async function fetchUserEditRequests({
   userId,
   status,
-  limit = 20
+  limit: limitCount = 20,
 }: {
   userId: string
   status?: EditRequestStatus
   limit?: number
 }) {
-  const supabase = createClientSupabaseClient()
+  try {
+    let q = query(
+      collection(firestore, COLLECTION_PATHS.HAND_EDIT_REQUESTS),
+      where('requesterId', '==', userId),
+      orderBy('createdAt', 'desc'),
+      limit(limitCount)
+    )
 
-  let query = supabase
-    .from('hand_edit_requests')
-    .select(`
-      id,
-      hand_id,
-      edit_type,
-      original_data,
-      proposed_data,
-      reason,
-      status,
-      reviewed_at,
-      admin_comment,
-      created_at,
-      hand:hand_id (
-        id,
-        number,
-        description,
-        day:day_id (
-          name,
-          sub_event:sub_event_id (
-            name,
-            tournament:tournament_id (
-              name
-            )
-          )
-        )
+    if (status) {
+      q = query(
+        collection(firestore, COLLECTION_PATHS.HAND_EDIT_REQUESTS),
+        where('requesterId', '==', userId),
+        where('status', '==', status),
+        orderBy('createdAt', 'desc'),
+        limit(limitCount)
       )
-    `)
-    .eq('requester_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(limit)
+    }
 
-  if (status) {
-    query = query.eq('status', status)
+    const snapshot = await getDocs(q)
+
+    return snapshot.docs.map((docSnap) => {
+      const data = docSnap.data() as FirestoreHandEditRequest
+      const request = toHandEditRequest(docSnap.id, data)
+
+      return {
+        ...request,
+        hand: data.hand
+          ? {
+              id: data.handId,
+              number: data.hand.number,
+              description: data.hand.description,
+              day: {
+                name: data.hand.streamName || 'N/A',
+                sub_event: {
+                  name: data.hand.eventName || 'N/A',
+                  tournament: {
+                    name: data.hand.tournamentName || 'N/A',
+                  },
+                },
+              },
+            }
+          : null,
+      }
+    })
+  } catch (error) {
+    console.error('fetchUserEditRequests 실패:', error)
+    throw error
   }
-
-  const { data, error } = await query
-
-  if (error) throw error
-  return data || []
 }
 
 /**
@@ -178,41 +247,40 @@ export async function fetchUserEditRequests({
 export async function approveEditRequest({
   requestId,
   adminId,
-  adminComment
+  adminComment,
 }: {
   requestId: string
   adminId: string
   adminComment?: string
 }) {
-  const supabase = createClientSupabaseClient()
+  try {
+    // 1. Get request details
+    const requestRef = doc(firestore, COLLECTION_PATHS.HAND_EDIT_REQUESTS, requestId)
+    const requestSnap = await getDoc(requestRef)
 
-  // 1. Get request details
-  const { data: request, error: fetchError } = await supabase
-    .from('hand_edit_requests')
-    .select('hand_id, edit_type, proposed_data')
-    .eq('id', requestId)
-    .single()
+    if (!requestSnap.exists()) {
+      throw new Error('Request not found')
+    }
 
-  if (fetchError) throw fetchError
+    const requestData = requestSnap.data() as FirestoreHandEditRequest
 
-  // 2. Apply edits to hand based on edit_type
-  await applyEditToHand(request.hand_id, request.edit_type, request.proposed_data)
+    // 2. Apply edits to hand based on edit_type
+    await applyEditToHand(requestData.handId, requestData.editType, requestData.proposedData)
 
-  // 3. Update request status
-  const { data, error } = await supabase
-    .from('hand_edit_requests')
-    .update({
+    // 3. Update request status
+    await updateDoc(requestRef, {
       status: 'approved',
-      reviewed_by: adminId,
-      reviewed_at: new Date().toISOString(),
-      admin_comment: adminComment || null
+      reviewedBy: adminId,
+      reviewedAt: Timestamp.now(),
+      adminComment: adminComment || null,
     })
-    .eq('id', requestId)
-    .select()
-    .single()
 
-  if (error) throw error
-  return data
+    const updatedSnap = await getDoc(requestRef)
+    return toHandEditRequest(updatedSnap.id, updatedSnap.data() as FirestoreHandEditRequest)
+  } catch (error) {
+    console.error('approveEditRequest 실패:', error)
+    throw error
+  }
 }
 
 /**
@@ -221,28 +289,28 @@ export async function approveEditRequest({
 export async function rejectEditRequest({
   requestId,
   adminId,
-  adminComment
+  adminComment,
 }: {
   requestId: string
   adminId: string
   adminComment?: string
 }) {
-  const supabase = createClientSupabaseClient()
+  try {
+    const requestRef = doc(firestore, COLLECTION_PATHS.HAND_EDIT_REQUESTS, requestId)
 
-  const { data, error } = await supabase
-    .from('hand_edit_requests')
-    .update({
+    await updateDoc(requestRef, {
       status: 'rejected',
-      reviewed_by: adminId,
-      reviewed_at: new Date().toISOString(),
-      admin_comment: adminComment || null
+      reviewedBy: adminId,
+      reviewedAt: Timestamp.now(),
+      adminComment: adminComment || null,
     })
-    .eq('id', requestId)
-    .select()
-    .single()
 
-  if (error) throw error
-  return data
+    const updatedSnap = await getDoc(requestRef)
+    return toHandEditRequest(updatedSnap.id, updatedSnap.data() as FirestoreHandEditRequest)
+  } catch (error) {
+    console.error('rejectEditRequest 실패:', error)
+    throw error
+  }
 }
 
 /**
@@ -251,68 +319,53 @@ export async function rejectEditRequest({
 async function applyEditToHand(
   handId: string,
   editType: EditType,
-  proposedData: any
+  proposedData: Record<string, unknown>
 ) {
-  const supabase = createClientSupabaseClient()
+  const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
 
   switch (editType) {
     case 'basic_info':
       // Update hand basic info (description, timestamp, etc.)
-      const { error: handError } = await supabase
-        .from('hands')
-        .update({
-          description: proposedData.description,
-          timestamp: proposedData.timestamp,
-          // Add other basic fields as needed
-        })
-        .eq('id', handId)
+      const basicUpdate: Record<string, unknown> = {
+        updatedAt: Timestamp.now(),
+      }
+      if (proposedData.description) basicUpdate.description = proposedData.description
+      if (proposedData.timestamp) basicUpdate.timestamp = proposedData.timestamp
 
-      if (handError) throw handError
+      await updateDoc(handRef, basicUpdate)
       break
 
     case 'board':
       // Update board cards and pot
-      const { error: boardError } = await supabase
-        .from('hands')
-        .update({
-          board_cards: proposedData.board_cards,
-          pot_size: proposedData.pot_size
-        })
-        .eq('id', handId)
+      const boardUpdate: Record<string, unknown> = {
+        updatedAt: Timestamp.now(),
+      }
+      if (proposedData.boardFlop) boardUpdate.boardFlop = proposedData.boardFlop
+      if (proposedData.boardTurn) boardUpdate.boardTurn = proposedData.boardTurn
+      if (proposedData.boardRiver) boardUpdate.boardRiver = proposedData.boardRiver
+      if (proposedData.potSize) boardUpdate.potSize = proposedData.potSize
 
-      if (boardError) throw boardError
+      await updateDoc(handRef, boardUpdate)
       break
 
     case 'players':
-      // Update hand_players
-      // This is more complex - would need to handle player updates/additions/deletions
-      // For now, just update existing players
+      // Update players array (embedded in hand document)
       if (proposedData.players && Array.isArray(proposedData.players)) {
-        for (const player of proposedData.players) {
-          if (player.id) {
-            const { error: playerError } = await supabase
-              .from('hand_players')
-              .update({
-                position: player.position,
-                cards: player.cards,
-                starting_stack: player.starting_stack,
-                ending_stack: player.ending_stack
-              })
-              .eq('id', player.id)
-
-            if (playerError) throw playerError
-          }
-        }
+        await updateDoc(handRef, {
+          players: proposedData.players,
+          updatedAt: Timestamp.now(),
+        })
       }
       break
 
     case 'actions':
-      // Update hand_actions
-      // This would typically involve deleting old actions and inserting new ones
-      // For simplicity, we'll skip this for now
-      // In a real implementation, you'd want to:
-      // 1. Delete existing actions for this hand
-      // 2. Insert new actions from proposedData
+      // Update actions array (embedded in hand document)
+      if (proposedData.actions && Array.isArray(proposedData.actions)) {
+        await updateDoc(handRef, {
+          actions: proposedData.actions,
+          updatedAt: Timestamp.now(),
+        })
+      }
       break
   }
 }
@@ -321,51 +374,34 @@ async function applyEditToHand(
  * 핸드 데이터 가져오기 (수정 요청용)
  */
 export async function getHandDataForEdit(handId: string) {
-  const supabase = createClientSupabaseClient()
+  try {
+    const handDoc = await getDoc(doc(firestore, COLLECTION_PATHS.HANDS, handId))
 
-  const { data: hand, error: handError } = await supabase
-    .from('hands')
-    .select(`
-      id,
-      number,
-      description,
-      timestamp,
-      board_cards,
-      pot_size,
-      day:day_id (
-        name,
-        sub_event:sub_event_id (
-          name,
-          tournament:tournament_id (
-            name
-          )
-        )
-      )
-    `)
-    .eq('id', handId)
-    .single()
+    if (!handDoc.exists()) {
+      throw new Error('Hand not found')
+    }
 
-  if (handError) throw handError
+    const handData = handDoc.data()
 
-  const { data: players, error: playersError } = await supabase
-    .from('hand_players')
-    .select(`
-      id,
-      position,
-      cards,
-      starting_stack,
-      ending_stack,
-      player:player_id (
-        id,
-        name
-      )
-    `)
-    .eq('hand_id', handId)
-
-  if (playersError) throw playersError
-
-  return {
-    hand,
-    players: players || []
+    return {
+      hand: {
+        id: handDoc.id,
+        number: handData.number,
+        description: handData.description,
+        timestamp: handData.timestamp,
+        boardFlop: handData.boardFlop,
+        boardTurn: handData.boardTurn,
+        boardRiver: handData.boardRiver,
+        potSize: handData.potSize,
+        streamName: handData.streamName,
+        eventName: handData.eventName,
+        tournamentName: handData.tournamentName,
+      },
+      players: handData.players || [],
+      actions: handData.actions || [],
+    }
+  } catch (error) {
+    console.error('getHandDataForEdit 실패:', error)
+    throw error
   }
 }

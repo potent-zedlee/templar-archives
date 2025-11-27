@@ -1,4 +1,27 @@
-import { createClientSupabaseClient } from './supabase-client'
+/**
+ * Unsorted Videos Database Operations (Firestore)
+ *
+ * 미분류 영상 관리
+ *
+ * @module lib/unsorted-videos
+ */
+
+import {
+  collection,
+  doc,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  writeBatch,
+  Timestamp,
+} from 'firebase/firestore'
+import { firestore } from '@/lib/firebase'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
+import type { FirestoreUnsortedStream } from '@/lib/firestore-types'
 
 export interface UnsortedVideo {
   id: string
@@ -46,24 +69,40 @@ export function normalizeYoutubeUrl(url: string): string {
 }
 
 /**
+ * Firestore 문서를 UnsortedVideo로 변환
+ */
+function toUnsortedVideo(id: string, data: FirestoreUnsortedStream): UnsortedVideo {
+  return {
+    id,
+    name: data.name,
+    video_url: data.videoUrl || null,
+    video_file: data.videoFile || null,
+    video_source: data.videoSource || null,
+    created_at: data.createdAt.toDate().toISOString(),
+    published_at: data.publishedAt?.toDate().toISOString() || null,
+  }
+}
+
+/**
  * Get all unsorted videos
  */
 export async function getUnsortedVideos(): Promise<UnsortedVideo[]> {
-  const supabase = createClientSupabaseClient()
+  try {
+    const q = query(
+      collection(firestore, COLLECTION_PATHS.UNSORTED_STREAMS),
+      where('isOrganized', '==', false),
+      orderBy('createdAt', 'desc')
+    )
 
-  const { data, error } = await supabase
-    .from('streams')
-    .select('id, name, video_url, video_file, video_source, created_at, published_at')
-    .is('sub_event_id', null)
-    .eq('is_organized', false)
-    .order('created_at', { ascending: false })
+    const snapshot = await getDocs(q)
 
-  if (error) {
+    return snapshot.docs.map((doc) =>
+      toUnsortedVideo(doc.id, doc.data() as FirestoreUnsortedStream)
+    )
+  } catch (error) {
     console.error('Error fetching unsorted videos:', error)
     return []
   }
-
-  return data || []
 }
 
 /**
@@ -76,61 +115,57 @@ export async function createUnsortedVideo(params: {
   video_source?: 'youtube' | 'local' | 'nas'
   published_at?: string
 }): Promise<{ success: boolean; id?: string; error?: string }> {
-  const supabase = createClientSupabaseClient()
+  try {
+    // Normalize YouTube URL if provided
+    let normalizedUrl = params.video_url || null
+    if (normalizedUrl && params.video_source === 'youtube') {
+      normalizedUrl = normalizeYoutubeUrl(normalizedUrl)
+      console.log('Normalized YouTube URL:', normalizedUrl)
+    }
 
-  // Normalize YouTube URL if provided
-  let normalizedUrl = params.video_url || null
-  if (normalizedUrl && params.video_source === 'youtube') {
-    normalizedUrl = normalizeYoutubeUrl(normalizedUrl)
-    console.log('Normalized YouTube URL:', normalizedUrl)
-  }
-
-  const { data, error } = await supabase
-    .from('streams')
-    .insert({
+    const now = Timestamp.now()
+    const streamData: FirestoreUnsortedStream = {
       name: params.name,
-      video_url: normalizedUrl,
-      video_file: params.video_file || null,
-      video_source: params.video_source || 'youtube',
-      sub_event_id: null,
-      is_organized: false,
-      published_at: params.published_at || null,
-    })
-    .select('id')
-    .single()
+      videoUrl: normalizedUrl || undefined,
+      videoFile: params.video_file,
+      videoSource: params.video_source || 'youtube',
+      publishedAt: params.published_at ? Timestamp.fromDate(new Date(params.published_at)) : undefined,
+      isOrganized: false,
+      createdAt: now,
+      updatedAt: now,
+    }
 
-  if (error) {
+    const docRef = await addDoc(collection(firestore, COLLECTION_PATHS.UNSORTED_STREAMS), streamData)
+
+    return { success: true, id: docRef.id }
+  } catch (error) {
     console.error('Error creating unsorted video:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: (error as Error).message }
   }
-
-  return { success: true, id: data.id }
 }
 
 /**
- * Organize a video by assigning it to a sub_event
+ * Organize a video by assigning it to an event
  */
 export async function organizeVideo(
   streamId: string,
-  subEventId: string
+  eventId: string
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClientSupabaseClient()
+  try {
+    const streamRef = doc(firestore, COLLECTION_PATHS.UNSORTED_STREAMS, streamId)
 
-  const { error } = await supabase
-    .from('streams')
-    .update({
-      sub_event_id: subEventId,
-      is_organized: true,
-      organized_at: new Date().toISOString(),
+    await updateDoc(streamRef, {
+      eventId,
+      isOrganized: true,
+      organizedAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     })
-    .eq('id', streamId)
 
-  if (error) {
+    return { success: true }
+  } catch (error) {
     console.error('Error organizing video:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: (error as Error).message }
   }
-
-  return { success: true }
 }
 
 /**
@@ -139,19 +174,14 @@ export async function organizeVideo(
 export async function deleteUnsortedVideo(
   streamId: string
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClientSupabaseClient()
+  try {
+    await deleteDoc(doc(firestore, COLLECTION_PATHS.UNSORTED_STREAMS, streamId))
 
-  const { error } = await supabase
-    .from('streams')
-    .delete()
-    .eq('id', streamId)
-
-  if (error) {
+    return { success: true }
+  } catch (error) {
     console.error('Error deleting unsorted video:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: (error as Error).message }
   }
-
-  return { success: true }
 }
 
 /**
@@ -159,25 +189,29 @@ export async function deleteUnsortedVideo(
  */
 export async function organizeVideos(
   streamIds: string[],
-  subEventId: string
+  eventId: string
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = createClientSupabaseClient()
+  try {
+    const batch = writeBatch(firestore)
+    const now = Timestamp.now()
 
-  const { error } = await supabase
-    .from('streams')
-    .update({
-      sub_event_id: subEventId,
-      is_organized: true,
-      organized_at: new Date().toISOString(),
-    })
-    .in('id', streamIds)
+    for (const streamId of streamIds) {
+      const streamRef = doc(firestore, COLLECTION_PATHS.UNSORTED_STREAMS, streamId)
+      batch.update(streamRef, {
+        eventId,
+        isOrganized: true,
+        organizedAt: now,
+        updatedAt: now,
+      })
+    }
 
-  if (error) {
+    await batch.commit()
+
+    return { success: true }
+  } catch (error) {
     console.error('Error organizing videos:', error)
-    return { success: false, error: error.message }
+    return { success: false, error: (error as Error).message }
   }
-
-  return { success: true }
 }
 
 /**
@@ -197,50 +231,52 @@ export async function createUnsortedVideosBatch(
   failed: number
   errors?: Array<{ video: string; error: string }>
 }> {
-  const supabase = createClientSupabaseClient()
-
   let imported = 0
   let failed = 0
   const errors: Array<{ video: string; error: string }> = []
 
-  // Process in batches to avoid overwhelming the database
+  // Process in batches to avoid overwhelming Firestore
+  // Firestore batch write limit is 500 operations
   const BATCH_SIZE = 10
 
   for (let i = 0; i < videos.length; i += BATCH_SIZE) {
-    const batch = videos.slice(i, Math.min(i + BATCH_SIZE, videos.length))
+    const batchVideos = videos.slice(i, Math.min(i + BATCH_SIZE, videos.length))
 
-    // Prepare batch insert data
-    const insertData = batch.map((video) => {
-      const normalizedUrl = video.video_source === 'youtube'
-        ? normalizeYoutubeUrl(video.video_url)
-        : video.video_url
+    try {
+      const batch = writeBatch(firestore)
+      const now = Timestamp.now()
 
-      return {
-        name: video.name,
-        video_url: normalizedUrl,
-        video_file: null,
-        video_source: video.video_source || 'youtube',
-        sub_event_id: null,
-        is_organized: false,
-        published_at: video.published_at || null,
+      for (const video of batchVideos) {
+        const normalizedUrl =
+          video.video_source === 'youtube'
+            ? normalizeYoutubeUrl(video.video_url)
+            : video.video_url
+
+        const streamData: FirestoreUnsortedStream = {
+          name: video.name,
+          videoUrl: normalizedUrl,
+          videoSource: video.video_source || 'youtube',
+          publishedAt: video.published_at
+            ? Timestamp.fromDate(new Date(video.published_at))
+            : undefined,
+          isOrganized: false,
+          createdAt: now,
+          updatedAt: now,
+        }
+
+        const docRef = doc(collection(firestore, COLLECTION_PATHS.UNSORTED_STREAMS))
+        batch.set(docRef, streamData)
       }
-    })
 
-    // Insert batch
-    const { data, error } = await supabase
-      .from('streams')
-      .insert(insertData)
-      .select('id')
-
-    if (error) {
+      await batch.commit()
+      imported += batchVideos.length
+    } catch (error) {
       console.error('Error in batch insert:', error)
       // Mark all videos in this batch as failed
-      batch.forEach((video) => {
-        errors.push({ video: video.name, error: error.message })
+      batchVideos.forEach((video) => {
+        errors.push({ video: video.name, error: (error as Error).message })
         failed++
       })
-    } else {
-      imported += batch.length
     }
 
     // Call progress callback
