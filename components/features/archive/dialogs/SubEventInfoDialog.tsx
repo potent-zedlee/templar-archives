@@ -17,29 +17,27 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
 import { Plus, Edit, X } from "lucide-react"
-import type { SubEvent as SubEventType } from "@/lib/supabase"
+import type { Event } from "@/lib/types/archive"
 import type { PayoutRow } from "@/hooks/useArchiveState"
+import { saveEventPayouts } from "@/app/actions/archive"
 
 interface EventPayout {
   id: string
   rank: number
-  player_name: string
-  prize_amount: number
+  playerName: string
+  prizeAmount: number
 }
 
 interface SubEventInfoDialogProps {
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   subEventId: string | null
-  subEvent: SubEventType | null
+  subEvent: Event | null
   isUserAdmin: boolean
   onSuccess?: () => void
 }
-
-const supabase = createClientSupabaseClient()
 
 export function SubEventInfoDialog({
   isOpen,
@@ -70,17 +68,14 @@ export function SubEventInfoDialog({
     }
   }, [isOpen, subEventId])
 
-  const loadViewingPayouts = async (subEventId: string) => {
+  const loadViewingPayouts = async (eventId: string) => {
     setLoadingViewingPayouts(true)
     try {
-      const { data, error } = await supabase
-        .from('event_payouts')
-        .select('*')
-        .eq('sub_event_id', subEventId)
-        .order('rank', { ascending: true })
-
-      if (error) throw error
-
+      const response = await fetch(`/api/events/${eventId}/payouts`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch payouts')
+      }
+      const { data } = await response.json()
       setViewingPayouts(data || [])
     } catch (error) {
       console.error('Error loading payouts:', error)
@@ -96,7 +91,7 @@ export function SubEventInfoDialog({
     return `$${dollars.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
   }
 
-  // Prize amount parser: "$10M" → 1000000000 (cents), "$10,000,000" → 1000000000
+  // Prize amount parser: "$10M" -> 1000000000 (cents), "$10,000,000" -> 1000000000
   const parsePrizeAmount = (amountStr: string): number => {
     if (!amountStr) return 0
 
@@ -187,8 +182,8 @@ export function SubEventInfoDialog({
   const enterEditMode = () => {
     const payoutsToEdit = viewingPayouts.map(p => ({
       rank: p.rank,
-      playerName: p.player_name,
-      prizeAmount: formatPrizeAmount(p.prize_amount),
+      playerName: p.playerName,
+      prizeAmount: formatPrizeAmount(p.prizeAmount),
     }))
     setEditingViewingPayouts(payoutsToEdit.length > 0 ? payoutsToEdit : [{ rank: 1, playerName: "", prizeAmount: "" }])
     setIsEditingViewingPayouts(true)
@@ -200,39 +195,20 @@ export function SubEventInfoDialog({
     setEditingViewingPayouts([])
   }
 
-  // Save edited payouts
+  // Save edited payouts via Server Action
   const saveEditingPayouts = async () => {
     if (!subEventId) return
 
     setSavingPayouts(true)
     try {
-      // 1. Delete old payouts
-      const { error: deleteError } = await supabase
-        .from('event_payouts')
-        .delete()
-        .eq('sub_event_id', subEventId)
+      // Save via Server Action
+      const result = await saveEventPayouts(subEventId, editingViewingPayouts)
 
-      if (deleteError) throw deleteError
-
-      // 2. Insert new payouts (only valid ones)
-      const validPayouts = editingViewingPayouts.filter(p => p.playerName.trim() && p.prizeAmount.trim())
-      if (validPayouts.length > 0) {
-        const payoutInserts = validPayouts.map(p => ({
-          sub_event_id: subEventId,
-          rank: p.rank,
-          player_name: p.playerName.trim(),
-          prize_amount: parsePrizeAmount(p.prizeAmount),
-          matched_status: 'unmatched' as const,
-        }))
-
-        const { error: insertError } = await supabase
-          .from('event_payouts')
-          .insert(payoutInserts)
-
-        if (insertError) throw insertError
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to save payouts')
       }
 
-      // 3. Reload payouts and exit edit mode
+      // Reload payouts and exit edit mode
       await loadViewingPayouts(subEventId)
       setIsEditingViewingPayouts(false)
       setEditingViewingPayouts([])
@@ -419,7 +395,7 @@ export function SubEventInfoDialog({
                       <div className="text-right">Prize</div>
                     </div>
                     {viewingPayouts.map((payout) => {
-                      const { flag, iso2, cleanName } = getCountryInfo(payout.player_name)
+                      const { flag, iso2, cleanName } = getCountryInfo(payout.playerName)
 
                       return (
                         <div key={payout.id} className="grid grid-cols-[50px_50px_1fr_auto] gap-3 p-3 border rounded-md hover:bg-muted/50 transition-colors">
@@ -434,7 +410,7 @@ export function SubEventInfoDialog({
                             )}
                           </div>
                           <div className="text-body">{cleanName}</div>
-                          <div className="text-body text-right font-medium whitespace-nowrap">{formatPrizeAmount(payout.prize_amount)}</div>
+                          <div className="text-body text-right font-medium whitespace-nowrap">{formatPrizeAmount(payout.prizeAmount)}</div>
                         </div>
                       )
                     })}

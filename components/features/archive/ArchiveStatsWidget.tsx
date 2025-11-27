@@ -5,8 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Trophy, Video, Target, PlaySquare, ChevronDown, ChevronUp } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { Tournament } from "@/lib/supabase"
-import type { FolderItem } from "@/lib/types/archive"
+import type { Tournament } from "@/lib/types/archive"
 
 interface ArchiveStatsWidgetProps {
   tournaments: Tournament[]
@@ -44,18 +43,16 @@ export function ArchiveStatsWidget({
 
   // Calculate statistics
   const stats = useMemo(() => {
-    // Count total events (sub_events)
+    // Count total events
     const totalEvents = tournaments.reduce((sum, tournament) => {
-      const tournament_any = tournament as any
-      return sum + (tournament_any.sub_events?.length || 0)
+      return sum + (tournament.events?.length || 0)
     }, 0)
 
-    // Count total videos (days)
+    // Count total videos (streams)
     const totalVideos = tournaments.reduce((sum, tournament) => {
-      const tournament_any = tournament as any
-      const subEvents = tournament_any.sub_events || []
-      return sum + subEvents.reduce((subSum: number, subEvent: any) => {
-        return subSum + (subEvent.days?.length || 0)
+      const events = tournament.events || []
+      return sum + events.reduce((subSum: number, event) => {
+        return subSum + (event.streams?.length || 0)
       }, 0)
     }, 0)
 

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select"
 import { organizeVideos } from "@/lib/unsorted-videos"
 import { toast } from "sonner"
-import type { Tournament } from "@/lib/supabase"
+import type { Tournament } from "@/lib/types/archive"
 
 interface MoveToExistingEventDialogProps {
   isOpen: boolean
@@ -116,7 +116,7 @@ export function MoveToExistingEventDialog({
                 {moveToExistingTournamentId &&
                   tournaments
                     .find(t => t.id === moveToExistingTournamentId)
-                    ?.sub_events?.map((event: any) => (
+                    ?.events?.map((event) => (
                       <SelectItem key={event.id} value={event.id}>
                         {event.name}
                       </SelectItem>

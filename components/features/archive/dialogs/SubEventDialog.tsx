@@ -18,7 +18,6 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { toast } from "sonner"
 import { Plus, X } from "lucide-react"
 import type { PayoutRow } from "@/hooks/useArchiveState"
@@ -31,8 +30,6 @@ interface SubEventDialogProps {
   editingSubEventId: string
   onSuccess?: () => void
 }
-
-const supabase = createClientSupabaseClient()
 
 export function SubEventDialog({
   isOpen,
@@ -59,6 +56,7 @@ export function SubEventDialog({
   const [hendonMobHtml, setHendonMobHtml] = useState("")
   const [csvText, setCsvText] = useState("")
   const [loadingPayouts, setLoadingPayouts] = useState(false)
+  const [loadingData, setLoadingData] = useState(false)
 
   // Load existing data when editing
   useEffect(() => {
@@ -76,48 +74,52 @@ export function SubEventDialog({
 
   const loadSubEventData = async () => {
     try {
-      const { data: subEvent, error } = await supabase
-        .from('sub_events')
-        .select('*')
-        .eq('id', editingSubEventId)
-        .single()
+      setLoadingData(true)
+      // Fetch event data via API
+      const response = await fetch(`/api/events/${editingSubEventId}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch event data')
+      }
+      const { data: subEvent } = await response.json()
 
-      if (error) throw error
+      if (subEvent) {
+        setNewSubEventName(subEvent.name || "")
+        // Handle Firestore Timestamp format
+        setNewSubEventDate(subEvent.date?._seconds
+          ? new Date(subEvent.date._seconds * 1000).toISOString().split('T')[0]
+          : subEvent.date || "")
+        setNewSubEventEventNumber(subEvent.eventNumber || "")
+        setNewSubEventPrize(subEvent.totalPrize || "")
+        setNewSubEventWinner(subEvent.winner || "")
+        setNewSubEventBuyIn(subEvent.buyIn || "")
+        setNewSubEventEntryCount(subEvent.entryCount?.toString() || "")
+        setNewSubEventBlindStructure(subEvent.blindStructure || "")
+        setNewSubEventLevelDuration(subEvent.levelDuration?.toString() || "")
+        setNewSubEventStartingStack(subEvent.startingStack?.toString() || "")
+        setNewSubEventNotes(subEvent.notes || "")
+      }
 
-      setNewSubEventName(subEvent.name)
-      setNewSubEventDate(subEvent.date || "")
-      setNewSubEventEventNumber(subEvent.event_number || "")
-      setNewSubEventPrize(subEvent.total_prize || "")
-      setNewSubEventWinner(subEvent.winner || "")
-      setNewSubEventBuyIn(subEvent.buy_in || "")
-      setNewSubEventEntryCount(subEvent.entry_count?.toString() || "")
-      setNewSubEventBlindStructure(subEvent.blind_structure || "")
-      setNewSubEventLevelDuration(subEvent.level_duration?.toString() || "")
-      setNewSubEventStartingStack(subEvent.starting_stack?.toString() || "")
-      setNewSubEventNotes(subEvent.notes || "")
+      // Load existing payouts via API
+      const payoutsResponse = await fetch(`/api/events/${editingSubEventId}/payouts`)
+      if (payoutsResponse.ok) {
+        const { data: existingPayouts } = await payoutsResponse.json()
 
-      // Load existing payouts
-      const { data: existingPayouts, error: payoutError } = await supabase
-        .from('event_payouts')
-        .select('*')
-        .eq('sub_event_id', editingSubEventId)
-        .order('rank', { ascending: true })
-
-      if (payoutError) throw payoutError
-
-      if (existingPayouts && existingPayouts.length > 0) {
-        const loadedPayouts = existingPayouts.map(p => ({
-          rank: p.rank,
-          playerName: p.player_name,
-          prizeAmount: formatPrizeAmount(p.prize_amount),
-        }))
-        setPayouts(loadedPayouts)
-      } else {
-        setPayouts([{ rank: 1, playerName: "", prizeAmount: "" }])
+        if (existingPayouts && existingPayouts.length > 0) {
+          const loadedPayouts = existingPayouts.map((p: { rank: number; playerName: string; prizeAmount: number }) => ({
+            rank: p.rank,
+            playerName: p.playerName,
+            prizeAmount: formatPrizeAmount(p.prizeAmount),
+          }))
+          setPayouts(loadedPayouts)
+        } else {
+          setPayouts([{ rank: 1, playerName: "", prizeAmount: "" }])
+        }
       }
     } catch (error) {
       console.error('Error loading sub event:', error)
       toast.error('Failed to load event data')
+    } finally {
+      setLoadingData(false)
     }
   }
 
@@ -198,7 +200,7 @@ export function SubEventDialog({
       }
 
       if (data.payouts && data.payouts.length > 0) {
-        const loadedPayouts = data.payouts.map((p: any) => ({
+        const loadedPayouts = data.payouts.map((p: { rank: number; playerName: string; prizeAmount: string }) => ({
           rank: p.rank,
           playerName: p.playerName,
           prizeAmount: p.prizeAmount,
@@ -209,9 +211,10 @@ export function SubEventDialog({
       } else {
         toast.error('Payout information not found')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading payouts from HTML:', error)
-      toast.error(error.message || 'Failed to load payouts')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load payouts'
+      toast.error(errorMessage)
     } finally {
       setLoadingPayouts(false)
     }
@@ -236,7 +239,7 @@ export function SubEventDialog({
       }
 
       if (data.payouts && data.payouts.length > 0) {
-        const loadedPayouts = data.payouts.map((p: any) => ({
+        const loadedPayouts = data.payouts.map((p: { rank: number; playerName: string; prizeAmount: string }) => ({
           rank: p.rank,
           playerName: p.playerName,
           prizeAmount: p.prizeAmount,
@@ -247,9 +250,10 @@ export function SubEventDialog({
       } else {
         toast.error('Payout information not found')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error loading payouts from CSV:', error)
-      toast.error(error.message || 'Failed to load payouts')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load payouts'
+      toast.error(errorMessage)
     } finally {
       setLoadingPayouts(false)
     }
@@ -306,9 +310,10 @@ export function SubEventDialog({
 
       onOpenChange(false)
       onSuccess?.()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[SubEventDialog] Error saving sub event:', error)
-      toast.error(error.message || 'Failed to save event')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save event'
+      toast.error(errorMessage)
     }
   }
 
@@ -318,286 +323,292 @@ export function SubEventDialog({
         <DialogHeader>
           <DialogTitle>{editingSubEventId ? "Edit Event" : "Add Event"}</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="basic">Basic Info</TabsTrigger>
-            <TabsTrigger value="payout">Payout</TabsTrigger>
-            <TabsTrigger value="structure">Blind Structure</TabsTrigger>
-          </TabsList>
+        {loadingData ? (
+          <div className="flex items-center justify-center h-[500px]">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        ) : (
+          <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="basic">Basic Info</TabsTrigger>
+              <TabsTrigger value="payout">Payout</TabsTrigger>
+              <TabsTrigger value="structure">Blind Structure</TabsTrigger>
+            </TabsList>
 
-          {/* Basic Info Tab */}
-          <TabsContent value="basic" className="space-y-4 mt-4">
-            <ScrollArea className="h-[500px] pr-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="subevent-name">Event Name *</Label>
-                  <Input
-                    id="subevent-name"
-                    placeholder="e.g., Main Event, High Roller"
-                    value={newSubEventName}
-                    onChange={(e) => setNewSubEventName(e.target.value)}
-                  />
+            {/* Basic Info Tab */}
+            <TabsContent value="basic" className="space-y-4 mt-4">
+              <ScrollArea className="h-[500px] pr-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="subevent-name">Event Name *</Label>
+                    <Input
+                      id="subevent-name"
+                      placeholder="e.g., Main Event, High Roller"
+                      value={newSubEventName}
+                      onChange={(e) => setNewSubEventName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subevent-date">Date *</Label>
+                    <Input
+                      id="subevent-date"
+                      type="date"
+                      value={newSubEventDate}
+                      onChange={(e) => setNewSubEventDate(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subevent-event-number">Event Number</Label>
+                    <Input
+                      id="subevent-event-number"
+                      placeholder="e.g., #15, Event 1A, #1"
+                      value={newSubEventEventNumber}
+                      onChange={(e) => setNewSubEventEventNumber(e.target.value)}
+                    />
+                    <p className="text-caption text-muted-foreground">
+                      Optional. Supports both sequential numbering and official event codes.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subevent-prize">Total Prize</Label>
+                    <Input
+                      id="subevent-prize"
+                      placeholder="e.g., $10,000,000"
+                      value={newSubEventPrize}
+                      onChange={(e) => setNewSubEventPrize(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subevent-winner">Winner</Label>
+                    <Input
+                      id="subevent-winner"
+                      placeholder="e.g., Daniel Negreanu"
+                      value={newSubEventWinner}
+                      onChange={(e) => setNewSubEventWinner(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subevent-buyin">Buy-in</Label>
+                    <Input
+                      id="subevent-buyin"
+                      placeholder="e.g., $10,000 + $400"
+                      value={newSubEventBuyIn}
+                      onChange={(e) => setNewSubEventBuyIn(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subevent-entries">Entry Count</Label>
+                    <Input
+                      id="subevent-entries"
+                      type="number"
+                      placeholder="e.g., 8569"
+                      value={newSubEventEntryCount}
+                      onChange={(e) => setNewSubEventEntryCount(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subevent-level-duration">Level Duration (min)</Label>
+                    <Input
+                      id="subevent-level-duration"
+                      type="number"
+                      placeholder="e.g., 60"
+                      value={newSubEventLevelDuration}
+                      onChange={(e) => setNewSubEventLevelDuration(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subevent-starting-stack">Starting Stack</Label>
+                    <Input
+                      id="subevent-starting-stack"
+                      type="number"
+                      placeholder="e.g., 60000"
+                      value={newSubEventStartingStack}
+                      onChange={(e) => setNewSubEventStartingStack(e.target.value)}
+                    />
+                  </div>
                 </div>
+              </ScrollArea>
+            </TabsContent>
 
-                <div className="space-y-2">
-                  <Label htmlFor="subevent-date">Date *</Label>
-                  <Input
-                    id="subevent-date"
-                    type="date"
-                    value={newSubEventDate}
-                    onChange={(e) => setNewSubEventDate(e.target.value)}
-                  />
-                </div>
+            {/* Payout Tab */}
+            <TabsContent value="payout" className="space-y-4 mt-4">
+              <ScrollArea className="h-[500px] pr-4">
+                <div className="space-y-3">
+                  <Tabs defaultValue="html" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="html">HTML</TabsTrigger>
+                      <TabsTrigger value="csv">CSV</TabsTrigger>
+                      <TabsTrigger value="manual">Manual</TabsTrigger>
+                    </TabsList>
 
-                <div className="space-y-2">
-                  <Label htmlFor="subevent-event-number">Event Number</Label>
-                  <Input
-                    id="subevent-event-number"
-                    placeholder="e.g., #15, Event 1A, #1"
-                    value={newSubEventEventNumber}
-                    onChange={(e) => setNewSubEventEventNumber(e.target.value)}
-                  />
-                  <p className="text-caption text-muted-foreground">
-                    Optional. Supports both sequential numbering and official event codes.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subevent-prize">Total Prize</Label>
-                  <Input
-                    id="subevent-prize"
-                    placeholder="e.g., $10,000,000"
-                    value={newSubEventPrize}
-                    onChange={(e) => setNewSubEventPrize(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subevent-winner">Winner</Label>
-                  <Input
-                    id="subevent-winner"
-                    placeholder="e.g., Daniel Negreanu"
-                    value={newSubEventWinner}
-                    onChange={(e) => setNewSubEventWinner(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subevent-buyin">Buy-in</Label>
-                  <Input
-                    id="subevent-buyin"
-                    placeholder="e.g., $10,000 + $400"
-                    value={newSubEventBuyIn}
-                    onChange={(e) => setNewSubEventBuyIn(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subevent-entries">Entry Count</Label>
-                  <Input
-                    id="subevent-entries"
-                    type="number"
-                    placeholder="e.g., 8569"
-                    value={newSubEventEntryCount}
-                    onChange={(e) => setNewSubEventEntryCount(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subevent-level-duration">Level Duration (min)</Label>
-                  <Input
-                    id="subevent-level-duration"
-                    type="number"
-                    placeholder="e.g., 60"
-                    value={newSubEventLevelDuration}
-                    onChange={(e) => setNewSubEventLevelDuration(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="subevent-starting-stack">Starting Stack</Label>
-                  <Input
-                    id="subevent-starting-stack"
-                    type="number"
-                    placeholder="e.g., 60000"
-                    value={newSubEventStartingStack}
-                    onChange={(e) => setNewSubEventStartingStack(e.target.value)}
-                  />
-                </div>
-              </div>
-            </ScrollArea>
-          </TabsContent>
-
-          {/* Payout Tab */}
-          <TabsContent value="payout" className="space-y-4 mt-4">
-            <ScrollArea className="h-[500px] pr-4">
-              <div className="space-y-3">
-                <Tabs defaultValue="html" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="html">HTML</TabsTrigger>
-                    <TabsTrigger value="csv">CSV</TabsTrigger>
-                    <TabsTrigger value="manual">Manual</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="html" className="space-y-2 mt-3">
-                    <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border overflow-hidden">
-                      <Label className="text-sm font-medium">Paste HTML Source Code</Label>
-                      <Textarea
-                        placeholder="1. Open Hendon Mob page in browser&#10;2. Right-click → 'View Page Source' (or Ctrl+U)&#10;3. Copy all HTML (Ctrl+A, Ctrl+C)&#10;4. Paste here"
-                        value={hendonMobHtml}
-                        onChange={(e) => setHendonMobHtml(e.target.value)}
-                        disabled={loadingPayouts}
-                        className="h-[150px] max-h-[150px] w-full overflow-x-auto overflow-y-auto font-mono text-xs resize-none break-all"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={loadPayoutsFromHtml}
-                          disabled={!hendonMobHtml.trim() || loadingPayouts}
-                          className="flex-1"
-                        >
-                          {loadingPayouts ? "Loading..." : "Parse HTML"}
-                        </Button>
-                      </div>
-                      <p className="text-caption text-muted-foreground">
-                        Recommended method. Bypasses bot protection.
-                      </p>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="csv" className="space-y-2 mt-3">
-                    <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border overflow-hidden">
-                      <Label className="text-sm font-medium">Paste CSV Data</Label>
-                      <Textarea
-                        placeholder="Format:&#10;Rank, Player Name, Prize Amount&#10;1, John Doe, $10,000,000&#10;2, Jane Smith, $5,500,000&#10;3, Bob Johnson, $3,000,000&#10;...&#10;&#10;Or without header:&#10;1, John Doe, $10M&#10;2, Jane Smith, $5.5M"
-                        value={csvText}
-                        onChange={(e) => setCsvText(e.target.value)}
-                        disabled={loadingPayouts}
-                        className="h-[150px] max-h-[150px] w-full overflow-x-auto overflow-y-auto font-mono text-xs resize-none break-all"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={loadPayoutsFromCsv}
-                          disabled={!csvText.trim() || loadingPayouts}
-                          className="flex-1"
-                        >
-                          {loadingPayouts ? "Loading..." : "Parse CSV"}
-                        </Button>
-                      </div>
-                      <p className="text-caption text-muted-foreground">
-                        Works with any tournament. Supports $10M or $10,000,000 format.
-                      </p>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="manual" className="space-y-2 mt-3">
-                    <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-medium">Enter Payout Information</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={addPayoutRow}
-                        >
-                          <Plus className="mr-2 h-3 w-3" />
-                          Add Place
-                        </Button>
-                      </div>
-                      <p className="text-caption text-muted-foreground mb-2">
-                        Format: $10M, $10,000,000, or 10000000
-                      </p>
-                      <ScrollArea className="h-[200px] max-h-[200px]">
-                        <div className="space-y-2 pr-3">
-                          {payouts.map((payout, index) => (
-                            <div key={index} className="flex items-center gap-2">
-                              <div className="w-16">
-                                <Input
-                                  placeholder="#"
-                                  value={payout.rank}
-                                  disabled
-                                  className="text-center"
-                                />
-                              </div>
-                              <div className="flex-1">
-                                <Input
-                                  placeholder="Player Name"
-                                  value={payout.playerName}
-                                  onChange={(e) => updatePayoutRow(index, 'playerName', e.target.value)}
-                                />
-                              </div>
-                              <div className="w-40">
-                                <Input
-                                  placeholder="Prize (e.g. $10M)"
-                                  value={payout.prizeAmount}
-                                  onChange={(e) => updatePayoutRow(index, 'prizeAmount', e.target.value)}
-                                />
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removePayoutRow(index)}
-                                disabled={payouts.length === 1}
-                                className="h-9 w-9 p-0"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
+                    <TabsContent value="html" className="space-y-2 mt-3">
+                      <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border overflow-hidden">
+                        <Label className="text-sm font-medium">Paste HTML Source Code</Label>
+                        <Textarea
+                          placeholder="1. Open Hendon Mob page in browser&#10;2. Right-click → 'View Page Source' (or Ctrl+U)&#10;3. Copy all HTML (Ctrl+A, Ctrl+C)&#10;4. Paste here"
+                          value={hendonMobHtml}
+                          onChange={(e) => setHendonMobHtml(e.target.value)}
+                          disabled={loadingPayouts}
+                          className="h-[150px] max-h-[150px] w-full overflow-x-auto overflow-y-auto font-mono text-xs resize-none break-all"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={loadPayoutsFromHtml}
+                            disabled={!hendonMobHtml.trim() || loadingPayouts}
+                            className="flex-1"
+                          >
+                            {loadingPayouts ? "Loading..." : "Parse HTML"}
+                          </Button>
                         </div>
-                      </ScrollArea>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-            </ScrollArea>
-          </TabsContent>
+                        <p className="text-caption text-muted-foreground">
+                          Recommended method. Bypasses bot protection.
+                        </p>
+                      </div>
+                    </TabsContent>
 
-          {/* Blind Structure Tab */}
-          <TabsContent value="structure" className="space-y-4 mt-4">
-            <ScrollArea className="h-[500px] pr-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="subevent-blind-structure">Blind Structure</Label>
-                  <Textarea
-                    id="subevent-blind-structure"
-                    placeholder="Level 1: 100/200/200&#10;Level 2: 200/400/400&#10;Level 3: 300/600/600&#10;..."
-                    value={newSubEventBlindStructure}
-                    onChange={(e) => setNewSubEventBlindStructure(e.target.value)}
-                    className="min-h-[300px] resize-none font-mono text-xs"
-                  />
-                  <p className="text-caption text-muted-foreground">
-                    Enter blind levels in any format
-                  </p>
-                </div>
+                    <TabsContent value="csv" className="space-y-2 mt-3">
+                      <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border overflow-hidden">
+                        <Label className="text-sm font-medium">Paste CSV Data</Label>
+                        <Textarea
+                          placeholder="Format:&#10;Rank, Player Name, Prize Amount&#10;1, John Doe, $10,000,000&#10;2, Jane Smith, $5,500,000&#10;3, Bob Johnson, $3,000,000&#10;...&#10;&#10;Or without header:&#10;1, John Doe, $10M&#10;2, Jane Smith, $5.5M"
+                          value={csvText}
+                          onChange={(e) => setCsvText(e.target.value)}
+                          disabled={loadingPayouts}
+                          className="h-[150px] max-h-[150px] w-full overflow-x-auto overflow-y-auto font-mono text-xs resize-none break-all"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={loadPayoutsFromCsv}
+                            disabled={!csvText.trim() || loadingPayouts}
+                            className="flex-1"
+                          >
+                            {loadingPayouts ? "Loading..." : "Parse CSV"}
+                          </Button>
+                        </div>
+                        <p className="text-caption text-muted-foreground">
+                          Works with any tournament. Supports $10M or $10,000,000 format.
+                        </p>
+                      </div>
+                    </TabsContent>
 
-                <div className="space-y-2">
-                  <Label htmlFor="subevent-notes">Notes</Label>
-                  <Textarea
-                    id="subevent-notes"
-                    placeholder="Additional notes or information about the event"
-                    value={newSubEventNotes}
-                    onChange={(e) => setNewSubEventNotes(e.target.value)}
-                    className="min-h-[150px] resize-none"
-                  />
-                  <p className="text-caption text-muted-foreground">
-                    Any extra information (e.g., special rules, format, etc.)
-                  </p>
+                    <TabsContent value="manual" className="space-y-2 mt-3">
+                      <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">Enter Payout Information</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={addPayoutRow}
+                          >
+                            <Plus className="mr-2 h-3 w-3" />
+                            Add Place
+                          </Button>
+                        </div>
+                        <p className="text-caption text-muted-foreground mb-2">
+                          Format: $10M, $10,000,000, or 10000000
+                        </p>
+                        <ScrollArea className="h-[200px] max-h-[200px]">
+                          <div className="space-y-2 pr-3">
+                            {payouts.map((payout, index) => (
+                              <div key={index} className="flex items-center gap-2">
+                                <div className="w-16">
+                                  <Input
+                                    placeholder="#"
+                                    value={payout.rank}
+                                    disabled
+                                    className="text-center"
+                                  />
+                                </div>
+                                <div className="flex-1">
+                                  <Input
+                                    placeholder="Player Name"
+                                    value={payout.playerName}
+                                    onChange={(e) => updatePayoutRow(index, 'playerName', e.target.value)}
+                                  />
+                                </div>
+                                <div className="w-40">
+                                  <Input
+                                    placeholder="Prize (e.g. $10M)"
+                                    value={payout.prizeAmount}
+                                    onChange={(e) => updatePayoutRow(index, 'prizeAmount', e.target.value)}
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removePayoutRow(index)}
+                                  disabled={payouts.length === 1}
+                                  className="h-9 w-9 p-0"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </div>
-              </div>
-            </ScrollArea>
-          </TabsContent>
-        </Tabs>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* Blind Structure Tab */}
+            <TabsContent value="structure" className="space-y-4 mt-4">
+              <ScrollArea className="h-[500px] pr-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="subevent-blind-structure">Blind Structure</Label>
+                    <Textarea
+                      id="subevent-blind-structure"
+                      placeholder="Level 1: 100/200/200&#10;Level 2: 200/400/400&#10;Level 3: 300/600/600&#10;..."
+                      value={newSubEventBlindStructure}
+                      onChange={(e) => setNewSubEventBlindStructure(e.target.value)}
+                      className="min-h-[300px] resize-none font-mono text-xs"
+                    />
+                    <p className="text-caption text-muted-foreground">
+                      Enter blind levels in any format
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="subevent-notes">Notes</Label>
+                    <Textarea
+                      id="subevent-notes"
+                      placeholder="Additional notes or information about the event"
+                      value={newSubEventNotes}
+                      onChange={(e) => setNewSubEventNotes(e.target.value)}
+                      className="min-h-[150px] resize-none"
+                    />
+                    <p className="text-caption text-muted-foreground">
+                      Any extra information (e.g., special rules, format, etc.)
+                    </p>
+                  </div>
+                </div>
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
+        )}
 
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>
+          <Button onClick={handleSubmit} disabled={loadingData}>
             {editingSubEventId ? "Edit" : "Add"}
           </Button>
         </div>

@@ -17,10 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { organizeVideos } from "@/lib/unsorted-videos"
+import { createEvent } from "@/app/actions/archive"
 import { toast } from "sonner"
-import type { Tournament } from "@/lib/supabase"
+import type { Tournament } from "@/lib/types/archive"
 
 interface MoveToNewEventDialogProps {
   isOpen: boolean
@@ -41,8 +41,6 @@ export function MoveToNewEventDialog({
   const [moveToEventName, setMoveToEventName] = useState('')
   const [moveToEventDate, setMoveToEventDate] = useState('')
   const [movingVideos, setMovingVideos] = useState(false)
-
-  const supabase = createClientSupabaseClient()
 
   // Reset form when dialog closes
   useEffect(() => {
@@ -67,29 +65,28 @@ export function MoveToNewEventDialog({
 
     setMovingVideos(true)
     try {
-      // 1. Create new SubEvent
-      const { data: subEventData, error: subEventError } = await supabase
-        .from('sub_events')
-        .insert({
-          tournament_id: moveToTournamentId,
-          name: moveToEventName.trim(),
-          date: moveToEventDate,
-        })
-        .select()
-        .single()
+      // 1. Create new Event via Server Action
+      const result = await createEvent(moveToTournamentId, {
+        name: moveToEventName.trim(),
+        date: moveToEventDate,
+      })
 
-      if (subEventError) throw subEventError
+      if (!result.success || !result.data) {
+        throw new Error(result.error || 'Failed to create event')
+      }
 
-      // 2. Move all selected videos to the new SubEvent
+      const newEventId = result.data.id
+
+      // 2. Move all selected videos to the new Event
       const videoIds = Array.from(selectedVideoIds)
-      const result = await organizeVideos(videoIds, subEventData.id)
+      const organizeResult = await organizeVideos(videoIds, newEventId)
 
-      if (result.success) {
+      if (organizeResult.success) {
         toast.success(`${videoIds.length} video(s) moved to new event "${moveToEventName}"`)
         onOpenChange(false)
         onSuccess?.()
       } else {
-        toast.error(result.error || 'Failed to move videos')
+        toast.error(organizeResult.error || 'Failed to move videos')
       }
     } catch (error) {
       console.error('Error creating new event:', error)
