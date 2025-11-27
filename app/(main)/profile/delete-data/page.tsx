@@ -10,22 +10,32 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle, Trash2, ArrowLeft, CheckCircle, XCircle, Clock } from "lucide-react"
 import { useAuth } from "@/components/layout/AuthProvider"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
+import {
+  collection,
+  getDocs,
+  addDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore"
+import { firestore } from "@/lib/firebase"
 import { toast } from "sonner"
 
 interface DeletionRequest {
   id: string
   reason: string
   status: "pending" | "approved" | "rejected" | "completed"
-  requested_at: string
-  reviewed_at?: string
-  admin_notes?: string
+  requestedAt: string
+  reviewedAt?: string
+  adminNotes?: string
 }
 
 export default function DeleteDataPage() {
   const router = useRouter()
   const { user } = useAuth()
-  const supabase = createClientSupabaseClient()
 
   const [reason, setReason] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -45,21 +55,33 @@ export default function DeleteDataPage() {
     if (!user) return
 
     try {
-      const { data, error } = await supabase
-        .from("data_deletion_requests")
-        .select("*")
-        .eq("user_id", user.id)
-        .in("status", ["pending", "approved"])
-        .order("requested_at", { ascending: false })
-        .limit(1)
-        .single()
+      const deletionRequestsRef = collection(firestore, "dataDeletionRequests")
+      const q = query(
+        deletionRequestsRef,
+        where("userId", "==", user.id),
+        where("status", "in", ["pending", "approved"]),
+        orderBy("requestedAt", "desc"),
+        limit(1)
+      )
 
-      if (error && error.code !== "PGRST116") {
-        // PGRST116 = no rows found
-        throw error
+      const querySnapshot = await getDocs(q)
+
+      if (!querySnapshot.empty) {
+        const docData = querySnapshot.docs[0]
+        const data = docData.data()
+        setExistingRequest({
+          id: docData.id,
+          reason: data.reason,
+          status: data.status,
+          requestedAt: data.requestedAt instanceof Timestamp
+            ? data.requestedAt.toDate().toISOString()
+            : data.requestedAt,
+          reviewedAt: data.reviewedAt instanceof Timestamp
+            ? data.reviewedAt.toDate().toISOString()
+            : data.reviewedAt,
+          adminNotes: data.adminNotes,
+        })
       }
-
-      setExistingRequest(data)
     } catch (error) {
       console.error("Error loading deletion request:", error)
     } finally {
@@ -88,13 +110,13 @@ export default function DeleteDataPage() {
     setSubmitting(true)
 
     try {
-      const { error } = await supabase.from("data_deletion_requests").insert({
-        user_id: user.id,
+      const deletionRequestsRef = collection(firestore, "dataDeletionRequests")
+      await addDoc(deletionRequestsRef, {
+        userId: user.id,
         reason: reason.trim(),
         status: "pending",
+        requestedAt: serverTimestamp(),
       })
-
-      if (error) throw error
 
       toast.success("Deletion request submitted successfully")
       setReason("")
@@ -184,7 +206,7 @@ export default function DeleteDataPage() {
               <div>
                 <Label className="text-sm text-muted-foreground">Submitted</Label>
                 <p className="text-sm mt-1">
-                  {new Date(existingRequest.requested_at).toLocaleDateString("en-US", {
+                  {new Date(existingRequest.requestedAt).toLocaleDateString("en-US", {
                     year: "numeric",
                     month: "long",
                     day: "numeric",
@@ -194,11 +216,11 @@ export default function DeleteDataPage() {
                 </p>
               </div>
 
-              {existingRequest.admin_notes && (
+              {existingRequest.adminNotes && (
                 <div>
                   <Label className="text-sm text-muted-foreground">Admin Response</Label>
                   <Alert className="mt-2">
-                    <AlertDescription>{existingRequest.admin_notes}</AlertDescription>
+                    <AlertDescription>{existingRequest.adminNotes}</AlertDescription>
                   </Alert>
                 </div>
               )}

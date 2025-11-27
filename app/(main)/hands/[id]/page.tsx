@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { adminFirestore } from '@/lib/firebase-admin'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +13,8 @@ import { ActionTimeline, type HandAction } from '@/components/features/poker/Act
 import { YouTubePlayer } from '@/components/features/video/YouTubePlayer'
 import { CommentSection } from '@/components/features/community/CommentSection'
 import type { PlayerSeatData } from '@/components/features/poker/PlayerSeat'
+import type { FirestoreHand, FirestoreStream, FirestoreEvent, FirestoreTournament } from '@/lib/firestore-types'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
@@ -22,111 +24,94 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 }
 
-async function getHandDetails(handId: string) {
-  const supabase = await createServerSupabaseClient()
+interface HandDetailsResult {
+  hand: FirestoreHand & { id: string }
+  stream: (FirestoreStream & { id: string }) | null
+  event: (FirestoreEvent & { id: string }) | null
+  tournament: (FirestoreTournament & { id: string }) | null
+}
 
-  // Get hand with all related data
-  const { data: hand, error } = await supabase
-    .from('hands')
-    .select(`
-      id,
-      number,
-      stakes,
-      pot_size,
-      board_flop,
-      board_turn,
-      board_river,
-      video_timestamp_start,
-      video_timestamp_end,
-      ai_summary,
-      created_at,
-      job_id,
-      day_id,
-      streams (
-        id,
-        name,
-        video_url,
-        sub_events (
-          id,
-          name,
-          date,
-          tournaments (
-            id,
-            name,
-            category,
-            location
-          )
-        )
-      ),
-      hand_players (
-        id,
-        seat,
-        position:poker_position,
-        hole_cards,
-        stack_size:starting_stack,
-        ending_stack,
-        final_amount,
-        is_winner,
-        hand_description,
-        players (
-          id,
-          name,
-          country
-        )
-      )
-    `)
-    .eq('id', handId)
-    .single()
+async function getHandDetails(handId: string): Promise<HandDetailsResult | null> {
+  try {
+    // Get hand document
+    const handRef = adminFirestore.collection(COLLECTION_PATHS.HANDS).doc(handId)
+    const handSnap = await handRef.get()
 
-  if (error || !hand) {
+    if (!handSnap.exists) {
+      console.error('Hand not found:', handId)
+      return null
+    }
+
+    const handData = handSnap.data() as FirestoreHand
+    const hand = { id: handSnap.id, ...handData }
+
+    // Get related documents
+    let stream: (FirestoreStream & { id: string }) | null = null
+    let event: (FirestoreEvent & { id: string }) | null = null
+    let tournament: (FirestoreTournament & { id: string }) | null = null
+
+    if (handData.tournamentId && handData.eventId && handData.streamId) {
+      // Get tournament
+      const tournamentRef = adminFirestore.collection(COLLECTION_PATHS.TOURNAMENTS).doc(handData.tournamentId)
+      const tournamentSnap = await tournamentRef.get()
+      if (tournamentSnap.exists) {
+        tournament = { id: tournamentSnap.id, ...tournamentSnap.data() as FirestoreTournament }
+      }
+
+      // Get event
+      const eventRef = adminFirestore
+        .collection(COLLECTION_PATHS.EVENTS(handData.tournamentId))
+        .doc(handData.eventId)
+      const eventSnap = await eventRef.get()
+      if (eventSnap.exists) {
+        event = { id: eventSnap.id, ...eventSnap.data() as FirestoreEvent }
+      }
+
+      // Get stream
+      const streamRef = adminFirestore
+        .collection(COLLECTION_PATHS.STREAMS(handData.tournamentId, handData.eventId))
+        .doc(handData.streamId)
+      const streamSnap = await streamRef.get()
+      if (streamSnap.exists) {
+        stream = { id: streamSnap.id, ...streamSnap.data() as FirestoreStream }
+      }
+    }
+
+    return { hand, stream, event, tournament }
+  } catch (error) {
     console.error('Error fetching hand:', error)
     return null
-  }
-
-  // Get hand actions
-  const { data: actions } = await supabase
-    .from('hand_actions')
-    .select(`
-      id,
-      hand_player_id,
-      street,
-      action_type,
-      amount,
-      timestamp,
-      action_sequence:sequence,
-      hand_players (
-        players (
-          name
-        )
-      )
-    `)
-    .eq('hand_id', handId)
-    .order('sequence', { ascending: true })
-
-  return {
-    ...hand,
-    actions: actions || [],
   }
 }
 
 async function getAdjacentHands(currentHandId: string, streamId: string) {
-  const supabase = await createServerSupabaseClient()
+  try {
+    // Get all hands from the same stream
+    const handsRef = adminFirestore
+      .collection(COLLECTION_PATHS.HANDS)
+      .where('streamId', '==', streamId)
+      .orderBy('createdAt', 'asc')
 
-  // Get prev/next hands from same stream
-  const { data: hands } = await supabase
-    .from('hands')
-    .select('id, number, created_at')
-    .eq('day_id', streamId)
-    .order('created_at', { ascending: true })
+    const handsSnap = await handsRef.get()
 
-  if (!hands) return { prev: null, next: null }
+    if (handsSnap.empty) return { prev: null, next: null }
 
-  const currentIndex = hands.findIndex((h) => h.id === currentHandId)
-  if (currentIndex === -1) return { prev: null, next: null }
+    const hands = handsSnap.docs.map(doc => ({
+      id: doc.id,
+      number: (doc.data() as FirestoreHand).number,
+      createdAt: doc.data().createdAt,
+    }))
 
-  return {
-    prev: currentIndex > 0 ? hands[currentIndex - 1] : null,
-    next: currentIndex < hands.length - 1 ? hands[currentIndex + 1] : null,
+    const currentIndex = hands.findIndex((h) => h.id === currentHandId)
+    if (currentIndex === -1) return { prev: null, next: null }
+
+    return {
+      prev: currentIndex > 0 ? hands[currentIndex - 1] : null,
+      next: currentIndex < hands.length - 1 ? hands[currentIndex + 1] : null,
+    }
+  } catch (error) {
+    console.error('Error fetching adjacent hands:', error)
+    return { prev: null, next: null }
   }
 }
 
@@ -144,48 +129,44 @@ function extractYouTubeId(url: string): string | null {
 }
 
 async function HandDetailContent({ handId }: { handId: string }) {
-  const hand = await getHandDetails(handId)
+  const result = await getHandDetails(handId)
 
-  if (!hand) {
+  if (!result) {
     notFound()
   }
 
-  const dayData = Array.isArray(hand.streams) ? hand.streams[0] : hand.streams
-  const subEventData = Array.isArray(dayData?.sub_events) ? dayData?.sub_events[0] : dayData?.sub_events
-  const tournament = Array.isArray(subEventData?.tournaments) ? subEventData?.tournaments[0] : subEventData?.tournaments
-  const subEvent = subEventData
-  const day = dayData
-  const videoId = day?.video_url ? extractYouTubeId(day.video_url) : null
+  const { hand, stream, event, tournament } = result
+  const videoId = stream?.videoUrl ? extractYouTubeId(stream.videoUrl) : null
 
-  // Transform hand_players to PlayerSeatData
+  // Transform players to PlayerSeatData
   const players: PlayerSeatData[] =
-    hand.hand_players?.map((hp: any) => ({
-      id: hp.id,
+    hand.players?.map((hp) => ({
+      id: hp.playerId,
       seat: hp.seat || 1,
-      position: hp.position || hp.poker_position,
-      name: hp.players?.name || 'Unknown',
-      stack: hp.stack_size ?? hp.ending_stack ?? 0,
-      holeCards: hp.hole_cards,
-      isWinner: hp.is_winner,
-      finalAmount: hp.final_amount,
-      handDescription: hp.hand_description,
-      flagCode: hp.players?.country,
+      position: hp.position,
+      name: hp.name || 'Unknown',
+      stack: hp.startStack ?? hp.endStack ?? 0,
+      holeCards: hp.cards,
+      isWinner: hp.isWinner,
+      finalAmount: undefined,
+      handDescription: hp.handDescription,
+      flagCode: undefined,
     })) || []
 
   // Transform actions
   const handActions: HandAction[] =
-    hand.actions?.map((action: any) => ({
-      id: action.id,
-      hand_player_id: action.hand_player_id,
+    hand.actions?.map((action, index) => ({
+      id: `${hand.id}-action-${index}`,
+      hand_player_id: action.playerId,
       street: action.street,
-      action_type: action.action_type,
+      action_type: action.actionType,
       amount: action.amount || 0,
-      timestamp: action.timestamp,
-      action_sequence: action.action_sequence,
-      player_name: action.hand_players?.players?.name,
+      timestamp: undefined,
+      action_sequence: action.sequence,
+      player_name: action.playerName,
     })) || []
 
-  const adjacent = await getAdjacentHands(handId, hand.day_id)
+  const adjacent = await getAdjacentHands(handId, hand.streamId)
 
   return (
     <div className="min-h-screen bg-background">
@@ -204,7 +185,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
                   {tournament?.name || 'Unknown Tournament'}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {subEvent?.name || 'Unknown Event'} • {day?.name || 'Day'}
+                  {event?.name || 'Unknown Event'} - {stream?.name || 'Stream'}
                 </p>
               </div>
             </div>
@@ -259,7 +240,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
                   <div className="aspect-square bg-black">
                     <YouTubePlayer
                       videoId={videoId}
-                      startTime={hand.video_timestamp_start || 0}
+                      startTime={hand.videoTimestampStart || 0}
                     />
                   </div>
                 ) : (
@@ -280,7 +261,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground leading-relaxed">
-                  {hand.ai_summary || 'Hand summary will be generated automatically after analysis...'}
+                  {hand.aiSummary || 'Hand summary will be generated automatically after analysis...'}
                 </p>
               </CardContent>
             </Card>
@@ -306,10 +287,10 @@ async function HandDetailContent({ handId }: { handId: string }) {
               <CardContent className="p-6">
                 <div className="space-y-4">
                   {/* Stakes Badge */}
-                  {hand.stakes && (
+                  {hand.smallBlind && hand.bigBlind && (
                     <div className="flex items-center justify-center">
                       <Badge variant="outline" className="text-lg py-1 px-4">
-                        {hand.stakes}
+                        {hand.smallBlind}/{hand.bigBlind}
                       </Badge>
                     </div>
                   )}
@@ -319,10 +300,10 @@ async function HandDetailContent({ handId }: { handId: string }) {
                     <div className="w-full h-full">
                       <PokerTable
                         players={players}
-                        flop={hand.board_flop}
-                        turn={hand.board_turn}
-                        river={hand.board_river}
-                        potSize={hand.pot_size}
+                        flop={hand.boardFlop}
+                        turn={hand.boardTurn}
+                        river={hand.boardRiver}
+                        potSize={hand.potSize}
                         showCards={true}
                       />
                     </div>

@@ -175,23 +175,23 @@ export default function EditRequestsClient() {
                     </div>
                     <div>
                       <span className="px-2 py-1 border border-black-400 text-xs uppercase">
-                        {EDIT_TYPE_LABELS[request.edit_type]}
+                        {EDIT_TYPE_LABELS[request.editType]}
                       </span>
                     </div>
                     <div className="font-mono text-sm">
-                      {new Date(request.created_at).toLocaleDateString("ko-KR")}
+                      {new Date(request.createdAt).toLocaleDateString("ko-KR")}
                     </div>
                     <div>
                       {getStatusBadge(request.status)}
                     </div>
                     <div className="font-mono text-sm">
-                      {request.reviewed_at
-                        ? new Date(request.reviewed_at).toLocaleDateString("ko-KR")
+                      {request.reviewedAt
+                        ? new Date(request.reviewedAt).toLocaleDateString("ko-KR")
                         : "-"}
                     </div>
                     <div>
                       <Link
-                        href={`/archive?hand=${request.hand_id}`}
+                        href={`/archive?hand=${request.handId}`}
                         className="btn-secondary text-sm"
                       >
                         핸드 보기
@@ -201,11 +201,11 @@ export default function EditRequestsClient() {
                 ))}
 
                 {/* Admin comment for rejected/approved requests */}
-                {requests.some(r => (r.status !== "pending" && r.admin_comment)) && (
+                {requests.some(r => (r.status !== "pending" && r.adminComment)) && (
                   <div className="p-6 border-t-2 border-black-300 space-y-3">
                     <h3 className="text-caption">관리자 코멘트</h3>
                     {requests
-                      .filter(r => r.status !== "pending" && r.admin_comment)
+                      .filter(r => r.status !== "pending" && r.adminComment)
                       .map(r => (
                         <div key={r.id} className="card-postmodern p-4 bg-black-200">
                           <div className="flex items-start gap-3">
@@ -213,9 +213,9 @@ export default function EditRequestsClient() {
                               #{(r as any).hand?.number}
                             </span>
                             <div className="flex-1 text-sm">
-                              <p className="text-black-600">{r.admin_comment}</p>
+                              <p className="text-black-600">{r.adminComment}</p>
                               <p className="text-xs text-black-600 mt-1 font-mono">
-                                {new Date(r.reviewed_at!).toLocaleString("ko-KR")}
+                                {new Date(r.reviewedAt!).toLocaleString("ko-KR")}
                               </p>
                             </div>
                           </div>

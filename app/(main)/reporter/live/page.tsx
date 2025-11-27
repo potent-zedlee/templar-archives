@@ -156,7 +156,7 @@ export default function ReporterLivePage() {
                       {report.tags.length > 0 && `Tags: ${report.tags.join(', ')}`}
                     </p>
                     <p className="text-xs text-black-600 mt-2 font-mono">
-                      Created: {new Date(report.created_at).toLocaleDateString()}
+                      Created: {new Date(report.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="flex gap-2">

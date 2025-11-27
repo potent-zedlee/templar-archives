@@ -29,9 +29,9 @@ const newsConverter = {
   toFirestore(news: Omit<News, 'id'>): DocumentData {
     return {
       ...news,
-      created_at: news.created_at ? Timestamp.fromDate(new Date(news.created_at)) : serverTimestamp(),
-      updated_at: news.updated_at ? Timestamp.fromDate(new Date(news.updated_at)) : serverTimestamp(),
-      published_at: news.published_at ? Timestamp.fromDate(new Date(news.published_at)) : null,
+      createdAt: news.createdAt ? Timestamp.fromDate(new Date(news.createdAt)) : serverTimestamp(),
+      updatedAt: news.updatedAt ? Timestamp.fromDate(new Date(news.updatedAt)) : serverTimestamp(),
+      publishedAt: news.publishedAt ? Timestamp.fromDate(new Date(news.publishedAt)) : null,
     }
   },
   fromFirestore(snapshot: QueryDocumentSnapshot): News {
@@ -40,16 +40,16 @@ const newsConverter = {
       id: snapshot.id,
       title: data.title,
       content: data.content,
-      thumbnail_url: data.thumbnail_url,
+      thumbnailUrl: data.thumbnailUrl ?? data.thumbnail_url,
       category: data.category,
       tags: data.tags || [],
-      external_link: data.external_link,
+      externalLink: data.externalLink ?? data.external_link,
       status: data.status,
-      author_id: data.author_id,
-      approved_by: data.approved_by,
-      created_at: data.created_at?.toDate().toISOString() || new Date().toISOString(),
-      updated_at: data.updated_at?.toDate().toISOString() || new Date().toISOString(),
-      published_at: data.published_at?.toDate().toISOString(),
+      authorId: data.authorId ?? data.author_id,
+      approvedBy: data.approvedBy ?? data.approved_by,
+      createdAt: (data.createdAt ?? data.created_at)?.toDate().toISOString() || new Date().toISOString(),
+      updatedAt: (data.updatedAt ?? data.updated_at)?.toDate().toISOString() || new Date().toISOString(),
+      publishedAt: (data.publishedAt ?? data.published_at)?.toDate().toISOString(),
       author: data.author,
       approver: data.approver,
     } as News
@@ -60,19 +60,19 @@ export type News = {
   id: string
   title: string
   content: string
-  thumbnail_url?: string
+  thumbnailUrl?: string
   category: 'Tournament' | 'Player News' | 'Industry' | 'General' | 'Other'
   tags: string[]
-  external_link?: string
+  externalLink?: string
   status: 'draft' | 'pending' | 'published'
-  author_id: string
-  approved_by?: string
-  created_at: string
-  updated_at: string
-  published_at?: string
+  authorId: string
+  approvedBy?: string
+  createdAt: string
+  updatedAt: string
+  publishedAt?: string
   author?: {
     nickname: string
-    avatar_url?: string
+    avatarUrl?: string
   }
   approver?: {
     nickname: string
@@ -103,7 +103,7 @@ async function fetchUserProfile(userId: string) {
       const data = profileDoc.data()
       return {
         nickname: data.nickname || 'Unknown',
-        avatar_url: data.avatar_url
+        avatarUrl: data.avatarUrl ?? data.avatar_url
       }
     }
   } catch (error) {
@@ -121,13 +121,13 @@ async function enrichNewsWithProfiles(newsItems: News[]): Promise<News[]> {
       const enriched = { ...news }
 
       // Fetch author profile
-      if (news.author_id) {
-        enriched.author = await fetchUserProfile(news.author_id) || undefined
+      if (news.authorId) {
+        enriched.author = await fetchUserProfile(news.authorId) || undefined
       }
 
       // Fetch approver profile
-      if (news.approved_by) {
-        enriched.approver = await fetchUserProfile(news.approved_by) || undefined
+      if (news.approvedBy) {
+        enriched.approver = await fetchUserProfile(news.approvedBy) || undefined
       }
 
       return enriched
@@ -151,7 +151,7 @@ export function useNewsQuery(options?: { category?: string }) {
       let q = query(
         newsRef,
         where('status', '==', 'published'),
-        orderBy('published_at', 'desc')
+        orderBy('publishedAt', 'desc')
       )
 
       if (options?.category) {
@@ -159,7 +159,7 @@ export function useNewsQuery(options?: { category?: string }) {
           newsRef,
           where('status', '==', 'published'),
           where('category', '==', options.category),
-          orderBy('published_at', 'desc')
+          orderBy('publishedAt', 'desc')
         )
       }
 
@@ -193,12 +193,12 @@ export function useNewsDetailQuery(id: string) {
       // Enrich with author and approver profiles
       const enriched = { ...news }
 
-      if (news.author_id) {
-        enriched.author = await fetchUserProfile(news.author_id) || undefined
+      if (news.authorId) {
+        enriched.author = await fetchUserProfile(news.authorId) || undefined
       }
 
-      if (news.approved_by) {
-        enriched.approver = await fetchUserProfile(news.approved_by) || undefined
+      if (news.approvedBy) {
+        enriched.approver = await fetchUserProfile(news.approvedBy) || undefined
       }
 
       return enriched
@@ -217,19 +217,19 @@ export function useNewsDetailQuery(id: string) {
 export function useMyNewsQuery() {
   return useQuery({
     queryKey: newsKeys.my(),
-    queryFn: async () => {
+    queryFn: async (): Promise<News[]> => {
       const user = auth.currentUser
       if (!user) throw new Error('Not authenticated')
 
       const newsRef = collection(db, 'news').withConverter(newsConverter)
       const q = query(
         newsRef,
-        where('author_id', '==', user.uid),
-        orderBy('created_at', 'desc')
+        where('authorId', '==', user.uid),
+        orderBy('createdAt', 'desc')
       )
 
       const querySnapshot = await getDocs(q)
-      return querySnapshot.docs.map(doc => doc.data())
+      return querySnapshot.docs.map(doc => doc.data() as News)
     },
     staleTime: 2 * 60 * 1000, // 2분
     gcTime: 5 * 60 * 1000,
@@ -249,7 +249,7 @@ export function usePendingNewsQuery() {
       const q = query(
         newsRef,
         where('status', '==', 'pending'),
-        orderBy('created_at', 'desc')
+        orderBy('createdAt', 'desc')
       )
 
       const querySnapshot = await getDocs(q)
@@ -275,10 +275,10 @@ export function useCreateNewsMutation() {
     mutationFn: async (input: {
       title: string
       content: string
-      thumbnail_url?: string
+      thumbnailUrl?: string
       category: News['category']
       tags?: string[]
-      external_link?: string
+      externalLink?: string
       status: 'draft' | 'pending'
     }) => {
       const user = auth.currentUser
@@ -288,9 +288,9 @@ export function useCreateNewsMutation() {
       const newsData = {
         ...input,
         tags: input.tags || [],
-        author_id: user.uid,
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
+        authorId: user.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       }
 
       const docRef = await addDoc(newsRef, newsData)
@@ -320,10 +320,10 @@ export function useUpdateNewsMutation() {
       id: string
       title?: string
       content?: string
-      thumbnail_url?: string
+      thumbnailUrl?: string
       category?: News['category']
       tags?: string[]
-      external_link?: string
+      externalLink?: string
       status?: 'draft' | 'pending'
     }) => {
       const { id, ...updates } = input
@@ -331,7 +331,7 @@ export function useUpdateNewsMutation() {
       const newsRef = doc(db, 'news', id)
       await updateDoc(newsRef, {
         ...updates,
-        updated_at: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       })
 
       const docSnap = await getDoc(newsRef.withConverter(newsConverter))
@@ -383,9 +383,9 @@ export function useApproveNewsMutation() {
       const newsRef = doc(db, 'news', id)
       await updateDoc(newsRef, {
         status: 'published',
-        approved_by: user.uid,
-        published_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
+        approvedBy: user.uid,
+        publishedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       })
 
       const docSnap = await getDoc(newsRef.withConverter(newsConverter))
@@ -414,7 +414,7 @@ export function useRejectNewsMutation() {
       const newsRef = doc(db, 'news', id)
       await updateDoc(newsRef, {
         status: 'draft',
-        updated_at: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       })
 
       const docSnap = await getDoc(newsRef.withConverter(newsConverter))

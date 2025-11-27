@@ -240,13 +240,13 @@ export default function ProfileIdClient() {
                         </span>
                         <span className="flex items-center gap-1">
                           <ThumbsUp className="h-3 w-3" />
-                          <span className="font-mono">{post.likes_count}</span>
+                          <span className="font-mono">{(post as any).likesCount ?? (post as any).likes_count ?? 0}</span>
                         </span>
                         <span className="flex items-center gap-1">
                           <MessageSquare className="h-3 w-3" />
-                          <span className="font-mono">{post.comments_count}</span>
+                          <span className="font-mono">{(post as any).commentsCount ?? (post as any).comments_count ?? 0}</span>
                         </span>
-                        <span className="font-mono">{new Date(post.created_at).toLocaleDateString()}</span>
+                        <span className="font-mono">{new Date((post as any).createdAt ?? (post as any).created_at).toLocaleDateString()}</span>
                       </div>
                     </Link>
                   </div>
@@ -277,9 +277,9 @@ export default function ProfileIdClient() {
                       )}
                       <span className="flex items-center gap-1">
                         <ThumbsUp className="h-3 w-3" />
-                        <span className="font-mono">{comment.likes_count}</span>
+                        <span className="font-mono">{(comment as any).likesCount ?? (comment as any).likes_count ?? 0}</span>
                       </span>
-                      <span className="font-mono">{new Date(comment.created_at).toLocaleDateString()}</span>
+                      <span className="font-mono">{new Date((comment as any).createdAt ?? (comment as any).created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                 ))
@@ -303,9 +303,9 @@ export default function ProfileIdClient() {
                           <span className="px-2 py-1 border border-gold-600 bg-gold-700/20 text-xs uppercase font-mono">
                             #{(bookmark.hand as any)?.number}
                           </span>
-                          {bookmark.folder_name && (
+                          {((bookmark as any).folderName ?? (bookmark as any).folder_name) && (
                             <span className="px-2 py-1 border border-black-400 text-xs uppercase">
-                              {bookmark.folder_name}
+                              {(bookmark as any).folderName ?? (bookmark as any).folder_name}
                             </span>
                           )}
                         </div>
