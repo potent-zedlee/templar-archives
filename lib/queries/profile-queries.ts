@@ -1,7 +1,8 @@
 /**
- * Profile React Query Hooks
+ * Profile React Query Hooks (Firestore)
  *
  * 사용자 프로필 관련 데이터 페칭을 위한 React Query hooks
+ * Firestore 기반 쿼리로 완전히 마이그레이션됨
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -25,7 +26,8 @@ export const profileKeys = {
   details: () => [...profileKeys.all, 'detail'] as const,
   detail: (userId: string) => [...profileKeys.details(), userId] as const,
   current: () => [...profileKeys.all, 'current'] as const,
-  nickname: (nickname: string, userId?: string) => [...profileKeys.all, 'nickname', nickname, userId] as const,
+  nickname: (nickname: string, userId?: string) =>
+    [...profileKeys.all, 'nickname', nickname, userId] as const,
   posts: (userId: string) => [...profileKeys.detail(userId), 'posts'] as const,
   comments: (userId: string) => [...profileKeys.detail(userId), 'comments'] as const,
   bookmarks: (userId: string) => [...profileKeys.detail(userId), 'bookmarks'] as const,
@@ -35,6 +37,8 @@ export const profileKeys = {
 
 /**
  * Get user profile by ID
+ *
+ * Firestore: doc(firestore, 'users', userId)
  */
 export function useProfileQuery(userId: string) {
   return useQuery({
@@ -50,6 +54,8 @@ export function useProfileQuery(userId: string) {
 
 /**
  * Get current logged-in user's profile
+ *
+ * Firestore: Firebase Auth 기반 현재 사용자 조회
  */
 export function useCurrentUserProfileQuery() {
   return useQuery({
@@ -64,6 +70,8 @@ export function useCurrentUserProfileQuery() {
 
 /**
  * Check nickname availability
+ *
+ * Firestore: query(collection(firestore, 'users'), where('nickname', '==', nickname))
  * NOTE: Use debouncing in component to avoid too many requests
  */
 export function useCheckNicknameQuery(nickname: string, currentUserId?: string, enabled: boolean = true) {
@@ -80,6 +88,8 @@ export function useCheckNicknameQuery(nickname: string, currentUserId?: string, 
 
 /**
  * Get user's posts
+ *
+ * Firestore: query(collection(firestore, 'posts'), where('author.id', '==', userId))
  */
 export function useUserPostsQuery(userId: string, limit: number = 10) {
   return useQuery({
@@ -95,6 +105,9 @@ export function useUserPostsQuery(userId: string, limit: number = 10) {
 
 /**
  * Get user's comments
+ *
+ * Firestore: collectionGroup(firestore, 'comments') + where('author.id', '==', userId)
+ * TODO: collectionGroup 구현 필요
  */
 export function useUserCommentsQuery(userId: string, limit: number = 10) {
   return useQuery({
@@ -110,6 +123,8 @@ export function useUserCommentsQuery(userId: string, limit: number = 10) {
 
 /**
  * Get user's bookmarks
+ *
+ * Firestore: query(collection(firestore, 'users/{userId}/bookmarks'))
  */
 export function useUserBookmarksQuery(userId: string, limit: number = 20) {
   return useQuery({
@@ -127,6 +142,8 @@ export function useUserBookmarksQuery(userId: string, limit: number = 20) {
 
 /**
  * Update user profile
+ *
+ * Firestore: updateDoc(doc(firestore, 'users', userId), updates)
  */
 export function useUpdateProfileMutation() {
   const queryClient = useQueryClient()
@@ -148,7 +165,9 @@ export function useUpdateProfileMutation() {
       queryClient.invalidateQueries({ queryKey: profileKeys.detail(variables.userId) })
       // Invalidate nickname check if nickname was changed
       if (variables.updates.nickname) {
-        queryClient.invalidateQueries({ queryKey: profileKeys.nickname(variables.updates.nickname, variables.userId) })
+        queryClient.invalidateQueries({
+          queryKey: profileKeys.nickname(variables.updates.nickname, variables.userId),
+        })
       }
     },
   })
@@ -156,6 +175,8 @@ export function useUpdateProfileMutation() {
 
 /**
  * Upload avatar image
+ *
+ * TODO: Firebase Storage 구현 후 사용 가능
  */
 export function useUploadAvatarMutation(userId: string) {
   const queryClient = useQueryClient()

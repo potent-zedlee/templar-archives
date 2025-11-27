@@ -14,6 +14,9 @@ import {
 
 /**
  * 플레이어 통계 조회 훅
+ *
+ * Server Action을 통해 플레이어 통계를 조회합니다.
+ * Firestore에서 players/{playerId} 문서의 stats 필드를 조회합니다.
  */
 export function usePlayerStatsQuery(playerId: string | undefined) {
   return useQuery({
@@ -22,7 +25,20 @@ export function usePlayerStatsQuery(playerId: string | undefined) {
       if (!playerId) {
         throw new Error('Player ID is required')
       }
-      return await calculatePlayerStatistics(playerId)
+
+      // Server Action 호출
+      const response = await fetch('/api/player-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId, type: 'overall' }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch player statistics')
+      }
+
+      const data = await response.json()
+      return data.stats as PlayerStatistics
     },
     enabled: !!playerId,
     staleTime: 10 * 60 * 1000, // 10분
@@ -33,6 +49,9 @@ export function usePlayerStatsQuery(playerId: string | undefined) {
 
 /**
  * 포지션별 통계 조회 훅
+ *
+ * Server Action을 통해 포지션별 통계를 조회합니다.
+ * Firestore에서 players/{playerId} 문서의 positionalStats 필드를 조회합니다.
  */
 export function usePositionalStatsQuery(playerId: string | undefined) {
   return useQuery({
@@ -41,7 +60,20 @@ export function usePositionalStatsQuery(playerId: string | undefined) {
       if (!playerId) {
         throw new Error('Player ID is required')
       }
-      return await calculatePositionStats(playerId)
+
+      // Server Action 호출
+      const response = await fetch('/api/player-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId, type: 'positional' }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch positional statistics')
+      }
+
+      const data = await response.json()
+      return data.stats as PositionStats[]
     },
     enabled: !!playerId,
     staleTime: 10 * 60 * 1000, // 10분
@@ -95,13 +127,26 @@ export function useInvalidatePlayerStats() {
 
   return useMutation({
     mutationFn: async (playerId: string) => {
-      // 실제 무효화만 수행 (별도의 API 호출 없음)
+      // Server Action을 통해 캐시 무효화 요청
+      const response = await fetch('/api/player-stats/invalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to invalidate player statistics')
+      }
+
+      // React Query 캐시 무효화
       await queryClient.invalidateQueries({
         queryKey: ['player-stats', 'overall', playerId],
       })
       await queryClient.invalidateQueries({
         queryKey: ['player-stats', 'positional', playerId],
       })
+
+      return response.json()
     },
     onSuccess: () => {
       console.log('플레이어 통계 캐시 무효화 완료')
@@ -116,13 +161,26 @@ export function useMultiplePlayersStatsQuery(playerIds: string[]) {
   return useQuery({
     queryKey: ['player-stats', 'multiple', playerIds.sort().join(',')],
     queryFn: async () => {
-      const statsPromises = playerIds.map(id => calculatePlayerStatistics(id))
-      const results = await Promise.all(statsPromises)
+      if (playerIds.length === 0) {
+        return []
+      }
 
-      return playerIds.map((id, index) => ({
-        playerId: id,
-        stats: results[index],
-      }))
+      // Server Action 호출
+      const response = await fetch('/api/player-stats/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerIds }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch multiple player statistics')
+      }
+
+      const data = await response.json()
+      return data.results as Array<{
+        playerId: string
+        stats: PlayerStatistics
+      }>
     },
     enabled: playerIds.length > 0,
     staleTime: 10 * 60 * 1000, // 10분

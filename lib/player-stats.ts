@@ -1,4 +1,10 @@
-import { createClientSupabaseClient } from "./supabase-client"
+import { adminFirestore } from './firebase-admin'
+import type {
+  FirestoreHand,
+  HandPlayerEmbedded,
+  HandActionEmbedded,
+  PokerPosition,
+} from './firestore-types'
 
 /**
  * 플레이어 통계 타입
@@ -19,17 +25,29 @@ export type PlayerStatistics = {
  * 플레이어의 모든 액션 가져오기
  */
 export async function fetchPlayerActions(playerId: string) {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from('hand_actions')
-      .select('*')
-      .eq('player_id', playerId)
-      .order('hand_id, sequence')
+    // Firestore에서 hands 컬렉션 쿼리
+    const handsSnapshot = await adminFirestore
+      .collection('hands')
+      .where('players', 'array-contains', { playerId })
+      .get()
 
-    if (error) throw error
-    return data || []
+    const allActions: (HandActionEmbedded & { hand_id: string })[] = []
+
+    // 각 핸드에서 해당 플레이어의 액션만 추출
+    handsSnapshot.docs.forEach((doc) => {
+      const hand = doc.data() as FirestoreHand
+      const playerActions = hand.actions.filter((action) => action.playerId === playerId)
+
+      playerActions.forEach((action) => {
+        allActions.push({
+          ...action,
+          hand_id: doc.id,
+        })
+      })
+    })
+
+    return allActions
   } catch (error) {
     console.error('플레이어 액션 조회 실패:', error)
     return []
@@ -40,19 +58,41 @@ export async function fetchPlayerActions(playerId: string) {
  * 플레이어가 참여한 모든 핸드 정보 가져오기
  */
 export async function fetchPlayerHandsInfo(playerId: string) {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from('hand_players')
-      .select(`
-        *,
-        hands!inner(id, pot_size)
-      `)
-      .eq('player_id', playerId)
+    // Firestore에서 플레이어가 참여한 핸드 조회
+    const handsSnapshot = await adminFirestore
+      .collection('hands')
+      .where('players', 'array-contains', { playerId })
+      .get()
 
-    if (error) throw error
-    return data || []
+    const handPlayersData: Array<{
+      hand_id: string
+      player_id: string
+      position?: PokerPosition
+      starting_stack?: number
+      ending_stack?: number
+      is_winner?: boolean
+      pot_size?: number
+    }> = []
+
+    handsSnapshot.docs.forEach((doc) => {
+      const hand = doc.data() as FirestoreHand
+      const playerData = hand.players.find((p) => p.playerId === playerId)
+
+      if (playerData) {
+        handPlayersData.push({
+          hand_id: doc.id,
+          player_id: playerId,
+          position: playerData.position,
+          starting_stack: playerData.startStack,
+          ending_stack: playerData.endStack,
+          is_winner: playerData.isWinner,
+          pot_size: hand.potSize,
+        })
+      }
+    })
+
+    return handPlayersData
   } catch (error) {
     console.error('플레이어 핸드 정보 조회 실패:', error)
     return []
@@ -67,11 +107,11 @@ export function calculateVPIP(actions: any[]): number {
   if (actions.length === 0) return 0
 
   // 프리플롭 액션만 필터
-  const preflopActions = actions.filter(a => a.street === 'preflop')
+  const preflopActions = actions.filter((a) => a.street === 'preflop')
 
   // 핸드별로 그룹화
   const handActionsMap = new Map<string, any[]>()
-  preflopActions.forEach(action => {
+  preflopActions.forEach((action) => {
     if (!handActionsMap.has(action.hand_id)) {
       handActionsMap.set(action.hand_id, [])
     }
@@ -84,8 +124,8 @@ export function calculateVPIP(actions: any[]): number {
   // 각 핸드에서 VPIP 여부 확인
   handActionsMap.forEach((handActions) => {
     // Call, Bet, Raise 액션이 있으면 VPIP
-    const hasVPIP = handActions.some(a =>
-      ['call', 'bet', 'raise', 'all-in'].includes(a.action_type)
+    const hasVPIP = handActions.some((a) =>
+      ['call', 'bet', 'raise', 'all-in'].includes(a.actionType)
     )
     if (hasVPIP) vpipCount++
   })
@@ -100,10 +140,10 @@ export function calculateVPIP(actions: any[]): number {
 export function calculatePFR(actions: any[]): number {
   if (actions.length === 0) return 0
 
-  const preflopActions = actions.filter(a => a.street === 'preflop')
+  const preflopActions = actions.filter((a) => a.street === 'preflop')
   const handActionsMap = new Map<string, any[]>()
 
-  preflopActions.forEach(action => {
+  preflopActions.forEach((action) => {
     if (!handActionsMap.has(action.hand_id)) {
       handActionsMap.set(action.hand_id, [])
     }
@@ -115,8 +155,8 @@ export function calculatePFR(actions: any[]): number {
 
   handActionsMap.forEach((handActions) => {
     // Raise 액션이 있으면 PFR
-    const hasPFR = handActions.some(a =>
-      ['raise', 'bet'].includes(a.action_type) && a.amount && a.amount > 0
+    const hasPFR = handActions.some(
+      (a) => ['raise', 'bet'].includes(a.actionType) && a.amount && a.amount > 0
     )
     if (hasPFR) pfrCount++
   })
@@ -131,10 +171,10 @@ export function calculatePFR(actions: any[]): number {
 export function calculate3Bet(actions: any[]): number {
   if (actions.length === 0) return 0
 
-  const preflopActions = actions.filter(a => a.street === 'preflop')
+  const preflopActions = actions.filter((a) => a.street === 'preflop')
   const handActionsMap = new Map<string, any[]>()
 
-  preflopActions.forEach(action => {
+  preflopActions.forEach((action) => {
     if (!handActionsMap.has(action.hand_id)) {
       handActionsMap.set(action.hand_id, [])
     }
@@ -149,7 +189,7 @@ export function calculate3Bet(actions: any[]): number {
     handActions.sort((a, b) => a.sequence - b.sequence)
 
     // 레이즈가 있는 핸드만 3벳 기회가 있음
-    const hasRaise = handActions.some(a => ['raise', 'bet'].includes(a.action_type))
+    const hasRaise = handActions.some((a) => ['raise', 'bet'].includes(a.actionType))
     if (!hasRaise) return
 
     threeBetOpportunities++
@@ -157,7 +197,7 @@ export function calculate3Bet(actions: any[]): number {
     // 두 번째 레이즈가 있으면 3벳
     let raiseCount = 0
     for (const action of handActions) {
-      if (['raise', 'bet'].includes(action.action_type)) {
+      if (['raise', 'bet'].includes(action.actionType)) {
         raiseCount++
         if (raiseCount >= 2) {
           threeBetCount++
@@ -181,14 +221,14 @@ export function calculateATS(actions: any[], handPlayersData: any[]): number {
 
   // 포지션별 hand_player 데이터 매핑
   const positionMap = new Map<string, string>()
-  handPlayersData.forEach(hp => {
+  handPlayersData.forEach((hp) => {
     positionMap.set(hp.hand_id, hp.position)
   })
 
-  const preflopActions = actions.filter(a => a.street === 'preflop')
+  const preflopActions = actions.filter((a) => a.street === 'preflop')
   const handActionsMap = new Map<string, any[]>()
 
-  preflopActions.forEach(action => {
+  preflopActions.forEach((action) => {
     if (!handActionsMap.has(action.hand_id)) {
       handActionsMap.set(action.hand_id, [])
     }
@@ -208,9 +248,7 @@ export function calculateATS(actions: any[], handPlayersData: any[]): number {
 
     // 첫 번째 레이즈가 있으면 스틸 시도
     handActions.sort((a, b) => a.sequence - b.sequence)
-    const firstAction = handActions.find(a =>
-      ['raise', 'bet'].includes(a.action_type)
-    )
+    const firstAction = handActions.find((a) => ['raise', 'bet'].includes(a.actionType))
 
     if (firstAction) stealAttempts++
   })
@@ -229,7 +267,7 @@ export function calculateWinRate(handPlayersData: any[]): number {
   const totalHands = handPlayersData.length
 
   // 스택이 증가한 핸드 = 이긴 핸드
-  const handsWon = handPlayersData.filter(hp => {
+  const handsWon = handPlayersData.filter((hp) => {
     const stackChange = (hp.ending_stack || 0) - (hp.starting_stack || 0)
     return stackChange > 0
   }).length
@@ -243,9 +281,7 @@ export function calculateWinRate(handPlayersData: any[]): number {
 export function calculateAvgPotSize(handPlayersData: any[]): number {
   if (handPlayersData.length === 0) return 0
 
-  const potSizes = handPlayersData
-    .map(hp => hp.hands?.pot_size || 0)
-    .filter(size => size > 0)
+  const potSizes = handPlayersData.map((hp) => hp.pot_size || 0).filter((size) => size > 0)
 
   if (potSizes.length === 0) return 0
 
@@ -331,22 +367,18 @@ export type PositionStats = {
 }
 
 /**
- * 포지션별 통계 계산 (캐시 우선)
+ * 포지션별 통계 계산 (Firestore - players/{playerId} 문서의 stats 활용)
  */
 export async function calculatePositionStats(playerId: string): Promise<PositionStats[]> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    // 1. 캐시에서 조회 시도
-    const { data: cached, error: cacheError } = await supabase
-      .from('player_stats_cache')
-      .select('positional_stats')
-      .eq('player_id', playerId)
-      .single()
+    // 1. Player 문서에서 캐시된 통계 조회
+    const playerDoc = await adminFirestore.collection('players').doc(playerId).get()
 
-    // 캐시가 있으면 반환
-    if (cached && !cacheError && cached.positional_stats) {
-      return cached.positional_stats as PositionStats[]
+    if (playerDoc.exists) {
+      const playerData = playerDoc.data()
+      if (playerData?.positionalStats) {
+        return playerData.positionalStats as PositionStats[]
+      }
     }
 
     // 2. 캐시가 없으면 실시간 계산
@@ -356,9 +388,9 @@ export async function calculatePositionStats(playerId: string): Promise<Position
     ])
 
     // 포지션별로 그룹화
-    const positionGroups: Record<string, { actions: any[], handPlayers: any[] }> = {}
+    const positionGroups: Record<string, { actions: any[]; handPlayers: any[] }> = {}
 
-    handPlayersData.forEach(hp => {
+    handPlayersData.forEach((hp) => {
       const pos = hp.position || 'Unknown'
       if (!positionGroups[pos]) {
         positionGroups[pos] = { actions: [], handPlayers: [] }
@@ -366,8 +398,8 @@ export async function calculatePositionStats(playerId: string): Promise<Position
       positionGroups[pos].handPlayers.push(hp)
     })
 
-    actions.forEach(action => {
-      const handPlayer = handPlayersData.find(hp => hp.hand_id === action.hand_id)
+    actions.forEach((action) => {
+      const handPlayer = handPlayersData.find((hp) => hp.hand_id === action.hand_id)
       if (handPlayer) {
         const pos = handPlayer.position || 'Unknown'
         if (positionGroups[pos]) {
@@ -377,29 +409,45 @@ export async function calculatePositionStats(playerId: string): Promise<Position
     })
 
     // 각 포지션별 통계 계산
-    const positionStats: PositionStats[] = Object.entries(positionGroups).map(([position, data]) => {
-      const vpip = calculateVPIP(data.actions)
-      const pfr = calculatePFR(data.actions)
-      const winRate = calculateWinRate(data.handPlayers)
+    const positionStats: PositionStats[] = Object.entries(positionGroups).map(
+      ([position, data]) => {
+        const vpip = calculateVPIP(data.actions)
+        const pfr = calculatePFR(data.actions)
+        const winRate = calculateWinRate(data.handPlayers)
 
-      return {
-        position,
-        hands: data.handPlayers.length,
-        vpip,
-        pfr,
-        winRate,
+        return {
+          position,
+          hands: data.handPlayers.length,
+          vpip,
+          pfr,
+          winRate,
+        }
       }
-    })
+    )
 
     // 포지션 순서 정렬
     const positionOrder = ['UTG', 'UTG+1', 'MP', 'CO', 'BTN', 'SB', 'BB']
-    return positionStats.sort((a, b) => {
+    const sortedStats = positionStats.sort((a, b) => {
       const aIndex = positionOrder.indexOf(a.position)
       const bIndex = positionOrder.indexOf(b.position)
       if (aIndex === -1) return 1
       if (bIndex === -1) return -1
       return aIndex - bIndex
     })
+
+    // 3. Player 문서에 캐시 저장
+    await adminFirestore
+      .collection('players')
+      .doc(playerId)
+      .set(
+        {
+          positionalStats: sortedStats,
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      )
+
+    return sortedStats
   } catch (error) {
     console.error('포지션별 통계 계산 실패:', error)
     return []
@@ -407,31 +455,29 @@ export async function calculatePositionStats(playerId: string): Promise<Position
 }
 
 /**
- * 플레이어 전체 통계 계산 (캐시 우선)
+ * 플레이어 전체 통계 계산 (Firestore - players/{playerId} 문서의 stats 활용)
  */
 export async function calculatePlayerStatistics(playerId: string): Promise<PlayerStatistics> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    // 1. 캐시에서 조회 시도
-    const { data: cached, error: cacheError } = await supabase
-      .from('player_stats_cache')
-      .select('*')
-      .eq('player_id', playerId)
-      .single()
+    // 1. Player 문서에서 캐시된 통계 조회
+    const playerDoc = await adminFirestore.collection('players').doc(playerId).get()
 
-    // 캐시가 있으면 반환 (camelCase 변환)
-    if (cached && !cacheError) {
-      return {
-        vpip: cached.vpip || 0,
-        pfr: cached.pfr || 0,
-        threeBet: cached.three_bet || 0,
-        ats: cached.ats || 0,
-        winRate: cached.win_rate || 0,
-        avgPotSize: cached.avg_pot_size || 0,
-        showdownWinRate: cached.showdown_win_rate || 0,
-        totalHands: cached.total_hands || 0,
-        handsWon: cached.hands_won || 0,
+    if (playerDoc.exists) {
+      const playerData = playerDoc.data()
+      const stats = playerData?.stats
+
+      if (stats && stats.totalHands > 0) {
+        return {
+          vpip: stats.vpip || 0,
+          pfr: stats.pfr || 0,
+          threeBet: stats.threeBet || 0,
+          ats: stats.ats || 0,
+          winRate: stats.winRate || 0,
+          avgPotSize: stats.avgPotSize || 0,
+          showdownWinRate: stats.showdownWinRate || 0,
+          totalHands: stats.totalHands || 0,
+          handsWon: stats.handsWon || 0,
+        }
       }
     }
 
@@ -450,7 +496,7 @@ export async function calculatePlayerStatistics(playerId: string): Promise<Playe
     const avgPotSize = calculateAvgPotSize(handPlayersData)
     const showdownWinRate = winRate // 임시로 winRate 사용
     const totalHands = handPlayersData.length
-    const handsWon = handPlayersData.filter(hp => {
+    const handsWon = handPlayersData.filter((hp) => {
       const stackChange = (hp.ending_stack || 0) - (hp.starting_stack || 0)
       return stackChange > 0
     }).length
@@ -467,27 +513,32 @@ export async function calculatePlayerStatistics(playerId: string): Promise<Playe
       handsWon,
     }
 
-    // 3. 캐시에 저장 (포지션별 통계는 별도로 계산)
+    // 3. Player 문서에 캐시 저장
     const positionStats = await calculatePositionStats(playerId)
     const playStyle = classifyPlayStyle(vpip, pfr, totalHands)
 
-    await supabase
-      .from('player_stats_cache')
-      .upsert({
-        player_id: playerId,
-        vpip,
-        pfr,
-        three_bet: threeBet,
-        ats,
-        win_rate: winRate,
-        avg_pot_size: avgPotSize,
-        showdown_win_rate: showdownWinRate,
-        total_hands: totalHands,
-        hands_won: handsWon,
-        positional_stats: positionStats,
-        play_style: playStyle,
-        last_updated: new Date().toISOString(),
-      })
+    await adminFirestore
+      .collection('players')
+      .doc(playerId)
+      .set(
+        {
+          stats: {
+            vpip,
+            pfr,
+            threeBet,
+            ats,
+            winRate,
+            avgPotSize,
+            showdownWinRate,
+            totalHands,
+            handsWon,
+          },
+          positionalStats: positionStats,
+          playStyle,
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      )
 
     return stats
   } catch (error) {
