@@ -1,9 +1,9 @@
 "use client"
 
-import { Button } from "./ui/button"
+import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { Badge } from "./ui/badge"
-import { PlayingCard, parseCard } from "./playing-card"
+import { Badge } from "@/components/ui/badge"
+import { PlayingCard, parseCard } from "@/components/common/PlayingCard"
 import { cn } from "@/lib/utils"
 
 interface HandNavigatorProps {

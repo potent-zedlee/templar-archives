@@ -1,6 +1,6 @@
 "use client"
 
-import { PlayingCard, parseCard } from "./playing-card"
+import { PlayingCard, parseCard } from "./PlayingCard"
 import { cn } from "@/lib/utils"
 
 interface BoardCardsProps {

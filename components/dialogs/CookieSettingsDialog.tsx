@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Settings, Cookie, Shield, BarChart3 } from "lucide-react"
-import type { CookieConsent } from "./cookie-consent-banner"
+import type { CookieConsent } from "./CookieConsentBanner"
 
 const CONSENT_KEY = "cookie-consent"
 
