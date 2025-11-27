@@ -10,7 +10,8 @@
  * - USE_CLOUD_RUN: 'true'로 설정하면 Cloud Run 사용, 아니면 Trigger.dev 사용
  */
 
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { adminFirestore } from '@/lib/firebase-admin'
+import { COLLECTION_PATHS } from '@/lib/firebase/collections'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
 
@@ -60,25 +61,23 @@ export async function startCloudRunAnalysis(
       }
     }
 
-    // Supabase 클라이언트 생성
-    const supabase = await createServerSupabaseClient()
-
     // Stream 존재 확인
-    const { data: stream, error: streamError } = await supabase
-      .from('streams')
-      .select('id, name, status, gcs_uri')
-      .eq('id', streamId)
-      .single()
+    const streamDoc = await adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS)
+      .doc(streamId)
+      .get()
 
-    if (streamError || !stream) {
+    if (!streamDoc.exists) {
       return {
         success: false,
         error: `Stream not found: ${streamId}`,
       }
     }
 
+    const stream = streamDoc.data()
+
     // GCS URI 확인 (파라미터 또는 DB에서)
-    const videoGcsUri = gcsUri || stream.gcs_uri
+    const videoGcsUri = gcsUri || stream?.gcsUri
     if (!videoGcsUri) {
       return {
         success: false,
@@ -123,13 +122,13 @@ export async function startCloudRunAnalysis(
     console.log(`[CloudRun-Trigger] Job started: ${jobId}`)
 
     // Stream 상태 업데이트 (분석 중)
-    await supabase
-      .from('streams')
+    await adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS)
+      .doc(streamId)
       .update({
         status: 'analyzing',
-        updated_at: new Date().toISOString(),
+        updatedAt: new Date(),
       })
-      .eq('id', streamId)
 
     // 캐시 무효화
     revalidatePath('/archive')
