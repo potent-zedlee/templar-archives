@@ -9,59 +9,71 @@
  * - 서버 사이드 권한 검증
  */
 
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { adminAuth, adminFirestore } from '@/lib/firebase-admin'
+import { COLLECTION_PATHS } from '@/lib/firebase/constants'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
+import { FieldValue } from 'firebase-admin/firestore'
 
 // ==================== Helper Functions ====================
 
 /**
- * 관리자 권한 검증 (DB role 기반)
+ * 관리자 권한 검증 (Firebase Auth + Firestore role 기반)
  */
 async function verifyAdmin(): Promise<{
   authorized: boolean
   error?: string
   userId?: string
 }> {
-  const supabase = await createServerSupabaseClient()
+  try {
+    // 1. 세션 쿠키에서 토큰 가져오기
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get('session')?.value
 
-  // 1. 인증된 사용자 확인
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-
-  if (authError || !user) {
-    return { authorized: false, error: 'Unauthorized - Please sign in' }
-  }
-
-  // 2. DB에서 사용자 role 조회
-  const { data: dbUser, error: dbError } = await supabase
-    .from('users')
-    .select('role, banned_at')
-    .eq('id', user.id)
-    .single()
-
-  if (dbError || !dbUser) {
-    return {
-      authorized: false,
-      error: 'User not found in database'
+    if (!sessionCookie) {
+      return { authorized: false, error: 'Unauthorized - Please sign in' }
     }
-  }
 
-  // 3. 밴 상태 확인
-  if (dbUser.banned_at) {
-    return {
-      authorized: false,
-      error: 'Account is banned'
+    // 2. Firebase Admin SDK로 토큰 검증
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie, true)
+    const userId = decodedToken.uid
+
+    // 3. Firestore에서 사용자 role 조회
+    const userDoc = await adminFirestore
+      .collection(COLLECTION_PATHS.USERS)
+      .doc(userId)
+      .get()
+
+    if (!userDoc.exists) {
+      return {
+        authorized: false,
+        error: 'User not found in database'
+      }
     }
-  }
 
-  // 4. 관리자 역할 확인
-  if (!['admin', 'high_templar'].includes(dbUser.role)) {
-    return {
-      authorized: false,
-      error: 'Forbidden - Admin access required'
+    const userData = userDoc.data()
+
+    // 4. 밴 상태 확인
+    if (userData?.bannedAt) {
+      return {
+        authorized: false,
+        error: 'Account is banned'
+      }
     }
-  }
 
-  return { authorized: true, userId: user.id }
+    // 5. 관리자 역할 확인
+    if (!['admin', 'high_templar'].includes(userData?.role || '')) {
+      return {
+        authorized: false,
+        error: 'Forbidden - Admin access required'
+      }
+    }
+
+    return { authorized: true, userId }
+  } catch (error) {
+    console.error('Error verifying admin:', error)
+    return { authorized: false, error: 'Authentication failed' }
+  }
 }
 
 /**
@@ -113,35 +125,39 @@ export async function createUnsortedVideo(data: {
     return { success: false, error }
   }
 
-  const supabase = await createServerSupabaseClient()
+  try {
+    // Normalize YouTube URL if provided
+    let normalizedUrl = data.video_url || null
+    if (normalizedUrl && data.video_source === 'youtube') {
+      normalizedUrl = normalizeYoutubeUrl(normalizedUrl)
+    }
 
-  // Normalize YouTube URL if provided
-  let normalizedUrl = data.video_url || null
-  if (normalizedUrl && data.video_source === 'youtube') {
-    normalizedUrl = normalizeYoutubeUrl(normalizedUrl)
-  }
-
-  const { data: result, error: insertError } = await supabase
-    .from('streams')
-    .insert({
+    const now = new Date()
+    const streamData = {
       name: data.name,
-      video_url: normalizedUrl,
-      video_file: data.video_file || null,
-      video_source: data.video_source || 'youtube',
-      sub_event_id: null,
-      is_organized: false,
-      published_at: data.published_at || null,
-    })
-    .select('id')
-    .single()
+      videoUrl: normalizedUrl,
+      videoFile: data.video_file || null,
+      videoSource: data.video_source || 'youtube',
+      subEventId: null,
+      isOrganized: false,
+      publishedAt: data.published_at ? new Date(data.published_at) : null,
+      createdAt: now,
+      updatedAt: now,
+    }
 
-  if (insertError) {
-    console.error('Error creating unsorted video:', insertError)
-    return { success: false, error: insertError.message }
+    const docRef = await adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS)
+      .add(streamData)
+
+    revalidatePath('/admin/archive')
+    return { success: true, id: docRef.id }
+  } catch (error) {
+    console.error('Error creating unsorted video:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create video'
+    }
   }
-
-  revalidatePath('/admin/archive')
-  return { success: true, id: result.id }
 }
 
 /**
@@ -163,32 +179,38 @@ export async function updateUnsortedVideo(
     return { success: false, error }
   }
 
-  const supabase = await createServerSupabaseClient()
+  try {
+    // Build update object
+    const updateData: Record<string, any> = {
+      updatedAt: new Date()
+    }
 
-  // Build update object
-  const updateData: Record<string, any> = {}
-  if (data.name !== undefined) updateData.name = data.name
-  if (data.video_url !== undefined) {
-    updateData.video_url = data.video_source === 'youtube' && data.video_url
-      ? normalizeYoutubeUrl(data.video_url)
-      : data.video_url
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.video_url !== undefined) {
+      updateData.videoUrl = data.video_source === 'youtube' && data.video_url
+        ? normalizeYoutubeUrl(data.video_url)
+        : data.video_url
+    }
+    if (data.video_file !== undefined) updateData.videoFile = data.video_file
+    if (data.video_source !== undefined) updateData.videoSource = data.video_source
+    if (data.published_at !== undefined) {
+      updateData.publishedAt = data.published_at ? new Date(data.published_at) : null
+    }
+
+    await adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS)
+      .doc(id)
+      .update(updateData)
+
+    revalidatePath('/admin/archive')
+    return { success: true }
+  } catch (error) {
+    console.error('Error updating unsorted video:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update video'
+    }
   }
-  if (data.video_file !== undefined) updateData.video_file = data.video_file
-  if (data.video_source !== undefined) updateData.video_source = data.video_source
-  if (data.published_at !== undefined) updateData.published_at = data.published_at
-
-  const { error: updateError } = await supabase
-    .from('streams')
-    .update(updateData)
-    .eq('id', id)
-
-  if (updateError) {
-    console.error('Error updating unsorted video:', updateError)
-    return { success: false, error: updateError.message }
-  }
-
-  revalidatePath('/admin/archive')
-  return { success: true }
 }
 
 /**
@@ -201,20 +223,21 @@ export async function deleteUnsortedVideo(id: string) {
     return { success: false, error }
   }
 
-  const supabase = await createServerSupabaseClient()
+  try {
+    await adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS)
+      .doc(id)
+      .delete()
 
-  const { error: deleteError } = await supabase
-    .from('streams')
-    .delete()
-    .eq('id', id)
-
-  if (deleteError) {
-    console.error('Error deleting unsorted video:', deleteError)
-    return { success: false, error: deleteError.message }
+    revalidatePath('/admin/archive')
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting unsorted video:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete video'
+    }
   }
-
-  revalidatePath('/admin/archive')
-  return { success: true }
 }
 
 /**
@@ -227,20 +250,25 @@ export async function deleteUnsortedVideosBatch(ids: string[]) {
     return { success: false, error }
   }
 
-  const supabase = await createServerSupabaseClient()
+  try {
+    const batch = adminFirestore.batch()
+    const streamsRef = adminFirestore.collection(COLLECTION_PATHS.STREAMS)
 
-  const { error: deleteError } = await supabase
-    .from('streams')
-    .delete()
-    .in('id', ids)
+    for (const id of ids) {
+      batch.delete(streamsRef.doc(id))
+    }
 
-  if (deleteError) {
-    console.error('Error deleting unsorted videos:', deleteError)
-    return { success: false, error: deleteError.message }
+    await batch.commit()
+
+    revalidatePath('/admin/archive')
+    return { success: true }
+  } catch (error) {
+    console.error('Error deleting unsorted videos:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete videos'
+    }
   }
-
-  revalidatePath('/admin/archive')
-  return { success: true }
 }
 
 /**
@@ -256,24 +284,26 @@ export async function organizeUnsortedVideo(
     return { success: false, error }
   }
 
-  const supabase = await createServerSupabaseClient()
+  try {
+    await adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS)
+      .doc(videoId)
+      .update({
+        subEventId,
+        isOrganized: true,
+        organizedAt: new Date(),
+        updatedAt: new Date(),
+      })
 
-  const { error: updateError } = await supabase
-    .from('streams')
-    .update({
-      sub_event_id: subEventId,
-      is_organized: true,
-      organized_at: new Date().toISOString(),
-    })
-    .eq('id', videoId)
-
-  if (updateError) {
-    console.error('Error organizing video:', updateError)
-    return { success: false, error: updateError.message }
+    revalidatePath('/admin/archive')
+    return { success: true }
+  } catch (error) {
+    console.error('Error organizing video:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to organize video'
+    }
   }
-
-  revalidatePath('/admin/archive')
-  return { success: true }
 }
 
 /**
@@ -289,24 +319,31 @@ export async function organizeUnsortedVideosBatch(
     return { success: false, error }
   }
 
-  const supabase = await createServerSupabaseClient()
+  try {
+    const batch = adminFirestore.batch()
+    const streamsRef = adminFirestore.collection(COLLECTION_PATHS.STREAMS)
+    const now = new Date()
 
-  const { error: updateError } = await supabase
-    .from('streams')
-    .update({
-      sub_event_id: subEventId,
-      is_organized: true,
-      organized_at: new Date().toISOString(),
-    })
-    .in('id', videoIds)
+    for (const videoId of videoIds) {
+      batch.update(streamsRef.doc(videoId), {
+        subEventId,
+        isOrganized: true,
+        organizedAt: now,
+        updatedAt: now,
+      })
+    }
 
-  if (updateError) {
-    console.error('Error organizing videos:', updateError)
-    return { success: false, error: updateError.message }
+    await batch.commit()
+
+    revalidatePath('/admin/archive')
+    return { success: true }
+  } catch (error) {
+    console.error('Error organizing videos:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to organize videos'
+    }
   }
-
-  revalidatePath('/admin/archive')
-  return { success: true }
 }
 
 /**
@@ -319,19 +356,34 @@ export async function getUnsortedVideos() {
     return { success: false, error, data: [] }
   }
 
-  const supabase = await createServerSupabaseClient()
+  try {
+    const snapshot = await adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS)
+      .where('subEventId', '==', null)
+      .where('isOrganized', '==', false)
+      .orderBy('createdAt', 'desc')
+      .get()
 
-  const { data, error: fetchError } = await supabase
-    .from('streams')
-    .select('id, name, video_url, video_file, video_source, created_at, published_at')
-    .is('sub_event_id', null)
-    .eq('is_organized', false)
-    .order('created_at', { ascending: false })
+    const data = snapshot.docs.map(doc => {
+      const docData = doc.data()
+      return {
+        id: doc.id,
+        name: docData.name,
+        video_url: docData.videoUrl,
+        video_file: docData.videoFile,
+        video_source: docData.videoSource,
+        created_at: docData.createdAt?.toDate().toISOString(),
+        published_at: docData.publishedAt?.toDate().toISOString() || null,
+      }
+    })
 
-  if (fetchError) {
-    console.error('Error fetching unsorted videos:', fetchError)
-    return { success: false, error: fetchError.message, data: [] }
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error fetching unsorted videos:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch videos',
+      data: []
+    }
   }
-
-  return { success: true, data: data || [] }
 }
