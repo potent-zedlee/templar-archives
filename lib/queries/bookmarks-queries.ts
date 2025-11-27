@@ -62,12 +62,6 @@ export type HandBookmarkWithDetails = HandBookmark & {
 // ==================== Converters ====================
 
 const bookmarkConverter = {
-  toFirestore(bookmark: Partial<FirestoreBookmark>): DocumentData {
-    return {
-      ...bookmark,
-      createdAt: bookmark.createdAt || serverTimestamp(),
-    }
-  },
   fromFirestore(snapshot: QueryDocumentSnapshot): HandBookmark {
     const data = snapshot.data() as FirestoreBookmark
     return {
