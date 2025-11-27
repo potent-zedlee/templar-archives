@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation"
 import { useLiveReportsQuery } from "@/lib/queries/live-reports-queries"
 import { CardSkeleton } from "@/components/ui/skeletons/CardSkeleton"
 import { Radio, Calendar, User } from "lucide-react"
+import type { LiveReportCategory } from "@/lib/firestore-types"
 
 const LIVE_CATEGORIES = ['All', 'Tournament Update', 'Chip Counts', 'Breaking News', 'Results', 'Other'] as const
+type CategoryFilter = 'All' | LiveReportCategory
 
 export default function LiveReportingPage() {
   const router = useRouter()
-  const [selectedCategory, setSelectedCategory] = useState<string>('All')
+  const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('All')
 
   const { data: allReports = [], isLoading } = useLiveReportsQuery(
     selectedCategory !== 'All' ? { category: selectedCategory } : undefined
@@ -77,10 +79,10 @@ export default function LiveReportingPage() {
               >
                 <div className="flex flex-col md:flex-row">
                   {/* Thumbnail */}
-                  {report.thumbnail_url && (
+                  {report.thumbnailUrl && (
                     <div className="md:w-80 h-48 md:h-auto flex-shrink-0">
                       <img
-                        src={report.thumbnail_url}
+                        src={report.thumbnailUrl}
                         alt={report.title}
                         className="w-full h-full object-cover border-2 border-gold-700"
                       />
@@ -126,29 +128,29 @@ export default function LiveReportingPage() {
                     <div className="flex items-center gap-4 post-meta">
                       <div className="flex items-center gap-1">
                         <User className="h-3 w-3" />
-                        <span>{report.author?.nickname || 'Unknown'}</span>
+                        <span>{report.author?.name || 'Unknown'}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         <span className="text-mono">
-                          {report.published_at
-                            ? new Date(report.published_at).toLocaleDateString('ko-KR')
-                            : new Date(report.created_at).toLocaleDateString('ko-KR')}
+                          {report.publishedAt
+                            ? new Date(report.publishedAt).toLocaleDateString('ko-KR')
+                            : new Date(report.createdAt).toLocaleDateString('ko-KR')}
                         </span>
                       </div>
                     </div>
 
                     {/* External Link */}
-                    {report.external_link && (
+                    {report.externalLink && (
                       <div className="mt-3 pt-3 border-t-2 border-gold-700">
                         <a
-                          href={report.external_link}
+                          href={report.externalLink}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-caption text-gold-400 hover:text-gold-300"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          Source: {new URL(report.external_link).hostname}
+                          Source: {new URL(report.externalLink).hostname}
                         </a>
                       </div>
                     )}

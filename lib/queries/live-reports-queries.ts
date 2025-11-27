@@ -31,10 +31,22 @@ import {
 } from '@/lib/firestore-types'
 
 /**
- * LiveReport 문서 타입 (ID 포함)
+ * LiveReport 문서 타입 (ID 포함, 날짜 필드는 ISO string으로 변환됨)
  */
-export type LiveReport = FirestoreLiveReport & {
+export interface LiveReport {
   id: string
+  title: string
+  content: string
+  thumbnailUrl?: string
+  category: LiveReportCategory
+  tags: string[]
+  externalLink?: string
+  status: LiveReportStatus
+  author: AuthorInfo
+  approver?: AuthorInfo
+  createdAt: string // ISO string
+  updatedAt: string // ISO string
+  publishedAt?: string // ISO string
 }
 
 /**

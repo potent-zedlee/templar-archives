@@ -54,10 +54,10 @@ export default function LiveReportDetailPage({ params }: { params: Promise<{ id:
 
         <div className="card-postmodern overflow-hidden">
           {/* Thumbnail */}
-          {report.thumbnail_url && (
+          {report.thumbnailUrl && (
             <div className="w-full h-96">
               <img
-                src={report.thumbnail_url}
+                src={report.thumbnailUrl}
                 alt={report.title}
                 className="w-full h-full object-cover border-2 border-gold-700"
               />
@@ -83,18 +83,18 @@ export default function LiveReportDetailPage({ params }: { params: Promise<{ id:
               <div className="flex items-center gap-4 post-meta">
                 <div className="flex items-center gap-1">
                   <User className="h-4 w-4" />
-                  <span>{report.author?.nickname || 'Unknown'}</span>
+                  <span>{report.author?.name || 'Unknown'}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   <span className="text-mono">
-                    {report.published_at
-                      ? new Date(report.published_at).toLocaleDateString('ko-KR', {
+                    {report.publishedAt
+                      ? new Date(report.publishedAt).toLocaleDateString('ko-KR', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
                         })
-                      : new Date(report.created_at).toLocaleDateString('ko-KR', {
+                      : new Date(report.createdAt).toLocaleDateString('ko-KR', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
@@ -103,7 +103,7 @@ export default function LiveReportDetailPage({ params }: { params: Promise<{ id:
                 </div>
                 {report.approver && (
                   <div className="flex items-center gap-1">
-                    <span className="text-caption">Approved by: {report.approver.nickname}</span>
+                    <span className="text-caption">Approved by: {report.approver.name}</span>
                   </div>
                 )}
               </div>
@@ -126,10 +126,10 @@ export default function LiveReportDetailPage({ params }: { params: Promise<{ id:
             </div>
 
             {/* External Link */}
-            {report.external_link && (
+            {report.externalLink && (
               <div className="pt-6 border-t-2 border-gold-700">
                 <a
-                  href={report.external_link}
+                  href={report.externalLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300"
