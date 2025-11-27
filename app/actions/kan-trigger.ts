@@ -1,9 +1,9 @@
 'use server'
 
 /**
- * KAN Analysis - Trigger.dev Integration
+ * KAN Analysis - Cloud Run Integration
  *
- * Python 백엔드를 대체하는 Trigger.dev 기반 분석 시스템
+ * GCP Cloud Run 기반 영상 분석 시스템
  * Firestore 기반 데이터베이스 사용
  */
 
@@ -40,8 +40,11 @@ export interface TriggerKanAnalysisResult {
   error?: string
 }
 
+// Cloud Run 서비스 URL
+const CLOUD_RUN_URL = process.env.CLOUD_RUN_URL || 'https://video-analyzer-700566907563.asia-northeast3.run.app'
+
 /**
- * Trigger.dev로 KAN 분석 시작
+ * Cloud Run으로 KAN 분석 시작
  *
  * @param input 분석 입력 데이터
  * @returns 작업 ID 및 결과
@@ -52,10 +55,10 @@ export async function startKanAnalysisWithTrigger(
   try {
     const { videoUrl, segments, platform = 'ept', streamId, tournamentId, eventId } = input
 
-    console.log('[KAN-Trigger] Starting analysis with Trigger.dev')
-    console.log(`[KAN-Trigger] URL: ${videoUrl}`)
-    console.log(`[KAN-Trigger] Segments: ${segments.length}`)
-    console.log(`[KAN-Trigger] Platform: ${platform}`)
+    console.log('[KAN-CloudRun] Starting analysis with Cloud Run')
+    console.log(`[KAN-CloudRun] URL: ${videoUrl}`)
+    console.log(`[KAN-CloudRun] Segments: ${segments.length}`)
+    console.log(`[KAN-CloudRun] Platform: ${platform}`)
 
     // Stream ID 검증
     if (!streamId || !tournamentId || !eventId) {
@@ -85,51 +88,50 @@ export async function startKanAnalysisWithTrigger(
 
     const stream = streamDoc.data() as FirestoreStream
 
+    // GCS URI 확인
+    if (!stream.gcsUri) {
+      return {
+        success: false,
+        error: 'Stream does not have GCS URI. Please upload video first.',
+      }
+    }
+
     // 세그먼트를 { start, end } 형식으로 변환
     const formattedSegments = segments.map((seg) => ({
       start: seg.start,
       end: seg.end,
     }))
 
-    // Trigger.dev v4 작업 트리거
-    const { tasks, configure } = await import('@trigger.dev/sdk')
+    console.log(`[KAN-CloudRun] Calling Cloud Run: ${CLOUD_RUN_URL}/analyze`)
+    console.log(`[KAN-CloudRun] GCS URI: ${stream.gcsUri}`)
 
-    // 환경 변수 디버깅
-    const secretKey = process.env.TRIGGER_SECRET_KEY
-    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY exists: ${!!secretKey}`)
-    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY length: ${secretKey?.length || 0}`)
-    console.log(`[KAN-Trigger] TRIGGER_SECRET_KEY prefix: ${secretKey?.substring(0, 10) || 'N/A'}...`)
+    // Cloud Run API 호출
+    const response = await fetch(`${CLOUD_RUN_URL}/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        streamId,
+        gcsUri: stream.gcsUri,
+        segments: formattedSegments,
+        platform,
+      }),
+    })
 
-    if (!secretKey) {
-      console.error('[KAN-Trigger] TRIGGER_SECRET_KEY is not set!')
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('[KAN-CloudRun] API error:', errorData)
       return {
         success: false,
-        error: 'TRIGGER_SECRET_KEY is not configured',
+        error: errorData.error || `Cloud Run API error: ${response.status}`,
       }
     }
 
-    // Server Action에서 SDK 사용 시 configure 필요
-    configure({
-      secretKey: secretKey,
-    })
+    const result = await response.json()
+    const jobId = result.jobId
 
-    console.log('[KAN-Trigger] Triggering task: kan-video-analysis')
-    console.log(
-      '[KAN-Trigger] Payload:',
-      JSON.stringify({ youtubeUrl: videoUrl, segments: formattedSegments, platform, streamId })
-    )
-
-    const handle = await tasks.trigger('kan-video-analysis', {
-      youtubeUrl: videoUrl,
-      segments: formattedSegments,
-      platform,
-      streamId,
-    })
-
-    console.log('[KAN-Trigger] Handle received:', JSON.stringify(handle))
-    const jobId = handle.id
-
-    console.log(`[KAN-Trigger] Job started: ${jobId}`)
+    console.log(`[KAN-CloudRun] Job started: ${jobId}`)
 
     // Stream 상태 업데이트 (분석 중)
     await streamRef.update({
@@ -146,7 +148,7 @@ export async function startKanAnalysisWithTrigger(
       streamId,
     }
   } catch (error) {
-    console.error('[KAN-Trigger] Error:', error)
+    console.error('[KAN-CloudRun] Error:', error)
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -155,33 +157,39 @@ export async function startKanAnalysisWithTrigger(
 }
 
 /**
- * Trigger.dev 작업 상태 조회
+ * Cloud Run 작업 상태 조회
  *
  * @param jobId 작업 ID
  * @returns 작업 상태 및 결과
  */
 export async function getTriggerJobStatus(jobId: string) {
   try {
-    // Trigger.dev v4에서 작업 상태 조회
-    const { runs, configure } = await import('@trigger.dev/sdk')
+    const response = await fetch(`${CLOUD_RUN_URL}/status/${jobId}`)
 
-    configure({
-      secretKey: process.env.TRIGGER_SECRET_KEY,
-    })
+    if (!response.ok) {
+      throw new Error(`Failed to get job status: ${response.status}`)
+    }
 
-    const run = await runs.retrieve(jobId)
+    const data = await response.json()
+
+    if (!data.success) {
+      throw new Error(data.error || 'Unknown error')
+    }
+
+    const job = data.job
 
     return {
-      id: run.id,
-      status: run.status, // "QUEUED" | "EXECUTING" | "COMPLETED" | "FAILED" | "CANCELED" etc
-      output: run.output,
-      error: run.error,
-      createdAt: run.createdAt,
-      startedAt: run.startedAt,
-      completedAt: run.isCompleted ? new Date() : undefined,
+      id: job.id,
+      status: job.status, // "PENDING" | "EXECUTING" | "SUCCESS" | "FAILURE"
+      output: job.output,
+      error: job.error,
+      metadata: job.metadata,
+      createdAt: job.createdAt,
+      startedAt: job.createdAt,
+      completedAt: job.status === 'SUCCESS' || job.status === 'FAILURE' ? job.updatedAt : undefined,
     }
   } catch (error) {
-    console.error('[KAN-Trigger] Error getting job status:', error)
+    console.error('[KAN-CloudRun] Error getting job status:', error)
     throw error
   }
 }
