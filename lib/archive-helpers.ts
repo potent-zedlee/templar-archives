@@ -142,10 +142,13 @@ export function toggleTournamentHelper(
   tournamentId: string,
   setTournaments: (fn: (prev: unknown[]) => unknown[]) => void,
 ): void {
-  setTournaments((prev) =>
-    prev.map((t: { id: string; expanded?: boolean }) =>
-      t.id === tournamentId ? { ...t, expanded: !t.expanded } : t,
-    ),
+  setTournaments((prev: unknown[]) =>
+    prev.map((t: unknown) => {
+      const tournament = t as { id: string; expanded?: boolean }
+      return tournament.id === tournamentId
+        ? { ...tournament, expanded: !tournament.expanded }
+        : tournament
+    }),
   )
 }
 
@@ -161,17 +164,18 @@ export function toggleSubEventHelper(
   subEventId: string,
   setTournaments: (fn: (prev: unknown[]) => unknown[]) => void,
 ): void {
-  setTournaments((prev) =>
-    prev.map((t: { id: string; events?: Array<{ id: string; expanded?: boolean }> }) =>
-      t.id === tournamentId
+  setTournaments((prev: unknown[]) =>
+    prev.map((t: unknown) => {
+      const tournament = t as { id: string; events?: Array<{ id: string; expanded?: boolean }> }
+      return tournament.id === tournamentId
         ? {
-            ...t,
-            events: t.events?.map((e) =>
+            ...tournament,
+            events: tournament.events?.map((e) =>
               e.id === subEventId ? { ...e, expanded: !e.expanded } : e,
             ),
           }
-        : t,
-    ),
+        : tournament
+    }),
   )
 }
 
@@ -188,25 +192,26 @@ export function selectDayHelper(
   setTournaments: (fn: (prev: unknown[]) => unknown[]) => void,
 ): void {
   setSelectedDay(streamId)
-  setTournaments((prev) =>
-    prev.map(
-      (t: {
+  setTournaments((prev: unknown[]) =>
+    prev.map((t: unknown) => {
+      const tournament = t as {
         id: string
         events?: Array<{
           id: string
           streams?: Array<{ id: string; selected?: boolean }>
         }>
-      }) => ({
-        ...t,
-        events: t.events?.map((e) => ({
+      }
+      return {
+        ...tournament,
+        events: tournament.events?.map((e) => ({
           ...e,
           streams: e.streams?.map((s) => ({
             ...s,
             selected: s.id === streamId,
           })),
         })),
-      }),
-    ),
+      }
+    }),
   )
 }
 
@@ -233,10 +238,11 @@ export async function toggleFavoriteHelper(
       updatedAt: serverTimestamp(),
     })
 
-    setHands((prev) =>
-      prev.map((h: { id: string; favorite?: boolean }) =>
-        h.id === handId ? { ...h, favorite: !h.favorite } : h,
-      ),
+    setHands((prev: unknown[]) =>
+      prev.map((h: unknown) => {
+        const hand = h as { id: string; favorite?: boolean }
+        return hand.id === handId ? { ...hand, favorite: !hand.favorite } : hand
+      }),
     )
   } catch (error) {
     console.error('Error toggling favorite:', error)
@@ -292,8 +298,11 @@ export async function deleteTournamentHelper(
 
     await batch.commit()
 
-    setTournaments((prev) =>
-      prev.filter((t: { id: string }) => t.id !== tournamentId),
+    setTournaments((prev: unknown[]) =>
+      prev.filter((t: unknown) => {
+        const tournament = t as { id: string }
+        return tournament.id !== tournamentId
+      }),
     )
     toast.success('Tournament deleted successfully')
   } catch (error: unknown) {
@@ -388,16 +397,17 @@ export async function deleteSubEventHelper(
 
     await batch.commit()
 
-    setTournaments((prev) =>
-      prev.map(
-        (t: {
+    setTournaments((prev: unknown[]) =>
+      prev.map((t: unknown) => {
+        const tournament = t as {
           id: string
           events?: Array<{ id: string }>
-        }) => ({
-          ...t,
-          events: t.events?.filter((e) => e.id !== subEventId),
-        }),
-      ),
+        }
+        return {
+          ...tournament,
+          events: tournament.events?.filter((e) => e.id !== subEventId),
+        }
+      }),
     )
     toast.success('Event deleted successfully')
   } catch (error: unknown) {
@@ -473,22 +483,23 @@ export async function deleteDayHelper(
 
     await batch.commit()
 
-    setTournaments((prev) =>
-      prev.map(
-        (t: {
+    setTournaments((prev: unknown[]) =>
+      prev.map((t: unknown) => {
+        const tournament = t as {
           id: string
           events?: Array<{
             id: string
             streams?: Array<{ id: string }>
           }>
-        }) => ({
-          ...t,
-          events: t.events?.map((e) => ({
+        }
+        return {
+          ...tournament,
+          events: tournament.events?.map((e) => ({
             ...e,
             streams: e.streams?.filter((s) => s.id !== streamId),
           })),
-        }),
-      ),
+        }
+      }),
     )
     toast.success('Stream deleted successfully')
   } catch (error: unknown) {
