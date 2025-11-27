@@ -18,10 +18,9 @@ import { toast } from "sonner"
 
 type HandTagBadgesProps = {
   handId: string
-  onTagAdded?: () => void
 }
 
-export function HandTagBadges({ handId, onTagAdded }: HandTagBadgesProps) {
+export function HandTagBadges({ handId }: HandTagBadgesProps) {
   const { user } = useAuth()
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -54,19 +53,12 @@ export function HandTagBadges({ handId, onTagAdded }: HandTagBadgesProps) {
     })
   }
 
-  const handleDialogSuccess = () => {
-    setDialogOpen(false)
-    if (onTagAdded) {
-      onTagAdded()
-    }
-  }
-
   // Group tags by tag name
   const groupedTags = tags.reduce((acc, tag) => {
-    if (!acc[tag.tag_name]) {
-      acc[tag.tag_name] = []
+    if (!acc[tag.tagName]) {
+      acc[tag.tagName] = []
     }
-    acc[tag.tag_name].push(tag)
+    acc[tag.tagName].push(tag)
     return acc
   }, {} as Record<string, typeof tags>)
 
@@ -74,7 +66,7 @@ export function HandTagBadges({ handId, onTagAdded }: HandTagBadgesProps) {
     <div className="flex items-center gap-2 flex-wrap">
       {Object.entries(groupedTags).map(([tagName, tagGroup]) => {
         const colorName = getTagColor(tagName as any)
-        const userTag = tagGroup.find(t => t.created_by === user?.id)
+        const userTag = tagGroup.find(t => t.createdBy === user?.id)
         const count = tagGroup.length
 
         return (
@@ -91,7 +83,7 @@ export function HandTagBadges({ handId, onTagAdded }: HandTagBadgesProps) {
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  handleRemoveTag(tagName, userTag.created_by)
+                  handleRemoveTag(tagName, userTag.createdBy)
                 }}
                 className="ml-1 hover:bg-white/20 rounded-full p-0.5"
                 disabled={removeTagMutation.isPending}
@@ -120,7 +112,6 @@ export function HandTagBadges({ handId, onTagAdded }: HandTagBadgesProps) {
         onOpenChange={setDialogOpen}
         handId={handId}
         existingTags={tags}
-        onSuccess={handleDialogSuccess}
       />
     </div>
   )

@@ -21,14 +21,12 @@ import { Check } from "lucide-react"
 import { useAuth } from "@/components/layout/AuthProvider"
 import { useAddHandTagMutation, useRemoveHandTagMutation } from "@/lib/queries/hand-tags-queries"
 import { TAG_CATEGORIES, getTagColor, type HandTag, type HandTagName } from "@/lib/types/hand-tags"
-import { toast } from "sonner"
 
 type HandTagDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   handId: string
   existingTags: HandTag[]
-  onSuccess?: () => void
 }
 
 export function HandTagDialog({
@@ -36,7 +34,6 @@ export function HandTagDialog({
   onOpenChange,
   handId,
   existingTags,
-  onSuccess,
 }: HandTagDialogProps) {
   const { user } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
@@ -49,7 +46,7 @@ export function HandTagDialog({
   // Check if user has already added a specific tag
   const hasUserTag = (tagName: HandTagName) => {
     return existingTags.some(
-      tag => tag.tag_name === tagName && tag.created_by === user.id
+      tag => tag.tagName === tagName && tag.createdBy === user.id
     )
   }
 
@@ -125,15 +122,16 @@ export function HandTagDialog({
                 <div className="flex flex-wrap gap-2">
                   {filteredTags.map((tagName) => {
                     const colorName = getTagColor(tagName)
-                    const isSelected = hasUserTag(tagName)
-                    const tagCount = existingTags.filter(t => t.tag_name === tagName).length
+                    const tagNameTyped = tagName as HandTagName
+                    const isSelected = hasUserTag(tagNameTyped)
+                    const tagCount = existingTags.filter(t => t.tagName === tagName).length
 
                     return (
                       <Button
                         key={tagName}
                         variant="outline"
                         size="sm"
-                        onClick={() => handleTagClick(tagName)}
+                        onClick={() => handleTagClick(tagNameTyped)}
                         disabled={addTagMutation.isPending || removeTagMutation.isPending}
                         className={`relative ${
                           isSelected
