@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { getUser, onAuthStateChange, type AuthUser } from '@/lib/auth'
 import { getCurrentUserProfile, createProfile } from '@/lib/user-profile'
+import { syncAdminRole } from '@/app/actions/admin-role'
+import { isAdminEmail } from '@/lib/auth-utils'
 import { NicknameSetupModal } from '@/components/dialogs/NicknameSetupModal'
 import type { UserProfile } from '@/lib/user-profile'
 
@@ -35,6 +37,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         displayName: currentUser.displayName,
         photoURL: currentUser.photoURL,
       })
+    }
+
+    // 관리자 이메일인 경우 role 동기화 (기존 사용자 대응)
+    if (userProfile && currentUser.email && isAdminEmail(currentUser.email)) {
+      if (userProfile.role !== 'admin') {
+        const result = await syncAdminRole(currentUser.uid, currentUser.email)
+        if (result.updated) {
+          // role이 업데이트되었으면 프로필 다시 로드
+          userProfile = await getCurrentUserProfile()
+        }
+      }
     }
 
     setProfile(userProfile)

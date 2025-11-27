@@ -21,6 +21,7 @@ import {
 import { firestore, auth } from '@/lib/firebase'
 import type { FirestoreUser } from '@/lib/firestore-types'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'
+import { isAdminEmail } from '@/lib/auth-utils'
 
 /**
  * UserProfile 타입 (API 응답용)
@@ -57,16 +58,16 @@ function firestoreUserToProfile(id: string, data: FirestoreUser): UserProfile {
     nickname: data.nickname || `user${id.substring(0, 6)}`,
     role: data.role,
     avatar_url: data.avatarUrl,
-    bio: undefined, // TODO: FirestoreUser에 추가 필요
-    poker_experience: undefined, // TODO: FirestoreUser에 추가 필요
-    location: undefined, // TODO: FirestoreUser에 추가 필요
-    website: undefined, // TODO: FirestoreUser에 추가 필요
-    twitter_handle: undefined, // TODO: FirestoreUser에 추가 필요
-    instagram_handle: undefined, // TODO: FirestoreUser에 추가 필요
-    profile_visibility: 'public', // TODO: FirestoreUser에 추가 필요
+    bio: data.bio,
+    poker_experience: data.pokerExperience,
+    location: data.location,
+    website: data.website,
+    twitter_handle: data.twitterHandle,
+    instagram_handle: data.instagramHandle,
+    profile_visibility: data.profileVisibility || 'public',
     posts_count: data.stats.postsCount,
     comments_count: data.stats.commentsCount,
-    likes_received: 0, // TODO: FirestoreUser에 추가 필요
+    likes_received: data.likesReceived || 0,
     created_at: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
     updated_at: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
   }
@@ -114,11 +115,14 @@ export async function createProfile(user: {
     const randomSuffix = Math.random().toString(36).substring(2, 8)
     const tempNickname = `user${randomSuffix}`
 
+    // 관리자 이메일인 경우 admin 역할 부여
+    const userRole = isAdminEmail(user.email) ? 'admin' : 'user'
+
     const newUser: FirestoreUser = {
       email: user.email || '',
       nickname: tempNickname,
       avatarUrl: user.photoURL || undefined,
-      role: 'user',
+      role: userRole,
       emailVerified: true,
       stats: {
         postsCount: 0,
@@ -135,7 +139,7 @@ export async function createProfile(user: {
       id: user.uid,
       email: newUser.email,
       nickname: tempNickname,
-      role: 'user',
+      role: userRole,
       avatar_url: newUser.avatarUrl,
       posts_count: 0,
       comments_count: 0,
@@ -167,7 +171,10 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
  */
 export async function updateProfile(
   userId: string,
-  updates: Partial<Pick<UserProfile, 'nickname' | 'avatar_url' | 'bio' | 'poker_experience'>>
+  updates: Partial<Pick<UserProfile,
+    'nickname' | 'avatar_url' | 'bio' | 'poker_experience' |
+    'location' | 'website' | 'twitter_handle' | 'instagram_handle' | 'profile_visibility'
+  >>
 ): Promise<UserProfile | null> {
   try {
     const userRef = doc(firestore, COLLECTION_PATHS.USERS, userId)
@@ -185,8 +192,33 @@ export async function updateProfile(
       firestoreUpdates.avatarUrl = updates.avatar_url
     }
 
-    // TODO: bio, poker_experience는 FirestoreUser 타입에 추가 필요
-    // 현재는 임시로 무시
+    if (updates.bio !== undefined) {
+      firestoreUpdates.bio = updates.bio
+    }
+
+    if (updates.poker_experience !== undefined) {
+      firestoreUpdates.pokerExperience = updates.poker_experience
+    }
+
+    if (updates.location !== undefined) {
+      firestoreUpdates.location = updates.location
+    }
+
+    if (updates.website !== undefined) {
+      firestoreUpdates.website = updates.website
+    }
+
+    if (updates.twitter_handle !== undefined) {
+      firestoreUpdates.twitterHandle = updates.twitter_handle
+    }
+
+    if (updates.instagram_handle !== undefined) {
+      firestoreUpdates.instagramHandle = updates.instagram_handle
+    }
+
+    if (updates.profile_visibility !== undefined) {
+      firestoreUpdates.profileVisibility = updates.profile_visibility
+    }
 
     await updateDoc(userRef, firestoreUpdates as Record<string, unknown>)
 

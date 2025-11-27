@@ -449,6 +449,25 @@ export interface FirestoreUser {
   role: UserRole
   /** 이메일 인증 여부 */
   emailVerified?: boolean
+
+  // 프로필 필드
+  /** 자기소개 */
+  bio?: string
+  /** 포커 경력 */
+  pokerExperience?: string
+  /** 위치 */
+  location?: string
+  /** 웹사이트 */
+  website?: string
+  /** Twitter 핸들 */
+  twitterHandle?: string
+  /** Instagram 핸들 */
+  instagramHandle?: string
+  /** 프로필 공개 설정 */
+  profileVisibility?: 'public' | 'private' | 'friends'
+  /** 받은 좋아요 수 */
+  likesReceived?: number
+
   /** 통계 */
   stats: {
     postsCount: number

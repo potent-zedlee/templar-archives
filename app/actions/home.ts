@@ -7,6 +7,7 @@
  */
 
 import { adminFirestore } from '@/lib/firebase-admin'
+import { Timestamp } from 'firebase-admin/firestore'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'
 import type { PlatformStats, WeeklyHighlight, TopPlayer } from '@/lib/main-page'
 
@@ -45,12 +46,16 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlight[]> {
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
+    // Date를 Firestore Admin Timestamp로 변환
+    const sevenDaysAgoTimestamp = Timestamp.fromDate(sevenDaysAgo)
+
+    // 복합 orderBy 대신 단일 orderBy 사용 (인덱스 불필요)
+    // 클라이언트에서 likesCount로 정렬
     const handsSnapshot = await adminFirestore
       .collection(COLLECTION_PATHS.HANDS)
-      .where('createdAt', '>=', sevenDaysAgo)
+      .where('createdAt', '>=', sevenDaysAgoTimestamp)
       .orderBy('createdAt', 'desc')
-      .orderBy('engagement.likesCount', 'desc')
-      .limit(3)
+      .limit(20)  // 더 많이 가져와서 클라이언트에서 정렬
       .get()
 
     const highlights: WeeklyHighlight[] = []
@@ -105,7 +110,10 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlight[]> {
       })
     }
 
+    // 좋아요 수로 정렬하고 상위 3개 반환
     return highlights
+      .sort((a, b) => b.likes_count - a.likes_count)
+      .slice(0, 3)
   } catch (error) {
     console.error('Error fetching weekly highlights:', error)
     return []
@@ -156,27 +164,17 @@ export async function getTopPlayers(): Promise<TopPlayer[]> {
       .limit(5)
       .get()
 
-    const topPlayers: TopPlayer[] = []
-
-    for (const doc of playersSnapshot.docs) {
+    const topPlayers: TopPlayer[] = playersSnapshot.docs.map(doc => {
       const data = doc.data()
-
-      // 플레이어의 핸드 수 조회
-      const handsCountSnapshot = await adminFirestore
-        .collection(COLLECTION_PATHS.HANDS)
-        .where('players', 'array-contains-any', [{ playerId: doc.id }])
-        .count()
-        .get()
-
-      topPlayers.push({
+      return {
         id: doc.id,
         name: data.name,
         photo_url: data.photoUrl || null,
         total_winnings: data.totalWinnings || 0,
-        tournament_count: 0, // 별도 계산 필요
-        hands_count: handsCountSnapshot.data().count,
-      })
-    }
+        tournament_count: data.stats?.tournamentsCount || 0,
+        hands_count: data.stats?.handsCount || 0,
+      }
+    })
 
     return topPlayers
   } catch (error) {
