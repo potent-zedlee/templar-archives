@@ -29,23 +29,32 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseServic
 })
 
 // ==================== Firebase Admin ====================
+import * as fs from 'fs'
+
 let firebaseApp: App | null = null
 let firestoreInstance: Firestore | null = null
 
 function initFirebase(): Firestore {
   if (firestoreInstance) return firestoreInstance
 
-  const serviceAccountKey = process.env.FIREBASE_ADMIN_SDK_KEY
-
-  if (!serviceAccountKey) {
-    throw new Error('Missing FIREBASE_ADMIN_SDK_KEY environment variable')
-  }
-
   try {
-    const credential = JSON.parse(serviceAccountKey)
-    firebaseApp = initializeApp({
-      credential: cert(credential),
-    })
+    // 방법 1: FIREBASE_ADMIN_SDK_KEY (JSON 문자열)
+    const serviceAccountKey = process.env.FIREBASE_ADMIN_SDK_KEY
+    // 방법 2: GOOGLE_APPLICATION_CREDENTIALS (파일 경로)
+    const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
+
+    let credential
+
+    if (serviceAccountKey) {
+      credential = cert(JSON.parse(serviceAccountKey))
+    } else if (credentialsPath && fs.existsSync(credentialsPath)) {
+      const keyFile = JSON.parse(fs.readFileSync(credentialsPath, 'utf-8'))
+      credential = cert(keyFile)
+    } else {
+      throw new Error('Missing FIREBASE_ADMIN_SDK_KEY or GOOGLE_APPLICATION_CREDENTIALS')
+    }
+
+    firebaseApp = initializeApp({ credential })
     firestoreInstance = getFirestore(firebaseApp)
 
     // Firestore 설정

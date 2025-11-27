@@ -59,19 +59,36 @@ export async function migratePlayers(options: MigrationOptions): Promise<Migrati
   }
 
   try {
-    // 1. Supabase에서 players 조회
-    const { data: players, error } = await supabase
-      .from('players')
-      .select('*')
-      .order('created_at', { ascending: true })
+    // 1. Supabase에서 players 조회 (페이지네이션)
+    const allPlayers: SupabasePlayer[] = []
+    const pageSize = 1000
+    let offset = 0
+    let hasMore = true
 
-    if (error) throw error
-    if (!players || players.length === 0) {
+    while (hasMore) {
+      const { data: players, error } = await supabase
+        .from('players')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .range(offset, offset + pageSize - 1)
+
+      if (error) throw error
+      if (!players || players.length === 0) {
+        hasMore = false
+      } else {
+        allPlayers.push(...players)
+        offset += players.length
+        hasMore = players.length === pageSize
+      }
+    }
+
+    if (allPlayers.length === 0) {
       logInfo('No players found in Supabase')
       result.duration = Date.now() - startTime
       return result
     }
 
+    const players = allPlayers
     logInfo(`Found ${players.length} players in Supabase`)
 
     // 2. 배치 처리
