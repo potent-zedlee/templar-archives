@@ -1,8 +1,6 @@
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
-import { Analytics } from "@vercel/analytics/react"
-import { SpeedInsights } from "@vercel/speed-insights/next"
 import { WebVitalsReporter } from "@/components/analytics/WebVitals"
 import { Footer } from "@/components/layout/Footer"
 import { CookieConsentBanner } from "@/components/dialogs/CookieConsentBanner"
@@ -11,7 +9,7 @@ import { Providers } from "@/components/layout/Providers"
 import { FlowbiteInitializer } from "@/components/layout/FlowbiteInitializer"
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://templar-archives.vercel.app'),
+  metadataBase: new URL('https://templar-archives-index.web.app'),
   title: {
     default: "Templar Archives Index - Poker Hand History Archive & Analysis",
     template: "%s | Templar Archives Index"
@@ -24,7 +22,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ko_KR",
-    url: "https://templar-archives.vercel.app",
+    url: "https://templar-archives-index.web.app",
     siteName: "Templar Archives Index",
     title: "Templar Archives Index - Poker Hand History Archive & Analysis",
     description: "Comprehensive poker hand history archive and analysis platform",
@@ -81,8 +79,6 @@ export default function RootLayout({
         </Providers>
         <FlowbiteInitializer />
         <WebVitalsReporter />
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   )

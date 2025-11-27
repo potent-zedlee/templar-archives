@@ -6,7 +6,6 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { ThemeProvider } from "@/components/layout/ThemeProvider"
 import { AuthProvider } from "@/components/layout/AuthProvider"
 import { Toaster } from "@/components/ui/sonner"
-import { Analytics } from "@vercel/analytics/next"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -34,7 +33,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <AuthProvider>
           <Suspense fallback={null}>
             {children}
-            <Analytics />
           </Suspense>
           <Toaster />
         </AuthProvider>
