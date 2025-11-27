@@ -58,8 +58,8 @@ export function YouTubeUploadTab({
   onUpload,
 }: YouTubeUploadTabProps) {
   const selectedTournament = tournaments.find(t => t.id === selectedTournamentId)
-  const subEvents = selectedTournament?.sub_events || []
-  const selectedSubEvent = selectedTournament?.sub_events?.find(se => se.id === selectedSubEventId)
+  const subEvents = selectedTournament?.events || []
+  const selectedSubEvent = selectedTournament?.events?.find(se => se.id === selectedSubEventId)
   const days = selectedSubEvent?.streams || []
 
   return (

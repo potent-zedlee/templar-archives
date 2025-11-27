@@ -175,7 +175,7 @@ function TournamentInfo({ tournament }: { tournament: Tournament }) {
         <InfoItem
           icon={<Hash className="h-4 w-4" />}
           label="Events"
-          value={`${tournament.sub_events?.length || 0} events`}
+          value={`${tournament.events?.length || 0} events`}
         />
       </div>
     </div>
