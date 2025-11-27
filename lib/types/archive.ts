@@ -130,6 +130,9 @@ export interface Hand {
   // AI-generated summary (DB: ai_summary)
   ai_summary?: string
 
+  // AI analysis confidence score (0-1)
+  confidence?: number
+
   timestamp: string
 
   // Structured board cards (KAN integration)
