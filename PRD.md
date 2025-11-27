@@ -1,9 +1,9 @@
 # Templar Archives Index - Product Requirements Document (PRD)
 
-**Version**: 2.1
-**Last Updated**: 2025-11-19
+**Version**: 3.0
+**Last Updated**: 2025-11-27
 **Document Owner**: Product Team
-**Status**: Phase 0-43 Completed
+**Status**: Phase 44 - Firebase/GCP Migration
 
 ---
 
@@ -46,8 +46,11 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 ### Current Status
 - ✅ **프로덕션**: https://templar-archives.vercel.app
 - ✅ **기술 스택**: React 19.2.0, Next.js 16.0.1, TypeScript 5.9.3
-- ✅ **AI**: Gemini 2.5 Flash
-- ✅ **데이터베이스**: Supabase (90+ 마이그레이션, 27개 테이블)
+- ✅ **AI**: Gemini 2.5 Flash (Vertex AI)
+- ✅ **데이터베이스**: Firebase Firestore (NoSQL)
+- ✅ **인증**: Firebase Auth (Google OAuth)
+- ✅ **검색**: Algolia (전체텍스트 검색)
+- ✅ **영상 분석**: Cloud Run + Cloud Tasks
 
 ---
 
@@ -63,16 +66,17 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 - Flowbite UI 컴포넌트 전면 적용
 
 #### KAN (Khalai Archive Network)
-- Gemini 2.0 Flash 기반 AI 영상 분석
+- Gemini 2.5 Flash 기반 AI 영상 분석 (Vertex AI)
 - 자동 핸드 히스토리 추출
 - 타임스탬프 동기화 (영상 클립 생성)
-- 실시간 진행률 표시 (Supabase Realtime)
+- 실시간 진행률 표시 (Firestore)
+- Cloud Run + Cloud Tasks 기반 분산 처리
 - EPT, WSOP, Triton, PokerStars, Hustler 지원
 
 #### Search (고급 검색)
 - 30+ 검색 조건 (플레이어, 홀 카드, 보드 카드, 날짜, 팟 사이즈)
-- AI 자연어 검색 (Gemini 2.0 Flash)
-- Full-Text Search (PostgreSQL tsvector)
+- AI 자연어 검색 (Gemini 2.5 Flash)
+- Full-Text Search (Algolia)
 
 #### Community
 - Reddit 스타일 포스트/댓글 (무한 중첩)
@@ -112,9 +116,13 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 
 **State**: Zustand 5.x (4 stores), React Query 5.x
 
-**Backend**: Supabase (PostgreSQL 15, Storage, Realtime, Auth)
+**Backend**: Firebase (Firestore, Auth, Cloud Functions)
 
-**AI**: Gemini 2.0 Flash (@google/genai 1.29.0), Claude 3.5 Sonnet
+**AI**: Gemini 2.5 Flash (Vertex AI), Claude 3.5 Sonnet
+
+**Search**: Algolia (전체텍스트 검색)
+
+**Video Processing**: Cloud Run + Cloud Tasks + GCS
 
 **Deployment**: Vercel (Edge Runtime)
 
@@ -245,54 +253,63 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 │  └──────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────┘
               │
-              ├──────────────────┐
-              │                  │
-    ┌─────────▼────────┐  ┌──────▼─────────┐
-    │ Supabase Cloud   │  │ External APIs  │
-    │ - PostgreSQL 15  │  │ - Gemini AI    │
-    │ - Storage (S3)   │  │ - Claude API   │
-    │ - Realtime       │  │ - YouTube API  │
-    │ - Auth (OAuth)   │  │                │
-    └──────────────────┘  └────────────────┘
+    ┌─────────┼──────────────────┐
+    │         │                  │
+┌───▼─────────▼───┐  ┌───────────▼──────────┐
+│ Firebase/GCP    │  │ External Services    │
+│ - Firestore DB  │  │ - Algolia (Search)   │
+│ - Firebase Auth │  │ - YouTube API        │
+│ - Cloud Functions│ │                      │
+│ - GCS (Storage) │  └──────────────────────┘
+│ - Vertex AI     │
+│ - Cloud Run     │
+│ - Cloud Tasks   │
+└─────────────────┘
 ```
 
-### Database Schema (27 Tables)
+### Firestore Collections
 
-**Core Tables**:
-- tournaments, sub_events, streams, hands, hand_players, hand_actions, players
+**Core Collections**:
+- `/tournaments/{id}` - 포커 토너먼트
+- `/tournaments/{id}/events/{id}` - 이벤트 (서브컬렉션)
+- `/tournaments/{id}/events/{id}/streams/{id}` - 스트림 (서브컬렉션)
+- `/hands/{id}` - 핸드 (플랫 컬렉션, 쿼리 최적화)
+- `/players/{id}` - 플레이어
+- `/players/{id}/hands/{id}` - 플레이어별 핸드 인덱스
 
-**Community Tables**:
-- posts, comments, post_likes, comment_likes, bookmarks
+**Community Collections**:
+- `/posts/{id}` - 커뮤니티 포스트
+- `/posts/{id}/comments/{id}` - 댓글 (서브컬렉션)
+- `/posts/{id}/likes/{userId}` - 좋아요 (서브컬렉션)
 
-**User Tables**:
-- users, user_profiles, player_claims
+**User Collections**:
+- `/users/{id}` - 사용자 프로필
+- `/users/{id}/notifications/{id}` - 알림
+- `/users/{id}/bookmarks/{id}` - 북마크
 
-**News Tables**:
-- news_posts, live_reports
+**System Collections**:
+- `/analysisJobs/{id}` - 영상 분석 작업
+- `/categories/{id}` - 토너먼트 카테고리
+- `/systemConfigs/{id}` - 시스템 설정
 
-**Admin Tables**:
-- admin_logs, content_reports, hand_edit_requests, notifications
-
-**Others**:
-- categories, tournament_categories, unsorted_videos
-
-**ERD (간략)**:
+**데이터 구조 (NoSQL)**:
 ```
-tournaments (1) ──< (N) sub_events (Events, 테이블명 유지)
-                         │
-                         └──< (N) streams
-                                   │
-                                   └──< (N) hands
-                                             │
-                                             ├──< (N) hand_players ──> (1) players
-                                             └──< (N) hand_actions
+/tournaments/{tournamentId}
+  ├── name, category, location, startDate
+  ├── categoryInfo: { id, name, logo }  ← 중복 (빠른 조회)
+  └── stats: { eventsCount, handsCount }
+        │
+        └── /events/{eventId}
+              └── /streams/{streamId}
 
-users (1) ──< (N) posts ──< (N) comments
-      │
-      ├──< (N) player_claims ──> (1) players
-      ├──< (N) post_likes
-      ├──< (N) comment_likes
-      └──< (N) bookmarks
+/hands/{handId}
+  ├── streamId, eventId, tournamentId  ← 역참조
+  ├── players: [{ playerId, name, cards, position }]  ← 임베딩
+  └── actions: [{ playerId, street, action, amount }]  ← 임베딩
+
+/users/{userId}
+  ├── email, nickname, role
+  └── stats: { postsCount, commentsCount }
 ```
 
 ### State Management
@@ -328,25 +345,34 @@ users (1) ──< (N) posts ──< (N) comments
 
 ### Security Architecture
 
-**Row Level Security (RLS)**:
-- 읽기: 대부분 Public (예외: admin_logs, hand_edit_requests)
-- 쓰기: tournaments, sub_events, streams → Admin/High Templar
+**Firebase Security Rules**:
+- 읽기: 대부분 Public (예외: admin_logs)
+- 쓰기: tournaments, events, streams → Admin/High Templar
 - 쓰기: posts, comments → 인증된 유저
 - 쓰기: likes, bookmarks → 본인 데이터만
 
 **인증 흐름**:
 ```
-1. Google OAuth 로그인 (Supabase Auth)
-2. users 테이블 자동 생성 (Trigger)
-3. 세션 생성 (JWT)
-4. RLS 정책 적용 (auth.uid() 기반)
+1. Google OAuth 로그인 (Firebase Auth)
+2. users 컬렉션 문서 생성 (Cloud Function)
+3. ID 토큰 생성 (JWT)
+4. Security Rules 적용 (request.auth.uid 기반)
 5. 역할별 UI 표시
 ```
 
+**역할 기반 접근 제어**:
+| 역할 | 권한 |
+|------|------|
+| `user` | 커뮤니티 참여 |
+| `templar` | 커뮤니티 중재 |
+| `arbiter` | 핸드 데이터 수정 |
+| `high_templar` | 아카이브 관리 |
+| `admin` | 전체 시스템 접근 |
+
 **보안 등급: A**
-- ✅ Google OAuth
-- ✅ RLS (27개 테이블)
-- ✅ CSRF 토큰 검증 (Double Submit Cookie 패턴)
+- ✅ Google OAuth (Firebase Auth)
+- ✅ Security Rules (역할 기반)
+- ✅ Cloud Functions (서버 사이드 검증)
 - ✅ Rate Limiting (User ID 기반)
 - ✅ 콘텐츠 신고 시스템
 - ✅ HTTPS (Vercel)
@@ -376,7 +402,7 @@ users (1) ──< (N) posts ──< (N) comments
 | 핸드 데이터 | 10,000 | 1,000,000 |
 | DB 연결 | 100 | 1,000 |
 
-**확장 전략**: Supabase 자동 스케일링, Vercel Serverless, CDN 캐싱, Read Replica
+**확장 전략**: Firestore 자동 스케일링, Vercel Serverless, CDN 캐싱, Cloud Functions
 
 ### Reliability
 
@@ -384,9 +410,9 @@ users (1) ──< (N) posts ──< (N) comments
 |---|---|---|
 | Uptime | 99.9% | ✅ 99.95% |
 | Error Rate | < 0.1% | ✅ 0.05% |
-| Data Loss | 0% | ✅ 0% (Supabase 자동 백업) |
+| Data Loss | 0% | ✅ 0% (Firestore 자동 백업) |
 
-**복구 전략**: Supabase PITR, Vercel 자동 롤백, Error Boundary, Sentry (Future)
+**복구 전략**: Firestore PITR, Vercel 자동 롤백, Error Boundary, Sentry (Future)
 
 ### Usability
 
@@ -401,7 +427,7 @@ users (1) ──< (N) posts ──< (N) comments
 
 ## 7. User Flows
 
-### HAE Analysis Flow (핵심 기능)
+### KAN (핵심 기능)
 
 ```
 ┌──────────────────────────────────────────┐
@@ -442,7 +468,7 @@ users (1) ──< (N) posts ──< (N) comments
              ▼
 ┌──────────────────────────────────────────┐
 │ 6. 진행률 표시 (Realtime)                │
-│    - Supabase Realtime Subscription      │
+│    - Firestore onSnapshot Subscription   │
 │    - 진행률 바 업데이트 (0-100%)         │
 └────────────┬─────────────────────────────┘
              │
@@ -543,31 +569,40 @@ users (1) ──< (N) posts ──< (N) comments
 
 | 항목 | 버전 |
 |---|---|
-| **Node.js** | 20.x (LTS) |
+| **Node.js** | 22.x (LTS) |
 | **React** | 19.2.0 |
 | **Next.js** | 16.0.1 |
 | **TypeScript** | 5.9.3 |
 | **Tailwind CSS** | 4.1.16 |
-| **Supabase** | 2.x |
+| **Firebase** | 11.x |
+| **Firestore** | 11.x |
+| **Algolia** | 5.x |
 | **Zustand** | 5.x |
 | **React Query** | 5.x |
-| **Gemini AI SDK** | 1.29.0 |
+| **Vertex AI** | Latest |
 | **shadcn/ui** | Latest |
 
 ### Environment Variables
 
 ```bash
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
-SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
+# Firebase
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSy...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=templar-archives-index
+FIREBASE_ADMIN_SDK_KEY={"type":"service_account",...}
 
-# AI
-GOOGLE_API_KEY=AIzaSy... # Server-side only
-ANTHROPIC_API_KEY=sk-ant-xxx... # Server-side only
+# GCP / Vertex AI
+GCS_PROJECT_ID=templar-archives-index
+VERTEX_AI_LOCATION=global
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 
-# YouTube Data API v3 (Optional)
-YOUTUBE_API_KEY=AIzaSy...
+# Algolia (Full-text Search)
+NEXT_PUBLIC_ALGOLIA_APP_ID=xxx
+NEXT_PUBLIC_ALGOLIA_SEARCH_KEY=xxx
+ALGOLIA_ADMIN_KEY=xxx
+
+# AI (Optional)
+ANTHROPIC_API_KEY=sk-ant-xxx...
 
 # Next.js
 NEXT_PUBLIC_APP_URL=https://templar-archives.vercel.app
@@ -578,14 +613,16 @@ NEXT_PUBLIC_APP_URL=https://templar-archives.vercel.app
 | 리소스 | URL |
 |---|---|
 | **프로덕션** | https://templar-archives.vercel.app |
-| **Gemini AI Docs** | https://ai.google.dev/gemini-api/docs |
+| **Firebase Docs** | https://firebase.google.com/docs |
+| **Firestore Docs** | https://firebase.google.com/docs/firestore |
+| **Vertex AI Docs** | https://cloud.google.com/vertex-ai/docs |
+| **Algolia Docs** | https://www.algolia.com/doc |
 | **Next.js Docs** | https://nextjs.org/docs |
-| **Supabase Docs** | https://supabase.com/docs |
 
 ---
 
 **END OF DOCUMENT**
 
-**마지막 업데이트**: 2025-11-19
-**버전**: 2.1
-**Status**: Phase 0-43 Completed (SubEvent → Event 용어 통일)
+**마지막 업데이트**: 2025-11-27
+**버전**: 3.0
+**Status**: Phase 44 - Firebase/GCP Migration Planning

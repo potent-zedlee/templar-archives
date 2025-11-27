@@ -20,9 +20,6 @@ Templar Archives는 포커 영상을 자동으로 핸드 히스토리로 변환�
 # 개발 서버
 npm run dev
 
-# Trigger.dev 로컬 개발 (영상 분석 테스트 시 필수)
-npx trigger.dev@latest dev --port 3001
-
 # 빌드 & 린트
 npm run build
 npm run lint
@@ -33,13 +30,14 @@ npm run test lib/filter-utils.test.ts     # 단일 파일
 npm run test:e2e                          # Playwright 전체
 npx playwright test e2e/archive.spec.ts   # 단일 파일
 
-# 데이터베이스 마이그레이션
-supabase db push                          # 프로덕션 적용
-supabase db reset                         # 로컬 리셋
-supabase migration new migration_name     # 새 마이그레이션
+# Firebase 에뮬레이터 (로컬 개발)
+firebase emulators:start
 
-# Trigger.dev 프로덕션 배포
-npx trigger.dev@latest deploy
+# Cloud Functions 배포
+firebase deploy --only functions
+
+# Cloud Run 배포 (영상 분석)
+cd cloud-run && ./deploy.sh
 
 # 번들 분석
 npm run analyze
@@ -47,8 +45,7 @@ npm run analyze
 # Admin CLI
 npm run admin -- --action=diagnose        # 전체 시스템 진단
 npm run admin -- --action=check-db        # DB 상태
-npm run admin -- --action=check-jobs      # KAN 작업 상태
-npm run admin -- --action=cleanup-jobs    # STUCK 작업 정리
+npm run admin -- --action=check-jobs      # 분석 작업 상태
 ```
 
 ---
@@ -60,10 +57,13 @@ npm run admin -- --action=cleanup-jobs    # STUCK 작업 정리
 | Framework | Next.js 16, React 19, TypeScript 5.9 |
 | Styling | Tailwind CSS 4.1 |
 | State | React Query 5, Zustand 5 |
-| Database | Supabase (PostgreSQL) |
+| Database | Firebase Firestore (NoSQL) |
+| Auth | Firebase Auth (Google OAuth) |
+| Search | Algolia (전체텍스트 검색) |
 | AI | Vertex AI Gemini 2.5 Flash |
-| Background Jobs | Trigger.dev v4 (`@trigger.dev/sdk`) |
+| Background Jobs | Cloud Run + Cloud Tasks |
 | Video | GCS 직접 업로드, fluent-ffmpeg |
+| Functions | Firebase Cloud Functions (트리거) |
 
 **Node.js**: >=22.0.0
 **패키지 매니저**: npm (pnpm 사용 금지)
@@ -81,23 +81,27 @@ npm run admin -- --action=cleanup-jobs    # STUCK 작업 정리
 
 ### Server Actions
 
-**모든 write 작업은 Server Actions 사용** (클라이언트 직접 Supabase 호출 금지)
+**모든 write 작업은 Server Actions 사용** (클라이언트 직접 Firestore 호출 금지)
 
 ```typescript
 'use server'
+
+import { adminFirestore } from '@/lib/firebase-admin'
+import { revalidatePath } from 'next/cache'
 
 export async function createTournament(data: TournamentData) {
   const user = await verifyAdmin()
   if (!user) return { success: false, error: 'Unauthorized' }
 
-  const { data: tournament, error } = await supabase
-    .from('tournaments')
-    .insert(data)
-    .select()
-    .single()
+  const docRef = adminFirestore.collection('tournaments').doc()
+  await docRef.set({
+    ...data,
+    createdAt: new Date(),
+    stats: { eventsCount: 0, handsCount: 0 }
+  })
 
   revalidatePath('/archive')
-  return { success: true, data: tournament }
+  return { success: true, data: { id: docRef.id, ...data } }
 }
 ```
 
@@ -109,32 +113,35 @@ Tournament → Event → Stream → Hand
                               └── HandActions
 ```
 
-### KAN 영상 분석 파이프라인 (GCS + Vertex AI)
+### KAN 영상 분석 파이프라인 (GCS + Cloud Run + Vertex AI)
 
 ```
 사용자 (분석 시작)
     → Server Action (app/actions/kan-trigger.ts)
     → GCS 업로드 (gs://bucket/videos/xxx.mp4)
-    → Trigger.dev Task (trigger/gcs-video-analysis.ts)
-        └─ Vertex AI Gemini 분석 (gs:// URI 직접 전달)
+    → Cloud Run Orchestrator
+        → Cloud Tasks 큐잉
+        → Segment Analyzer (FFmpeg + Vertex AI)
     → JSON 핸드 데이터 파싱 (Self-Healing)
-    → DB 저장 (hands → hand_players → hand_actions)
+    → Firestore 저장 (hands 컬렉션)
+    → Firestore 실시간 진행률 업데이트
 ```
 
 **핵심 모듈**:
 | 파일 | 역할 |
 |------|------|
-| `app/actions/kan-trigger.ts` | Server Action - 분석 시작, 결과 저장 |
-| `trigger/gcs-video-analysis.ts` | Trigger.dev Task - GCS 영상 분석 (최대 7200초) |
+| `app/actions/kan-trigger.ts` | Server Action - 분석 시작 |
+| `cloud-run/orchestrator/` | Cloud Run - 작업 관리, 세그먼트 분할 |
+| `cloud-run/segment-analyzer/` | Cloud Run - FFmpeg + Gemini 분석 |
 | `lib/video/vertex-analyzer.ts` | Vertex AI Gemini 분석 및 JSON 파싱 |
-| `lib/video/ffmpeg-processor.ts` | FFmpeg 영상 처리 |
 | `lib/ai/prompts.ts` | Platform별 AI 프롬프트 (EPT/Triton) |
-| `lib/hooks/use-trigger-job.ts` | React Query 폴링 (2초 간격) |
+| `lib/hooks/use-analysis-job.ts` | React Query Firestore 폴링 (2초) |
 
 **특징**:
-- GCS gs:// URI 직접 전달 (File API 대비 대용량 최적화)
-- 30분 초과 세그먼트 자동 분할
-- 재시도: 3회, Exponential Backoff
+- GCS gs:// URI 직접 전달 (대용량 최적화)
+- 30분 세그먼트 자동 분할
+- Cloud Tasks 재시도: 3회, Exponential Backoff
+- Firestore 실시간 진행률
 - Vertex AI global 리전 (Gemini 2.5 모델 1M 토큰 지원)
 
 ---
@@ -144,16 +151,26 @@ Tournament → Event → Stream → Hand
 `.env.local`:
 
 ```bash
-# 필수
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-TRIGGER_SECRET_KEY=your-key          # Trigger.dev v4
+# Firebase (필수)
+NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+FIREBASE_ADMIN_PRIVATE_KEY=your-private-key
+FIREBASE_ADMIN_CLIENT_EMAIL=your-client-email
 
-# Vertex AI / GCS (영상 분석 시 필수)
-GCS_PROJECT_ID=your-project-id       # Google Cloud 프로젝트 ID
-VERTEX_AI_LOCATION=global            # global: Gemini 2.5 모델 1M 토큰 지원
+# Algolia (검색)
+NEXT_PUBLIC_ALGOLIA_APP_ID=your-app-id
+NEXT_PUBLIC_ALGOLIA_SEARCH_KEY=your-search-key
+ALGOLIA_ADMIN_KEY=your-admin-key
+
+# GCP / Vertex AI (영상 분석)
+GCP_PROJECT_ID=your-project-id
+VERTEX_AI_LOCATION=global
 GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json
+
+# Cloud Run
+CLOUD_RUN_ORCHESTRATOR_URL=https://video-orchestrator-xxx.run.app
 
 # 선택
 ANTHROPIC_API_KEY=sk-ant-...         # Claude
@@ -166,17 +183,27 @@ UPSTASH_REDIS_REST_URL=your-url      # Rate Limiting
 
 ### 금지 사항
 
-- 클라이언트에서 직접 Supabase write
+- 클라이언트에서 직접 Firestore write
 - `any` 타입 사용
-- SQL Injection 위험 코드
+- 인증 없이 민감한 데이터 접근
 - pnpm 사용
 
 ### 필수 사항
 
 - Server Actions: 모든 write 작업
+- Firebase Security Rules: 역할 기반 접근 제어
 - Zod 검증: API 입력
-- RLS 정책: 모든 테이블
 - TypeScript Strict Mode
+
+### Firebase Security Rules 역할
+
+| 역할 | 권한 |
+|------|------|
+| `user` | 커뮤니티 참여 (포스트, 댓글) |
+| `templar` | 커뮤니티 중재 |
+| `arbiter` | 핸드 데이터 수정 |
+| `high_templar` | 아카이브 관리 |
+| `admin` | 전체 시스템 접근 |
 
 ---
 
@@ -189,8 +216,12 @@ npx tsc --noEmit
 # 빌드 캐시 초기화
 rm -rf .next && npm run build
 
-# Trigger.dev 로그
-# https://cloud.trigger.dev/
+# Firebase 로그
+firebase functions:log
+
+# Cloud Run 로그
+gcloud run services logs read video-orchestrator --region=asia-northeast3
+gcloud run services logs read segment-analyzer --region=asia-northeast3
 ```
 
 ---
@@ -200,12 +231,13 @@ rm -rf .next && npm run build
 | 문서 | 설명 |
 |------|------|
 | `docs/POKER_DOMAIN.md` | 포커 도메인 지식 |
-| `docs/DATABASE_SCHEMA.md` | DB 스키마 상세 |
+| `docs/FIRESTORE_SCHEMA.md` | Firestore 컬렉션 구조 |
 | `docs/REACT_QUERY_GUIDE.md` | 데이터 페칭 패턴 |
 | `docs/DESIGN_SYSTEM.md` | 디자인 시스템 |
 | `docs/DEPLOYMENT.md` | 배포 가이드 |
+| `firestore.rules` | Firebase Security Rules |
 
 ---
 
-**마지막 업데이트**: 2025-11-25
-**문서 버전**: 3.2
+**마지막 업데이트**: 2025-11-27
+**문서 버전**: 4.0 (Firebase/Firestore 마이그레이션)
