@@ -62,12 +62,12 @@ export async function toastPromise<T>(
 ): Promise<T> {
   return toast.promise(promise, {
     loading: messages.loading,
-    success: (data) => {
+    success: (data: T) => {
       return typeof messages.success === "function"
         ? messages.success(data)
         : messages.success
     },
-    error: (error) => {
+    error: (error: unknown) => {
       logError("ToastPromise", error)
 
       if (messages.error) {
@@ -76,7 +76,6 @@ export async function toastPromise<T>(
           : messages.error
       }
 
-      // 기본 에러 메시지
       return error instanceof Error
         ? error.message
         : "작업 실행 중 오류가 발생했습니다"

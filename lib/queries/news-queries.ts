@@ -339,11 +339,9 @@ export function useUpdateNewsMutation() {
 
       return docSnap.data()
     },
-    onSuccess: (data) => {
+    onSuccess: (data: News) => {
       queryClient.invalidateQueries({ queryKey: newsKeys.my() })
-      if (data?.id) {
-        queryClient.invalidateQueries({ queryKey: newsKeys.detail(data.id) })
-      }
+      queryClient.invalidateQueries({ queryKey: newsKeys.detail(data.id) })
       queryClient.invalidateQueries({ queryKey: newsKeys.pending() })
     },
   })

@@ -81,6 +81,9 @@ export type TournamentTree = {
 // ==================== Converters ====================
 
 const handConverter = {
+  toFirestore(hand: Hand) {
+    return hand
+  },
   fromFirestore(snapshot: QueryDocumentSnapshot): Hand {
     const data = snapshot.data() as FirestoreHand
     return {
@@ -111,6 +114,9 @@ const handConverter = {
 }
 
 const playerConverter = {
+  toFirestore(player: Player) {
+    return player
+  },
   fromFirestore(snapshot: QueryDocumentSnapshot): Player {
     const data = snapshot.data() as FirestorePlayer
     return {
@@ -147,32 +153,28 @@ async function fetchHandsWithDetails(options: {
 
   let q = query(handsRef, orderBy('createdAt', 'desc'))
 
-  // Filter by streamId
   if (options.streamId) {
     q = query(handsRef, where('streamId', '==', options.streamId), orderBy('createdAt', 'desc'))
   }
 
-  // Filter by playerId (using playerIds array for efficient querying)
   if (options.playerId) {
     q = query(handsRef, where('playerIds', 'array-contains', options.playerId), orderBy('createdAt', 'desc'))
   }
 
-  // Filter by favorite (embedded in hand)
   if (options.favoriteOnly) {
     q = query(handsRef, where('favorite', '==', true), orderBy('createdAt', 'desc'))
   }
 
-  // Apply limit
   if (options.limit) {
     q = query(q, firestoreLimit(options.limit))
   }
 
   const querySnapshot = await getDocs(q)
-  const hands = querySnapshot.docs.map(doc => doc.data())
+  const hands = querySnapshot.docs.map(doc => doc.data()) as Hand[]
 
   return {
     hands,
-    count: hands.length, // Firestore doesn't have native count, use actual length
+    count: hands.length,
   }
 }
 
@@ -237,14 +239,13 @@ async function fetchPlayersWithHandCount(): Promise<Player[]> {
     playersSnapshot.docs.map(async (playerDoc) => {
       const playerData = playerDoc.data()
 
-      // Count hands for this player using player hands subcollection
       const playerHandsRef = collection(firestore, `players/${playerDoc.id}/hands`)
       const playerHandsSnapshot = await getDocs(playerHandsRef)
 
       return {
         ...playerData,
         handCount: playerHandsSnapshot.size,
-      }
+      } as Player
     })
   )
 
@@ -309,7 +310,7 @@ export function usePlayersQuery() {
  */
 export function useHandQuery(handId: string) {
   return useQuery({
-    queryKey: searchKeys.all.concat(['hand', handId]),
+    queryKey: [...searchKeys.all, 'hand', handId] as const,
     queryFn: async () => {
       const handRef = doc(firestore, 'hands', handId).withConverter(handConverter)
       const handSnap = await getDoc(handRef)
@@ -318,9 +319,8 @@ export function useHandQuery(handId: string) {
         throw new Error('Hand not found')
       }
 
-      const hand = handSnap.data()
+      const hand = handSnap.data() as Hand
 
-      // Fetch stream details
       if (hand.streamId) {
         const streamRef = doc(firestore, `tournaments/${hand.tournamentId}/events/${hand.eventId}/streams/${hand.streamId}`)
         const streamSnap = await getDoc(streamRef)
@@ -328,11 +328,9 @@ export function useHandQuery(handId: string) {
         if (streamSnap.exists()) {
           const streamData = streamSnap.data() as FirestoreStream
 
-          // Fetch event details
           const eventRef = doc(firestore, `tournaments/${hand.tournamentId}/events/${hand.eventId}`)
           const eventSnap = await getDoc(eventRef)
 
-          // Fetch tournament details
           const tournamentRef = doc(firestore, `tournaments/${hand.tournamentId}`)
           const tournamentSnap = await getDoc(tournamentRef)
 
@@ -352,6 +350,6 @@ export function useHandQuery(handId: string) {
       return hand
     },
     enabled: !!handId,
-    staleTime: 10 * 60 * 1000, // 10분
+    staleTime: 10 * 60 * 1000,
   })
 }

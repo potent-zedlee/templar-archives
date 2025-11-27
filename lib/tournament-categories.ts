@@ -201,9 +201,8 @@ export async function getChildCategories(
  * @deprecated Region 필드가 제거되어 더 이상 사용되지 않습니다. getAllCategories()를 사용하세요.
  */
 export async function getCategoriesByRegion(
-  region: 'premier' | 'regional' | 'online' | 'specialty'
+  _region: 'premier' | 'regional' | 'online' | 'specialty'
 ): Promise<TournamentCategory[]> {
-  // Region 필드가 DB에서 제거되었으므로 빈 배열 반환
   console.warn('getCategoriesByRegion is deprecated. Use getAllCategories() instead.')
   return []
 }
@@ -415,9 +414,8 @@ export async function toggleCategoryActive(id: string): Promise<TournamentCatego
  * @deprecated Priority 필드가 제거되어 더 이상 사용되지 않습니다. 카테고리는 이름 순으로 자동 정렬됩니다.
  */
 export async function reorderCategories(
-  categoryIds: string[]
+  _categoryIds: string[]
 ): Promise<TournamentCategory[]> {
-  // Priority 필드가 DB에서 제거되었으므로 현재 카테고리 목록만 반환
   console.warn('reorderCategories is deprecated. Categories are now sorted by name automatically.')
   return getAllCategories(true)
 }

@@ -104,7 +104,7 @@ export async function verifyCSRF(
   // Double Submit Cookie 패턴을 사용한 CSRF 토큰 검증
   // 쿠키에 저장된 해시 값과 헤더의 토큰을 비교
   if (csrfToken) {
-    const cookieToken = request.cookies.get("csrf-token")?.value
+    const cookieToken = request.cookies.get("csrf-token")?.value ?? null
 
     // 쿠키가 없거나 토큰이 일치하지 않으면 차단
     if (!verifyDoubleSubmitToken(csrfToken, cookieToken)) {

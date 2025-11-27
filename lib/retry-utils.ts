@@ -76,7 +76,7 @@ export async function withRetry<T>(
   const {
     maxRetries = 3,
     retryDelay = 1000,
-    exponentialBackoff = true,
+    exponentialBackoff = 2,
     shouldRetry = shouldRetryByDefault,
     onRetry,
   } = options
@@ -100,8 +100,8 @@ export async function withRetry<T>(
       }
 
       // 재시도 간격 계산
-      const delay = exponentialBackoff
-        ? retryDelay * Math.pow(2, attempt)
+      const delay = typeof exponentialBackoff === 'number' && exponentialBackoff > 1
+        ? retryDelay * Math.pow(exponentialBackoff, attempt)
         : retryDelay
 
       console.log(
