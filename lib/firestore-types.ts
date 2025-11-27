@@ -303,6 +303,9 @@ export interface FirestoreHand {
   /** 토너먼트 ID (참조) */
   tournamentId: string
 
+  /** 플레이어 ID 목록 (array-contains 쿼리용) */
+  playerIds: string[]
+
   /** 핸드 번호 */
   number: string
   /** 핸드 설명 */

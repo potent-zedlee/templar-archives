@@ -135,29 +135,24 @@ export async function buildQueryFromFilter(
       return null // 일치하는 플레이어 없음
     }
 
-    // 해당 플레이어가 참여한 핸드 찾기
+    // 해당 플레이어가 참여한 핸드 찾기 (playerIds 필드 사용)
     const handIds = new Set<string>()
 
-    for (const playerId of playerIds) {
+    // playerIds 배열을 최대 10개씩 나눠서 쿼리 (Firestore array-contains-any 제한)
+    const chunks = []
+    for (let i = 0; i < playerIds.length; i += 10) {
+      chunks.push(playerIds.slice(i, i + 10))
+    }
+
+    for (const chunk of chunks) {
       const handsSnapshot = await firestore
         .collection(COLLECTION_PATHS.HANDS)
-        .where('players', 'array-contains-any', [{ playerId }])
+        .where('playerIds', 'array-contains-any', chunk)
         .limit(100)
         .get()
 
-      // players 배열에서 playerId를 직접 검색하기 어려우므로
-      // 전체 핸드를 가져와서 필터링
-      const allHandsSnapshot = await firestore
-        .collection(COLLECTION_PATHS.HANDS)
-        .limit(500)
-        .get()
-
-      allHandsSnapshot.forEach(doc => {
-        const hand = doc.data() as FirestoreHand
-        const hasPlayer = hand.players?.some(p => playerIds.includes(p.playerId))
-        if (hasPlayer) {
-          handIds.add(doc.id)
-        }
+      handsSnapshot.forEach(doc => {
+        handIds.add(doc.id)
       })
     }
 

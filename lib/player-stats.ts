@@ -28,10 +28,10 @@ export type PlayerStatistics = {
  */
 export async function fetchPlayerActions(playerId: string) {
   try {
-    // Firestore에서 hands 컬렉션 쿼리
+    // Firestore에서 hands 컬렉션 쿼리 (playerIds 배열 사용)
     const handsSnapshot = await adminFirestore
       .collection('hands')
-      .where('players', 'array-contains', { playerId })
+      .where('playerIds', 'array-contains', playerId)
       .get()
 
     const allActions: (HandActionEmbedded & { hand_id: string })[] = []
@@ -61,10 +61,10 @@ export async function fetchPlayerActions(playerId: string) {
  */
 export async function fetchPlayerHandsInfo(playerId: string) {
   try {
-    // Firestore에서 플레이어가 참여한 핸드 조회
+    // Firestore에서 플레이어가 참여한 핸드 조회 (playerIds 배열 사용)
     const handsSnapshot = await adminFirestore
       .collection('hands')
-      .where('players', 'array-contains', { playerId })
+      .where('playerIds', 'array-contains', playerId)
       .get()
 
     const handPlayersData: Array<{

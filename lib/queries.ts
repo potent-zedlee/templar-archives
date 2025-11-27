@@ -257,8 +257,8 @@ export async function fetchHandsWithDetails(options: {
     }
 
     if (playerId) {
-      // 플레이어 ID로 필터링 (players 배열 내 playerId 검색)
-      constraints.push(where('players', 'array-contains', { playerId }))
+      // 플레이어 ID로 필터링 (playerIds 배열 사용)
+      constraints.push(where('playerIds', 'array-contains', playerId))
     }
 
     constraints.push(orderBy('createdAt', 'desc'))

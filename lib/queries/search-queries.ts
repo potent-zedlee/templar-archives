@@ -161,9 +161,9 @@ async function fetchHandsWithDetails(options: {
     q = query(handsRef, where('streamId', '==', options.streamId), orderBy('createdAt', 'desc'))
   }
 
-  // Filter by playerId (embedded in players array)
+  // Filter by playerId (using playerIds array for efficient querying)
   if (options.playerId) {
-    q = query(handsRef, where('players', 'array-contains', { playerId: options.playerId }), orderBy('createdAt', 'desc'))
+    q = query(handsRef, where('playerIds', 'array-contains', options.playerId), orderBy('createdAt', 'desc'))
   }
 
   // Filter by favorite (embedded in hand)
