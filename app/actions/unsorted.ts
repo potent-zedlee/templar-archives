@@ -10,7 +10,7 @@
  */
 
 import { adminAuth, adminFirestore } from '@/lib/firebase-admin'
-import { COLLECTION_PATHS } from '@/lib/firebase/constants'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { FieldValue } from 'firebase-admin/firestore'

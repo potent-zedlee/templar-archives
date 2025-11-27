@@ -1,7 +1,7 @@
 'use server'
 
 import { adminAuth, adminFirestore } from '@/lib/firebase-admin'
-import { COLLECTION_PATHS } from '@/lib/firebase/collections'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
 import { getHandThumbnailUrl } from '@/lib/thumbnail-utils'
