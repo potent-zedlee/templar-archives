@@ -9,7 +9,6 @@
 
 import {
   collection,
-  collectionGroup,
   doc,
   getDoc,
   getDocs,
@@ -17,7 +16,6 @@ import {
   where,
   orderBy,
   limit,
-  startAfter,
   Timestamp,
   DocumentData,
   QueryDocumentSnapshot,
@@ -567,7 +565,6 @@ export async function fetchPlayerHands(playerId: string): Promise<{
         const endTime = parts[1] || parts[0] || '00:00'
 
         // 현재 플레이어의 정보 찾기
-        const currentPlayer = hand.players?.find((p) => p.playerId === playerId)
         const winner = hand.players?.find((p) => p.isWinner)?.name || 'Unknown'
 
         return {

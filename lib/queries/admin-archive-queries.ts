@@ -17,7 +17,7 @@ import {
   CollectionReference,
   QueryConstraint
 } from 'firebase/firestore'
-import { publishStream, unpublishStream, bulkPublishStreams, bulkUnpublishStreams } from '@/app/actions/archive-status'
+import { publishStream, unpublishStream, bulkPublishStreams, bulkUnpublishStreams } from '@/app/actions/admin/archive-admin'
 import type { Tournament, Event, Stream, ContentStatus } from '@/lib/types/archive'
 
 // ==================== Query Keys ====================
@@ -59,7 +59,19 @@ export function useAdminTournamentsQuery(statusFilter: ContentStatus | 'all' = '
         const data = doc.data()
         tournaments.push({
           id: doc.id,
-          ...data,
+          name: data.name,
+          category: data.category,
+          category_id: data.category_id,
+          category_logo: data.category_logo,
+          category_logo_url: data.category_logo_url,
+          location: data.location,
+          city: data.city,
+          country: data.country,
+          game_type: data.game_type,
+          total_prize: data.total_prize,
+          status: data.status,
+          published_by: data.published_by,
+          published_at: data.published_at,
           // Timestamp를 string으로 변환
           start_date: data.start_date instanceof Timestamp
             ? data.start_date.toDate().toISOString()
@@ -70,10 +82,7 @@ export function useAdminTournamentsQuery(statusFilter: ContentStatus | 'all' = '
           created_at: data.created_at instanceof Timestamp
             ? data.created_at.toDate().toISOString()
             : data.created_at,
-          updated_at: data.updated_at instanceof Timestamp
-            ? data.updated_at.toDate().toISOString()
-            : data.updated_at,
-        } as Tournament)
+        })
       })
 
       return tournaments
@@ -114,7 +123,20 @@ export function useAdminEventsQuery(
         const data = doc.data()
         events.push({
           id: doc.id,
-          ...data,
+          tournament_id: data.tournament_id,
+          name: data.name,
+          event_number: data.event_number,
+          total_prize: data.total_prize,
+          winner: data.winner,
+          buy_in: data.buy_in,
+          entry_count: data.entry_count,
+          blind_structure: data.blind_structure,
+          level_duration: data.level_duration,
+          starting_stack: data.starting_stack,
+          notes: data.notes,
+          status: data.status,
+          published_by: data.published_by,
+          published_at: data.published_at,
           // Timestamp를 string으로 변환
           date: data.date instanceof Timestamp
             ? data.date.toDate().toISOString()
@@ -122,10 +144,7 @@ export function useAdminEventsQuery(
           created_at: data.created_at instanceof Timestamp
             ? data.created_at.toDate().toISOString()
             : data.created_at,
-          updated_at: data.updated_at instanceof Timestamp
-            ? data.updated_at.toDate().toISOString()
-            : data.updated_at,
-        } as Event)
+        })
       })
 
       return events
@@ -171,7 +190,24 @@ export function useAdminStreamsQuery(
 
         streams.push({
           id: doc.id,
-          ...data,
+          event_id: data.sub_event_id || data.event_id,
+          name: data.name,
+          description: data.description,
+          video_url: data.video_url,
+          video_file: data.video_file,
+          video_nas_path: data.video_nas_path,
+          video_source: data.video_source,
+          is_organized: data.is_organized,
+          organized_at: data.organized_at,
+          player_count: data.player_count,
+          status: data.status,
+          published_by: data.published_by,
+          gcs_path: data.gcs_path,
+          gcs_uri: data.gcs_uri,
+          gcs_file_size: data.gcs_file_size,
+          gcs_uploaded_at: data.gcs_uploaded_at,
+          upload_status: data.upload_status,
+          video_duration: data.video_duration,
           // Timestamp를 string으로 변환
           published_at: data.published_at instanceof Timestamp
             ? data.published_at.toDate().toISOString()
@@ -179,11 +215,8 @@ export function useAdminStreamsQuery(
           created_at: data.created_at instanceof Timestamp
             ? data.created_at.toDate().toISOString()
             : data.created_at,
-          updated_at: data.updated_at instanceof Timestamp
-            ? data.updated_at.toDate().toISOString()
-            : data.updated_at,
           hand_count: 0, // 초기값
-        } as Stream & { hand_count?: number })
+        })
       })
 
       // Hand count 조회
@@ -227,8 +260,8 @@ export function usePublishStreamMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (streamId: string) => {
-      const result = await publishStream(streamId)
+    mutationFn: async ({ tournamentId, eventId, streamId }: { tournamentId: string, eventId: string, streamId: string }) => {
+      const result = await publishStream(tournamentId, eventId, streamId)
       if (!result.success) throw new Error(result.error)
       return result
     },
@@ -246,8 +279,8 @@ export function useUnpublishStreamMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (streamId: string) => {
-      const result = await unpublishStream(streamId)
+    mutationFn: async ({ tournamentId, eventId, streamId }: { tournamentId: string, eventId: string, streamId: string }) => {
+      const result = await unpublishStream(tournamentId, eventId, streamId)
       if (!result.success) throw new Error(result.error)
       return result
     },
@@ -265,8 +298,8 @@ export function useBulkPublishMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (streamIds: string[]) => {
-      const result = await bulkPublishStreams(streamIds)
+    mutationFn: async ({ tournamentId, eventId, streamIds }: { tournamentId: string, eventId: string, streamIds: string[] }) => {
+      const result = await bulkPublishStreams(tournamentId, eventId, streamIds)
       if (!result.success) throw new Error(result.error)
       return result
     },
@@ -284,8 +317,8 @@ export function useBulkUnpublishMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (streamIds: string[]) => {
-      const result = await bulkUnpublishStreams(streamIds)
+    mutationFn: async ({ tournamentId, eventId, streamIds }: { tournamentId: string, eventId: string, streamIds: string[] }) => {
+      const result = await bulkUnpublishStreams(tournamentId, eventId, streamIds)
       if (!result.success) throw new Error(result.error)
       return result
     },
