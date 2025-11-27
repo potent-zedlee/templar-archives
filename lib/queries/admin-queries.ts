@@ -17,8 +17,6 @@ import {
   getRecentPosts,
   getRecentComments,
   type AdminRole,
-  type DashboardStats,
-  type AdminLog,
 } from '@/lib/admin'
 import {
   fetchAllPosts,
@@ -29,7 +27,6 @@ import {
   hideContent,
   unhideContent,
   deleteContent,
-  type Report,
   type ReportStatus,
 } from '@/lib/content-moderation'
 import {
@@ -37,13 +34,11 @@ import {
   getAllClaims,
   approvePlayerClaim,
   rejectPlayerClaim,
-  type PlayerClaimWithDetails,
 } from '@/lib/player-claims'
 import {
   fetchEditRequests,
   approveEditRequest,
   rejectEditRequest,
-  type HandEditRequest,
   type EditRequestStatus,
 } from '@/lib/hand-edit-requests'
 import {
@@ -52,8 +47,6 @@ import {
   approveDeletionRequest,
   rejectDeletionRequest,
   completeDeletionRequest,
-  type DeletionRequestWithUser,
-  type DeletionRequestStatus,
 } from '@/lib/data-deletion-requests'
 
 // ==================== Query Keys ====================
@@ -163,7 +156,7 @@ export function useBanUserMutation(adminId: string) {
 
       return { previousData }
     },
-    onError: (err, variables, context) => {
+    onError: (_, __, context) => {
       // Rollback on error
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]) => {
@@ -213,7 +206,7 @@ export function useUnbanUserMutation(adminId: string) {
 
       return { previousData }
     },
-    onError: (err, variables, context) => {
+    onError: (_, __, context) => {
       // Rollback on error
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]) => {
@@ -262,7 +255,7 @@ export function useChangeRoleMutation(adminId: string) {
 
       return { previousData }
     },
-    onError: (err, variables, context) => {
+    onError: (_, __, context) => {
       // Rollback on error
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]) => {

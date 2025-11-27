@@ -14,9 +14,6 @@ import {
   where,
   orderBy,
   limit as firestoreLimit,
-  startAfter,
-  Timestamp,
-  DocumentData,
   QueryDocumentSnapshot,
 } from 'firebase/firestore'
 import { firestore } from '@/lib/firebase'
@@ -84,9 +81,6 @@ export type TournamentTree = {
 // ==================== Converters ====================
 
 const handConverter = {
-  toFirestore(hand: Omit<FirestoreHand, 'id'>): DocumentData {
-    return hand as DocumentData
-  },
   fromFirestore(snapshot: QueryDocumentSnapshot): Hand {
     const data = snapshot.data() as FirestoreHand
     return {
@@ -117,9 +111,6 @@ const handConverter = {
 }
 
 const playerConverter = {
-  toFirestore(player: Omit<FirestorePlayer, 'id'>): DocumentData {
-    return player as DocumentData
-  },
   fromFirestore(snapshot: QueryDocumentSnapshot): Player {
     const data = snapshot.data() as FirestorePlayer
     return {

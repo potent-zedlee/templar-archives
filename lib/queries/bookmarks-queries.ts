@@ -10,8 +10,6 @@ import {
   doc,
   getDoc,
   getDocs,
-  addDoc,
-  updateDoc,
   deleteDoc,
   query,
   where,
@@ -98,13 +96,13 @@ export const bookmarksKeys = {
  * Get user's bookmarks
  */
 async function getUserBookmarks(userId: string): Promise<HandBookmarkWithDetails[]> {
-  const bookmarksRef = collection(firestore, `users/${userId}/bookmarks`).withConverter(bookmarkConverter)
+  const bookmarksRef = collection(firestore, `users/${userId}/bookmarks`)
   const q = query(bookmarksRef, orderBy('createdAt', 'desc'))
   const querySnapshot = await getDocs(q)
 
   const bookmarks = await Promise.all(
     querySnapshot.docs.map(async (bookmarkDoc) => {
-      const bookmark = bookmarkDoc.data()
+      const bookmark = bookmarkConverter.fromFirestore(bookmarkDoc as any)
 
       // Fetch hand details if type is 'hand'
       if (bookmark.type === 'hand') {
@@ -168,7 +166,7 @@ async function getUserBookmarks(userId: string): Promise<HandBookmarkWithDetails
     })
   )
 
-  return bookmarks
+  return bookmarks as HandBookmarkWithDetails[]
 }
 
 /**
@@ -189,19 +187,17 @@ async function removeHandBookmark(handId: string, userId: string): Promise<void>
  * Update bookmark folder (Firestore에서는 사용 안 함, 호환성 유지)
  */
 async function updateBookmarkFolder(
-  handId: string,
-  userId: string,
-  folderName: string | null
+  _handId: string,
+  _userId: string,
+  _folderName: string | null
 ): Promise<void> {
-  // Firestore 구조에서는 별도 폴더 필드 없음
   console.warn('updateBookmarkFolder is not supported in Firestore structure')
 }
 
 /**
  * Update bookmark notes (Firestore에서는 사용 안 함, 호환성 유지)
  */
-async function updateBookmarkNotes(handId: string, userId: string, notes: string): Promise<void> {
-  // Firestore 구조에서는 별도 노트 필드 없음
+async function updateBookmarkNotes(_handId: string, _userId: string, _notes: string): Promise<void> {
   console.warn('updateBookmarkNotes is not supported in Firestore structure')
 }
 

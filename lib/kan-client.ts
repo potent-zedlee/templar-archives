@@ -5,7 +5,6 @@
 
 import type {
   AnalyzeVideoRequest,
-  AnalyzeResult,
   SseEvent,
   ProgressEvent,
   LogEvent,
@@ -20,12 +19,10 @@ import type {
 export class KanClient {
   private baseUrl: string
   private apiKey?: string
-  private timeout: number
 
   constructor(config?: Partial<KanClientConfig>) {
     this.baseUrl = config?.baseUrl || this.getDefaultBaseUrl()
     this.apiKey = config?.apiKey
-    this.timeout = config?.timeout || 900000 // 15 minutes default
   }
 
   /**

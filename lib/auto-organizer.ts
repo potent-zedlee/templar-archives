@@ -228,7 +228,7 @@ export function createAutoOrganizedStructure(
   // Create tournament structures
   const tournaments: TournamentStructure[] = []
 
-  for (const [monthKey, groups] of monthGroups.entries()) {
+  for (const [_monthKey, groups] of monthGroups.entries()) {
     const allVideos = Array.from(groups.values()).flatMap(g => g.videos)
     const startDate = new Date(Math.min(...allVideos.map(v => new Date(v.publishedAt).getTime())))
     const endDate = new Date(Math.max(...allVideos.map(v => new Date(v.publishedAt).getTime())))
@@ -244,7 +244,7 @@ export function createAutoOrganizedStructure(
       a[1].startDate.getTime() - b[1].startDate.getTime()
     )
 
-    for (const [key, group] of sortedGroups) {
+    for (const [_key, group] of sortedGroups) {
       const subEventName = formatDateRange(group.startDate, group.endDate, groupBy)
 
       subEvents.push({

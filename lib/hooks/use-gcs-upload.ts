@@ -190,7 +190,6 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
       totalSize: number
     ): Promise<void> => {
       const chunk = file.slice(start, end)
-      const chunkSize = end - start
 
       const response = await fetch(uploadUrl, {
         method: 'PUT',

@@ -55,20 +55,6 @@ export function validateEnv() {
 // ==================== Environment Variable Getters ====================
 
 /**
- * 환경 변수 가져오기 (타입 안전)
- */
-function getEnvVar(key: string, fallback?: string): string {
-  const value = process.env[key]
-  if (!value) {
-    if (fallback !== undefined) {
-      return fallback
-    }
-    throw new Error(`Environment variable ${key} is not set`)
-  }
-  return value
-}
-
-/**
  * 환경 변수 가져오기 (안전 모드 - 빌드 타임에도 안전)
  * 빌드 타임에 환경 변수가 없어도 에러를 던지지 않음
  */

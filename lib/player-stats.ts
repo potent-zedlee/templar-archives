@@ -3,7 +3,6 @@ import 'server-only'
 import { adminFirestore } from './firebase-admin'
 import type {
   FirestoreHand,
-  HandPlayerEmbedded,
   HandActionEmbedded,
   PokerPosition,
 } from './firestore-types'

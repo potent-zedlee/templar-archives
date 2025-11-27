@@ -17,7 +17,6 @@ import {
   increment,
   updateDoc,
   Timestamp,
-  DocumentData,
   QueryDocumentSnapshot,
   serverTimestamp,
   orderBy,
@@ -73,13 +72,6 @@ interface FirestorePostExtended extends FirestorePost {
 }
 
 const postConverter = {
-  toFirestore(post: Partial<FirestorePostExtended>): DocumentData {
-    return {
-      ...post,
-      createdAt: post.createdAt || serverTimestamp(),
-      updatedAt: post.updatedAt || serverTimestamp(),
-    }
-  },
   fromFirestore(snapshot: QueryDocumentSnapshot): Post {
     const data = snapshot.data() as FirestorePostExtended
     return {
@@ -101,13 +93,6 @@ const postConverter = {
 }
 
 const commentConverter = {
-  toFirestore(comment: Partial<FirestoreComment>): DocumentData {
-    return {
-      ...comment,
-      createdAt: comment.createdAt || serverTimestamp(),
-      updatedAt: comment.updatedAt || serverTimestamp(),
-    }
-  },
   fromFirestore(snapshot: QueryDocumentSnapshot): Comment {
     const data = snapshot.data() as FirestoreComment & { likesCount?: number; postId?: string; handId?: string }
     return {

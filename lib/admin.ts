@@ -405,7 +405,7 @@ export async function deletePost(postId: string, reason: string, adminId: string
 /**
  * Delete comment (admin)
  */
-export async function deleteComment(commentId: string, reason: string, adminId: string) {
+export async function deleteComment(_commentId: string, _reason: string, _adminId: string) {
   // 댓글은 posts/{postId}/comments/{commentId} 서브컬렉션에 있음
   // postId를 알아야 하므로, commentId만으로는 삭제 불가
   // 대안: commentId에 postId 정보 포함 또는 별도 조회

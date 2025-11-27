@@ -223,7 +223,7 @@ export function EditHandDialog({
             </div>
 
             <div className="space-y-3">
-              {players.map((player, idx) => (
+              {players.map((player) => (
                 <Card key={player.id} className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="flex-1 space-y-3">

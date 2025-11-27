@@ -27,7 +27,6 @@ import {
 } from 'firebase/firestore'
 import { firestore as db } from '@/lib/firebase'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'
-import type { FirestoreCategory } from '@/lib/firestore-types'
 import { toast } from 'sonner'
 
 // ==================== Types ====================
@@ -147,7 +146,7 @@ async function getActiveCategoriesFirestore(gameType?: GameType): Promise<Tourna
  * @deprecated Region 필드가 제거되어 더 이상 사용되지 않습니다. getAllCategories()를 사용하세요.
  */
 async function getCategoriesByRegionFirestore(
-  region: 'premier' | 'regional' | 'online' | 'specialty'
+  _region: 'premier' | 'regional' | 'online' | 'specialty'
 ): Promise<TournamentCategory[]> {
   console.warn('getCategoriesByRegion is deprecated. Use getAllCategories() instead.')
   return []

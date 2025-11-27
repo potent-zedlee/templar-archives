@@ -3,9 +3,6 @@ import type { Firestore } from 'firebase-admin/firestore'
 import {
   COLLECTION_PATHS,
   type FirestoreHand,
-  type FirestoreTournament,
-  type FirestorePlayer,
-  type TournamentCategory,
 } from '@/lib/firestore-types'
 
 /**

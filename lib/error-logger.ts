@@ -180,13 +180,6 @@ export function logError(
  * Info 로깅
  */
 export function logInfo(message: string, metadata?: Record<string, any>): void {
-  const entry: LogEntry = {
-    timestamp: new Date().toISOString(),
-    severity: ErrorSeverity.INFO,
-    category: ErrorCategory.UNKNOWN,
-    message,
-    context: { metadata },
-  }
 
   console.log(`[INFO]`, message)
   if (metadata) {
@@ -198,13 +191,6 @@ export function logInfo(message: string, metadata?: Record<string, any>): void {
  * Warning 로깅
  */
 export function logWarning(message: string, metadata?: Record<string, any>): void {
-  const entry: LogEntry = {
-    timestamp: new Date().toISOString(),
-    severity: ErrorSeverity.WARNING,
-    category: ErrorCategory.UNKNOWN,
-    message,
-    context: { metadata },
-  }
 
   console.warn(`[WARNING]`, message)
   if (metadata) {

@@ -13,7 +13,6 @@ import {
   getDoc,
   getDocs,
   updateDoc,
-  deleteDoc,
   query,
   where,
   orderBy,
@@ -24,9 +23,6 @@ import {
 import { firestore } from './firebase'
 import {
   COLLECTION_PATHS,
-  type FirestoreTournament,
-  type FirestoreEvent,
-  type FirestoreStream,
   type FirestoreHand,
   type FirestoreUser,
 } from './firestore-types'
@@ -54,7 +50,7 @@ function timestampToString(ts: Timestamp | undefined): string | undefined {
  */
 export async function loadTournamentsHelper(
   setTournaments: (tournaments: unknown[]) => void,
-  setSelectedDay: (day: string) => void,
+  _setSelectedDay: (day: string) => void,
   setLoading: (loading: boolean) => void,
 ): Promise<void> {
   setLoading(true)

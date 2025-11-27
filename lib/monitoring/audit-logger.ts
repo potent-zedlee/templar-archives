@@ -5,7 +5,7 @@
  * Migrated to Firestore.
  */
 
-import { collection, addDoc, getDocs, query, where, orderBy, limit, startAfter, getCountFromServer, Timestamp, doc, getDoc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, query, where, orderBy, limit, getCountFromServer, Timestamp, doc, getDoc } from 'firebase/firestore'
 import { firestore } from '../firebase'
 
 const AUDIT_LOGS_COLLECTION = 'auditLogs'

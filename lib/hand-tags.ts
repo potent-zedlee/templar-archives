@@ -16,8 +16,6 @@ import {
   Timestamp,
   collectionGroup,
   limit,
-  doc,
-  setDoc,
 } from 'firebase/firestore'
 import { firestore } from './firebase'
 import type {
