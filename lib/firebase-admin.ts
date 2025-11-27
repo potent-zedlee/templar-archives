@@ -22,8 +22,9 @@ import { getAuth, type Auth } from 'firebase-admin/auth'
  * Admin SDK 서비스 계정 설정
  *
  * 우선순위:
- * 1. FIREBASE_ADMIN_SDK_KEY: JSON 문자열 (Vercel/Cloud Run 권장)
+ * 1. FIREBASE_ADMIN_SDK_KEY: JSON 문자열 (로컬 개발, Vercel/Cloud Run)
  * 2. GOOGLE_APPLICATION_CREDENTIALS: 파일 경로 (로컬 개발)
+ * 3. ADC (Application Default Credentials): Cloud Functions 환경에서 자동
  */
 function getAdminCredential(): ServiceAccount | undefined {
   // 환경변수에서 JSON 문자열로 제공된 경우
@@ -36,16 +37,10 @@ function getAdminCredential(): ServiceAccount | undefined {
     }
   }
 
-  // GOOGLE_APPLICATION_CREDENTIALS가 설정된 경우
-  // Firebase Admin SDK가 자동으로 읽어옴 (undefined 반환)
-  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    return undefined
-  }
-
-  throw new Error(
-    'Firebase Admin credentials not found. ' +
-    'Set FIREBASE_ADMIN_SDK_KEY or GOOGLE_APPLICATION_CREDENTIALS environment variable.'
-  )
+  // GOOGLE_APPLICATION_CREDENTIALS가 설정된 경우 또는
+  // Cloud Functions 환경에서는 ADC(Application Default Credentials)가 자동으로 사용됨
+  // undefined를 반환하면 Firebase Admin SDK가 ADC를 사용
+  return undefined
 }
 
 /**
