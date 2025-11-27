@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { useAuth } from "@/components/layout/AuthProvider"
 import { signOut } from "@/lib/auth"
-import { isAdmin, isReporterOrAdmin } from "@/lib/admin"
 import { NotificationBell } from "@/components/common/NotificationBell"
 import { HeaderLogo } from "./HeaderLogo"
 import { HeaderDesktopNav } from "./HeaderDesktopNav"
@@ -17,32 +16,15 @@ export function Header() {
   const router = useRouter()
   const { user, profile, loading: authLoading } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isUserAdmin, setIsUserAdmin] = useState(false)
-  const [isUserReporter, setIsUserReporter] = useState(false)
 
-  useEffect(() => {
-    async function checkAdmin() {
-      if (user) {
-        const adminStatus = await isAdmin(user.id)
-        setIsUserAdmin(adminStatus)
-      } else {
-        setIsUserAdmin(false)
-      }
-    }
-    checkAdmin()
-  }, [user])
+  // profile.role에서 직접 권한 확인 (추가 Firestore 호출 불필요)
+  const isUserAdmin = useMemo(() => {
+    return profile?.role === 'admin' || profile?.role === 'high_templar'
+  }, [profile?.role])
 
-  useEffect(() => {
-    async function checkReporter() {
-      if (user) {
-        const reporterStatus = await isReporterOrAdmin(user.id)
-        setIsUserReporter(reporterStatus)
-      } else {
-        setIsUserReporter(false)
-      }
-    }
-    checkReporter()
-  }, [user])
+  const isUserReporter = useMemo(() => {
+    return profile?.role === 'reporter' || profile?.role === 'admin' || profile?.role === 'high_templar'
+  }, [profile?.role])
 
   const handleSignOut = async () => {
     try {

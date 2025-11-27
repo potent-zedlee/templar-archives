@@ -155,6 +155,9 @@ export async function createProfile(user: {
 
 /**
  * 현재 로그인한 사용자의 프로필 조회
+ *
+ * Firebase Auth UID로 먼저 조회하고, 없으면 email로 조회
+ * (Supabase 마이그레이션 사용자 대응)
  */
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const user = auth.currentUser
@@ -163,7 +166,30 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
     return null
   }
 
-  return getProfile(user.uid)
+  // 1. Firebase Auth UID로 조회
+  let profile = await getProfile(user.uid)
+  if (profile) {
+    return profile
+  }
+
+  // 2. UID로 못 찾으면 email로 조회 (Supabase 마이그레이션 사용자)
+  if (user.email) {
+    try {
+      const usersRef = collection(firestore, COLLECTION_PATHS.USERS)
+      const q = query(usersRef, where('email', '==', user.email), firestoreLimit(1))
+      const querySnapshot = await getDocs(q)
+
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0]
+        profile = firestoreUserToProfile(userDoc.id, userDoc.data() as FirestoreUser)
+        return profile
+      }
+    } catch (error) {
+      console.error('이메일로 프로필 조회 실패:', error)
+    }
+  }
+
+  return null
 }
 
 /**
