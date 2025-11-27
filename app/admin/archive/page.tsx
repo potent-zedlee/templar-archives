@@ -14,7 +14,6 @@ import { useEffect, useState } from 'react'
 import {
   collection,
   query,
-  where,
   orderBy,
   getDocs,
   Timestamp,
@@ -45,7 +44,7 @@ import { TournamentDialog } from '@/components/features/archive/TournamentDialog
 import { DeleteDialog } from '@/components/features/archive/dialogs/DeleteDialog'
 import { SubEventDialog } from '@/components/features/archive/dialogs/SubEventDialog'
 import { DayDialog } from '@/components/features/archive/dialogs/DayDialog'
-import { AnalyzeVideoDialog } from '@/components/features/archive/dialogs/AnalyzeVideoDialog'
+import { AnalyzeVideoDialog, type StreamWithIds } from '@/components/features/archive/dialogs/AnalyzeVideoDialog'
 import { UnsortedVideosTab } from './_components/UnsortedVideosTab'
 import type { Tournament, FolderItem, ContentStatus, Event, Stream } from '@/lib/types/archive'
 import type { AdminArchiveSortField, SortDirection } from '@/lib/types/sorting'
@@ -102,7 +101,7 @@ export default function AdminArchivePage() {
 
   // KAN Analyze states
   const [analyzeDialogOpen, setAnalyzeDialogOpen] = useState(false)
-  const [selectedStreamForAnalyze, setSelectedStreamForAnalyze] = useState<Stream | null>(null)
+  const [selectedStreamForAnalyze, setSelectedStreamForAnalyze] = useState<StreamWithIds | null>(null)
 
   // Tournament form states
   const [newTournamentName, setNewTournamentName] = useState('')
@@ -513,8 +512,21 @@ export default function AdminArchivePage() {
   }
 
   // KAN Analyze functions
-  const handleOpenAnalyze = (stream: Stream) => {
-    setSelectedStreamForAnalyze(stream)
+  const handleOpenAnalyze = (stream: Stream, tournamentId: string, eventId: string) => {
+    setSelectedStreamForAnalyze({
+      ...stream,
+      tournamentId,
+      eventId,
+      // Ensure FirestoreStream compatibility
+      name: stream.name,
+      description: stream.description,
+      videoUrl: stream.video_url,
+      videoFile: stream.video_file,
+      videoNasPath: stream.video_nas_path,
+      videoSource: stream.video_source,
+      createdAt: stream.created_at ? new Date(stream.created_at) as any : new Date() as any,
+      updatedAt: stream.created_at ? new Date(stream.created_at) as any : new Date() as any,
+    } as unknown as StreamWithIds)
     setAnalyzeDialogOpen(true)
   }
 
@@ -980,7 +992,7 @@ export default function AdminArchivePage() {
                                         videoUrl={stream.video_url}
                                         stream={stream}
                                         onStatusChange={() => loadStreams(tournament.id, subEvent.id)}
-                                        onOpenAnalyze={() => handleOpenAnalyze(stream)}
+                                        onOpenAnalyze={() => handleOpenAnalyze(stream, tournament.id, subEvent.id)}
                                       />
                                       <Button
                                         variant="ghost"

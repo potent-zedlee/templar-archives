@@ -244,9 +244,10 @@ export default function ClaimsClient() {
                         {getVerificationMethodLabel(claim.verification_method)}
                       </td>
                       <td className="p-3">
-                        {claim.verification_data?.social_media_url && (
+                        {claim.verification_data?.social_media_url &&
+                         typeof claim.verification_data.social_media_url === 'string' ? (
                           <a
-                            href={claim.verification_data.social_media_url}
+                            href={String(claim.verification_data.social_media_url)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-gold-400 hover:underline"
@@ -254,15 +255,17 @@ export default function ClaimsClient() {
                             View Link
                             <ExternalLink className="h-3 w-3" />
                           </a>
-                        )}
-                        {claim.verification_data?.email && (
-                          <span className="text-text-secondary">{claim.verification_data.email}</span>
-                        )}
-                        {claim.verification_data?.additional_info && (
+                        ) : null}
+                        {claim.verification_data?.email &&
+                         typeof claim.verification_data.email === 'string' ? (
+                          <span className="text-text-secondary">{String(claim.verification_data.email)}</span>
+                        ) : null}
+                        {claim.verification_data?.additional_info &&
+                         typeof claim.verification_data.additional_info === 'string' ? (
                           <p className="text-caption text-text-secondary mt-1">
-                            {claim.verification_data.additional_info}
+                            {String(claim.verification_data.additional_info)}
                           </p>
-                        )}
+                        ) : null}
                       </td>
                       <td className="p-3 text-text-secondary">
                         {new Date(claim.claimed_at).toLocaleString("ko-KR")}

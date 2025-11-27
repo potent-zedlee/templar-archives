@@ -115,7 +115,7 @@ export default function editrequestsClient() {
                   <div>
                     <div className="text-xs text-muted-foreground mb-2">Original</div>
                     <div className="space-y-2">
-                      {originalValue?.map((item: any, i: number) => (
+                      {Array.isArray(originalValue) && originalValue.map((item: any, i: number) => (
                         <div key={i} className="p-2 bg-red-50 dark:bg-red-950/20 border border-border rounded-lg text-xs">
                           {JSON.stringify(item, null, 2)}
                         </div>

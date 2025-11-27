@@ -21,7 +21,7 @@ import { Sparkles, Loader2, CheckCircle2, AlertCircle, Users, Plus, X, XCircle }
 import type { FirestoreStream } from "@/lib/firestore-types"
 
 // Extended Stream type with IDs for Firestore path
-interface StreamWithIds extends FirestoreStream {
+export interface StreamWithIds extends FirestoreStream {
   id: string
   tournamentId: string
   eventId: string

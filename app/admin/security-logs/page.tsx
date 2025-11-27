@@ -338,16 +338,10 @@ export default function SecurityLogsPage() {
       user_id: event.userId,
       ip_address: event.ipAddress,
       user_agent: event.userAgent,
-      request_method: event.requestMethod,
-      request_path: event.requestPath,
-      response_status: event.responseStatus,
+      method: event.requestMethod,
+      path: event.requestPath,
       details: event.details,
       created_at: event.createdAt,
-      users: event.user ? {
-        id: event.user.id,
-        email: event.user.email,
-        name: event.user.name
-      } : null
     }))
     exportSecurityLogs(exportData, 'csv')
     toast.success('CSV 파일이 다운로드되었습니다')
@@ -366,16 +360,10 @@ export default function SecurityLogsPage() {
       user_id: event.userId,
       ip_address: event.ipAddress,
       user_agent: event.userAgent,
-      request_method: event.requestMethod,
-      request_path: event.requestPath,
-      response_status: event.responseStatus,
+      method: event.requestMethod,
+      path: event.requestPath,
       details: event.details,
       created_at: event.createdAt,
-      users: event.user ? {
-        id: event.user.id,
-        email: event.user.email,
-        name: event.user.name
-      } : null
     }))
     exportSecurityLogs(exportData, 'json')
     toast.success('JSON 파일이 다운로드되었습니다')

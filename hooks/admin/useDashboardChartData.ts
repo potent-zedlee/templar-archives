@@ -29,9 +29,9 @@ type ContentDistributionData = {
 }
 
 type SecurityEventData = {
-  eventType: string
+  event_type: string
   severity: 'low' | 'medium' | 'high' | 'critical'
-  createdAt: string
+  created_at: string
 }
 
 /**

@@ -64,7 +64,6 @@ export default function UsersClient() {
   // React Query hooks
   const {
     data: usersData,
-    isLoading: usersLoading
   } = useUsersQuery({
     page: currentPage,
     limit: 20,
@@ -73,7 +72,7 @@ export default function UsersClient() {
     search: searchQuery || undefined
   })
 
-  const users = usersData?.users as User[] || []
+  const users = usersData?.users || []
   const totalPages = usersData?.totalPages || 1
 
   const banUserMutation = useBanUserMutation(user?.id || "")
@@ -133,7 +132,7 @@ export default function UsersClient() {
     )
   }
 
-  function handleUnbanUser(targetUser: User) {
+  function handleUnbanUser(targetUser: any) {
     if (!user) return
 
     unbanUserMutation.mutate(targetUser.id, {
@@ -166,13 +165,13 @@ export default function UsersClient() {
     )
   }
 
-  function openBanDialog(targetUser: User) {
+  function openBanDialog(targetUser: any) {
     setSelectedUser(targetUser)
     setBanReason("")
     setBanDialogOpen(true)
   }
 
-  function openRoleDialog(targetUser: User) {
+  function openRoleDialog(targetUser: any) {
     setSelectedUser(targetUser)
     setNewRole(targetUser.role)
     setRoleDialogOpen(true)
@@ -263,7 +262,7 @@ export default function UsersClient() {
                   name: u.nickname,
                   role: u.role,
                   created_at: u.created_at,
-                  last_sign_in_at: u.last_sign_in_at || null,
+                  last_sign_in_at: (u as any).last_sign_in_at || null,
                   banned_at: u.is_banned ? new Date().toISOString() : null,
                 }))
                 exportUsers(exportData as any, 'csv')
@@ -324,18 +323,18 @@ export default function UsersClient() {
                         {targetUser.email}
                       </p>
                       <div className="flex gap-4 text-caption text-text-secondary">
-                        <span>POSTS: {targetUser.posts_count}</span>
-                        <span>COMMENTS: {targetUser.comments_count}</span>
+                        <span>POSTS: {(targetUser as any).posts_count || 0}</span>
+                        <span>COMMENTS: {(targetUser as any).comments_count || 0}</span>
                         <span>JOINED: {new Date(targetUser.created_at).toLocaleDateString("ko-KR")}</span>
-                        {targetUser.last_sign_in_at ? (
+                        {(targetUser as any).last_sign_in_at ? (
                           <span className={
-                            new Date().getTime() - new Date(targetUser.last_sign_in_at).getTime() < 7 * 24 * 60 * 60 * 1000
+                            new Date().getTime() - new Date((targetUser as any).last_sign_in_at).getTime() < 7 * 24 * 60 * 60 * 1000
                               ? "text-green-400"
-                              : new Date().getTime() - new Date(targetUser.last_sign_in_at).getTime() > 30 * 24 * 60 * 60 * 1000
+                              : new Date().getTime() - new Date((targetUser as any).last_sign_in_at).getTime() > 30 * 24 * 60 * 60 * 1000
                               ? "text-gray-600"
                               : ""
                           }>
-                            LAST SIGN IN: {new Date(targetUser.last_sign_in_at).toLocaleDateString("ko-KR")}
+                            LAST SIGN IN: {new Date((targetUser as any).last_sign_in_at).toLocaleDateString("ko-KR")}
                           </span>
                         ) : (
                           <span className="text-gray-600">LAST SIGN IN: NEVER</span>
