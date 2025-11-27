@@ -1,7 +1,8 @@
 /**
- * Hand Players React Query Hooks
+ * Hand Players React Query Hooks (Firestore)
  *
  * 핸드 플레이어 데이터 페칭을 위한 React Query hooks
+ * Firestore에서는 players가 hands 컬렉션 내 embedded 배열로 저장됨
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -29,6 +30,7 @@ export const handPlayersKeys = {
 
 /**
  * Get players for a specific hand
+ * Firestore: hands/{handId}의 players 배열 조회
  */
 export function useHandPlayersQuery(handId: string) {
   return useQuery({
@@ -44,6 +46,7 @@ export function useHandPlayersQuery(handId: string) {
 
 /**
  * Get all players
+ * Firestore: players 컬렉션 조회
  */
 export function useAllPlayersQuery() {
   return useQuery({
@@ -58,6 +61,7 @@ export function useAllPlayersQuery() {
 
 /**
  * Search players by name
+ * Firestore: players 컬렉션에서 name 필드로 검색
  */
 export function useSearchPlayersQuery(query: string) {
   return useQuery({
@@ -76,6 +80,7 @@ export function useSearchPlayersQuery(query: string) {
 
 /**
  * Add player to hand
+ * Firestore: hands/{handId}의 players 배열에 추가
  */
 export function useAddPlayerMutation(handId: string) {
   const queryClient = useQueryClient()
@@ -101,9 +106,9 @@ export function useAddPlayerMutation(handId: string) {
       // Snapshot previous value
       const previousPlayers = queryClient.getQueryData<HandPlayer[]>(handPlayersKeys.byHand(handId))
 
-      // Optimistically update
+      // Optimistically update (Firestore embedded array)
       const newPlayer: HandPlayer = {
-        id: 'temp-' + Date.now(),
+        id: playerId, // Firestore: player ID를 직접 사용 (별도 hand_player ID 없음)
         hand_id: handId,
         player_id: playerId,
         position: position || null,
@@ -144,6 +149,7 @@ export function useAddPlayerMutation(handId: string) {
 
 /**
  * Remove player from hand
+ * Firestore: hands/{handId}의 players 배열에서 제거
  */
 export function useRemovePlayerMutation(handId: string) {
   const queryClient = useQueryClient()
@@ -159,7 +165,7 @@ export function useRemovePlayerMutation(handId: string) {
       // Snapshot previous value
       const previousPlayers = queryClient.getQueryData<HandPlayer[]>(handPlayersKeys.byHand(handId))
 
-      // Optimistically update (remove the player)
+      // Optimistically update (remove from players array)
       queryClient.setQueryData<HandPlayer[]>(
         handPlayersKeys.byHand(handId),
         (old) => (old || []).filter(player => player.player_id !== playerId)
@@ -191,6 +197,7 @@ export function useRemovePlayerMutation(handId: string) {
 
 /**
  * Update player in hand
+ * Firestore: hands/{handId}의 players 배열에서 해당 player 업데이트
  */
 export function useUpdatePlayerMutation(handId: string) {
   const queryClient = useQueryClient()
@@ -210,17 +217,50 @@ export function useUpdatePlayerMutation(handId: string) {
     }) => {
       return await updatePlayerInHand(handId, playerId, data)
     },
+    onMutate: async ({ playerId, data }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: handPlayersKeys.byHand(handId) })
+
+      // Snapshot previous value
+      const previousPlayers = queryClient.getQueryData<HandPlayer[]>(handPlayersKeys.byHand(handId))
+
+      // Optimistically update (update specific player in array)
+      queryClient.setQueryData<HandPlayer[]>(
+        handPlayersKeys.byHand(handId),
+        (old) =>
+          (old || []).map((player) =>
+            player.player_id === playerId
+              ? {
+                  ...player,
+                  position: data.position ?? player.position,
+                  cards: data.cards ?? player.cards,
+                  starting_stack: data.starting_stack ?? player.starting_stack,
+                  ending_stack: data.ending_stack ?? player.ending_stack,
+                }
+              : player
+          )
+      )
+
+      return { previousPlayers }
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context?.previousPlayers) {
+        queryClient.setQueryData(handPlayersKeys.byHand(handId), context.previousPlayers)
+      }
+      console.error('플레이어 정보 수정 실패:', error)
+      toast.error('Failed to update player')
+    },
     onSuccess: (result) => {
       if (!result.success) {
         toast.error(result.error || 'Failed to update player')
         return
       }
       toast.success('Player updated')
-      queryClient.invalidateQueries({ queryKey: handPlayersKeys.byHand(handId) })
     },
-    onError: (error) => {
-      console.error('플레이어 정보 수정 실패:', error)
-      toast.error('Failed to update player')
+    onSettled: () => {
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: handPlayersKeys.byHand(handId) })
     },
   })
 }

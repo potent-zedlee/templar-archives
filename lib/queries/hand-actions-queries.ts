@@ -1,10 +1,11 @@
 /**
- * Hand Actions React Query Hooks
+ * Hand Actions React Query Hooks (Firestore)
  *
  * 핸드 액션 데이터 페칭을 위한 React Query hooks
+ * Firestore에서 actions는 hands 문서 내 embedded 배열
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tantml/react-query'
 import {
   getHandActions,
   getHandActionsByStreet,
@@ -19,6 +20,7 @@ import {
   type Street,
 } from '@/lib/hand-actions'
 import { playersKeys } from '@/lib/queries/players-queries'
+import { handsKeys } from '@/lib/queries/hands-queries'
 
 // ==================== Query Keys ====================
 
@@ -33,6 +35,7 @@ export const handActionsKeys = {
 
 /**
  * 핸드의 모든 액션 조회
+ * Firestore: hands/{handId}.actions 배열에서 가져옴
  */
 export function useHandActionsQuery(handId: string) {
   return useQuery({
@@ -45,6 +48,7 @@ export function useHandActionsQuery(handId: string) {
 
 /**
  * Street별 액션 조회
+ * Firestore: hands/{handId}.actions 배열을 클라이언트에서 필터링
  */
 export function useHandActionsByStreetQuery(handId: string, street: Street) {
   return useQuery({
@@ -59,6 +63,7 @@ export function useHandActionsByStreetQuery(handId: string, street: Street) {
 
 /**
  * 단일 액션 생성
+ * Firestore: hands/{handId}.actions 배열에 추가 (updateDoc arrayUnion)
  */
 export function useCreateHandActionMutation(handId: string) {
   const queryClient = useQueryClient()
@@ -66,6 +71,10 @@ export function useCreateHandActionMutation(handId: string) {
   return useMutation({
     mutationFn: (action: HandActionInput) => createHandAction(action),
     onSuccess: () => {
+      // hands 문서와 actions 모두 무효화
+      queryClient.invalidateQueries({
+        queryKey: handsKeys.byId(handId),
+      })
       queryClient.invalidateQueries({
         queryKey: handActionsKeys.byHand(handId),
       })
@@ -75,6 +84,7 @@ export function useCreateHandActionMutation(handId: string) {
 
 /**
  * 여러 액션 일괄 생성
+ * Firestore: hands/{handId}.actions 배열에 일괄 추가 (batch update)
  */
 export function useBulkCreateHandActionsMutation(handId: string, handPlayerIds: string[]) {
   const queryClient = useQueryClient()
@@ -82,6 +92,11 @@ export function useBulkCreateHandActionsMutation(handId: string, handPlayerIds: 
   return useMutation({
     mutationFn: (actions: HandActionInput[]) => bulkCreateHandActions(actions),
     onSuccess: () => {
+      // hands 문서 캐시 무효화
+      queryClient.invalidateQueries({
+        queryKey: handsKeys.byId(handId),
+      })
+
       // 핸드 액션 캐시 무효화
       queryClient.invalidateQueries({
         queryKey: handActionsKeys.byHand(handId),
@@ -99,6 +114,7 @@ export function useBulkCreateHandActionsMutation(handId: string, handPlayerIds: 
 
 /**
  * 액션 수정
+ * Firestore: hands/{handId}.actions 배열에서 해당 액션 찾아서 수정
  */
 export function useUpdateHandActionMutation(handId: string) {
   const queryClient = useQueryClient()
@@ -113,6 +129,9 @@ export function useUpdateHandActionMutation(handId: string) {
     }) => updateHandAction(actionId, updates),
     onSuccess: () => {
       queryClient.invalidateQueries({
+        queryKey: handsKeys.byId(handId),
+      })
+      queryClient.invalidateQueries({
         queryKey: handActionsKeys.byHand(handId),
       })
     },
@@ -121,6 +140,7 @@ export function useUpdateHandActionMutation(handId: string) {
 
 /**
  * 액션 삭제
+ * Firestore: hands/{handId}.actions 배열에서 제거 (arrayRemove)
  */
 export function useDeleteHandActionMutation(handId: string) {
   const queryClient = useQueryClient()
@@ -154,6 +174,9 @@ export function useDeleteHandActionMutation(handId: string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({
+        queryKey: handsKeys.byId(handId),
+      })
+      queryClient.invalidateQueries({
         queryKey: handActionsKeys.byHand(handId),
       })
     },
@@ -162,6 +185,7 @@ export function useDeleteHandActionMutation(handId: string) {
 
 /**
  * 모든 액션 삭제
+ * Firestore: hands/{handId}.actions 배열 전체 삭제
  */
 export function useDeleteAllHandActionsMutation(handId: string, handPlayerIds: string[]) {
   const queryClient = useQueryClient()
@@ -169,6 +193,11 @@ export function useDeleteAllHandActionsMutation(handId: string, handPlayerIds: s
   return useMutation({
     mutationFn: () => deleteAllHandActions(handId),
     onSuccess: () => {
+      // hands 문서 캐시 무효화
+      queryClient.invalidateQueries({
+        queryKey: handsKeys.byId(handId),
+      })
+
       // 핸드 액션 캐시 무효화
       queryClient.invalidateQueries({
         queryKey: handActionsKeys.byHand(handId),
@@ -186,6 +215,7 @@ export function useDeleteAllHandActionsMutation(handId: string, handPlayerIds: s
 
 /**
  * 액션 순서 변경 (드래그앤드롭)
+ * Firestore: hands/{handId}.actions 배열의 sequence 필드 업데이트
  */
 export function useReorderHandActionsMutation(handId: string, street: Street) {
   const queryClient = useQueryClient()
@@ -229,6 +259,9 @@ export function useReorderHandActionsMutation(handId: string, street: Street) {
       }
     },
     onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: handsKeys.byId(handId),
+      })
       queryClient.invalidateQueries({
         queryKey: handActionsKeys.byHand(handId),
       })
