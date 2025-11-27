@@ -103,7 +103,7 @@ describe('Archive UI Store', () => {
     it('should open video dialog with stream and start time', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        sub_event_id: 'event-1',
+        event_id: 'event-1',
         name: 'Test Stream',
         video_source: 'youtube',
         video_url: 'https://youtube.com/watch?v=test',

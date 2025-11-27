@@ -73,6 +73,8 @@ describe('Archive Form Store', () => {
         category: 'EPT',
         game_type: 'tournament',
         location: 'Barcelona',
+        city: 'Barcelona',
+        country: 'Spain',
         start_date: '2024-08-15',
         end_date: '2024-08-25',
       }
@@ -123,6 +125,7 @@ describe('Archive Form Store', () => {
       const newForm = {
         name: 'Event #20',
         date: '2024-07-15',
+        event_number: '20',
         total_prize: '10000000',
         winner: 'John Doe',
         buy_in: '5000',
