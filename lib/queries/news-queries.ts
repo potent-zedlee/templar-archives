@@ -312,17 +312,17 @@ export function useCreateNewsMutation() {
 export function useUpdateNewsMutation() {
   const queryClient = useQueryClient()
 
-  return useMutation({
-    mutationFn: async (input: {
-      id: string
-      title?: string
-      content?: string
-      thumbnailUrl?: string
-      category?: News['category']
-      tags?: string[]
-      externalLink?: string
-      status?: 'draft' | 'pending'
-    }) => {
+  return useMutation<News, Error, {
+    id: string
+    title?: string
+    content?: string
+    thumbnailUrl?: string
+    category?: News['category']
+    tags?: string[]
+    externalLink?: string
+    status?: 'draft' | 'pending'
+  }>({
+    mutationFn: async (input) => {
       const { id, ...updates } = input
 
       const newsRef = doc(db, 'news', id)
@@ -337,9 +337,9 @@ export function useUpdateNewsMutation() {
         throw new Error('News not found')
       }
 
-      return docSnap.data()
+      return docSnap.data() as News
     },
-    onSuccess: (data: News) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: newsKeys.my() })
       queryClient.invalidateQueries({ queryKey: newsKeys.detail(data.id) })
       queryClient.invalidateQueries({ queryKey: newsKeys.pending() })
