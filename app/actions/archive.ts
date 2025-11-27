@@ -1,20 +1,23 @@
 'use server'
 
 /**
- * Archive 관리 Server Actions
+ * Archive 관리 Server Actions (Firestore)
  *
  * 모든 write 작업은 서버 사이드에서만 실행되며,
  * 관리자 권한을 서버에서 검증합니다.
  */
 
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { adminFirestore, adminAuth } from '@/lib/firebase-admin'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
+import { Timestamp, FieldValue } from 'firebase-admin/firestore'
 import type { TournamentCategory } from '@/lib/types/archive'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
 
 // ==================== Helper Functions ====================
 
 /**
- * 관리자 권한 검증 (DB role 기반)
+ * 관리자 권한 검증 (Firestore role 기반)
  *
  * @returns {Promise<{authorized: boolean, error?: string, userId?: string}>}
  */
@@ -23,46 +26,50 @@ async function verifyAdmin(): Promise<{
   error?: string
   userId?: string
 }> {
-  const supabase = await createServerSupabaseClient()
+  try {
+    // 1. 쿠키에서 Firebase Auth 토큰 가져오기
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get('session')
 
-  // 1. 인증된 사용자 확인
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (!sessionCookie?.value) {
+      return { authorized: false, error: 'Unauthorized - Please sign in' }
+    }
 
-  if (authError || !user) {
-    return { authorized: false, error: 'Unauthorized - Please sign in' }
-  }
+    // 2. Firebase Auth 토큰 검증
+    const decodedToken = await adminAuth.verifyIdToken(sessionCookie.value)
+    const userId = decodedToken.uid
 
-  // 2. DB에서 사용자 role 조회 (신뢰할 수 있는 source)
-  const { data: dbUser, error: dbError } = await supabase
-    .from('users')
-    .select('role, banned_at')
-    .eq('id', user.id)
-    .single()
+    // 3. Firestore에서 사용자 role 조회
+    const userDoc = await adminFirestore
+      .collection(COLLECTION_PATHS.USERS)
+      .doc(userId)
+      .get()
 
-  if (dbError || !dbUser) {
+    if (!userDoc.exists) {
+      return {
+        authorized: false,
+        error: 'User not found in database'
+      }
+    }
+
+    const userData = userDoc.data()
+
+    // 4. 관리자 역할 확인 (admin 또는 high_templar)
+    if (!['admin', 'high_templar'].includes(userData?.role)) {
+      return {
+        authorized: false,
+        error: 'Forbidden - Admin access required'
+      }
+    }
+
+    return { authorized: true, userId }
+  } catch (error: any) {
+    console.error('[verifyAdmin] Error:', error)
     return {
       authorized: false,
-      error: 'User not found in database'
+      error: error.message || 'Authentication failed'
     }
   }
-
-  // 3. 밴 상태 확인
-  if (dbUser.banned_at) {
-    return {
-      authorized: false,
-      error: 'Account is banned'
-    }
-  }
-
-  // 4. 관리자 역할 확인 (admin 또는 high_templar)
-  if (!['admin', 'high_templar'].includes(dbUser.role)) {
-    return {
-      authorized: false,
-      error: 'Forbidden - Admin access required'
-    }
-  }
-
-  return { authorized: true, userId: user.id }
 }
 
 // ==================== Tournament Actions ====================
@@ -105,36 +112,49 @@ export async function createTournament(data: {
       return mapping[category] || category.toLowerCase().replace(/\s+/g, '-')
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 4. Firestore에 문서 추가
+    const tournamentRef = adminFirestore.collection(COLLECTION_PATHS.TOURNAMENTS).doc()
 
-    // 4. DB에 삽입
-    const { data: tournament, error } = await supabase
-      .from('tournaments')
-      .insert({
-        name: data.name.trim(),
-        category: data.category,
-        category_id: getCategoryId(data.category),
-        category_logo: data.category_logo || null,
-        game_type: data.game_type,
-        location: data.location.trim(),
-        city: data.city?.trim() || null,
-        country: data.country?.trim() || null,
-        start_date: data.start_date,
-        end_date: data.end_date,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('[Server Action] Create tournament error:', error)
-      return { success: false, error: error.message }
+    const tournamentData = {
+      name: data.name.trim(),
+      category: data.category,
+      categoryInfo: {
+        id: getCategoryId(data.category),
+        name: data.category,
+        logo: data.category_logo || null,
+      },
+      gameType: data.game_type,
+      location: data.location.trim(),
+      city: data.city?.trim() || null,
+      country: data.country?.trim() || null,
+      startDate: Timestamp.fromDate(new Date(data.start_date)),
+      endDate: Timestamp.fromDate(new Date(data.end_date)),
+      status: 'draft' as const,
+      stats: {
+        eventsCount: 0,
+        streamsCount: 0,
+        handsCount: 0,
+        playersCount: 0,
+      },
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     }
+
+    await tournamentRef.set(tournamentData)
 
     // 5. 캐시 무효화
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
-    return { success: true, data: tournament }
+    return {
+      success: true,
+      data: {
+        id: tournamentRef.id,
+        ...tournamentData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    }
   } catch (error: any) {
     console.error('[Server Action] Create tournament exception:', error)
     return { success: false, error: error.message || 'Unknown error' }
@@ -179,39 +199,42 @@ export async function updateTournament(id: string, data: {
       return mapping[category] || category.toLowerCase().replace(/\s+/g, '-')
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 4. Firestore 문서 업데이트
+    const tournamentRef = adminFirestore.collection(COLLECTION_PATHS.TOURNAMENTS).doc(id)
 
-    // 4. DB 업데이트
-    const { data: tournament, error } = await supabase
-      .from('tournaments')
-      .update({
-        name: data.name.trim(),
-        category: data.category,
-        category_id: getCategoryId(data.category),
-        category_logo: data.category_logo || null,
-        game_type: data.game_type,
-        location: data.location.trim(),
-        city: data.city?.trim() || null,
-        country: data.country?.trim() || null,
-        start_date: data.start_date,
-        end_date: data.end_date,
-      })
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('[Server Action] Update tournament error:', error)
-      return { success: false, error: error.message }
+    const updateData = {
+      name: data.name.trim(),
+      category: data.category,
+      categoryInfo: {
+        id: getCategoryId(data.category),
+        name: data.category,
+        logo: data.category_logo || null,
+      },
+      gameType: data.game_type,
+      location: data.location.trim(),
+      city: data.city?.trim() || null,
+      country: data.country?.trim() || null,
+      startDate: Timestamp.fromDate(new Date(data.start_date)),
+      endDate: Timestamp.fromDate(new Date(data.end_date)),
+      updatedAt: FieldValue.serverTimestamp(),
     }
+
+    await tournamentRef.update(updateData)
 
     // 5. 캐시 무효화
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
-    return { success: true, data: tournament }
+    return {
+      success: true,
+      data: {
+        id,
+        ...updateData,
+        updatedAt: new Date(),
+      }
+    }
   } catch (error: any) {
-    console.error('[Server Action] Update tournament exception:', error)
+    console.error('[Server Action] Update tournament error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
@@ -224,18 +247,11 @@ export async function deleteTournament(id: string) {
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
-
-    // 2. DB에서 삭제
-    const { error } = await supabase
-      .from('tournaments')
+    // 2. Firestore에서 문서 삭제 (Cascading Delete는 별도 트리거 필요)
+    await adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(id)
       .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('[Server Action] Delete tournament error:', error)
-      return { success: false, error: error.message }
-    }
 
     // 3. 캐시 무효화
     revalidatePath('/archive')
@@ -275,38 +291,56 @@ export async function createEvent(tournamentId: string, data: {
       return { success: false, error: 'Missing required fields' }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 3. Firestore 서브컬렉션에 문서 추가
+    const eventRef = adminFirestore
+      .collection(COLLECTION_PATHS.EVENTS(tournamentId))
+      .doc()
 
-    // 3. DB에 삽입
-    const { data: event, error } = await supabase
-      .from('sub_events')
-      .insert({
-        tournament_id: tournamentId,
-        name: data.name.trim(),
-        date: data.date,
-        event_number: data.event_number?.trim() || null,
-        total_prize: data.total_prize?.trim() || null,
-        winner: data.winner?.trim() || null,
-        buy_in: data.buy_in?.trim() || null,
-        entry_count: data.entry_count || null,
-        blind_structure: data.blind_structure?.trim() || null,
-        level_duration: data.level_duration || null,
-        starting_stack: data.starting_stack || null,
-        notes: data.notes?.trim() || null,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('[Server Action] Create event error:', error)
-      return { success: false, error: error.message }
+    const eventData = {
+      name: data.name.trim(),
+      date: Timestamp.fromDate(new Date(data.date)),
+      eventNumber: data.event_number?.trim() || null,
+      totalPrize: data.total_prize?.trim() || null,
+      winner: data.winner?.trim() || null,
+      buyIn: data.buy_in?.trim() || null,
+      entryCount: data.entry_count || null,
+      blindStructure: data.blind_structure?.trim() || null,
+      levelDuration: data.level_duration || null,
+      startingStack: data.starting_stack || null,
+      notes: data.notes?.trim() || null,
+      status: 'draft' as const,
+      stats: {
+        streamsCount: 0,
+        handsCount: 0,
+      },
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     }
 
-    // 4. 캐시 무효화
+    await eventRef.set(eventData)
+
+    // 4. 부모 Tournament의 eventsCount 증가
+    await adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(tournamentId)
+      .update({
+        'stats.eventsCount': FieldValue.increment(1),
+        updatedAt: FieldValue.serverTimestamp(),
+      })
+
+    // 5. 캐시 무효화
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
-    return { success: true, data: event }
+    return {
+      success: true,
+      data: {
+        id: eventRef.id,
+        ...eventData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    }
   } catch (error: any) {
     console.error('[Server Action] Create event exception:', error)
     return { success: false, error: error.message || 'Unknown error' }
@@ -338,38 +372,48 @@ export async function updateEvent(id: string, data: {
       return { success: false, error: 'Missing required fields' }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 3. Event 문서 찾기 (tournamentId가 필요하므로 전체 검색)
+    // 실제 운영 환경에서는 tournamentId를 파라미터로 받아야 함
+    const eventsSnapshot = await adminFirestore
+      .collectionGroup('events')
+      .where(adminFirestore.FieldPath.documentId(), '==', id)
+      .limit(1)
+      .get()
 
-    // 3. DB 업데이트
-    const { data: event, error } = await supabase
-      .from('sub_events')
-      .update({
-        name: data.name.trim(),
-        date: data.date,
-        event_number: data.event_number?.trim() || null,
-        total_prize: data.total_prize?.trim() || null,
-        winner: data.winner?.trim() || null,
-        buy_in: data.buy_in?.trim() || null,
-        entry_count: data.entry_count || null,
-        blind_structure: data.blind_structure?.trim() || null,
-        level_duration: data.level_duration || null,
-        starting_stack: data.starting_stack || null,
-        notes: data.notes?.trim() || null,
-      })
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('[Server Action] Update event error:', error)
-      return { success: false, error: error.message }
+    if (eventsSnapshot.empty) {
+      return { success: false, error: 'Event not found' }
     }
+
+    const eventDoc = eventsSnapshot.docs[0]
+    const updateData = {
+      name: data.name.trim(),
+      date: Timestamp.fromDate(new Date(data.date)),
+      eventNumber: data.event_number?.trim() || null,
+      totalPrize: data.total_prize?.trim() || null,
+      winner: data.winner?.trim() || null,
+      buyIn: data.buy_in?.trim() || null,
+      entryCount: data.entry_count || null,
+      blindStructure: data.blind_structure?.trim() || null,
+      levelDuration: data.level_duration || null,
+      startingStack: data.starting_stack || null,
+      notes: data.notes?.trim() || null,
+      updatedAt: FieldValue.serverTimestamp(),
+    }
+
+    await eventDoc.ref.update(updateData)
 
     // 4. 캐시 무효화
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
-    return { success: true, data: event }
+    return {
+      success: true,
+      data: {
+        id,
+        ...updateData,
+        updatedAt: new Date(),
+      }
+    }
   } catch (error: any) {
     console.error('[Server Action] Update event exception:', error)
     return { success: false, error: error.message || 'Unknown error' }
@@ -384,20 +428,35 @@ export async function deleteEvent(id: string) {
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 2. Event 문서 찾기
+    const eventsSnapshot = await adminFirestore
+      .collectionGroup('events')
+      .where(adminFirestore.FieldPath.documentId(), '==', id)
+      .limit(1)
+      .get()
 
-    // 2. DB에서 삭제
-    const { error } = await supabase
-      .from('sub_events')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('[Server Action] Delete event error:', error)
-      return { success: false, error: error.message }
+    if (eventsSnapshot.empty) {
+      return { success: false, error: 'Event not found' }
     }
 
-    // 3. 캐시 무효화
+    const eventDoc = eventsSnapshot.docs[0]
+    const tournamentId = eventDoc.ref.parent.parent?.id
+
+    // 3. 문서 삭제
+    await eventDoc.ref.delete()
+
+    // 4. 부모 Tournament의 eventsCount 감소
+    if (tournamentId) {
+      await adminFirestore
+        .collection(COLLECTION_PATHS.TOURNAMENTS)
+        .doc(tournamentId)
+        .update({
+          'stats.eventsCount': FieldValue.increment(-1),
+          updatedAt: FieldValue.serverTimestamp(),
+        })
+    }
+
+    // 5. 캐시 무효화
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
@@ -429,34 +488,74 @@ export async function createStream(eventId: string, data: {
       return { success: false, error: 'YouTube URL is required' }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 3. Event 문서 찾기 (tournamentId 추출)
+    const eventsSnapshot = await adminFirestore
+      .collectionGroup('events')
+      .where(adminFirestore.FieldPath.documentId(), '==', eventId)
+      .limit(1)
+      .get()
 
-    // 3. DB에 삽입
-    const { data: stream, error } = await supabase
-      .from('streams')
-      .insert({
-        sub_event_id: eventId,
-        name: data.name?.trim() || `Stream ${new Date().toISOString()}`,
-        video_source: data.video_source,
-        video_url: data.video_url?.trim() || null,
-        video_file: data.video_file?.trim() || null,
-        published_at: data.published_at || null,
-        is_organized: true,
-        organized_at: new Date().toISOString(),
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('[Server Action] Create stream error:', error)
-      return { success: false, error: error.message }
+    if (eventsSnapshot.empty) {
+      return { success: false, error: 'Event not found' }
     }
 
-    // 4. 캐시 무효화
+    const eventDoc = eventsSnapshot.docs[0]
+    const tournamentId = eventDoc.ref.parent.parent?.id
+
+    if (!tournamentId) {
+      return { success: false, error: 'Tournament ID not found' }
+    }
+
+    // 4. Firestore 서브컬렉션에 문서 추가
+    const streamRef = adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS(tournamentId, eventId))
+      .doc()
+
+    const streamData = {
+      name: data.name?.trim() || `Stream ${new Date().toISOString()}`,
+      videoSource: data.video_source,
+      videoUrl: data.video_url?.trim() || null,
+      videoFile: data.video_file?.trim() || null,
+      publishedAt: data.published_at ? Timestamp.fromDate(new Date(data.published_at)) : null,
+      uploadStatus: 'none' as const,
+      status: 'draft' as const,
+      stats: {
+        handsCount: 0,
+      },
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    }
+
+    await streamRef.set(streamData)
+
+    // 5. 부모 Event의 streamsCount 증가
+    await eventDoc.ref.update({
+      'stats.streamsCount': FieldValue.increment(1),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+
+    // 6. Tournament의 streamsCount 증가
+    await adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(tournamentId)
+      .update({
+        'stats.streamsCount': FieldValue.increment(1),
+        updatedAt: FieldValue.serverTimestamp(),
+      })
+
+    // 7. 캐시 무효화
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
-    return { success: true, data: stream }
+    return {
+      success: true,
+      data: {
+        id: streamRef.id,
+        ...streamData,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    }
   } catch (error: any) {
     console.error('[Server Action] Create stream exception:', error)
     return { success: false, error: error.message || 'Unknown error' }
@@ -485,32 +584,41 @@ export async function updateStream(id: string, data: {
       return { success: false, error: 'YouTube URL is required' }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 3. Stream 문서 찾기
+    const streamsSnapshot = await adminFirestore
+      .collectionGroup('streams')
+      .where(adminFirestore.FieldPath.documentId(), '==', id)
+      .limit(1)
+      .get()
 
-    // 3. DB 업데이트
-    const { data: stream, error } = await supabase
-      .from('streams')
-      .update({
-        name: data.name?.trim() || `Stream ${new Date().toISOString()}`,
-        video_source: data.video_source,
-        video_url: data.video_url?.trim() || null,
-        video_file: data.video_file?.trim() || null,
-        published_at: data.published_at || null,
-      })
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('[Server Action] Update stream error:', error)
-      return { success: false, error: error.message }
+    if (streamsSnapshot.empty) {
+      return { success: false, error: 'Stream not found' }
     }
+
+    const streamDoc = streamsSnapshot.docs[0]
+    const updateData = {
+      name: data.name?.trim() || `Stream ${new Date().toISOString()}`,
+      videoSource: data.video_source,
+      videoUrl: data.video_url?.trim() || null,
+      videoFile: data.video_file?.trim() || null,
+      publishedAt: data.published_at ? Timestamp.fromDate(new Date(data.published_at)) : null,
+      updatedAt: FieldValue.serverTimestamp(),
+    }
+
+    await streamDoc.ref.update(updateData)
 
     // 4. 캐시 무효화
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
-    return { success: true, data: stream }
+    return {
+      success: true,
+      data: {
+        id,
+        ...updateData,
+        updatedAt: new Date(),
+      }
+    }
   } catch (error: any) {
     console.error('[Server Action] Update stream exception:', error)
     return { success: false, error: error.message || 'Unknown error' }
@@ -528,20 +636,45 @@ export async function deleteStream(id: string) {
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 2. Stream 문서 찾기
+    const streamsSnapshot = await adminFirestore
+      .collectionGroup('streams')
+      .where(adminFirestore.FieldPath.documentId(), '==', id)
+      .limit(1)
+      .get()
 
-    // 2. DB에서 삭제
-    const { error } = await supabase
-      .from('streams')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('[Server Action] Delete stream error:', error)
-      return { success: false, error: error.message }
+    if (streamsSnapshot.empty) {
+      return { success: false, error: 'Stream not found' }
     }
 
-    // 3. 캐시 무효화
+    const streamDoc = streamsSnapshot.docs[0]
+    const eventId = streamDoc.ref.parent.parent?.id
+    const tournamentId = streamDoc.ref.parent.parent?.parent.parent?.id
+
+    // 3. 문서 삭제
+    await streamDoc.ref.delete()
+
+    // 4. 부모 Event의 streamsCount 감소
+    if (eventId && tournamentId) {
+      await adminFirestore
+        .collection(COLLECTION_PATHS.EVENTS(tournamentId))
+        .doc(eventId)
+        .update({
+          'stats.streamsCount': FieldValue.increment(-1),
+          updatedAt: FieldValue.serverTimestamp(),
+        })
+
+      // 5. Tournament의 streamsCount 감소
+      await adminFirestore
+        .collection(COLLECTION_PATHS.TOURNAMENTS)
+        .doc(tournamentId)
+        .update({
+          'stats.streamsCount': FieldValue.increment(-1),
+          updatedAt: FieldValue.serverTimestamp(),
+        })
+    }
+
+    // 6. 캐시 무효화
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
@@ -557,6 +690,10 @@ export const deleteDay = deleteStream
 
 // ==================== Payout Actions ====================
 
+/**
+ * Event Payouts는 별도 컬렉션으로 관리
+ * Collection: /tournaments/{tournamentId}/events/{eventId}/payouts/{payoutId}
+ */
 export async function saveEventPayouts(eventId: string, payouts: Array<{
   rank: number
   playerName: string
@@ -569,13 +706,23 @@ export async function saveEventPayouts(eventId: string, payouts: Array<{
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 2. Event 문서 찾기
+    const eventsSnapshot = await adminFirestore
+      .collectionGroup('events')
+      .where(adminFirestore.FieldPath.documentId(), '==', eventId)
+      .limit(1)
+      .get()
 
-    // 2. 기존 payouts 삭제
-    await supabase
-      .from('event_payouts')
-      .delete()
-      .eq('sub_event_id', eventId)
+    if (eventsSnapshot.empty) {
+      return { success: false, error: 'Event not found' }
+    }
+
+    const eventDoc = eventsSnapshot.docs[0]
+    const tournamentId = eventDoc.ref.parent.parent?.id
+
+    if (!tournamentId) {
+      return { success: false, error: 'Tournament ID not found' }
+    }
 
     // 3. Prize amount 파싱 함수
     const parsePrizeAmount = (amountStr: string): number => {
@@ -595,29 +742,36 @@ export async function saveEventPayouts(eventId: string, payouts: Array<{
       }
     }
 
-    // 4. 유효한 payouts만 필터링
+    // 4. 기존 payouts 삭제
+    const payoutsCollectionRef = adminFirestore
+      .collection(`tournaments/${tournamentId}/events/${eventId}/payouts`)
+
+    const existingPayouts = await payoutsCollectionRef.get()
+    const batch = adminFirestore.batch()
+
+    existingPayouts.docs.forEach(doc => {
+      batch.delete(doc.ref)
+    })
+
+    // 5. 유효한 payouts만 필터링
     const validPayouts = payouts.filter(p => p.playerName.trim() && p.prizeAmount.trim())
 
     if (validPayouts.length > 0) {
-      const payoutInserts = validPayouts.map(p => ({
-        sub_event_id: eventId,
-        rank: p.rank,
-        player_name: p.playerName.trim(),
-        prize_amount: parsePrizeAmount(p.prizeAmount),
-        matched_status: 'unmatched' as const,
-      }))
-
-      const { error } = await supabase
-        .from('event_payouts')
-        .insert(payoutInserts)
-
-      if (error) {
-        console.error('[Server Action] Save payouts error:', error)
-        return { success: false, error: error.message }
-      }
+      validPayouts.forEach(p => {
+        const payoutRef = payoutsCollectionRef.doc()
+        batch.set(payoutRef, {
+          rank: p.rank,
+          playerName: p.playerName.trim(),
+          prizeAmount: parsePrizeAmount(p.prizeAmount),
+          matchedStatus: 'unmatched',
+          createdAt: FieldValue.serverTimestamp(),
+        })
+      })
     }
 
-    // 5. 캐시 무효화
+    await batch.commit()
+
+    // 6. 캐시 무효화
     revalidatePath('/archive')
     revalidatePath('/admin/archive')
 
@@ -647,23 +801,42 @@ export async function renameItem(
       return { success: false, error: 'Name cannot be empty' }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 3. 문서 찾기 및 업데이트
+    let docRef: FirebaseFirestore.DocumentReference | null = null
 
-    // 3. 테이블 이름 매핑
-    const table = itemType === 'tournament' ? 'tournaments'
-      : itemType === 'event' ? 'sub_events'
-      : 'streams'
+    if (itemType === 'tournament') {
+      docRef = adminFirestore.collection(COLLECTION_PATHS.TOURNAMENTS).doc(itemId)
+    } else if (itemType === 'event') {
+      const snapshot = await adminFirestore
+        .collectionGroup('events')
+        .where(adminFirestore.FieldPath.documentId(), '==', itemId)
+        .limit(1)
+        .get()
 
-    // 4. DB 업데이트
-    const { error } = await supabase
-      .from(table)
-      .update({ name: newName.trim() })
-      .eq('id', itemId)
+      if (!snapshot.empty) {
+        docRef = snapshot.docs[0].ref
+      }
+    } else if (itemType === 'stream') {
+      const snapshot = await adminFirestore
+        .collectionGroup('streams')
+        .where(adminFirestore.FieldPath.documentId(), '==', itemId)
+        .limit(1)
+        .get()
 
-    if (error) {
-      console.error('[Server Action] Rename item error:', error)
-      return { success: false, error: error.message }
+      if (!snapshot.empty) {
+        docRef = snapshot.docs[0].ref
+      }
     }
+
+    if (!docRef) {
+      return { success: false, error: 'Item not found' }
+    }
+
+    // 4. 이름 업데이트
+    await docRef.update({
+      name: newName.trim(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
 
     // 5. 캐시 무효화
     revalidatePath('/archive')
