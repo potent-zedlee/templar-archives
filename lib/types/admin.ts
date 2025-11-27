@@ -166,6 +166,16 @@ export function canChangeStatus(
     return targetStatus === 'draft' || targetStatus === 'published'
   }
 
+  // analyzing → draft, completed
+  if (currentStatus === 'analyzing') {
+    return targetStatus === 'draft' || targetStatus === 'completed'
+  }
+
+  // completed → published, archived
+  if (currentStatus === 'completed') {
+    return targetStatus === 'published' || targetStatus === 'archived'
+  }
+
   return false
 }
 
@@ -179,6 +189,8 @@ export const ALLOWED_STATUS_TRANSITIONS: Record<
   draft: ['published', 'archived'],
   published: ['draft', 'archived'],
   archived: ['draft', 'published'],
+  analyzing: ['draft', 'completed'],
+  completed: ['published', 'archived'],
 }
 
 /**
@@ -188,6 +200,8 @@ export const STATUS_LABELS: Record<ContentStatus, string> = {
   draft: '작성 중',
   published: '공개됨',
   archived: '보관됨',
+  analyzing: '분석 중',
+  completed: '완료됨',
 }
 
 /**
@@ -197,6 +211,8 @@ export const STATUS_COLORS: Record<ContentStatus, string> = {
   draft: 'bg-yellow-100 text-yellow-800',
   published: 'bg-green-100 text-green-800',
   archived: 'bg-gray-100 text-gray-800',
+  analyzing: 'bg-blue-100 text-blue-800',
+  completed: 'bg-purple-100 text-purple-800',
 }
 
 /**
@@ -206,4 +222,6 @@ export const STATUS_ICONS: Record<ContentStatus, string> = {
   draft: '✏️',
   published: '✅',
   archived: '📦',
+  analyzing: '🔄',
+  completed: '✨',
 }

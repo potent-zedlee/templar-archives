@@ -92,9 +92,11 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
   const isPremium = posStats.length >= 5 // 5개 이상 포지션 데이터
 
   return (
-    <Card variant={isPremium ? 'premium' : 'default'}>
+    <Card className={isPremium ? 'border-gold-500/50 bg-gradient-to-br from-gray-800 to-gray-900' : undefined}>
       <CardHeader>
-        <CardTitle gradient={isPremium}>성과 차트</CardTitle>
+        <CardTitle className={isPremium ? 'bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent' : undefined}>
+          성과 차트
+        </CardTitle>
         <CardDescription>시각화된 통계 분석</CardDescription>
       </CardHeader>
       <CardContent>

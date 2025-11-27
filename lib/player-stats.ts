@@ -7,6 +7,7 @@ import type {
   HandActionEmbedded,
   PokerPosition,
 } from './firestore-types'
+import { classifyPlayStyle } from './player-stats-utils'
 
 /**
  * 플레이어 통계 타입

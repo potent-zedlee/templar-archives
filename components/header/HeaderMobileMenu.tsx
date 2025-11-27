@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, Newspaper, Radio, Folder, Archive } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { AuthUser } from "@/lib/auth"
-import type { Profile } from "@/lib/types/profile"
+import type { UserProfile } from "@/lib/user-profile"
 import type { NavLink } from "./HeaderDesktopNav"
 
 interface HeaderMobileMenuProps {
@@ -15,7 +15,7 @@ interface HeaderMobileMenuProps {
   onClose: () => void
   navLinks: NavLink[]
   user: AuthUser | null
-  profile: Profile | null
+  profile: UserProfile | null
   isUserAdmin: boolean
   isUserReporter: boolean
   authLoading: boolean

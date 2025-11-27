@@ -439,9 +439,10 @@ export function applyExtendedSearchFilters<T extends {
   // Action Types filter
   if (filters.actionTypes && filters.actionTypes.length > 0) {
     filtered = filtered.filter(hand => {
-      if (!hand.hand_actions) return false
+      if (!hand.hand_actions || !Array.isArray(hand.hand_actions)) return false
+      const actions = hand.hand_actions
       return filters.actionTypes!.some(actionType =>
-        hand.hand_actions.some((action: any) =>
+        actions.some((action: any) =>
           action.action_type?.toLowerCase() === actionType.toLowerCase()
         )
       )
@@ -451,8 +452,9 @@ export function applyExtendedSearchFilters<T extends {
   // Street filter
   if (filters.street) {
     filtered = filtered.filter(hand => {
-      if (!hand.hand_actions) return false
-      return hand.hand_actions.some((action: any) =>
+      if (!hand.hand_actions || !Array.isArray(hand.hand_actions)) return false
+      const actions = hand.hand_actions
+      return actions.some((action: any) =>
         action.street?.toLowerCase() === filters.street!.toLowerCase()
       )
     })

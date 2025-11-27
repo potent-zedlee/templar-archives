@@ -61,15 +61,17 @@ export function AdvancedStatsCard({ playerId }: AdvancedStatsCardProps) {
     )
   }
 
-  // Premium variant if player has significant stats
+  // Premium styling if player has significant stats
   const isPremium = stats.totalHands > 50
 
   return (
-    <Card variant={isPremium ? 'premium' : 'default'}>
+    <Card className={isPremium ? 'border-gold-500/50 bg-gradient-to-br from-gray-800 to-gray-900' : undefined}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle gradient={isPremium}>고급 통계</CardTitle>
+            <CardTitle className={isPremium ? 'bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent' : undefined}>
+              고급 통계
+            </CardTitle>
             <CardDescription>
               {formatStatNumber(stats.totalHands)}개의 핸드 기준
             </CardDescription>

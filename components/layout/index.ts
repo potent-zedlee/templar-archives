@@ -1,6 +1,5 @@
 // Layout component exports
 export { AuthProvider } from './AuthProvider'
-export { DiscoveryLayout } from './DiscoveryLayout'
 export { FlowbiteInitializer } from './FlowbiteInitializer'
 export { Footer } from './Footer'
 export { PageTransition } from './PageTransition'

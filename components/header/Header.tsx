@@ -40,7 +40,7 @@ export function Header() {
       return profile.nickname.charAt(0).toUpperCase()
     }
     if (!user?.user_metadata?.full_name && !user?.email) return "U"
-    const name = user.user_metadata?.full_name || user.email
+    const name = user.user_metadata?.full_name || user.email || "U"
     return name.charAt(0).toUpperCase()
   }
 

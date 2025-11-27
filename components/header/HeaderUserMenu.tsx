@@ -4,17 +4,24 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, Newspaper, Radio, Folder, Archive } from "lucide-react"
 import type { AuthUser } from "@/lib/auth"
-import type { Profile } from "@/lib/types/profile"
+import type { UserProfile } from "@/lib/user-profile"
 
 interface HeaderUserMenuProps {
   user: AuthUser
-  profile: Profile | null
+  profile: UserProfile | null
   isUserAdmin: boolean
   isUserReporter: boolean
   onSignOut: () => void
   getUserInitials: () => string
   getDisplayName: () => string
   getAvatarUrl: () => string | undefined
+}
+
+interface DropdownInstance {
+  show?: () => void
+  hide?: () => void
+  toggle?: () => void
+  destroyAndRemoveInstance?: () => void
 }
 
 export function HeaderUserMenu({
@@ -29,7 +36,7 @@ export function HeaderUserMenu({
 }: HeaderUserMenuProps) {
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
-  const dropdownRef = useRef<any>(null)
+  const dropdownRef = useRef<DropdownInstance | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -48,14 +55,14 @@ export function HeaderUserMenu({
 
         if (targetEl && triggerEl) {
           const options = {
-            placement: 'bottom',
-            triggerType: 'click',
+            placement: 'bottom' as const,
+            triggerType: 'click' as const,
             offsetSkidding: 0,
             offsetDistance: 10,
             delay: 300,
           }
 
-          dropdownRef.current = new Dropdown(targetEl, triggerEl, options)
+          dropdownRef.current = new Dropdown(targetEl, triggerEl, options) as DropdownInstance
         }
       } catch (error) {
         console.error('Flowbite Dropdown initialization failed:', error)
