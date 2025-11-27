@@ -24,6 +24,7 @@ export interface VideoSegment {
   startTime: string // "HH:MM:SS" 또는 "MM:SS"
   endTime: string // "HH:MM:SS" 또는 "MM:SS"
   duration?: number // 자동 계산 (초 단위)
+  label?: string // 선택적 커스텀 라벨
 }
 
 /**

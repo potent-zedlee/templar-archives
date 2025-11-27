@@ -36,7 +36,7 @@ type DragState = {
   originalEndTime?: number
 } | null
 
-export function InteractiveTimeline({
+export function InteractiveVideoTimeline({
   segments,
   onChange,
   totalDuration,
@@ -170,6 +170,8 @@ export function InteractiveTimeline({
         window.removeEventListener('mouseup', handleMouseUp)
       }
     }
+    // dragState가 없을 때도 명시적으로 undefined 반환
+    return undefined
   }, [dragState, handleMouseMove, handleMouseUp])
 
   // 세그먼트 추가

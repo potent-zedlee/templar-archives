@@ -26,7 +26,7 @@ export interface StreamWithIds extends FirestoreStream {
   tournamentId: string
   eventId: string
 }
-import { InteractiveTimeline } from "@/components/features/video/InteractiveVideoTimeline"
+import { InteractiveVideoTimeline } from "@/components/features/video/InteractiveVideoTimeline"
 import type { VideoSegment } from "@/lib/types/video-segments"
 import { timeStringToSeconds } from "@/lib/types/video-segments"
 import { PlayerMatchResults } from "@/components/features/player/PlayerMatchResults"
@@ -493,7 +493,7 @@ export function AnalyzeVideoDialog({
               />
 
               {/* Interactive Timeline */}
-              <InteractiveTimeline
+              <InteractiveVideoTimeline
                 segments={segments}
                 onChange={setSegments}
                 totalDuration={videoDuration || 3600}
