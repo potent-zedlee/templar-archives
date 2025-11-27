@@ -21,6 +21,8 @@ const STORAGE_KEY_PREFIX = 'gcs_upload_'
 
 export interface UseGcsUploadOptions {
   streamId: string
+  tournamentId: string
+  eventId: string
   onProgress?: (progress: number) => void
   onComplete?: (gcsUri: string) => void
   onError?: (error: Error) => void
@@ -43,6 +45,8 @@ interface UploadState {
   uploadUrl: string
   uploadId: string  // 추가: complete-upload API에 필요
   gcsUri: string    // 추가: 완료 시 반환
+  tournamentId: string  // Firestore 경로용
+  eventId: string       // Firestore 경로용
   fileName: string
   fileSize: number
   uploadedBytes: number
@@ -52,7 +56,7 @@ interface UploadState {
 // ==================== Hook ====================
 
 export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
-  const { streamId, onProgress, onComplete, onError } = options
+  const { streamId, tournamentId, eventId, onProgress, onComplete, onError } = options
 
   const [status, setStatus] = useState<UseGcsUploadReturn['status']>('idle')
   const [progress, setProgress] = useState(0)
@@ -151,6 +155,8 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           streamId,
+          tournamentId,
+          eventId,
           filename: file.name,
           fileSize: file.size,
           contentType: file.type || 'video/mp4',
@@ -169,7 +175,7 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
         gcsUri: data.gcsUri,
       }
     },
-    [streamId]
+    [streamId, tournamentId, eventId]
   )
 
   /**
@@ -237,15 +243,19 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
 
   /**
    * 업로드 완료
-   * @param uploadId - video_uploads 테이블의 레코드 ID
+   * @param uploadId - stream ID
+   * @param tId - tournament ID
+   * @param eId - event ID
    */
   const completeUpload = useCallback(
-    async (uploadId: string): Promise<string> => {
+    async (uploadId: string, tId: string, eId: string): Promise<string> => {
       const response = await fetch('/api/gcs/complete-upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uploadId,  // uploadUrl이 아닌 uploadId 사용
+          uploadId,
+          tournamentId: tId,
+          eventId: eId,
         }),
       })
 
@@ -286,7 +296,9 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
           savedState &&
           savedState.fileName === file.name &&
           savedState.fileSize === file.size &&
-          savedState.uploadId  // uploadId가 있는 경우에만 재개
+          savedState.uploadId &&
+          savedState.tournamentId === tournamentId &&
+          savedState.eventId === eventId
         ) {
           // 재개
           uploadUrl = savedState.uploadUrl
@@ -304,6 +316,8 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
             uploadUrl,
             uploadId,
             gcsUri,
+            tournamentId,
+            eventId,
             fileName: file.name,
             fileSize: file.size,
             uploadedBytes: 0,
@@ -323,7 +337,7 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
 
         // 완료
         if (uploadedBytes === file.size) {
-          const resultGcsUri = await completeUpload(uploadId)
+          const resultGcsUri = await completeUpload(uploadId, tournamentId, eventId)
           setStatus('completed')
           setProgress(100)
           clearUploadState()
@@ -345,6 +359,8 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 uploadId: uploadStateRef.current.uploadId,
+                tournamentId: uploadStateRef.current.tournamentId,
+                eventId: uploadStateRef.current.eventId,
                 errorMessage: error.message
               }),
             })
@@ -362,6 +378,8 @@ export function useGcsUpload(options: UseGcsUploadOptions): UseGcsUploadReturn {
       }
     },
     [
+      tournamentId,
+      eventId,
       loadUploadState,
       initUpload,
       uploadFile,

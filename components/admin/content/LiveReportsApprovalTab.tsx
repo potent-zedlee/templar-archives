@@ -48,12 +48,12 @@ export function LiveReportsApprovalTab({ pendingLiveReports, onReview }: Props) 
             pendingLiveReports.map((report) => (
               <TableRow key={report.id}>
                 <TableCell className="max-w-sm truncate">{report.title}</TableCell>
-                <TableCell>{report.author?.nickname || 'Unknown'}</TableCell>
+                <TableCell>{report.author?.name || 'Unknown'}</TableCell>
                 <TableCell>
                   <Badge variant="outline">{report.category}</Badge>
                 </TableCell>
                 <TableCell>
-                  {new Date(report.created_at).toLocaleDateString('ko-KR')}
+                  {new Date(report.createdAt).toLocaleDateString('ko-KR')}
                 </TableCell>
                 <TableCell>
                   <Button size="sm" variant="outline" onClick={() => onReview(report)}>

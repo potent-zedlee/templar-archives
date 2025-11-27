@@ -4,25 +4,31 @@ import { useQuery } from '@tanstack/react-query'
  * Cloud Run 작업 메타데이터 타입
  */
 export interface CloudRunJobMetadata {
+  status?: string
+  progress?: number
   totalSegments?: number
-  completedSegments?: number
+  processedSegments?: number
+  currentSegment?: number
+  currentSegmentRange?: string
   handsFound?: number
+  streamId?: string
+  gcsUri?: string
 }
 
 export interface CloudRunJobStatus {
   id: string
   status: 'PENDING' | 'EXECUTING' | 'SUCCESS' | 'FAILURE'
   progress?: number
+  output?: any
+  error?: string | null
   metadata?: CloudRunJobMetadata | null
   createdAt: string
+  startedAt?: string | null
   completedAt?: string | null
-  error?: string | null
 }
 
 /**
  * Cloud Run 작업 상태를 폴링하는 React Hook
- *
- * 기존 useTriggerJob과 동일한 인터페이스 유지
  *
  * @param jobId 작업 ID
  * @param options 옵션
@@ -31,8 +37,8 @@ export interface CloudRunJobStatus {
 export function useCloudRunJob(
   jobId: string | null | undefined,
   options?: {
-    refetchInterval?: number
-    enabled?: boolean
+    refetchInterval?: number // 폴링 간격 (ms)
+    enabled?: boolean // 쿼리 활성화 여부
   }
 ) {
   const { refetchInterval = 2000, enabled = true } = options || {}
@@ -54,13 +60,14 @@ export function useCloudRunJob(
     },
     enabled: enabled && !!jobId,
     refetchInterval: (query) => {
+      // 작업이 완료되면 폴링 중지
       const data = query.state.data
       if (data?.status === 'SUCCESS' || data?.status === 'FAILURE') {
         return false
       }
       return refetchInterval
     },
-    staleTime: 0,
+    staleTime: 0, // 항상 최신 데이터 조회
   })
 }
 
@@ -72,6 +79,7 @@ export function calculateProgress(status: CloudRunJobStatus): number {
     return status.progress
   }
 
+  // status 기반 기본 진행률
   switch (status.status) {
     case 'PENDING':
       return 0
@@ -120,31 +128,4 @@ export function getStatusColor(status: CloudRunJobStatus['status']): string {
     default:
       return 'text-gray-500'
   }
-}
-
-/**
- * 통합 Hook - 환경에 따라 Cloud Run 또는 Trigger.dev 사용
- *
- * @param jobId 작업 ID
- * @param options 옵션
- */
-export function useAnalysisJob(
-  jobId: string | null | undefined,
-  options?: {
-    refetchInterval?: number
-    enabled?: boolean
-    useCloudRun?: boolean
-  }
-) {
-  const { useCloudRun = false, ...restOptions } = options || {}
-
-  const cloudRunQuery = useCloudRunJob(jobId, {
-    ...restOptions,
-    enabled: useCloudRun && (restOptions.enabled ?? true),
-  })
-
-  // Trigger.dev hook은 기존 것을 사용
-  // 환경 변수로 전환 시 useCloudRun 파라미터 사용
-
-  return cloudRunQuery
 }

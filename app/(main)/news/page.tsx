@@ -74,10 +74,10 @@ export default function NewsPage() {
               >
                 <div className="flex flex-col md:flex-row">
                   {/* Thumbnail */}
-                  {news.thumbnail_url && (
+                  {news.thumbnailUrl && (
                     <div className="md:w-80 h-48 md:h-auto flex-shrink-0">
                       <img
-                        src={news.thumbnail_url}
+                        src={news.thumbnailUrl}
                         alt={news.title}
                         className="w-full h-full object-cover border-2 border-gold-700"
                       />
@@ -124,24 +124,24 @@ export default function NewsPage() {
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         <span className="text-mono">
-                          {news.published_at
-                            ? new Date(news.published_at).toLocaleDateString('ko-KR')
-                            : new Date(news.created_at).toLocaleDateString('ko-KR')}
+                          {news.publishedAt
+                            ? new Date(news.publishedAt).toLocaleDateString('ko-KR')
+                            : new Date(news.createdAt).toLocaleDateString('ko-KR')}
                         </span>
                       </div>
                     </div>
 
                     {/* External Link */}
-                    {news.external_link && (
+                    {news.externalLink && (
                       <div className="mt-3 pt-3 border-t-2 border-gold-700">
                         <a
-                          href={news.external_link}
+                          href={news.externalLink}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-caption text-gold-400 hover:text-gold-300"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          Source: {new URL(news.external_link).hostname}
+                          Source: {new URL(news.externalLink).hostname}
                         </a>
                       </div>
                     )}

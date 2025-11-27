@@ -16,7 +16,13 @@ import {
   fetchUserComments,
   fetchUserBookmarks,
   type UserProfile,
+  type UserPost,
+  type UserComment,
+  type UserBookmark,
 } from '@/lib/user-profile'
+
+// Re-export types for use in components
+export type { UserProfile, UserPost, UserComment, UserBookmark }
 
 // ==================== Query Keys ====================
 

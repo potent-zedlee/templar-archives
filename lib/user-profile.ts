@@ -273,9 +273,22 @@ export async function hasCompletedProfile(userId: string): Promise<boolean> {
 }
 
 /**
+ * UserPost 타입 (API 응답용)
+ */
+export type UserPost = {
+  id: string
+  title: string
+  content: string
+  category: string
+  likesCount: number
+  commentsCount: number
+  createdAt: string
+}
+
+/**
  * 사용자의 포스트 목록 조회
  */
-export async function fetchUserPosts(userId: string, limit: number = 10) {
+export async function fetchUserPosts(userId: string, limit: number = 10): Promise<UserPost[]> {
   try {
     const postsRef = collection(firestore, COLLECTION_PATHS.POSTS)
     const q = query(
@@ -287,10 +300,20 @@ export async function fetchUserPosts(userId: string, limit: number = 10) {
 
     const querySnapshot = await getDocs(q)
 
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
+    return querySnapshot.docs.map((doc) => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        title: data.title || '',
+        content: data.content || '',
+        category: data.category || '',
+        likesCount: data.stats?.likesCount || 0,
+        commentsCount: data.stats?.commentsCount || 0,
+        createdAt: data.createdAt instanceof Timestamp
+          ? data.createdAt.toDate().toISOString()
+          : new Date().toISOString(),
+      }
+    })
   } catch (error) {
     console.error('사용자 포스트 조회 실패:', error)
     throw error
@@ -298,13 +321,26 @@ export async function fetchUserPosts(userId: string, limit: number = 10) {
 }
 
 /**
+ * UserComment 타입 (API 응답용)
+ */
+export type UserComment = {
+  id: string
+  content: string
+  likesCount: number
+  createdAt: string
+  post?: {
+    id: string
+    title: string
+  }
+}
+
+/**
  * 사용자의 댓글 목록 조회
  */
-export async function fetchUserComments(userId: string, limit: number = 10) {
+export async function fetchUserComments(userId: string, limit: number = 10): Promise<UserComment[]> {
   try {
     // Firestore는 컬렉션 그룹 쿼리 필요
     // 모든 posts/{postId}/comments를 검색
-    const commentsRef = collection(firestore, COLLECTION_PATHS.POSTS)
     // TODO: collectionGroup 사용 필요
     // const q = query(
     //   collectionGroup(firestore, 'comments'),
@@ -315,7 +351,7 @@ export async function fetchUserComments(userId: string, limit: number = 10) {
 
     // 임시: 빈 배열 반환 (collectionGroup 구현 필요)
     console.warn('fetchUserComments: collectionGroup 구현 필요')
-    return []
+    return [] as UserComment[]
   } catch (error) {
     console.error('사용자 댓글 조회 실패:', error)
     throw error
@@ -323,19 +359,46 @@ export async function fetchUserComments(userId: string, limit: number = 10) {
 }
 
 /**
+ * UserBookmark 타입 (API 응답용)
+ */
+export type UserBookmark = {
+  id: string
+  notes?: string
+  folderName?: string
+  createdAt: string
+  hand?: {
+    id: string
+    number: string
+    description?: string
+  }
+}
+
+/**
  * 사용자의 북마크 목록 조회
  */
-export async function fetchUserBookmarks(userId: string, limit: number = 20) {
+export async function fetchUserBookmarks(userId: string, limit: number = 20): Promise<UserBookmark[]> {
   try {
     const bookmarksRef = collection(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId))
     const q = query(bookmarksRef, orderBy('createdAt', 'desc'), firestoreLimit(limit))
 
     const querySnapshot = await getDocs(q)
 
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
+    return querySnapshot.docs.map((doc) => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        notes: data.notes,
+        folderName: data.folderName,
+        createdAt: data.createdAt instanceof Timestamp
+          ? data.createdAt.toDate().toISOString()
+          : new Date().toISOString(),
+        hand: data.handId ? {
+          id: data.handId,
+          number: data.handNumber || '',
+          description: data.handDescription,
+        } : undefined,
+      }
+    })
   } catch (error) {
     console.error('사용자 북마크 조회 실패:', error)
     throw error

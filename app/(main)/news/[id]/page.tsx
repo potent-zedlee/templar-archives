@@ -54,10 +54,10 @@ export default function NewsDetailPage({ params }: { params: Promise<{ id: strin
 
         <div className="card-postmodern overflow-hidden">
           {/* Thumbnail */}
-          {news.thumbnail_url && (
+          {news.thumbnailUrl && (
             <div className="w-full h-96">
               <img
-                src={news.thumbnail_url}
+                src={news.thumbnailUrl}
                 alt={news.title}
                 className="w-full h-full object-cover border-2 border-gold-700"
               />
@@ -82,13 +82,13 @@ export default function NewsDetailPage({ params }: { params: Promise<{ id: strin
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   <span className="text-mono">
-                    {news.published_at
-                      ? new Date(news.published_at).toLocaleDateString('ko-KR', {
+                    {news.publishedAt
+                      ? new Date(news.publishedAt).toLocaleDateString('ko-KR', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
                         })
-                      : new Date(news.created_at).toLocaleDateString('ko-KR', {
+                      : new Date(news.createdAt).toLocaleDateString('ko-KR', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
@@ -120,10 +120,10 @@ export default function NewsDetailPage({ params }: { params: Promise<{ id: strin
             </div>
 
             {/* External Link */}
-            {news.external_link && (
+            {news.externalLink && (
               <div className="pt-6 border-t-2 border-gold-700">
                 <a
-                  href={news.external_link}
+                  href={news.externalLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-gold-400 hover:text-gold-300"

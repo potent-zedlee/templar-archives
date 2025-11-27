@@ -73,11 +73,11 @@ export function LiveReportPreviewDialog({
             </div>
           )}
 
-          {liveReport.thumbnail_url && (
+          {liveReport.thumbnailUrl && (
             <div>
               <Label>Thumbnail</Label>
               <img
-                src={liveReport.thumbnail_url}
+                src={liveReport.thumbnailUrl}
                 alt="Thumbnail"
                 className="mt-1 rounded-lg max-h-48 object-cover"
               />
@@ -91,29 +91,29 @@ export function LiveReportPreviewDialog({
             </div>
           </div>
 
-          {liveReport.external_link && (
+          {liveReport.externalLink && (
             <div>
               <Label>External Link</Label>
               <a
-                href={liveReport.external_link}
+                href={liveReport.externalLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-1 text-sm text-blue-500 hover:underline block"
               >
-                {liveReport.external_link}
+                {liveReport.externalLink}
               </a>
             </div>
           )}
 
           <div>
             <Label>Author</Label>
-            <p className="mt-1 text-sm">{liveReport.author?.nickname || 'Unknown'}</p>
+            <p className="mt-1 text-sm">{liveReport.author?.name || 'Unknown'}</p>
           </div>
 
           <div>
             <Label>Created</Label>
             <p className="mt-1 text-sm text-muted-foreground">
-              {new Date(liveReport.created_at).toLocaleString('ko-KR')}
+              {new Date(liveReport.createdAt).toLocaleString('ko-KR')}
             </p>
           </div>
         </div>

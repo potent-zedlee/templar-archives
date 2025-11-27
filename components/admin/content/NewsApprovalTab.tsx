@@ -53,7 +53,7 @@ export function NewsApprovalTab({ pendingNews, onReview }: Props) {
                   <Badge variant="outline">{news.category}</Badge>
                 </TableCell>
                 <TableCell>
-                  {new Date(news.created_at).toLocaleDateString('ko-KR')}
+                  {new Date(news.createdAt).toLocaleDateString('ko-KR')}
                 </TableCell>
                 <TableCell>
                   <Button size="sm" variant="outline" onClick={() => onReview(news)}>

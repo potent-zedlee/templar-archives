@@ -67,11 +67,11 @@ export function NewsPreviewDialog({ news, open, onClose, onApprove, onReject }: 
             </div>
           )}
 
-          {news.thumbnail_url && (
+          {news.thumbnailUrl && (
             <div>
               <Label>Thumbnail</Label>
               <img
-                src={news.thumbnail_url}
+                src={news.thumbnailUrl}
                 alt="Thumbnail"
                 className="mt-1 rounded-lg max-h-48 object-cover"
               />
@@ -85,16 +85,16 @@ export function NewsPreviewDialog({ news, open, onClose, onApprove, onReject }: 
             </div>
           </div>
 
-          {news.external_link && (
+          {news.externalLink && (
             <div>
               <Label>External Link</Label>
               <a
-                href={news.external_link}
+                href={news.externalLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-1 text-sm text-blue-500 hover:underline block"
               >
-                {news.external_link}
+                {news.externalLink}
               </a>
             </div>
           )}
@@ -107,7 +107,7 @@ export function NewsPreviewDialog({ news, open, onClose, onApprove, onReject }: 
           <div>
             <Label>Created</Label>
             <p className="mt-1 text-sm text-muted-foreground">
-              {new Date(news.created_at).toLocaleString('ko-KR')}
+              {new Date(news.createdAt).toLocaleString('ko-KR')}
             </p>
           </div>
         </div>
