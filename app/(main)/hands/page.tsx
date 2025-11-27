@@ -2,66 +2,51 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { adminFirestore } from '@/lib/firebase-admin'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
+import type { FirestoreHand, HandPlayerEmbedded } from '@/lib/firestore-types'
 
 export const metadata: Metadata = {
   title: 'Hand History | Templar Archives Index',
   description: '분석된 포커 핸드 히스토리를 확인하세요',
 }
 
-async function getHands() {
-  const supabase = await createServerSupabaseClient()
+interface HandWithId extends FirestoreHand {
+  id: string
+}
 
-  const { data: hands, error } = await supabase
-    .from('hands')
-    .select(`
-      id,
-      number,
-      stakes,
-      pot_size,
-      board_flop,
-      board_turn,
-      board_river,
-      video_timestamp_start,
-      video_timestamp_end,
-      created_at,
-      job_id,
-      hand_players (
-        id,
-        seat,
-        poker_position,
-        hole_cards,
-        is_winner,
-        final_amount,
-        hand_description,
-        players (
-          id,
-          name
-        )
-      )
-    `)
-    .order('created_at', { ascending: false })
-    .limit(50)
+async function getHands(): Promise<HandWithId[]> {
+  try {
+    const snapshot = await adminFirestore
+      .collection('hands')
+      .orderBy('createdAt', 'desc')
+      .limit(50)
+      .get()
 
-  if (error) {
+    if (snapshot.empty) {
+      return []
+    }
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as HandWithId[]
+  } catch (error) {
     console.error('Error fetching hands:', error)
     return []
   }
-
-  return hands || []
 }
 
-function HandCard({ hand }: { hand: any }) {
+function HandCard({ hand }: { hand: HandWithId }) {
   const board = [
-    ...(hand.board_flop || []),
-    hand.board_turn,
-    hand.board_river,
+    ...(hand.boardFlop || []),
+    hand.boardTurn,
+    hand.boardRiver,
   ].filter(Boolean)
 
-  const winners = hand.hand_players?.filter((p: any) => p.is_winner) || []
-  const allPlayers = hand.hand_players || []
+  const winners = hand.players?.filter((p: HandPlayerEmbedded) => p.isWinner) || []
+  const allPlayers = hand.players || []
 
   return (
     <Link href={`/hands/${hand.id}`}>
@@ -71,8 +56,8 @@ function HandCard({ hand }: { hand: any }) {
             <CardTitle className="text-lg">
               Hand #{hand.number || 'N/A'}
             </CardTitle>
-            {hand.stakes && (
-              <Badge variant="outline">{hand.stakes}</Badge>
+            {hand.smallBlind && hand.bigBlind && (
+              <Badge variant="outline">{hand.smallBlind}/{hand.bigBlind}</Badge>
             )}
           </div>
         </CardHeader>
@@ -92,11 +77,11 @@ function HandCard({ hand }: { hand: any }) {
           )}
 
           {/* Pot Size */}
-          {hand.pot_size && (
+          {hand.potSize && (
             <div className="flex gap-2">
               <span className="text-sm text-muted-foreground">Pot:</span>
               <span className="font-semibold">
-                {hand.pot_size.toLocaleString()} chips
+                {hand.potSize.toLocaleString()} chips
               </span>
             </div>
           )}
@@ -107,15 +92,15 @@ function HandCard({ hand }: { hand: any }) {
               Players ({allPlayers.length}):
             </span>
             <div className="flex flex-wrap gap-2">
-              {allPlayers.slice(0, 6).map((hp: any) => (
+              {allPlayers.slice(0, 6).map((hp: HandPlayerEmbedded, idx: number) => (
                 <Badge
-                  key={hp.id}
-                  variant={hp.is_winner ? 'default' : 'secondary'}
+                  key={hp.playerId || idx}
+                  variant={hp.isWinner ? 'default' : 'secondary'}
                 >
-                  {hp.players?.name || 'Unknown'}
-                  {hp.hole_cards && hp.hole_cards.length > 0 && (
+                  {hp.name || 'Unknown'}
+                  {hp.cards && hp.cards.length > 0 && (
                     <span className="ml-1 font-mono">
-                      [{hp.hole_cards.join(' ')}]
+                      [{hp.cards.join(' ')}]
                     </span>
                   )}
                 </Badge>
@@ -131,11 +116,11 @@ function HandCard({ hand }: { hand: any }) {
                   Winner:
                 </span>
                 <span className="font-medium">
-                  {winners.map((w: any) => w.players?.name).join(', ')}
+                  {winners.map((w: HandPlayerEmbedded) => w.name).join(', ')}
                 </span>
-                {winners[0]?.hand_description && (
+                {winners[0]?.handDescription && (
                   <span className="text-sm text-muted-foreground">
-                    ({winners[0].hand_description})
+                    ({winners[0].handDescription})
                   </span>
                 )}
               </div>
@@ -143,12 +128,16 @@ function HandCard({ hand }: { hand: any }) {
           )}
 
           {/* Timestamp */}
-          {hand.video_timestamp_start !== null && (
+          {hand.videoTimestampStart !== null && hand.videoTimestampStart !== undefined && (
             <div className="text-xs text-muted-foreground">
-              Video: {Math.floor(hand.video_timestamp_start / 60)}:
-              {String(hand.video_timestamp_start % 60).padStart(2, '0')} -{' '}
-              {Math.floor(hand.video_timestamp_end / 60)}:
-              {String(hand.video_timestamp_end % 60).padStart(2, '0')}
+              Video: {Math.floor(hand.videoTimestampStart / 60)}:
+              {String(hand.videoTimestampStart % 60).padStart(2, '0')} -{' '}
+              {hand.videoTimestampEnd !== undefined && (
+                <>
+                  {Math.floor(hand.videoTimestampEnd / 60)}:
+                  {String(hand.videoTimestampEnd % 60).padStart(2, '0')}
+                </>
+              )}
             </div>
           )}
         </CardContent>
