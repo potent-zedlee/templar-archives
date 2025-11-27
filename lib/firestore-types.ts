@@ -771,6 +771,8 @@ export const COLLECTION_PATHS = {
   EVENTS: (tournamentId: string) => `tournaments/${tournamentId}/events`,
   STREAMS: (tournamentId: string, eventId: string) =>
     `tournaments/${tournamentId}/events/${eventId}/streams`,
+  /** Unsorted streams (최상위 컬렉션, 아직 조직화되지 않은 비디오) */
+  UNSORTED_STREAMS: 'streams',
   HANDS: 'hands',
   HAND_TAGS: (handId: string) => `hands/${handId}/tags`,
   PLAYERS: 'players',

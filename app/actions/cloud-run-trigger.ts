@@ -63,7 +63,7 @@ export async function startCloudRunAnalysis(
 
     // Stream 존재 확인
     const streamDoc = await adminFirestore
-      .collection(COLLECTION_PATHS.STREAMS)
+      .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
       .doc(streamId)
       .get()
 
@@ -123,7 +123,7 @@ export async function startCloudRunAnalysis(
 
     // Stream 상태 업데이트 (분석 중)
     await adminFirestore
-      .collection(COLLECTION_PATHS.STREAMS)
+      .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
       .doc(streamId)
       .update({
         status: 'analyzing',
@@ -207,7 +207,7 @@ export async function startAnalysis(input: {
   }
 
   // Trigger.dev fallback (기존 구현)
-  const { startKanAnalysisWithTrigger } = await import('./kan-trigger')
+  const { startKanAnalysis: startKanAnalysisWithTrigger } = await import('./kan-analysis')
   return startKanAnalysisWithTrigger({
     videoUrl: input.videoUrl || '',
     segments: input.segments,

@@ -146,7 +146,7 @@ export async function createUnsortedVideo(data: {
     }
 
     const docRef = await adminFirestore
-      .collection(COLLECTION_PATHS.STREAMS)
+      .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
       .add(streamData)
 
     revalidatePath('/admin/archive')
@@ -198,7 +198,7 @@ export async function updateUnsortedVideo(
     }
 
     await adminFirestore
-      .collection(COLLECTION_PATHS.STREAMS)
+      .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
       .doc(id)
       .update(updateData)
 
@@ -225,7 +225,7 @@ export async function deleteUnsortedVideo(id: string) {
 
   try {
     await adminFirestore
-      .collection(COLLECTION_PATHS.STREAMS)
+      .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
       .doc(id)
       .delete()
 
@@ -252,7 +252,7 @@ export async function deleteUnsortedVideosBatch(ids: string[]) {
 
   try {
     const batch = adminFirestore.batch()
-    const streamsRef = adminFirestore.collection(COLLECTION_PATHS.STREAMS)
+    const streamsRef = adminFirestore.collection(COLLECTION_PATHS.UNSORTED_STREAMS)
 
     for (const id of ids) {
       batch.delete(streamsRef.doc(id))
@@ -286,7 +286,7 @@ export async function organizeUnsortedVideo(
 
   try {
     await adminFirestore
-      .collection(COLLECTION_PATHS.STREAMS)
+      .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
       .doc(videoId)
       .update({
         subEventId,
@@ -321,7 +321,7 @@ export async function organizeUnsortedVideosBatch(
 
   try {
     const batch = adminFirestore.batch()
-    const streamsRef = adminFirestore.collection(COLLECTION_PATHS.STREAMS)
+    const streamsRef = adminFirestore.collection(COLLECTION_PATHS.UNSORTED_STREAMS)
     const now = new Date()
 
     for (const videoId of videoIds) {
@@ -358,7 +358,7 @@ export async function getUnsortedVideos() {
 
   try {
     const snapshot = await adminFirestore
-      .collection(COLLECTION_PATHS.STREAMS)
+      .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
       .where('subEventId', '==', null)
       .where('isOrganized', '==', false)
       .orderBy('createdAt', 'desc')
@@ -419,7 +419,7 @@ export async function createUnsortedVideosBatch(
       const batchVideos = videos.slice(i, Math.min(i + BATCH_SIZE, videos.length))
 
       for (const video of batchVideos) {
-        const streamRef = adminFirestore.collection(COLLECTION_PATHS.STREAMS).doc()
+        const streamRef = adminFirestore.collection(COLLECTION_PATHS.UNSORTED_STREAMS).doc()
 
         const normalizedUrl = video.video_source === 'youtube' && video.video_url
           ? normalizeYoutubeUrl(video.video_url)

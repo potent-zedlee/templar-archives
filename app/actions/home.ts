@@ -97,11 +97,11 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlight[]> {
         number: data.number || '',
         description: data.description || '',
         timestamp: data.timestamp || '',
-        potSize: data.potSize || 0,
-        likesCount: data.engagement?.likesCount || 0,
-        videoUrl,
-        tournamentName,
-        dayName: streamName,
+        pot_size: data.potSize || 0,
+        likes_count: data.engagement?.likesCount || 0,
+        video_url: videoUrl,
+        tournament_name: tournamentName,
+        day_name: streamName,
       })
     }
 
@@ -171,10 +171,10 @@ export async function getTopPlayers(): Promise<TopPlayer[]> {
       topPlayers.push({
         id: doc.id,
         name: data.name,
-        photoUrl: data.photoUrl || null,
-        totalWinnings: data.totalWinnings || 0,
-        tournamentCount: 0, // 별도 계산 필요
-        handsCount: handsCountSnapshot.data().count,
+        photo_url: data.photoUrl || null,
+        total_winnings: data.totalWinnings || 0,
+        tournament_count: 0, // 별도 계산 필요
+        hands_count: handsCountSnapshot.data().count,
       })
     }
 
