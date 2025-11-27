@@ -772,11 +772,13 @@ export const COLLECTION_PATHS = {
   STREAMS: (tournamentId: string, eventId: string) =>
     `tournaments/${tournamentId}/events/${eventId}/streams`,
   HANDS: 'hands',
+  HAND_TAGS: (handId: string) => `hands/${handId}/tags`,
   PLAYERS: 'players',
   PLAYER_HANDS: (playerId: string) => `players/${playerId}/hands`,
   USERS: 'users',
   USER_NOTIFICATIONS: (userId: string) => `users/${userId}/notifications`,
   USER_BOOKMARKS: (userId: string) => `users/${userId}/bookmarks`,
+  USER_TAG_HISTORY: (userId: string) => `users/${userId}/tagHistory`,
   POSTS: 'posts',
   POST_COMMENTS: (postId: string) => `posts/${postId}/comments`,
   POST_LIKES: (postId: string) => `posts/${postId}/likes`,

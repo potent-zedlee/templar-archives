@@ -1,7 +1,10 @@
 /**
- * Notification React Query Hooks
+ * Notification React Query Hooks (Firestore Version)
  *
  * 알림 시스템의 데이터 페칭을 위한 React Query hooks
+ * Supabase에서 Firestore로 마이그레이션됨
+ *
+ * @module lib/queries/notification-queries
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'

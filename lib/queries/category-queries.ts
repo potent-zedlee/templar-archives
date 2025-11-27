@@ -1,30 +1,379 @@
 /**
- * Tournament Categories React Query Hooks
+ * Tournament Categories React Query Hooks (Firestore Version)
  *
  * 토너먼트 카테고리 관리를 위한 React Query hooks
+ * Supabase에서 Firestore로 마이그레이션됨
+ *
+ * @module lib/queries/category-queries
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  getAllCategories,
-  getCategoryById,
-  getActiveCategories,
-  getCategoriesByRegion,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  uploadCategoryLogo,
-  deleteCategoryLogo,
-  reorderCategories,
-  toggleCategoryActive,
-  searchCategories,
-  getCategoryUsageCount,
-  getAllCategoryUsageCounts,
-  type TournamentCategory,
-  type CategoryInput,
-  type CategoryUpdateInput,
-} from '@/lib/tournament-categories'
+import { adminFirestore } from '@/lib/firebase-admin'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
+import type { FirestoreCategory } from '@/lib/firestore-types'
+import type { Timestamp } from 'firebase-admin/firestore'
 import { toast } from 'sonner'
+
+// ==================== Types ====================
+
+export type GameType = 'tournament' | 'cash_game' | 'both'
+
+/**
+ * 클라이언트용 TournamentCategory 타입
+ */
+export interface TournamentCategory {
+  id: string
+  name: string
+  display_name: string
+  short_name?: string | null
+  aliases: string[]
+  logo_url?: string | null
+  is_active: boolean
+  game_type: GameType
+  parent_id?: string | null
+  theme_gradient?: string | null
+  theme_text?: string | null
+  theme_shadow?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CategoryInput {
+  id: string
+  name: string
+  display_name: string
+  short_name?: string
+  aliases?: string[]
+  logo_url?: string
+  is_active?: boolean
+  game_type?: GameType
+  parent_id?: string | null
+  theme_gradient?: string
+  theme_text?: string
+  theme_shadow?: string
+}
+
+export interface CategoryUpdateInput extends Partial<Omit<CategoryInput, 'id'>> {}
+
+// ==================== Helper Functions ====================
+
+/**
+ * Firestore Timestamp을 ISO 문자열로 변환
+ */
+function timestampToString(timestamp: Timestamp | undefined): string {
+  if (!timestamp) return new Date().toISOString()
+  return timestamp.toDate().toISOString()
+}
+
+/**
+ * FirestoreCategory을 TournamentCategory로 변환
+ */
+function mapFirestoreCategory(doc: FirebaseFirestore.DocumentSnapshot): TournamentCategory {
+  const data = doc.data() as any
+  return {
+    id: doc.id,
+    name: data.name || '',
+    display_name: data.displayName || data.name || '',
+    short_name: data.shortName || null,
+    aliases: data.aliases || [],
+    logo_url: data.logoUrl || null,
+    is_active: data.isActive ?? true,
+    game_type: (data.gameType || 'both') as GameType,
+    parent_id: data.parentId || null,
+    theme_gradient: data.themeGradient || null,
+    theme_text: data.themeText || null,
+    theme_shadow: data.themeShadow || null,
+    created_at: timestampToString(data.createdAt),
+    updated_at: timestampToString(data.updatedAt),
+  }
+}
+
+// ==================== Server Functions ====================
+
+/**
+ * 모든 카테고리 조회 (Admin용)
+ */
+async function getAllCategoriesFirestore(
+  includeInactive = false,
+  gameType?: GameType
+): Promise<TournamentCategory[]> {
+  try {
+    let query = adminFirestore
+      .collection(COLLECTION_PATHS.CATEGORIES)
+      .orderBy('name', 'asc')
+
+    if (!includeInactive) {
+      query = query.where('isActive', '==', true) as FirebaseFirestore.Query
+    }
+
+    if (gameType) {
+      query = query.where('gameType', 'in', [gameType, 'both']) as FirebaseFirestore.Query
+    }
+
+    const snapshot = await query.get()
+    return snapshot.docs.map(mapFirestoreCategory)
+  } catch (error) {
+    console.error('Error fetching categories from Firestore:', error)
+    throw error
+  }
+}
+
+/**
+ * 활성화된 카테고리만 조회 (Public)
+ */
+async function getActiveCategoriesFirestore(gameType?: GameType): Promise<TournamentCategory[]> {
+  return getAllCategoriesFirestore(false, gameType)
+}
+
+/**
+ * Region별 카테고리 조회
+ * @deprecated Region 필드가 제거되어 더 이상 사용되지 않습니다. getAllCategories()를 사용하세요.
+ */
+async function getCategoriesByRegionFirestore(
+  region: 'premier' | 'regional' | 'online' | 'specialty'
+): Promise<TournamentCategory[]> {
+  console.warn('getCategoriesByRegion is deprecated. Use getAllCategories() instead.')
+  return []
+}
+
+/**
+ * ID로 카테고리 조회
+ */
+async function getCategoryByIdFirestore(id: string): Promise<TournamentCategory | null> {
+  try {
+    const doc = await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(id).get()
+
+    if (!doc.exists) {
+      return null
+    }
+
+    return mapFirestoreCategory(doc)
+  } catch (error) {
+    console.error('Error fetching category by ID from Firestore:', error)
+    throw error
+  }
+}
+
+/**
+ * 카테고리 사용 개수 확인
+ */
+async function getCategoryUsageCountFirestore(categoryId: string): Promise<number> {
+  try {
+    const snapshot = await adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .where('categoryInfo.id', '==', categoryId)
+      .count()
+      .get()
+
+    return snapshot.data().count
+  } catch (error) {
+    console.error('Error fetching category usage count from Firestore:', error)
+    return 0
+  }
+}
+
+/**
+ * 모든 카테고리의 사용 개수를 한 번에 조회 (N+1 쿼리 방지)
+ */
+async function getAllCategoryUsageCountsFirestore(): Promise<Record<string, number>> {
+  try {
+    const snapshot = await adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .select('categoryInfo.id')
+      .get()
+
+    const counts: Record<string, number> = {}
+    snapshot.docs.forEach((doc) => {
+      const data = doc.data()
+      const categoryId = data?.categoryInfo?.id
+      if (categoryId) {
+        counts[categoryId] = (counts[categoryId] || 0) + 1
+      }
+    })
+
+    return counts
+  } catch (error) {
+    console.error('Error fetching all category usage counts from Firestore:', error)
+    return {}
+  }
+}
+
+/**
+ * 검색 (이름, display_name, aliases로 검색)
+ */
+async function searchCategoriesFirestore(query: string): Promise<TournamentCategory[]> {
+  try {
+    if (!query.trim()) return []
+
+    const lowerQuery = query.toLowerCase()
+
+    // Firestore는 부분 일치 검색을 직접 지원하지 않으므로 모든 활성 카테고리를 가져와서 필터링
+    const snapshot = await adminFirestore
+      .collection(COLLECTION_PATHS.CATEGORIES)
+      .where('isActive', '==', true)
+      .get()
+
+    const categories = snapshot.docs.map(mapFirestoreCategory)
+
+    // 클라이언트 측 필터링
+    return categories.filter((cat) => {
+      const nameMatch = cat.name.toLowerCase().includes(lowerQuery)
+      const displayNameMatch = cat.display_name.toLowerCase().includes(lowerQuery)
+      const shortNameMatch = cat.short_name?.toLowerCase().includes(lowerQuery)
+      const aliasMatch = cat.aliases.some((alias) => alias.toLowerCase().includes(lowerQuery))
+
+      return nameMatch || displayNameMatch || shortNameMatch || aliasMatch
+    })
+  } catch (error) {
+    console.error('Error searching categories from Firestore:', error)
+    return []
+  }
+}
+
+/**
+ * 카테고리 생성
+ */
+async function createCategoryFirestore(input: CategoryInput): Promise<TournamentCategory> {
+  try {
+    // ID 중복 확인
+    const existing = await getCategoryByIdFirestore(input.id)
+    if (existing) {
+      throw new Error(`카테고리 ID "${input.id}"가 이미 존재합니다.`)
+    }
+
+    const now = new Date()
+    const categoryData = {
+      name: input.name,
+      displayName: input.display_name,
+      shortName: input.short_name || null,
+      aliases: input.aliases || [],
+      logoUrl: input.logo_url || null,
+      isActive: input.is_active ?? true,
+      gameType: input.game_type || 'both',
+      parentId: input.parent_id || null,
+      themeGradient: input.theme_gradient || null,
+      themeText: input.theme_text || null,
+      themeShadow: input.theme_shadow || null,
+      order: 0, // 기본값
+      createdAt: now,
+      updatedAt: now,
+    }
+
+    await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(input.id).set(categoryData)
+
+    const doc = await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(input.id).get()
+    return mapFirestoreCategory(doc)
+  } catch (error) {
+    console.error('Error creating category in Firestore:', error)
+    throw error
+  }
+}
+
+/**
+ * 카테고리 수정
+ */
+async function updateCategoryFirestore(
+  id: string,
+  input: CategoryUpdateInput
+): Promise<TournamentCategory> {
+  try {
+    const updateData: any = {
+      updatedAt: new Date(),
+    }
+
+    if (input.name !== undefined) updateData.name = input.name
+    if (input.display_name !== undefined) updateData.displayName = input.display_name
+    if (input.short_name !== undefined) updateData.shortName = input.short_name || null
+    if (input.aliases !== undefined) updateData.aliases = input.aliases
+    if (input.logo_url !== undefined) updateData.logoUrl = input.logo_url || null
+    if (input.is_active !== undefined) updateData.isActive = input.is_active
+    if (input.game_type !== undefined) updateData.gameType = input.game_type
+    if (input.parent_id !== undefined) updateData.parentId = input.parent_id
+    if (input.theme_gradient !== undefined) updateData.themeGradient = input.theme_gradient || null
+    if (input.theme_text !== undefined) updateData.themeText = input.theme_text || null
+    if (input.theme_shadow !== undefined) updateData.themeShadow = input.theme_shadow || null
+
+    await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(id).update(updateData)
+
+    const doc = await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(id).get()
+    if (!doc.exists) {
+      throw new Error(`카테고리 ID "${id}"를 찾을 수 없습니다.`)
+    }
+
+    return mapFirestoreCategory(doc)
+  } catch (error) {
+    console.error('Error updating category in Firestore:', error)
+    throw error
+  }
+}
+
+/**
+ * 카테고리 삭제
+ */
+async function deleteCategoryFirestore(id: string): Promise<void> {
+  try {
+    // 사용 여부 확인
+    const usageCount = await getCategoryUsageCountFirestore(id)
+    if (usageCount > 0) {
+      throw new Error(`카테고리가 ${usageCount}개의 토너먼트에서 사용 중이므로 삭제할 수 없습니다.`)
+    }
+
+    await adminFirestore.collection(COLLECTION_PATHS.CATEGORIES).doc(id).delete()
+  } catch (error) {
+    console.error('Error deleting category from Firestore:', error)
+    throw error
+  }
+}
+
+/**
+ * 카테고리 활성화/비활성화 토글
+ */
+async function toggleCategoryActiveFirestore(id: string): Promise<TournamentCategory> {
+  try {
+    const category = await getCategoryByIdFirestore(id)
+    if (!category) {
+      throw new Error(`카테고리 ID "${id}"를 찾을 수 없습니다.`)
+    }
+
+    return updateCategoryFirestore(id, { is_active: !category.is_active })
+  } catch (error) {
+    console.error('Error toggling category active status in Firestore:', error)
+    throw error
+  }
+}
+
+/**
+ * 카테고리 우선순위 일괄 업데이트
+ * @deprecated Priority 필드가 제거되어 더 이상 사용되지 않습니다. 카테고리는 이름 순으로 자동 정렬됩니다.
+ */
+async function reorderCategoriesFirestore(categoryIds: string[]): Promise<TournamentCategory[]> {
+  console.warn('reorderCategories is deprecated. Categories are now sorted by name automatically.')
+  return getAllCategoriesFirestore(true)
+}
+
+/**
+ * 로고 업로드
+ * Note: Firestore는 파일 저장소가 아니므로 Firebase Storage 또는 GCS 사용 필요
+ */
+async function uploadCategoryLogoFirestore(
+  categoryId: string,
+  file: File
+): Promise<string> {
+  // TODO: Firebase Storage 또는 GCS로 업로드 구현 필요
+  throw new Error('uploadCategoryLogo: Firebase Storage 연동 필요')
+}
+
+/**
+ * 로고 삭제
+ */
+async function deleteCategoryLogoFirestore(categoryId: string): Promise<void> {
+  try {
+    await updateCategoryFirestore(categoryId, { logo_url: null })
+  } catch (error) {
+    console.error('Error deleting category logo from Firestore:', error)
+    throw error
+  }
+}
 
 // ==================== Query Keys ====================
 
@@ -50,7 +399,7 @@ export function useCategoriesQuery(includeInactive = false) {
   return useQuery({
     queryKey: categoryKeys.list({ includeInactive }),
     queryFn: async () => {
-      return await getAllCategories(includeInactive)
+      return await getAllCategoriesFirestore(includeInactive)
     },
     staleTime: 5 * 60 * 1000, // 5분 (카테고리는 자주 변경되지 않음)
     gcTime: 10 * 60 * 1000, // 10분
@@ -64,7 +413,7 @@ export function useActiveCategoriesQuery() {
   return useQuery({
     queryKey: categoryKeys.active(),
     queryFn: async () => {
-      return await getActiveCategories()
+      return await getActiveCategoriesFirestore()
     },
     staleTime: 5 * 60 * 1000, // 5분
     gcTime: 10 * 60 * 1000, // 10분
@@ -78,7 +427,7 @@ export function useCategoriesByRegionQuery(region: 'premier' | 'regional' | 'onl
   return useQuery({
     queryKey: categoryKeys.byRegion(region),
     queryFn: async () => {
-      return await getCategoriesByRegion(region)
+      return await getCategoriesByRegionFirestore(region)
     },
     staleTime: 5 * 60 * 1000, // 5분
     gcTime: 10 * 60 * 1000, // 10분
@@ -93,7 +442,7 @@ export function useCategoryByIdQuery(categoryId: string) {
   return useQuery({
     queryKey: categoryKeys.detail(categoryId),
     queryFn: async () => {
-      return await getCategoryById(categoryId)
+      return await getCategoryByIdFirestore(categoryId)
     },
     staleTime: 10 * 60 * 1000, // 10분
     gcTime: 30 * 60 * 1000, // 30분
@@ -108,7 +457,7 @@ export function useCategoryUsageQuery(categoryId: string) {
   return useQuery({
     queryKey: categoryKeys.usage(categoryId),
     queryFn: async () => {
-      return await getCategoryUsageCount(categoryId)
+      return await getCategoryUsageCountFirestore(categoryId)
     },
     staleTime: 2 * 60 * 1000, // 2분
     gcTime: 5 * 60 * 1000, // 5분
@@ -123,7 +472,7 @@ export function useAllCategoryUsageQuery() {
   return useQuery({
     queryKey: [...categoryKeys.all, 'usage', 'all'] as const,
     queryFn: async () => {
-      return await getAllCategoryUsageCounts()
+      return await getAllCategoryUsageCountsFirestore()
     },
     staleTime: 2 * 60 * 1000, // 2분
     gcTime: 5 * 60 * 1000, // 5분
@@ -138,7 +487,7 @@ export function useSearchCategoriesQuery(query: string) {
     queryKey: categoryKeys.search(query),
     queryFn: async () => {
       if (!query.trim()) return []
-      return await searchCategories(query)
+      return await searchCategoriesFirestore(query)
     },
     staleTime: 3 * 60 * 1000, // 3분
     gcTime: 5 * 60 * 1000, // 5분
@@ -156,7 +505,7 @@ export function useCreateCategoryMutation() {
 
   return useMutation({
     mutationFn: async (input: CategoryInput) => {
-      return await createCategory(input)
+      return await createCategoryFirestore(input)
     },
     onMutate: async (newCategory) => {
       // Cancel outgoing refetches
@@ -223,7 +572,7 @@ export function useUpdateCategoryMutation(categoryId: string) {
 
   return useMutation({
     mutationFn: async (input: CategoryUpdateInput) => {
-      return await updateCategory(categoryId, input)
+      return await updateCategoryFirestore(categoryId, input)
     },
     onMutate: async (updatedFields) => {
       // Cancel outgoing refetches
@@ -272,7 +621,7 @@ export function useDeleteCategoryMutation() {
 
   return useMutation({
     mutationFn: async (categoryId: string) => {
-      await deleteCategory(categoryId)
+      await deleteCategoryFirestore(categoryId)
       return categoryId
     },
     onMutate: async (categoryId) => {
@@ -317,13 +666,14 @@ export function useDeleteCategoryMutation() {
 
 /**
  * Upload category logo
+ * Note: Firestore는 파일 저장소가 아니므로 Firebase Storage 또는 GCS 사용 필요
  */
 export function useUploadLogoMutation(categoryId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async (file: File) => {
-      return await uploadCategoryLogo(categoryId, file)
+      return await uploadCategoryLogoFirestore(categoryId, file)
     },
     onSuccess: (publicUrl) => {
       toast.success('로고가 업로드되었습니다.')
@@ -358,7 +708,7 @@ export function useDeleteLogoMutation(categoryId: string) {
 
   return useMutation({
     mutationFn: async () => {
-      await deleteCategoryLogo(categoryId)
+      await deleteCategoryLogoFirestore(categoryId)
     },
     onSuccess: () => {
       toast.success('로고가 삭제되었습니다.')
@@ -393,7 +743,7 @@ export function useReorderCategoriesMutation() {
 
   return useMutation({
     mutationFn: async (categoryIds: string[]) => {
-      return await reorderCategories(categoryIds)
+      return await reorderCategoriesFirestore(categoryIds)
     },
     onSuccess: () => {
       toast.success('카테고리 순서가 변경되었습니다.')
@@ -417,7 +767,7 @@ export function useToggleActiveMutation(categoryId: string) {
 
   return useMutation({
     mutationFn: async () => {
-      return await toggleCategoryActive(categoryId)
+      return await toggleCategoryActiveFirestore(categoryId)
     },
     onMutate: async () => {
       // Cancel outgoing refetches
