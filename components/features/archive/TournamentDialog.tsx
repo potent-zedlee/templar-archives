@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { X } from "lucide-react"
 import { toast } from "sonner"
 import type { TournamentCategory } from "@/lib/firestore-types"
@@ -86,7 +85,6 @@ export function TournamentDialog({
   isUserAdmin,
 }: TournamentDialogProps) {
   const [saving, setSaving] = useState(false)
-  const [logoUploadMode, setLogoUploadMode] = useState<"upload" | "select">("select")
 
   if (!isUserAdmin) return null
 

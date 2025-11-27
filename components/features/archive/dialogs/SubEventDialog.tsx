@@ -157,24 +157,6 @@ export function SubEventDialog({
     setPayouts(newPayouts)
   }
 
-  // Prize amount parser
-  const parsePrizeAmount = (amountStr: string): number => {
-    if (!amountStr) return 0
-
-    let cleaned = amountStr.replace(/[$\s]/g, '')
-
-    if (cleaned.includes('M')) {
-      const num = parseFloat(cleaned.replace('M', ''))
-      return Math.round(num * 1000000 * 100)
-    } else if (cleaned.includes('K')) {
-      const num = parseFloat(cleaned.replace('K', ''))
-      return Math.round(num * 1000 * 100)
-    } else {
-      const num = parseFloat(cleaned.replace(/,/g, ''))
-      return Math.round(num * 100)
-    }
-  }
-
   // Format cents to display
   const formatPrizeAmount = (cents: number): string => {
     const dollars = cents / 100

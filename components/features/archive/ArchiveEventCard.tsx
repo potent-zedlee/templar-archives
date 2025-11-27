@@ -38,7 +38,6 @@ export function ArchiveEventCard({
   item,
   onClick,
   menuItems,
-  isAdmin = false,
   variant = 'list'
 }: ArchiveEventCardProps) {
   // Get category-based styling

@@ -91,27 +91,6 @@ export function SubEventInfoDialog({
     return `$${dollars.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
   }
 
-  // Prize amount parser: "$10M" -> 1000000000 (cents), "$10,000,000" -> 1000000000
-  const parsePrizeAmount = (amountStr: string): number => {
-    if (!amountStr) return 0
-
-    // Remove $ and spaces
-    let cleaned = amountStr.replace(/[$\s]/g, '')
-
-    // Handle M (million) and K (thousand)
-    if (cleaned.includes('M')) {
-      const num = parseFloat(cleaned.replace('M', ''))
-      return Math.round(num * 1000000 * 100) // Convert to cents
-    } else if (cleaned.includes('K')) {
-      const num = parseFloat(cleaned.replace('K', ''))
-      return Math.round(num * 1000 * 100)
-    } else {
-      // Remove commas and parse
-      const num = parseFloat(cleaned.replace(/,/g, ''))
-      return Math.round(num * 100) // Convert to cents
-    }
-  }
-
   // Extract country info from player name
   const getCountryInfo = (playerName: string): { flag: string; iso2: string; cleanName: string } => {
     const match = playerName.match(/\(([A-Z]{2,3})\)$/)

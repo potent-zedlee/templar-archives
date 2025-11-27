@@ -8,7 +8,6 @@
  * - 관리자: Edit/Delete 버튼
  */
 
-import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
