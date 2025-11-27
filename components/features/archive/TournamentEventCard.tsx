@@ -9,11 +9,9 @@
  * - 체크박스 선택
  */
 
-import { format } from 'date-fns'
 import { Checkbox } from '@/components/ui/checkbox'
 import { CategoryLogo } from '@/components/common/CategoryLogo'
-import { getCategoryById } from '@/lib/tournament-categories'
-import { cn } from '@/lib/utils'
+import { useCategoryByIdQuery } from '@/lib/queries/category-queries'
 
 export interface TournamentEventCardProps {
   id: string
@@ -28,7 +26,6 @@ export interface TournamentEventCardProps {
 }
 
 export function TournamentEventCard({
-  id,
   date,
   time,
   title,
@@ -38,13 +35,8 @@ export function TournamentEventCard({
   onSelect,
   onClick,
 }: TournamentEventCardProps) {
-  // Get category theme
-  const categoryData = category ? getCategoryById(category) : null
-  const theme = categoryData?.theme || {
-    gradient: 'from-gray-800 via-gray-700 to-gray-600',
-    text: 'text-white',
-    shadow: 'shadow-gray-800/50',
-  }
+  // Get category theme using React Query
+  const { data: categoryData } = useCategoryByIdQuery(category || '')
 
   return (
     <div className="group flex items-center gap-3 py-2">
