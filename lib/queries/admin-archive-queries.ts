@@ -2,14 +2,23 @@
  * Admin Archive React Query Hooks
  *
  * Admin 전용 Archive 쿼리 (모든 상태 조회 가능)
+ * Firestore 기반
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createClientSupabaseClient } from '@/lib/supabase-client'
+import { db } from '@/lib/firebase'
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  Timestamp,
+  CollectionReference,
+  QueryConstraint
+} from 'firebase/firestore'
 import { publishStream, unpublishStream, bulkPublishStreams, bulkUnpublishStreams } from '@/app/actions/archive-status'
 import type { Tournament, Event, Stream, ContentStatus } from '@/lib/types/archive'
-
-const supabase = createClientSupabaseClient()
 
 // ==================== Query Keys ====================
 
@@ -32,20 +41,42 @@ export function useAdminTournamentsQuery(statusFilter: ContentStatus | 'all' = '
   return useQuery({
     queryKey: adminArchiveKeys.tournaments(statusFilter),
     queryFn: async () => {
-      let query = supabase
-        .from('tournaments')
-        .select('*')
-        .order('end_date', { ascending: false })
+      const tournamentsRef = collection(db, 'tournaments') as CollectionReference
+      const constraints: QueryConstraint[] = [
+        orderBy('end_date', 'desc')
+      ]
 
       // Status 필터 적용
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter)
+        constraints.unshift(where('status', '==', statusFilter))
       }
 
-      const { data, error } = await query
+      const q = query(tournamentsRef, ...constraints)
+      const snapshot = await getDocs(q)
 
-      if (error) throw error
-      return (data || []) as Tournament[]
+      const tournaments: Tournament[] = []
+      snapshot.forEach(doc => {
+        const data = doc.data()
+        tournaments.push({
+          id: doc.id,
+          ...data,
+          // Timestamp를 string으로 변환
+          start_date: data.start_date instanceof Timestamp
+            ? data.start_date.toDate().toISOString()
+            : data.start_date,
+          end_date: data.end_date instanceof Timestamp
+            ? data.end_date.toDate().toISOString()
+            : data.end_date,
+          created_at: data.created_at instanceof Timestamp
+            ? data.created_at.toDate().toISOString()
+            : data.created_at,
+          updated_at: data.updated_at instanceof Timestamp
+            ? data.updated_at.toDate().toISOString()
+            : data.updated_at,
+        } as Tournament)
+      })
+
+      return tournaments
     },
     staleTime: 2 * 60 * 1000, // 2분 (Admin은 자주 업데이트)
     gcTime: 10 * 60 * 1000, // 10분
@@ -64,21 +95,40 @@ export function useAdminEventsQuery(
   return useQuery({
     queryKey: adminArchiveKeys.events(tournamentId, statusFilter),
     queryFn: async () => {
-      let query = supabase
-        .from('sub_events')
-        .select('*')
-        .eq('tournament_id', tournamentId)
-        .order('date', { ascending: false })
+      const eventsRef = collection(db, 'sub_events') as CollectionReference
+      const constraints: QueryConstraint[] = [
+        where('tournament_id', '==', tournamentId),
+        orderBy('date', 'desc')
+      ]
 
       // Status 필터 적용
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter)
+        constraints.splice(1, 0, where('status', '==', statusFilter))
       }
 
-      const { data, error } = await query
+      const q = query(eventsRef, ...constraints)
+      const snapshot = await getDocs(q)
 
-      if (error) throw error
-      return (data || []) as Event[]
+      const events: Event[] = []
+      snapshot.forEach(doc => {
+        const data = doc.data()
+        events.push({
+          id: doc.id,
+          ...data,
+          // Timestamp를 string으로 변환
+          date: data.date instanceof Timestamp
+            ? data.date.toDate().toISOString()
+            : data.date,
+          created_at: data.created_at instanceof Timestamp
+            ? data.created_at.toDate().toISOString()
+            : data.created_at,
+          updated_at: data.updated_at instanceof Timestamp
+            ? data.updated_at.toDate().toISOString()
+            : data.updated_at,
+        } as Event)
+      })
+
+      return events
     },
     enabled: !!tournamentId,
     staleTime: 2 * 60 * 1000, // 2분
@@ -98,46 +148,69 @@ export function useAdminStreamsQuery(
   return useQuery({
     queryKey: adminArchiveKeys.streams(eventId, statusFilter),
     queryFn: async () => {
-      let query = supabase
-        .from('streams')
-        .select('*')
-        .eq('sub_event_id', eventId)
-        .order('published_at', { ascending: false })
+      const streamsRef = collection(db, 'streams') as CollectionReference
+      const constraints: QueryConstraint[] = [
+        where('sub_event_id', '==', eventId),
+        orderBy('published_at', 'desc')
+      ]
 
       // Status 필터 적용
       if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter)
+        constraints.splice(1, 0, where('status', '==', statusFilter))
       }
 
-      const { data: streamsData, error } = await query
+      const q = query(streamsRef, ...constraints)
+      const snapshot = await getDocs(q)
 
-      if (error) throw error
+      const streams: (Stream & { hand_count?: number })[] = []
+      const streamIds: string[] = []
+
+      snapshot.forEach(doc => {
+        const data = doc.data()
+        streamIds.push(doc.id)
+
+        streams.push({
+          id: doc.id,
+          ...data,
+          // Timestamp를 string으로 변환
+          published_at: data.published_at instanceof Timestamp
+            ? data.published_at.toDate().toISOString()
+            : data.published_at,
+          created_at: data.created_at instanceof Timestamp
+            ? data.created_at.toDate().toISOString()
+            : data.created_at,
+          updated_at: data.updated_at instanceof Timestamp
+            ? data.updated_at.toDate().toISOString()
+            : data.updated_at,
+          hand_count: 0, // 초기값
+        } as Stream & { hand_count?: number })
+      })
 
       // Hand count 조회
-      const streamIds = (streamsData || []).map(s => s.id)
-      let handCounts: Record<string, number> = {}
-
       if (streamIds.length > 0) {
-        const { data: handCountData } = await supabase
-          .from('hands')
-          .select('day_id')
-          .in('day_id', streamIds)
+        const handCounts: Record<string, number> = {}
 
-        if (handCountData) {
-          handCounts = handCountData.reduce((acc, h) => {
-            acc[h.day_id] = (acc[h.day_id] || 0) + 1
-            return acc
-          }, {} as Record<string, number>)
+        // Firestore 'in' 쿼리는 최대 30개까지만 가능하므로 청크로 나눔
+        const chunkSize = 30
+        for (let i = 0; i < streamIds.length; i += chunkSize) {
+          const chunk = streamIds.slice(i, i + chunkSize)
+          const handsRef = collection(db, 'hands')
+          const handsQuery = query(handsRef, where('day_id', 'in', chunk))
+          const handsSnapshot = await getDocs(handsQuery)
+
+          handsSnapshot.forEach(doc => {
+            const dayId = doc.data().day_id
+            handCounts[dayId] = (handCounts[dayId] || 0) + 1
+          })
         }
+
+        // Hand count 병합
+        streams.forEach(stream => {
+          stream.hand_count = handCounts[stream.id] || 0
+        })
       }
 
-      // Hand count 병합
-      const streamsWithCounts = (streamsData || []).map(stream => ({
-        ...stream,
-        hand_count: handCounts[stream.id] || 0
-      }))
-
-      return streamsWithCounts as (Stream & { hand_count?: number })[]
+      return streams
     },
     enabled: !!eventId,
     staleTime: 2 * 60 * 1000, // 2분
