@@ -80,7 +80,7 @@ describe('Toast Utils', () => {
         success: 'Success!',
       }
 
-      vi.mocked(toast.promise).mockResolvedValue('data')
+      vi.mocked(toast.promise).mockResolvedValue('data' as never)
       await toastPromise(promise, messages)
 
       expect(toast.promise).toHaveBeenCalledWith(
@@ -98,11 +98,12 @@ describe('Toast Utils', () => {
         success: (data: { id: number }) => `Created item ${data.id}`,
       }
 
-      vi.mocked(toast.promise).mockImplementation(async (p, opts) => {
+      vi.mocked(toast.promise).mockImplementation(async (p: Promise<unknown>, opts: { success?: (data: unknown) => void }) => {
         const data = await p
-        // @ts-ignore - accessing success callback
-        opts.success(data)
-        return data
+        if (opts.success) {
+          opts.success(data)
+        }
+        return data as never
       })
 
       await toastPromise(promise, messages)
@@ -176,7 +177,7 @@ describe('Toast Utils', () => {
       const submitFn = vi.fn().mockResolvedValue({ id: 1 })
       const onSuccess = vi.fn()
 
-      vi.mocked(toast.promise).mockResolvedValue({ id: 1 })
+      vi.mocked(toast.promise).mockResolvedValue({ id: 1 } as never)
 
       const result = await handleFormSubmit(submitFn, {
         successMessage: 'Form submitted',
@@ -191,7 +192,7 @@ describe('Toast Utils', () => {
       const submitFn = vi.fn().mockRejectedValue(new Error('Validation error'))
       const onError = vi.fn()
 
-      vi.mocked(toast.promise).mockRejectedValue(new Error('Validation error'))
+      vi.mocked(toast.promise).mockRejectedValue(new Error('Validation error') as never)
 
       const result = await handleFormSubmit(submitFn, {
         errorMessage: 'Form submission failed',

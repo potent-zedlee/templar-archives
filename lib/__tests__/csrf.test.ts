@@ -173,8 +173,7 @@ describe('CSRF Security', () => {
     it('should warn in development mode when no token provided', async () => {
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
-      const originalEnv = process.env.NODE_ENV
-      process.env.NODE_ENV = 'development'
+      vi.stubEnv('NODE_ENV', 'development')
 
       const request = new NextRequest('https://example.com/api/test', {
         method: 'POST',
@@ -190,7 +189,7 @@ describe('CSRF Security', () => {
         expect.stringContaining('No token provided (development mode)')
       )
 
-      process.env.NODE_ENV = originalEnv
+      vi.unstubAllEnvs()
       consoleWarnSpy.mockRestore()
     })
   })

@@ -18,9 +18,8 @@
  * @module lib/__tests__/auth-utils.test
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
-// Firebase Admin SDK mock - import 전에 설정되어야 함
 vi.mock('@/lib/firebase-admin', () => ({
   adminFirestore: {
     collection: vi.fn(() => ({
@@ -31,7 +30,6 @@ vi.mock('@/lib/firebase-admin', () => ({
   },
 }))
 
-// auth-utils는 mock 설정 후 동적으로 import
 const { isAdmin, isAdminEmail } = await import('../auth-utils')
 
 describe('Auth Utils', () => {
