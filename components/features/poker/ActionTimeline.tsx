@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { ArrowRight } from 'lucide-react'
 
 export interface HandAction {
   id: string

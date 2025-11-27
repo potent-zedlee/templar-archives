@@ -4,9 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Rnd } from "react-rnd"
 import { Button } from "@/components/ui/button"
 import { X, RotateCcw, PictureInPicture2 } from "lucide-react"
-import type { FirestoreStream } from "@/lib/firestore-types"
 
-// Adapted Stream type for component props
 type Stream = {
   name?: string
   video_source?: 'youtube' | 'upload' | 'nas'
@@ -36,7 +34,6 @@ export function VideoPlayerDialog({
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const playerRef = useRef<any>(null)
-  const [isPlayerReady, setIsPlayerReady] = useState(false)
 
   const [size, setSize] = useState({ width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT })
   const [position, setPosition] = useState({ x: 0, y: 0 })
@@ -119,7 +116,6 @@ export function VideoPlayerDialog({
         },
         events: {
           onReady: () => {
-            setIsPlayerReady(true)
             if (startTimeSeconds > 0 && playerRef.current) {
               playerRef.current.seekTo(startTimeSeconds, true)
             }

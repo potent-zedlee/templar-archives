@@ -1,7 +1,7 @@
 import { HoleCards } from './Card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Crown, Trophy } from 'lucide-react'
+import { Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface PlayerSeatData {

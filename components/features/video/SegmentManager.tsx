@@ -201,7 +201,7 @@ export function SegmentManager({ segments, onChange, currentTime, videoDuration 
             </div>
 
             <div className="space-y-2">
-              {segments.map((segment, index) => {
+              {segments.map((segment) => {
                 const typeConfig = SEGMENT_TYPES[segment.type]
                 const Icon = typeConfig.icon
                 return (
