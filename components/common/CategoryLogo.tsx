@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
+import { getCategoryById, getCategoryByAlias } from '@/lib/tournament-categories'
 
 interface CategoryLogoProps {
   category: string | { id: string; logo_url?: string | null; name?: string }
@@ -56,8 +57,8 @@ export function CategoryLogo({
     if (fallback === 'none') return null
 
     const displayName = typeof category === 'string'
-      ? (categoryData?.displayName || category)
-      : (category.name || categoryData?.displayName || category.id)
+      ? category
+      : (category.name || category.id)
 
     if (fallback === 'text') {
       return (
@@ -131,8 +132,9 @@ export function CategoryLogo({
 
 /**
  * Check if a category has a logo available
+ * Note: This is an async function and should be called from server components
  */
-export function hasLogo(category: string): boolean {
-  const categoryData = getCategoryById(category) || getCategoryByAlias(category)
-  return !!categoryData?.logoUrl
+export async function hasLogo(category: string): Promise<boolean> {
+  const categoryData = await getCategoryById(category) || await getCategoryByAlias(category)
+  return !!categoryData?.logo_url
 }
