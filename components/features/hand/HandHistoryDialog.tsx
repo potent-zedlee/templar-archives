@@ -25,7 +25,7 @@ import {
   MoreHorizontal
 } from "lucide-react"
 import { Badge } from "./ui/badge"
-import type { Stream } from "@/lib/supabase"
+import type { FirestoreStream } from "@/lib/firestore-types"
 
 interface HandData {
   id: string
