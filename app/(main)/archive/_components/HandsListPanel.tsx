@@ -20,8 +20,7 @@ import { GridSkeleton } from '@/components/ui/skeletons/GridSkeleton'
 import { EmptyState } from '@/components/common/EmptyState'
 import { StaggerContainer, StaggerItem } from '@/components/layout/PageTransition'
 import { YouTubePlayer, type YouTubePlayerHandle } from '@/components/features/video/YouTubePlayer'
-import type { Stream } from '@/lib/supabase'
-import type { Hand } from '@/lib/types/archive'
+import type { Hand, Stream } from '@/lib/types/archive'
 
 interface HandsListPanelProps {
   streamId: string

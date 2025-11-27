@@ -7,11 +7,26 @@
  * - 토너먼트 목록 (테이블 뷰)
  * - CRUD 다이얼로그
  * - 검색 및 필터링
- * Phase 33: Enhanced with type-safe sorting and ARIA attributes
+ * Firestore 버전으로 마이그레이션됨
  */
 
 import { useEffect, useState } from 'react'
-import { createClientSupabaseClient } from '@/lib/supabase-client'
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  Timestamp,
+} from 'firebase/firestore'
+import { firestore as db, auth } from '@/lib/firebase'
+import { onAuthStateChanged } from 'firebase/auth'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
+import type {
+  FirestoreTournament,
+  FirestoreEvent,
+  FirestoreStream,
+} from '@/lib/firestore-types'
 import { isAdmin } from '@/lib/auth-utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,19 +38,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-// Select removed - using native select
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, Search, Loader2, ChevronRight, ChevronDown, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
-// Tabs removed - using custom tabs
 import { TournamentDialog } from '@/components/features/archive/TournamentDialog'
 import { DeleteDialog } from '@/components/features/archive/dialogs/DeleteDialog'
 import { SubEventDialog } from '@/components/features/archive/dialogs/SubEventDialog'
 import { DayDialog } from '@/components/features/archive/dialogs/DayDialog'
 import { AnalyzeVideoDialog } from '@/components/features/archive/dialogs/AnalyzeVideoDialog'
 import { UnsortedVideosTab } from './_components/UnsortedVideosTab'
-import type { Tournament, FolderItem, ContentStatus } from '@/lib/types/archive'
-import type { SubEvent, Stream } from '@/lib/supabase'
+import type { Tournament, FolderItem, ContentStatus, Event, Stream } from '@/lib/types/archive'
 import type { AdminArchiveSortField, SortDirection } from '@/lib/types/sorting'
 import { getSortAriaProps } from '@/hooks/useSorting'
 import { useRouter } from 'next/navigation'
@@ -44,6 +56,14 @@ import { StreamActions } from '@/components/admin/archive/StreamActions'
 import { StreamProgressIndicator } from '@/components/admin/archive/StreamProgressIndicator'
 import { StatusFilter } from '@/components/admin/archive/StatusFilter'
 import { BulkActions } from '@/components/admin/archive/BulkActions'
+
+// Helper: Timestamp to string
+function timestampToString(ts: Timestamp | { toDate: () => Date } | null | undefined): string {
+  if (!ts) return ''
+  if (ts instanceof Timestamp) return ts.toDate().toISOString()
+  if ('toDate' in ts) return ts.toDate().toISOString()
+  return ''
+}
 
 export default function AdminArchivePage() {
   const [loading, setLoading] = useState(true)
@@ -68,7 +88,7 @@ export default function AdminArchivePage() {
 
   // SubEvent states
   const [expandedTournaments, setExpandedTournaments] = useState<Set<string>>(new Set())
-  const [subEvents, setSubEvents] = useState<Map<string, SubEvent[]>>(new Map())
+  const [subEvents, setSubEvents] = useState<Map<string, Event[]>>(new Map())
   const [subEventDialogOpen, setSubEventDialogOpen] = useState(false)
   const [editingSubEventId, setEditingSubEventId] = useState('')
   const [selectedTournamentIdForSubEvent, setSelectedTournamentIdForSubEvent] = useState('')
@@ -96,12 +116,10 @@ export default function AdminArchivePage() {
   const [newEndDate, setNewEndDate] = useState('')
 
   const router = useRouter()
-  const supabase = createClientSupabaseClient()
 
-  // Auth check
+  // Auth check with Firebase
   useEffect(() => {
-    const checkAdmin = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         toast.error('Please sign in')
         router.push('/auth/login')
@@ -117,9 +135,9 @@ export default function AdminArchivePage() {
         router.push('/')
         return
       }
-    }
+    })
 
-    checkAdmin()
+    return () => unsubscribe()
   }, [router])
 
   // Load tournaments
@@ -130,9 +148,15 @@ export default function AdminArchivePage() {
 
   // Reload streams when status filter changes
   useEffect(() => {
-    // Reload all expanded subevents
     expandedSubEvents.forEach(subEventId => {
-      loadStreams(subEventId)
+      // Find the tournament ID for this subEvent
+      for (const [tournamentId, events] of subEvents.entries()) {
+        const foundEvent = events.find(e => e.id === subEventId)
+        if (foundEvent) {
+          loadStreams(tournamentId, subEventId)
+          break
+        }
+      }
     })
   }, [statusFilter])
 
@@ -194,13 +218,30 @@ export default function AdminArchivePage() {
   const loadTournaments = async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('tournaments')
-        .select('*')
-        .order('end_date', { ascending: false })
+      const tournamentsRef = collection(db, COLLECTION_PATHS.TOURNAMENTS)
+      const tournamentsQuery = query(tournamentsRef, orderBy('endDate', 'desc'))
+      const snapshot = await getDocs(tournamentsQuery)
 
-      if (error) throw error
-      setTournaments(data || [])
+      const tournamentsList: Tournament[] = snapshot.docs.map(doc => {
+        const data = doc.data() as FirestoreTournament
+        return {
+          id: doc.id,
+          name: data.name,
+          category: data.category,
+          category_logo: data.categoryInfo?.logo,
+          game_type: data.gameType,
+          location: data.location,
+          city: data.city,
+          country: data.country,
+          start_date: timestampToString(data.startDate),
+          end_date: timestampToString(data.endDate),
+          total_prize: data.totalPrize,
+          status: data.status,
+          created_at: timestampToString(data.createdAt),
+        }
+      })
+
+      setTournaments(tournamentsList)
     } catch (error) {
       console.error('Error loading tournaments:', error)
       toast.error('Failed to load tournaments')
@@ -211,10 +252,8 @@ export default function AdminArchivePage() {
 
   const handleSort = (field: AdminArchiveSortField) => {
     if (sortField === field) {
-      // 같은 필드 클릭 시 방향 토글
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
     } else {
-      // 다른 필드 클릭 시 해당 필드로 변경, 기본 asc
       setSortField(field)
       setSortDirection('asc')
     }
@@ -275,7 +314,6 @@ export default function AdminArchivePage() {
       newExpanded.delete(tournamentId)
     } else {
       newExpanded.add(tournamentId)
-      // Load SubEvents if not already loaded
       if (!subEvents.has(tournamentId)) {
         await loadSubEvents(tournamentId)
       }
@@ -286,16 +324,33 @@ export default function AdminArchivePage() {
 
   const loadSubEvents = async (tournamentId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('sub_events')
-        .select('*')
-        .eq('tournament_id', tournamentId)
-        .order('date', { ascending: false })
+      const eventsRef = collection(db, COLLECTION_PATHS.EVENTS(tournamentId))
+      const eventsQuery = query(eventsRef, orderBy('date', 'desc'))
+      const snapshot = await getDocs(eventsQuery)
 
-      if (error) throw error
+      const eventsList: Event[] = snapshot.docs.map(doc => {
+        const data = doc.data() as FirestoreEvent
+        return {
+          id: doc.id,
+          tournament_id: tournamentId,
+          name: data.name,
+          date: timestampToString(data.date),
+          event_number: data.eventNumber,
+          total_prize: data.totalPrize,
+          winner: data.winner,
+          buy_in: data.buyIn,
+          entry_count: data.entryCount,
+          blind_structure: data.blindStructure,
+          level_duration: data.levelDuration,
+          starting_stack: data.startingStack,
+          notes: data.notes,
+          status: data.status,
+          created_at: timestampToString(data.createdAt),
+        }
+      })
 
       const newSubEvents = new Map(subEvents)
-      newSubEvents.set(tournamentId, data || [])
+      newSubEvents.set(tournamentId, eventsList)
       setSubEvents(newSubEvents)
     } catch (error) {
       console.error('Error loading sub events:', error)
@@ -315,7 +370,7 @@ export default function AdminArchivePage() {
     setSubEventDialogOpen(true)
   }
 
-  const handleDeleteSubEvent = (subEvent: SubEvent, _tournamentId: string) => {
+  const handleDeleteSubEvent = (subEvent: Event, _tournamentId: string) => {
     setDeletingItem({
       id: subEvent.id,
       name: subEvent.name,
@@ -325,7 +380,6 @@ export default function AdminArchivePage() {
   }
 
   const handleSubEventSuccess = () => {
-    // Reload SubEvents for the current tournament
     if (selectedTournamentIdForSubEvent) {
       loadSubEvents(selectedTournamentIdForSubEvent)
     }
@@ -335,7 +389,6 @@ export default function AdminArchivePage() {
   }
 
   const handleSubEventDeleted = () => {
-    // Reload SubEvents for all expanded tournaments
     expandedTournaments.forEach(tournamentId => {
       loadSubEvents(tournamentId)
     })
@@ -343,66 +396,66 @@ export default function AdminArchivePage() {
   }
 
   // Stream/Day functions
-  const toggleSubEventExpand = async (subEventId: string) => {
+  const toggleSubEventExpand = async (tournamentId: string, subEventId: string) => {
     const newExpanded = new Set(expandedSubEvents)
 
     if (newExpanded.has(subEventId)) {
       newExpanded.delete(subEventId)
     } else {
       newExpanded.add(subEventId)
-      // Load Streams if not already loaded
       if (!streams.has(subEventId)) {
-        await loadStreams(subEventId)
+        await loadStreams(tournamentId, subEventId)
       }
     }
 
     setExpandedSubEvents(newExpanded)
   }
 
-  const loadStreams = async (subEventId: string) => {
+  const loadStreams = async (tournamentId: string, subEventId: string) => {
     try {
-      // Load streams with hand count (Admin 모드: 모든 상태 포함)
-      let query = supabase
-        .from('streams')
-        .select('*')
-        .eq('sub_event_id', subEventId)
-        .order('published_at', { ascending: false })
+      const streamsRef = collection(db, COLLECTION_PATHS.STREAMS(tournamentId, subEventId))
+      let streamsQuery = query(streamsRef, orderBy('publishedAt', 'desc'))
 
-      // Status 필터 적용
-      if (statusFilter !== 'all') {
-        query = query.eq('status', statusFilter)
-      }
-
-      const { data: streamsData, error } = await query
-
-      if (error) throw error
+      // Status filter is handled client-side since Firestore doesn't support combining orderBy with where on different fields easily
+      const snapshot = await getDocs(streamsQuery)
 
       // Get hand counts for these streams
-      const streamIds = (streamsData || []).map(s => s.id)
-      let handCounts: Record<string, number> = {}
+      const streamsList: (Stream & { hand_count?: number })[] = []
 
-      if (streamIds.length > 0) {
-        const { data: handCountData } = await supabase
-          .from('hands')
-          .select('day_id')
-          .in('day_id', streamIds)
+      for (const doc of snapshot.docs) {
+        const data = doc.data() as FirestoreStream
 
-        if (handCountData) {
-          handCounts = handCountData.reduce((acc, h) => {
-            acc[h.day_id] = (acc[h.day_id] || 0) + 1
-            return acc
-          }, {} as Record<string, number>)
+        // Apply status filter
+        if (statusFilter !== 'all' && data.status !== statusFilter) {
+          continue
         }
+
+        // Get hand count from embedded stats or query hands collection
+        let handCount = data.stats?.handsCount || 0
+
+        streamsList.push({
+          id: doc.id,
+          event_id: subEventId,
+          name: data.name,
+          description: data.description,
+          video_url: data.videoUrl,
+          video_file: data.videoFile,
+          video_source: data.videoSource,
+          status: data.status,
+          gcs_path: data.gcsPath,
+          gcs_uri: data.gcsUri,
+          gcs_file_size: data.gcsFileSize,
+          gcs_uploaded_at: timestampToString(data.gcsUploadedAt),
+          upload_status: data.uploadStatus,
+          video_duration: data.videoDuration,
+          published_at: timestampToString(data.publishedAt),
+          created_at: timestampToString(data.createdAt),
+          hand_count: handCount,
+        })
       }
 
-      // Merge hand counts with stream data
-      const streamsWithCounts = (streamsData || []).map(stream => ({
-        ...stream,
-        hand_count: handCounts[stream.id] || 0
-      }))
-
       const newStreams = new Map(streams)
-      newStreams.set(subEventId, streamsWithCounts)
+      newStreams.set(subEventId, streamsList)
       setStreams(newStreams)
     } catch (error) {
       console.error('Error loading streams:', error)
@@ -432,9 +485,14 @@ export default function AdminArchivePage() {
   }
 
   const handleStreamSuccess = () => {
-    // Reload Streams for the current SubEvent
+    // Find tournament ID for the subEvent
     if (selectedSubEventIdForDay) {
-      loadStreams(selectedSubEventIdForDay)
+      for (const [tournamentId, events] of subEvents.entries()) {
+        if (events.some(e => e.id === selectedSubEventIdForDay)) {
+          loadStreams(tournamentId, selectedSubEventIdForDay)
+          break
+        }
+      }
     }
     setDayDialogOpen(false)
     setEditingDayId('')
@@ -443,9 +501,14 @@ export default function AdminArchivePage() {
 
   const handleStreamDeleted = () => {
     // Reload Streams for all expanded subevents
-    expandedSubEvents.forEach(subEventId => {
-      loadStreams(subEventId)
-    })
+    for (const subEventId of expandedSubEvents) {
+      for (const [tournamentId, events] of subEvents.entries()) {
+        if (events.some(e => e.id === subEventId)) {
+          loadStreams(tournamentId, subEventId)
+          break
+        }
+      }
+    }
     setDeleteDialogOpen(false)
   }
 
@@ -519,9 +582,14 @@ export default function AdminArchivePage() {
           selectedStreamIds={Array.from(selectedStreamIds)}
           onSuccess={() => {
             // Reload streams for expanded subevents
-            expandedSubEvents.forEach(subEventId => {
-              loadStreams(subEventId)
-            })
+            for (const subEventId of expandedSubEvents) {
+              for (const [tournamentId, events] of subEvents.entries()) {
+                if (events.some(e => e.id === subEventId)) {
+                  loadStreams(tournamentId, subEventId)
+                  break
+                }
+              }
+            }
           }}
           onClearSelection={() => setSelectedStreamIds(new Set())}
         />
@@ -689,7 +757,6 @@ export default function AdminArchivePage() {
                                 <ChevronRight className="h-4 w-4" />
                               )}
                             </Button>
-                            {/* CategoryLogo removed due to async category fetch */}
                             {tournament.name}
                           </div>
                         </TableCell>
@@ -707,8 +774,8 @@ export default function AdminArchivePage() {
                             : tournament.location}
                         </TableCell>
                         <TableCell className="w-48 text-xs text-muted-foreground">
-                          {new Date(tournament.start_date).toLocaleDateString()} -{' '}
-                          {new Date(tournament.end_date).toLocaleDateString()}
+                          {tournament.start_date ? new Date(tournament.start_date).toLocaleDateString() : ''} -{' '}
+                          {tournament.end_date ? new Date(tournament.end_date).toLocaleDateString() : ''}
                         </TableCell>
                         <TableCell className="w-36 text-right">
                           <div className="flex items-center justify-end gap-2">
@@ -770,7 +837,7 @@ export default function AdminArchivePage() {
                           <TableRow
                             key={subEvent.id}
                             className="hover:bg-muted/30 cursor-pointer bg-muted/20"
-                            onClick={() => toggleSubEventExpand(subEvent.id)}
+                            onClick={() => toggleSubEventExpand(tournament.id, subEvent.id)}
                           >
                             <TableCell className="font-medium min-w-[200px]">
                               <div className="flex items-center gap-2 pl-4">
@@ -780,7 +847,7 @@ export default function AdminArchivePage() {
                                                   className="h-5 w-5 p-0"
                                                   onClick={(e) => {
                                                     e.stopPropagation()
-                                                    toggleSubEventExpand(subEvent.id)
+                                                    toggleSubEventExpand(tournament.id, subEvent.id)
                                                   }}
                                                 >
                                                   {isSubEventExpanded ? (
@@ -912,7 +979,7 @@ export default function AdminArchivePage() {
                                         currentStatus={streamStatus}
                                         videoUrl={stream.video_url}
                                         stream={stream}
-                                        onStatusChange={() => loadStreams(subEvent.id)}
+                                        onStatusChange={() => loadStreams(tournament.id, subEvent.id)}
                                         onOpenAnalyze={() => handleOpenAnalyze(stream)}
                                       />
                                       <Button
@@ -959,7 +1026,7 @@ export default function AdminArchivePage() {
           {/* Stats */}
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>Total: {tournaments.length} tournaments</span>
-            <span>•</span>
+            <span>-</span>
             <span>Showing: {filteredTournaments.length} tournaments</span>
           </div>
         </div>
@@ -1039,7 +1106,13 @@ export default function AdminArchivePage() {
             // Find parent subEvent to reload
             for (const [subEventId, streamList] of streams.entries()) {
               if (streamList.some(s => s.id === selectedStreamForAnalyze.id)) {
-                loadStreams(subEventId)
+                // Find tournament ID
+                for (const [tournamentId, events] of subEvents.entries()) {
+                  if (events.some(e => e.id === subEventId)) {
+                    loadStreams(tournamentId, subEventId)
+                    break
+                  }
+                }
                 break
               }
             }

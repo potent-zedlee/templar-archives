@@ -18,8 +18,7 @@ import {
 } from '@/components/ui/accordion'
 import { Trophy, Video, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Tournament } from '@/lib/types/archive'
-import type { Stream } from '@/lib/supabase'
+import type { Tournament, Stream } from '@/lib/types/archive'
 
 interface ArchiveNavigationSidebarProps {
   tournaments: Tournament[]
