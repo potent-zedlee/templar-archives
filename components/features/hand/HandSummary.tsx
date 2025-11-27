@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Card } from "./ui/card"
-import { Input } from "./ui/input"
-import { Textarea } from "./ui/textarea"
-import { Button } from "./ui/button"
+import { Card } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button"
 import { Edit2, Save, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
