@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo } from "react"
 import { useRouter} from "next/navigation"
 import { Bookmark, Trash2, FolderOpen, Calendar, Edit } from "lucide-react"
 import { useAuth } from "@/components/layout/AuthProvider"
-import { type HandBookmarkWithDetails } from "@/lib/hand-bookmarks"
 import { BookmarkDialog } from "@/components/dialogs/BookmarkDialog"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -12,6 +11,7 @@ import {
   useBookmarksQuery,
   useRemoveBookmarkMutation,
   useUpdateBookmarkMutation,
+  type HandBookmarkWithDetails,
 } from "@/lib/queries/bookmarks-queries"
 
 export default function BookmarksClient() {
@@ -42,7 +42,7 @@ export default function BookmarksClient() {
 
   // Extract folder list from bookmarks
   const folders = useMemo(() => {
-    const folderSet = new Set(bookmarks.map((b) => b.folder_name || 'Default').filter(Boolean))
+    const folderSet = new Set(bookmarks.map((b) => b.folderName || 'Default').filter(Boolean))
     return Array.from(folderSet).sort()
   }, [bookmarks])
 
@@ -50,7 +50,7 @@ export default function BookmarksClient() {
   const filteredBookmarks = useMemo(() => {
     return bookmarks.filter((bookmark) => {
       if (selectedFolder === 'all') return true
-      return (bookmark.folder_name || 'Default') === selectedFolder
+      return (bookmark.folderName || 'Default') === selectedFolder
     })
   }, [bookmarks, selectedFolder])
 
@@ -78,7 +78,7 @@ export default function BookmarksClient() {
 
     updateBookmarkMutation.mutate(
       {
-        handId: editingBookmark.hand_id,
+        handId: editingBookmark.refId,
         folderName,
         notes,
       },
@@ -132,7 +132,7 @@ export default function BookmarksClient() {
                 onClick={() => setSelectedFolder(folder)}
                 className={selectedFolder === folder ? 'btn-primary' : 'btn-secondary'}
               >
-                {folder} <span className="font-mono ml-1">({bookmarks.filter((b) => (b.folder_name || 'Default') === folder).length})</span>
+                {folder} <span className="font-mono ml-1">({bookmarks.filter((b) => (b.folderName || 'Default') === folder).length})</span>
               </button>
             ))}
           </div>
@@ -167,26 +167,26 @@ export default function BookmarksClient() {
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-2">
                       <Link
-                        href={`/archive?tournament=${bookmark.hand?.day?.sub_event?.tournament?.id}&day=${bookmark.hand?.day?.id}`}
+                        href={`/archive?tournament=${bookmark.hand?.day?.subEvent?.tournament?.id}&day=${bookmark.hand?.day?.id}`}
                         className="hover:text-gold-400 transition-colors"
                       >
                         <h3 className="text-heading font-mono">
                           HAND #{bookmark.hand?.number}
                         </h3>
                       </Link>
-                      {bookmark.folder_name && (
+                      {bookmark.folderName && (
                         <span className="px-2 py-1 border border-black-400 bg-black-200 text-xs uppercase flex items-center gap-1">
                           <FolderOpen className="h-3 w-3" />
-                          {bookmark.folder_name}
+                          {bookmark.folderName}
                         </span>
                       )}
                     </div>
 
                     {/* Tournament info */}
-                    {bookmark.hand?.day?.sub_event?.tournament && (
+                    {bookmark.hand?.day?.subEvent?.tournament && (
                       <div className="text-caption text-black-600">
-                        {bookmark.hand.day.sub_event.tournament.name} &gt;{' '}
-                        {bookmark.hand.day.sub_event.name} &gt; {bookmark.hand.day.name}
+                        {bookmark.hand.day.subEvent.tournament.name} &gt;{' '}
+                        {bookmark.hand.day.subEvent.name} &gt; {bookmark.hand.day.name}
                       </div>
                     )}
 
@@ -207,14 +207,14 @@ export default function BookmarksClient() {
                     {/* Bookmark date */}
                     <div className="flex items-center gap-2 text-caption text-black-600">
                       <Calendar className="h-3 w-3" />
-                      Bookmarked <span className="font-mono">{new Date(bookmark.created_at).toLocaleDateString('en-US')}</span>
+                      Bookmarked <span className="font-mono">{new Date(bookmark.createdAt).toLocaleDateString('en-US')}</span>
                     </div>
                   </div>
 
                   {/* Action buttons */}
                   <div className="flex flex-col gap-2">
                     <Link
-                      href={`/archive?tournament=${bookmark.hand?.day?.sub_event?.tournament?.id}&day=${bookmark.hand?.day?.id}`}
+                      href={`/archive?tournament=${bookmark.hand?.day?.subEvent?.tournament?.id}&day=${bookmark.hand?.day?.id}`}
                       className="btn-secondary text-sm"
                     >
                       View
@@ -226,7 +226,7 @@ export default function BookmarksClient() {
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => handleRemoveBookmark(bookmark.hand_id)}
+                      onClick={() => handleRemoveBookmark(bookmark.refId)}
                       className="btn-ghost text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -246,7 +246,7 @@ export default function BookmarksClient() {
             onSave={handleUpdateBookmark}
             userId={user?.id}
             existingBookmark={{
-              folder_name: editingBookmark.folder_name,
+              folderName: editingBookmark.folderName,
               notes: editingBookmark.notes
             }}
             mode="edit"

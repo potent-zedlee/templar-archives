@@ -21,7 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Bookmark, FolderPlus } from "lucide-react"
-import { getUserBookmarkFolders } from "@/lib/hand-bookmarks"
 
 interface BookmarkDialogProps {
   open: boolean
@@ -29,7 +28,7 @@ interface BookmarkDialogProps {
   onSave: (folderName: string | null, notes: string) => Promise<void>
   userId?: string
   existingBookmark?: {
-    folder_name?: string
+    folderName?: string
     notes?: string
   }
   mode: "add" | "edit"
@@ -58,7 +57,7 @@ export function BookmarkDialog({
 
   useEffect(() => {
     if (existingBookmark) {
-      setSelectedFolder(existingBookmark.folder_name || "default")
+      setSelectedFolder(existingBookmark.folderName || "default")
       setNotes(existingBookmark.notes || "")
     } else {
       setSelectedFolder("default")
@@ -71,8 +70,9 @@ export function BookmarkDialog({
   const loadFolders = async () => {
     if (!userId) return
     try {
-      const folderList = await getUserBookmarkFolders(userId)
-      setFolders(folderList)
+      // Firestore 구조에서는 별도 폴더 기능이 없으므로 빈 배열 반환
+      // 향후 폴더 기능 추가 시 여기서 Firestore 조회 구현
+      setFolders([])
     } catch (error) {
       console.error("Failed to load folders:", error)
     }
