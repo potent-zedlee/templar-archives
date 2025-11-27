@@ -24,6 +24,7 @@ npm run dev
 # 빌드 & 린트
 npm run build
 npm run lint
+npx tsc --noEmit                          # TypeScript 체크
 
 # 테스트
 npm run test                              # Vitest 전체
@@ -34,14 +35,21 @@ npx playwright test e2e/archive.spec.ts   # 단일 파일
 # Firebase 에뮬레이터 (로컬 개발)
 firebase emulators:start
 
-# Firebase Hosting 배포 (자동: GitHub Actions, 수동: 아래 명령어)
+# Firebase Hosting 배포 (자동: GitHub Actions, 수동: 아래)
 firebase deploy --only hosting
 
-# Cloud Functions 배포
-firebase deploy --only functions
+# Firestore Rules/Indexes 배포
+firebase deploy --only firestore
 
 # Cloud Run 배포 (영상 분석)
-cd cloud-run && ./deploy.sh
+cd cloud-run && ./deploy.sh all              # 전체 배포
+cd cloud-run && ./deploy.sh orchestrator     # Orchestrator만
+cd cloud-run && ./deploy.sh segment-analyzer # Segment Analyzer만
+
+# 운영 스크립트
+npm run admin                             # 관리자 CLI
+npm run ops:check-jobs                    # 분석 작업 상태 확인
+npm run ops:cleanup-jobs                  # 중단된 작업 정리
 
 # 번들 분석
 npm run analyze
@@ -210,6 +218,7 @@ UPSTASH_REDIS_REST_URL=your-url      # Rate Limiting
 **GitHub Actions** (`main` 브랜치 push 시 자동 배포):
 ```
 .github/workflows/firebase-deploy.yml
+.github/workflows/ci.yml
 ```
 
 **배포 흐름**:
@@ -220,8 +229,16 @@ Git Push (main) → GitHub Actions → npm ci → npm run build → firebase dep
 ```
 
 **GitHub Secrets 필요**:
-- `FIREBASE_SERVICE_ACCOUNT`
-- `NEXT_PUBLIC_FIREBASE_*` (6개)
+- `GOOGLE_APPLICATION_CREDENTIALS` - GCP 서비스 계정 JSON
+- `FIREBASE_TOKEN` - Firebase CLI 토큰
+- `NEXT_PUBLIC_FIREBASE_API_KEY`
+- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `NEXT_PUBLIC_FIREBASE_APP_ID`
+- `CLOUD_RUN_ORCHESTRATOR_URL`
+- `GOOGLE_API_KEY`
 
 ---
 
@@ -281,5 +298,5 @@ systemConfigs/            # 시스템 설정 (Admin 전용)
 
 ---
 
-**마지막 업데이트**: 2025-11-27
-**문서 버전**: 4.3 (Supabase/Trigger.dev 완전 제거)
+**마지막 업데이트**: 2025-11-28
+**문서 버전**: 4.4 (CLAUDE.md 개선 - 명령어 상세화, CI/CD Secrets 업데이트)
