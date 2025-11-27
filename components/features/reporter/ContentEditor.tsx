@@ -21,7 +21,8 @@ import {
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Upload, X, Save, Send } from "lucide-react"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
+import { storage } from "@/lib/firebase"
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { toast } from "sonner"
 
 type ContentType = 'news' | 'live_report'
@@ -31,18 +32,18 @@ interface ContentEditorProps {
   initialData?: {
     title?: string
     content?: string
-    thumbnail_url?: string
+    thumbnailUrl?: string
     category?: string
     tags?: string[]
-    external_link?: string
+    externalLink?: string
   }
   onSave: (data: {
     title: string
     content: string
-    thumbnail_url?: string
+    thumbnailUrl?: string
     category: string
     tags: string[]
-    external_link?: string
+    externalLink?: string
     status: 'draft' | 'pending'
   }) => Promise<void>
   onCancel: () => void
@@ -55,15 +56,14 @@ const LIVE_CATEGORIES = ['Tournament Update', 'Chip Counts', 'Breaking News', 'R
 export function ContentEditor({ type, initialData, onSave, onCancel, isLoading }: ContentEditorProps) {
   const [title, setTitle] = useState(initialData?.title || '')
   const [content, setContent] = useState(initialData?.content || '')
-  const [thumbnailUrl, setThumbnailUrl] = useState(initialData?.thumbnail_url || '')
+  const [thumbnailUrl, setThumbnailUrl] = useState(initialData?.thumbnailUrl || '')
   const [category, setCategory] = useState(initialData?.category || '')
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState<string[]>(initialData?.tags || [])
-  const [externalLink, setExternalLink] = useState(initialData?.external_link || '')
+  const [externalLink, setExternalLink] = useState(initialData?.externalLink || '')
   const [uploading, setUploading] = useState(false)
 
   const categories = type === 'news' ? NEWS_CATEGORIES : LIVE_CATEGORIES
-  const supabase = createClientSupabaseClient()
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -83,20 +83,15 @@ export function ContentEditor({ type, initialData, onSave, onCancel, isLoading }
 
     setUploading(true)
     try {
-      const bucket = type === 'news' ? 'news-images' : 'live-reports-images'
+      const folder = type === 'news' ? 'news-images' : 'live-reports-images'
       const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random()}.${fileExt}`
-      const filePath = `${fileName}`
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `${folder}/${fileName}`
 
-      const { error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath)
+      // Firebase Storage에 업로드
+      const storageRef = ref(storage, filePath)
+      await uploadBytes(storageRef, file)
+      const publicUrl = await getDownloadURL(storageRef)
 
       setThumbnailUrl(publicUrl)
       toast.success('Image uploaded successfully')
@@ -136,10 +131,10 @@ export function ContentEditor({ type, initialData, onSave, onCancel, isLoading }
     await onSave({
       title: title.trim(),
       content: content.trim(),
-      thumbnail_url: thumbnailUrl || undefined,
+      thumbnailUrl: thumbnailUrl || undefined,
       category,
       tags,
-      external_link: externalLink.trim() || undefined,
+      externalLink: externalLink.trim() || undefined,
       status,
     })
   }

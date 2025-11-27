@@ -6,9 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
-import { getKanJob } from '@/app/actions/kan-analysis'
-import { createBrowserSupabaseClient } from '@/lib/supabase-client'
-import type { RealtimeChannel } from '@supabase/supabase-js'
+import { firestore } from '@/lib/firebase'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { COLLECTION_PATHS, type FirestoreAnalysisJob } from '@/lib/firestore-types'
 
 interface JobStatusProps {
   jobId: string
@@ -16,56 +16,35 @@ interface JobStatusProps {
 }
 
 export function JobStatus({ jobId, onComplete }: JobStatusProps) {
-  const [job, setJob] = useState<any>(null)
+  const [job, setJob] = useState<FirestoreAnalysisJob | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    const supabase = createBrowserSupabaseClient()
-    let channel: RealtimeChannel | null = null
+    // Firestore 실시간 구독
+    const jobRef = doc(firestore, COLLECTION_PATHS.ANALYSIS_JOBS, jobId)
 
-    // Initial fetch
-    const fetchInitialJob = async () => {
-      const data = await getKanJob(jobId)
-      setJob(data)
+    const unsubscribe = onSnapshot(
+      jobRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data() as FirestoreAnalysisJob
 
-      // Check if already completed/failed
-      if (data && (data.status === 'completed' || data.status === 'failed')) {
-        if (data.status === 'completed' && onComplete) {
-          onComplete()
-        }
-      }
-    }
-
-    fetchInitialJob()
-
-    // Subscribe to Realtime updates
-    channel = supabase
-      .channel(`analysis_job:${jobId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'analysis_jobs',
-          filter: `id=eq.${jobId}`,
-        },
-        (payload) => {
-          const updatedJob = payload.new as any
-          setJob(updatedJob)
+          setJob(data)
 
           // Call onComplete when job finishes
-          if (updatedJob.status === 'completed' && onComplete) {
+          if (data.status === 'completed' && onComplete) {
             onComplete()
           }
         }
-      )
-      .subscribe()
+      },
+      (error) => {
+        console.error('[JobStatus] Firestore subscription error:', error)
+      }
+    )
 
     // Cleanup
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel)
-      }
+      unsubscribe()
     }
   }, [jobId, onComplete])
 
@@ -122,10 +101,10 @@ export function JobStatus({ jobId, onComplete }: JobStatusProps) {
           <Progress value={job.progress} className="w-full" />
         )}
 
-        {job.status === 'failed' && job.error_message && (
+        {job.status === 'failed' && job.errorMessage && (
           <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
             <p className="text-sm font-medium">오류 메시지:</p>
-            <p className="text-sm mt-1">{job.error_message}</p>
+            <p className="text-sm mt-1">{job.errorMessage}</p>
           </div>
         )}
 
@@ -146,17 +125,17 @@ export function JobStatus({ jobId, onComplete }: JobStatusProps) {
         )}
 
         <div className="text-sm text-muted-foreground space-y-1">
-          <p>작업 ID: {job.id}</p>
-          {job.started_at && (
+          <p>작업 ID: {jobId}</p>
+          {job.startedAt && (
             <p>
               시작 시간:{' '}
-              {new Date(job.started_at).toLocaleString('ko-KR')}
+              {job.startedAt.toDate().toLocaleString('ko-KR')}
             </p>
           )}
-          {job.completed_at && (
+          {job.completedAt && (
             <p>
               완료 시간:{' '}
-              {new Date(job.completed_at).toLocaleString('ko-KR')}
+              {job.completedAt.toDate().toLocaleString('ko-KR')}
             </p>
           )}
         </div>

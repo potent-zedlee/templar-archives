@@ -10,7 +10,7 @@
 import { adminFirestore, adminAuth } from '@/lib/firebase-admin'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
-import { Timestamp, FieldValue } from 'firebase-admin/firestore'
+import { Timestamp, FieldValue, FieldPath } from 'firebase-admin/firestore'
 import type { TournamentCategory } from '@/lib/types/archive'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'
 
@@ -376,7 +376,7 @@ export async function updateEvent(id: string, data: {
     // 실제 운영 환경에서는 tournamentId를 파라미터로 받아야 함
     const eventsSnapshot = await adminFirestore
       .collectionGroup('events')
-      .where(adminFirestore.FieldPath.documentId(), '==', id)
+      .where(FieldPath.documentId(), '==', id)
       .limit(1)
       .get()
 
@@ -431,7 +431,7 @@ export async function deleteEvent(id: string) {
     // 2. Event 문서 찾기
     const eventsSnapshot = await adminFirestore
       .collectionGroup('events')
-      .where(adminFirestore.FieldPath.documentId(), '==', id)
+      .where(FieldPath.documentId(), '==', id)
       .limit(1)
       .get()
 
@@ -491,7 +491,7 @@ export async function createStream(eventId: string, data: {
     // 3. Event 문서 찾기 (tournamentId 추출)
     const eventsSnapshot = await adminFirestore
       .collectionGroup('events')
-      .where(adminFirestore.FieldPath.documentId(), '==', eventId)
+      .where(FieldPath.documentId(), '==', eventId)
       .limit(1)
       .get()
 
@@ -587,7 +587,7 @@ export async function updateStream(id: string, data: {
     // 3. Stream 문서 찾기
     const streamsSnapshot = await adminFirestore
       .collectionGroup('streams')
-      .where(adminFirestore.FieldPath.documentId(), '==', id)
+      .where(FieldPath.documentId(), '==', id)
       .limit(1)
       .get()
 
@@ -639,7 +639,7 @@ export async function deleteStream(id: string) {
     // 2. Stream 문서 찾기
     const streamsSnapshot = await adminFirestore
       .collectionGroup('streams')
-      .where(adminFirestore.FieldPath.documentId(), '==', id)
+      .where(FieldPath.documentId(), '==', id)
       .limit(1)
       .get()
 
@@ -709,7 +709,7 @@ export async function saveEventPayouts(eventId: string, payouts: Array<{
     // 2. Event 문서 찾기
     const eventsSnapshot = await adminFirestore
       .collectionGroup('events')
-      .where(adminFirestore.FieldPath.documentId(), '==', eventId)
+      .where(FieldPath.documentId(), '==', eventId)
       .limit(1)
       .get()
 
@@ -809,7 +809,7 @@ export async function renameItem(
     } else if (itemType === 'event') {
       const snapshot = await adminFirestore
         .collectionGroup('events')
-        .where(adminFirestore.FieldPath.documentId(), '==', itemId)
+        .where(FieldPath.documentId(), '==', itemId)
         .limit(1)
         .get()
 
@@ -819,7 +819,7 @@ export async function renameItem(
     } else if (itemType === 'stream') {
       const snapshot = await adminFirestore
         .collectionGroup('streams')
-        .where(adminFirestore.FieldPath.documentId(), '==', itemId)
+        .where(FieldPath.documentId(), '==', itemId)
         .limit(1)
         .get()
 

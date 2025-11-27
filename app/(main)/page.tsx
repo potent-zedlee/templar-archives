@@ -10,10 +10,10 @@ import { LatestPosts } from "@/components/home/LatestPosts"
 import { TopPlayers } from "@/components/home/TopPlayers"
 import { CardSkeleton } from "@/components/ui/skeletons/CardSkeleton"
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
+import { getHomePageData } from "@/app/actions/home"
 import type { PlatformStats, WeeklyHighlight, TopPlayer } from "@/lib/main-page"
 
-export default function homeClient() {
+export default function HomeClient() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<{
     stats: PlatformStats | null
@@ -25,112 +25,18 @@ export default function homeClient() {
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClientSupabaseClient()
+        const result = await getHomePageData()
 
-        // Fetch platform stats
-        const [
-          { count: totalHands },
-          { count: totalTournaments },
-          { count: totalPlayers }
-        ] = await Promise.all([
-          supabase.from('hands').select('*', { count: 'exact', head: true }),
-          supabase.from('tournaments').select('*', { count: 'exact', head: true }),
-          supabase.from('players').select('*', { count: 'exact', head: true })
-        ])
-
-        const stats = {
-          totalHands: totalHands || 0,
-          totalTournaments: totalTournaments || 0,
-          totalPlayers: totalPlayers || 0
+        if (result.success && result.data) {
+          setData({
+            stats: result.data.stats,
+            highlights: result.data.highlights,
+            posts: result.data.posts,
+            topPlayers: result.data.topPlayers,
+          })
+        } else {
+          console.error("Failed to load homepage data:", result.error)
         }
-
-        // Fetch weekly highlights
-        const sevenDaysAgo = new Date()
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-
-        const { data: highlightsData } = await supabase
-          .from('hands')
-          .select(`
-            id,
-            number,
-            description,
-            timestamp,
-            pot_size,
-            likes_count,
-            day:day_id (
-              name,
-              video_url,
-              sub_event:sub_event_id (
-                tournament:tournament_id (
-                  name
-                )
-              )
-            )
-          `)
-          .gte('created_at', sevenDaysAgo.toISOString())
-          .order('likes_count', { ascending: false })
-          .limit(3)
-
-        const highlights = (highlightsData || []).map((hand: any) => ({
-          id: hand.id,
-          number: hand.number,
-          description: hand.description || '',
-          timestamp: hand.timestamp || '',
-          pot_size: hand.pot_size || 0,
-          likes_count: hand.likes_count || 0,
-          video_url: hand.day?.video_url || '',
-          tournament_name: hand.day?.sub_event?.tournament?.name || 'Unknown',
-          day_name: hand.day?.name || 'Unknown'
-        }))
-
-        // Fetch latest posts
-        const { data: postsData } = await supabase
-          .from('posts')
-          .select(`
-            id,
-            title,
-            content,
-            category,
-            created_at,
-            likes_count,
-            comments_count,
-            author_name,
-            author_avatar
-          `)
-          .order('created_at', { ascending: false })
-          .limit(4)
-
-        const posts = (postsData || []).map((post: any) => ({
-          ...post,
-          author: {
-            nickname: post.author_name,
-            avatar_url: post.author_avatar
-          }
-        }))
-
-        // Fetch top players
-        const { data: playersData } = await supabase
-          .from('players')
-          .select(`
-            id,
-            name,
-            photo_url,
-            total_winnings,
-            hand_players:hand_players(count)
-          `)
-          .order('total_winnings', { ascending: false })
-          .limit(5)
-
-        const topPlayers = (playersData || []).map((player: any) => ({
-          id: player.id,
-          name: player.name,
-          photo_url: player.photo_url,
-          total_winnings: player.total_winnings || 0,
-          tournament_count: 0,
-          hands_count: player.hand_players?.length || 0
-        }))
-
-        setData({ stats, highlights, posts, topPlayers })
       } catch (error) {
         console.error("Failed to load homepage data:", error)
       } finally {

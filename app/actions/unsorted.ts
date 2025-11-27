@@ -387,3 +387,346 @@ export async function getUnsortedVideos() {
     }
   }
 }
+
+/**
+ * Create multiple unsorted videos at once (batch import)
+ */
+export async function createUnsortedVideosBatch(
+  videos: Array<{
+    name: string
+    video_url: string
+    video_source?: 'youtube' | 'local' | 'nas'
+    published_at?: string
+  }>
+) {
+  // 권한 검증
+  const { authorized, error } = await verifyAdmin()
+  if (!authorized) {
+    return { success: false, error, imported: 0, failed: 0 }
+  }
+
+  try {
+    let imported = 0
+    let failed = 0
+    const errors: Array<{ video: string; error: string }> = []
+
+    // Process in batches
+    const BATCH_SIZE = 10
+    const now = new Date()
+
+    for (let i = 0; i < videos.length; i += BATCH_SIZE) {
+      const batch = adminFirestore.batch()
+      const batchVideos = videos.slice(i, Math.min(i + BATCH_SIZE, videos.length))
+
+      for (const video of batchVideos) {
+        const streamRef = adminFirestore.collection(COLLECTION_PATHS.STREAMS).doc()
+
+        const normalizedUrl = video.video_source === 'youtube' && video.video_url
+          ? normalizeYoutubeUrl(video.video_url)
+          : video.video_url
+
+        batch.set(streamRef, {
+          name: video.name,
+          videoUrl: normalizedUrl,
+          videoFile: null,
+          videoSource: video.video_source || 'youtube',
+          subEventId: null,
+          isOrganized: false,
+          publishedAt: video.published_at ? new Date(video.published_at) : null,
+          createdAt: now,
+          updatedAt: now,
+        })
+      }
+
+      try {
+        await batch.commit()
+        imported += batchVideos.length
+      } catch (batchError) {
+        console.error('Error in batch insert:', batchError)
+        batchVideos.forEach(video => {
+          errors.push({ video: video.name, error: 'Batch insert failed' })
+        })
+        failed += batchVideos.length
+      }
+    }
+
+    revalidatePath('/admin/archive')
+
+    return {
+      success: imported > 0,
+      imported,
+      failed,
+      errors: errors.length > 0 ? errors : undefined,
+    }
+  } catch (error) {
+    console.error('Error creating unsorted videos batch:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create videos',
+      imported: 0,
+      failed: videos.length,
+    }
+  }
+}
+
+/**
+ * Add video directly to a stream (Day)
+ */
+export async function addVideoToStream(
+  tournamentId: string,
+  eventId: string,
+  streamId: string,
+  data: {
+    video_url?: string
+    video_file?: string
+  }
+) {
+  // 권한 검증
+  const { authorized, error } = await verifyAdmin()
+  if (!authorized) {
+    return { success: false, error }
+  }
+
+  try {
+    const streamRef = adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(tournamentId)
+      .collection('events')
+      .doc(eventId)
+      .collection('streams')
+      .doc(streamId)
+
+    const updateData: Record<string, any> = {
+      updatedAt: FieldValue.serverTimestamp(),
+    }
+
+    if (data.video_url) {
+      updateData.videoUrl = data.video_url
+    }
+    if (data.video_file) {
+      updateData.videoFile = data.video_file
+    }
+
+    await streamRef.update(updateData)
+
+    revalidatePath('/admin/archive')
+    revalidatePath('/archive')
+    return { success: true }
+  } catch (error) {
+    console.error('Error adding video to stream:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to add video to stream'
+    }
+  }
+}
+
+/**
+ * Create new stream (Day) with video
+ */
+export async function createStreamWithVideo(
+  tournamentId: string,
+  eventId: string,
+  data: {
+    name: string
+    video_url?: string
+    video_file?: string
+  }
+) {
+  // 권한 검증
+  const { authorized, error } = await verifyAdmin()
+  if (!authorized) {
+    return { success: false, error }
+  }
+
+  try {
+    const streamRef = adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(tournamentId)
+      .collection('events')
+      .doc(eventId)
+      .collection('streams')
+      .doc()
+
+    const streamData = {
+      name: data.name,
+      videoUrl: data.video_url || null,
+      videoFile: data.video_file || null,
+      videoSource: data.video_url ? 'youtube' as const : 'upload' as const,
+      isOrganized: true,
+      organizedAt: FieldValue.serverTimestamp(),
+      uploadStatus: 'none' as const,
+      status: 'draft' as const,
+      stats: {
+        handsCount: 0,
+      },
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    }
+
+    await streamRef.set(streamData)
+
+    // Update parent Event's streamsCount
+    await adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(tournamentId)
+      .collection('events')
+      .doc(eventId)
+      .update({
+        'stats.streamsCount': FieldValue.increment(1),
+        updatedAt: FieldValue.serverTimestamp(),
+      })
+
+    // Update Tournament's streamsCount
+    await adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(tournamentId)
+      .update({
+        'stats.streamsCount': FieldValue.increment(1),
+        updatedAt: FieldValue.serverTimestamp(),
+      })
+
+    revalidatePath('/admin/archive')
+    revalidatePath('/archive')
+    return { success: true, id: streamRef.id }
+  } catch (error) {
+    console.error('Error creating stream with video:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create stream'
+    }
+  }
+}
+
+/**
+ * Auto-organize videos into tournaments (batch import with structure)
+ */
+export async function autoOrganizeVideos(structure: {
+  tournaments: Array<{
+    name: string
+    category: string
+    location: string
+    startDate: string
+    endDate: string
+    subEvents: Array<{
+      name: string
+      date: string
+      videos: Array<{
+        title: string
+        url: string
+        publishedAt?: string
+      }>
+    }>
+  }>
+}) {
+  // 권한 검증
+  const { authorized, error } = await verifyAdmin()
+  if (!authorized) {
+    return { success: false, error, imported: 0 }
+  }
+
+  try {
+    let totalImported = 0
+
+    for (const tournament of structure.tournaments) {
+      // Create tournament
+      const tournamentRef = adminFirestore.collection(COLLECTION_PATHS.TOURNAMENTS).doc()
+
+      const getCategoryId = (category: string): string => {
+        const mapping: Record<string, string> = {
+          'WSOP': 'wsop',
+          'Triton': 'triton',
+          'EPT': 'ept',
+          'APT': 'apt',
+          'APL': 'apl',
+          'Hustler Casino Live': 'hustler',
+          'WSOP Classic': 'wsop',
+          'GGPOKER': 'ggpoker',
+        }
+        return mapping[category] || category.toLowerCase().replace(/\s+/g, '-')
+      }
+
+      await tournamentRef.set({
+        name: tournament.name,
+        category: tournament.category,
+        categoryInfo: {
+          id: getCategoryId(tournament.category),
+          name: tournament.category,
+          logo: null,
+        },
+        location: tournament.location,
+        startDate: new Date(tournament.startDate),
+        endDate: new Date(tournament.endDate),
+        status: 'draft',
+        stats: {
+          eventsCount: tournament.subEvents.length,
+          streamsCount: 0,
+          handsCount: 0,
+          playersCount: 0,
+        },
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      })
+
+      let tournamentStreamsCount = 0
+
+      for (const subEvent of tournament.subEvents) {
+        // Create event
+        const eventRef = tournamentRef.collection('events').doc()
+
+        await eventRef.set({
+          name: subEvent.name,
+          date: new Date(subEvent.date),
+          status: 'draft',
+          stats: {
+            streamsCount: subEvent.videos.length,
+            handsCount: 0,
+          },
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        })
+
+        for (const video of subEvent.videos) {
+          // Create stream
+          const streamRef = eventRef.collection('streams').doc()
+
+          await streamRef.set({
+            name: video.title,
+            videoUrl: video.url,
+            videoSource: 'youtube',
+            isOrganized: true,
+            organizedAt: FieldValue.serverTimestamp(),
+            publishedAt: video.publishedAt ? new Date(video.publishedAt) : null,
+            uploadStatus: 'none',
+            status: 'draft',
+            stats: {
+              handsCount: 0,
+            },
+            createdAt: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
+          })
+
+          totalImported++
+          tournamentStreamsCount++
+        }
+      }
+
+      // Update tournament streams count
+      await tournamentRef.update({
+        'stats.streamsCount': tournamentStreamsCount,
+      })
+    }
+
+    revalidatePath('/admin/archive')
+    revalidatePath('/archive')
+
+    return { success: true, imported: totalImported }
+  } catch (error) {
+    console.error('Error auto-organizing videos:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to auto-organize videos',
+      imported: 0,
+    }
+  }
+}

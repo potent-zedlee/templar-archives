@@ -12,10 +12,15 @@ import {
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, Youtube, Upload, Radio } from 'lucide-react'
-import { createUnsortedVideo, createUnsortedVideosBatch } from '@/lib/unsorted-videos'
+import {
+  createUnsortedVideo,
+  createUnsortedVideosBatch,
+  addVideoToStream,
+  createStreamWithVideo,
+  autoOrganizeVideos,
+} from '@/app/actions/unsorted'
 import type { YouTubeVideo } from '@/lib/youtube-api'
 import { createAutoOrganizedStructure, type GroupingStrategy, type OrganizedStructure } from '@/lib/auto-organizer'
-import { createClientSupabaseClient } from '@/lib/supabase-client'
 import { toast } from 'sonner'
 import { useTournamentsQuery } from '@/lib/queries/archive-queries'
 import { YouTubeUploadTab } from './YouTubeUploadTab'
@@ -73,11 +78,10 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
     }
 
     setLoading(true)
-    const supabase = createClientSupabaseClient()
 
     try {
       if (addToUnsorted) {
-        // 기존 로직: Unsorted에 추가
+        // 기존 로직: Unsorted에 추가 (Server Action 사용)
         const result = await createUnsortedVideo({
           name: youtubeName,
           video_url: youtubeUrl,
@@ -95,54 +99,49 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
         }
       } else {
         // 새 로직: Tournament → SubEvent → Day에 직접 추가
-        let targetDayId = selectedDayId
+        if (!selectedTournamentId || !selectedSubEventId) {
+          toast.error('Please select a tournament and sub-event')
+          return
+        }
 
-        // Create new day if needed
         if (createNewDay) {
+          // Create new day if needed
           if (!newDayName) {
             toast.error('Please enter new day name')
             return
           }
-          if (!selectedSubEventId) {
-            toast.error('Please select a sub-event to create a new day')
-            return
-          }
 
-          const { data: newDay, error: dayError } = await supabase
-            .from('streams')
-            .insert({
-              sub_event_id: selectedSubEventId,
+          const result = await createStreamWithVideo(
+            selectedTournamentId,
+            selectedSubEventId,
+            {
               name: newDayName,
               video_url: youtubeUrl,
-              is_organized: true,
-              organized_at: new Date().toISOString(),
-            })
-            .select()
-            .single()
+            }
+          )
 
-          if (dayError) {
-            console.error('Error creating new day:', dayError)
-            toast.error('Failed to create new day')
+          if (!result.success) {
+            toast.error(result.error || 'Failed to create new day')
             return
           }
 
-          targetDayId = newDay.id
           toast.success(`Created new day: ${newDayName}`)
         } else {
           // Add to existing day
-          if (!targetDayId) {
+          if (!selectedDayId) {
             toast.error('Please select a day')
             return
           }
 
-          const { error: updateError } = await supabase
-            .from('streams')
-            .update({ video_url: youtubeUrl })
-            .eq('id', targetDayId)
+          const result = await addVideoToStream(
+            selectedTournamentId,
+            selectedSubEventId,
+            selectedDayId,
+            { video_url: youtubeUrl }
+          )
 
-          if (updateError) {
-            console.error('Error updating day:', updateError)
-            toast.error('Failed to add video to day')
+          if (!result.success) {
+            toast.error(result.error || 'Failed to add video to day')
             return
           }
         }
@@ -168,11 +167,10 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
     }
 
     setLoading(true)
-    const supabase = createClientSupabaseClient()
 
     try {
       if (addToUnsorted) {
-        // 기존 로직: Unsorted에 추가
+        // 기존 로직: Unsorted에 추가 (Server Action 사용)
         const result = await createUnsortedVideo({
           name: localName,
           video_file: localFile.name,
@@ -190,54 +188,49 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
         }
       } else {
         // 새 로직: Tournament → SubEvent → Day에 직접 추가
-        let targetDayId = selectedDayId
+        if (!selectedTournamentId || !selectedSubEventId) {
+          toast.error('Please select a tournament and sub-event')
+          return
+        }
 
-        // Create new day if needed
         if (createNewDay) {
+          // Create new day if needed
           if (!newDayName) {
             toast.error('Please enter new day name')
             return
           }
-          if (!selectedSubEventId) {
-            toast.error('Please select a sub-event to create a new day')
-            return
-          }
 
-          const { data: newDay, error: dayError } = await supabase
-            .from('streams')
-            .insert({
-              sub_event_id: selectedSubEventId,
+          const result = await createStreamWithVideo(
+            selectedTournamentId,
+            selectedSubEventId,
+            {
               name: newDayName,
               video_file: localFile.name,
-              is_organized: true,
-              organized_at: new Date().toISOString(),
-            })
-            .select()
-            .single()
+            }
+          )
 
-          if (dayError) {
-            console.error('Error creating new day:', dayError)
-            toast.error('Failed to create new day')
+          if (!result.success) {
+            toast.error(result.error || 'Failed to create new day')
             return
           }
 
-          targetDayId = newDay.id
           toast.success(`Created new day: ${newDayName}`)
         } else {
           // Add to existing day
-          if (!targetDayId) {
+          if (!selectedDayId) {
             toast.error('Please select a day')
             return
           }
 
-          const { error: updateError } = await supabase
-            .from('streams')
-            .update({ video_file: localFile.name })
-            .eq('id', targetDayId)
+          const result = await addVideoToStream(
+            selectedTournamentId,
+            selectedSubEventId,
+            selectedDayId,
+            { video_file: localFile.name }
+          )
 
-          if (updateError) {
-            console.error('Error updating day:', updateError)
-            toast.error('Failed to add video to day')
+          if (!result.success) {
+            toast.error(result.error || 'Failed to add video to day')
             return
           }
         }
@@ -363,9 +356,7 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
 
       setImporting(true)
       try {
-        const result = await createUnsortedVideosBatch(videosToImport, (current, total) => {
-          // Progress callback
-        })
+        const result = await createUnsortedVideosBatch(videosToImport)
 
         if (result.success) {
           toast.success(`Successfully imported ${result.imported} video(s)`)
@@ -391,8 +382,6 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
   }
 
   const handleImportAndOrganize = async () => {
-    const supabase = createClientSupabaseClient()
-
     if (!organizationPreview) {
       handleGeneratePreview()
       toast.error('Please generate preview first')
@@ -401,72 +390,21 @@ export function QuickUploadDialog({ onSuccess }: QuickUploadDialogProps) {
 
     setImporting(true)
     try {
-      let totalImported = 0
+      const result = await autoOrganizeVideos(organizationPreview)
 
-      for (const tournament of organizationPreview.tournaments) {
-        const { data: tournamentData, error: tournamentError } = await supabase
-          .from('tournaments')
-          .insert({
-            name: tournament.name,
-            category: tournament.category,
-            location: tournament.location,
-            start_date: tournament.startDate,
-            end_date: tournament.endDate,
-          })
-          .select()
-          .single()
+      if (result.success) {
+        toast.success(`Successfully organized ${result.imported} video(s) into tournaments!`)
 
-        if (tournamentError) {
-          console.error('Error creating tournament:', tournamentError)
-          continue
-        }
-
-        for (const subEvent of tournament.subEvents) {
-          const { data: subEventData, error: subEventError } = await supabase
-            .from('sub_events')
-            .insert({
-              tournament_id: tournamentData.id,
-              name: subEvent.name,
-              date: subEvent.date,
-            })
-            .select()
-            .single()
-
-          if (subEventError) {
-            console.error('Error creating sub-event:', subEventError)
-            continue
-          }
-
-          for (const video of subEvent.videos) {
-            const { error: dayError } = await supabase
-              .from('streams')
-              .insert({
-                sub_event_id: subEventData.id,
-                name: video.title,
-                video_url: video.url,
-                is_organized: true,
-                organized_at: new Date().toISOString(),
-                published_at: video.publishedAt,
-              })
-
-            if (dayError) {
-              console.error('Error creating day:', dayError)
-            } else {
-              totalImported++
-            }
-          }
-        }
+        setChannelUrl('')
+        setFetchedVideos([])
+        setSelectedVideos(new Set())
+        setAutoOrganize(false)
+        setOrganizationPreview(null)
+        setOpen(false)
+        onSuccess?.()
+      } else {
+        toast.error(result.error || 'Failed to auto-organize videos')
       }
-
-      toast.success(`Successfully organized ${totalImported} video(s) into tournaments!`)
-
-      setChannelUrl('')
-      setFetchedVideos([])
-      setSelectedVideos(new Set())
-      setAutoOrganize(false)
-      setOrganizationPreview(null)
-      setOpen(false)
-      onSuccess?.()
     } catch (error) {
       console.error('Error auto-organizing:', error)
       toast.error('Failed to auto-organize videos')

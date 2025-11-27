@@ -11,6 +11,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app'
 import { getFirestore, type Firestore } from 'firebase/firestore'
 import { getAuth, type Auth } from 'firebase/auth'
+import { getStorage, type FirebaseStorage } from 'firebase/storage'
 
 /**
  * Firebase 설정 객체
@@ -71,6 +72,21 @@ export const firestore: Firestore = getFirestore(app)
  * ```
  */
 export const auth: Auth = getAuth(app)
+
+/**
+ * Firebase Storage 인스턴스
+ *
+ * @example
+ * ```typescript
+ * import { storage } from '@/lib/firebase'
+ * import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+ *
+ * const storageRef = ref(storage, 'images/photo.jpg')
+ * await uploadBytes(storageRef, file)
+ * const url = await getDownloadURL(storageRef)
+ * ```
+ */
+export const storage: FirebaseStorage = getStorage(app)
 
 /**
  * Firebase 설정이 올바르게 되어있는지 확인

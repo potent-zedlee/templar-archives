@@ -24,12 +24,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "sonner"
 import { requestPlayerClaim, type VerificationMethod } from "@/lib/player-claims"
 import { useAuth } from "@/components/layout/AuthProvider"
-import type { Player } from "@/lib/supabase"
+
+/**
+ * 플레이어 타입 (Firestore 또는 Supabase에서 모두 호환)
+ */
+type PlayerForClaim = {
+  id: string
+  name: string
+  photoUrl?: string | null
+  photo_url?: string | null  // Supabase 호환
+  country?: string | null
+}
 
 type ClaimPlayerDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
-  player: Player
+  player: PlayerForClaim
   onSuccess?: () => void
 }
 
@@ -66,16 +76,16 @@ export function ClaimPlayerDialog({
     setIsSubmitting(true)
 
     try {
-      const verificationData: any = {}
+      const verificationData: Record<string, string> = {}
 
       if (verificationMethod === "social_media") {
-        verificationData.social_media_url = socialMediaUrl
+        verificationData.socialMediaUrl = socialMediaUrl
       } else if (verificationMethod === "email") {
         verificationData.email = email
       }
 
       if (additionalInfo) {
-        verificationData.additional_info = additionalInfo
+        verificationData.additionalInfo = additionalInfo
       }
 
       const { data, error } = await requestPlayerClaim({
@@ -122,7 +132,7 @@ export function ClaimPlayerDialog({
           {/* Player Info */}
           <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
             <Avatar className="h-12 w-12">
-              <AvatarImage src={player.photo_url} alt={player.name} />
+              <AvatarImage src={player.photoUrl || player.photo_url || undefined} alt={player.name} />
               <AvatarFallback>
                 {player.name.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
