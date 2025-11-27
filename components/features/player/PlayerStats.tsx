@@ -99,9 +99,9 @@ export function AdvancedStatsCard({ playerId }: { playerId: string }) {
     <Card className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">고급 통계</h3>
-        {playStyle?.data && (
-          <div className={`inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg ${playStyle.data.color}`}>
-            <span className="text-sm font-medium">{playStyle.data.style}</span>
+        {playStyle && (
+          <div className={`inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-lg ${playStyle.color}`}>
+            <span className="text-sm font-medium">{playStyle.style}</span>
           </div>
         )}
       </div>
@@ -123,10 +123,10 @@ export function AdvancedStatsCard({ playerId }: { playerId: string }) {
         ))}
       </div>
 
-      {playStyle?.data && (
+      {playStyle && (
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {playStyle.data.description}
+            {playStyle.description}
           </p>
         </div>
       )}

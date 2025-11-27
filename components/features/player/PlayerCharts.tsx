@@ -52,12 +52,10 @@ export function PrizeHistoryChart({ data }: PrizeHistoryChartProps) {
             return item ? `${item.eventName} (Rank ${item.rank})` : label
           }}
           contentStyle={{
-            backgroundColor: 'var(--tw-bg-opacity, 1)',
-            border: '1px solid',
-            borderColor: 'var(--tw-border-opacity, 1)',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid rgba(209, 213, 219, 1)',
             borderRadius: '8px',
           }}
-          className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
         />
         <Area
           type="monotone"
@@ -95,12 +93,10 @@ export function TournamentCategoryChart({ data }: TournamentCategoryChartProps) 
         </Pie>
         <Tooltip
           contentStyle={{
-            backgroundColor: 'var(--tw-bg-opacity, 1)',
-            border: '1px solid',
-            borderColor: 'var(--tw-border-opacity, 1)',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid rgba(209, 213, 219, 1)',
             borderRadius: '8px',
           }}
-          className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
         />
       </RechartsPie>
     </ResponsiveContainer>
