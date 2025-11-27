@@ -1,26 +1,71 @@
-import { createClientSupabaseClient } from './supabase-client'
+/**
+ * Firestore 아카이브 헬퍼 함수
+ *
+ * 아카이브 UI에서 사용되는 헬퍼 함수들
+ * Supabase PostgreSQL에서 마이그레이션됨
+ *
+ * @module lib/archive-helpers
+ */
+
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  serverTimestamp,
+  writeBatch,
+  Timestamp,
+} from 'firebase/firestore'
+import { firestore } from './firebase'
+import {
+  COLLECTION_PATHS,
+  type FirestoreTournament,
+  type FirestoreEvent,
+  type FirestoreStream,
+  type FirestoreHand,
+  type FirestoreUser,
+} from './firestore-types'
 import { fetchTournamentsTree } from './queries'
 import { toast } from 'sonner'
 
-const supabase = createClientSupabaseClient()
+// ==================== Helper Functions ====================
 
 /**
- * Load tournaments with sub_events and days
+ * Firestore Timestamp을 ISO 문자열로 변환
+ */
+function timestampToString(ts: Timestamp | undefined): string | undefined {
+  if (!ts) return undefined
+  return ts.toDate().toISOString()
+}
+
+// ==================== Main Helper Functions ====================
+
+/**
+ * 토너먼트 목록 로드 (UI 상태 포함)
+ *
+ * @param setTournaments - 토너먼트 상태 설정 함수
+ * @param setSelectedDay - 선택된 날짜 설정 함수
+ * @param setLoading - 로딩 상태 설정 함수
  */
 export async function loadTournamentsHelper(
-  setTournaments: (tournaments: any[]) => void,
+  setTournaments: (tournaments: unknown[]) => void,
   setSelectedDay: (day: string) => void,
-  setLoading: (loading: boolean) => void
-) {
+  setLoading: (loading: boolean) => void,
+): Promise<void> {
   setLoading(true)
   try {
     const tournamentsData = await fetchTournamentsTree()
 
-    const tournamentsWithUIState = tournamentsData.map((tournament: any) => ({
+    const tournamentsWithUIState = tournamentsData.map((tournament) => ({
       ...tournament,
-      sub_events: tournament.sub_events?.map((subEvent: any) => ({
+      sub_events: tournament.sub_events?.map((subEvent) => ({
         ...subEvent,
-        days: subEvent.streams?.map((day: any) => ({ ...day, selected: false })),
+        days: subEvent.streams?.map((day) => ({ ...day, selected: false })),
         expanded: false,
       })),
       expanded: true,
@@ -38,109 +83,160 @@ export async function loadTournamentsHelper(
 }
 
 /**
- * Load hands for a specific stream
+ * 특정 스트림의 핸드 목록 로드
+ *
+ * @param streamId - 스트림 ID
+ * @param setHands - 핸드 상태 설정 함수
  */
-export async function loadHandsHelper(streamId: string, setHands: (hands: any[]) => void) {
+export async function loadHandsHelper(
+  streamId: string,
+  setHands: (hands: unknown[]) => void,
+): Promise<void> {
   try {
-    const { data, error } = await supabase
-      .from('hands')
-      .select(`
-        *,
-        hand_players(
-          position:poker_position,
-          cards,
-          player:players(name)
-        )
-      `)
-      .eq('day_id', streamId)
-      .order('created_at', { ascending: true })
+    const handsRef = collection(firestore, COLLECTION_PATHS.HANDS)
+    const handsQuery = query(
+      handsRef,
+      where('streamId', '==', streamId),
+      orderBy('createdAt', 'asc'),
+    )
+    const snapshot = await getDocs(handsQuery)
 
-    if (error) throw error
+    const hands = snapshot.docs.map((doc) => {
+      const data = doc.data() as FirestoreHand
+      return {
+        id: doc.id,
+        number: data.number,
+        description: data.description,
+        timestamp: data.timestamp,
+        pot_size: data.potSize,
+        board_flop: data.boardFlop,
+        board_turn: data.boardTurn,
+        board_river: data.boardRiver,
+        favorite: data.favorite,
+        created_at: timestampToString(data.createdAt as Timestamp),
+        // 플레이어 정보 변환
+        hand_players: data.players?.map((hp) => ({
+          position: hp.position,
+          cards: hp.cards?.join(''),
+          player: {
+            name: hp.name,
+          },
+        })),
+        checked: false,
+      }
+    })
 
-    setHands((data || []).map((hand) => ({ ...hand, checked: false })))
+    setHands(hands)
   } catch (error) {
     console.error('Error loading hands:', error)
   }
 }
 
 /**
- * Toggle tournament expansion
+ * 토너먼트 확장/축소 토글
+ *
+ * @param tournamentId - 토너먼트 ID
+ * @param setTournaments - 토너먼트 상태 설정 함수
  */
 export function toggleTournamentHelper(
   tournamentId: string,
-  setTournaments: (fn: (prev: any[]) => any[]) => void
-) {
+  setTournaments: (fn: (prev: unknown[]) => unknown[]) => void,
+): void {
   setTournaments((prev) =>
-    prev.map((t) => (t.id === tournamentId ? { ...t, expanded: !t.expanded } : t))
+    prev.map((t: { id: string; expanded?: boolean }) =>
+      t.id === tournamentId ? { ...t, expanded: !t.expanded } : t,
+    ),
   )
 }
 
 /**
- * Toggle sub-event expansion
+ * 서브이벤트 확장/축소 토글
+ *
+ * @param tournamentId - 토너먼트 ID
+ * @param subEventId - 서브이벤트 ID
+ * @param setTournaments - 토너먼트 상태 설정 함수
  */
 export function toggleSubEventHelper(
   tournamentId: string,
   subEventId: string,
-  setTournaments: (fn: (prev: any[]) => any[]) => void
-) {
+  setTournaments: (fn: (prev: unknown[]) => unknown[]) => void,
+): void {
   setTournaments((prev) =>
-    prev.map((t) =>
+    prev.map((t: { id: string; sub_events?: Array<{ id: string; expanded?: boolean }> }) =>
       t.id === tournamentId
         ? {
             ...t,
-            sub_events: t.sub_events?.map((se: any) =>
-              se.id === subEventId ? { ...se, expanded: !se.expanded } : se
+            sub_events: t.sub_events?.map((se) =>
+              se.id === subEventId ? { ...se, expanded: !se.expanded } : se,
             ),
           }
-        : t
-    )
+        : t,
+    ),
   )
 }
 
 /**
- * Select a stream
+ * 스트림(날짜) 선택
+ *
+ * @param streamId - 스트림 ID
+ * @param setSelectedDay - 선택된 날짜 설정 함수
+ * @param setTournaments - 토너먼트 상태 설정 함수
  */
 export function selectDayHelper(
   streamId: string,
   setSelectedDay: (day: string) => void,
-  setTournaments: (fn: (prev: any[]) => any[]) => void
-) {
+  setTournaments: (fn: (prev: unknown[]) => unknown[]) => void,
+): void {
   setSelectedDay(streamId)
   setTournaments((prev) =>
-    prev.map((t) => ({
-      ...t,
-      sub_events: t.sub_events?.map((se: any) => ({
-        ...se,
-        days: se.days?.map((d: any) => ({
-          ...d,
-          selected: d.id === streamId,
+    prev.map(
+      (t: {
+        id: string
+        sub_events?: Array<{
+          id: string
+          days?: Array<{ id: string; selected?: boolean }>
+        }>
+      }) => ({
+        ...t,
+        sub_events: t.sub_events?.map((se) => ({
+          ...se,
+          days: se.days?.map((d) => ({
+            ...d,
+            selected: d.id === streamId,
+          })),
         })),
-      })),
-    }))
+      }),
+    ),
   )
 }
 
 /**
- * Toggle hand favorite
+ * 핸드 즐겨찾기 토글
+ *
+ * @param handId - 핸드 ID
+ * @param hands - 현재 핸드 목록
+ * @param setHands - 핸드 상태 설정 함수
  */
 export async function toggleFavoriteHelper(
   handId: string,
-  hands: any[],
-  setHands: (fn: (prev: any[]) => any[]) => void
-) {
+  hands: Array<{ id: string; favorite?: boolean }>,
+  setHands: (fn: (prev: unknown[]) => unknown[]) => void,
+): Promise<void> {
   const hand = hands.find((h) => h.id === handId)
   if (!hand) return
 
   try {
-    const { error } = await supabase
-      .from('hands')
-      .update({ favorite: !hand.favorite })
-      .eq('id', handId)
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
 
-    if (error) throw error
+    await updateDoc(handRef, {
+      favorite: !hand.favorite,
+      updatedAt: serverTimestamp(),
+    })
 
     setHands((prev) =>
-      prev.map((h) => (h.id === handId ? { ...h, favorite: !h.favorite } : h))
+      prev.map((h: { id: string; favorite?: boolean }) =>
+        h.id === handId ? { ...h, favorite: !h.favorite } : h,
+      ),
     )
   } catch (error) {
     console.error('Error toggling favorite:', error)
@@ -148,95 +244,324 @@ export async function toggleFavoriteHelper(
 }
 
 /**
- * Delete tournament
+ * 토너먼트 삭제
+ *
+ * @param tournamentId - 토너먼트 ID
+ * @param setTournaments - 토너먼트 상태 설정 함수
  */
 export async function deleteTournamentHelper(
   tournamentId: string,
-  setTournaments: (fn: (prev: any[]) => any[]) => void
-) {
+  setTournaments: (fn: (prev: unknown[]) => unknown[]) => void,
+): Promise<void> {
   try {
-    const { error } = await supabase.from('tournaments').delete().eq('id', tournamentId)
+    const batch = writeBatch(firestore)
 
-    if (error) throw error
+    // 토너먼트 삭제
+    const tournamentRef = doc(firestore, COLLECTION_PATHS.TOURNAMENTS, tournamentId)
+    batch.delete(tournamentRef)
 
-    setTournaments((prev) => prev.filter((t) => t.id !== tournamentId))
+    // 하위 이벤트 조회 및 삭제
+    const eventsRef = collection(firestore, COLLECTION_PATHS.EVENTS(tournamentId))
+    const eventsSnapshot = await getDocs(eventsRef)
+
+    for (const eventDoc of eventsSnapshot.docs) {
+      const eventId = eventDoc.id
+
+      // 하위 스트림 조회 및 삭제
+      const streamsRef = collection(
+        firestore,
+        COLLECTION_PATHS.STREAMS(tournamentId, eventId),
+      )
+      const streamsSnapshot = await getDocs(streamsRef)
+
+      for (const streamDoc of streamsSnapshot.docs) {
+        batch.delete(streamDoc.ref)
+      }
+
+      batch.delete(eventDoc.ref)
+    }
+
+    // 관련 핸드 삭제 (별도 처리 필요 - 핸드가 많을 경우 Cloud Function 권장)
+    const handsRef = collection(firestore, COLLECTION_PATHS.HANDS)
+    const handsQuery = query(handsRef, where('tournamentId', '==', tournamentId))
+    const handsSnapshot = await getDocs(handsQuery)
+
+    for (const handDoc of handsSnapshot.docs) {
+      batch.delete(handDoc.ref)
+    }
+
+    await batch.commit()
+
+    setTournaments((prev) =>
+      prev.filter((t: { id: string }) => t.id !== tournamentId),
+    )
     toast.success('Tournament deleted successfully')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting tournament:', error)
-    toast.error(error.message || 'Failed to delete tournament')
+    const errorMessage = error instanceof Error ? error.message : 'Failed to delete tournament'
+    toast.error(errorMessage)
   }
 }
 
 /**
- * Delete sub-event
+ * 서브이벤트 삭제
+ *
+ * @param tournamentId - 토너먼트 ID
+ * @param subEventId - 서브이벤트 ID
+ * @param setTournaments - 토너먼트 상태 설정 함수
  */
 export async function deleteSubEventHelper(
   subEventId: string,
-  setTournaments: (fn: (prev: any[]) => any[]) => void
-) {
+  setTournaments: (fn: (prev: unknown[]) => unknown[]) => void,
+): Promise<void> {
   try {
-    const { error } = await supabase.from('sub_events').delete().eq('id', subEventId)
+    // 먼저 이벤트가 어느 토너먼트에 속하는지 찾기
+    const tournamentsRef = collection(firestore, COLLECTION_PATHS.TOURNAMENTS)
+    const tournamentsSnapshot = await getDocs(tournamentsRef)
 
-    if (error) throw error
+    let foundTournamentId: string | null = null
+
+    for (const tournamentDoc of tournamentsSnapshot.docs) {
+      const eventsRef = collection(
+        firestore,
+        COLLECTION_PATHS.EVENTS(tournamentDoc.id),
+      )
+      const eventQuery = query(eventsRef, where('__name__', '==', subEventId))
+      const eventSnapshot = await getDocs(eventQuery)
+
+      if (!eventSnapshot.empty) {
+        foundTournamentId = tournamentDoc.id
+        break
+      }
+    }
+
+    if (!foundTournamentId) {
+      // 대안: 모든 이벤트 서브컬렉션을 순회
+      for (const tournamentDoc of tournamentsSnapshot.docs) {
+        const eventRef = doc(
+          firestore,
+          COLLECTION_PATHS.EVENTS(tournamentDoc.id),
+          subEventId,
+        )
+        const eventDoc = await getDoc(eventRef)
+        if (eventDoc.exists()) {
+          foundTournamentId = tournamentDoc.id
+          break
+        }
+      }
+    }
+
+    if (!foundTournamentId) {
+      toast.error('Event not found')
+      return
+    }
+
+    const batch = writeBatch(firestore)
+
+    // 이벤트 삭제
+    const eventRef = doc(
+      firestore,
+      COLLECTION_PATHS.EVENTS(foundTournamentId),
+      subEventId,
+    )
+    batch.delete(eventRef)
+
+    // 하위 스트림 삭제
+    const streamsRef = collection(
+      firestore,
+      COLLECTION_PATHS.STREAMS(foundTournamentId, subEventId),
+    )
+    const streamsSnapshot = await getDocs(streamsRef)
+
+    for (const streamDoc of streamsSnapshot.docs) {
+      batch.delete(streamDoc.ref)
+    }
+
+    // 관련 핸드 삭제
+    const handsRef = collection(firestore, COLLECTION_PATHS.HANDS)
+    const handsQuery = query(handsRef, where('eventId', '==', subEventId))
+    const handsSnapshot = await getDocs(handsQuery)
+
+    for (const handDoc of handsSnapshot.docs) {
+      batch.delete(handDoc.ref)
+    }
+
+    await batch.commit()
 
     setTournaments((prev) =>
-      prev.map((t) => ({
-        ...t,
-        sub_events: t.sub_events?.filter((se: any) => se.id !== subEventId),
-      }))
+      prev.map(
+        (t: {
+          id: string
+          sub_events?: Array<{ id: string }>
+        }) => ({
+          ...t,
+          sub_events: t.sub_events?.filter((se) => se.id !== subEventId),
+        }),
+      ),
     )
     toast.success('Event deleted successfully')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting sub-event:', error)
-    toast.error(error.message || 'Failed to delete event')
+    const errorMessage = error instanceof Error ? error.message : 'Failed to delete event'
+    toast.error(errorMessage)
   }
 }
 
 /**
- * Delete stream
+ * 스트림(날짜) 삭제
+ *
+ * @param streamId - 스트림 ID
+ * @param setTournaments - 토너먼트 상태 설정 함수
  */
 export async function deleteDayHelper(
   streamId: string,
-  setTournaments: (fn: (prev: any[]) => any[]) => void
-) {
+  setTournaments: (fn: (prev: unknown[]) => unknown[]) => void,
+): Promise<void> {
   try {
-    const { error } = await supabase.from('streams').delete().eq('id', streamId)
+    // 스트림이 어느 토너먼트/이벤트에 속하는지 찾기
+    const tournamentsRef = collection(firestore, COLLECTION_PATHS.TOURNAMENTS)
+    const tournamentsSnapshot = await getDocs(tournamentsRef)
 
-    if (error) throw error
+    let foundPath: { tournamentId: string; eventId: string } | null = null
+
+    for (const tournamentDoc of tournamentsSnapshot.docs) {
+      const tournamentId = tournamentDoc.id
+      const eventsRef = collection(firestore, COLLECTION_PATHS.EVENTS(tournamentId))
+      const eventsSnapshot = await getDocs(eventsRef)
+
+      for (const eventDoc of eventsSnapshot.docs) {
+        const eventId = eventDoc.id
+        const streamRef = doc(
+          firestore,
+          COLLECTION_PATHS.STREAMS(tournamentId, eventId),
+          streamId,
+        )
+        const streamDoc = await getDoc(streamRef)
+
+        if (streamDoc.exists()) {
+          foundPath = { tournamentId, eventId }
+          break
+        }
+      }
+
+      if (foundPath) break
+    }
+
+    if (!foundPath) {
+      toast.error('Stream not found')
+      return
+    }
+
+    const batch = writeBatch(firestore)
+
+    // 스트림 삭제
+    const streamRef = doc(
+      firestore,
+      COLLECTION_PATHS.STREAMS(foundPath.tournamentId, foundPath.eventId),
+      streamId,
+    )
+    batch.delete(streamRef)
+
+    // 관련 핸드 삭제
+    const handsRef = collection(firestore, COLLECTION_PATHS.HANDS)
+    const handsQuery = query(handsRef, where('streamId', '==', streamId))
+    const handsSnapshot = await getDocs(handsQuery)
+
+    for (const handDoc of handsSnapshot.docs) {
+      batch.delete(handDoc.ref)
+    }
+
+    await batch.commit()
 
     setTournaments((prev) =>
-      prev.map((t) => ({
-        ...t,
-        sub_events: t.sub_events?.map((se: any) => ({
-          ...se,
-          days: se.days?.filter((d: any) => d.id !== streamId),
-        })),
-      }))
+      prev.map(
+        (t: {
+          id: string
+          sub_events?: Array<{
+            id: string
+            days?: Array<{ id: string }>
+          }>
+        }) => ({
+          ...t,
+          sub_events: t.sub_events?.map((se) => ({
+            ...se,
+            days: se.days?.filter((d) => d.id !== streamId),
+          })),
+        }),
+      ),
     )
     toast.success('Stream deleted successfully')
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error deleting stream:', error)
-    toast.error(error.message || 'Failed to delete stream')
+    const errorMessage = error instanceof Error ? error.message : 'Failed to delete stream'
+    toast.error(errorMessage)
   }
 }
 
 /**
- * Check if user is admin
+ * 사용자 관리자 여부 확인
+ *
+ * @param userEmail - 사용자 이메일
+ * @returns 관리자 여부
  */
 export async function checkIsUserAdmin(userEmail: string | null): Promise<boolean> {
   if (!userEmail) return false
 
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('email', userEmail)
-      .single()
+    const usersRef = collection(firestore, COLLECTION_PATHS.USERS)
+    const userQuery = query(usersRef, where('email', '==', userEmail))
+    const snapshot = await getDocs(userQuery)
 
-    if (error) return false
+    if (snapshot.empty) return false
 
-    return data?.role === 'admin' || data?.role === 'high_templar'
+    const userData = snapshot.docs[0].data() as FirestoreUser
+    return userData.role === 'admin' || userData.role === 'high_templar'
   } catch (error) {
+    console.error('Error checking admin status:', error)
     return false
+  }
+}
+
+/**
+ * 사용자 ID로 관리자 여부 확인
+ *
+ * @param userId - 사용자 ID
+ * @returns 관리자 여부
+ */
+export async function checkIsUserAdminById(userId: string | null): Promise<boolean> {
+  if (!userId) return false
+
+  try {
+    const userRef = doc(firestore, COLLECTION_PATHS.USERS, userId)
+    const userDoc = await getDoc(userRef)
+
+    if (!userDoc.exists()) return false
+
+    const userData = userDoc.data() as FirestoreUser
+    return userData.role === 'admin' || userData.role === 'high_templar'
+  } catch (error) {
+    console.error('Error checking admin status:', error)
+    return false
+  }
+}
+
+/**
+ * 사용자 역할 조회
+ *
+ * @param userId - 사용자 ID
+ * @returns 사용자 역할
+ */
+export async function getUserRole(userId: string): Promise<string | null> {
+  try {
+    const userRef = doc(firestore, COLLECTION_PATHS.USERS, userId)
+    const userDoc = await getDoc(userRef)
+
+    if (!userDoc.exists()) return null
+
+    const userData = userDoc.data() as FirestoreUser
+    return userData.role
+  } catch (error) {
+    console.error('Error getting user role:', error)
+    return null
   }
 }

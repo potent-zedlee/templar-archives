@@ -445,6 +445,7 @@ async function saveHandToDatabase(
     actions,
     engagement: {
       likesCount: 0,
+      dislikesCount: 0,
       bookmarksCount: 0,
     },
     createdAt: FieldValue.serverTimestamp() as any,

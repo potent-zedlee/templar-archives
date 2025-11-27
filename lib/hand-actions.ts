@@ -1,7 +1,29 @@
-import { createClientSupabaseClient } from "./supabase-client"
+/**
+ * 핸드 액션 관리
+ *
+ * Firestore를 사용하여 핸드별 액션을 관리합니다.
+ * 액션은 /hands/{handId} 문서의 actions 배열에 임베딩됩니다.
+ *
+ * @module lib/hand-actions
+ */
+
+import { firestore } from './firebase'
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+} from 'firebase/firestore'
+import {
+  COLLECTION_PATHS,
+  type FirestoreHand,
+  type HandActionEmbedded,
+  type PokerStreet,
+  type PokerActionType,
+} from './firestore-types'
 
 /**
- * Hand Action 타입
+ * Hand Action 타입 (레거시 호환)
  */
 export type Street = 'preflop' | 'flop' | 'turn' | 'river'
 export type ActionType = 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in'
@@ -27,20 +49,75 @@ export type HandActionInput = {
 }
 
 /**
+ * Firestore 액션을 레거시 형식으로 변환
+ */
+function convertToLegacyFormat(
+  handId: string,
+  action: HandActionEmbedded,
+  _index: number
+): HandAction {
+  return {
+    id: `${handId}_${action.street}_${action.sequence}`,
+    hand_id: handId,
+    player_id: action.playerId,
+    street: action.street as Street,
+    action_type: action.actionType as ActionType,
+    amount: action.amount,
+    action_order: action.sequence,
+    created_at: new Date().toISOString(),
+  }
+}
+
+/**
+ * 레거시 형식을 Firestore 형식으로 변환
+ */
+function convertToFirestoreFormat(
+  input: HandActionInput,
+  playerName: string = ''
+): HandActionEmbedded {
+  return {
+    playerId: input.player_id,
+    playerName,
+    street: input.street as PokerStreet,
+    sequence: input.action_order,
+    actionType: input.action_type as PokerActionType,
+    amount: input.amount || 0,
+  }
+}
+
+/**
  * 핸드의 모든 액션 조회
  */
 export async function getHandActions(handId: string): Promise<HandAction[]> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from('hand_actions')
-      .select('*')
-      .eq('hand_id', handId)
-      .order('action_order', { ascending: true })
+    const handDocRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    const handDoc = await getDoc(handDocRef)
 
-    if (error) throw error
-    return data || []
+    if (!handDoc.exists()) {
+      throw new Error('핸드가 존재하지 않음')
+    }
+
+    const handData = handDoc.data() as FirestoreHand
+    const actions = handData.actions || []
+
+    // sequence 순으로 정렬
+    const sortedActions = [...actions].sort((a, b) => {
+      // 먼저 street 순으로 정렬
+      const streetOrder: Record<PokerStreet, number> = {
+        preflop: 0,
+        flop: 1,
+        turn: 2,
+        river: 3,
+      }
+      const streetDiff = streetOrder[a.street] - streetOrder[b.street]
+      if (streetDiff !== 0) return streetDiff
+      // 같은 street 내에서는 sequence 순으로 정렬
+      return a.sequence - b.sequence
+    })
+
+    return sortedActions.map((action, index) =>
+      convertToLegacyFormat(handId, action, index)
+    )
   } catch (error) {
     console.error('Failed to fetch hand actions:', error)
     throw error
@@ -54,18 +131,9 @@ export async function getHandActionsByStreet(
   handId: string,
   street: Street
 ): Promise<HandAction[]> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from('hand_actions')
-      .select('*')
-      .eq('hand_id', handId)
-      .eq('street', street)
-      .order('action_order', { ascending: true })
-
-    if (error) throw error
-    return data || []
+    const allActions = await getHandActions(handId)
+    return allActions.filter((action) => action.street === street)
   } catch (error) {
     console.error(`Failed to fetch ${street} actions:`, error)
     throw error
@@ -76,20 +144,32 @@ export async function getHandActionsByStreet(
  * 단일 액션 생성
  */
 export async function createHandAction(action: HandActionInput): Promise<HandAction> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from('hand_actions')
-      .insert({
-        ...action,
-        amount: action.amount || 0,
-      })
-      .select()
-      .single()
+    const handDocRef = doc(firestore, COLLECTION_PATHS.HANDS, action.hand_id)
+    const handDoc = await getDoc(handDocRef)
 
-    if (error) throw error
-    return data
+    if (!handDoc.exists()) {
+      throw new Error('핸드가 존재하지 않음')
+    }
+
+    const handData = handDoc.data() as FirestoreHand
+    const existingActions = handData.actions || []
+
+    // 플레이어 이름 찾기
+    const player = handData.players?.find((p) => p.playerId === action.player_id)
+    const playerName = player?.name || ''
+
+    const newAction = convertToFirestoreFormat(action, playerName)
+
+    // 새 액션 추가
+    const updatedActions = [...existingActions, newAction]
+
+    await updateDoc(handDocRef, {
+      actions: updatedActions,
+      updatedAt: serverTimestamp(),
+    })
+
+    return convertToLegacyFormat(action.hand_id, newAction, existingActions.length)
   } catch (error) {
     console.error('Failed to create hand action:', error)
     throw error
@@ -102,21 +182,46 @@ export async function createHandAction(action: HandActionInput): Promise<HandAct
 export async function bulkCreateHandActions(
   actions: HandActionInput[]
 ): Promise<HandAction[]> {
-  const supabase = createClientSupabaseClient()
+  if (actions.length === 0) return []
+
+  // 모든 액션이 같은 핸드에 속해야 함
+  const handId = actions[0].hand_id
+  if (!actions.every((a) => a.hand_id === handId)) {
+    throw new Error('모든 액션은 같은 핸드에 속해야 합니다')
+  }
 
   try {
-    const actionsWithDefaults = actions.map(action => ({
-      ...action,
-      amount: action.amount || 0,
-    }))
+    const handDocRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    const handDoc = await getDoc(handDocRef)
 
-    const { data, error } = await supabase
-      .from('hand_actions')
-      .insert(actionsWithDefaults)
-      .select()
+    if (!handDoc.exists()) {
+      throw new Error('핸드가 존재하지 않음')
+    }
 
-    if (error) throw error
-    return data || []
+    const handData = handDoc.data() as FirestoreHand
+    const existingActions = handData.actions || []
+
+    // 플레이어 이름 매핑
+    const playerMap = new Map<string, string>()
+    handData.players?.forEach((p) => {
+      playerMap.set(p.playerId, p.name)
+    })
+
+    const newActions = actions.map((action) =>
+      convertToFirestoreFormat(action, playerMap.get(action.player_id) || '')
+    )
+
+    // 기존 액션 + 새 액션
+    const updatedActions = [...existingActions, ...newActions]
+
+    await updateDoc(handDocRef, {
+      actions: updatedActions,
+      updatedAt: serverTimestamp(),
+    })
+
+    return newActions.map((action, index) =>
+      convertToLegacyFormat(handId, action, existingActions.length + index)
+    )
   } catch (error) {
     console.error('Failed to bulk create hand actions:', error)
     throw error
@@ -130,18 +235,55 @@ export async function updateHandAction(
   actionId: string,
   updates: Partial<HandActionInput>
 ): Promise<HandAction> {
-  const supabase = createClientSupabaseClient()
+  // actionId 형식: handId_street_sequence
+  const parts = actionId.split('_')
+  if (parts.length < 3) {
+    throw new Error('Invalid action ID format')
+  }
+
+  const handId = parts[0]
+  const street = parts[1] as Street
+  const sequence = parseInt(parts[2], 10)
 
   try {
-    const { data, error } = await supabase
-      .from('hand_actions')
-      .update(updates)
-      .eq('id', actionId)
-      .select()
-      .single()
+    const handDocRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    const handDoc = await getDoc(handDocRef)
 
-    if (error) throw error
-    return data
+    if (!handDoc.exists()) {
+      throw new Error('핸드가 존재하지 않음')
+    }
+
+    const handData = handDoc.data() as FirestoreHand
+    const actions = handData.actions || []
+
+    // 해당 액션 찾기
+    const actionIndex = actions.findIndex(
+      (a) => a.street === street && a.sequence === sequence
+    )
+
+    if (actionIndex === -1) {
+      throw new Error('액션을 찾을 수 없음')
+    }
+
+    // 액션 업데이트
+    const updatedAction: HandActionEmbedded = {
+      ...actions[actionIndex],
+      ...(updates.player_id && { playerId: updates.player_id }),
+      ...(updates.street && { street: updates.street as PokerStreet }),
+      ...(updates.action_type && { actionType: updates.action_type as PokerActionType }),
+      ...(updates.amount !== undefined && { amount: updates.amount }),
+      ...(updates.action_order !== undefined && { sequence: updates.action_order }),
+    }
+
+    const updatedActions = [...actions]
+    updatedActions[actionIndex] = updatedAction
+
+    await updateDoc(handDocRef, {
+      actions: updatedActions,
+      updatedAt: serverTimestamp(),
+    })
+
+    return convertToLegacyFormat(handId, updatedAction, actionIndex)
   } catch (error) {
     console.error('Failed to update hand action:', error)
     throw error
@@ -152,15 +294,36 @@ export async function updateHandAction(
  * 액션 삭제
  */
 export async function deleteHandAction(actionId: string): Promise<void> {
-  const supabase = createClientSupabaseClient()
+  // actionId 형식: handId_street_sequence
+  const parts = actionId.split('_')
+  if (parts.length < 3) {
+    throw new Error('Invalid action ID format')
+  }
+
+  const handId = parts[0]
+  const street = parts[1] as Street
+  const sequence = parseInt(parts[2], 10)
 
   try {
-    const { error } = await supabase
-      .from('hand_actions')
-      .delete()
-      .eq('id', actionId)
+    const handDocRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    const handDoc = await getDoc(handDocRef)
 
-    if (error) throw error
+    if (!handDoc.exists()) {
+      throw new Error('핸드가 존재하지 않음')
+    }
+
+    const handData = handDoc.data() as FirestoreHand
+    const actions = handData.actions || []
+
+    // 해당 액션 제외
+    const updatedActions = actions.filter(
+      (a) => !(a.street === street && a.sequence === sequence)
+    )
+
+    await updateDoc(handDocRef, {
+      actions: updatedActions,
+      updatedAt: serverTimestamp(),
+    })
   } catch (error) {
     console.error('Failed to delete hand action:', error)
     throw error
@@ -171,15 +334,13 @@ export async function deleteHandAction(actionId: string): Promise<void> {
  * 핸드의 모든 액션 삭제
  */
 export async function deleteAllHandActions(handId: string): Promise<void> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { error } = await supabase
-      .from('hand_actions')
-      .delete()
-      .eq('hand_id', handId)
+    const handDocRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
 
-    if (error) throw error
+    await updateDoc(handDocRef, {
+      actions: [],
+      updatedAt: serverTimestamp(),
+    })
   } catch (error) {
     console.error('Failed to delete all hand actions:', error)
     throw error
@@ -193,24 +354,25 @@ export async function calculateNextSequence(
   handId: string,
   street: Street
 ): Promise<number> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    const { data, error } = await supabase
-      .from('hand_actions')
-      .select('action_order')
-      .eq('hand_id', handId)
-      .eq('street', street)
-      .order('action_order', { ascending: false })
-      .limit(1)
-      .single()
+    const handDocRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    const handDoc = await getDoc(handDocRef)
 
-    if (error && error.code !== 'PGRST116') {
-      // PGRST116 = no rows returned (first action)
-      throw error
+    if (!handDoc.exists()) {
+      return 1
     }
 
-    return data ? data.action_order + 1 : 1
+    const handData = handDoc.data() as FirestoreHand
+    const actions = handData.actions || []
+
+    // 해당 street의 마지막 sequence 찾기
+    const streetActions = actions.filter((a) => a.street === street)
+    if (streetActions.length === 0) {
+      return 1
+    }
+
+    const maxSequence = Math.max(...streetActions.map((a) => a.sequence))
+    return maxSequence + 1
   } catch (error) {
     console.error('Failed to calculate next sequence:', error)
     return 1
@@ -234,7 +396,7 @@ export function validateActionSequence(actions: HandAction[]): {
     river: [],
   }
 
-  actions.forEach(action => {
+  actions.forEach((action) => {
     streetGroups[action.street].push(action)
   })
 
@@ -243,7 +405,7 @@ export function validateActionSequence(actions: HandAction[]): {
     if (streetActions.length === 0) return
 
     // 시퀀스 번호 정렬 확인
-    const sequences = streetActions.map(a => a.action_order).sort((a, b) => a - b)
+    const sequences = streetActions.map((a) => a.action_order).sort((a, b) => a - b)
     const expectedSequences = Array.from({ length: sequences.length }, (_, i) => i + 1)
 
     if (JSON.stringify(sequences) !== JSON.stringify(expectedSequences)) {
@@ -281,26 +443,45 @@ export async function reorderHandActions(
   street: Street,
   newOrder: string[] // action IDs in new order
 ): Promise<void> {
-  const supabase = createClientSupabaseClient()
-
   try {
-    // 각 액션의 시퀀스 번호 업데이트
-    const updates = newOrder.map((actionId, index) => ({
-      id: actionId,
-      action_order: index + 1,
-    }))
+    const handDocRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    const handDoc = await getDoc(handDocRef)
 
-    // 일괄 업데이트 (upsert 사용)
-    for (const update of updates) {
-      const { error } = await supabase
-        .from('hand_actions')
-        .update({ action_order: update.action_order })
-        .eq('id', update.id)
-        .eq('hand_id', handId)
-        .eq('street', street)
-
-      if (error) throw error
+    if (!handDoc.exists()) {
+      throw new Error('핸드가 존재하지 않음')
     }
+
+    const handData = handDoc.data() as FirestoreHand
+    const actions = handData.actions || []
+
+    // 해당 street의 액션만 추출
+    const otherActions = actions.filter((a) => a.street !== street)
+    const streetActions = actions.filter((a) => a.street === street)
+
+    // 새 순서에 따라 sequence 업데이트
+    const reorderedStreetActions = newOrder.map((actionId, index) => {
+      // actionId 형식: handId_street_sequence
+      const parts = actionId.split('_')
+      const oldSequence = parseInt(parts[2], 10)
+
+      const action = streetActions.find((a) => a.sequence === oldSequence)
+      if (!action) {
+        throw new Error(`액션을 찾을 수 없음: ${actionId}`)
+      }
+
+      return {
+        ...action,
+        sequence: index + 1,
+      }
+    })
+
+    // 다른 street 액션 + 재정렬된 액션
+    const updatedActions = [...otherActions, ...reorderedStreetActions]
+
+    await updateDoc(handDocRef, {
+      actions: updatedActions,
+      updatedAt: serverTimestamp(),
+    })
   } catch (error) {
     console.error('Failed to reorder hand actions:', error)
     throw error

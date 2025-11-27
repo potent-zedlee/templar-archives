@@ -1,4 +1,28 @@
-import { createClientSupabaseClient } from './supabase-client'
+/**
+ * 핸드 북마크 관리
+ *
+ * Firestore를 사용하여 사용자별 핸드 북마크를 관리합니다.
+ * Collection: /users/{userId}/bookmarks/{bookmarkId}
+ *
+ * @module lib/hand-bookmarks
+ */
+
+import { firestore } from './firebase'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  deleteDoc,
+  updateDoc,
+  query,
+  where,
+  orderBy,
+  serverTimestamp,
+  Timestamp,
+} from 'firebase/firestore'
+import { COLLECTION_PATHS, type FirestoreBookmark } from './firestore-types'
 
 export type HandBookmark = {
   id: string
@@ -32,6 +56,56 @@ export type HandBookmarkWithDetails = HandBookmark & {
 }
 
 /**
+ * Firestore 북마크를 레거시 형식으로 변환
+ */
+function convertToLegacyFormat(
+  bookmarkId: string,
+  userId: string,
+  bookmark: FirestoreBookmark
+): HandBookmarkWithDetails {
+  const createdAt =
+    bookmark.createdAt instanceof Timestamp
+      ? bookmark.createdAt.toDate().toISOString()
+      : new Date().toISOString()
+
+  return {
+    id: bookmarkId,
+    hand_id: bookmark.refId,
+    user_id: userId,
+    folder_name: bookmark.folderName,
+    notes: bookmark.notes,
+    created_at: createdAt,
+    hand: bookmark.refData
+      ? {
+          id: bookmark.refId,
+          number: bookmark.refData.number || '',
+          description: bookmark.refData.description || '',
+          timestamp: bookmark.refData.timestamp || '',
+          day: bookmark.refData.streamName
+            ? {
+                id: '',
+                name: bookmark.refData.streamName,
+                sub_event: bookmark.refData.eventName
+                  ? {
+                      id: '',
+                      name: bookmark.refData.eventName,
+                      tournament: bookmark.refData.tournamentName
+                        ? {
+                            id: '',
+                            name: bookmark.refData.tournamentName,
+                            category: bookmark.refData.tournamentCategory || '',
+                          }
+                        : undefined,
+                    }
+                  : undefined,
+              }
+            : undefined,
+        }
+      : undefined,
+  }
+}
+
+/**
  * 핸드 북마크 추가
  */
 export async function addHandBookmark(
@@ -40,16 +114,43 @@ export async function addHandBookmark(
   folderName?: string,
   notes?: string
 ): Promise<void> {
-  const supabase = createClientSupabaseClient()
+  const bookmarksRef = collection(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId))
+  const bookmarkDocRef = doc(bookmarksRef, handId) // handId를 문서 ID로 사용
 
-  const { error } = await supabase.from('hand_bookmarks').insert({
-    hand_id: handId,
-    user_id: userId,
-    folder_name: folderName || null,
-    notes: notes || null,
-  })
+  // 핸드 정보 가져오기 (refData용)
+  let refData: FirestoreBookmark['refData'] = {
+    title: '',
+    description: '',
+  }
 
-  if (error) {
+  try {
+    const handDocRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    const handDoc = await getDoc(handDocRef)
+    if (handDoc.exists()) {
+      const handData = handDoc.data()
+      refData = {
+        title: handData.description || `Hand #${handData.number}`,
+        description: handData.description,
+        number: handData.number,
+        timestamp: handData.timestamp,
+      }
+    }
+  } catch (error) {
+    console.error('핸드 정보 조회 실패:', error)
+  }
+
+  const bookmarkData: Omit<FirestoreBookmark, 'createdAt'> & { createdAt: ReturnType<typeof serverTimestamp> } = {
+    type: 'hand',
+    refId: handId,
+    folderName: folderName || undefined,
+    notes: notes || undefined,
+    refData,
+    createdAt: serverTimestamp(),
+  }
+
+  try {
+    await setDoc(bookmarkDocRef, bookmarkData)
+  } catch (error) {
     console.error('북마크 추가 실패:', error)
     throw error
   }
@@ -59,15 +160,11 @@ export async function addHandBookmark(
  * 핸드 북마크 삭제
  */
 export async function removeHandBookmark(handId: string, userId: string): Promise<void> {
-  const supabase = createClientSupabaseClient()
+  const bookmarkDocRef = doc(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId), handId)
 
-  const { error } = await supabase
-    .from('hand_bookmarks')
-    .delete()
-    .eq('hand_id', handId)
-    .eq('user_id', userId)
-
-  if (error) {
+  try {
+    await deleteDoc(bookmarkDocRef)
+  } catch (error) {
     console.error('북마크 삭제 실패:', error)
     throw error
   }
@@ -82,29 +179,22 @@ export async function toggleHandBookmark(
   folderName?: string,
   notes?: string
 ): Promise<boolean> {
-  const supabase = createClientSupabaseClient()
+  const bookmarkDocRef = doc(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId), handId)
 
-  // 기존 북마크 확인
-  const { data: existingBookmark, error: checkError } = await supabase
-    .from('hand_bookmarks')
-    .select('id')
-    .eq('hand_id', handId)
-    .eq('user_id', userId)
-    .single()
+  try {
+    const bookmarkDoc = await getDoc(bookmarkDocRef)
 
-  if (checkError && checkError.code !== 'PGRST116') {
-    // PGRST116 = no rows (북마크 없음)
-    console.error('북마크 확인 실패:', checkError)
-    throw checkError
-  }
-
-  // 북마크가 있으면 삭제, 없으면 추가
-  if (existingBookmark) {
-    await removeHandBookmark(handId, userId)
-    return false // 삭제됨
-  } else {
-    await addHandBookmark(handId, userId, folderName, notes)
-    return true // 추가됨
+    // 북마크가 있으면 삭제, 없으면 추가
+    if (bookmarkDoc.exists()) {
+      await removeHandBookmark(handId, userId)
+      return false // 삭제됨
+    } else {
+      await addHandBookmark(handId, userId, folderName, notes)
+      return true // 추가됨
+    }
+  } catch (error) {
+    console.error('북마크 토글 실패:', error)
+    throw error
   }
 }
 
@@ -114,64 +204,42 @@ export async function toggleHandBookmark(
 export async function isHandBookmarked(handId: string, userId?: string): Promise<boolean> {
   if (!userId) return false
 
-  const supabase = createClientSupabaseClient()
+  const bookmarkDocRef = doc(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId), handId)
 
-  const { data, error } = await supabase
-    .from('hand_bookmarks')
-    .select('id')
-    .eq('hand_id', handId)
-    .eq('user_id', userId)
-    .single()
-
-  if (error && error.code !== 'PGRST116') {
+  try {
+    const bookmarkDoc = await getDoc(bookmarkDocRef)
+    return bookmarkDoc.exists() && bookmarkDoc.data()?.type === 'hand'
+  } catch (error) {
     console.error('북마크 상태 확인 실패:', error)
     return false
   }
-
-  return !!data
 }
 
 /**
  * 사용자의 모든 북마크 조회
  */
 export async function getUserBookmarks(userId: string): Promise<HandBookmarkWithDetails[]> {
-  const supabase = createClientSupabaseClient()
+  const bookmarksRef = collection(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId))
 
-  const { data, error } = await supabase
-    .from('hand_bookmarks')
-    .select(
-      `
-      *,
-      hand:hands!inner (
-        id,
-        number,
-        description,
-        timestamp,
-        day:days!inner (
-          id,
-          name,
-          sub_event:sub_events!inner (
-            id,
-            name,
-            tournament:tournaments!inner (
-              id,
-              name,
-              category
-            )
-          )
-        )
-      )
-    `
+  try {
+    const q = query(
+      bookmarksRef,
+      where('type', '==', 'hand'),
+      orderBy('createdAt', 'desc')
     )
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
+    const snapshot = await getDocs(q)
 
-  if (error) {
+    const bookmarks: HandBookmarkWithDetails[] = []
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data() as FirestoreBookmark
+      bookmarks.push(convertToLegacyFormat(docSnap.id, userId, data))
+    })
+
+    return bookmarks
+  } catch (error) {
     console.error('북마크 목록 조회 실패:', error)
     throw error
   }
-
-  return (data as any[]) || []
 }
 
 /**
@@ -198,22 +266,25 @@ export async function getUserBookmarksByFolder(
  * 사용자의 북마크 폴더 목록 조회
  */
 export async function getUserBookmarkFolders(userId: string): Promise<string[]> {
-  const supabase = createClientSupabaseClient()
+  const bookmarksRef = collection(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId))
 
-  const { data, error } = await supabase
-    .from('hand_bookmarks')
-    .select('folder_name')
-    .eq('user_id', userId)
-    .not('folder_name', 'is', null)
+  try {
+    const q = query(bookmarksRef, where('type', '==', 'hand'))
+    const snapshot = await getDocs(q)
 
-  if (error) {
+    const folders = new Set<string>()
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data() as FirestoreBookmark
+      if (data.folderName) {
+        folders.add(data.folderName)
+      }
+    })
+
+    return Array.from(folders).sort()
+  } catch (error) {
     console.error('폴더 목록 조회 실패:', error)
     return []
   }
-
-  // 중복 제거 및 정렬
-  const folders = [...new Set(data.map((item) => item.folder_name).filter(Boolean))]
-  return folders.sort()
 }
 
 /**
@@ -224,15 +295,11 @@ export async function updateBookmarkNotes(
   userId: string,
   notes: string
 ): Promise<void> {
-  const supabase = createClientSupabaseClient()
+  const bookmarkDocRef = doc(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId), handId)
 
-  const { error } = await supabase
-    .from('hand_bookmarks')
-    .update({ notes })
-    .eq('hand_id', handId)
-    .eq('user_id', userId)
-
-  if (error) {
+  try {
+    await updateDoc(bookmarkDocRef, { notes })
+  } catch (error) {
     console.error('북마크 메모 업데이트 실패:', error)
     throw error
   }
@@ -246,15 +313,11 @@ export async function updateBookmarkFolder(
   userId: string,
   folderName: string | null
 ): Promise<void> {
-  const supabase = createClientSupabaseClient()
+  const bookmarkDocRef = doc(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId), handId)
 
-  const { error } = await supabase
-    .from('hand_bookmarks')
-    .update({ folder_name: folderName })
-    .eq('hand_id', handId)
-    .eq('user_id', userId)
-
-  if (error) {
+  try {
+    await updateDoc(bookmarkDocRef, { folderName: folderName || null })
+  } catch (error) {
     console.error('북마크 폴더 변경 실패:', error)
     throw error
   }
@@ -267,20 +330,31 @@ export async function getBatchHandBookmarkStatus(
   handIds: string[],
   userId?: string
 ): Promise<Set<string>> {
-  if (!userId) return new Set()
+  if (!userId || handIds.length === 0) return new Set()
 
-  const supabase = createClientSupabaseClient()
+  const bookmarkedIds = new Set<string>()
 
-  const { data, error } = await supabase
-    .from('hand_bookmarks')
-    .select('hand_id')
-    .in('hand_id', handIds)
-    .eq('user_id', userId)
+  try {
+    // Firestore는 in 쿼리에 최대 30개 제한이 있으므로 배치 처리
+    const batchSize = 30
+    for (let i = 0; i < handIds.length; i += batchSize) {
+      const batchIds = handIds.slice(i, i + batchSize)
 
-  if (error) {
+      // 각 핸드 ID에 대해 직접 문서 조회 (더 효율적)
+      const promises = batchIds.map(async (handId) => {
+        const bookmarkDocRef = doc(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId), handId)
+        const bookmarkDoc = await getDoc(bookmarkDocRef)
+        if (bookmarkDoc.exists() && bookmarkDoc.data()?.type === 'hand') {
+          bookmarkedIds.add(handId)
+        }
+      })
+
+      await Promise.all(promises)
+    }
+
+    return bookmarkedIds
+  } catch (error) {
     console.error('북마크 상태 일괄 조회 실패:', error)
     return new Set()
   }
-
-  return new Set(data.map((item) => item.hand_id))
 }

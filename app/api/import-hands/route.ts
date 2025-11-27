@@ -362,6 +362,7 @@ export async function POST(request: NextRequest) {
           actions: embeddedActions,
           engagement: {
             likesCount: 0,
+            dislikesCount: 0,
             bookmarksCount: 0,
           },
           favorite: false,

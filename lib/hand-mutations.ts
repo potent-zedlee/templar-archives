@@ -1,27 +1,144 @@
-import { createClientSupabaseClient } from "./supabase-client"
+/**
+ * Firestore 핸드 뮤테이션 함수
+ *
+ * 핸드 데이터 생성, 수정, 삭제를 위한 Firestore 뮤테이션 함수들
+ * Supabase PostgreSQL에서 마이그레이션됨
+ *
+ * @module lib/hand-mutations
+ */
+
+import {
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  writeBatch,
+  Timestamp,
+  serverTimestamp,
+  arrayUnion,
+  arrayRemove,
+} from 'firebase/firestore'
+import { firestore } from './firebase'
+import {
+  COLLECTION_PATHS,
+  type FirestoreHand,
+  type HandActionEmbedded,
+  type HandPlayerEmbedded,
+  type PokerStreet,
+  type PokerActionType,
+} from './firestore-types'
+
+// ==================== Types ====================
+
+/**
+ * 핸드 기본 정보 업데이트 데이터
+ */
+export interface HandBasicInfoUpdate {
+  number?: string
+  description?: string
+  timestamp?: string
+  pot_size?: number
+  board_cards?: string
+}
+
+/**
+ * 핸드 플레이어 업데이트 데이터
+ */
+export interface HandPlayerUpdate {
+  position?: string
+  cards?: string
+  starting_stack?: number
+  ending_stack?: number
+}
+
+/**
+ * 핸드 액션 데이터
+ */
+export interface HandActionData {
+  player_id: string
+  street: PokerStreet
+  action_type: PokerActionType
+  amount?: number
+  sequence: number
+}
+
+// ==================== Helper Functions ====================
+
+/**
+ * board_cards 문자열을 Firestore 형식으로 변환
+ * "As Kh Qd 7c 3s" -> { boardFlop: ["As", "Kh", "Qd"], boardTurn: "7c", boardRiver: "3s" }
+ */
+function parseBoardCards(boardCardsStr: string): {
+  boardFlop?: string[]
+  boardTurn?: string
+  boardRiver?: string
+} {
+  const cards = boardCardsStr.trim().split(/\s+/).filter(Boolean)
+
+  if (cards.length === 0) return {}
+
+  const result: {
+    boardFlop?: string[]
+    boardTurn?: string
+    boardRiver?: string
+  } = {}
+
+  if (cards.length >= 3) {
+    result.boardFlop = cards.slice(0, 3)
+  }
+  if (cards.length >= 4) {
+    result.boardTurn = cards[3]
+  }
+  if (cards.length >= 5) {
+    result.boardRiver = cards[4]
+  }
+
+  return result
+}
+
+// ==================== Main Mutation Functions ====================
 
 /**
  * 핸드 기본 정보 업데이트
+ *
+ * @param handId - 핸드 ID
+ * @param data - 업데이트할 데이터
+ * @returns 성공 여부
  */
 export async function updateHandBasicInfo(
   handId: string,
-  data: {
-    number?: string
-    description?: string
-    timestamp?: string
-    pot_size?: number
-    board_cards?: string
-  }
-) {
-  const supabase = createClientSupabaseClient()
-
+  data: HandBasicInfoUpdate,
+): Promise<{ success: boolean }> {
   try {
-    const { error } = await supabase
-      .from('hands')
-      .update(data)
-      .eq('id', handId)
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
 
-    if (error) throw error
+    // Firestore 형식으로 변환
+    const updateData: Partial<FirestoreHand> & { updatedAt: ReturnType<typeof serverTimestamp> } = {
+      updatedAt: serverTimestamp(),
+    }
+
+    if (data.number !== undefined) {
+      updateData.number = data.number
+    }
+    if (data.description !== undefined) {
+      updateData.description = data.description
+    }
+    if (data.timestamp !== undefined) {
+      updateData.timestamp = data.timestamp
+    }
+    if (data.pot_size !== undefined) {
+      updateData.potSize = data.pot_size
+    }
+    if (data.board_cards !== undefined) {
+      const boardData = parseBoardCards(data.board_cards)
+      if (boardData.boardFlop) updateData.boardFlop = boardData.boardFlop
+      if (boardData.boardTurn) updateData.boardTurn = boardData.boardTurn
+      if (boardData.boardRiver) updateData.boardRiver = boardData.boardRiver
+    }
+
+    await updateDoc(handRef, updateData)
+
     return { success: true }
   } catch (error) {
     console.error('핸드 정보 업데이트 실패:', error)
@@ -30,26 +147,48 @@ export async function updateHandBasicInfo(
 }
 
 /**
- * 플레이어 정보 업데이트 (hand_players 테이블)
+ * 플레이어 정보 업데이트 (hand_players 배열 내)
+ *
+ * @param handId - 핸드 ID
+ * @param playerId - 플레이어 ID
+ * @param data - 업데이트할 데이터
+ * @returns 성공 여부
  */
 export async function updateHandPlayer(
-  handPlayerId: string,
-  data: {
-    position?: string
-    cards?: string
-    starting_stack?: number
-    ending_stack?: number
-  }
-) {
-  const supabase = createClientSupabaseClient()
-
+  handId: string,
+  playerId: string,
+  data: HandPlayerUpdate,
+): Promise<{ success: boolean }> {
   try {
-    const { error } = await supabase
-      .from('hand_players')
-      .update(data)
-      .eq('id', handPlayerId)
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    const handDoc = await getDoc(handRef)
 
-    if (error) throw error
+    if (!handDoc.exists()) {
+      throw new Error('핸드를 찾을 수 없습니다')
+    }
+
+    const hand = handDoc.data() as FirestoreHand
+    const players = hand.players || []
+
+    // 플레이어 찾아서 업데이트
+    const updatedPlayers = players.map((p) => {
+      if (p.playerId === playerId) {
+        return {
+          ...p,
+          position: data.position ?? p.position,
+          cards: data.cards ? data.cards.match(/.{1,2}/g) || [] : p.cards,
+          startStack: data.starting_stack ?? p.startStack,
+          endStack: data.ending_stack ?? p.endStack,
+        }
+      }
+      return p
+    })
+
+    await updateDoc(handRef, {
+      players: updatedPlayers,
+      updatedAt: serverTimestamp(),
+    })
+
     return { success: true }
   } catch (error) {
     console.error('플레이어 정보 업데이트 실패:', error)
@@ -59,23 +198,55 @@ export async function updateHandPlayer(
 
 /**
  * 여러 플레이어 정보를 한 번에 업데이트
+ *
+ * @param handId - 핸드 ID
+ * @param players - 업데이트할 플레이어 목록
+ * @returns 성공 여부
  */
 export async function updateHandPlayers(
   handId: string,
   players: Array<{
-    id: string // hand_player_id
+    id: string // player_id
     position?: string
     cards?: string
     starting_stack?: number
     ending_stack?: number
-  }>
-) {
+  }>,
+): Promise<{ success: boolean }> {
   try {
-    // 각 플레이어에 대해 순차적으로 업데이트
-    for (const player of players) {
-      const { id, ...data } = player
-      await updateHandPlayer(id, data)
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    const handDoc = await getDoc(handRef)
+
+    if (!handDoc.exists()) {
+      throw new Error('핸드를 찾을 수 없습니다')
     }
+
+    const hand = handDoc.data() as FirestoreHand
+    const existingPlayers = hand.players || []
+
+    // 업데이트 맵 생성
+    const updateMap = new Map(players.map((p) => [p.id, p]))
+
+    // 플레이어 정보 업데이트
+    const updatedPlayers = existingPlayers.map((p) => {
+      const update = updateMap.get(p.playerId)
+      if (update) {
+        return {
+          ...p,
+          position: update.position ?? p.position,
+          cards: update.cards ? update.cards.match(/.{1,2}/g) || [] : p.cards,
+          startStack: update.starting_stack ?? p.startStack,
+          endStack: update.ending_stack ?? p.endStack,
+        }
+      }
+      return p
+    })
+
+    await updateDoc(handRef, {
+      players: updatedPlayers,
+      updatedAt: serverTimestamp(),
+    })
+
     return { success: true }
   } catch (error) {
     console.error('플레이어 정보 일괄 업데이트 실패:', error)
@@ -85,23 +256,48 @@ export async function updateHandPlayers(
 
 /**
  * 핸드 액션 추가
+ *
+ * @param data - 액션 데이터
+ * @returns 성공 여부
  */
 export async function addHandAction(data: {
   hand_id: string
   player_id: string
-  street: 'preflop' | 'flop' | 'turn' | 'river'
-  action_type: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in'
+  street: PokerStreet
+  action_type: PokerActionType
   amount?: number
   sequence: number
-}) {
-  const supabase = createClientSupabaseClient()
-
+}): Promise<{ success: boolean }> {
   try {
-    const { error } = await supabase
-      .from('hand_actions')
-      .insert(data)
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, data.hand_id)
+    const handDoc = await getDoc(handRef)
 
-    if (error) throw error
+    if (!handDoc.exists()) {
+      throw new Error('핸드를 찾을 수 없습니다')
+    }
+
+    const hand = handDoc.data() as FirestoreHand
+
+    // 플레이어 이름 찾기
+    const player = hand.players?.find((p) => p.playerId === data.player_id)
+    const playerName = player?.name || 'Unknown'
+
+    // 새 액션 생성
+    const newAction: HandActionEmbedded = {
+      playerId: data.player_id,
+      playerName,
+      street: data.street,
+      sequence: data.sequence,
+      actionType: data.action_type,
+      amount: data.amount,
+    }
+
+    // 액션 배열에 추가
+    await updateDoc(handRef, {
+      actions: arrayUnion(newAction),
+      updatedAt: serverTimestamp(),
+    })
+
     return { success: true }
   } catch (error) {
     console.error('액션 추가 실패:', error)
@@ -110,18 +306,20 @@ export async function addHandAction(data: {
 }
 
 /**
- * 핸드 액션 삭제
+ * 핸드 액션 전체 삭제
+ *
+ * @param handId - 핸드 ID
+ * @returns 성공 여부
  */
-export async function deleteHandActions(handId: string) {
-  const supabase = createClientSupabaseClient()
-
+export async function deleteHandActions(handId: string): Promise<{ success: boolean }> {
   try {
-    const { error } = await supabase
-      .from('hand_actions')
-      .delete()
-      .eq('hand_id', handId)
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
 
-    if (error) throw error
+    await updateDoc(handRef, {
+      actions: [],
+      updatedAt: serverTimestamp(),
+    })
+
     return { success: true }
   } catch (error) {
     console.error('액션 삭제 실패:', error)
@@ -131,36 +329,50 @@ export async function deleteHandActions(handId: string) {
 
 /**
  * 핸드 액션 일괄 업데이트 (기존 삭제 후 새로 추가)
+ *
+ * @param handId - 핸드 ID
+ * @param actions - 새 액션 목록
+ * @returns 성공 여부
  */
 export async function updateHandActions(
   handId: string,
   actions: Array<{
     player_id: string
-    street: 'preflop' | 'flop' | 'turn' | 'river'
-    action_type: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in'
+    street: PokerStreet
+    action_type: PokerActionType
     amount?: number
     sequence: number
-  }>
-) {
-  const supabase = createClientSupabaseClient()
-
+  }>,
+): Promise<{ success: boolean }> {
   try {
-    // 1. 기존 액션 삭제
-    await deleteHandActions(handId)
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    const handDoc = await getDoc(handRef)
 
-    // 2. 새 액션 추가
-    if (actions.length > 0) {
-      const actionsWithHandId = actions.map(action => ({
-        ...action,
-        hand_id: handId,
-      }))
-
-      const { error } = await supabase
-        .from('hand_actions')
-        .insert(actionsWithHandId)
-
-      if (error) throw error
+    if (!handDoc.exists()) {
+      throw new Error('핸드를 찾을 수 없습니다')
     }
+
+    const hand = handDoc.data() as FirestoreHand
+
+    // 플레이어 이름 맵 생성
+    const playerNameMap = new Map(
+      (hand.players || []).map((p) => [p.playerId, p.name]),
+    )
+
+    // 새 액션 목록 생성
+    const newActions: HandActionEmbedded[] = actions.map((action) => ({
+      playerId: action.player_id,
+      playerName: playerNameMap.get(action.player_id) || 'Unknown',
+      street: action.street,
+      sequence: action.sequence,
+      actionType: action.action_type,
+      amount: action.amount,
+    }))
+
+    await updateDoc(handRef, {
+      actions: newActions,
+      updatedAt: serverTimestamp(),
+    })
 
     return { success: true }
   } catch (error) {
@@ -171,17 +383,15 @@ export async function updateHandActions(
 
 /**
  * 핸드 전체 정보 업데이트 (트랜잭션처럼 동작)
+ *
+ * @param handId - 핸드 ID
+ * @param data - 업데이트할 데이터
+ * @returns 성공 여부
  */
 export async function updateHandComplete(
   handId: string,
   data: {
-    basicInfo?: {
-      number?: string
-      description?: string
-      timestamp?: string
-      pot_size?: number
-      board_cards?: string
-    }
+    basicInfo?: HandBasicInfoUpdate
     players?: Array<{
       id: string
       position?: string
@@ -191,28 +401,87 @@ export async function updateHandComplete(
     }>
     actions?: Array<{
       player_id: string
-      street: 'preflop' | 'flop' | 'turn' | 'river'
-      action_type: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in'
+      street: PokerStreet
+      action_type: PokerActionType
       amount?: number
       sequence: number
     }>
-  }
-) {
+  },
+): Promise<{ success: boolean }> {
   try {
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    const handDoc = await getDoc(handRef)
+
+    if (!handDoc.exists()) {
+      throw new Error('핸드를 찾을 수 없습니다')
+    }
+
+    const hand = handDoc.data() as FirestoreHand
+
+    // 업데이트 데이터 준비
+    const updateData: Partial<FirestoreHand> & { updatedAt: ReturnType<typeof serverTimestamp> } = {
+      updatedAt: serverTimestamp(),
+    }
+
     // 1. 기본 정보 업데이트
     if (data.basicInfo) {
-      await updateHandBasicInfo(handId, data.basicInfo)
+      if (data.basicInfo.number !== undefined) {
+        updateData.number = data.basicInfo.number
+      }
+      if (data.basicInfo.description !== undefined) {
+        updateData.description = data.basicInfo.description
+      }
+      if (data.basicInfo.timestamp !== undefined) {
+        updateData.timestamp = data.basicInfo.timestamp
+      }
+      if (data.basicInfo.pot_size !== undefined) {
+        updateData.potSize = data.basicInfo.pot_size
+      }
+      if (data.basicInfo.board_cards !== undefined) {
+        const boardData = parseBoardCards(data.basicInfo.board_cards)
+        if (boardData.boardFlop) updateData.boardFlop = boardData.boardFlop
+        if (boardData.boardTurn) updateData.boardTurn = boardData.boardTurn
+        if (boardData.boardRiver) updateData.boardRiver = boardData.boardRiver
+      }
     }
 
     // 2. 플레이어 정보 업데이트
     if (data.players && data.players.length > 0) {
-      await updateHandPlayers(handId, data.players)
+      const existingPlayers = hand.players || []
+      const updateMap = new Map(data.players.map((p) => [p.id, p]))
+
+      updateData.players = existingPlayers.map((p) => {
+        const update = updateMap.get(p.playerId)
+        if (update) {
+          return {
+            ...p,
+            position: update.position ?? p.position,
+            cards: update.cards ? update.cards.match(/.{1,2}/g) || [] : p.cards,
+            startStack: update.starting_stack ?? p.startStack,
+            endStack: update.ending_stack ?? p.endStack,
+          }
+        }
+        return p
+      }) as HandPlayerEmbedded[]
     }
 
     // 3. 액션 정보 업데이트
     if (data.actions) {
-      await updateHandActions(handId, data.actions)
+      const playerNameMap = new Map(
+        (hand.players || []).map((p) => [p.playerId, p.name]),
+      )
+
+      updateData.actions = data.actions.map((action) => ({
+        playerId: action.player_id,
+        playerName: playerNameMap.get(action.player_id) || 'Unknown',
+        street: action.street,
+        sequence: action.sequence,
+        actionType: action.action_type,
+        amount: action.amount,
+      })) as HandActionEmbedded[]
     }
+
+    await updateDoc(handRef, updateData)
 
     return { success: true }
   } catch (error) {
@@ -223,20 +492,69 @@ export async function updateHandComplete(
 
 /**
  * 핸드 삭제
+ *
+ * @param handId - 핸드 ID
+ * @returns 성공 여부
  */
-export async function deleteHand(handId: string) {
-  const supabase = createClientSupabaseClient()
-
+export async function deleteHand(handId: string): Promise<{ success: boolean }> {
   try {
-    const { error } = await supabase
-      .from('hands')
-      .delete()
-      .eq('id', handId)
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
 
-    if (error) throw error
+    // 핸드 정보 조회 (플레이어 인덱스 삭제를 위해)
+    const handDoc = await getDoc(handRef)
+
+    if (handDoc.exists()) {
+      const hand = handDoc.data() as FirestoreHand
+      const batch = writeBatch(firestore)
+
+      // 플레이어별 핸드 인덱스 삭제
+      for (const player of hand.players || []) {
+        const playerHandRef = doc(
+          firestore,
+          COLLECTION_PATHS.PLAYER_HANDS(player.playerId),
+          handId,
+        )
+        batch.delete(playerHandRef)
+      }
+
+      // 핸드 문서 삭제
+      batch.delete(handRef)
+
+      // 스트림 핸드 카운트 감소 (선택적)
+      // TODO: Cloud Function으로 처리하는 것이 좋음
+
+      await batch.commit()
+    }
+
     return { success: true }
   } catch (error) {
     console.error('핸드 삭제 실패:', error)
+    throw error
+  }
+}
+
+/**
+ * 핸드 즐겨찾기 토글
+ *
+ * @param handId - 핸드 ID
+ * @param favorite - 즐겨찾기 여부
+ * @returns 성공 여부
+ */
+export async function toggleHandFavorite(
+  handId: string,
+  favorite: boolean,
+): Promise<{ success: boolean }> {
+  try {
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+
+    await updateDoc(handRef, {
+      favorite,
+      updatedAt: serverTimestamp(),
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error('즐겨찾기 토글 실패:', error)
     throw error
   }
 }

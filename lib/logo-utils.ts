@@ -3,10 +3,13 @@
  *
  * Provides functions to get logo files from:
  * 1. Static logos (public/logos/)
- * 2. Uploaded logos (Supabase Storage)
+ * 2. Uploaded logos (Firebase Storage)
+ *
+ * @module lib/logo-utils
  */
 
-import { createClientSupabaseClient } from './supabase-client'
+import { storage } from './firebase'
+import { ref, listAll, getDownloadURL, getMetadata } from 'firebase/storage'
 
 export interface LogoFile {
   name: string
@@ -67,6 +70,11 @@ export const STATIC_LOGOS: LogoFile[] = [
 ]
 
 /**
+ * Firebase Storage path for tournament logos
+ */
+const LOGOS_STORAGE_PATH = 'tournament-logos'
+
+/**
  * Get all static logos from public/logos/ folder
  */
 export function getStaticLogos(): LogoFile[] {
@@ -74,47 +82,45 @@ export function getStaticLogos(): LogoFile[] {
 }
 
 /**
- * Get uploaded logos from Supabase Storage
+ * Get uploaded logos from Firebase Storage
  * @returns Promise<LogoFile[]>
  */
 export async function getUploadedLogos(): Promise<LogoFile[]> {
   try {
-    const supabase = createClientSupabaseClient()
+    const logosRef = ref(storage, LOGOS_STORAGE_PATH)
+    const result = await listAll(logosRef)
 
-    const { data, error } = await supabase
-      .storage
-      .from('tournament-logos')
-      .list()
-
-    if (error) {
-      console.error('Error fetching uploaded logos:', error)
+    if (!result.items || result.items.length === 0) {
       return []
     }
 
-    if (!data || data.length === 0) {
-      return []
-    }
+    // Get URLs and metadata for each file
+    const logoPromises = result.items.map(async (itemRef) => {
+      try {
+        const [url, metadata] = await Promise.all([
+          getDownloadURL(itemRef),
+          getMetadata(itemRef),
+        ])
 
-    // Get public URLs for each file
-    const logos: LogoFile[] = data
-      .filter((file) => file.name !== '.emptyFolderPlaceholder')
-      .map((file) => {
-        const { data: urlData } = supabase
-          .storage
-          .from('tournament-logos')
-          .getPublicUrl(file.name)
+        // Extract name from filename (remove extension)
+        const name = itemRef.name.replace(/\.(svg|png|jpg|jpeg)$/i, '')
 
         return {
-          name: file.name.replace(/\.(svg|png|jpg|jpeg)$/i, ''),
-          path: `tournament-logos/${file.name}`,
-          url: urlData.publicUrl,
+          name,
+          path: `${LOGOS_STORAGE_PATH}/${itemRef.name}`,
+          url,
           source: 'uploaded' as const,
-          size: file.metadata?.size,
-          createdAt: file.created_at,
+          size: metadata.size,
+          createdAt: metadata.timeCreated,
         }
-      })
+      } catch (error) {
+        console.error(`Error fetching logo ${itemRef.name}:`, error)
+        return null
+      }
+    })
 
-    return logos
+    const logos = await Promise.all(logoPromises)
+    return logos.filter((logo): logo is NonNullable<typeof logo> => logo !== null) as LogoFile[]
   } catch (error) {
     console.error('Error in getUploadedLogos:', error)
     return []

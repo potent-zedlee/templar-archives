@@ -261,8 +261,32 @@ export interface HandActionEmbedded {
 export interface HandEngagement {
   /** 좋아요 수 */
   likesCount: number
+  /** 싫어요 수 */
+  dislikesCount: number
   /** 북마크 수 */
   bookmarksCount: number
+}
+
+/**
+ * 핸드 좋아요/싫어요 투표 타입
+ */
+export type VoteType = 'like' | 'dislike'
+
+/**
+ * HandLike 문서
+ *
+ * Collection: /hands/{handId}/likes/{likeId}
+ * likeId = odba (for 빠른 조회)
+ */
+export interface FirestoreHandLike {
+  /** 사용자 ID */
+  userId: string
+  /** 투표 타입 */
+  voteType: VoteType
+  /** 생성일 */
+  createdAt: Timestamp
+  /** 수정일 */
+  updatedAt: Timestamp
 }
 
 /**
@@ -462,16 +486,33 @@ export interface FirestoreNotification {
  * 사용자 북마크
  *
  * Collection: /users/{userId}/bookmarks/{bookmarkId}
+ * bookmarkId = handId (for 빠른 조회)
  */
 export interface FirestoreBookmark {
   /** 북마크 타입 */
   type: 'hand' | 'post'
-  /** 참조 ID */
+  /** 참조 ID (핸드 ID 또는 포스트 ID) */
   refId: string
-  /** 참조 정보 (중복) */
+  /** 폴더 이름 */
+  folderName?: string
+  /** 메모 */
+  notes?: string
+  /** 참조 정보 (중복 - 빠른 조회) */
   refData: {
     title: string
     description?: string
+    /** 핸드 번호 */
+    number?: string
+    /** 타임스탬프 */
+    timestamp?: string
+    /** 스트림 이름 */
+    streamName?: string
+    /** 이벤트 이름 */
+    eventName?: string
+    /** 토너먼트 이름 */
+    tournamentName?: string
+    /** 토너먼트 카테고리 */
+    tournamentCategory?: string
   }
   /** 생성일 */
   createdAt: Timestamp
@@ -788,4 +829,6 @@ export const COLLECTION_PATHS = {
   ANALYSIS_JOBS: 'analysisJobs',
   CATEGORIES: 'categories',
   SYSTEM_CONFIGS: 'systemConfigs',
+  /** Hand likes (서브컬렉션) */
+  HAND_LIKES: (handId: string) => `hands/${handId}/likes`,
 } as const
