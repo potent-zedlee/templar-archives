@@ -16,9 +16,10 @@ import {
   Timestamp,
   collectionGroup,
   limit,
+  doc,
+  setDoc,
 } from 'firebase/firestore'
 import { firestore } from './firebase'
-import { adminFirestore } from './firebase-admin'
 import type {
   FirestoreHandTag,
   FirestoreUserTagHistory,
@@ -323,7 +324,9 @@ export async function getHandTagCount(
 }
 
 /**
- * 서버측: 유저 태그 히스토리 업데이트 (Cloud Function / Server Action용)
+ * 유저 태그 히스토리 업데이트 (클라이언트용)
+ *
+ * Note: 서버 환경에서 실행해야 할 경우 Server Action으로 래핑 필요
  *
  * @param userId - 사용자 ID
  * @param handId - 핸드 ID
@@ -331,7 +334,7 @@ export async function getHandTagCount(
  * @param handNumber - 핸드 번호
  * @param tournamentName - 토너먼트 이름
  */
-export async function updateUserTagHistoryServer(
+export async function updateUserTagHistory(
   userId: string,
   handId: string,
   tagName: import('./firestore-types').HandTagName,
@@ -339,17 +342,17 @@ export async function updateUserTagHistoryServer(
   tournamentName?: string
 ): Promise<void> {
   try {
-    const historyRef = adminFirestore.collection(COLLECTION_PATHS.USER_TAG_HISTORY(userId))
+    const historyRef = collection(firestore, COLLECTION_PATHS.USER_TAG_HISTORY(userId))
 
-    const newHistory = {
+    const newHistory: Omit<FirestoreUserTagHistory, 'createdAt'> & { createdAt: any } = {
       handId,
       tagName,
       handNumber,
       tournamentName,
-      createdAt: new Date(),
+      createdAt: serverTimestamp(),
     }
 
-    await historyRef.add(newHistory)
+    await addDoc(historyRef, newHistory)
   } catch (error) {
     console.error('유저 태그 히스토리 업데이트 실패:', error)
   }
