@@ -13,7 +13,7 @@ import {
 import { Search, Sparkles, Grid3x3, List, Star, TrendingUp } from "lucide-react"
 import { SearchEmptyState } from "./SearchEmptyState"
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton"
-import type { Hand } from "@/lib/supabase"
+import type { Hand } from "@/lib/types/archive"
 import { cn } from "@/lib/utils"
 
 type HandWithDetails = Hand & {

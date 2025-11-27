@@ -44,31 +44,46 @@ const PerformanceChartCard = dynamic(() => import("@/components/features/player/
   loading: () => <div className="h-64 flex items-center justify-center">차트 로딩 중...</div>
 })
 
-type Tournament = {
+// Local types for UI state (extending PlayerHandGroup from queries)
+interface TournamentView {
   id: string
   name: string
   category: string
-  location: string
-  sub_events: Event[]
+  location?: string
+  sub_events: EventView[]
   expanded: boolean
 }
 
-type Event = {
+interface EventView {
   id: string
   name: string
-  date: string
-  days: Day[]
+  date?: string
+  days: DayView[]
   expanded: boolean
 }
 
-type Day = {
+interface DayView {
   id: string
   name: string
   video_url?: string
   video_file?: string
   video_source?: string
   video_nas_path?: string
-  hands: any[]
+  hands: HandView[]
+}
+
+interface HandView {
+  id: string
+  number: string
+  description?: string
+  timestamp?: string
+  board_cards?: string[]
+  pot_size?: number
+  hand_players?: Array<{
+    position?: string
+    player?: { name?: string }
+    cards?: string[]
+  }>
 }
 
 export default function PlayerDetailClient() {
@@ -94,16 +109,18 @@ export default function PlayerDetailClient() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Extract claim data
-  const playerClaim = claimData?.claimInfo.claim || null
-  const isClaimed = claimData?.claimInfo.claimed || false
+  const claimInfo = claimData?.claimInfo || null
+  const isClaimed = claimInfo?.claimed || false
+  const claimerName = claimInfo?.claimerName || null
   const userClaim = claimData?.userClaim || null
 
   // Calculate tournaments from hands data (useMemo to prevent hydration mismatch)
-  const tournaments: Tournament[] = useMemo(() => {
-    return handsData.map((tournament: Tournament) => ({
+  // Note: handsData structure from API may vary, using type assertion for flexibility
+  const tournaments: TournamentView[] = useMemo(() => {
+    return (handsData as unknown as TournamentView[]).map((tournament) => ({
       ...tournament,
       expanded: expandedTournaments[tournament.id] ?? true,
-      sub_events: tournament.sub_events.map((event: Event) => ({
+      sub_events: tournament.sub_events.map((event) => ({
         ...event,
         expanded: expandedEvents[event.id] ?? false,
       })),
@@ -309,9 +326,9 @@ export default function PlayerDetailClient() {
                   )}
 
                   {/* Claim Status Badges */}
-                  {isClaimed && playerClaim && (
+                  {isClaimed && claimerName && (
                     <div className="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-lg">
-                      Claimed by {playerClaim.user.nickname}
+                      Claimed by {claimerName}
                     </div>
                   )}
                   {userClaim && userClaim.status === 'pending' && (

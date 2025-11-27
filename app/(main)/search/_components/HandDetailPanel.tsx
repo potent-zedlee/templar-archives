@@ -1,15 +1,11 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
-import { createClientSupabaseClient } from "@/lib/supabase-client"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Loader2, ExternalLink } from "lucide-react"
+import { Loader2, ExternalLink, Search } from "lucide-react"
 import Link from "next/link"
 import { EmptyState } from "@/components/common/EmptyState"
-import { Search } from "lucide-react"
 import { YouTubePlayer } from "@/components/features/video/YouTubePlayer"
-
-const supabase = createClientSupabaseClient()
 
 /**
  * YouTube URL에서 video ID 추출
@@ -71,37 +67,12 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
   const { data: hand, isLoading, error } = useQuery({
     queryKey: ["hand", handId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("hands")
-        .select(`
-          *,
-          stream:day_id (
-            name,
-            video_url,
-            sub_event:event_id (
-              name,
-              tournament:tournament_id (
-                name
-              )
-            )
-          ),
-          hand_players (
-            *,
-            player:player_id (
-              name,
-              photo_url,
-              country
-            )
-          ),
-          hand_actions (
-            *
-          )
-        `)
-        .eq("id", handId)
-        .single()
-
-      if (error) throw error
-      return data
+      const response = await fetch(`/api/hands/${handId}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch hand')
+      }
+      const data = await response.json()
+      return data.hand
     },
     enabled: !!handId,
     staleTime: 10 * 60 * 1000,

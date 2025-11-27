@@ -17,7 +17,7 @@ import {
   useUpdatePlayerPhotoMutation
 } from "@/lib/queries/players-queries"
 import { HandListAccordion } from "@/components/features/hand/HandListAccordion"
-import type { Player } from "@/lib/supabase"
+import type { Player } from "@/lib/types/archive"
 
 // Dynamic imports for chart components
 const PrizeHistoryChart = dynamic(() => import("@/components/features/player/PlayerCharts").then(mod => ({ default: mod.PrizeHistoryChart })), {
@@ -67,8 +67,9 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Extract claim data
-  const playerClaim = claimData?.claimInfo.claim || null
-  const isClaimed = claimData?.claimInfo.claimed || false
+  const claimInfo = claimData?.claimInfo || null
+  const isClaimed = claimInfo?.claimed || false
+  const claimerName = claimInfo?.claimerName || null
   const userClaim = claimData?.userClaim || null
 
   // Calculate tournaments from hands data
@@ -270,9 +271,9 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
                     )}
 
                     {/* Claim Status Badges */}
-                    {isClaimed && playerClaim && (
+                    {isClaimed && claimerName && (
                       <div className="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-sm font-medium rounded-lg">
-                        Claimed by {playerClaim.user.nickname}
+                        Claimed by {claimerName}
                       </div>
                     )}
                     {userClaim && userClaim.status === 'pending' && (

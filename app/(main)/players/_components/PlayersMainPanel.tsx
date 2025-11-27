@@ -7,7 +7,7 @@ import { AnimatedCard } from "@/components/common/AnimatedCard"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Search, ChevronLeft, ChevronRight, Users } from "lucide-react"
-import type { Player } from "@/lib/supabase"
+import type { Player } from "@/lib/types/archive"
 import { GridSkeleton } from "@/components/ui/skeletons/GridSkeleton"
 import { EmptyState } from "@/components/common/EmptyState"
 
