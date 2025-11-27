@@ -39,7 +39,6 @@ export function StreamActions({
   currentStatus,
   tournamentId,
   eventId,
-  videoUrl,
   stream,
   onStatusChange,
   onOpenAnalyze

@@ -13,7 +13,6 @@ import {
   where,
   getDocs,
   orderBy,
-  limit as firestoreLimit,
   Timestamp,
 } from 'firebase/firestore'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'

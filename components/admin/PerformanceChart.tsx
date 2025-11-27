@@ -2,7 +2,7 @@
 
 import { Card } from '@/components/ui/card'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts'
-import { type WebVitalMetric, type MetricName, METRIC_THRESHOLDS, getMetricColor } from '@/lib/analytics/metrics'
+import { type WebVitalMetric, type MetricName, METRIC_THRESHOLDS } from '@/lib/analytics/metrics'
 import { format } from 'date-fns'
 
 interface PerformanceChartProps {

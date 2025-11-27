@@ -166,7 +166,7 @@ export function HandComments({ handId, onCommentsCountChange }: HandCommentsProp
     }
   }
 
-  const handleLikeComment = async (commentId: string) => {
+  const handleLikeComment = async (_: string) => {
     if (!user) {
       toast.error('로그인이 필요합니다.')
       router.push('/auth/login')

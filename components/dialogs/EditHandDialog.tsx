@@ -66,10 +66,9 @@ export function EditHandDialog({
   const [players, setPlayers] = useState<PlayerEdit[]>([])
 
   useEffect(() => {
-    // hand.players를 PlayerEdit 형식으로 변환
     if (hand.players && hand.players.length > 0) {
-      const initialPlayers: PlayerEdit[] = hand.players.map((p, idx) => ({
-        id: `player-${idx}`, // 임시 ID (실제로는 hand_player_id가 필요)
+      const initialPlayers: PlayerEdit[] = hand.players.map((p, _) => ({
+        id: `player-${_}`,
         name: p.name || "",
         position: p.position || "",
         cards: p.cards || "",

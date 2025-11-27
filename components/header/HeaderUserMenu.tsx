@@ -26,7 +26,6 @@ interface DropdownInstance {
 
 export function HeaderUserMenu({
   user,
-  profile,
   isUserAdmin,
   isUserReporter,
   onSignOut,

@@ -21,7 +21,7 @@ import {
   Timestamp,
 } from "firebase/firestore"
 import { COLLECTION_PATHS } from "@/lib/firestore-types"
-import type { FirestoreTournament, FirestoreHand } from "@/lib/firestore-types"
+import type { FirestoreTournament } from "@/lib/firestore-types"
 import Link from "next/link"
 
 type HistoricalTournament = {

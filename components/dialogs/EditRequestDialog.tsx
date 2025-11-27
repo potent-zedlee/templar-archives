@@ -13,16 +13,9 @@ import {
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useAuth } from "@/components/layout/AuthProvider"
 import { useRouter } from "next/navigation"
-import { Edit, ChevronRight, ChevronLeft } from "lucide-react"
+import { ChevronRight, ChevronLeft } from "lucide-react"
 import { createEditRequest, getHandDataForEdit, type EditType } from "@/lib/hand-edit-requests"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"

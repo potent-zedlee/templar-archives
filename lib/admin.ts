@@ -20,8 +20,6 @@ import {
   limit,
   getCountFromServer,
   Timestamp,
-  startAfter,
-  DocumentData,
 } from 'firebase/firestore'
 import { firestore, auth } from '@/lib/firebase'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'

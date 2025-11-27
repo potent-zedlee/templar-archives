@@ -8,7 +8,7 @@ import {
   usePositionalStatsQuery,
   formatStatPercentage,
 } from '@/lib/queries/player-stats-queries'
-import { BarChart, LineChart } from 'lucide-react'
+import { LineChart } from 'lucide-react'
 import {
   ResponsiveContainer,
   BarChart as RechartsBarChart,
@@ -123,7 +123,6 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
                     borderColor: 'var(--tw-border-opacity, 1)',
                     borderRadius: '8px',
                   }}
-                  className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                 />
                 <Legend />
                 <Bar dataKey="VPIP" fill="#3b82f6" name="VPIP (%)" />
@@ -181,7 +180,6 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
                     borderColor: 'var(--tw-border-opacity, 1)',
                     borderRadius: '8px',
                   }}
-                  className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                   formatter={(value: number) => formatStatPercentage(value)}
                 />
               </RadarChart>

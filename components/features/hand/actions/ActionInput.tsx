@@ -39,7 +39,6 @@ const ACTION_TYPES: { value: ActionType; label: string }[] = [
 ]
 
 export function ActionInput({
-  handId,
   players,
   street,
   sequence,

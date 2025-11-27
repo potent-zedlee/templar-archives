@@ -9,7 +9,6 @@ import {
   Video,
   Users,
   PlayCircle,
-  TrendingUp,
   Calendar,
   Trophy,
   ChevronRight,
@@ -23,8 +22,6 @@ import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CategoryLogo } from "@/components/common/CategoryLogo"

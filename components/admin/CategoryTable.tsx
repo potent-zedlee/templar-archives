@@ -10,7 +10,6 @@ import {
   GripVertical,
   Eye,
   EyeOff,
-  ExternalLink,
   ChevronRight,
 } from "lucide-react"
 import {

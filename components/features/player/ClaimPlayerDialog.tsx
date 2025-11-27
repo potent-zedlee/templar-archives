@@ -88,7 +88,7 @@ export function ClaimPlayerDialog({
         verificationData.additionalInfo = additionalInfo
       }
 
-      const { data, error } = await requestPlayerClaim({
+      const { error } = await requestPlayerClaim({
         userId: user.id,
         playerId: player.id,
         verificationMethod,

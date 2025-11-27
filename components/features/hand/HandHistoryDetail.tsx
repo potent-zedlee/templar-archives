@@ -18,7 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { ThumbsUp, ThumbsDown, Pencil, ChevronDown, ChevronRight, Bookmark, Edit, List, Tag, UserPlus } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Pencil, ChevronDown, ChevronRight, Bookmark, Edit, List, UserPlus } from "lucide-react"
 import { useAuth } from "@/components/layout/AuthProvider"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"

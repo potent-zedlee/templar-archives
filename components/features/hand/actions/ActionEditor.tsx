@@ -132,14 +132,6 @@ export function ActionEditor({
   // Get pending actions for current street
   const pendingStreetActions = pendingActions.filter(a => a.street === activeStreet)
 
-  // Get actions to save (pending actions only)
-  function getPendingActionsToSave() {
-    return pendingActions.map(action => ({
-      ...action,
-      hand_id: handId,
-    }))
-  }
-
   if (isLoading) {
     return (
       <Card className="p-6">

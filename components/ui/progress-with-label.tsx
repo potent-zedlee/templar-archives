@@ -103,7 +103,7 @@ export function SteppedProgress({
       <Progress value={progress} />
       {steps && (
         <div className="flex justify-between text-xs text-muted-foreground">
-          {steps.map((step, index) => (
+          {steps.map((_, index) => (
             <span
               key={index}
               className={cn(

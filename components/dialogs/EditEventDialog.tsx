@@ -20,7 +20,6 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { Plus, X, Loader2 } from "lucide-react"
-import type { Event } from "@/lib/types/archive"
 import type { PayoutRow } from "@/hooks/useArchiveState"
 import { updateEvent, saveEventPayouts } from "@/app/actions/archive"
 

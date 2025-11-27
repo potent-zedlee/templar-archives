@@ -20,7 +20,6 @@ interface HandSummaryProps {
 }
 
 export function HandSummary({
-  handId,
   title = "",
   summary = "",
   author,

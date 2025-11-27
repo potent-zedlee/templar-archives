@@ -30,7 +30,6 @@ export function HeaderMobileMenu({
   onClose,
   navLinks,
   user,
-  profile,
   isUserAdmin,
   isUserReporter,
   authLoading,

@@ -20,7 +20,6 @@ import {
   FileCheck,
   ShieldAlert,
   Settings,
-  Video,
   Newspaper,
   Radio,
   Activity,

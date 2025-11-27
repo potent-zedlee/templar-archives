@@ -24,7 +24,7 @@ interface CookieSettingsDialogProps {
 
 export function CookieSettingsDialog({ children }: CookieSettingsDialogProps) {
   const [open, setOpen] = useState(false)
-  const [essential, setEssential] = useState(true) // Always true
+  const [essential] = useState(true)
   const [analytics, setAnalytics] = useState(false)
 
   useEffect(() => {

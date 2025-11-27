@@ -107,7 +107,6 @@ export default function AuditLogsPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize] = useState(50)
-  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null)
   const [pageSnapshots, setPageSnapshots] = useState<(DocumentSnapshot | null)[]>([null])
 
   // Filters
@@ -195,7 +194,6 @@ export default function AuditLogsPage() {
       // Store the last document for next page
       if (snapshot.docs.length > 0) {
         const newLastDoc = snapshot.docs[snapshot.docs.length - 1]
-        setLastDoc(newLastDoc)
 
         // Store snapshot for this page
         const newPageSnapshots = [...pageSnapshots]
