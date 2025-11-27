@@ -1,34 +1,61 @@
 /**
  * Live Reports React Query Hooks
  *
- * 라이브 리포팅 데이터 페칭을 위한 React Query hooks
+ * 라이브 리포팅 데이터 페칭을 위한 React Query hooks (Firestore)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { createClientSupabaseClient } from '@/lib/supabase-client'
+import {
+  collection,
+  doc,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  getDoc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  serverTimestamp,
+  type Timestamp,
+  type DocumentData,
+  type QueryDocumentSnapshot,
+} from 'firebase/firestore'
+import { firestore, auth } from '@/lib/firebase'
+import {
+  type FirestoreLiveReport,
+  type LiveReportCategory,
+  type LiveReportStatus,
+  type AuthorInfo,
+  COLLECTION_PATHS,
+} from '@/lib/firestore-types'
 
-const supabase = createClientSupabaseClient()
-
-export type LiveReport = {
+/**
+ * LiveReport 문서 타입 (ID 포함)
+ */
+export type LiveReport = FirestoreLiveReport & {
   id: string
-  title: string
-  content: string
-  thumbnail_url?: string
-  category: 'Tournament Update' | 'Chip Counts' | 'Breaking News' | 'Results' | 'Other'
-  tags: string[]
-  external_link?: string
-  status: 'draft' | 'pending' | 'published'
-  author_id: string
-  approved_by?: string
-  created_at: string
-  updated_at: string
-  published_at?: string
-  author?: {
-    nickname: string
-    avatar_url?: string
-  }
-  approver?: {
-    nickname: string
+}
+
+/**
+ * Firestore 문서 → LiveReport 변환
+ */
+function docToLiveReport(docSnap: QueryDocumentSnapshot<DocumentData>): LiveReport {
+  const data = docSnap.data()
+  return {
+    id: docSnap.id,
+    title: data.title,
+    content: data.content,
+    thumbnailUrl: data.thumbnailUrl,
+    category: data.category,
+    tags: data.tags || [],
+    externalLink: data.externalLink,
+    status: data.status,
+    author: data.author,
+    approver: data.approver,
+    createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString(),
+    updatedAt: data.updatedAt?.toDate().toISOString() || new Date().toISOString(),
+    publishedAt: data.publishedAt?.toDate().toISOString(),
   }
 }
 
@@ -37,7 +64,8 @@ export type LiveReport = {
 export const liveReportsKeys = {
   all: ['live_reports'] as const,
   lists: () => [...liveReportsKeys.all, 'list'] as const,
-  list: (filters?: { category?: string; status?: string }) => [...liveReportsKeys.lists(), filters] as const,
+  list: (filters?: { category?: string; status?: string }) =>
+    [...liveReportsKeys.lists(), filters] as const,
   details: () => [...liveReportsKeys.all, 'detail'] as const,
   detail: (id: string) => [...liveReportsKeys.details(), id] as const,
   my: () => [...liveReportsKeys.all, 'my'] as const,
@@ -49,27 +77,26 @@ export const liveReportsKeys = {
 /**
  * Fetch published live reports
  */
-export function useLiveReportsQuery(options?: { category?: string }) {
+export function useLiveReportsQuery(options?: { category?: LiveReportCategory }) {
   return useQuery({
     queryKey: liveReportsKeys.list({ status: 'published', category: options?.category }),
     queryFn: async () => {
-      let query = supabase
-        .from('live_reports')
-        .select(`
-          *,
-          author:author_id (nickname, avatar_url)
-        `)
-        .eq('status', 'published')
-        .order('published_at', { ascending: false })
+      const reportsRef = collection(firestore, COLLECTION_PATHS.LIVE_REPORTS)
+
+      // 쿼리 구성
+      const constraints = [
+        where('status', '==', 'published'),
+        orderBy('publishedAt', 'desc'),
+      ]
 
       if (options?.category) {
-        query = query.eq('category', options.category)
+        constraints.unshift(where('category', '==', options.category))
       }
 
-      const { data, error } = await query
+      const q = query(reportsRef, ...constraints)
+      const snapshot = await getDocs(q)
 
-      if (error) throw error
-      return data as LiveReport[]
+      return snapshot.docs.map(docToLiveReport)
     },
     staleTime: 2 * 60 * 1000, // 2분 (더 자주 갱신)
     gcTime: 5 * 60 * 1000,
@@ -83,18 +110,14 @@ export function useLiveReportDetailQuery(id: string) {
   return useQuery({
     queryKey: liveReportsKeys.detail(id),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('live_reports')
-        .select(`
-          *,
-          author:author_id (nickname, avatar_url),
-          approver:approved_by (nickname)
-        `)
-        .eq('id', id)
-        .single()
+      const docRef = doc(firestore, COLLECTION_PATHS.LIVE_REPORTS, id)
+      const docSnap = await getDoc(docRef)
 
-      if (error) throw error
-      return data as LiveReport
+      if (!docSnap.exists()) {
+        throw new Error('Live report not found')
+      }
+
+      return docToLiveReport(docSnap as QueryDocumentSnapshot<DocumentData>)
     },
     enabled: !!id,
     staleTime: 2 * 60 * 1000,
@@ -111,17 +134,18 @@ export function useMyLiveReportsQuery() {
   return useQuery({
     queryKey: liveReportsKeys.my(),
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = auth.currentUser
       if (!user) throw new Error('Not authenticated')
 
-      const { data, error } = await supabase
-        .from('live_reports')
-        .select('*')
-        .eq('author_id', user.id)
-        .order('created_at', { ascending: false })
+      const reportsRef = collection(firestore, COLLECTION_PATHS.LIVE_REPORTS)
+      const q = query(
+        reportsRef,
+        where('author.id', '==', user.uid),
+        orderBy('createdAt', 'desc')
+      )
 
-      if (error) throw error
-      return data as LiveReport[]
+      const snapshot = await getDocs(q)
+      return snapshot.docs.map(docToLiveReport)
     },
     staleTime: 1 * 60 * 1000, // 1분
     gcTime: 5 * 60 * 1000,
@@ -137,17 +161,15 @@ export function usePendingLiveReportsQuery() {
   return useQuery({
     queryKey: liveReportsKeys.pending(),
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('live_reports')
-        .select(`
-          *,
-          author:author_id (nickname, avatar_url)
-        `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
+      const reportsRef = collection(firestore, COLLECTION_PATHS.LIVE_REPORTS)
+      const q = query(
+        reportsRef,
+        where('status', '==', 'pending'),
+        orderBy('createdAt', 'desc')
+      )
 
-      if (error) throw error
-      return data as LiveReport[]
+      const snapshot = await getDocs(q)
+      return snapshot.docs.map(docToLiveReport)
     },
     staleTime: 1 * 60 * 1000, // 1분
     gcTime: 5 * 60 * 1000,
@@ -166,26 +188,55 @@ export function useCreateLiveReportMutation() {
     mutationFn: async (input: {
       title: string
       content: string
-      thumbnail_url?: string
-      category: LiveReport['category']
+      thumbnailUrl?: string
+      category: LiveReportCategory
       tags?: string[]
-      external_link?: string
+      externalLink?: string
       status: 'draft' | 'pending'
     }) => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = auth.currentUser
       if (!user) throw new Error('Not authenticated')
 
-      const { data, error } = await supabase
-        .from('live_reports')
-        .insert({
-          ...input,
-          author_id: user.id,
-        })
-        .select()
-        .single()
+      // 사용자 정보 가져오기 (임베딩용)
+      const userDocRef = doc(firestore, COLLECTION_PATHS.USERS, user.uid)
+      const userSnap = await getDoc(userDocRef)
 
-      if (error) throw error
-      return data as LiveReport
+      if (!userSnap.exists()) {
+        throw new Error('User profile not found')
+      }
+
+      const userData = userSnap.data()
+      const author: AuthorInfo = {
+        id: user.uid,
+        name: userData.nickname || user.displayName || 'Anonymous',
+        avatarUrl: userData.avatarUrl || user.photoURL || undefined,
+      }
+
+      const reportsRef = collection(firestore, COLLECTION_PATHS.LIVE_REPORTS)
+      const newReport: Omit<FirestoreLiveReport, 'createdAt' | 'updatedAt'> & {
+        createdAt: ReturnType<typeof serverTimestamp>
+        updatedAt: ReturnType<typeof serverTimestamp>
+      } = {
+        title: input.title,
+        content: input.content,
+        thumbnailUrl: input.thumbnailUrl,
+        category: input.category,
+        tags: input.tags || [],
+        externalLink: input.externalLink,
+        status: input.status,
+        author,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      }
+
+      const docRef = await addDoc(reportsRef, newReport)
+      const docSnap = await getDoc(docRef)
+
+      if (!docSnap.exists()) {
+        throw new Error('Failed to create report')
+      }
+
+      return docToLiveReport(docSnap as QueryDocumentSnapshot<DocumentData>)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: liveReportsKeys.my() })
@@ -205,23 +256,30 @@ export function useUpdateLiveReportMutation() {
       id: string
       title?: string
       content?: string
-      thumbnail_url?: string
-      category?: LiveReport['category']
+      thumbnailUrl?: string
+      category?: LiveReportCategory
       tags?: string[]
-      external_link?: string
+      externalLink?: string
       status?: 'draft' | 'pending'
     }) => {
       const { id, ...updates } = input
 
-      const { data, error } = await supabase
-        .from('live_reports')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single()
+      const docRef = doc(firestore, COLLECTION_PATHS.LIVE_REPORTS, id)
 
-      if (error) throw error
-      return data as LiveReport
+      // updatedAt 자동 추가
+      const updateData = {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      }
+
+      await updateDoc(docRef, updateData)
+
+      const docSnap = await getDoc(docRef)
+      if (!docSnap.exists()) {
+        throw new Error('Report not found after update')
+      }
+
+      return docToLiveReport(docSnap as QueryDocumentSnapshot<DocumentData>)
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: liveReportsKeys.my() })
@@ -239,12 +297,8 @@ export function useDeleteLiveReportMutation() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('live_reports')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
+      const docRef = doc(firestore, COLLECTION_PATHS.LIVE_REPORTS, id)
+      await deleteDoc(docRef)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: liveReportsKeys.my() })
@@ -262,22 +316,38 @@ export function useApproveLiveReportMutation() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = auth.currentUser
       if (!user) throw new Error('Not authenticated')
 
-      const { data, error } = await supabase
-        .from('live_reports')
-        .update({
-          status: 'published',
-          approved_by: user.id,
-          published_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .select()
-        .single()
+      // 승인자 정보 가져오기
+      const userDocRef = doc(firestore, COLLECTION_PATHS.USERS, user.uid)
+      const userSnap = await getDoc(userDocRef)
 
-      if (error) throw error
-      return data as LiveReport
+      if (!userSnap.exists()) {
+        throw new Error('User profile not found')
+      }
+
+      const userData = userSnap.data()
+      const approver: AuthorInfo = {
+        id: user.uid,
+        name: userData.nickname || user.displayName || 'Admin',
+        avatarUrl: userData.avatarUrl || user.photoURL || undefined,
+      }
+
+      const docRef = doc(firestore, COLLECTION_PATHS.LIVE_REPORTS, id)
+      await updateDoc(docRef, {
+        status: 'published',
+        approver,
+        publishedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      })
+
+      const docSnap = await getDoc(docRef)
+      if (!docSnap.exists()) {
+        throw new Error('Report not found after approval')
+      }
+
+      return docToLiveReport(docSnap as QueryDocumentSnapshot<DocumentData>)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: liveReportsKeys.pending() })
@@ -294,17 +364,18 @@ export function useRejectLiveReportMutation() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data, error } = await supabase
-        .from('live_reports')
-        .update({
-          status: 'draft',
-        })
-        .eq('id', id)
-        .select()
-        .single()
+      const docRef = doc(firestore, COLLECTION_PATHS.LIVE_REPORTS, id)
+      await updateDoc(docRef, {
+        status: 'draft',
+        updatedAt: serverTimestamp(),
+      })
 
-      if (error) throw error
-      return data as LiveReport
+      const docSnap = await getDoc(docRef)
+      if (!docSnap.exists()) {
+        throw new Error('Report not found after rejection')
+      }
+
+      return docToLiveReport(docSnap as QueryDocumentSnapshot<DocumentData>)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: liveReportsKeys.pending() })

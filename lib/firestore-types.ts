@@ -492,6 +492,53 @@ export interface AuthorInfo {
 }
 
 /**
+ * 라이브 리포트 카테고리
+ */
+export type LiveReportCategory =
+  | 'Tournament Update'
+  | 'Chip Counts'
+  | 'Breaking News'
+  | 'Results'
+  | 'Other'
+
+/**
+ * 라이브 리포트 상태
+ */
+export type LiveReportStatus = 'draft' | 'pending' | 'published'
+
+/**
+ * LiveReport 문서
+ *
+ * Collection: /liveReports/{reportId}
+ */
+export interface FirestoreLiveReport {
+  /** 제목 */
+  title: string
+  /** 내용 */
+  content: string
+  /** 썸네일 URL */
+  thumbnailUrl?: string
+  /** 카테고리 */
+  category: LiveReportCategory
+  /** 태그 */
+  tags: string[]
+  /** 외부 링크 */
+  externalLink?: string
+  /** 상태 */
+  status: LiveReportStatus
+  /** 작성자 (임베딩) */
+  author: AuthorInfo
+  /** 승인자 (임베딩) */
+  approver?: AuthorInfo
+  /** 생성일 */
+  createdAt: Timestamp
+  /** 수정일 */
+  updatedAt: Timestamp
+  /** 발행일 */
+  publishedAt?: Timestamp
+}
+
+/**
  * Post 문서
  *
  * Collection: /posts/{postId}
@@ -594,6 +641,75 @@ export interface FirestoreAnalysisJob {
   completedAt?: Timestamp
 }
 
+// ==================== Hand Tags Collection ====================
+
+/**
+ * 허용된 핸드 태그 이름
+ *
+ * 카테고리:
+ * - 플레이 유형: Bluff, Value Bet, Slow Play, Check Raise
+ * - 결과: Bad Beat, Cooler, Suck Out
+ * - 액션: Hero Call, Hero Fold, Big Pot
+ */
+export type HandTagName =
+  // Play Types
+  | 'Bluff'
+  | 'Value Bet'
+  | 'Slow Play'
+  | 'Check Raise'
+  // Results
+  | 'Bad Beat'
+  | 'Cooler'
+  | 'Suck Out'
+  // Actions
+  | 'Hero Call'
+  | 'Hero Fold'
+  | 'Big Pot'
+
+/**
+ * HandTag 문서
+ *
+ * Collection: /hands/{handId}/tags/{tagId}
+ * 각 핸드의 서브컬렉션으로 태그 관리
+ */
+export interface FirestoreHandTag {
+  /** 태그 이름 */
+  tagName: HandTagName
+  /** 생성자 사용자 ID */
+  createdBy: string
+  /** 생성자 정보 (임베딩) */
+  createdByInfo?: AuthorInfo
+  /** 생성일 */
+  createdAt: Timestamp
+}
+
+/**
+ * 태그별 통계
+ */
+export interface HandTagStats {
+  tagName: HandTagName
+  count: number
+  percentage: number
+}
+
+/**
+ * 유저 태그 히스토리 (materialized view)
+ *
+ * Collection: /users/{userId}/tagHistory/{historyId}
+ */
+export interface FirestoreUserTagHistory {
+  /** 핸드 ID */
+  handId: string
+  /** 태그 이름 */
+  tagName: HandTagName
+  /** 핸드 번호 */
+  handNumber?: string
+  /** 토너먼트 이름 */
+  tournamentName?: string
+  /** 생성일 */
+  createdAt: Timestamp
+}
+
 // ==================== System Collections ====================
 
 /**
@@ -664,6 +780,7 @@ export const COLLECTION_PATHS = {
   POSTS: 'posts',
   POST_COMMENTS: (postId: string) => `posts/${postId}/comments`,
   POST_LIKES: (postId: string) => `posts/${postId}/likes`,
+  LIVE_REPORTS: 'liveReports',
   ANALYSIS_JOBS: 'analysisJobs',
   CATEGORIES: 'categories',
   SYSTEM_CONFIGS: 'systemConfigs',
