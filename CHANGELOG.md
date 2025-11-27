@@ -4,6 +4,26 @@ Templar Archives 프로젝트의 버전별 변경사항입니다.
 
 ---
 
+## [v3.0] - 2025-11-27
+
+### Changed
+- **인프라 전면 마이그레이션**: Supabase → Firebase Firestore
+- **배포 시스템**: Vercel → Firebase Hosting + GitHub Actions CI/CD
+- **영상 분석**: Cloud Run + Cloud Tasks (primary system)
+
+### Removed
+- Supabase 완전 제거 (PostgreSQL → Firestore NoSQL)
+- Trigger.dev 완전 제거 (Cloud Run으로 대체)
+- Vercel 배포 제거 (Firebase Hosting으로 대체)
+
+### Added
+- Firebase Admin SDK 통합
+- Firestore Security Rules
+- GitHub Actions CI/CD 파이프라인
+- Cloud Build 설정
+
+---
+
 ## [v2.5] - 2025-11-23
 
 ### Added

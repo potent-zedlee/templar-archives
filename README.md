@@ -5,10 +5,10 @@
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-green)](https://supabase.com/)
-[![Vercel](https://img.shields.io/badge/Deployed-Vercel-black)](https://templar-archives.vercel.app)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore-orange)](https://firebase.google.com/)
+[![Firebase Hosting](https://img.shields.io/badge/Deployed-Firebase%20Hosting-yellow)](https://templar-archives-index.web.app)
 
-**프로덕션**: https://templar-archives.vercel.app
+**프로덕션**: https://templar-archives-index.web.app
 
 ---
 
@@ -19,14 +19,11 @@
 npm install
 
 # 2. 환경 변수 설정
-cp .env.example .env.local
+cp .env.local.example .env.local
 # .env.local 편집
 
 # 3. 개발 서버
 npm run dev
-
-# 4. Trigger.dev 로컬 (영상 분석 테스트 시)
-npx trigger.dev@latest dev --port 3001
 ```
 
 ---
@@ -38,10 +35,12 @@ npx trigger.dev@latest dev --port 3001
 | Framework | Next.js 16, React 19, TypeScript 5.9 |
 | Styling | Tailwind CSS 4.1 |
 | State | React Query 5, Zustand 5 |
-| Database | Supabase (PostgreSQL) |
-| AI | Gemini 2.5 Flash |
-| Background Jobs | Trigger.dev v3 |
-| Video | @distube/ytdl-core, fluent-ffmpeg |
+| Database | Firebase Firestore |
+| Auth | Firebase Auth (Google OAuth) |
+| AI | Vertex AI Gemini 2.5 Flash |
+| Background Jobs | Cloud Run + Cloud Tasks |
+| Video | GCS 직접 업로드, fluent-ffmpeg |
+| Hosting | Firebase Hosting (GitHub Actions CI/CD) |
 
 **Node.js**: >=22.0.0
 **패키지 매니저**: npm
@@ -75,8 +74,9 @@ templar-archives/
 │   └── types/                 # TypeScript 타입
 │
 ├── stores/                    # Zustand 상태 관리
-├── trigger/                   # Trigger.dev Tasks
-└── supabase/migrations/       # DB 마이그레이션
+└── cloud-run/                 # Cloud Run 서비스
+    ├── orchestrator/          # 작업 관리
+    └── segment-analyzer/      # 영상 분석
 ```
 
 ---
@@ -99,23 +99,23 @@ Tournament → Event → Stream → Hand
 ### 2. KAN (영상 분석 파이프라인)
 
 ```
-사용자 → Server Action → Trigger.dev v3
+사용자 → Server Action → Cloud Run Orchestrator
                             ↓
-         YouTube → FFmpeg 추출 → Gemini 분석 → DB 저장
+         GCS 영상 → FFmpeg 추출 → Gemini 분석 → Firestore 저장
 ```
 
 **핵심 특징**:
 - Gemini 2.5 Flash 기반 AI 분석
-- 인메모리 처리 (디스크 I/O 없음)
-- 1시간 초과 영상 자동 30분 분할
-- 5회 재시도, Exponential Backoff
-- 실시간 진행률 표시 (2초 폴링)
+- GCS gs:// URI 직접 전달 (대용량 최적화)
+- 30분 세그먼트 자동 분할
+- Cloud Tasks 재시도 (3회, Exponential Backoff)
+- Firestore 실시간 진행률
 
 ### 3. Search (AI 검색)
 
 - Gemini 기반 자연어 검색
 - 30+ 고급 필터
-- Full-Text Search (PostgreSQL)
+- Algolia Full-Text Search
 
 ### 4. Community
 
@@ -136,7 +136,6 @@ Tournament → Event → Stream → Hand
 ```bash
 # 개발
 npm run dev                               # 개발 서버
-npx trigger.dev@latest dev --port 3001    # Trigger.dev 로컬
 
 # 빌드 & 린트
 npm run build
@@ -148,18 +147,13 @@ npm run test                              # Vitest 전체
 npm run test lib/filter-utils.test.ts     # 단일 파일
 npm run test:e2e                          # Playwright E2E
 
-# 데이터베이스
-supabase db push                          # 프로덕션 적용
-supabase db reset                         # 로컬 리셋
-supabase migration new migration_name     # 새 마이그레이션
-
 # 배포
-npx trigger.dev@latest deploy             # Trigger.dev 배포
+firebase deploy --only hosting            # Firebase Hosting 수동 배포
 npm run analyze                           # 번들 분석
 
-# Admin CLI
-npm run admin -- --action=diagnose        # 시스템 진단
-npm run admin -- --action=check-jobs      # KAN 작업 상태
+# Cloud Run 배포
+cd cloud-run/orchestrator && ./deploy.sh
+cd cloud-run/segment-analyzer && ./deploy.sh
 ```
 
 ---
@@ -167,42 +161,23 @@ npm run admin -- --action=check-jobs      # KAN 작업 상태
 ## 환경 변수
 
 ```bash
-# 필수
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-GOOGLE_API_KEY=your-key              # Gemini AI
-TRIGGER_SECRET_KEY=your-key          # Trigger.dev v3
+# 필수 - Firebase
+NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
+FIREBASE_ADMIN_PRIVATE_KEY=your-private-key
+FIREBASE_ADMIN_CLIENT_EMAIL=your-client-email
+
+# 필수 - AI / Cloud Run
+GOOGLE_API_KEY=your-key                   # Gemini AI
+CLOUD_RUN_ORCHESTRATOR_URL=https://xxx.run.app
 
 # 선택
-ANTHROPIC_API_KEY=sk-ant-...         # Claude
-UPSTASH_REDIS_REST_URL=your-url      # Rate Limiting
-YTDL_COOKIE=VISITOR_INFO1_LIVE=xxx;__Secure-3PSID=xxx
-YTDL_USER_AGENT="Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15"
-YTDL_ACCEPT_LANGUAGE=en-US,en;q=0.9
-```
-
----
-
-## 데이터베이스
-
-### 핵심 테이블 (28개)
-
-**Archive**: tournaments, sub_events, streams, hands, hand_players, hand_actions
-**Players**: players, player_stats_cache, player_claims
-**Community**: posts, comments, likes, hand_bookmarks
-**System**: users, notifications, analysis_jobs, security_events, audit_logs
-
-### ERD (간소화)
-
-```
-tournaments → sub_events → streams → hands
-                                      │
-                                      ├── hand_players ─── players
-                                      │                      └── player_stats_cache
-                                      └── hand_actions
-
-analysis_jobs → streams (KAN 작업 추적)
+ANTHROPIC_API_KEY=sk-ant-...              # Claude
+UPSTASH_REDIS_REST_URL=your-url           # Rate Limiting
 ```
 
 ---
@@ -213,7 +188,7 @@ analysis_jobs → streams (KAN 작업 추적)
 |------|------|
 | `CLAUDE.md` | Claude Code 가이드 (핵심) |
 | `docs/POKER_DOMAIN.md` | 포커 도메인 지식 |
-| `docs/DATABASE_SCHEMA.md` | DB 스키마 상세 |
+| `docs/FIRESTORE_SCHEMA.md` | Firestore 스키마 상세 |
 | `docs/REACT_QUERY_GUIDE.md` | 데이터 페칭 패턴 |
 | `docs/DEPLOYMENT.md` | 배포 가이드 |
 | `docs/DESIGN_SYSTEM.md` | 디자인 시스템 |
@@ -223,19 +198,17 @@ analysis_jobs → streams (KAN 작업 추적)
 ## 배포
 
 ```
-Git Push (main) → Vercel Build → Production Deploy
-                                  ↓
-                  https://templar-archives.vercel.app
+Git Push (main) → GitHub Actions → Firebase Hosting
+                                    ↓
+                   https://templar-archives-index.web.app
 ```
 
 **배포 전 체크리스트**:
 - [ ] `npm run build` 성공
 - [ ] `npx tsc --noEmit` 에러 없음
-- [ ] Vercel 환경 변수 등록
-- [ ] Supabase 마이그레이션 적용
-- [ ] Trigger.dev 배포 (`npx trigger.dev@latest deploy`)
+- [ ] GitHub Secrets 등록
 
 ---
 
-**마지막 업데이트**: 2025-11-24
+**마지막 업데이트**: 2025-11-27
 **프로젝트**: Templar Archives

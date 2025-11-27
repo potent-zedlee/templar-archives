@@ -1,21 +1,19 @@
 # Templar Archives 배포 가이드
 
-이 가이드는 Templar Archives를 Vercel을 통해 배포하는 방법을 단계별로 설명합니다.
+이 가이드는 Templar Archives를 Firebase Hosting을 통해 배포하는 방법을 설명합니다.
 
-**마지막 업데이트**: 2025-11-23
-**프로덕션 URL**: https://templar-archives.vercel.app
+**마지막 업데이트**: 2025-11-27
+**프로덕션 URL**: https://templar-archives-index.web.app
 
 ---
 
-## 📋 배포 전 체크리스트
+## 배포 전 체크리스트
 
 - [ ] GitHub 계정 (https://github.com)
-- [ ] Vercel 계정 (https://vercel.com)
-- [ ] Supabase 프로젝트 (https://supabase.com)
+- [ ] Firebase 프로젝트 (https://console.firebase.google.com)
+- [ ] GCP 프로젝트 (https://console.cloud.google.com)
 - [ ] Google API Key (Gemini AI용)
-- [ ] Trigger.dev 계정 (영상 분석용, https://cloud.trigger.dev)
 - [ ] (선택) Anthropic API Key (자연어 검색용)
-- [ ] (선택) Upstash Redis (Rate Limiting용)
 
 ---
 
@@ -25,11 +23,16 @@
 
 | 변수명 | 설명 | 발급처 |
 |--------|------|--------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL | Supabase Dashboard → Settings → API |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase 익명 키 | Supabase Dashboard → Settings → API |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase 서비스 역할 키 | Supabase Dashboard → Settings → API |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase API 키 | Firebase Console → Settings |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase 인증 도메인 | Firebase Console → Settings |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase 프로젝트 ID | Firebase Console → Settings |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase Storage 버킷 | Firebase Console → Settings |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase 메시징 ID | Firebase Console → Settings |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase 앱 ID | Firebase Console → Settings |
+| `FIREBASE_ADMIN_PRIVATE_KEY` | Firebase Admin 비공개 키 | Firebase Console → Service Accounts |
+| `FIREBASE_ADMIN_CLIENT_EMAIL` | Firebase Admin 클라이언트 이메일 | Firebase Console → Service Accounts |
 | `GOOGLE_API_KEY` | Gemini AI API 키 | https://aistudio.google.com/app/apikey |
-| `TRIGGER_SECRET_KEY` | Trigger.dev 시크릿 키 | https://cloud.trigger.dev → Settings → API Keys |
+| `CLOUD_RUN_ORCHESTRATOR_URL` | Cloud Run Orchestrator URL | GCP Console → Cloud Run |
 
 ### 선택 환경 변수
 
@@ -38,70 +41,75 @@
 | `ANTHROPIC_API_KEY` | Claude API (자연어 검색) | https://console.anthropic.com |
 | `UPSTASH_REDIS_REST_URL` | Rate Limiting | https://console.upstash.com |
 | `UPSTASH_REDIS_REST_TOKEN` | Rate Limiting | https://console.upstash.com |
-| `YOUTUBE_API_KEY` | YouTube Data API | Google Cloud Console |
-| `YTDL_COOKIE` | YouTube Bot 차단 우회를 위한 쿠키 문자열 | 브라우저 개발자도구 → Network |
-| `YTDL_USER_AGENT` | YouTube 요청에 사용할 User-Agent | 동일 |
-| `YTDL_ACCEPT_LANGUAGE` | YouTube Accept-Language 헤더 | 기본: `en-US,en;q=0.9` |
-| `CSRF_SECRET` | CSRF 보호용 시크릿 | 랜덤 문자열 생성 |
 
 ---
 
-## 2단계: Trigger.dev 설정 (영상 분석 필수)
+## 2단계: Firebase 설정
 
-### 2.1 Trigger.dev 계정 생성
+### 2.1 Firebase 프로젝트 생성
 
-1. https://cloud.trigger.dev/ 접속
-2. GitHub 계정으로 가입
-3. 새 프로젝트 생성
+1. https://console.firebase.google.com 접속
+2. 새 프로젝트 생성
+3. Firestore Database 활성화
+4. Authentication 활성화 (Google Provider)
+5. Storage 활성화
 
-### 2.2 API Key 발급
+### 2.2 Firebase Admin SDK 설정
 
-1. Trigger.dev Dashboard → Settings → API Keys
-2. Secret Key 복사 (형식: `tr_prod_xxx...`)
+1. Firebase Console → Project Settings → Service Accounts
+2. "Generate new private key" 클릭
+3. JSON 파일에서 `private_key`, `client_email` 추출
 
 ### 2.3 로컬 개발 설정
 
 ```bash
-# Trigger.dev CLI로 로컬 개발
-npx trigger.dev@latest dev --port 3001
+# Firebase 에뮬레이터 실행 (선택)
+firebase emulators:start
 ```
-
-### 2.4 프로덕션 배포
-
-Vercel에 push하면 자동으로 Trigger.dev Task가 배포됩니다.
 
 ---
 
-## 3단계: Vercel 배포
+## 3단계: Cloud Run 설정 (영상 분석)
 
-### 3.1 프로젝트 Import
+### 3.1 Cloud Run 서비스 배포
 
-1. https://vercel.com 접속 및 로그인
-2. `Add New...` → `Project` 클릭
-3. GitHub repository 선택 → `Import`
+```bash
+# Orchestrator 배포
+cd cloud-run/orchestrator
+./deploy.sh
 
-### 3.2 환경 변수 설정
-
-**Configure Project** 화면에서 Environment Variables 추가:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
-SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
-GOOGLE_API_KEY=AIzaxxx...
-TRIGGER_SECRET_KEY=tr_prod_xxx...
-ANTHROPIC_API_KEY=sk-ant-xxx... (선택)
+# Segment Analyzer 배포
+cd cloud-run/segment-analyzer
+./deploy.sh
 ```
 
-### 3.3 배포 시작
+### 3.2 Cloud Tasks 큐 생성
 
-1. `Deploy` 버튼 클릭
-2. 배포 완료까지 2-3분 대기
-3. 생성된 URL 확인
+```bash
+gcloud tasks queues create video-analysis-queue --location=asia-northeast3
+```
 
 ---
 
-## 4단계: 자동 배포
+## 4단계: GitHub Actions 자동 배포
+
+### 4.1 GitHub Secrets 설정
+
+Repository Settings → Secrets and variables → Actions에서 추가:
+
+```
+FIREBASE_SERVICE_ACCOUNT=<서비스 계정 JSON>
+NEXT_PUBLIC_FIREBASE_API_KEY=<API 키>
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<인증 도메인>
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=<프로젝트 ID>
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<스토리지 버킷>
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<메시징 ID>
+NEXT_PUBLIC_FIREBASE_APP_ID=<앱 ID>
+CLOUD_RUN_ORCHESTRATOR_URL=<Cloud Run URL>
+GOOGLE_API_KEY=<Gemini API 키>
+```
+
+### 4.2 자동 배포
 
 GitHub main 브랜치에 push하면 자동으로 배포됩니다:
 
@@ -109,60 +117,82 @@ GitHub main 브랜치에 push하면 자동으로 배포됩니다:
 git add .
 git commit -m "feat: 새 기능 추가"
 git push origin main
-# Vercel이 자동으로 감지하여 2-3분 내 재배포
+# GitHub Actions가 자동으로 빌드 및 배포 (2-3분)
 ```
 
 ---
 
-## 5단계: 배포 확인
+## 5단계: 수동 배포 (선택)
+
+```bash
+# 로컬에서 빌드
+npm run build
+
+# Firebase Hosting 배포
+firebase deploy --only hosting
+```
+
+---
+
+## 6단계: 배포 확인
 
 ### 확인 항목
 
 - [ ] 홈페이지 로딩
-- [ ] Supabase 연결 (Archive 페이지 데이터 표시)
-- [ ] 사용자 인증 (로그인/회원가입)
-- [ ] 영상 분석 (Trigger.dev 작동)
-- [ ] 자연어 검색 (Claude API, 선택)
+- [ ] Firebase 연결 (Archive 페이지 데이터 표시)
+- [ ] 사용자 인증 (Google 로그인)
+- [ ] 영상 분석 (Cloud Run 작동)
+- [ ] 자연어 검색 (선택)
 
 ### 로그 확인
 
-- **Vercel 로그**: Vercel Dashboard → Deployments → Logs
-- **Trigger.dev 로그**: https://cloud.trigger.dev → Runs
+- **GitHub Actions 로그**: GitHub → Actions → Workflow runs
+- **Firebase Hosting 로그**: Firebase Console → Hosting
+- **Cloud Run 로그**: GCP Console → Cloud Run → Logs
+
+```bash
+# CLI에서 확인
+gh run list
+gh run view <run-id> --log-failed
+
+# Cloud Run 로그
+gcloud run services logs read video-orchestrator --region=asia-northeast3
+```
 
 ---
 
-## 🐛 트러블슈팅
+## 트러블슈팅
 
 ### 빌드 실패
 
 ```bash
 # 로컬에서 빌드 테스트
 npm run build
+npx tsc --noEmit
 ```
 
 ### 환경 변수 오류
 
-1. Vercel Dashboard → Settings → Environment Variables
+1. GitHub → Settings → Secrets and variables → Actions
 2. 변수 확인 및 수정
-3. Redeploy 실행
+3. Re-run workflow 실행
 
-### Trigger.dev 연결 실패
+### Cloud Run 연결 실패
 
-1. `TRIGGER_SECRET_KEY` 환경 변수 확인
-2. Trigger.dev Dashboard에서 프로젝트 연결 상태 확인
-3. 필요시 `npx trigger.dev@latest deploy` 수동 실행
+1. `CLOUD_RUN_ORCHESTRATOR_URL` 환경 변수 확인
+2. Cloud Run 서비스 상태 확인
+3. IAM 권한 확인 (Cloud Run Invoker)
 
-### Supabase RLS 에러
+### Firebase 인증 에러
 
-- Supabase Dashboard → Table Editor에서 RLS 정책 확인
-- Service Role Key로 관리자 작업 수행
+- Firebase Console → Authentication에서 Google Provider 활성화 확인
+- Authorized domains에 배포 도메인 추가
 
 ---
 
-## 📚 참고 문서
+## 참고 문서
 
-- [Vercel 문서](https://vercel.com/docs)
+- [Firebase Hosting 문서](https://firebase.google.com/docs/hosting)
 - [Next.js 문서](https://nextjs.org/docs)
-- [Supabase 문서](https://supabase.com/docs)
-- [Trigger.dev 문서](https://trigger.dev/docs)
+- [Cloud Run 문서](https://cloud.google.com/run/docs)
 - [CLAUDE.md](../CLAUDE.md) - 프로젝트 개발 가이드

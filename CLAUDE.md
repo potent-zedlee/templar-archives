@@ -65,7 +65,7 @@ npm run admin -- --action=check-jobs      # 분석 작업 상태
 | Auth | Firebase Auth (Google OAuth) |
 | Search | Algolia (전체텍스트 검색) |
 | AI | Vertex AI Gemini 2.5 Flash |
-| Background Jobs | Cloud Run + Cloud Tasks (primary), Trigger.dev (fallback) |
+| Background Jobs | Cloud Run + Cloud Tasks |
 | Video | GCS 직접 업로드, fluent-ffmpeg |
 | Functions | Firebase Cloud Functions (트리거) |
 | Hosting | Firebase Hosting (GitHub Actions CI/CD) |
@@ -141,7 +141,6 @@ Tournament → Event → Stream → Hand
 | `lib/video/vertex-analyzer.ts` | Vertex AI Gemini 분석 및 JSON 파싱 |
 | `lib/ai/prompts.ts` | Platform별 AI 프롬프트 (EPT/Triton) |
 | `lib/hooks/use-cloud-run-job.ts` | Cloud Run 작업 진행률 폴링 |
-| `lib/hooks/use-trigger-job.ts` | Trigger.dev 작업 폴링 (fallback) |
 
 **특징**:
 - GCS gs:// URI 직접 전달 (대용량 최적화)
@@ -231,7 +230,7 @@ Git Push (main) → GitHub Actions → npm ci → npm run build → firebase dep
 - `FIREBASE_TOKEN`, `FIREBASE_SERVICE_ACCOUNT`
 - `GOOGLE_APPLICATION_CREDENTIALS`
 - `NEXT_PUBLIC_FIREBASE_*` (6개)
-- `CLOUD_RUN_ORCHESTRATOR_URL`, `TRIGGER_SECRET_KEY`, `GOOGLE_API_KEY`
+- `CLOUD_RUN_ORCHESTRATOR_URL`, `GOOGLE_API_KEY`
 
 ---
 

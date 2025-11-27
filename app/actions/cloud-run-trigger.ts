@@ -3,11 +3,10 @@
 /**
  * Cloud Run Analysis - Server Action
  *
- * Trigger.dev를 대체하는 Cloud Run 기반 분석 시스템
+ * Cloud Run 기반 영상 분석 시스템
  *
  * 환경 변수:
  * - CLOUD_RUN_ORCHESTRATOR_URL: Cloud Run Orchestrator 서비스 URL
- * - USE_CLOUD_RUN: 'true'로 설정하면 Cloud Run 사용, 아니면 Trigger.dev 사용
  */
 
 import { adminFirestore } from '@/lib/firebase-admin'
@@ -185,31 +184,15 @@ export async function getCloudRunJobStatus(jobId: string) {
 
 /**
  * 통합 분석 시작 함수
- *
- * USE_CLOUD_RUN 환경 변수에 따라 Cloud Run 또는 Trigger.dev 사용
  */
 export async function startAnalysis(input: {
-  videoUrl?: string // YouTube URL (Trigger.dev용)
-  gcsUri?: string // GCS URI (Cloud Run용)
+  gcsUri: string
   segments: TimeSegment[]
   platform?: KanPlatform
   streamId: string
 }): Promise<CloudRunAnalysisResult> {
-  const useCloudRun = process.env.USE_CLOUD_RUN === 'true'
-
-  if (useCloudRun && input.gcsUri) {
-    return startCloudRunAnalysis({
-      gcsUri: input.gcsUri,
-      segments: input.segments,
-      platform: input.platform,
-      streamId: input.streamId,
-    })
-  }
-
-  // Trigger.dev fallback (기존 구현)
-  const { startKanAnalysis: startKanAnalysisWithTrigger } = await import('./kan-analysis')
-  return startKanAnalysisWithTrigger({
-    videoUrl: input.videoUrl || '',
+  return startCloudRunAnalysis({
+    gcsUri: input.gcsUri,
     segments: input.segments,
     platform: input.platform,
     streamId: input.streamId,
