@@ -9,9 +9,12 @@
  * @module app/actions/admin/archive-admin
  */
 
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { adminFirestore, adminAuth } from '@/lib/firebase-admin'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
 import { revalidatePath } from 'next/cache'
 import type { ContentStatus } from '@/lib/types/archive'
+import { FieldValue } from 'firebase-admin/firestore'
+import { cookies } from 'next/headers'
 
 // ==================== Types ====================
 
@@ -38,53 +41,71 @@ interface StreamChecklistValidation {
 // ==================== Helper Functions ====================
 
 /**
- * 관리자 권한 검증 (DB role 기반)
+ * 관리자 권한 검증 (Firebase Auth 기반)
  */
 async function verifyAdmin(): Promise<{
   authorized: boolean
   error?: string
   userId?: string
 }> {
-  const supabase = await createServerSupabaseClient()
+  try {
+    // 1. 쿠키에서 Firebase ID 토큰 가져오기
+    const cookieStore = await cookies()
+    const token = cookieStore.get('firebase-auth-token')?.value
 
-  // 1. 인증된 사용자 확인
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (!token) {
+      return { authorized: false, error: 'Unauthorized - Please sign in' }
+    }
 
-  if (authError || !user) {
-    return { authorized: false, error: 'Unauthorized - Please sign in' }
-  }
+    // 2. Firebase Auth 토큰 검증
+    const decodedToken = await adminAuth.verifyIdToken(token)
+    const userId = decodedToken.uid
 
-  // 2. DB에서 사용자 role 조회
-  const { data: dbUser, error: dbError } = await supabase
-    .from('users')
-    .select('role, banned_at')
-    .eq('id', user.id)
-    .single()
+    // 3. Firestore에서 사용자 role 조회
+    const userDoc = await adminFirestore
+      .collection(COLLECTION_PATHS.USERS)
+      .doc(userId)
+      .get()
 
-  if (dbError || !dbUser) {
+    if (!userDoc.exists) {
+      return {
+        authorized: false,
+        error: 'User not found in database'
+      }
+    }
+
+    const userData = userDoc.data()
+    if (!userData) {
+      return {
+        authorized: false,
+        error: 'User data not found'
+      }
+    }
+
+    // 4. 밴 상태 확인
+    if (userData.bannedAt) {
+      return {
+        authorized: false,
+        error: 'Account is banned'
+      }
+    }
+
+    // 5. 관리자 역할 확인
+    if (!['admin', 'high_templar'].includes(userData.role)) {
+      return {
+        authorized: false,
+        error: 'Forbidden - Admin access required'
+      }
+    }
+
+    return { authorized: true, userId }
+  } catch (error: any) {
+    console.error('[verifyAdmin] Error:', error)
     return {
       authorized: false,
-      error: 'User not found in database'
+      error: error.message || 'Authentication failed'
     }
   }
-
-  // 3. 밴 상태 확인
-  if (dbUser.banned_at) {
-    return {
-      authorized: false,
-      error: 'Account is banned'
-    }
-  }
-
-  // 4. 관리자 역할 확인
-  if (!['admin', 'high_templar'].includes(dbUser.role)) {
-    return {
-      authorized: false,
-      error: 'Forbidden - Admin access required'
-    }
-  }
-
-  return { authorized: true, userId: user.id }
 }
 
 /**
@@ -108,24 +129,24 @@ export async function publishTournament(id: string): Promise<ActionResult> {
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 2. Firestore 업데이트
+    const tournamentRef = adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(id)
 
-    // 2. DB 함수 호출 (SECURITY DEFINER)
-    const { error } = await supabase.rpc('publish_tournament', {
-      tournament_id: id
+    await tournamentRef.update({
+      status: 'published' as ContentStatus,
+      publishedBy: authCheck.userId,
+      publishedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
     })
-
-    if (error) {
-      console.error('[publishTournament] RPC error:', error)
-      return { success: false, error: error.message }
-    }
 
     // 3. 캐시 무효화
     invalidateCache()
 
     return { success: true }
   } catch (error: any) {
-    console.error('[publishTournament] Exception:', error)
+    console.error('[publishTournament] Error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
@@ -141,29 +162,24 @@ export async function unpublishTournament(id: string): Promise<ActionResult> {
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 2. Firestore 업데이트
+    const tournamentRef = adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(id)
 
-    // 2. 상태 변경
-    const { error } = await supabase
-      .from('tournaments')
-      .update({
-        status: 'draft' as ContentStatus,
-        published_at: null,
-        published_by: null
-      })
-      .eq('id', id)
-
-    if (error) {
-      console.error('[unpublishTournament] Update error:', error)
-      return { success: false, error: error.message }
-    }
+    await tournamentRef.update({
+      status: 'draft' as ContentStatus,
+      publishedAt: FieldValue.delete(),
+      publishedBy: FieldValue.delete(),
+      updatedAt: FieldValue.serverTimestamp()
+    })
 
     // 3. 캐시 무효화
     invalidateCache()
 
     return { success: true }
   } catch (error: any) {
-    console.error('[unpublishTournament] Exception:', error)
+    console.error('[unpublishTournament] Error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
@@ -179,70 +195,35 @@ export async function archiveTournament(id: string): Promise<ActionResult> {
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 2. Firestore 업데이트
+    const tournamentRef = adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .doc(id)
 
-    // 2. 상태 변경
-    const { error } = await supabase
-      .from('tournaments')
-      .update({
-        status: 'archived' as ContentStatus
-      })
-      .eq('id', id)
-
-    if (error) {
-      console.error('[archiveTournament] Update error:', error)
-      return { success: false, error: error.message }
-    }
-
-    // 3. 캐시 무효화
-    invalidateCache()
-
-    return { success: true }
-  } catch (error: any) {
-    console.error('[archiveTournament] Exception:', error)
-    return { success: false, error: error.message || 'Unknown error' }
-  }
-}
-
-// ==================== SubEvent Status Actions ====================
-
-/**
- * SubEvent를 published 상태로 변경
- */
-export async function publishSubEvent(id: string): Promise<ActionResult> {
-  try {
-    // 1. 권한 검증
-    const authCheck = await verifyAdmin()
-    if (!authCheck.authorized) {
-      return { success: false, error: authCheck.error }
-    }
-
-    const supabase = await createServerSupabaseClient()
-
-    // 2. DB 함수 호출
-    const { error } = await supabase.rpc('publish_sub_event', {
-      sub_event_id: id
+    await tournamentRef.update({
+      status: 'archived' as ContentStatus,
+      updatedAt: FieldValue.serverTimestamp()
     })
 
-    if (error) {
-      console.error('[publishSubEvent] RPC error:', error)
-      return { success: false, error: error.message }
-    }
-
     // 3. 캐시 무효화
     invalidateCache()
 
     return { success: true }
   } catch (error: any) {
-    console.error('[publishSubEvent] Exception:', error)
+    console.error('[archiveTournament] Error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
 
+// ==================== Event Status Actions ====================
+
 /**
- * SubEvent를 draft 상태로 변경 (Unpublish)
+ * Event를 published 상태로 변경
  */
-export async function unpublishSubEvent(id: string): Promise<ActionResult> {
+export async function publishSubEvent(
+  tournamentId: string,
+  eventId: string
+): Promise<ActionResult> {
   try {
     // 1. 권한 검증
     const authCheck = await verifyAdmin()
@@ -250,37 +231,35 @@ export async function unpublishSubEvent(id: string): Promise<ActionResult> {
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 2. Firestore 서브컬렉션 업데이트
+    const eventRef = adminFirestore
+      .collection(COLLECTION_PATHS.EVENTS(tournamentId))
+      .doc(eventId)
 
-    // 2. 상태 변경
-    const { error } = await supabase
-      .from('sub_events')
-      .update({
-        status: 'draft' as ContentStatus,
-        published_at: null,
-        published_by: null
-      })
-      .eq('id', id)
-
-    if (error) {
-      console.error('[unpublishSubEvent] Update error:', error)
-      return { success: false, error: error.message }
-    }
+    await eventRef.update({
+      status: 'published' as ContentStatus,
+      publishedBy: authCheck.userId,
+      publishedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
+    })
 
     // 3. 캐시 무효화
     invalidateCache()
 
     return { success: true }
   } catch (error: any) {
-    console.error('[unpublishSubEvent] Exception:', error)
+    console.error('[publishSubEvent] Error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
 
 /**
- * SubEvent를 archived 상태로 변경
+ * Event를 draft 상태로 변경 (Unpublish)
  */
-export async function archiveSubEvent(id: string): Promise<ActionResult> {
+export async function unpublishSubEvent(
+  tournamentId: string,
+  eventId: string
+): Promise<ActionResult> {
   try {
     // 1. 권한 검증
     const authCheck = await verifyAdmin()
@@ -288,27 +267,58 @@ export async function archiveSubEvent(id: string): Promise<ActionResult> {
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 2. Firestore 서브컬렉션 업데이트
+    const eventRef = adminFirestore
+      .collection(COLLECTION_PATHS.EVENTS(tournamentId))
+      .doc(eventId)
 
-    // 2. 상태 변경
-    const { error } = await supabase
-      .from('sub_events')
-      .update({
-        status: 'archived' as ContentStatus
-      })
-      .eq('id', id)
-
-    if (error) {
-      console.error('[archiveSubEvent] Update error:', error)
-      return { success: false, error: error.message }
-    }
+    await eventRef.update({
+      status: 'draft' as ContentStatus,
+      publishedAt: FieldValue.delete(),
+      publishedBy: FieldValue.delete(),
+      updatedAt: FieldValue.serverTimestamp()
+    })
 
     // 3. 캐시 무효화
     invalidateCache()
 
     return { success: true }
   } catch (error: any) {
-    console.error('[archiveSubEvent] Exception:', error)
+    console.error('[unpublishSubEvent] Error:', error)
+    return { success: false, error: error.message || 'Unknown error' }
+  }
+}
+
+/**
+ * Event를 archived 상태로 변경
+ */
+export async function archiveSubEvent(
+  tournamentId: string,
+  eventId: string
+): Promise<ActionResult> {
+  try {
+    // 1. 권한 검증
+    const authCheck = await verifyAdmin()
+    if (!authCheck.authorized) {
+      return { success: false, error: authCheck.error }
+    }
+
+    // 2. Firestore 서브컬렉션 업데이트
+    const eventRef = adminFirestore
+      .collection(COLLECTION_PATHS.EVENTS(tournamentId))
+      .doc(eventId)
+
+    await eventRef.update({
+      status: 'archived' as ContentStatus,
+      updatedAt: FieldValue.serverTimestamp()
+    })
+
+    // 3. 캐시 무효화
+    invalidateCache()
+
+    return { success: true }
+  } catch (error: any) {
+    console.error('[archiveSubEvent] Error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
@@ -318,7 +328,11 @@ export async function archiveSubEvent(id: string): Promise<ActionResult> {
 /**
  * Stream을 published 상태로 변경
  */
-export async function publishStream(id: string): Promise<ActionResult> {
+export async function publishStream(
+  tournamentId: string,
+  eventId: string,
+  streamId: string
+): Promise<ActionResult> {
   try {
     // 1. 권한 검증
     const authCheck = await verifyAdmin()
@@ -326,24 +340,24 @@ export async function publishStream(id: string): Promise<ActionResult> {
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 2. Firestore 서브컬렉션 업데이트
+    const streamRef = adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS(tournamentId, eventId))
+      .doc(streamId)
 
-    // 2. DB 함수 호출
-    const { error } = await supabase.rpc('publish_stream', {
-      stream_id: id
+    await streamRef.update({
+      status: 'published' as ContentStatus,
+      publishedBy: authCheck.userId,
+      publishedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
     })
-
-    if (error) {
-      console.error('[publishStream] RPC error:', error)
-      return { success: false, error: error.message }
-    }
 
     // 3. 캐시 무효화
     invalidateCache()
 
     return { success: true }
   } catch (error: any) {
-    console.error('[publishStream] Exception:', error)
+    console.error('[publishStream] Error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
@@ -351,7 +365,11 @@ export async function publishStream(id: string): Promise<ActionResult> {
 /**
  * Stream을 draft 상태로 변경 (Unpublish)
  */
-export async function unpublishStream(id: string): Promise<ActionResult> {
+export async function unpublishStream(
+  tournamentId: string,
+  eventId: string,
+  streamId: string
+): Promise<ActionResult> {
   try {
     // 1. 권한 검증
     const authCheck = await verifyAdmin()
@@ -359,29 +377,24 @@ export async function unpublishStream(id: string): Promise<ActionResult> {
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 2. Firestore 서브컬렉션 업데이트
+    const streamRef = adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS(tournamentId, eventId))
+      .doc(streamId)
 
-    // 2. 상태 변경
-    const { error } = await supabase
-      .from('streams')
-      .update({
-        status: 'draft' as ContentStatus,
-        published_at: null,
-        published_by: null
-      })
-      .eq('id', id)
-
-    if (error) {
-      console.error('[unpublishStream] Update error:', error)
-      return { success: false, error: error.message }
-    }
+    await streamRef.update({
+      status: 'draft' as ContentStatus,
+      publishedAt: FieldValue.delete(),
+      publishedBy: FieldValue.delete(),
+      updatedAt: FieldValue.serverTimestamp()
+    })
 
     // 3. 캐시 무효화
     invalidateCache()
 
     return { success: true }
   } catch (error: any) {
-    console.error('[unpublishStream] Exception:', error)
+    console.error('[unpublishStream] Error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
@@ -389,7 +402,11 @@ export async function unpublishStream(id: string): Promise<ActionResult> {
 /**
  * Stream을 archived 상태로 변경
  */
-export async function archiveStream(id: string): Promise<ActionResult> {
+export async function archiveStream(
+  tournamentId: string,
+  eventId: string,
+  streamId: string
+): Promise<ActionResult> {
   try {
     // 1. 권한 검증
     const authCheck = await verifyAdmin()
@@ -397,27 +414,22 @@ export async function archiveStream(id: string): Promise<ActionResult> {
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 2. Firestore 서브컬렉션 업데이트
+    const streamRef = adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS(tournamentId, eventId))
+      .doc(streamId)
 
-    // 2. 상태 변경
-    const { error } = await supabase
-      .from('streams')
-      .update({
-        status: 'archived' as ContentStatus
-      })
-      .eq('id', id)
-
-    if (error) {
-      console.error('[archiveStream] Update error:', error)
-      return { success: false, error: error.message }
-    }
+    await streamRef.update({
+      status: 'archived' as ContentStatus,
+      updatedAt: FieldValue.serverTimestamp()
+    })
 
     // 3. 캐시 무효화
     invalidateCache()
 
     return { success: true }
   } catch (error: any) {
-    console.error('[archiveStream] Exception:', error)
+    console.error('[archiveStream] Error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
@@ -427,7 +439,11 @@ export async function archiveStream(id: string): Promise<ActionResult> {
 /**
  * 여러 Stream을 한 번에 published 상태로 변경
  */
-export async function bulkPublishStreams(ids: string[]): Promise<ActionResult<{ published: number }>> {
+export async function bulkPublishStreams(
+  tournamentId: string,
+  eventId: string,
+  streamIds: string[]
+): Promise<ActionResult<{ published: number }>> {
   try {
     // 1. 권한 검증
     const authCheck = await verifyAdmin()
@@ -436,36 +452,34 @@ export async function bulkPublishStreams(ids: string[]): Promise<ActionResult<{ 
     }
 
     // 2. 입력 검증
-    if (!ids || ids.length === 0) {
+    if (!streamIds || streamIds.length === 0) {
       return { success: false, error: 'No stream IDs provided' }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 3. Firestore Batch 업데이트 (최대 500개)
+    const batch = adminFirestore.batch()
+    const streamsCollectionRef = adminFirestore.collection(
+      COLLECTION_PATHS.STREAMS(tournamentId, eventId)
+    )
 
-    // 3. 대량 상태 변경
-    const { data, error } = await supabase
-      .from('streams')
-      .update({
+    streamIds.forEach((streamId) => {
+      const streamRef = streamsCollectionRef.doc(streamId)
+      batch.update(streamRef, {
         status: 'published' as ContentStatus,
-        published_by: authCheck.userId,
-        published_at: new Date().toISOString()
+        publishedBy: authCheck.userId,
+        publishedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp()
       })
-      .in('id', ids)
-      .select('id')
+    })
 
-    if (error) {
-      console.error('[bulkPublishStreams] Update error:', error)
-      return { success: false, error: error.message }
-    }
-
-    const published = data?.length || 0
+    await batch.commit()
 
     // 4. 캐시 무효화
     invalidateCache()
 
-    return { success: true, data: { published } }
+    return { success: true, data: { published: streamIds.length } }
   } catch (error: any) {
-    console.error('[bulkPublishStreams] Exception:', error)
+    console.error('[bulkPublishStreams] Error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
@@ -473,7 +487,11 @@ export async function bulkPublishStreams(ids: string[]): Promise<ActionResult<{ 
 /**
  * 여러 Stream을 한 번에 draft 상태로 변경
  */
-export async function bulkUnpublishStreams(ids: string[]): Promise<ActionResult<{ unpublished: number }>> {
+export async function bulkUnpublishStreams(
+  tournamentId: string,
+  eventId: string,
+  streamIds: string[]
+): Promise<ActionResult<{ unpublished: number }>> {
   try {
     // 1. 권한 검증
     const authCheck = await verifyAdmin()
@@ -482,36 +500,34 @@ export async function bulkUnpublishStreams(ids: string[]): Promise<ActionResult<
     }
 
     // 2. 입력 검증
-    if (!ids || ids.length === 0) {
+    if (!streamIds || streamIds.length === 0) {
       return { success: false, error: 'No stream IDs provided' }
     }
 
-    const supabase = await createServerSupabaseClient()
+    // 3. Firestore Batch 업데이트 (최대 500개)
+    const batch = adminFirestore.batch()
+    const streamsCollectionRef = adminFirestore.collection(
+      COLLECTION_PATHS.STREAMS(tournamentId, eventId)
+    )
 
-    // 3. 대량 상태 변경
-    const { data, error } = await supabase
-      .from('streams')
-      .update({
+    streamIds.forEach((streamId) => {
+      const streamRef = streamsCollectionRef.doc(streamId)
+      batch.update(streamRef, {
         status: 'draft' as ContentStatus,
-        published_at: null,
-        published_by: null
+        publishedAt: FieldValue.delete(),
+        publishedBy: FieldValue.delete(),
+        updatedAt: FieldValue.serverTimestamp()
       })
-      .in('id', ids)
-      .select('id')
+    })
 
-    if (error) {
-      console.error('[bulkUnpublishStreams] Update error:', error)
-      return { success: false, error: error.message }
-    }
-
-    const unpublished = data?.length || 0
+    await batch.commit()
 
     // 4. 캐시 무효화
     invalidateCache()
 
-    return { success: true, data: { unpublished } }
+    return { success: true, data: { unpublished: streamIds.length } }
   } catch (error: any) {
-    console.error('[bulkUnpublishStreams] Exception:', error)
+    console.error('[bulkUnpublishStreams] Error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
@@ -529,6 +545,8 @@ export async function bulkUnpublishStreams(ids: string[]): Promise<ActionResult<
  * - 메타데이터 검증 (권장)
  */
 export async function validateStreamChecklist(
+  tournamentId: string,
+  eventId: string,
   streamId: string
 ): Promise<ActionResult<StreamChecklistValidation>> {
   try {
@@ -538,93 +556,114 @@ export async function validateStreamChecklist(
       return { success: false, error: authCheck.error }
     }
 
-    const supabase = await createServerSupabaseClient()
-
     // 2. Stream 정보 조회
-    const { data: stream, error: streamError } = await supabase
-      .from('streams')
-      .select(`
-        id,
-        name,
-        video_url,
-        video_source,
-        sub_event_id
-      `)
-      .eq('id', streamId)
-      .single()
+    const streamDoc = await adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS(tournamentId, eventId))
+      .doc(streamId)
+      .get()
 
-    if (streamError || !stream) {
+    if (!streamDoc.exists) {
       return { success: false, error: 'Stream not found' }
+    }
+
+    const stream = streamDoc.data()
+    if (!stream) {
+      return { success: false, error: 'Stream data not found' }
     }
 
     const errors: string[] = []
     const warnings: string[] = []
 
     // 3. YouTube 링크 확인 (필수)
-    const hasYouTubeLink = stream.video_source === 'youtube' && !!stream.video_url
+    const hasYouTubeLink = stream.videoSource === 'youtube' && !!stream.videoUrl
     if (!hasYouTubeLink) {
       errors.push('YouTube link is required for publishing')
     }
 
-    // 4. 핸드 개수 확인
-    const { data: hands } = await supabase
-      .from('hands')
-      .select('id')
-      .eq('day_id', streamId)
+    // 4. 핸드 개수 확인 (streamId로 필터링)
+    const handsSnapshot = await adminFirestore
+      .collection(COLLECTION_PATHS.HANDS)
+      .where('streamId', '==', streamId)
+      .get()
 
-    const handCount = hands?.length || 0
+    const handCount = handsSnapshot.size
 
     if (handCount === 0) {
       errors.push('At least 1 hand is required')
     }
 
     // 5. 평균 핸드 개수 대비 검증 (경고만)
-    const { data: avgData } = await supabase
-      .from('streams')
-      .select('id')
-      .eq('sub_event_id', stream.sub_event_id)
+    const allStreamsSnapshot = await adminFirestore
+      .collection(COLLECTION_PATHS.STREAMS(tournamentId, eventId))
+      .get()
 
-    if (avgData && avgData.length > 1) {
-      // 같은 SubEvent의 다른 스트림들의 평균 핸드 개수 계산
-      const { data: allHands } = await supabase
-        .from('hands')
-        .select('day_id')
-        .in('day_id', avgData.map(s => s.id))
+    if (allStreamsSnapshot.size > 1) {
+      // 같은 Event의 모든 스트림 핸드 개수 집계
+      let totalHands = 0
+      const streamIds: string[] = []
 
-      if (allHands && allHands.length > 0) {
-        const avgHandCount = Math.round(allHands.length / avgData.length)
+      allStreamsSnapshot.forEach((doc) => {
+        streamIds.push(doc.id)
+      })
 
-        if (handCount < avgHandCount * 0.5) {
-          warnings.push(
-            `Hand count (${handCount}) is significantly lower than average (${avgHandCount})`
-          )
-        }
+      // 각 스트림별 핸드 개수 조회
+      for (const sid of streamIds) {
+        const streamHandsSnapshot = await adminFirestore
+          .collection(COLLECTION_PATHS.HANDS)
+          .where('streamId', '==', sid)
+          .get()
+
+        totalHands += streamHandsSnapshot.size
+      }
+
+      const avgHandCount = Math.round(totalHands / streamIds.length)
+
+      if (handCount < avgHandCount * 0.5) {
+        warnings.push(
+          `Hand count (${handCount}) is significantly lower than average (${avgHandCount})`
+        )
       }
     }
 
     // 6. 썸네일 존재 확인 (권장)
-    const { data: handsWithThumbnail } = await supabase
-      .from('hands')
-      .select('id')
-      .eq('day_id', streamId)
-      .not('thumbnail_url', 'is', null)
+    let hasThumbnail = false
+    if (handCount > 0) {
+      const handsWithThumbnailSnapshot = await adminFirestore
+        .collection(COLLECTION_PATHS.HANDS)
+        .where('streamId', '==', streamId)
+        .where('thumbnailUrl', '!=', null)
+        .limit(1)
+        .get()
 
-    const hasThumbnail = (handsWithThumbnail?.length || 0) > 0
+      hasThumbnail = !handsWithThumbnailSnapshot.empty
+    }
 
     if (!hasThumbnail && handCount > 0) {
       warnings.push('No thumbnail found for hands')
     }
 
     // 7. 플레이어 정보 완성도 확인 (권장)
-    const { data: handPlayers } = await supabase
-      .from('hand_players')
-      .select('id, player_id, cards, position')
-      .in('hand_id', (hands || []).map(h => h.id))
+    // Firestore에서는 players가 Hand 문서에 embedded 배열로 저장됨
+    let totalPlayers = 0
+    let playersWithInfo = 0
 
-    const totalPlayers = handPlayers?.length || 0
-    const playersWithInfo = handPlayers?.filter(
-      hp => hp.player_id && hp.cards && hp.cards.length > 0 && hp.position
-    ).length || 0
+    handsSnapshot.forEach((handDoc) => {
+      const hand = handDoc.data()
+      if (hand.players && Array.isArray(hand.players)) {
+        hand.players.forEach((player: any) => {
+          totalPlayers++
+          if (
+            player.playerId &&
+            player.cards &&
+            Array.isArray(player.cards) &&
+            player.cards.length > 0 &&
+            player.position
+          ) {
+            playersWithInfo++
+          }
+        })
+      }
+    })
 
     const playersInfoComplete = totalPlayers > 0 && playersWithInfo / totalPlayers >= 0.8
 
@@ -657,7 +696,7 @@ export async function validateStreamChecklist(
 
     return { success: true, data: validation }
   } catch (error: any) {
-    console.error('[validateStreamChecklist] Exception:', error)
+    console.error('[validateStreamChecklist] Error:', error)
     return { success: false, error: error.message || 'Unknown error' }
   }
 }

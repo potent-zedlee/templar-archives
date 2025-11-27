@@ -1,15 +1,12 @@
 'use server'
 
-import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { getServiceSupabaseClient } from '@/lib/supabase-service'
+import { adminAuth, adminFirestore } from '@/lib/firebase-admin'
+import { COLLECTION_PATHS } from '@/lib/firebase/collections'
 import { TimeSegment } from '@/types/segments'
 import { revalidatePath } from 'next/cache'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/lib/database.types'
 import { getHandThumbnailUrl } from '@/lib/thumbnail-utils'
-
-// Typed Supabase Client
-type TypedSupabaseClient = SupabaseClient<Database>
+import { cookies } from 'next/headers'
+import { FieldValue } from 'firebase-admin/firestore'
 
 type KanPlatform = 'ept' | 'triton' | 'pokerstars' | 'wsop' | 'hustler'
 
@@ -94,26 +91,6 @@ export interface KanAnalysisRequestInput {
   streamName?: string // Custom stream name
 }
 
-// Segment processing result (Currently unused, reserved for future multi-segment support)
-// interface SegmentResult {
-//   segment_id: string
-//   segment_index: number
-//   status: 'success' | 'failed'
-//   hands_found?: number
-//   error?: string
-//   processing_time?: number
-// }
-
-// Job result structure (stored in analysis_jobs.result) - Currently unused
-// interface JobResult {
-//   success: boolean
-//   segments_processed: number
-//   segments_failed: number
-//   segment_results: SegmentResult[]
-//   total_hands: number
-//   errors: string[]
-// }
-
 /**
  * Extract YouTube video ID from URL
  */
@@ -150,66 +127,69 @@ function formatTimestamp(seconds: number): string {
 }
 
 /**
+ * Verify user authentication from session cookie
+ */
+async function verifyAuth(): Promise<{ userId: string } | { error: string }> {
+  try {
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get('session')?.value
+
+    if (!sessionCookie) {
+      return { error: '로그인이 필요합니다' }
+    }
+
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie)
+    return { userId: decodedToken.uid }
+  } catch (error) {
+    console.error('[KAN] Auth verification failed:', error)
+    return { error: '인증에 실패했습니다' }
+  }
+}
+
+/**
  * Find or create player in database
  */
-async function findOrCreatePlayer(
-  supabase: TypedSupabaseClient,
-  name: string
-): Promise<string> {
+async function findOrCreatePlayer(name: string): Promise<string> {
   const normalized = normalizePlayerName(name)
 
   // Try to find existing player
-  const { data: existing } = await supabase
-    .from('players')
-    .select('id')
-    .eq('normalized_name', normalized)
-    .single()
+  const playersRef = adminFirestore.collection(COLLECTION_PATHS.PLAYERS)
+  const existingQuery = await playersRef
+    .where('normalized_name', '==', normalized)
+    .limit(1)
+    .get()
 
-  if (existing) {
-    return existing.id
+  if (!existingQuery.empty) {
+    return existingQuery.docs[0].id
   }
 
   // Create new player
-  const { data: newPlayer, error } = await supabase
-    .from('players')
-    .insert({
-      name,
-      normalized_name: normalized,
-    })
-    .select('id')
-    .single()
+  const newPlayerRef = playersRef.doc()
+  await newPlayerRef.set({
+    name,
+    normalized_name: normalized,
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
+  })
 
-  if (error) {
-    throw new Error(`Failed to create player: ${error.message}`)
-  }
-
-  return newPlayer.id
+  return newPlayerRef.id
 }
 
 /**
  * Rate Limiting: 시간당 5개 분석 제한
  */
 async function checkRateLimit(
-  userId: string,
-  supabase: TypedSupabaseClient
+  userId: string
 ): Promise<{ allowed: boolean; error?: string }> {
-  const oneHourAgo = new Date(Date.now() - 3600000).toISOString()
+  const oneHourAgo = new Date(Date.now() - 3600000)
 
-  const { data, error } = await supabase
-    .from('analysis_jobs')
-    .select('id')
-    .eq('created_by', userId)
-    .gte('created_at', oneHourAgo)
+  const jobsRef = adminFirestore.collection('analysisJobs')
+  const recentJobs = await jobsRef
+    .where('created_by', '==', userId)
+    .where('created_at', '>=', oneHourAgo)
+    .get()
 
-  if (error) {
-    console.error('[KAN] Rate limit check failed')
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[KAN] Error details:', error)
-    }
-    return { allowed: false, error: 'Rate limit 확인 실패' }
-  }
-
-  const requestCount = data?.length || 0
+  const requestCount = recentJobs.size
   const limit = 5 // 시간당 5개
 
   if (requestCount >= limit) {
@@ -227,8 +207,7 @@ async function checkRateLimit(
  */
 async function checkDuplicateAnalysis(
   videoId: string,
-  segments: TimeSegment[],
-  supabase: TypedSupabaseClient
+  segments: TimeSegment[]
 ): Promise<{ isDuplicate: boolean; error?: string; existingJobId?: string }> {
   try {
     // Input validation
@@ -251,225 +230,42 @@ async function checkDuplicateAnalysis(
       }
     }
 
-    // Call RPC function to check for overlapping segments
-    const { data, error } = await supabase.rpc('check_duplicate_analysis', {
-      p_video_id: videoId,
-      p_segments: JSON.parse(JSON.stringify(segments)),
-    })
+    // Find jobs for this video
+    const jobsRef = adminFirestore.collection('analysisJobs')
+    const existingJobs = await jobsRef
+      .where('video_id', '==', videoId)
+      .where('status', 'in', ['pending', 'processing', 'completed'])
+      .get()
 
-    if (error) {
-      console.error('[KAN] Duplicate check RPC failed')
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[KAN] Error details:', error)
-      }
-      // Fail-Closed: Block analysis on DB error
-      return {
-        isDuplicate: false,
-        error: '중복 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
-      }
-    }
+    // Check for overlapping segments
+    for (const jobDoc of existingJobs.docs) {
+      const jobData = jobDoc.data()
+      const existingSegments = jobData.segments as TimeSegment[] || []
 
-    if (data && data.length > 0) {
-      const existingJob = data[0]
-      return {
-        isDuplicate: true,
-        existingJobId: existingJob.job_id,
-        error: `이미 ${existingJob.status === 'completed' ? '완료된' : '분석 중인'} 세그먼트가 포함되어 있습니다. (Job ID: ${existingJob.job_id})`,
+      for (const newSeg of segments) {
+        for (const existingSeg of existingSegments) {
+          // Check overlap: new segment overlaps if it starts before existing ends AND ends after existing starts
+          const overlaps = newSeg.start < existingSeg.end && newSeg.end > existingSeg.start
+          if (overlaps) {
+            return {
+              isDuplicate: true,
+              existingJobId: jobDoc.id,
+              error: `이미 ${jobData.status === 'completed' ? '완료된' : '분석 중인'} 세그먼트가 포함되어 있습니다. (Job ID: ${jobDoc.id})`,
+            }
+          }
+        }
       }
     }
 
     return { isDuplicate: false }
   } catch (error) {
-    console.error('[KAN] Duplicate check exception')
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[KAN] Exception details:', error)
-    }
-    // Fail-Closed: Block analysis on exception
+    console.error('[KAN] Duplicate check exception:', error)
     return {
       isDuplicate: false,
       error: '중복 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
     }
   }
 }
-
-/**
- * Store hands from segment to database using transactional RPC
- * (Currently unused - reserved for future multi-segment support)
- */
-// async function storeHandsFromSegment(
-//   supabase: TypedSupabaseClient,
-//   hands: KanHand[],
-//   streamId: string,
-//   jobId: string,
-//   segment: TimeSegment,
-//   startHandNumber: number
-// ): Promise<{ success: number; failed: number; errors: string[] }> {
-//   let handNumber = startHandNumber
-//   let successCount = 0
-//   let failedCount = 0
-//   const errors: string[] = []
-//
-//   if (process.env.NODE_ENV === 'development') {
-//     console.log(`[storeHands] Processing ${hands.length} hands for segment`)
-//   }
-//
-//   // Fetch stream info once for thumbnail URL generation
-//   const { data: streamData } = await supabase
-//     .from('streams')
-//     .select('video_url, video_source')
-//     .eq('id', streamId)
-//     .single()
-//
-//   const thumbnailUrl = streamData
-//     ? getHandThumbnailUrl(
-//         streamData.video_url || undefined,
-//         (streamData.video_source as 'youtube' | 'upload' | 'nas' | undefined) || undefined
-//       )
-//     : null
-//
-//   if (process.env.NODE_ENV === 'development') {
-//     console.log(`[storeHands] Thumbnail URL for stream ${streamId}:`, thumbnailUrl)
-//   }
-//
-//   for (const handData of hands) {
-//     try {
-//       if (process.env.NODE_ENV === 'development') {
-//         console.log(`[storeHands] Processing hand #${handData.handNumber || handNumber}`)
-//       }
-//
-//       // Find or create players first (outside transaction)
-//       const playerIdMap = new Map<string, string>()
-//
-//       if (handData.players) {
-//         if (process.env.NODE_ENV === 'development') {
-//           console.log(`[storeHands] Finding/creating ${handData.players.length} players`)
-//         }
-//         for (const playerData of handData.players) {
-//           const playerId = await findOrCreatePlayer(supabase, playerData.name)
-//           playerIdMap.set(playerData.name, playerId)
-//           if (process.env.NODE_ENV === 'development') {
-//             console.log(`[storeHands] Player ${playerData.name} -> ${playerId}`)
-//           }
-//         }
-//       }
-//
-//       // Prepare players data for RPC
-//       const playersData: Record<string, unknown>[] = []
-//       if (handData.players) {
-//         for (const playerData of handData.players) {
-//           const playerId = playerIdMap.get(playerData.name)
-//           if (!playerId) continue
-//
-//           const winner = handData.winners?.find((w) => w.name === playerData.name)
-//
-//           let holeCardsArray: string[] | null = null
-//           if (playerData.holeCards) {
-//             if (Array.isArray(playerData.holeCards)) {
-//               holeCardsArray = playerData.holeCards
-//             } else if (typeof playerData.holeCards === 'string') {
-//               holeCardsArray = playerData.holeCards.split(/[\s,]+/).filter(Boolean)
-//             }
-//           }
-//
-//           playersData.push({
-//             player_id: playerId,
-//             poker_position: playerData.position,
-//             starting_stack: playerData.stackSize || 0,
-//             ending_stack: playerData.stackSize || 0,
-//             hole_cards: holeCardsArray,
-//             cards: holeCardsArray ? holeCardsArray.join(' ') : null,
-//             final_amount: winner?.amount || 0,
-//             is_winner: !!winner,
-//             hand_description: winner?.hand || null,
-//           })
-//         }
-//       }
-//
-//       // Prepare actions data for RPC
-//       const actionsData: Record<string, unknown>[] = []
-//       if (handData.actions) {
-//         for (let idx = 0; idx < handData.actions.length; idx++) {
-//           const action = handData.actions[idx]
-//           const playerId = playerIdMap.get(action.player)
-//           if (!playerId) continue
-//
-//           actionsData.push({
-//             player_id: playerId,
-//             action_order: idx + 1,
-//             street: action.street.toLowerCase(),
-//             action_type: action.action.toLowerCase(),
-//             amount: action.amount || 0,
-//           })
-//         }
-//       }
-//
-//       // Call RPC function to save hand transactionally
-//       console.log(`[storeHands] Calling RPC with ${playersData.length} players, ${actionsData.length} actions`)
-//       const { data: newHandId, error: rpcError } = await supabase.rpc(
-//         'save_hand_with_players_actions',
-//         {
-//           p_day_id: streamId,
-//           p_job_id: jobId,
-//           p_number: String(handData.handNumber || ++handNumber),
-//           p_description: handData.description || `Hand #${handData.handNumber || handNumber}`,
-//           p_timestamp: formatTimestamp(segment.start),
-//           p_video_timestamp_start: segment.start,
-//           p_video_timestamp_end: segment.end,
-//           p_stakes: handData.stakes || 'Unknown',
-//           p_board_flop: handData.board?.flop || [],
-//           p_board_turn: handData.board?.turn || '',
-//           p_board_river: handData.board?.river || '',
-//           p_pot_size: handData.pot || 0,
-//           p_raw_data: JSON.parse(JSON.stringify(handData)),
-//           // Players and actions (required params)
-//           p_players: JSON.parse(JSON.stringify(playersData)),
-//           p_actions: JSON.parse(JSON.stringify(actionsData)),
-//           // NEW: Blind information (optional params)
-//           p_small_blind: handData.small_blind || null,
-//           p_big_blind: handData.big_blind || null,
-//           p_ante: handData.ante || 0,
-//           // NEW: Street-specific pot sizes (optional params)
-//           p_pot_preflop: handData.pot_preflop || null,
-//           p_pot_flop: handData.pot_flop || null,
-//           p_pot_turn: handData.pot_turn || null,
-//           p_pot_river: handData.pot_river || null,
-//           // NEW: Thumbnail URL (Phase 3)
-//           p_thumbnail_url: thumbnailUrl || '',
-//         }
-//       )
-//
-//       if (rpcError) {
-//         console.error(`[storeHands] RPC error:`, rpcError)
-//         throw new Error(`RPC error: ${rpcError.message}`)
-//       }
-//
-//       if (!newHandId) {
-//         console.error(`[storeHands] No hand ID returned from RPC`)
-//         throw new Error('No hand ID returned from RPC')
-//       }
-//
-//       console.log(`[storeHands] Successfully saved hand with ID: ${newHandId}`)
-//       successCount++
-//     } catch (error) {
-//       failedCount++
-//       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
-//       errors.push(`Hand ${handData.handNumber || handNumber}: ${errorMsg}`)
-//
-//       // Detailed error logging in development only
-//       if (process.env.NODE_ENV === 'development') {
-//         console.error('[storeHands] Failed to save hand:', error)
-//         if (error instanceof Error && error.stack) {
-//           console.error('[storeHands] Stack trace:', error.stack)
-//         }
-//       } else {
-//         // Production: Log only essential info
-//         console.error(`[storeHands] Hand save failed: ${errorMsg}`)
-//       }
-//     }
-//   }
-//
-//   return { success: successCount, failed: failedCount, errors }
-// }
 
 /**
  * Start KAN video analysis job
@@ -497,25 +293,17 @@ export async function startKanAnalysis(
     }
     console.log('[KAN] Backend URL:', backendUrl)
 
-    // 인증 확인 - Server Client 사용 (사용자 세션 포함)
-    const authSupabase = await createServerSupabaseClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await authSupabase.auth.getUser()
-    if (authError || !user) {
-      console.error('[KAN] Auth error:', authError)
-      return { success: false, error: '로그인이 필요합니다' }
+    // 인증 확인
+    const authResult = await verifyAuth()
+    if ('error' in authResult) {
+      return { success: false, error: authResult.error }
     }
-
-    console.log('[KAN] User authenticated:', user.id)
-
-    // DB 작업용 - Service Role Client 사용 (RLS 우회)
-    const supabase = getServiceSupabaseClient()
+    const userId = authResult.userId
+    console.log('[KAN] User authenticated:', userId)
 
     // Rate Limiting 체크
     console.log('[KAN] Checking rate limit...')
-    const rateLimitCheck = await checkRateLimit(user.id, supabase)
+    const rateLimitCheck = await checkRateLimit(userId)
     if (!rateLimitCheck.allowed) {
       console.warn('[KAN] Rate limit exceeded:', rateLimitCheck.error)
       return { success: false, error: rateLimitCheck.error }
@@ -524,44 +312,34 @@ export async function startKanAnalysis(
 
     // 권한 체크 (High Templar 이상)
     console.log('[KAN] Checking user permissions...')
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    const userDoc = await adminFirestore.collection(COLLECTION_PATHS.USERS).doc(userId).get()
 
-    // 권한 체크: High Templar, Reporter, Admin만 허용
-    const allowedRoles = ['high_templar', 'reporter', 'admin']
-
-    if (profileError) {
-      console.error('[KAN] Profile fetch error:', profileError)
-      return {
-        success: false,
-        error: '사용자 정보를 불러오는데 실패했습니다.',
-      }
-    }
-
-    if (!profile) {
-      console.error('[KAN] No profile found for user:', user.id)
+    if (!userDoc.exists) {
+      console.error('[KAN] No profile found for user:', userId)
       return {
         success: false,
         error: '사용자 프로필을 찾을 수 없습니다.',
       }
     }
 
-    console.log('[KAN] User role:', profile.role)
+    const userData = userDoc.data()
+    const userRole = userData?.role
 
-    const hasValidRole = profile.role ? allowedRoles.includes(profile.role) : false
+    console.log('[KAN] User role:', userRole)
+
+    // 권한 체크: High Templar, Reporter, Admin만 허용
+    const allowedRoles = ['high_templar', 'reporter', 'admin']
+    const hasValidRole = userRole ? allowedRoles.includes(userRole) : false
 
     if (!hasValidRole) {
-      console.warn('[KAN] Permission denied - insufficient role:', profile.role)
+      console.warn('[KAN] Permission denied - insufficient role:', userRole)
       return {
         success: false,
-        error: `이 기능은 High Templar, Reporter, Admin 권한이 필요합니다. (현재 권한: ${profile.role})`,
+        error: `이 기능은 High Templar, Reporter, Admin 권한이 필요합니다. (현재 권한: ${userRole})`,
       }
     }
 
-    console.log('[KAN] Permission granted for user:', user.id)
+    console.log('[KAN] Permission granted for user:', userId)
 
     const selectedPlatform = input.platform || DEFAULT_PLATFORM
     const dbPlatform = DB_PLATFORM_MAP[selectedPlatform] ?? DB_PLATFORM_MAP[DEFAULT_PLATFORM]
@@ -594,41 +372,32 @@ export async function startKanAnalysis(
     }
 
     // Create or get video record
-    const { data: existingVideo } = await supabase
-      .from('videos')
-      .select('id')
-      .eq('youtube_id', videoId)
-      .single()
+    const videosRef = adminFirestore.collection('videos')
+    const existingVideoQuery = await videosRef
+      .where('youtube_id', '==', videoId)
+      .limit(1)
+      .get()
 
     let dbVideoId: string
 
-    if (!existingVideo) {
-      const { data: newVideo, error: videoError } = await supabase
-        .from('videos')
-        .insert({
-          url: input.videoUrl,
-          youtube_id: videoId,
-          platform: 'youtube',
-          title: null,
-          duration: null,
-        })
-        .select('id')
-        .single()
-
-      if (videoError || !newVideo) {
-        return {
-          success: false,
-          error: `Failed to create video record: ${videoError?.message || 'Unknown error'}`,
-        }
-      }
-
-      dbVideoId = newVideo.id
+    if (existingVideoQuery.empty) {
+      const newVideoRef = videosRef.doc()
+      await newVideoRef.set({
+        url: input.videoUrl,
+        youtube_id: videoId,
+        platform: 'youtube',
+        title: null,
+        duration: null,
+        created_at: FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
+      })
+      dbVideoId = newVideoRef.id
     } else {
-      dbVideoId = existingVideo.id
+      dbVideoId = existingVideoQuery.docs[0].id
     }
 
     // Check for duplicate analysis
-    const duplicateCheck = await checkDuplicateAnalysis(dbVideoId, gameplaySegments, supabase)
+    const duplicateCheck = await checkDuplicateAnalysis(dbVideoId, gameplaySegments)
     if (duplicateCheck.error) {
       // DB error or validation error - block analysis
       return { success: false, error: duplicateCheck.error }
@@ -649,46 +418,40 @@ export async function startKanAnalysis(
       segments_count: gameplaySegments.length,
       ai_provider: 'gemini',
       submitted_players_count: input.players?.length || 0,
-      created_by: user.id,
+      created_by: userId,
     })
 
-    const { data: job, error: jobError } = await supabase
-      .from('analysis_jobs')
-      .insert({
-        video_id: dbVideoId,
-        stream_id: input.streamId || null,
-        platform: dbPlatform,
-        status: 'pending',
-        segments: JSON.parse(JSON.stringify(gameplaySegments)),
-        progress: 0,
-        ai_provider: 'gemini',
-        submitted_players: input.players || null,
-        created_by: user.id,
-      })
-      .select('id')
-      .single()
+    const jobsRef = adminFirestore.collection('analysisJobs')
+    const newJobRef = jobsRef.doc()
 
-    if (jobError) {
-      console.error('[KAN] Failed to create job:', jobError)
-      return {
-        success: false,
-        error: `Failed to create analysis job: ${jobError.message}`,
-      }
-    }
+    await newJobRef.set({
+      video_id: dbVideoId,
+      stream_id: input.streamId || null,
+      platform: dbPlatform,
+      status: 'pending',
+      segments: gameplaySegments,
+      progress: 0,
+      ai_provider: 'gemini',
+      submitted_players: input.players || null,
+      created_by: userId,
+      created_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
+    })
 
-    console.log('[KAN] Analysis job created:', job.id)
+    const jobId = newJobRef.id
+    console.log('[KAN] Analysis job created:', jobId)
 
     // Job created and enqueued for processing
-    // KAN Backend will pick up this job via Supabase polling
+    // KAN Backend will pick up this job via Firestore polling
     console.log('[KAN] Job enqueued for background processing')
     console.log('[KAN] KAN Backend worker will detect and process this job')
 
     revalidatePath('/kan')
 
-    console.log('[KAN] startKanAnalysis completed, jobId:', job.id)
+    console.log('[KAN] startKanAnalysis completed, jobId:', jobId)
     return {
       success: true,
-      jobId: job.id,
+      jobId,
     }
   } catch (error) {
     console.error('[KAN] Start KAN error:', error)
@@ -703,30 +466,19 @@ export async function startKanAnalysis(
  * Get KAN job status
  */
 export async function getKanJob(jobId: string) {
-  // 인증 확인 - Server Client 사용 (사용자 세션 포함)
-  const authSupabase = await createServerSupabaseClient()
-  const {
-    data: { user },
-    error: authError,
-  } = await authSupabase.auth.getUser()
-  if (authError || !user) {
-    return { data: null, error: { message: '로그인이 필요합니다' } }
-  }
-
-  // DB 작업용 - Service Role Client 사용 (RLS 우회)
-  const supabase = getServiceSupabaseClient()
-
-  const { data, error } = await supabase
-    .from('analysis_jobs')
-    .select('*')
-    .eq('id', jobId)
-    .single()
-
-  if (error) {
+  // 인증 확인
+  const authResult = await verifyAuth()
+  if ('error' in authResult) {
     return null
   }
 
-  return data
+  const jobDoc = await adminFirestore.collection('analysisJobs').doc(jobId).get()
+
+  if (!jobDoc.exists) {
+    return null
+  }
+
+  return { id: jobDoc.id, ...jobDoc.data() }
 }
 
 /**
@@ -736,36 +488,27 @@ export async function saveHandsFromJob(jobId: string): Promise<{ success: boolea
   try {
     console.log('[saveHandsFromJob] Starting for job:', jobId)
 
-    // 인증 확인 - Server Client 사용 (사용자 세션 포함)
-    const authSupabase = await createServerSupabaseClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await authSupabase.auth.getUser()
-    if (authError || !user) {
-      return { success: false, saved: 0, error: '로그인이 필요합니다' }
+    // 인증 확인
+    const authResult = await verifyAuth()
+    if ('error' in authResult) {
+      return { success: false, saved: 0, error: authResult.error }
     }
 
-    // DB 작업용 - Service Role Client 사용 (RLS 우회)
-    const supabase = getServiceSupabaseClient()
-
     // Get job data
-    const { data: job, error: jobError } = await supabase
-      .from('analysis_jobs')
-      .select('*')
-      .eq('id', jobId)
-      .single()
+    const jobDoc = await adminFirestore.collection('analysisJobs').doc(jobId).get()
 
-    if (jobError || !job) {
+    if (!jobDoc.exists) {
       return { success: false, saved: 0, error: 'Job not found' }
     }
 
+    const job = jobDoc.data()
+
     // Check if stream_id exists
-    if (!job.stream_id) {
+    if (!job?.stream_id) {
       return { success: false, saved: 0, error: 'No stream_id associated with this job' }
     }
 
-    const streamId = job.stream_id // Now guaranteed to be string
+    const streamId = job.stream_id
 
     // Check if hands data exists in result
     const jobResult = job.result as Record<string, unknown> | null
@@ -777,11 +520,8 @@ export async function saveHandsFromJob(jobId: string): Promise<{ success: boolea
     console.log(`[saveHandsFromJob] Found ${hands.length} hands in job result`)
 
     // Get stream info for thumbnail
-    const { data: streamData } = await supabase
-      .from('streams')
-      .select('video_url, video_source')
-      .eq('id', streamId)
-      .single()
+    const streamDoc = await adminFirestore.collection(COLLECTION_PATHS.STREAMS).doc(streamId).get()
+    const streamData = streamDoc.data()
 
     const thumbnailUrl = streamData
       ? getHandThumbnailUrl(
@@ -793,7 +533,10 @@ export async function saveHandsFromJob(jobId: string): Promise<{ success: boolea
     let savedCount = 0
     const errors: string[] = []
 
-    // Save each hand
+    // Save each hand using batch writes
+    const batch = adminFirestore.batch()
+    const handsRef = adminFirestore.collection(COLLECTION_PATHS.HANDS)
+
     for (const handData of hands) {
       try {
         // Find or create players
@@ -801,12 +544,12 @@ export async function saveHandsFromJob(jobId: string): Promise<{ success: boolea
 
         if (handData.players) {
           for (const playerData of handData.players) {
-            const playerId = await findOrCreatePlayer(supabase, playerData.name)
+            const playerId = await findOrCreatePlayer(playerData.name)
             playerIdMap.set(playerData.name, playerId)
           }
         }
 
-        // Prepare players data
+        // Prepare players data (embedded in hand document)
         const playersData: Record<string, unknown>[] = []
         if (handData.players) {
           for (const playerData of handData.players) {
@@ -838,7 +581,7 @@ export async function saveHandsFromJob(jobId: string): Promise<{ success: boolea
           }
         }
 
-        // Prepare actions data
+        // Prepare actions data (embedded in hand document)
         const actionsData: Record<string, unknown>[] = []
         if (handData.actions) {
           for (let idx = 0; idx < handData.actions.length; idx++) {
@@ -861,46 +604,45 @@ export async function saveHandsFromJob(jobId: string): Promise<{ success: boolea
         const segment = jobSegments?.[0]
         const videoTimestampStart = segment?.start || 0
 
-        // Call RPC to save hand
-        const { error: rpcError } = await supabase.rpc(
-          'save_hand_with_players_actions',
-          {
-            p_day_id: streamId,
-            p_job_id: jobId,
-            p_number: String(handData.handNumber || savedCount + 1),
-            p_description: handData.description || `Hand #${handData.handNumber || savedCount + 1}`,
-            p_timestamp: formatTimestamp(videoTimestampStart),
-            p_video_timestamp_start: videoTimestampStart,
-            p_video_timestamp_end: videoTimestampStart + 300, // Default 5 minutes
-            p_stakes: handData.stakes || 'Unknown',
-            p_board_flop: handData.board?.flop || [],
-            p_board_turn: handData.board?.turn || '',
-            p_board_river: handData.board?.river || '',
-            p_pot_size: handData.pot || 0,
-            p_raw_data: JSON.parse(JSON.stringify(handData)),
-            p_players: JSON.parse(JSON.stringify(playersData)),
-            p_actions: JSON.parse(JSON.stringify(actionsData)),
-            p_small_blind: handData.small_blind || null,
-            p_big_blind: handData.big_blind || null,
-            p_ante: handData.ante || 0,
-            p_pot_preflop: handData.pot_preflop || null,
-            p_pot_flop: handData.pot_flop || null,
-            p_pot_turn: handData.pot_turn || null,
-            p_pot_river: handData.pot_river || null,
-            p_thumbnail_url: thumbnailUrl || '',
-          }
-        )
+        // Create hand document
+        const handRef = handsRef.doc()
+        batch.set(handRef, {
+          day_id: streamId,
+          job_id: jobId,
+          number: String(handData.handNumber || savedCount + 1),
+          description: handData.description || `Hand #${handData.handNumber || savedCount + 1}`,
+          timestamp: formatTimestamp(videoTimestampStart),
+          video_timestamp_start: videoTimestampStart,
+          video_timestamp_end: videoTimestampStart + 300, // Default 5 minutes
+          stakes: handData.stakes || 'Unknown',
+          board_flop: handData.board?.flop || [],
+          board_turn: handData.board?.turn || '',
+          board_river: handData.board?.river || '',
+          pot_size: handData.pot || 0,
+          raw_data: handData,
+          players: playersData,
+          actions: actionsData,
+          small_blind: handData.small_blind || null,
+          big_blind: handData.big_blind || null,
+          ante: handData.ante || 0,
+          pot_preflop: handData.pot_preflop || null,
+          pot_flop: handData.pot_flop || null,
+          pot_turn: handData.pot_turn || null,
+          pot_river: handData.pot_river || null,
+          thumbnail_url: thumbnailUrl || '',
+          created_at: FieldValue.serverTimestamp(),
+          updated_at: FieldValue.serverTimestamp(),
+        })
 
-        if (rpcError) {
-          errors.push(`Hand ${handData.handNumber}: ${rpcError.message}`)
-        } else {
-          savedCount++
-        }
+        savedCount++
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error'
         errors.push(`Hand ${handData.handNumber}: ${errorMsg}`)
       }
     }
+
+    // Commit batch
+    await batch.commit()
 
     console.log(`[saveHandsFromJob] Saved ${savedCount}/${hands.length} hands`)
 
@@ -927,28 +669,20 @@ export async function createKanAnalysisRequest(
   input: KanAnalysisRequestInput
 ): Promise<KanStartResult> {
   try {
-    // 인증 확인 - Server Client 사용 (사용자 세션 포함)
-    const authSupabase = await createServerSupabaseClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await authSupabase.auth.getUser()
-    if (authError || !user) {
-      return { success: false, error: '로그인이 필요합니다' }
+    // 인증 확인
+    const authResult = await verifyAuth()
+    if ('error' in authResult) {
+      return { success: false, error: authResult.error }
     }
-
-    // DB 작업용 - Service Role Client 사용 (RLS 우회)
-    const supabase = getServiceSupabaseClient()
+    const userId = authResult.userId
 
     // 권한 체크
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+    const userDoc = await adminFirestore.collection(COLLECTION_PATHS.USERS).doc(userId).get()
+    const userData = userDoc.data()
+    const userRole = userData?.role
 
     const allowedRoles = ['high_templar', 'reporter', 'admin']
-    if (profileError || !profile || !profile.role || !allowedRoles.includes(profile.role)) {
+    if (!userRole || !allowedRoles.includes(userRole)) {
       return {
         success: false,
         error: 'KAN 분석 권한이 없습니다 (High Templar 이상 필요)',
@@ -956,7 +690,7 @@ export async function createKanAnalysisRequest(
     }
 
     // Rate Limiting
-    const rateLimitCheck = await checkRateLimit(user.id, supabase)
+    const rateLimitCheck = await checkRateLimit(userId)
     if (!rateLimitCheck.allowed) {
       return { success: false, error: rateLimitCheck.error }
     }
@@ -968,28 +702,22 @@ export async function createKanAnalysisRequest(
     }
 
     // Create or get video record
-    const { data: existingVideo } = await supabase
-      .from('videos')
-      .select('id')
-      .eq('youtube_id', videoId)
-      .single()
+    const videosRef = adminFirestore.collection('videos')
+    const existingVideoQuery = await videosRef
+      .where('youtube_id', '==', videoId)
+      .limit(1)
+      .get()
 
     // Create video record if not exists (required for analysis tracking)
-    if (!existingVideo) {
-      const { error: videoError } = await supabase
-        .from('videos')
-        .insert({
-          url: input.youtubeUrl,
-          youtube_id: videoId,
-          platform: 'youtube',
-        })
-
-      if (videoError) {
-        return {
-          success: false,
-          error: `Failed to create video record: ${videoError.message}`,
-        }
-      }
+    if (existingVideoQuery.empty) {
+      const newVideoRef = videosRef.doc()
+      await newVideoRef.set({
+        url: input.youtubeUrl,
+        youtube_id: videoId,
+        platform: 'youtube',
+        created_at: FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
+      })
     }
 
     // Create draft stream if requested
@@ -998,27 +726,21 @@ export async function createKanAnalysisRequest(
     if (input.createDraftStream) {
       const streamName = input.streamName || `KAN Analysis - ${new Date().toLocaleDateString()}`
 
-      const { data: newStream, error: streamError } = await supabase
-        .from('streams')
-        .insert({
-          sub_event_id: input.subEventId,
-          name: streamName,
-          video_url: input.youtubeUrl,
-          video_source: 'youtube',
-          status: 'draft',
-          is_organized: false,
-        })
-        .select('id')
-        .single()
+      const streamsRef = adminFirestore.collection(COLLECTION_PATHS.STREAMS)
+      const newStreamRef = streamsRef.doc()
 
-      if (streamError || !newStream) {
-        return {
-          success: false,
-          error: `Failed to create draft stream: ${streamError?.message}`,
-        }
-      }
+      await newStreamRef.set({
+        sub_event_id: input.subEventId,
+        name: streamName,
+        video_url: input.youtubeUrl,
+        video_source: 'youtube',
+        status: 'draft',
+        is_organized: false,
+        created_at: FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp(),
+      })
 
-      streamId = newStream.id
+      streamId = newStreamRef.id
     }
 
     // Convert time strings to segments
