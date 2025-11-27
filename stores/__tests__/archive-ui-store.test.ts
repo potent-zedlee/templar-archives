@@ -124,7 +124,7 @@ describe('Archive UI Store', () => {
     it('should close video dialog and clear start time', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        sub_event_id: 'event-1',
+        event_id: 'event-1',
         name: 'Test Stream',
         video_source: 'youtube',
         video_url: 'https://youtube.com/watch?v=test',
@@ -145,7 +145,7 @@ describe('Archive UI Store', () => {
     it('should open analyze dialog with stream', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        sub_event_id: 'event-1',
+        event_id: 'event-1',
         name: 'Test Stream',
         video_source: 'youtube',
         video_url: 'https://youtube.com/watch?v=test',
@@ -165,7 +165,7 @@ describe('Archive UI Store', () => {
     it('should close analyze dialog and clear stream', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        sub_event_id: 'event-1',
+        event_id: 'event-1',
         name: 'Test Stream',
         video_source: 'youtube',
         video_url: 'https://youtube.com/watch?v=test',
