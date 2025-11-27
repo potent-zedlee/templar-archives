@@ -10,13 +10,12 @@
 // ==================== Required Environment Variables ====================
 
 const REQUIRED_ENV_VARS = [
-  'NEXT_PUBLIC_SUPABASE_URL',
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_FIREBASE_API_KEY',
+  'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
 ] as const
 
 const REQUIRED_SERVER_ENV_VARS = [
-  'SUPABASE_SERVICE_ROLE_KEY',
-  'CLAUDE_API_KEY',
+  'FIREBASE_SERVICE_ACCOUNT_KEY',
 ] as const
 
 // ==================== Validation ====================
@@ -81,38 +80,27 @@ function getEnvVarSafe(key: string, fallback: string = ''): string {
 // ==================== Exported Environment Variables ====================
 
 /**
- * Supabase 환경 변수 (Lazy Evaluation)
- *
- * 사용법:
- * - url: supabaseEnv.url (빌드 타임에 안전)
- * - serviceRoleKey: supabaseEnv.getServiceRoleKey() (런타임에만 호출)
+ * Firebase 환경 변수 (Lazy Evaluation)
  */
-export const supabaseEnv = {
-  get url() {
-    return getEnvVar('NEXT_PUBLIC_SUPABASE_URL')
+export const firebaseEnv = {
+  get apiKey() {
+    return getEnvVarSafe('NEXT_PUBLIC_FIREBASE_API_KEY', '')
   },
-  get anonKey() {
-    return getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  get projectId() {
+    return getEnvVarSafe('NEXT_PUBLIC_FIREBASE_PROJECT_ID', '')
+  },
+  get authDomain() {
+    return getEnvVarSafe('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', '')
+  },
+  get storageBucket() {
+    return getEnvVarSafe('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', '')
   },
   // Server-only: 런타임에 호출해야 함
-  getServiceRoleKey(): string {
+  getServiceAccountKey(): string {
     if (typeof window !== 'undefined') {
       return '' // 클라이언트에서는 빈 문자열
     }
-    return getEnvVarSafe('SUPABASE_SERVICE_ROLE_KEY')
-  },
-}
-
-/**
- * Claude API 환경 변수 (Lazy Evaluation)
- */
-export const claudeEnv = {
-  // Server-only: 런타임에 호출해야 함
-  getApiKey(): string {
-    if (typeof window !== 'undefined') {
-      return '' // 클라이언트에서는 빈 문자열
-    }
-    return getEnvVarSafe('CLAUDE_API_KEY')
+    return getEnvVarSafe('FIREBASE_SERVICE_ACCOUNT_KEY')
   },
 }
 
