@@ -34,7 +34,7 @@ npx playwright test e2e/archive.spec.ts   # 단일 파일
 # Firebase 에뮬레이터 (로컬 개발)
 firebase emulators:start
 
-# Firebase Hosting 배포 (자동: Cloud Build, 수동: 아래 명령어)
+# Firebase Hosting 배포 (자동: GitHub Actions, 수동: 아래 명령어)
 firebase deploy --only hosting
 
 # Cloud Functions 배포
@@ -45,11 +45,6 @@ cd cloud-run && ./deploy.sh
 
 # 번들 분석
 npm run analyze
-
-# Admin CLI
-npm run admin -- --action=diagnose        # 전체 시스템 진단
-npm run admin -- --action=check-db        # DB 상태
-npm run admin -- --action=check-jobs      # 분석 작업 상태
 ```
 
 ---
@@ -63,11 +58,9 @@ npm run admin -- --action=check-jobs      # 분석 작업 상태
 | State | React Query 5, Zustand 5 |
 | Database | Firebase Firestore (NoSQL) |
 | Auth | Firebase Auth (Google OAuth) |
-| Search | Algolia (전체텍스트 검색) |
 | AI | Vertex AI Gemini 2.5 Flash |
 | Background Jobs | Cloud Run + Cloud Tasks |
-| Video | GCS 직접 업로드, fluent-ffmpeg |
-| Functions | Firebase Cloud Functions (트리거) |
+| Video | GCS 직접 업로드 |
 | Hosting | Firebase Hosting (GitHub Actions CI/CD) |
 
 **Node.js**: >=22.0.0
@@ -135,7 +128,7 @@ Tournament → Event → Stream → Hand
 **핵심 모듈**:
 | 파일 | 역할 |
 |------|------|
-| `app/actions/kan-trigger.ts` | Server Action - 분석 시작 |
+| `app/actions/cloud-run-trigger.ts` | Server Action - Cloud Run 분석 시작 |
 | `cloud-run/orchestrator/` | Cloud Run - 작업 관리, 세그먼트 분할 |
 | `cloud-run/segment-analyzer/` | Cloud Run - FFmpeg + Gemini 분석 |
 | `lib/video/vertex-analyzer.ts` | Vertex AI Gemini 분석 및 JSON 파싱 |
@@ -227,10 +220,8 @@ Git Push (main) → GitHub Actions → npm ci → npm run build → firebase dep
 ```
 
 **GitHub Secrets 필요**:
-- `FIREBASE_TOKEN`, `FIREBASE_SERVICE_ACCOUNT`
-- `GOOGLE_APPLICATION_CREDENTIALS`
+- `FIREBASE_SERVICE_ACCOUNT`
 - `NEXT_PUBLIC_FIREBASE_*` (6개)
-- `CLOUD_RUN_ORCHESTRATOR_URL`, `GOOGLE_API_KEY`
 
 ---
 
@@ -257,18 +248,38 @@ gh run view <run-id> --log-failed
 
 ---
 
+## Firestore 컬렉션 구조
+
+```
+tournaments/
+  └── events/ (subcollection)
+      └── streams/ (subcollection)
+
+hands/                    # 핸드 데이터 (players, actions 임베딩)
+players/                  # 플레이어 프로필
+users/                    # 사용자 정보, 역할
+  └── notifications/
+  └── bookmarks/
+posts/                    # 커뮤니티 게시글
+  └── comments/
+  └── likes/
+analysisJobs/             # Cloud Run 분석 작업 상태
+categories/               # 카테고리 마스터
+systemConfigs/            # 시스템 설정 (Admin 전용)
+```
+
+---
+
 ## 참고 문서
 
 | 문서 | 설명 |
 |------|------|
 | `docs/POKER_DOMAIN.md` | 포커 도메인 지식 |
-| `docs/FIRESTORE_SCHEMA.md` | Firestore 컬렉션 구조 |
 | `docs/REACT_QUERY_GUIDE.md` | 데이터 페칭 패턴 |
 | `docs/DESIGN_SYSTEM.md` | 디자인 시스템 |
-| `docs/DEPLOYMENT.md` | 배포 가이드 |
 | `firestore.rules` | Firebase Security Rules |
 
 ---
 
 **마지막 업데이트**: 2025-11-27
-**문서 버전**: 4.2 (Firebase Hosting + GitHub Actions CI/CD)
+**문서 버전**: 4.3 (Supabase/Trigger.dev 완전 제거)
