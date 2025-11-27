@@ -197,11 +197,15 @@ async function saveSingleHand(
     }
   }
 
+  // playerIds 배열 생성 (array-contains 쿼리용)
+  const playerIds = playersEmbedded.map((p) => p.playerId)
+
   // 핸드 문서 저장 (Firestore 스키마에 맞게)
   await handRef.set({
     streamId,
     eventId: '', // 나중에 업데이트
     tournamentId: '', // 나중에 업데이트
+    playerIds, // array-contains 쿼리용
     number: String(hand.handNumber),
     description: generateHandDescription(hand),
     timestamp: formatTimestampDisplay(hand),

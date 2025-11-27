@@ -459,14 +459,14 @@ export function useHandsInfiniteQuery(streamId: string | null) {
 
 /**
  * Firestore에서 미분류 비디오 목록을 가져옵니다
- * unsortedVideos 컬렉션에서 조회
+ * streams 컬렉션에서 조회 (COLLECTION_PATHS.UNSORTED_STREAMS)
  *
  * @returns UnsortedVideo[]
  */
 async function fetchUnsortedVideosFirestore(): Promise<UnsortedVideo[]> {
   try {
-    // unsortedVideos 컬렉션 조회 (eventId가 없는 스트림)
-    const unsortedRef = collection(db, 'unsortedVideos')
+    // streams 컬렉션 조회 (eventId가 없는 미분류 스트림)
+    const unsortedRef = collection(db, 'streams')
     const unsortedQuery = query(unsortedRef, orderBy('createdAt', 'desc'))
     const snapshot = await getDocs(unsortedQuery)
 

@@ -383,11 +383,15 @@ async function saveHandsToDatabase(
         })
       }
 
+      // playerIds 배열 생성 (array-contains 쿼리용)
+      const playerIds = playersEmbedded.map((p) => p.playerId)
+
       // 핸드 저장
       await handRef.set({
         streamId,
         eventId: '',
         tournamentId: '',
+        playerIds, // array-contains 쿼리용
         number: hand.number,
         timestamp: hand.timestamp_start || '',
         videoTimestampStart: hand.absolute_timestamp_start ?? null,

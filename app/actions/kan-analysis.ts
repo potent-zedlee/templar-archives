@@ -423,11 +423,15 @@ async function saveHandToDatabase(
   const boardTurn = hand.board?.turn || null
   const boardRiver = hand.board?.river || null
 
+  // playerIds 배열 생성 (array-contains 쿼리용)
+  const playerIds = players.map((p) => p.playerId)
+
   // Hand 문서 생성
   const handData: Partial<FirestoreHand> = {
     streamId,
     eventId,
     tournamentId,
+    playerIds, // array-contains 쿼리용
     number: String(hand.handNumber),
     description: generateHandDescription(hand),
     timestamp: formatTimestampDisplay(hand), // 사용자 표시용 타임코드

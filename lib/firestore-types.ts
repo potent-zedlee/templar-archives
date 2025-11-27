@@ -490,6 +490,8 @@ export interface FirestoreUser {
  * Collection: /users/{userId}/notifications/{notificationId}
  */
 export interface FirestoreNotification {
+  /** 수신자 ID (Security Rules에서 사용) */
+  recipientId: string
   /** 알림 타입 */
   type: 'comment' | 'like' | 'mention' | 'system'
   /** 알림 제목 */
