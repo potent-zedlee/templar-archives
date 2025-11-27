@@ -1,8 +1,10 @@
+'use client'
+
 /**
- * Tournament Categories React Query Hooks (Firestore Version)
+ * Tournament Categories React Query Hooks (Firestore Client SDK)
  *
  * 토너먼트 카테고리 관리를 위한 React Query hooks
- * Supabase에서 Firestore로 마이그레이션됨
+ * firebase-admin에서 클라이언트 Firebase SDK로 변환됨
  *
  * @module lib/queries/category-queries
  */
@@ -19,12 +21,11 @@ import {
   query,
   where,
   orderBy,
-  type Timestamp,
-  serverTimestamp,
+  getCountFromServer,
+  Timestamp,
   type QueryConstraint,
-  getCountFromServer
 } from 'firebase/firestore'
-import { firestore } from '@/lib/firebase'
+import { db } from '@/lib/firebase'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'
 import type { FirestoreCategory } from '@/lib/firestore-types'
 import { toast } from 'sonner'
@@ -125,7 +126,7 @@ async function getAllCategoriesFirestore(
       constraints.push(where('gameType', 'in', [gameType, 'both']))
     }
 
-    const q = query(collection(firestore, COLLECTION_PATHS.CATEGORIES), ...constraints)
+    const q = query(collection(db, COLLECTION_PATHS.CATEGORIES), ...constraints)
     const snapshot = await getDocs(q)
     return snapshot.docs.map(mapFirestoreCategory)
   } catch (error) {
@@ -157,7 +158,7 @@ async function getCategoriesByRegionFirestore(
  */
 async function getCategoryByIdFirestore(id: string): Promise<TournamentCategory | null> {
   try {
-    const docRef = doc(firestore, COLLECTION_PATHS.CATEGORIES, id)
+    const docRef = doc(db, COLLECTION_PATHS.CATEGORIES, id)
     const docSnap = await getDoc(docRef)
 
     if (!docSnap.exists()) {
@@ -176,11 +177,10 @@ async function getCategoryByIdFirestore(id: string): Promise<TournamentCategory 
  */
 async function getCategoryUsageCountFirestore(categoryId: string): Promise<number> {
   try {
-    const q = query(
-      collection(firestore, COLLECTION_PATHS.TOURNAMENTS),
-      where('categoryInfo.id', '==', categoryId)
-    )
+    const tournamentsRef = collection(db, COLLECTION_PATHS.TOURNAMENTS)
+    const q = query(tournamentsRef, where('categoryInfo.id', '==', categoryId))
     const snapshot = await getCountFromServer(q)
+
     return snapshot.data().count
   } catch (error) {
     console.error('Error fetching category usage count from Firestore:', error)
@@ -193,8 +193,8 @@ async function getCategoryUsageCountFirestore(categoryId: string): Promise<numbe
  */
 async function getAllCategoryUsageCountsFirestore(): Promise<Record<string, number>> {
   try {
-    const q = query(collection(firestore, COLLECTION_PATHS.TOURNAMENTS))
-    const snapshot = await getDocs(q)
+    const tournamentsRef = collection(db, COLLECTION_PATHS.TOURNAMENTS)
+    const snapshot = await getDocs(tournamentsRef)
 
     const counts: Record<string, number> = {}
     snapshot.docs.forEach((docSnap) => {
@@ -222,10 +222,8 @@ async function searchCategoriesFirestore(searchQuery: string): Promise<Tournamen
     const lowerQuery = searchQuery.toLowerCase()
 
     // Firestore는 부분 일치 검색을 직접 지원하지 않으므로 모든 활성 카테고리를 가져와서 필터링
-    const q = query(
-      collection(firestore, COLLECTION_PATHS.CATEGORIES),
-      where('isActive', '==', true)
-    )
+    const categoriesRef = collection(db, COLLECTION_PATHS.CATEGORIES)
+    const q = query(categoriesRef, where('isActive', '==', true))
     const snapshot = await getDocs(q)
 
     const categories = snapshot.docs.map(mapFirestoreCategory)
@@ -256,6 +254,7 @@ async function createCategoryFirestore(input: CategoryInput): Promise<Tournament
       throw new Error(`카테고리 ID "${input.id}"가 이미 존재합니다.`)
     }
 
+    const now = Timestamp.now()
     const categoryData = {
       name: input.name,
       displayName: input.display_name,
@@ -269,11 +268,11 @@ async function createCategoryFirestore(input: CategoryInput): Promise<Tournament
       themeText: input.theme_text || null,
       themeShadow: input.theme_shadow || null,
       order: 0, // 기본값
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+      createdAt: now,
+      updatedAt: now,
     }
 
-    const docRef = doc(firestore, COLLECTION_PATHS.CATEGORIES, input.id)
+    const docRef = doc(db, COLLECTION_PATHS.CATEGORIES, input.id)
     await setDoc(docRef, categoryData)
 
     const docSnap = await getDoc(docRef)
@@ -293,7 +292,7 @@ async function updateCategoryFirestore(
 ): Promise<TournamentCategory> {
   try {
     const updateData: any = {
-      updatedAt: serverTimestamp(),
+      updatedAt: Timestamp.now(),
     }
 
     if (input.name !== undefined) updateData.name = input.name
@@ -308,7 +307,7 @@ async function updateCategoryFirestore(
     if (input.theme_text !== undefined) updateData.themeText = input.theme_text || null
     if (input.theme_shadow !== undefined) updateData.themeShadow = input.theme_shadow || null
 
-    const docRef = doc(firestore, COLLECTION_PATHS.CATEGORIES, id)
+    const docRef = doc(db, COLLECTION_PATHS.CATEGORIES, id)
     await updateDoc(docRef, updateData)
 
     const docSnap = await getDoc(docRef)
@@ -334,7 +333,7 @@ async function deleteCategoryFirestore(id: string): Promise<void> {
       throw new Error(`카테고리가 ${usageCount}개의 토너먼트에서 사용 중이므로 삭제할 수 없습니다.`)
     }
 
-    const docRef = doc(firestore, COLLECTION_PATHS.CATEGORIES, id)
+    const docRef = doc(db, COLLECTION_PATHS.CATEGORIES, id)
     await deleteDoc(docRef)
   } catch (error) {
     console.error('Error deleting category from Firestore:', error)
@@ -372,10 +371,7 @@ async function reorderCategoriesFirestore(categoryIds: string[]): Promise<Tourna
  * 로고 업로드
  * Note: Firestore는 파일 저장소가 아니므로 Firebase Storage 또는 GCS 사용 필요
  */
-async function uploadCategoryLogoFirestore(
-  categoryId: string,
-  file: File
-): Promise<string> {
+async function uploadCategoryLogoFirestore(categoryId: string, file: File): Promise<string> {
   // TODO: Firebase Storage 또는 GCS로 업로드 구현 필요
   throw new Error('uploadCategoryLogo: Firebase Storage 연동 필요')
 }
