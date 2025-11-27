@@ -1,19 +1,176 @@
 /**
- * Archive React Query Hooks
+ * Archive React Query Hooks (Firestore Version)
  *
  * Archive 페이지의 데이터 페칭을 위한 React Query hooks
- * Phase 33: Comprehensive Sorting & Type Safety Enhancement
+ * Supabase에서 Firestore로 마이그레이션됨
+ *
+ * @module lib/queries/archive-queries
  */
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
-import { createClientSupabaseClient } from '@/lib/supabase-client'
-import { fetchTournamentsTree } from '@/lib/queries'
-import { getUnsortedVideos } from '@/lib/unsorted-videos'
-import type { Tournament, Hand, UnsortedVideo } from '@/lib/types/archive'
+import { adminFirestore } from '@/lib/firebase-admin'
+import { COLLECTION_PATHS } from '@/lib/firestore-types'
+import type {
+  FirestoreTournament,
+  FirestoreEvent,
+  FirestoreStream,
+  FirestoreHand,
+} from '@/lib/firestore-types'
+import type { Tournament, Hand, UnsortedVideo, Event, Stream } from '@/lib/types/archive'
 import type { ServerSortParams } from '@/lib/types/sorting'
-import { getSupabaseRange } from '@/hooks/useServerSorting'
+import type { Timestamp } from 'firebase-admin/firestore'
 
-const supabase = createClientSupabaseClient()
+// ==================== Helper Functions ====================
+
+/**
+ * Firestore Timestamp을 ISO 문자열로 변환
+ */
+function timestampToString(timestamp: Timestamp | undefined): string | undefined {
+  if (!timestamp) return undefined
+  return timestamp.toDate().toISOString()
+}
+
+/**
+ * FirestoreTournament을 Tournament 타입으로 변환
+ */
+function mapFirestoreTournament(
+  doc: FirebaseFirestore.DocumentSnapshot,
+  events: Event[] = []
+): Tournament {
+  const data = doc.data() as FirestoreTournament
+  return {
+    id: doc.id,
+    name: data.name,
+    category: data.category,
+    category_id: data.categoryInfo?.id,
+    category_logo: data.categoryInfo?.logo,
+    category_logo_url: data.categoryInfo?.logo,
+    location: data.location,
+    city: data.city,
+    country: data.country,
+    game_type: data.gameType,
+    start_date: timestampToString(data.startDate) || '',
+    end_date: timestampToString(data.endDate) || '',
+    total_prize: data.totalPrize,
+    status: data.status,
+    created_at: timestampToString(data.createdAt),
+    events,
+    expanded: true,
+  }
+}
+
+/**
+ * FirestoreEvent을 Event 타입으로 변환
+ */
+function mapFirestoreEvent(
+  doc: FirebaseFirestore.DocumentSnapshot,
+  tournamentId: string,
+  streams: Stream[] = []
+): Event {
+  const data = doc.data() as FirestoreEvent
+  return {
+    id: doc.id,
+    tournament_id: tournamentId,
+    name: data.name,
+    date: timestampToString(data.date) || '',
+    event_number: data.eventNumber,
+    total_prize: data.totalPrize,
+    winner: data.winner,
+    buy_in: data.buyIn,
+    entry_count: data.entryCount,
+    blind_structure: data.blindStructure,
+    level_duration: data.levelDuration,
+    starting_stack: data.startingStack,
+    notes: data.notes,
+    status: data.status,
+    created_at: timestampToString(data.createdAt),
+    streams,
+    expanded: false,
+  }
+}
+
+/**
+ * FirestoreStream을 Stream 타입으로 변환
+ */
+function mapFirestoreStream(
+  doc: FirebaseFirestore.DocumentSnapshot,
+  eventId: string
+): Stream {
+  const data = doc.data() as FirestoreStream
+  return {
+    id: doc.id,
+    event_id: eventId,
+    name: data.name,
+    description: data.description,
+    video_url: data.videoUrl,
+    video_file: data.videoFile,
+    video_source: data.videoSource,
+    status: data.status,
+    gcs_path: data.gcsPath,
+    gcs_uri: data.gcsUri,
+    gcs_file_size: data.gcsFileSize,
+    gcs_uploaded_at: timestampToString(data.gcsUploadedAt),
+    upload_status: data.uploadStatus,
+    video_duration: data.videoDuration,
+    created_at: timestampToString(data.createdAt),
+    player_count: data.stats?.playersCount || 0,
+    hand_count: data.stats?.handsCount || 0,
+    selected: false,
+  }
+}
+
+/**
+ * FirestoreHand을 Hand 타입으로 변환
+ */
+function mapFirestoreHand(doc: FirebaseFirestore.DocumentSnapshot): Hand {
+  const data = doc.data() as FirestoreHand
+  return {
+    id: doc.id,
+    day_id: data.streamId,
+    number: data.number,
+    description: data.description,
+    ai_summary: data.aiSummary,
+    timestamp: data.timestamp,
+    board_flop: data.boardFlop,
+    board_turn: data.boardTurn,
+    board_river: data.boardRiver,
+    pot_size: data.potSize,
+    small_blind: data.smallBlind,
+    big_blind: data.bigBlind,
+    ante: data.ante,
+    pot_preflop: data.potPreflop,
+    pot_flop: data.potFlop,
+    pot_turn: data.potTurn,
+    pot_river: data.potRiver,
+    video_timestamp_start: data.videoTimestampStart,
+    video_timestamp_end: data.videoTimestampEnd,
+    job_id: data.jobId,
+    favorite: data.favorite,
+    thumbnail_url: data.thumbnailUrl,
+    likes_count: data.engagement?.likesCount,
+    bookmarks_count: data.engagement?.bookmarksCount,
+    created_at: timestampToString(data.createdAt),
+    hand_players: data.players?.map((p) => ({
+      id: p.playerId,
+      hand_id: doc.id,
+      player_id: p.playerId,
+      poker_position: p.position,
+      seat: p.seat,
+      hole_cards: p.cards,
+      cards: p.cards,
+      starting_stack: p.startStack,
+      ending_stack: p.endStack,
+      hand_description: p.handDescription,
+      is_winner: p.isWinner,
+      player: {
+        id: p.playerId,
+        name: p.name,
+        normalized_name: p.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      },
+    })),
+    checked: false,
+  }
+}
 
 // ==================== Query Keys ====================
 
@@ -21,8 +178,8 @@ export const archiveKeys = {
   all: ['archive'] as const,
   tournaments: (gameType?: 'tournament' | 'cash-game', sortParams?: Partial<ServerSortParams>) =>
     gameType
-      ? [...archiveKeys.all, 'tournaments', gameType, sortParams] as const
-      : [...archiveKeys.all, 'tournaments', sortParams] as const,
+      ? ([...archiveKeys.all, 'tournaments', gameType, sortParams] as const)
+      : ([...archiveKeys.all, 'tournaments', sortParams] as const),
   hands: (streamId: string) => [...archiveKeys.all, 'hands', streamId] as const,
   handsInfinite: (streamId: string) => [...archiveKeys.all, 'hands-infinite', streamId] as const,
   unsortedVideos: (sortParams?: Partial<ServerSortParams>) =>
@@ -33,9 +190,92 @@ export const archiveKeys = {
 // ==================== Tournaments Query ====================
 
 /**
+ * Firestore에서 토너먼트 트리 구조를 가져옵니다
+ * 서브컬렉션 (events, streams)을 포함한 계층 구조 반환
+ *
+ * @param gameType - 필터링할 게임 타입 (tournament | cash-game)
+ * @returns Tournament[] with nested events and streams
+ */
+async function fetchTournamentsTreeFirestore(
+  gameType?: 'tournament' | 'cash-game'
+): Promise<Tournament[]> {
+  try {
+    // 1. 토너먼트 목록 조회
+    let tournamentsQuery = adminFirestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .orderBy('startDate', 'desc')
+
+    // gameType 필터 적용
+    if (gameType) {
+      tournamentsQuery = tournamentsQuery.where('gameType', '==', gameType) as FirebaseFirestore.Query
+    }
+
+    const tournamentsSnapshot = await tournamentsQuery.get()
+
+    // 2. 각 토너먼트의 이벤트와 스트림을 병렬로 조회
+    const tournamentPromises = tournamentsSnapshot.docs.map(async (tournamentDoc) => {
+      const tournamentData = tournamentDoc.data() as FirestoreTournament
+
+      // 상태 필터: published 또는 status가 없는 경우만 표시
+      if (tournamentData.status && tournamentData.status !== 'published') {
+        return null
+      }
+
+      // 이벤트 조회
+      const eventsSnapshot = await adminFirestore
+        .collection(COLLECTION_PATHS.EVENTS(tournamentDoc.id))
+        .orderBy('date', 'desc')
+        .get()
+
+      const events: Event[] = []
+
+      // 각 이벤트의 스트림 조회
+      for (const eventDoc of eventsSnapshot.docs) {
+        const eventData = eventDoc.data() as FirestoreEvent
+
+        // 상태 필터
+        if (eventData.status && eventData.status !== 'published') {
+          continue
+        }
+
+        // 스트림 조회
+        const streamsSnapshot = await adminFirestore
+          .collection(COLLECTION_PATHS.STREAMS(tournamentDoc.id, eventDoc.id))
+          .orderBy('publishedAt', 'desc')
+          .get()
+
+        const streams: Stream[] = streamsSnapshot.docs
+          .map((streamDoc) => {
+            const streamData = streamDoc.data() as FirestoreStream
+            // 상태 필터
+            if (streamData.status && streamData.status !== 'published') {
+              return null
+            }
+            return mapFirestoreStream(streamDoc, eventDoc.id)
+          })
+          .filter((s): s is Stream => s !== null)
+
+        events.push(mapFirestoreEvent(eventDoc, tournamentDoc.id, streams))
+      }
+
+      return mapFirestoreTournament(tournamentDoc, events)
+    })
+
+    const results = await Promise.all(tournamentPromises)
+    return results.filter((t): t is Tournament => t !== null)
+  } catch (error) {
+    console.error('Error fetching tournaments tree from Firestore:', error)
+    throw error
+  }
+}
+
+/**
  * Fetch tournaments with sub_events and days
  * Optimized: Increased staleTime as tournament hierarchy changes infrequently
- * Phase 33: Added server-side sorting support
+ * Firestore 버전으로 전환됨
+ *
+ * @param gameType - 필터링할 게임 타입
+ * @param sortParams - 정렬 파라미터
  */
 export function useTournamentsQuery(
   gameType?: 'tournament' | 'cash-game',
@@ -44,20 +284,8 @@ export function useTournamentsQuery(
   return useQuery({
     queryKey: archiveKeys.tournaments(gameType, sortParams),
     queryFn: async () => {
-      const tournamentsData = await fetchTournamentsTree(gameType)
-
-      // Add UI state (expanded, selected)
-      const tournamentsWithUIState = tournamentsData.map((tournament: any) => ({
-        ...tournament,
-        events: tournament.sub_events?.map((event: any) => ({
-          ...event,
-          streams: event.streams?.map((stream: any) => ({ ...stream, selected: false })),
-          expanded: false,
-        })),
-        expanded: true,
-      }))
-
-      return tournamentsWithUIState as Tournament[]
+      const tournamentsData = await fetchTournamentsTreeFirestore(gameType)
+      return tournamentsData
     },
     // Client-side sorting via select option
     select: (data) => {
@@ -65,8 +293,8 @@ export function useTournamentsQuery(
 
       // Apply client-side sorting
       const sorted = [...data].sort((a, b) => {
-        let aValue: any
-        let bValue: any
+        let aValue: string | number | null = null
+        let bValue: string | number | null = null
 
         // Map sortField to actual data field
         switch (sortParams.sortField) {
@@ -116,31 +344,39 @@ export function useTournamentsQuery(
 // ==================== Hands Query ====================
 
 /**
+ * Firestore에서 스트림의 핸드 목록을 가져옵니다
+ *
+ * @param streamId - 스트림 ID
+ * @returns Hand[]
+ */
+async function fetchHandsByStreamFirestore(streamId: string): Promise<Hand[]> {
+  try {
+    const handsSnapshot = await adminFirestore
+      .collection(COLLECTION_PATHS.HANDS)
+      .where('streamId', '==', streamId)
+      .orderBy('createdAt', 'asc')
+      .get()
+
+    return handsSnapshot.docs.map(mapFirestoreHand)
+  } catch (error) {
+    console.error('Error fetching hands from Firestore:', error)
+    throw error
+  }
+}
+
+/**
  * Fetch hands for a specific stream (regular query)
  * Optimized: Increased staleTime as hand data changes infrequently
+ * Firestore 버전으로 전환됨
+ *
+ * @param streamId - 스트림 ID
  */
 export function useHandsQuery(streamId: string | null) {
   return useQuery({
     queryKey: archiveKeys.hands(streamId || ''),
     queryFn: async () => {
       if (!streamId) return []
-
-      const { data, error } = await supabase
-        .from('hands')
-        .select(`
-          *,
-          hand_players(
-            position:poker_position,
-            cards,
-            player:players(name)
-          )
-        `)
-        .eq('day_id', streamId)
-        .order('created_at', { ascending: true })
-
-      if (error) throw error
-
-      return (data || []).map((hand) => ({ ...hand, checked: false })) as Hand[]
+      return fetchHandsByStreamFirestore(streamId)
     },
     enabled: !!streamId,
     staleTime: 5 * 60 * 1000, // 5분 (핸드 데이터는 자주 변경되지 않음)
@@ -151,64 +387,100 @@ export function useHandsQuery(streamId: string | null) {
 /**
  * Fetch hands with infinite scroll
  * Optimized: Increased staleTime as hand data changes infrequently
+ * Firestore 버전으로 전환됨
  */
 const HANDS_PER_PAGE = 50
 
 export function useHandsInfiniteQuery(streamId: string | null) {
   return useInfiniteQuery({
     queryKey: archiveKeys.handsInfinite(streamId || ''),
-    queryFn: async ({ pageParam = 0 }) => {
+    queryFn: async ({ pageParam }) => {
       if (!streamId) return { hands: [], nextCursor: null }
 
-      const from = pageParam * HANDS_PER_PAGE
-      const to = from + HANDS_PER_PAGE - 1
+      // Firestore 페이지네이션: startAfter 사용
+      let query = adminFirestore
+        .collection(COLLECTION_PATHS.HANDS)
+        .where('streamId', '==', streamId)
+        .orderBy('createdAt', 'asc')
+        .limit(HANDS_PER_PAGE)
 
-      const { data, error, count } = await supabase
-        .from('hands')
-        .select(
-          `
-          *,
-          hand_players(
-            position:poker_position,
-            cards,
-            player:players(name)
-          )
-        `,
-          { count: 'exact' }
-        )
-        .eq('day_id', streamId)
-        .order('created_at', { ascending: true })
-        .range(from, to)
+      // 이전 페이지의 마지막 문서부터 시작
+      if (pageParam) {
+        const lastDoc = await adminFirestore
+          .collection(COLLECTION_PATHS.HANDS)
+          .doc(pageParam as string)
+          .get()
+        if (lastDoc.exists) {
+          query = query.startAfter(lastDoc)
+        }
+      }
 
-      if (error) throw error
+      const snapshot = await query.get()
+      const hands = snapshot.docs.map(mapFirestoreHand)
 
-      const hands = (data || []).map((hand) => ({ ...hand, checked: false })) as Hand[]
-      const hasMore = count ? from + HANDS_PER_PAGE < count : false
-      const nextCursor = hasMore ? pageParam + 1 : null
+      // 다음 페이지 커서: 마지막 문서 ID
+      const lastDocId = snapshot.docs.length > 0 ? snapshot.docs[snapshot.docs.length - 1].id : null
+      const hasMore = snapshot.docs.length === HANDS_PER_PAGE
 
-      return { hands, nextCursor }
+      return {
+        hands,
+        nextCursor: hasMore ? lastDocId : null,
+      }
     },
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     enabled: !!streamId,
     staleTime: 5 * 60 * 1000, // 5분 (무한 스크롤 데이터도 자주 변경되지 않음)
     gcTime: 15 * 60 * 1000, // 15분 (메모리에 더 오래 유지)
-    initialPageParam: 0,
+    initialPageParam: null as string | null,
   })
 }
 
 // ==================== Unsorted Videos Query ====================
 
 /**
+ * Firestore에서 미분류 비디오 목록을 가져옵니다
+ * unsortedVideos 컬렉션에서 조회
+ *
+ * @returns UnsortedVideo[]
+ */
+async function fetchUnsortedVideosFirestore(): Promise<UnsortedVideo[]> {
+  try {
+    // unsortedVideos 컬렉션 조회 (eventId가 없는 스트림)
+    const snapshot = await adminFirestore
+      .collection('unsortedVideos')
+      .orderBy('createdAt', 'desc')
+      .get()
+
+    return snapshot.docs.map((doc) => {
+      const data = doc.data()
+      return {
+        id: doc.id,
+        name: data.name || '',
+        video_url: data.videoUrl,
+        video_file: data.videoFile,
+        video_source: data.videoSource || 'youtube',
+        published_at: timestampToString(data.publishedAt),
+        created_at: timestampToString(data.createdAt) || new Date().toISOString(),
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching unsorted videos from Firestore:', error)
+    return []
+  }
+}
+
+/**
  * Fetch unsorted videos
  * Optimized: Increased staleTime for better caching
- * Phase 33: Added server-side sorting support
+ * Firestore 버전으로 전환됨
+ *
+ * @param sortParams - 정렬 파라미터
  */
 export function useUnsortedVideosQuery(sortParams?: Partial<ServerSortParams>) {
   return useQuery({
     queryKey: archiveKeys.unsortedVideos(sortParams),
     queryFn: async () => {
-      const videos = await getUnsortedVideos()
-      return videos as UnsortedVideo[]
+      return fetchUnsortedVideosFirestore()
     },
     // Client-side sorting via select option
     select: (data) => {
@@ -216,8 +488,8 @@ export function useUnsortedVideosQuery(sortParams?: Partial<ServerSortParams>) {
 
       // Apply client-side sorting
       const sorted = [...data].sort((a, b) => {
-        let aValue: any
-        let bValue: any
+        let aValue: string | number | null = null
+        let bValue: string | number | null = null
 
         // Map sortField to actual data field
         switch (sortParams.sortField) {
@@ -226,8 +498,8 @@ export function useUnsortedVideosQuery(sortParams?: Partial<ServerSortParams>) {
             bValue = b.name
             break
           case 'source':
-            aValue = a.source
-            bValue = b.source
+            aValue = a.video_source
+            bValue = b.video_source
             break
           case 'created':
             aValue = new Date(a.created_at || 0).getTime()
@@ -269,18 +541,20 @@ export function useUnsortedVideosQuery(sortParams?: Partial<ServerSortParams>) {
 
 /**
  * Toggle hand favorite (Optimistic Update)
+ * Firestore 버전으로 전환됨
+ *
+ * @param streamId - 스트림 ID (캐시 무효화용)
  */
 export function useFavoriteHandMutation(streamId: string | null) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: async ({ handId, favorite }: { handId: string; favorite: boolean }) => {
-      const { error } = await supabase
-        .from('hands')
-        .update({ favorite })
-        .eq('id', handId)
-
-      if (error) throw error
+      // Firestore에서 핸드 문서 업데이트
+      await adminFirestore.collection(COLLECTION_PATHS.HANDS).doc(handId).update({
+        favorite,
+        updatedAt: new Date(),
+      })
     },
     onMutate: async ({ handId, favorite }) => {
       if (!streamId) return
@@ -298,7 +572,8 @@ export function useFavoriteHandMutation(streamId: string | null) {
 
       return { previousHands }
     },
-    onError: (err, variables, context) => {
+    onError: (err, _variables, context) => {
+      console.error('Error toggling favorite:', err)
       if (streamId && context?.previousHands) {
         queryClient.setQueryData(archiveKeys.hands(streamId), context.previousHands)
       }
@@ -313,6 +588,8 @@ export function useFavoriteHandMutation(streamId: string | null) {
 
 /**
  * Toggle hand checked (local state only, no server update)
+ *
+ * @param streamId - 스트림 ID (캐시 업데이트용)
  */
 export function useCheckHandMutation(streamId: string | null) {
   const queryClient = useQueryClient()
@@ -342,6 +619,9 @@ export function useCheckHandMutation(streamId: string | null) {
 /**
  * Fetch players for a specific stream (day)
  * Returns unique players who participated in any hand in the stream
+ * Firestore 버전으로 전환됨
+ *
+ * @param streamId - 스트림 ID
  */
 export function useStreamPlayersQuery(streamId: string | null) {
   return useQuery({
@@ -349,24 +629,11 @@ export function useStreamPlayersQuery(streamId: string | null) {
     queryFn: async () => {
       if (!streamId) return []
 
-      // 핸드 데이터와 플레이어 정보를 조회
-      const { data: handsData, error: handsError } = await supabase
-        .from('hands')
-        .select(`
-          id,
-          hand_players(
-            player_id,
-            player:players(
-              id,
-              name,
-              photo_url,
-              country
-            )
-          )
-        `)
-        .eq('day_id', streamId)
-
-      if (handsError) throw handsError
+      // 해당 스트림의 핸드 조회
+      const handsSnapshot = await adminFirestore
+        .collection(COLLECTION_PATHS.HANDS)
+        .where('streamId', '==', streamId)
+        .get()
 
       // 플레이어 중복 제거 및 핸드 수 계산
       const playerMap = new Map<
@@ -380,25 +647,33 @@ export function useStreamPlayersQuery(streamId: string | null) {
         }
       >()
 
-      handsData.forEach((hand) => {
-        hand.hand_players?.forEach((hp: any) => {
-          const player = hp.player
-          if (player) {
-            const existing = playerMap.get(player.id)
-            if (existing) {
-              existing.hand_count++
-            } else {
-              playerMap.set(player.id, {
-                id: player.id,
-                name: player.name,
-                photo_url: player.photo_url,
-                country: player.country,
-                hand_count: 1,
-              })
-            }
+      // 각 핸드의 플레이어 정보 수집
+      for (const handDoc of handsSnapshot.docs) {
+        const handData = handDoc.data() as FirestoreHand
+        const players = handData.players || []
+
+        for (const player of players) {
+          const existing = playerMap.get(player.playerId)
+          if (existing) {
+            existing.hand_count++
+          } else {
+            // 플레이어 상세 정보 조회
+            const playerDoc = await adminFirestore
+              .collection(COLLECTION_PATHS.PLAYERS)
+              .doc(player.playerId)
+              .get()
+
+            const playerData = playerDoc.data()
+            playerMap.set(player.playerId, {
+              id: player.playerId,
+              name: player.name,
+              photo_url: playerData?.photoUrl || null,
+              country: playerData?.country || null,
+              hand_count: 1,
+            })
           }
-        })
-      })
+        }
+      }
 
       // 핸드 수 내림차순 정렬
       return Array.from(playerMap.values()).sort((a, b) => b.hand_count - a.hand_count)
