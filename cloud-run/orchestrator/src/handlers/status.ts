@@ -7,7 +7,7 @@
 
 import type { Context } from 'hono'
 import { Firestore } from '@google-cloud/firestore'
-import type { AnalysisJob, JobStatusResponse } from '../../shared/src/types'
+import type { AnalysisJob, JobStatusResponse } from '../types'
 
 const firestore = new Firestore({
   projectId: process.env.GOOGLE_CLOUD_PROJECT,

@@ -7,14 +7,18 @@ WORKDIR /app
 # 패키지 파일 복사
 COPY package*.json ./
 
-# 의존성 설치
-RUN npm ci --only=production
+# 전체 의존성 설치 (빌드용 devDependencies 포함)
+RUN npm install
 
 # 소스 코드 복사
-COPY . .
+COPY tsconfig.json ./
+COPY src ./src
 
 # TypeScript 빌드
 RUN npm run build
+
+# 프로덕션 의존성만 남기기
+RUN npm prune --omit=dev
 
 # 환경 변수
 ENV NODE_ENV=production

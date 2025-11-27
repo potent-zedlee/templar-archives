@@ -13,7 +13,7 @@ import { Firestore } from '@google-cloud/firestore'
 import { vertexAnalyzer } from '../lib/vertex-analyzer'
 import { gcsSegmentExtractor } from '../lib/gcs-segment-extractor'
 import { saveHandsToDatabase } from '../lib/hand-saver'
-import type { ProcessSegmentRequest, AnalysisJob, SegmentInfo } from '../../../shared/src/types'
+import type { ProcessSegmentRequest, AnalysisJob, SegmentInfo } from '../types'
 
 const firestore = new Firestore({
   projectId: process.env.GOOGLE_CLOUD_PROJECT,

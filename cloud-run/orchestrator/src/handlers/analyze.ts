@@ -10,7 +10,7 @@ import type { Context } from 'hono'
 import { v4 as uuidv4 } from 'uuid'
 import { Firestore } from '@google-cloud/firestore'
 import { CloudTasksClient } from '@google-cloud/tasks'
-import type { AnalysisJob, AnalyzeRequest, SegmentInfo, ProcessSegmentRequest } from '../../shared/src/types'
+import type { AnalysisJob, AnalyzeRequest, SegmentInfo, ProcessSegmentRequest } from '../types'
 
 const firestore = new Firestore({
   projectId: process.env.GOOGLE_CLOUD_PROJECT,

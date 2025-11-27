@@ -5,10 +5,13 @@
  * Cloud Run 환경에 최적화
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import type { ExtractedHand } from './vertex-analyzer'
 
-function createSupabaseClient() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>
+
+function createSupabaseClient(): AnySupabaseClient {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
@@ -100,7 +103,7 @@ export async function updateStreamStatus(
 }
 
 async function saveSingleHand(
-  supabase: ReturnType<typeof createClient>,
+  supabase: AnySupabaseClient,
   streamId: string,
   hand: ExtractedHand
 ): Promise<void> {
@@ -160,6 +163,11 @@ async function saveSingleHand(
         }
 
         existingPlayer = newPlayer
+      }
+
+      if (!existingPlayer) {
+        console.warn(`[HandSaver] Could not find or create player: ${player.name}`)
+        continue
       }
 
       const playerId = existingPlayer.id

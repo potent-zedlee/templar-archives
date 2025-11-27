@@ -9,8 +9,8 @@
     "dev": "tsx watch src/index.ts"
   },
   "dependencies": {
-    "@google-cloud/firestore": "^7.11.0",
-    "@google-cloud/storage": "^7.14.0",
+    "@google-cloud/firestore": "^8.0.0",
+    "@google-cloud/storage": "^7.17.3",
     "@google/genai": "^1.0.1",
     "@hono/node-server": "^1.13.7",
     "@supabase/supabase-js": "^2.49.1",
