@@ -1,11 +1,72 @@
 /**
  * Community React Query Hooks
  *
- * Community 페이지 (상세)의 데이터 페칭을 위한 React Query hooks
+ * Community 페이지 (상세)의 데이터 페칭을 위한 React Query hooks (Firestore)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { fetchPost, togglePostLike, type Post } from '@/lib/supabase-community'
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  query,
+  where,
+  increment,
+  updateDoc,
+  Timestamp,
+  DocumentData,
+  QueryDocumentSnapshot,
+  serverTimestamp,
+} from 'firebase/firestore'
+import { firestore, auth } from '@/lib/firebase'
+import type { FirestorePost, AuthorInfo } from '@/lib/firestore-types'
+
+// ==================== Types ====================
+
+export type Post = {
+  id: string
+  title: string
+  content: string
+  author: AuthorInfo
+  stats: {
+    likesCount: number
+    commentsCount: number
+  }
+  tags?: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+// ==================== Converters ====================
+
+const postConverter = {
+  toFirestore(post: Partial<FirestorePost>): DocumentData {
+    return {
+      ...post,
+      createdAt: post.createdAt || serverTimestamp(),
+      updatedAt: post.updatedAt || serverTimestamp(),
+    }
+  },
+  fromFirestore(snapshot: QueryDocumentSnapshot): Post {
+    const data = snapshot.data() as FirestorePost
+    return {
+      id: snapshot.id,
+      title: data.title,
+      content: data.content,
+      author: data.author,
+      stats: {
+        likesCount: data.stats.likesCount,
+        commentsCount: data.stats.commentsCount,
+      },
+      tags: data.tags,
+      createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
+      updatedAt: (data.updatedAt as Timestamp).toDate().toISOString(),
+    }
+  }
+}
 
 // ==================== Query Keys ====================
 
@@ -13,6 +74,59 @@ export const communityKeys = {
   all: ['community'] as const,
   posts: () => [...communityKeys.all, 'posts'] as const,
   post: (postId: string) => [...communityKeys.posts(), postId] as const,
+}
+
+// ==================== Helper Functions ====================
+
+/**
+ * Fetch single post
+ */
+async function fetchPost(postId: string): Promise<Post> {
+  const postRef = doc(firestore, 'posts', postId).withConverter(postConverter)
+  const postSnap = await getDoc(postRef)
+
+  if (!postSnap.exists()) {
+    throw new Error('Post not found')
+  }
+
+  return postSnap.data()
+}
+
+/**
+ * Toggle post like
+ */
+async function togglePostLike(postId: string, userId: string): Promise<boolean> {
+  const likesRef = collection(firestore, `posts/${postId}/likes`)
+  const likeQuery = query(likesRef, where('userId', '==', userId))
+  const likeSnapshot = await getDocs(likeQuery)
+
+  const postRef = doc(firestore, 'posts', postId)
+
+  if (!likeSnapshot.empty) {
+    // Unlike: 삭제
+    const likeDoc = likeSnapshot.docs[0]
+    await deleteDoc(doc(firestore, `posts/${postId}/likes/${likeDoc.id}`))
+
+    // 카운트 감소
+    await updateDoc(postRef, {
+      'stats.likesCount': increment(-1),
+    })
+
+    return false // Unliked
+  } else {
+    // Like: 추가
+    await addDoc(likesRef, {
+      userId,
+      createdAt: serverTimestamp(),
+    })
+
+    // 카운트 증가
+    await updateDoc(postRef, {
+      'stats.likesCount': increment(1),
+    })
+
+    return true // Liked
+  }
 }
 
 // ==================== Queries ====================
@@ -55,7 +169,10 @@ export function useLikePostMutation(userId: string) {
       if (previousPost) {
         queryClient.setQueryData<Post>(communityKeys.post(postId), {
           ...previousPost,
-          likes_count: previousPost.likes_count + 1, // 일단 증가로 가정
+          stats: {
+            ...previousPost.stats,
+            likesCount: previousPost.stats.likesCount + 1, // 일단 증가로 가정
+          },
         })
       }
 
@@ -67,7 +184,10 @@ export function useLikePostMutation(userId: string) {
       if (previousPost) {
         queryClient.setQueryData<Post>(communityKeys.post(postId), {
           ...previousPost,
-          likes_count: previousPost.likes_count + (liked ? 1 : -1),
+          stats: {
+            ...previousPost.stats,
+            likesCount: previousPost.stats.likesCount + (liked ? 1 : -1),
+          },
         })
       }
     },
