@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     let resultsTable: cheerio.Cheerio<any> | null = null
 
     // Find table with "Place" or "Pos" or "Rank" header
-    tables.each((_, table) => {
+    tables.each((_, table): void | false => {
       const headers = $(table).find('tr').first().find('th, td')
       const headerTexts = headers.map((_, el) => $(el).text().trim().toLowerCase()).get()
 
@@ -95,7 +95,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse table rows (skip header)
-    resultsTable!.find('tr').slice(1).each((_: number, row: Element) => {
+    // TypeScript: Use type assertion - resultsTable is guaranteed to be non-null here
+    const tableRows = (resultsTable as cheerio.Cheerio<any>).find('tr').slice(1)
+    tableRows.each((_: number, row: Element) => {
       const cells = $(row).find('td')
 
       if (cells.length >= 3) {
@@ -110,7 +112,7 @@ export async function POST(request: NextRequest) {
         // Player name is usually in column 1 or 2
         // Look for link with player name
         let playerName = ''
-        cells.each((i, cell) => {
+        cells.each((i, cell): void | false => {
           if (i === 0) return // skip rank column
           const link = $(cell).find('a').first()
           if (link.length && link.attr('href')?.includes('player.php')) {

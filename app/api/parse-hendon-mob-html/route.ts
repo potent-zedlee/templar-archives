@@ -285,7 +285,7 @@ export async function POST(request: NextRequest) {
     // Find table with Hendon Mob class structure (place, prize, name)
     let resultsTable: cheerio.Cheerio<any> | null = null
 
-    tables.each((_, table) => {
+    tables.each((_, table): void | false => {
       const hasPlaceClass = $(table).find('td.place').length > 0
       const hasPrizeClass = $(table).find('td.prize').length > 0
       const hasNameClass = $(table).find('td.name').length > 0
@@ -294,12 +294,11 @@ export async function POST(request: NextRequest) {
         resultsTable = $(table)
         return false // break
       }
-      return undefined
     })
 
     // Fallback: position-based detection for non-Hendon Mob sites
     if (!resultsTable) {
-      tables.each((_, table) => {
+      tables.each((_, table): void | false => {
         const rows = $(table).find('tr')
         if (rows.length < 3) return
 
@@ -320,7 +319,7 @@ export async function POST(request: NextRequest) {
         // If 70%+ rows look like payout rows, use this table
         if (validRows / Math.min(10, rows.length - 1) > 0.7) {
           resultsTable = $(table)
-          return false
+          return false // break
         }
       })
     }
@@ -337,7 +336,9 @@ export async function POST(request: NextRequest) {
     logger.debug(`Found payout table. Total tables analyzed: ${tables.length}`)
 
     // Parse table rows (skip header)
-    resultsTable!.find('tr').slice(1).each((_: number, row: Element) => {
+    // TypeScript: Use type assertion - resultsTable is guaranteed to be non-null here
+    const tableRows = (resultsTable as cheerio.Cheerio<any>).find('tr').slice(1)
+    tableRows.each((_: number, row: Element) => {
       const cells = $(row).find('td')
 
       if (cells.length >= 3) {
@@ -347,7 +348,7 @@ export async function POST(request: NextRequest) {
         let country = ''
 
         // Try class-based parsing first (Hendon Mob specific)
-        cells.each((i, cell) => {
+        cells.each((_, cell): void | false => {
           const cellClass = $(cell).attr('class') || ''
           const cellText = $(cell).text().trim()
 
@@ -391,12 +392,12 @@ export async function POST(request: NextRequest) {
           rank = parseInt(firstCell.replace(/\D/g, '')) || 0
 
           // Look for player name link
-          cells.each((i, cell) => {
+          cells.each((i, cell): void | false => {
             if (i === 0) return
             const link = $(cell).find('a').first()
             if (link.length && link.attr('href')?.includes('player.php')) {
               playerName = link.text().trim()
-              return false
+              return false // break
             }
           })
 
@@ -408,11 +409,11 @@ export async function POST(request: NextRequest) {
         // Fallback prize extraction if class-based failed
         if (!prizeText) {
           // Look for cell with currency symbols
-          cells.each((_, cell) => {
+          cells.each((_, cell): void | false => {
             const cellText = $(cell).text().trim()
             if (/\$|€|£/.test(cellText) && !prizeText) {
               prizeText = cellText
-              return false
+              return false // break
             }
           })
 
