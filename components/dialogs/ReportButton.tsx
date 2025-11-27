@@ -28,7 +28,7 @@ interface ReportButtonProps {
   postId?: string
   commentId?: string
   variant?: "default" | "ghost" | "outline"
-  size?: "default" | "sm" | "lg" | "icon"
+  size?: "sm" | "md" | "lg" | "icon"
   className?: string
 }
 

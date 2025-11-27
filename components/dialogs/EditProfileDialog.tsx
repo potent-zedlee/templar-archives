@@ -97,6 +97,10 @@ export function EditProfileDialog({
         avatar_url: avatarUrl || undefined
       })
 
+      if (!updatedProfile) {
+        throw new Error('Failed to update profile')
+      }
+
       toast.success('Profile updated successfully')
       onProfileUpdated(updatedProfile)
       onOpenChange(false)

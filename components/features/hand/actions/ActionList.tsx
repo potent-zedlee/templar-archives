@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Trash2, Edit, ChevronsUp, ChevronsDown } from "lucide-react"
+import { Trash2, ChevronsUp, ChevronsDown } from "lucide-react"
 import type { HandAction } from "@/lib/hand-actions"
 
 type Player = {
@@ -38,8 +38,8 @@ function getActionTypeColor(actionType: string): string {
   }
 }
 
-function formatAmount(amount: number): string {
-  if (amount === 0) return '-'
+function formatAmount(amount: number | undefined): string {
+  if (amount === undefined || amount === 0) return '-'
   return `$${amount.toLocaleString()}`
 }
 
