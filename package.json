@@ -30,7 +30,14 @@
     "ops:check-db": "node scripts/operations/check-db.mjs",
     "ops:check-rls": "node scripts/operations/check-rls-policies.mjs",
     "ops:import-players": "node scripts/operations/import-hendonmob-players.mjs",
-    "ops:update-role": "node scripts/operations/update-user-role.mjs"
+    "ops:update-role": "node scripts/operations/update-user-role.mjs",
+    "migrate": "npx tsx scripts/migration/run-all.ts",
+    "migrate:dry-run": "npx tsx scripts/migration/run-all.ts --dry-run",
+    "migrate:players": "npx tsx scripts/migration/migrate-players.ts",
+    "migrate:tournaments": "npx tsx scripts/migration/migrate-tournaments.ts",
+    "migrate:hands": "npx tsx scripts/migration/migrate-hands.ts",
+    "migrate:users": "npx tsx scripts/migration/migrate-users.ts",
+    "migrate:posts": "npx tsx scripts/migration/migrate-posts.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.30.1",
