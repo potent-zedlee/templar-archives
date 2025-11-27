@@ -10,25 +10,23 @@ import {
   where,
   orderBy,
   getDocs,
-  getDoc,
-  doc,
   addDoc,
   deleteDoc,
   serverTimestamp,
   Timestamp,
   collectionGroup,
   limit,
-  writeBatch,
 } from 'firebase/firestore'
 import { firestore } from './firebase'
 import { adminFirestore } from './firebase-admin'
 import type {
   FirestoreHandTag,
-  HandTagName,
-  HandTagStats,
   FirestoreUserTagHistory,
 } from './firestore-types'
 import { COLLECTION_PATHS } from './firestore-types'
+
+// Re-export types for consumers
+export type { HandTagName, HandTagStats } from './firestore-types'
 
 /**
  * 클라이언트용 HandTag 타입 (Timestamp → string)
@@ -36,7 +34,7 @@ import { COLLECTION_PATHS } from './firestore-types'
 export interface HandTag {
   id: string
   handId: string
-  tagName: HandTagName
+  tagName: import('./firestore-types').HandTagName
   createdBy: string
   createdAt: string
 }
@@ -46,7 +44,7 @@ export interface HandTag {
  */
 export interface UserTagHistory {
   handId: string
-  tagName: HandTagName
+  tagName: import('./firestore-types').HandTagName
   createdAt: string
   handNumber: string | null
   tournamentName: string | null
@@ -86,14 +84,14 @@ export async function fetchHandTags(handId: string): Promise<HandTag[]> {
 /**
  * 모든 태그 목록 가져오기 (중복 제거)
  */
-export async function fetchAllTags(): Promise<HandTagName[]> {
+export async function fetchAllTags(): Promise<import('./firestore-types').HandTagName[]> {
   try {
     // collectionGroup으로 모든 핸드의 태그 조회
     const tagsQuery = query(collectionGroup(firestore, 'tags'))
     const snapshot = await getDocs(tagsQuery)
 
     // 중복 제거
-    const uniqueTags = new Set<HandTagName>()
+    const uniqueTags = new Set<import('./firestore-types').HandTagName>()
     snapshot.docs.forEach((doc) => {
       const data = doc.data() as FirestoreHandTag
       uniqueTags.add(data.tagName)
@@ -111,7 +109,7 @@ export async function fetchAllTags(): Promise<HandTagName[]> {
  */
 export async function addHandTag(
   handId: string,
-  tagName: HandTagName,
+  tagName: import('./firestore-types').HandTagName,
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -145,7 +143,7 @@ export async function addHandTag(
  */
 export async function removeHandTag(
   handId: string,
-  tagName: HandTagName,
+  tagName: import('./firestore-types').HandTagName,
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -170,22 +168,22 @@ export async function removeHandTag(
 /**
  * 태그별 통계 가져오기
  *
- * @param filters - 필터 (현재 Firestore에서는 제한적 지원)
+ * @param _filters - 필터 (현재 Firestore에서는 제한적 지원)
  * @returns 태그별 통계 배열
  */
-export async function getTagStats(filters?: {
+export async function getTagStats(_filters?: {
   tournamentId?: string
   playerId?: string
   dateFrom?: string
   dateTo?: string
-}): Promise<HandTagStats[]> {
+}): Promise<import('./firestore-types').HandTagStats[]> {
   try {
     // collectionGroup으로 모든 태그 조회
     const tagsQuery = query(collectionGroup(firestore, 'tags'))
     const snapshot = await getDocs(tagsQuery)
 
     // 태그별 카운트 집계
-    const tagCounts = new Map<HandTagName, number>()
+    const tagCounts = new Map<import('./firestore-types').HandTagName, number>()
     let totalTags = 0
 
     snapshot.docs.forEach((doc) => {
@@ -195,11 +193,13 @@ export async function getTagStats(filters?: {
     })
 
     // 통계 계산
-    const stats: HandTagStats[] = Array.from(tagCounts.entries()).map(([tagName, count]) => ({
-      tagName,
-      count,
-      percentage: totalTags > 0 ? (count / totalTags) * 100 : 0,
-    }))
+    const stats: import('./firestore-types').HandTagStats[] = Array.from(tagCounts.entries()).map(
+      ([tagName, count]) => ({
+        tagName,
+        count,
+        percentage: totalTags > 0 ? (count / totalTags) * 100 : 0,
+      })
+    )
 
     // 카운트 내림차순 정렬
     return stats.sort((a, b) => b.count - a.count)
@@ -218,7 +218,9 @@ export async function getTagStats(filters?: {
  * Note: Firestore에서는 복잡한 AND 검색이 제한적이므로,
  * 클라이언트에서 필터링 권장
  */
-export async function searchHandsByTags(tags: HandTagName[]): Promise<string[]> {
+export async function searchHandsByTags(
+  tags: import('./firestore-types').HandTagName[]
+): Promise<string[]> {
   if (tags.length === 0) return []
 
   try {
@@ -283,7 +285,7 @@ export async function getUserTagHistory(userId: string): Promise<UserTagHistory[
  */
 export async function handHasTag(
   handId: string,
-  tagName: HandTagName,
+  tagName: import('./firestore-types').HandTagName,
   userId?: string
 ): Promise<boolean> {
   try {
@@ -304,7 +306,10 @@ export async function handHasTag(
 /**
  * 핸드의 특정 태그 개수 가져오기
  */
-export async function getHandTagCount(handId: string, tagName: HandTagName): Promise<number> {
+export async function getHandTagCount(
+  handId: string,
+  tagName: import('./firestore-types').HandTagName
+): Promise<number> {
   try {
     const tagsRef = collection(firestore, COLLECTION_PATHS.HAND_TAGS(handId))
     const q = query(tagsRef, where('tagName', '==', tagName))
@@ -329,22 +334,22 @@ export async function getHandTagCount(handId: string, tagName: HandTagName): Pro
 export async function updateUserTagHistoryServer(
   userId: string,
   handId: string,
-  tagName: HandTagName,
+  tagName: import('./firestore-types').HandTagName,
   handNumber?: string,
   tournamentName?: string
 ): Promise<void> {
   try {
-    const historyRef = collection(adminFirestore, COLLECTION_PATHS.USER_TAG_HISTORY(userId))
+    const historyRef = adminFirestore.collection(COLLECTION_PATHS.USER_TAG_HISTORY(userId))
 
-    const newHistory: Omit<FirestoreUserTagHistory, 'createdAt'> & { createdAt: any } = {
+    const newHistory = {
       handId,
       tagName,
       handNumber,
       tournamentName,
-      createdAt: serverTimestamp(),
+      createdAt: new Date(),
     }
 
-    await addDoc(historyRef, newHistory)
+    await historyRef.add(newHistory)
   } catch (error) {
     console.error('유저 태그 히스토리 업데이트 실패:', error)
   }

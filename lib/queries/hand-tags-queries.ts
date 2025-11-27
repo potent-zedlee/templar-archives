@@ -1,7 +1,7 @@
 /**
- * Hand Tags React Query Hooks
+ * Hand Tags React Query Hooks (Firestore)
  *
- * 핸드 태그 데이터 페칭을 위한 React Query hooks
+ * 핸드 태그 데이터 페칭을 위한 React Query hooks - Firestore 기반
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -11,10 +11,10 @@ import {
   addHandTag,
   removeHandTag,
   getTagStats,
-  searchHandsByTags,
   getUserTagHistory,
+  type HandTagName,
+  type HandTag,
 } from '@/lib/hand-tags'
-import type { HandTagName, HandTag, HandTagStats, UserTagHistory } from '@/lib/types/hand-tags'
 import { toast } from 'sonner'
 
 // ==================== Query Keys ====================
@@ -114,20 +114,20 @@ export function useAddHandTagMutation(handId: string) {
       // Optimistically update
       const newTag: HandTag = {
         id: 'temp-' + Date.now(),
-        hand_id: handId,
-        tag_name: tagName,
-        created_by: userId,
-        created_at: new Date().toISOString(),
+        handId: handId,
+        tagName: tagName,
+        createdBy: userId,
+        createdAt: new Date().toISOString(),
       }
 
-      queryClient.setQueryData<HandTag[]>(
-        handTagsKeys.byHand(handId),
-        (old) => [...(old || []), newTag]
-      )
+      queryClient.setQueryData<HandTag[]>(handTagsKeys.byHand(handId), (old) => [
+        ...(old || []),
+        newTag,
+      ])
 
       return { previousTags }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       // Rollback on error
       if (context?.previousTags) {
         queryClient.setQueryData(handTagsKeys.byHand(handId), context.previousTags)
@@ -169,16 +169,13 @@ export function useRemoveHandTagMutation(handId: string) {
       const previousTags = queryClient.getQueryData<HandTag[]>(handTagsKeys.byHand(handId))
 
       // Optimistically update (remove the tag)
-      queryClient.setQueryData<HandTag[]>(
-        handTagsKeys.byHand(handId),
-        (old) => (old || []).filter(tag =>
-          !(tag.tag_name === tagName && tag.created_by === userId)
-        )
+      queryClient.setQueryData<HandTag[]>(handTagsKeys.byHand(handId), (old) =>
+        (old || []).filter((tag) => !(tag.tagName === tagName && tag.createdBy === userId))
       )
 
       return { previousTags }
     },
-    onError: (error, variables, context) => {
+    onError: (error, _variables, context) => {
       // Rollback on error
       if (context?.previousTags) {
         queryClient.setQueryData(handTagsKeys.byHand(handId), context.previousTags)

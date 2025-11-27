@@ -1,31 +1,15 @@
 /**
- * Hand Tags Types
+ * Hand Tags Types (Firestore)
  *
  * 핸드 태그 시스템을 위한 타입 정의
+ * Firestore 타입은 lib/firestore-types.ts에 정의되어 있음
  */
 
-/**
- * 허용된 핸드 태그 이름
- *
- * 카테고리:
- * - 플레이 유형: Bluff, Value Bet, Slow Play, Check Raise
- * - 결과: Bad Beat, Cooler, Suck Out
- * - 액션: Hero Call, Hero Fold, Big Pot
- */
-export type HandTagName =
-  // Play Types
-  | 'Bluff'
-  | 'Value Bet'
-  | 'Slow Play'
-  | 'Check Raise'
-  // Results
-  | 'Bad Beat'
-  | 'Cooler'
-  | 'Suck Out'
-  // Actions
-  | 'Hero Call'
-  | 'Hero Fold'
-  | 'Big Pot'
+// Re-export from firestore-types for consistency
+export type { HandTagName, HandTagStats } from '../firestore-types'
+
+// Re-export from hand-tags library
+export type { HandTag, UserTagHistory } from '../hand-tags'
 
 /**
  * 태그 카테고리
@@ -33,43 +17,12 @@ export type HandTagName =
 export type HandTagCategory = 'Play Type' | 'Result' | 'Action'
 
 /**
- * 핸드 태그
- */
-export type HandTag = {
-  id: string
-  hand_id: string
-  tag_name: HandTagName
-  created_by: string
-  created_at: string
-}
-
-/**
- * 태그별 통계
- */
-export type HandTagStats = {
-  tag_name: HandTagName
-  count: number
-  percentage: number
-}
-
-/**
- * 유저 태그 히스토리
- */
-export type UserTagHistory = {
-  hand_id: string
-  tag_name: HandTagName
-  created_at: string
-  hand_number: string | null
-  tournament_name: string | null
-}
-
-/**
  * 태그 카테고리별 그룹화
  */
-export const TAG_CATEGORIES: Record<HandTagCategory, HandTagName[]> = {
+export const TAG_CATEGORIES: Record<HandTagCategory, string[]> = {
   'Play Type': ['Bluff', 'Value Bet', 'Slow Play', 'Check Raise'],
-  'Result': ['Bad Beat', 'Cooler', 'Suck Out'],
-  'Action': ['Hero Call', 'Hero Fold', 'Big Pot'],
+  Result: ['Bad Beat', 'Cooler', 'Suck Out'],
+  Action: ['Hero Call', 'Hero Fold', 'Big Pot'],
 }
 
 /**
@@ -77,14 +30,14 @@ export const TAG_CATEGORIES: Record<HandTagCategory, HandTagName[]> = {
  */
 export const TAG_COLORS: Record<HandTagCategory, string> = {
   'Play Type': 'blue',
-  'Result': 'red',
-  'Action': 'green',
+  Result: 'red',
+  Action: 'green',
 }
 
 /**
  * 태그 이름에서 카테고리 가져오기
  */
-export function getTagCategory(tagName: HandTagName): HandTagCategory {
+export function getTagCategory(tagName: string): HandTagCategory {
   for (const [category, tags] of Object.entries(TAG_CATEGORIES)) {
     if (tags.includes(tagName)) {
       return category as HandTagCategory
@@ -96,7 +49,7 @@ export function getTagCategory(tagName: HandTagName): HandTagCategory {
 /**
  * 태그 색상 가져오기
  */
-export function getTagColor(tagName: HandTagName): string {
+export function getTagColor(tagName: string): string {
   const category = getTagCategory(tagName)
   return TAG_COLORS[category]
 }
@@ -104,7 +57,7 @@ export function getTagColor(tagName: HandTagName): string {
 /**
  * 모든 태그 이름 목록
  */
-export const ALL_TAG_NAMES: HandTagName[] = [
+export const ALL_TAG_NAMES: string[] = [
   'Bluff',
   'Value Bet',
   'Slow Play',
