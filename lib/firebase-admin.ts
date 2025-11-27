@@ -22,7 +22,7 @@ import { getAuth, type Auth } from 'firebase-admin/auth'
  * Admin SDK 서비스 계정 설정
  *
  * 우선순위:
- * 1. FIREBASE_ADMIN_SDK_KEY: JSON 문자열 (로컬 개발, Vercel/Cloud Run)
+ * 1. FIREBASE_ADMIN_SDK_KEY: JSON 문자열 (로컬 개발, Cloud Run)
  * 2. GOOGLE_APPLICATION_CREDENTIALS: 파일 경로 (로컬 개발)
  * 3. ADC (Application Default Credentials): Cloud Functions 환경에서 자동
  */

@@ -20,9 +20,6 @@ yarn-error.log*
 .env*
 !.env.local.example
 
-# vercel
-.vercel
-
 # firebase
 .firebase/
 
@@ -37,7 +34,6 @@ next-env.d.ts
 
 # temp files
 /temp/
-/vercel log/
 
 
 # macOS
@@ -59,7 +55,8 @@ credentials*.json
 # GCS service account keys (sensitive)
 gcs-service-account-key.json
 *-service-account*.json
-.vercel
+
+# Trigger.dev logs (레거시)
 trigger/trigger_logs/
 
 # Migration artifacts
