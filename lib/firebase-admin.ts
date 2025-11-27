@@ -63,9 +63,23 @@ function getAdminApp(): App {
     })
   }
 
-  // Cloud Functions 환경: 인자 없이 호출하면 ADC 자동 사용
-  // GOOGLE_APPLICATION_CREDENTIALS 환경도 동일하게 처리
-  return initializeApp()
+  // Cloud Functions 환경: FIREBASE_CONFIG 환경 변수가 자동 설정됨
+  const firebaseConfig = process.env.FIREBASE_CONFIG
+  if (firebaseConfig) {
+    try {
+      const config = JSON.parse(firebaseConfig)
+      return initializeApp({
+        projectId: config.projectId || 'templar-archives-index',
+      })
+    } catch {
+      // JSON 파싱 실패 시 기본 초기화
+    }
+  }
+
+  // GOOGLE_APPLICATION_CREDENTIALS 또는 ADC 환경
+  return initializeApp({
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'templar-archives-index',
+  })
 }
 
 /**
