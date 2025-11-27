@@ -99,7 +99,7 @@ describe('Toast Utils', () => {
       }
 
       vi.mocked(toast.promise).mockImplementation(async (p: Promise<unknown>, opts: { success?: (data: unknown) => void }) => {
-        const data = await p
+        const data: { id: number } = await p as { id: number }
         if (opts.success) {
           opts.success(data)
         }
@@ -136,7 +136,7 @@ describe('Toast Utils', () => {
     it('should handle success message as function', async () => {
       const fn = vi.fn().mockResolvedValue({ id: 1 })
       await tryCatchWithToast(fn, {
-        success: (data) => `Created item ${data.id}`,
+        success: (data: { id: number }) => `Created item ${data.id}`,
       })
 
       expect(toast.success).toHaveBeenCalledWith('Created item 1')

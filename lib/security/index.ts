@@ -151,7 +151,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { Ratelimit } from "@upstash/ratelimit"
 import { applyRateLimit } from "../rate-limit"
 import { verifyCSRF } from "./csrf"
-import { detectSQLInjection, isValidUUID, isValidDateFormat } from "./sql-sanitizer"
+import { isValidUUID, isValidDateFormat } from "./sql-sanitizer"
 import { sanitizeText, detectDangerousHtml, escapeHtml, isSafeUrl } from "./xss-sanitizer"
 
 export async function securityChecklist(

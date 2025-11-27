@@ -15,11 +15,6 @@ import type {
   EventFormData,
   StreamFormData,
   Payout,
-  TournamentCategory,
-  VideoSource,
-  INITIAL_TOURNAMENT_FORM,
-  INITIAL_EVENT_FORM,
-  INITIAL_STREAM_FORM,
 } from '@/lib/types/archive'
 
 interface ArchiveFormState {

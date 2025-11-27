@@ -435,7 +435,8 @@ export async function uploadCategoryLogo(
   }
 
   // 파일 타입 확인
-  if (!CATEGORY_VALIDATIONS.ALLOWED_FILE_TYPES.includes(file.type as 'image/png' | 'image/jpeg' | 'image/webp' | 'image/svg+xml')) {
+  const allowedTypes: string[] = [...CATEGORY_VALIDATIONS.ALLOWED_FILE_TYPES]
+  if (!allowedTypes.includes(file.type)) {
     throw new Error(CATEGORY_ERRORS.INVALID_FILE_TYPE)
   }
 

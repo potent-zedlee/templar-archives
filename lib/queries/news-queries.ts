@@ -163,9 +163,8 @@ export function useNewsQuery(options?: { category?: string }) {
       }
 
       const querySnapshot = await getDocs(q)
-      const newsItems = querySnapshot.docs.map(doc => doc.data())
+      const newsItems = querySnapshot.docs.map(doc => doc.data()) as News[]
 
-      // Enrich with author profiles
       return await enrichNewsWithProfiles(newsItems)
     },
     staleTime: 5 * 60 * 1000, // 5분
@@ -252,9 +251,8 @@ export function usePendingNewsQuery() {
       )
 
       const querySnapshot = await getDocs(q)
-      const newsItems = querySnapshot.docs.map(doc => doc.data())
+      const newsItems = querySnapshot.docs.map(doc => doc.data()) as News[]
 
-      // Enrich with author profiles
       return await enrichNewsWithProfiles(newsItems)
     },
     staleTime: 1 * 60 * 1000, // 1분
@@ -343,7 +341,9 @@ export function useUpdateNewsMutation() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: newsKeys.my() })
-      queryClient.invalidateQueries({ queryKey: newsKeys.detail(data.id) })
+      if (data?.id) {
+        queryClient.invalidateQueries({ queryKey: newsKeys.detail(data.id) })
+      }
       queryClient.invalidateQueries({ queryKey: newsKeys.pending() })
     },
   })

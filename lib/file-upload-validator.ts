@@ -165,10 +165,10 @@ export async function validateFile(
   // 1. 파일 타입 검증
   const allowedTypes: string[] =
     type === 'video'
-      ? (ALLOWED_VIDEO_TYPES as string[])
+      ? [...ALLOWED_VIDEO_TYPES]
       : type === 'avatar'
       ? ['image/jpeg', 'image/png', 'image/webp']
-      : (ALLOWED_IMAGE_TYPES as string[])
+      : [...ALLOWED_IMAGE_TYPES]
 
   if (!allowedTypes.includes(file.type)) {
     return {

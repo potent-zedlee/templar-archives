@@ -30,9 +30,9 @@ vi.mock('@/lib/firebase-admin', () => ({
   },
 }))
 
-const { isAdmin, isAdminEmail } = await import('../auth-utils')
+describe('Auth Utils', async () => {
+  const { isAdmin, isAdminEmail } = await import('../auth-utils')
 
-describe('Auth Utils', () => {
   describe('isAdminEmail (이메일 기반 관리자 확인)', () => {
     it('관리자 이메일이면 true 반환', () => {
       expect(isAdminEmail('jhng.mov@gmail.com')).toBe(true)

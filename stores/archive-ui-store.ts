@@ -11,9 +11,6 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import type {
-  SortOption,
-  FilterState,
-  AdvancedFilters,
   DialogState,
   VideoPlayerState,
   UploadState,
@@ -112,7 +109,7 @@ interface ArchiveUIState {
 export const useArchiveUIStore = create<ArchiveUIState>()(
   devtools(
     persist(
-      (set, get) => ({
+      (set, _get) => ({
         // Initial State - Dialogs
         tournamentDialog: { isOpen: false, editingId: null },
         eventDialog: { isOpen: false, editingId: null },
@@ -311,8 +308,7 @@ export const useArchiveUIStore = create<ArchiveUIState>()(
       }),
       {
         name: 'ArchiveUIStore',
-        // No persistence needed (all state is managed locally)
-        partialize: (state) => ({}),
+        partialize: (_state) => ({}),
       }
     ),
     { name: 'ArchiveUIStore' }
