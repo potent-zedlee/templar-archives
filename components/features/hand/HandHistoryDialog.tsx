@@ -1,20 +1,20 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useMemo } from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog"
-import { Button } from "./ui/button"
-import { ScrollArea } from "./ui/scroll-area"
-import { VideoPlayer } from "./video-player"
-import { PokerTable } from "./poker-table"
-import { HandNavigator } from "./hand-navigator"
-import { HandSummary } from "./hand-summary"
-import { HandComments } from "./hand-comments"
-import { HandHistoryTimeline } from "./hand-history-timeline"
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { VideoPlayer } from "@/components/features/video/VideoPlayer"
+import { PokerTable } from "@/components/features/poker/PokerTable"
+import { HandNavigator } from "./HandNavigator"
+import { HandSummary } from "./HandSummary"
+import { HandComments } from "./HandComments"
+import { HandHistoryTimeline } from "./HandHistoryTimeline"
 import {
   Download,
   ChevronLeft,
@@ -24,7 +24,6 @@ import {
   Heart,
   MoreHorizontal
 } from "lucide-react"
-import { Badge } from "./ui/badge"
 import type { FirestoreStream } from "@/lib/firestore-types"
 
 interface HandData {
@@ -65,7 +64,7 @@ interface HandHistoryDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   hand: HandData
-  day: Stream
+  day: FirestoreStream
   tournament?: {
     name: string
     category?: string
@@ -85,44 +84,34 @@ export function HandHistoryDialog({
   currentHandIndex = 0,
   onHandChange
 }: HandHistoryDialogProps) {
-  const [seekTime, setSeekTime] = useState<number | null>(null)
+  // Video seek time (currently not implemented, but reserved for future use)
+  const seekTime = null
 
-  // Parse timestamp for video seeking
-  const handleSeekToTime = (timeString: string) => {
-    const parts = timeString.split(':')
-    if (parts.length === 2) {
-      const minutes = parseInt(parts[0], 10)
-      const seconds = parseInt(parts[1], 10)
-      setSeekTime(minutes * 60 + seconds)
-    }
-  }
+  // Transform FirestoreStream to VideoPlayer format
+  const videoPlayerDay = useMemo(() => ({
+    video_source: day.videoSource,
+    video_url: day.videoUrl,
+    video_file: day.videoFile,
+    video_nas_path: undefined
+  }), [day])
 
   // Transform hand data for PokerTable
   const tableData = useMemo(() => {
-    const players = hand.hand_players?.map(hp => ({
+    const players = hand.hand_players?.map((hp, index) => ({
+      id: hp.player?.id || `player-${index}`,
+      seat: index + 1,
       name: hp.player?.name || "Unknown",
       position: hp.position,
-      avatar: hp.player?.avatar,
       stack: hp.stack || 0,
-      cards: hp.cards,
-      isWinner: hp.is_winner,
-      playerData: hp.player ? {
-        id: hp.player.id || '',
-        name: hp.player.name,
-        normalized_name: hp.player.normalized_name || hp.player.name.toLowerCase(),
-        aliases: hp.player.aliases,
-        bio: hp.player.bio,
-        is_pro: hp.player.is_pro,
-        photo_url: hp.player.photo_url,
-        country: hp.player.country,
-        total_winnings: hp.player.total_winnings,
-        created_at: hp.player.created_at
-      } : undefined
+      holeCards: Array.isArray(hp.cards) ? hp.cards : (hp.cards ? [hp.cards] : null),
+      isWinner: hp.is_winner
     })) || []
 
     return {
       players,
-      boardCards: hand.board_cards || [],
+      flop: hand.board_cards?.slice(0, 3),
+      turn: hand.board_cards?.[3] || null,
+      river: hand.board_cards?.[4] || null,
       potSize: hand.pot_size || 0
     }
   }, [hand])
@@ -131,7 +120,7 @@ export function HandHistoryDialog({
   const navigatorPlayers = useMemo(() => {
     return hand.hand_players?.slice(0, 2).map(hp => ({
       name: hp.player?.name || "Unknown",
-      cards: hp.cards?.join('')
+      cards: Array.isArray(hp.cards) ? hp.cards.join('') : (hp.cards || '')
     })) || []
   }, [hand])
 
@@ -204,7 +193,7 @@ export function HandHistoryDialog({
               <div className="p-4 space-y-4">
                 {/* Video Player */}
                 <div className="aspect-video bg-black rounded-lg overflow-hidden">
-                  <VideoPlayer day={day} seekTime={seekTime} />
+                  <VideoPlayer day={videoPlayerDay} seekTime={seekTime} />
                 </div>
 
                 {/* Hand Navigator */}
@@ -235,47 +224,20 @@ export function HandHistoryDialog({
           <div className="w-1/2 flex flex-col">
             <ScrollArea className="flex-1">
               <div className="p-4 space-y-4">
-                {/* Poker Table (Collapsible) */}
+                {/* Poker Table */}
                 <PokerTable
                   players={tableData.players}
-                  boardCards={tableData.boardCards}
+                  flop={tableData.flop}
+                  turn={tableData.turn}
+                  river={tableData.river}
                   potSize={tableData.potSize}
-                  currentStreet="river"
-                  showAllCards={true}
-                  defaultOpen={true}
+                  showCards={true}
                 />
 
                 {/* Hand History Timeline */}
                 <div className="mt-4">
                   <h3 className="text-lg font-semibold mb-3">Action History</h3>
-                  <HandHistoryTimeline
-                    players={hand.hand_players?.map(hp => ({
-                      name: hp.player?.name || "Unknown",
-                      position: hp.position || "Unknown",
-                      cards: hp.cards?.join('') || "",
-                      stackBefore: hp.stack || 0,
-                      stackAfter: hp.stack || 0,
-                      stackChange: 0
-                    })) || []}
-                    communityCards={{
-                      preflop: [],
-                      flop: hand.board_cards?.slice(0, 3) || [],
-                      turn: hand.board_cards?.slice(3, 4) || [],
-                      river: hand.board_cards?.slice(4, 5) || []
-                    }}
-                    actions={{
-                      preflop: hand.streets?.preflop?.actions || [],
-                      flop: hand.streets?.flop?.actions || [],
-                      turn: hand.streets?.turn?.actions || [],
-                      river: hand.streets?.river?.actions || []
-                    }}
-                    streets={{
-                      preflop: hand.streets?.preflop || { actions: [], pot: 0 },
-                      flop: hand.streets?.flop || { actions: [], pot: 0 },
-                      turn: hand.streets?.turn || { actions: [], pot: 0 },
-                      river: hand.streets?.river || { actions: [], pot: 0 }
-                    }}
-                  />
+                  <HandHistoryTimeline handId={hand.id} />
                 </div>
               </div>
             </ScrollArea>
