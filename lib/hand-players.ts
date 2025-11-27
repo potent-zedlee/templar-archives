@@ -50,8 +50,9 @@ export type HandPlayer = {
   player?: {
     id: string
     name: string
-    photo_url: string | null
-    country: string | null
+    normalized_name: string
+    photo_url?: string
+    country?: string
   }
 }
 
@@ -141,14 +142,16 @@ export async function fetchHandPlayers(handId: string): Promise<HandPlayer[]> {
           ? {
               id: hp.playerId,
               name: player.name,
-              photo_url: player.photoUrl || null,
-              country: player.country || null,
+              normalized_name: player.normalizedName || normalizeName(player.name),
+              photo_url: player.photoUrl || undefined,
+              country: player.country || undefined,
             }
           : {
               id: hp.playerId,
               name: hp.name,
-              photo_url: null,
-              country: null,
+              normalized_name: normalizeName(hp.name),
+              photo_url: undefined,
+              country: undefined,
             },
       })
     }

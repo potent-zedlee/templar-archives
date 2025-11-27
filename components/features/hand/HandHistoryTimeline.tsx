@@ -43,7 +43,7 @@ function ActionBadge({ action }: { action: HandAction }) {
   if (action_type === 'all-in') {
     return (
       <div className="px-3 py-1.5 rounded bg-red-600 text-white text-sm font-medium">
-        All-In {amount > 0 && `(${amount.toLocaleString()})`}
+        All-In {amount && amount > 0 && `(${amount.toLocaleString()})`}
       </div>
     )
   }
@@ -52,7 +52,7 @@ function ActionBadge({ action }: { action: HandAction }) {
   return (
     <div className="px-3 py-1.5 rounded bg-white border border-gray-300 text-black text-sm font-medium">
       {action_type.charAt(0).toUpperCase() + action_type.slice(1)}{' '}
-      {amount > 0 && `(${amount.toLocaleString()})`}
+      {amount && amount > 0 && `(${amount.toLocaleString()})`}
     </div>
   )
 }
@@ -88,7 +88,7 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
       const streetTotal = streetActions.reduce((sum, action) => {
         // bet, raise, call, all-in만 팟에 추가
         if (['bet', 'raise', 'call', 'all-in'].includes(action.action_type)) {
-          return sum + action.amount
+          return sum + (action.amount || 0)
         }
         return sum
       }, 0)
