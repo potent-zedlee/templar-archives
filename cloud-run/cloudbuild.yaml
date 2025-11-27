@@ -44,10 +44,9 @@ steps:
       - '--max-instances=5'
       - '--min-instances=0'
       - '--set-env-vars=NODE_ENV=production'
-      - '--set-secrets=GOOGLE_API_KEY=GOOGLE_API_KEY:latest'
-      - '--set-secrets=NEXT_PUBLIC_SUPABASE_URL=supabase-url:latest'
-      - '--set-secrets=SUPABASE_SERVICE_ROLE_KEY=supabase-service-role-key:latest'
+      - '--set-env-vars=GCP_PROJECT_ID=templar-archives-index'
       - '--set-env-vars=GCS_PROJECT_ID=templar-archives-index'
+      - '--set-secrets=GOOGLE_API_KEY=GOOGLE_API_KEY:latest'
 
 # Store images in Container Registry
 images:

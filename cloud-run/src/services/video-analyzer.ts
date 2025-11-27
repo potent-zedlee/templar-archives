@@ -1,20 +1,19 @@
 /**
  * Video Analyzer Service
  *
- * Trigger.dev gcs-video-analysis 태스크를 Cloud Run용으로 포팅
+ * Cloud Run 기반 영상 분석 서비스
  *
  * 주요 기능:
  * 1. FFmpeg로 영상 세그먼트 추출
  * 2. Vertex AI Gemini로 핸드 분석
- * 3. Supabase DB에 결과 저장
+ * 3. Firestore DB에 결과 저장
  */
 
 import { z } from 'zod'
 import { GoogleGenAI } from '@google/genai'
 import { Storage } from '@google-cloud/storage'
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { Firestore, FieldValue } from '@google-cloud/firestore'
 import ffmpeg from 'fluent-ffmpeg'
-import { v4 as uuidv4 } from 'uuid'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as os from 'os'
@@ -73,11 +72,20 @@ interface ExtractedSegment {
   end: number
 }
 
+// ==================== Firestore 컬렉션 경로 ====================
+
+const COLLECTION_PATHS = {
+  HANDS: 'hands',
+  PLAYERS: 'players',
+  UNSORTED_STREAMS: 'streams',
+  ANALYSIS_JOBS: 'analysisJobs',
+} as const
+
 // ==================== 클라이언트 초기화 ====================
 
 let genAI: GoogleGenAI | null = null
 let storage: Storage | null = null
-let supabase: SupabaseClient | null = null
+let firestore: Firestore | null = null
 
 function getGenAI(): GoogleGenAI {
   if (!genAI) {
@@ -99,16 +107,13 @@ function getStorage(): Storage {
   return storage
 }
 
-function getSupabase(): SupabaseClient {
-  if (!supabase) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!url || !key) {
-      throw new Error('Supabase credentials are required')
-    }
-    supabase = createClient(url, key)
+function getFirestore(): Firestore {
+  if (!firestore) {
+    firestore = new Firestore({
+      projectId: process.env.GCP_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT,
+    })
   }
-  return supabase
+  return firestore
 }
 
 // ==================== 유틸리티 함수 ====================
@@ -304,7 +309,7 @@ Output as JSON array with this structure:
   }
 }
 
-// ==================== Phase 3: DB 저장 ====================
+// ==================== Phase 3: Firestore 저장 ====================
 
 async function saveHandsToDatabase(
   streamId: string,
@@ -314,61 +319,91 @@ async function saveHandsToDatabase(
     return { success: true, saved: 0, errors: 0 }
   }
 
-  const supabase = getSupabase()
+  const db = getFirestore()
   let saved = 0
   let errors = 0
 
   for (const hand of hands) {
     try {
-      // 핸드 저장
-      const { data: handData, error: handError } = await supabase
-        .from('hands')
-        .insert({
-          stream_id: streamId,
-          number: hand.number,
-          timestamp_start: hand.timestamp_start,
-          timestamp_end: hand.timestamp_end,
-          absolute_timestamp_start: hand.absolute_timestamp_start,
-          absolute_timestamp_end: hand.absolute_timestamp_end,
-          pot_size: hand.pot_size,
-          description: hand.description,
-          winner: hand.winner,
-          showdown: hand.showdown,
+      // 핸드 문서 생성
+      const handRef = db.collection(COLLECTION_PATHS.HANDS).doc()
+
+      // 플레이어 임베딩 데이터 준비
+      const playersEmbedded = []
+      for (const player of hand.players || []) {
+        const normalizedName = player.name.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+        // 플레이어 찾기 또는 생성
+        const playersQuery = await db
+          .collection(COLLECTION_PATHS.PLAYERS)
+          .where('normalizedName', '==', normalizedName)
+          .limit(1)
+          .get()
+
+        let playerId: string
+        if (playersQuery.empty) {
+          const newPlayerRef = db.collection(COLLECTION_PATHS.PLAYERS).doc()
+          await newPlayerRef.set({
+            name: player.name,
+            normalizedName,
+            createdAt: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
+          })
+          playerId = newPlayerRef.id
+        } else {
+          playerId = playersQuery.docs[0].id
+        }
+
+        playersEmbedded.push({
+          playerId,
+          name: player.name,
+          position: player.position || null,
+          cards: player.cards ? [player.cards] : null,
+          startStack: player.stack || 0,
+          endStack: player.stack || 0,
+          isWinner: hand.winner === player.name,
         })
-        .select('id')
-        .single()
-
-      if (handError) throw handError
-
-      const handId = handData.id
-
-      // 플레이어 저장
-      if (hand.players && hand.players.length > 0) {
-        for (const player of hand.players) {
-          await supabase.from('hand_players').insert({
-            hand_id: handId,
-            player_name: player.name,
-            position: player.position,
-            stack: player.stack,
-            cards: player.cards,
-          })
-        }
       }
 
-      // 액션 저장
-      if (hand.actions && hand.actions.length > 0) {
-        for (let i = 0; i < hand.actions.length; i++) {
-          const action = hand.actions[i]
-          await supabase.from('hand_actions').insert({
-            hand_id: handId,
-            sequence: i + 1,
-            player_name: action.player,
-            action: action.action,
-            amount: action.amount,
-            street: action.street,
-          })
-        }
+      // 액션 임베딩 데이터 준비
+      const actionsEmbedded = []
+      let sequence = 1
+      for (const action of hand.actions || []) {
+        const playerData = playersEmbedded.find(
+          (p) => p.name.toLowerCase() === action.player.toLowerCase()
+        )
+
+        actionsEmbedded.push({
+          playerId: playerData?.playerId || '',
+          playerName: action.player,
+          street: action.street || 'preflop',
+          sequence: sequence++,
+          actionType: action.action,
+          amount: action.amount || 0,
+        })
       }
+
+      // 핸드 저장
+      await handRef.set({
+        streamId,
+        eventId: '',
+        tournamentId: '',
+        number: hand.number,
+        timestamp: hand.timestamp_start || '',
+        videoTimestampStart: hand.absolute_timestamp_start ?? null,
+        videoTimestampEnd: hand.absolute_timestamp_end ?? null,
+        potSize: hand.pot_size || 0,
+        description: hand.description || '',
+        players: playersEmbedded,
+        actions: actionsEmbedded,
+        engagement: {
+          likesCount: 0,
+          dislikesCount: 0,
+          bookmarksCount: 0,
+        },
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      })
 
       saved++
     } catch (error) {
@@ -389,15 +424,12 @@ async function updateStreamStatus(
   streamId: string,
   status: 'completed' | 'failed'
 ): Promise<void> {
-  const supabase = getSupabase()
+  const db = getFirestore()
 
-  await supabase
-    .from('streams')
-    .update({
-      analysis_status: status,
-      analyzed_at: new Date().toISOString(),
-    })
-    .eq('id', streamId)
+  await db.collection(COLLECTION_PATHS.UNSORTED_STREAMS).doc(streamId).update({
+    status,
+    updatedAt: FieldValue.serverTimestamp(),
+  })
 }
 
 // ==================== 정리 ====================
@@ -498,7 +530,7 @@ export async function runAnalysis(
 
     // Phase 3: DB 저장
     updateJobMetadata(jobId, { status: 'saving' })
-    console.log(`[ANALYZER] Phase 3: Saving to database...`)
+    console.log(`[ANALYZER] Phase 3: Saving to Firestore...`)
 
     const saveResult = await saveHandsToDatabase(streamId, allHands)
     console.log(`[ANALYZER] Saved: ${saveResult.saved}, Errors: ${saveResult.errors}`)

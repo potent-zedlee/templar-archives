@@ -1,6 +1,6 @@
 # Cloud Run 영상 분석 서비스
 
-Trigger.dev를 대체하는 Google Cloud Run 기반 영상 분석 파이프라인입니다.
+Google Cloud Run 기반 영상 분석 파이프라인입니다.
 
 ## 아키텍처
 
@@ -11,17 +11,17 @@ Trigger.dev를 대체하는 Google Cloud Run 기반 영상 분석 파이프라�
 │   (Next.js)     │     │  (Cloud Run)    │     │                 │
 │                 │     │                 │     │                 │
 └─────────────────┘     └─────────────────┘     └────────┬────────┘
-                               │                         │
-                               │                         ▼
-                               │                ┌─────────────────┐
-                               │                │                 │
-                               ▼                │ Segment Analyzer│
-                        ┌─────────────────┐     │  (Cloud Run)    │
-                        │                 │     │                 │
-                        │   Firestore     │◀────│  - FFmpeg       │
-                        │   (상태 저장)    │     │  - Vertex AI    │
-                        │                 │     │  - Supabase     │
-                        └─────────────────┘     └─────────────────┘
+                              │                         │
+                              │                         ▼
+                              │                ┌─────────────────┐
+                              │                │                 │
+                              ▼                │ Segment Analyzer│
+                       ┌─────────────────┐     │  (Cloud Run)    │
+                       │                 │     │                 │
+                       │   Firestore     │◀────│  - FFmpeg       │
+                       │   (상태 저장)    │     │  - Vertex AI    │
+                       │                 │     │  - Firestore    │
+                       └─────────────────┘     └─────────────────┘
 ```
 
 ## 서비스 구성
@@ -37,7 +37,7 @@ Trigger.dev를 대체하는 Google Cloud Run 기반 영상 분석 파이프라�
 **환경 변수:**
 ```bash
 GOOGLE_CLOUD_PROJECT=your-project-id
-FIRESTORE_COLLECTION=analysis-jobs
+FIRESTORE_COLLECTION=analysisJobs
 CLOUD_TASKS_LOCATION=asia-northeast3
 CLOUD_TASKS_QUEUE=video-analysis-queue
 SEGMENT_ANALYZER_URL=https://segment-analyzer-xxx.run.app
@@ -50,19 +50,17 @@ SEGMENT_ANALYZER_URL=https://segment-analyzer-xxx.run.app
 **기능:**
 - FFmpeg로 세그먼트 추출
 - Vertex AI Gemini로 영상 분석
-- Supabase에 핸드 저장
+- Firestore에 핸드 저장
 - Firestore 진행 상황 업데이트
 
 **환경 변수:**
 ```bash
 GOOGLE_CLOUD_PROJECT=your-project-id
-FIRESTORE_COLLECTION=analysis-jobs
+GCP_PROJECT_ID=your-project-id
+FIRESTORE_COLLECTION=analysisJobs
 GCS_BUCKET_NAME=templar-archives-videos
 VERTEX_AI_LOCATION=global
-GCS_CLIENT_EMAIL=service-account@project.iam.gserviceaccount.com
-GCS_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----...
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+GOOGLE_API_KEY=your-google-api-key
 ```
 
 ### 3. Shared (`/shared`)
@@ -102,7 +100,6 @@ chmod +x deploy.sh
 ```bash
 # .env.local
 CLOUD_RUN_ORCHESTRATOR_URL=https://video-orchestrator-xxx.run.app
-USE_CLOUD_RUN=true
 ```
 
 ## 로컬 개발
@@ -132,13 +129,6 @@ npm run dev
 - 세그먼트 간 지연: 2초
 - 최대 재시도: 3회
 
-## Trigger.dev에서 마이그레이션
-
-1. `USE_CLOUD_RUN=true` 환경 변수 설정
-2. `CLOUD_RUN_ORCHESTRATOR_URL` 설정
-3. 프론트엔드에서 `useCloudRunJob` hook 사용
-4. 기존 Trigger.dev 코드는 fallback으로 유지
-
 ## 문제 해결
 
 ### 세그먼트 분석 실패
@@ -163,3 +153,4 @@ npm run dev
 - [Google Cloud Run](https://cloud.google.com/run)
 - [Google Cloud Tasks](https://cloud.google.com/tasks)
 - [Vertex AI Gemini](https://cloud.google.com/vertex-ai/docs/generative-ai)
+- [Firebase Firestore](https://firebase.google.com/docs/firestore)

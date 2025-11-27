@@ -1,28 +1,31 @@
 /**
- * Hand Saver - DB 저장 유틸리티
+ * Hand Saver - Firestore 저장 유틸리티
  *
- * 기존 lib/database/hand-saver.ts 포팅
- * Cloud Run 환경에 최적화
+ * Cloud Run 환경에 최적화된 Firestore 버전
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { Firestore, FieldValue } from '@google-cloud/firestore'
 import type { ExtractedHand } from './vertex-analyzer'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabaseClient = SupabaseClient<any, any, any>
+// Firestore 클라이언트 초기화
+let firestoreClient: Firestore | null = null
 
-function createSupabaseClient(): AnySupabaseClient {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-
-  if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase environment variables are not set')
+function getFirestore(): Firestore {
+  if (!firestoreClient) {
+    firestoreClient = new Firestore({
+      projectId: process.env.GCP_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT,
+    })
   }
-
-  return createClient(supabaseUrl, supabaseKey, {
-    auth: { persistSession: false },
-  })
+  return firestoreClient
 }
+
+// 컬렉션 경로 상수
+const COLLECTION_PATHS = {
+  HANDS: 'hands',
+  PLAYERS: 'players',
+  UNSORTED_STREAMS: 'streams',
+  ANALYSIS_JOBS: 'analysisJobs',
+} as const
 
 export interface SaveHandsResult {
   success: boolean
@@ -36,19 +39,17 @@ export async function saveHandsToDatabase(
   streamId: string,
   hands: ExtractedHand[]
 ): Promise<SaveHandsResult> {
-  const supabase = createSupabaseClient()
+  const firestore = getFirestore()
 
   console.log(
     `[HandSaver] Starting to save ${hands.length} hands to stream ${streamId}`
   )
 
-  const { data: stream, error: streamError } = await supabase
-    .from('streams')
-    .select('id, sub_event_id')
-    .eq('id', streamId)
-    .single()
+  // Stream 존재 확인
+  const streamRef = firestore.collection(COLLECTION_PATHS.UNSORTED_STREAMS).doc(streamId)
+  const streamDoc = await streamRef.get()
 
-  if (streamError || !stream) {
+  if (!streamDoc.exists) {
     return {
       success: false,
       saved: 0,
@@ -63,7 +64,7 @@ export async function saveHandsToDatabase(
 
   for (const hand of hands) {
     try {
-      await saveSingleHand(supabase, streamId, hand)
+      await saveSingleHand(firestore, streamId, hand)
       savedCount++
 
       if (savedCount % 10 === 0) {
@@ -89,88 +90,59 @@ export async function updateStreamStatus(
   streamId: string,
   status: 'analyzing' | 'completed' | 'failed'
 ): Promise<void> {
-  const supabase = createSupabaseClient()
+  const firestore = getFirestore()
 
-  await supabase
-    .from('streams')
-    .update({
-      status,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', streamId)
+  await firestore.collection(COLLECTION_PATHS.UNSORTED_STREAMS).doc(streamId).update({
+    status,
+    updatedAt: FieldValue.serverTimestamp(),
+  })
 
   console.log(`[HandSaver] Stream ${streamId} status updated to: ${status}`)
 }
 
 async function saveSingleHand(
-  supabase: AnySupabaseClient,
+  firestore: Firestore,
   streamId: string,
   hand: ExtractedHand
 ): Promise<void> {
   const blinds = parseBlindsFromStakes(hand.stakes)
 
-  const { data: insertedHand, error: handError } = await supabase
-    .from('hands')
-    .insert({
-      day_id: streamId,
-      number: String(hand.handNumber),
-      description: generateHandDescription(hand),
-      timestamp: formatTimestampDisplay(hand),
-      video_timestamp_start: hand.absolute_timestamp_start ?? null,
-      video_timestamp_end: hand.absolute_timestamp_end ?? null,
-      pot_size: hand.pot || 0,
-      board_cards: formatBoardCards(hand.board),
-      small_blind: blinds.smallBlind,
-      big_blind: blinds.bigBlind,
-      ante: blinds.ante,
-    })
-    .select()
-    .single()
+  // 핸드 문서 생성
+  const handRef = firestore.collection(COLLECTION_PATHS.HANDS).doc()
+  const handId = handRef.id
 
-  if (handError || !insertedHand) {
-    throw new Error(`Failed to insert hand: ${handError?.message}`)
-  }
+  // 플레이어 처리 및 임베딩 데이터 준비
+  const playersEmbedded = []
+  const actionsEmbedded = []
 
-  const handId = insertedHand.id
-
-  // Players
+  // Players 처리
   for (const player of hand.players || []) {
     try {
       const normalizedName = player.name.toLowerCase().replace(/[^a-z0-9]/g, '')
 
-      let { data: existingPlayer } = await supabase
-        .from('players')
-        .select('id, name')
-        .eq('normalized_name', normalizedName)
-        .single()
+      // 플레이어 찾기 또는 생성
+      const playersQuery = await firestore
+        .collection(COLLECTION_PATHS.PLAYERS)
+        .where('normalizedName', '==', normalizedName)
+        .limit(1)
+        .get()
 
-      if (!existingPlayer) {
-        const { data: newPlayer, error: playerError } = await supabase
-          .from('players')
-          .insert({
-            name: player.name,
-            normalized_name: normalizedName,
-          })
-          .select()
-          .single()
+      let playerId: string
 
-        if (playerError) {
-          console.error(
-            `[HandSaver] Error creating player ${player.name}:`,
-            playerError
-          )
-          continue
-        }
-
-        existingPlayer = newPlayer
+      if (playersQuery.empty) {
+        // 새 플레이어 생성
+        const newPlayerRef = firestore.collection(COLLECTION_PATHS.PLAYERS).doc()
+        await newPlayerRef.set({
+          name: player.name,
+          normalizedName,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        })
+        playerId = newPlayerRef.id
+        console.log(`[HandSaver] Created new player: ${player.name} (${playerId})`)
+      } else {
+        playerId = playersQuery.docs[0].id
       }
-
-      if (!existingPlayer) {
-        console.warn(`[HandSaver] Could not find or create player: ${player.name}`)
-        continue
-      }
-
-      const playerId = existingPlayer.id
 
       const isWinner =
         hand.winners?.some(
@@ -178,51 +150,80 @@ async function saveSingleHand(
             w.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normalizedName
         ) || false
 
-      await supabase.from('hand_players').insert({
-        hand_id: handId,
-        player_id: playerId,
-        poker_position: player.position,
-        hole_cards: player.holeCards,
-        starting_stack: player.stackSize || 0,
-        ending_stack: player.stackSize || 0,
-        seat: player.seat,
-        is_winner: isWinner,
+      // 임베딩 데이터에 추가
+      playersEmbedded.push({
+        playerId,
+        name: player.name,
+        position: player.position || null,
+        seat: player.seat || null,
+        cards: player.holeCards || null,
+        startStack: player.stackSize || 0,
+        endStack: player.stackSize || 0,
+        isWinner,
       })
     } catch (error) {
-      console.error(`[HandSaver] Error saving player ${player.name}:`, error)
+      console.error(`[HandSaver] Error processing player ${player.name}:`, error)
     }
   }
 
-  // Actions
+  // Actions 처리
   let sequence = 1
   for (const action of hand.actions || []) {
     try {
       const normalizedName = action.player.toLowerCase().replace(/[^a-z0-9]/g, '')
-      const { data: player } = await supabase
-        .from('players')
-        .select('id')
-        .eq('normalized_name', normalizedName)
-        .single()
 
-      if (!player) {
+      // 플레이어 ID 찾기
+      const playerData = playersEmbedded.find(
+        (p) => p.name.toLowerCase().replace(/[^a-z0-9]/g, '') === normalizedName
+      )
+
+      if (!playerData) {
         console.warn(
           `[HandSaver] Player not found for action: ${action.player}`
         )
         continue
       }
 
-      await supabase.from('hand_actions').insert({
-        hand_id: handId,
-        player_id: player.id,
-        street: action.street,
-        action_type: action.action,
-        amount: action.amount || 0,
+      actionsEmbedded.push({
+        playerId: playerData.playerId,
+        playerName: action.player,
+        street: action.street || 'preflop',
         sequence: sequence++,
+        actionType: action.action,
+        amount: action.amount || 0,
       })
     } catch (error) {
-      console.error(`[HandSaver] Error saving action:`, error)
+      console.error(`[HandSaver] Error processing action:`, error)
     }
   }
+
+  // 핸드 문서 저장 (Firestore 스키마에 맞게)
+  await handRef.set({
+    streamId,
+    eventId: '', // 나중에 업데이트
+    tournamentId: '', // 나중에 업데이트
+    number: String(hand.handNumber),
+    description: generateHandDescription(hand),
+    timestamp: formatTimestampDisplay(hand),
+    videoTimestampStart: hand.absolute_timestamp_start ?? null,
+    videoTimestampEnd: hand.absolute_timestamp_end ?? null,
+    potSize: hand.pot || 0,
+    boardFlop: hand.board?.flop || null,
+    boardTurn: hand.board?.turn || null,
+    boardRiver: hand.board?.river || null,
+    smallBlind: blinds.smallBlind,
+    bigBlind: blinds.bigBlind,
+    ante: blinds.ante,
+    players: playersEmbedded,
+    actions: actionsEmbedded,
+    engagement: {
+      likesCount: 0,
+      dislikesCount: 0,
+      bookmarksCount: 0,
+    },
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  })
 }
 
 function formatSecondsToTimestamp(seconds: number): string {
@@ -266,19 +267,6 @@ function generateHandDescription(hand: ExtractedHand): string {
     .join(' / ')
 
   return descriptions || 'Hand'
-}
-
-function formatBoardCards(board: ExtractedHand['board']): string {
-  if (!board) return ''
-
-  const cards: string[] = []
-  if (board.flop && Array.isArray(board.flop)) {
-    cards.push(...board.flop)
-  }
-  if (board.turn) cards.push(board.turn)
-  if (board.river) cards.push(board.river)
-
-  return cards.join(' ')
 }
 
 interface ParsedBlinds {
