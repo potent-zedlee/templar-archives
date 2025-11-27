@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { adminFirestore } from '@/lib/firebase-admin'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { logger } from '@/lib/logger'
@@ -24,8 +24,6 @@ export async function POST(request: NextRequest) {
   // Apply rate limiting (5 requests per minute)
   const rateLimitResponse = await applyRateLimit(request, rateLimiters.naturalSearch)
   if (rateLimitResponse) return rateLimitResponse
-
-  const supabase = await createServerSupabaseClient()
 
   try {
     const body = await request.json()
@@ -109,10 +107,10 @@ export async function POST(request: NextRequest) {
 
     logger.debug('Validated filter:', filter)
 
-    // Build query from filter (안전한 Query Builder 사용)
-    const supabaseQuery = await buildQueryFromFilter(filter, supabase)
+    // Build query from filter (Firestore 쿼리 사용)
+    const results = await buildQueryFromFilter(filter, adminFirestore)
 
-    if (!supabaseQuery) {
+    if (!results || results.length === 0) {
       // 필터 조건에 일치하는 결과 없음
       return NextResponse.json({
         results: [],
@@ -122,20 +120,13 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Execute the query
-    const { data, error } = await supabaseQuery
-
-    if (error) {
-      throw error
-    }
-
     return NextResponse.json({
-      results: data,
+      results,
       filter,
       method: 'json-filter'
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     logError('natural-search', error)
 
     return NextResponse.json(

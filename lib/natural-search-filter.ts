@@ -1,4 +1,12 @@
 import { z } from 'zod'
+import type { Firestore } from 'firebase-admin/firestore'
+import {
+  COLLECTION_PATHS,
+  type FirestoreHand,
+  type FirestoreTournament,
+  type FirestorePlayer,
+  type TournamentCategory,
+} from '@/lib/firestore-types'
 
 /**
  * Natural Search Filter Types
@@ -48,184 +56,350 @@ export type NaturalSearchFilter = z.infer<typeof NaturalSearchFilterSchema>
 // ==================== Filter Builder ====================
 
 /**
- * 필터를 Supabase 쿼리로 변환
+ * 검색 결과 타입
+ */
+export interface NaturalSearchResult {
+  id: string
+  number: string
+  description: string
+  timestamp: string
+  favorite?: boolean
+  potSize?: number
+  boardCards?: string[]
+  stream?: {
+    name: string
+    event?: {
+      name: string
+      tournament?: {
+        name: string
+        category: string
+      }
+    }
+  }
+}
+
+/**
+ * 필터를 Firestore 쿼리로 변환하고 결과를 반환
  *
  * @param filter - 자연어 검색 필터
- * @param supabase - Supabase 클라이언트
- * @returns Supabase 쿼리 빌더
+ * @param firestore - Admin Firestore 인스턴스
+ * @returns 검색 결과 배열 또는 null
  */
-export async function buildQueryFromFilter(filter: NaturalSearchFilter, supabase: any) {
-  // 기본 쿼리 시작
-  let query = supabase
-    .from('hands')
-    .select(`
-      id,
-      number,
-      description,
-      timestamp,
-      favorite,
-      pot_size,
-      board_cards,
-      days (
-        name,
-        sub_events (
-          name,
-          tournaments (
-            name,
-            category
-          )
-        )
-      )
-    `)
+export async function buildQueryFromFilter(
+  filter: NaturalSearchFilter,
+  firestore: Firestore
+): Promise<NaturalSearchResult[] | null> {
+  // 결과를 저장할 배열
+  let results: NaturalSearchResult[] = []
+
+  // 필터링에 사용할 핸드 ID 세트 (교집합 계산용)
+  let filteredHandIds: Set<string> | null = null
 
   // 1. 플레이어 필터
   if (filter.players && filter.players.length > 0) {
-    // 플레이어 ID 조회
-    const { data: playerData } = await supabase
-      .from('players')
-      .select('id')
-      .or(filter.players.map(name => `name.ilike.%${name}%`).join(','))
+    // 플레이어 이름으로 검색
+    const playerIds: string[] = []
 
-    if (playerData && playerData.length > 0) {
-      const playerIds = playerData.map((p: any) => p.id)
+    for (const playerName of filter.players) {
+      const normalizedName = playerName.toLowerCase().replace(/[^a-z0-9]/g, '')
 
-      // hand_players로 핸드 필터링
-      const { data: handPlayerData } = await supabase
-        .from('hand_players')
-        .select('hand_id')
-        .in('player_id', playerIds)
+      // 정규화된 이름으로 검색
+      const playersSnapshot = await firestore
+        .collection(COLLECTION_PATHS.PLAYERS)
+        .where('normalizedName', '>=', normalizedName)
+        .where('normalizedName', '<=', normalizedName + '\uf8ff')
+        .limit(10)
+        .get()
 
-      if (handPlayerData && handPlayerData.length > 0) {
-        const handIds = handPlayerData.map((hp: any) => hp.hand_id)
-        query = query.in('id', handIds)
-      } else {
-        // 일치하는 핸드 없음
-        return null
-      }
-    } else {
-      // 일치하는 플레이어 없음
+      playersSnapshot.forEach(doc => {
+        playerIds.push(doc.id)
+      })
+
+      // 일반 이름으로도 검색 (부분 일치)
+      const nameSnapshot = await firestore
+        .collection(COLLECTION_PATHS.PLAYERS)
+        .orderBy('name')
+        .startAt(playerName)
+        .endAt(playerName + '\uf8ff')
+        .limit(10)
+        .get()
+
+      nameSnapshot.forEach(doc => {
+        if (!playerIds.includes(doc.id)) {
+          playerIds.push(doc.id)
+        }
+      })
+    }
+
+    if (playerIds.length === 0) {
+      return null // 일치하는 플레이어 없음
+    }
+
+    // 해당 플레이어가 참여한 핸드 찾기
+    const handIds = new Set<string>()
+
+    for (const playerId of playerIds) {
+      const handsSnapshot = await firestore
+        .collection(COLLECTION_PATHS.HANDS)
+        .where('players', 'array-contains-any', [{ playerId }])
+        .limit(100)
+        .get()
+
+      // players 배열에서 playerId를 직접 검색하기 어려우므로
+      // 전체 핸드를 가져와서 필터링
+      const allHandsSnapshot = await firestore
+        .collection(COLLECTION_PATHS.HANDS)
+        .limit(500)
+        .get()
+
+      allHandsSnapshot.forEach(doc => {
+        const hand = doc.data() as FirestoreHand
+        const hasPlayer = hand.players?.some(p => playerIds.includes(p.playerId))
+        if (hasPlayer) {
+          handIds.add(doc.id)
+        }
+      })
+    }
+
+    if (handIds.size === 0) {
       return null
     }
+
+    filteredHandIds = handIds
   }
 
   // 2. 토너먼트 필터
   if (filter.tournaments && filter.tournaments.length > 0) {
-    const { data: tournamentData } = await supabase
-      .from('tournaments')
-      .select('id')
-      .or(filter.tournaments.map(name => `name.ilike.%${name}%`).join(','))
+    const tournamentIds: string[] = []
 
-    if (tournamentData && tournamentData.length > 0) {
-      const tournamentIds = tournamentData.map((t: any) => t.id)
+    for (const tournamentName of filter.tournaments) {
+      const tournamentsSnapshot = await firestore
+        .collection(COLLECTION_PATHS.TOURNAMENTS)
+        .orderBy('name')
+        .startAt(tournamentName)
+        .endAt(tournamentName + '\uf8ff')
+        .limit(10)
+        .get()
 
-      // sub_events를 통해 days 조회
-      const { data: subEventData } = await supabase
-        .from('sub_events')
-        .select('id')
-        .in('tournament_id', tournamentIds)
+      tournamentsSnapshot.forEach(doc => {
+        tournamentIds.push(doc.id)
+      })
+    }
 
-      if (subEventData && subEventData.length > 0) {
-        const subEventIds = subEventData.map((se: any) => se.id)
-
-        const { data: dayData } = await supabase
-          .from('streams')
-          .select('id')
-          .in('sub_event_id', subEventIds)
-
-        if (dayData && dayData.length > 0) {
-          const dayIds = dayData.map((d: any) => d.id)
-          query = query.in('day_id', dayIds)
-        } else {
-          return null
-        }
-      } else {
-        return null
-      }
-    } else {
+    if (tournamentIds.length === 0) {
       return null
+    }
+
+    // 해당 토너먼트의 핸드 찾기
+    const handIds = new Set<string>()
+
+    for (const tournamentId of tournamentIds) {
+      const handsSnapshot = await firestore
+        .collection(COLLECTION_PATHS.HANDS)
+        .where('tournamentId', '==', tournamentId)
+        .limit(100)
+        .get()
+
+      handsSnapshot.forEach(doc => {
+        handIds.add(doc.id)
+      })
+    }
+
+    if (handIds.size === 0) {
+      return null
+    }
+
+    // 교집합 계산
+    if (filteredHandIds !== null) {
+      filteredHandIds = new Set([...filteredHandIds].filter(id => handIds.has(id)))
+      if (filteredHandIds.size === 0) return null
+    } else {
+      filteredHandIds = handIds
     }
   }
 
   // 3. 카테고리 필터
   if (filter.categories && filter.categories.length > 0) {
-    const { data: tournamentData } = await supabase
-      .from('tournaments')
-      .select('id')
-      .in('category', filter.categories)
+    const tournamentIds: string[] = []
 
-    if (tournamentData && tournamentData.length > 0) {
-      const tournamentIds = tournamentData.map((t: any) => t.id)
+    const tournamentsSnapshot = await firestore
+      .collection(COLLECTION_PATHS.TOURNAMENTS)
+      .where('category', 'in', filter.categories)
+      .get()
 
-      const { data: subEventData } = await supabase
-        .from('sub_events')
-        .select('id')
-        .in('tournament_id', tournamentIds)
+    tournamentsSnapshot.forEach(doc => {
+      tournamentIds.push(doc.id)
+    })
 
-      if (subEventData && subEventData.length > 0) {
-        const subEventIds = subEventData.map((se: any) => se.id)
-
-        const { data: dayData } = await supabase
-          .from('streams')
-          .select('id')
-          .in('sub_event_id', subEventIds)
-
-        if (dayData && dayData.length > 0) {
-          const dayIds = dayData.map((d: any) => d.id)
-          query = query.in('day_id', dayIds)
-        } else {
-          return null
-        }
-      } else {
-        return null
-      }
-    } else {
+    if (tournamentIds.length === 0) {
       return null
+    }
+
+    // 해당 토너먼트의 핸드 찾기
+    const handIds = new Set<string>()
+
+    for (const tournamentId of tournamentIds) {
+      const handsSnapshot = await firestore
+        .collection(COLLECTION_PATHS.HANDS)
+        .where('tournamentId', '==', tournamentId)
+        .limit(100)
+        .get()
+
+      handsSnapshot.forEach(doc => {
+        handIds.add(doc.id)
+      })
+    }
+
+    if (handIds.size === 0) {
+      return null
+    }
+
+    // 교집합 계산
+    if (filteredHandIds !== null) {
+      filteredHandIds = new Set([...filteredHandIds].filter(id => handIds.has(id)))
+      if (filteredHandIds.size === 0) return null
+    } else {
+      filteredHandIds = handIds
     }
   }
 
-  // 4. 팟 크기 필터
+  // 4. 팟 크기 필터 및 기타 필터는 최종 쿼리에서 적용
+  let handsQuery = firestore.collection(COLLECTION_PATHS.HANDS) as FirebaseFirestore.Query
+
+  // 팟 크기 필터
   if (filter.pot_min !== undefined) {
-    query = query.gte('pot_size', filter.pot_min)
+    handsQuery = handsQuery.where('potSize', '>=', filter.pot_min)
   }
   if (filter.pot_max !== undefined) {
-    query = query.lte('pot_size', filter.pot_max)
+    handsQuery = handsQuery.where('potSize', '<=', filter.pot_max)
   }
 
-  // 5. 홀카드 필터 (description 텍스트 검색)
-  if (filter.hole_cards && filter.hole_cards.length > 0) {
-    const cardPatterns = filter.hole_cards.map(card => `%${card}%`)
-    query = query.or(cardPatterns.map(pattern => `description.ilike.${pattern}`).join(','))
-  }
-
-  // 6. 보드 카드 필터 (board_cards 배열)
-  if (filter.board_cards && filter.board_cards.length > 0) {
-    // PostgreSQL array contains 연산자 사용
-    query = query.contains('board_cards', filter.board_cards)
-  }
-
-  // 7. Description 텍스트 검색
-  if (filter.description_contains) {
-    query = query.ilike('description', `%${filter.description_contains}%`)
-  }
-
-  // 8. 날짜 필터 (timestamp 기준)
-  if (filter.date_from) {
-    query = query.gte('timestamp', filter.date_from)
-  }
-  if (filter.date_to) {
-    query = query.lte('timestamp', filter.date_to)
-  }
-
-  // 9. 정렬
-  const orderBy = filter.order_by || 'timestamp'
+  // 정렬
+  const orderBy = filter.order_by === 'pot_size' ? 'potSize' :
+                  filter.order_by === 'created_at' ? 'createdAt' : 'timestamp'
   const orderDirection = filter.order_direction || 'desc'
-  query = query.order(orderBy, { ascending: orderDirection === 'asc' })
+  handsQuery = handsQuery.orderBy(orderBy, orderDirection)
 
-  // 10. 제한
+  // 제한
   const limit = filter.limit || 50
-  query = query.limit(limit)
+  handsQuery = handsQuery.limit(limit)
 
-  return query
+  // 쿼리 실행
+  const handsSnapshot = await handsQuery.get()
+
+  // 결과 처리
+  const streamCache = new Map<string, any>()
+  const tournamentCache = new Map<string, any>()
+
+  for (const doc of handsSnapshot.docs) {
+    const hand = doc.data() as FirestoreHand
+
+    // 필터된 핸드 ID가 있으면 확인
+    if (filteredHandIds !== null && !filteredHandIds.has(doc.id)) {
+      continue
+    }
+
+    // Description 텍스트 검색
+    if (filter.description_contains) {
+      const searchTerm = filter.description_contains.toLowerCase()
+      if (!hand.description?.toLowerCase().includes(searchTerm)) {
+        continue
+      }
+    }
+
+    // 홀카드 필터 (description에서 검색)
+    if (filter.hole_cards && filter.hole_cards.length > 0) {
+      const hasCard = filter.hole_cards.some(card =>
+        hand.description?.toLowerCase().includes(card.toLowerCase())
+      )
+      if (!hasCard) {
+        continue
+      }
+    }
+
+    // 보드 카드 필터
+    if (filter.board_cards && filter.board_cards.length > 0) {
+      const boardCards = [
+        ...(hand.boardFlop || []),
+        hand.boardTurn,
+        hand.boardRiver,
+      ].filter(Boolean)
+
+      const hasAllCards = filter.board_cards.every(card =>
+        boardCards.includes(card)
+      )
+      if (!hasAllCards) {
+        continue
+      }
+    }
+
+    // 스트림/이벤트/토너먼트 정보 가져오기 (캐싱)
+    let streamData = null
+    if (hand.streamId) {
+      if (streamCache.has(hand.streamId)) {
+        streamData = streamCache.get(hand.streamId)
+      } else {
+        const streamDoc = await firestore
+          .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
+          .doc(hand.streamId)
+          .get()
+
+        if (streamDoc.exists) {
+          streamData = streamDoc.data()
+          streamCache.set(hand.streamId, streamData)
+        }
+      }
+    }
+
+    let tournamentData = null
+    if (hand.tournamentId) {
+      if (tournamentCache.has(hand.tournamentId)) {
+        tournamentData = tournamentCache.get(hand.tournamentId)
+      } else {
+        const tournamentDoc = await firestore
+          .collection(COLLECTION_PATHS.TOURNAMENTS)
+          .doc(hand.tournamentId)
+          .get()
+
+        if (tournamentDoc.exists) {
+          tournamentData = tournamentDoc.data()
+          tournamentCache.set(hand.tournamentId, tournamentData)
+        }
+      }
+    }
+
+    // 결과 추가
+    results.push({
+      id: doc.id,
+      number: hand.number,
+      description: hand.description,
+      timestamp: hand.timestamp,
+      favorite: hand.favorite,
+      potSize: hand.potSize,
+      boardCards: [
+        ...(hand.boardFlop || []),
+        hand.boardTurn,
+        hand.boardRiver,
+      ].filter((c): c is string => Boolean(c)),
+      stream: streamData ? {
+        name: streamData.name || '',
+        event: {
+          name: streamData.eventName || '',
+          tournament: tournamentData ? {
+            name: tournamentData.name || '',
+            category: tournamentData.category || '',
+          } : undefined,
+        },
+      } : undefined,
+    })
+
+    // 결과 수 제한
+    if (results.length >= limit) {
+      break
+    }
+  }
+
+  return results.length > 0 ? results : null
 }
 
 // ==================== Prompt Template ====================

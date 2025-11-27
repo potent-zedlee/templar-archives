@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { adminFirestore } from '@/lib/firebase-admin'
 import { sanitizeErrorMessage, logError } from '@/lib/error-handler'
 import { applyRateLimit, rateLimiters } from '@/lib/rate-limit'
 import { importHandsSchema, validateInput, formatValidationErrors } from '@/lib/validation/api-schemas'
 import { sanitizeText, logSecurityEvent } from '@/lib/security'
 import { verifyCSRF } from '@/lib/security/csrf'
 import { findBestMatch } from '@/lib/name-matching'
+import {
+  COLLECTION_PATHS,
+  type FirestoreHand,
+  type FirestorePlayer,
+  type HandPlayerEmbedded,
+  type HandActionEmbedded,
+  type PokerStreet,
+  type PokerActionType,
+  type PokerPosition,
+} from '@/lib/firestore-types'
+import { FieldValue } from 'firebase-admin/firestore'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +28,59 @@ interface PlayerMatchResult {
   similarity: number
   confidence: 'high' | 'medium' | 'low'
   isPartialMatch: boolean
+}
+
+// Import 응답 타입
+interface ImportHandsResponse {
+  success: boolean
+  imported: number
+  failed: number
+  error?: string
+  errors?: string[]
+}
+
+// Import 핸드 플레이어 타입
+interface ImportHandPlayer {
+  name: string
+  position?: string
+  cards?: string
+  stack?: number
+}
+
+// Import 핸드 스트리트 액션 타입
+interface ImportStreetActions {
+  actions?: Array<string | {
+    player?: string
+    playerName?: string
+    action?: string
+    actionType?: string
+    amount?: number
+    description?: string
+  }>
+}
+
+// Import 핸드 스트리트 타입
+interface ImportHandStreets {
+  preflop?: ImportStreetActions
+  flop?: ImportStreetActions
+  turn?: ImportStreetActions
+  river?: ImportStreetActions
+}
+
+// Import 핸드 타입
+interface ImportHand {
+  number: string
+  description: string
+  timestamp: string
+  summary?: string
+  pot_size?: number
+  board_cards?: string[]
+  players?: ImportHandPlayer[]
+  streets?: ImportHandStreets
+  preflop?: any
+  flop?: any
+  turn?: any
+  river?: any
 }
 
 /**
@@ -37,8 +101,6 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = await applyRateLimit(request, rateLimiters.importHands)
   if (rateLimitResponse) return rateLimitResponse
 
-  const supabase = await createServerSupabaseClient()
-
   try {
     const body = await request.json()
 
@@ -58,16 +120,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { streamId, hands } = validation.data!
+    const { streamId, hands } = validation.data! as { streamId: string; hands: ImportHand[] }
 
     // Stream이 존재하는지 확인
-    const { data: stream, error: streamError } = await supabase
-      .from('streams')
-      .select('id')
-      .eq('id', streamId)
-      .single()
+    const streamDoc = await adminFirestore
+      .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
+      .doc(streamId)
+      .get()
 
-    if (streamError || !stream) {
+    if (!streamDoc.exists) {
       return NextResponse.json(
         {
           success: false,
@@ -84,57 +145,38 @@ export async function POST(request: NextRequest) {
     const errors: string[] = []
     const matchResults: PlayerMatchResult[] = []
 
+    // 모든 플레이어 목록을 한 번에 가져와서 fuzzy matching에 사용
+    const playersSnapshot = await adminFirestore
+      .collection(COLLECTION_PATHS.PLAYERS)
+      .get()
+
+    const allPlayers: Array<{ id: string; name: string }> = []
+    playersSnapshot.forEach(doc => {
+      const data = doc.data() as FirestorePlayer
+      allPlayers.push({ id: doc.id, name: data.name })
+    })
+
     // 각 핸드를 처리
     for (let i = 0; i < hands.length; i++) {
       const hand = hands[i]
 
       try {
-        // 1. 핸드 데이터 저장
-        const { data: handData, error: handError } = await supabase
-          .from('hands')
-          .insert({
-            day_id: streamId,
-            number: hand.number,
-            description: hand.description,
-            summary: hand.summary,
-            timestamp: hand.timestamp,
-            pot_size: hand.pot_size,
-            board_cards: hand.board_cards,
-            favorite: false
-          })
-          .select()
-          .single()
-
-        if (handError || !handData) {
-          logError('import-hands', handError)
-          throw new Error('핸드 저장에 실패했습니다')
-        }
-
-        // 2. 플레이어 정보 저장
-        // 먼저 모든 플레이어 목록을 가져와서 fuzzy matching에 사용
-        const { data: allPlayers } = await supabase
-          .from('players')
-          .select('id, name')
-
         const playerNameMap = new Map<string, string>() // 입력 이름 → DB 플레이어 ID
+        const embeddedPlayers: HandPlayerEmbedded[] = []
 
+        // 1. 플레이어 처리
         if (hand.players && hand.players.length > 0) {
           for (const player of hand.players) {
             // 플레이어 이름 sanitize (XSS 방지)
             const sanitizedPlayerName = sanitizeText(player.name, 100)
 
             // 1. 정확히 일치하는 플레이어 찾기
-            let { data: existingPlayer } = await supabase
-              .from('players')
-              .select('id, name')
-              .eq('name', sanitizedPlayerName)
-              .maybeSingle()
-
+            let existingPlayer = allPlayers.find(p => p.name === sanitizedPlayerName)
             let playerId: string
             let matchedName = sanitizedPlayerName
 
             // 2. 정확한 일치가 없으면 fuzzy matching 시도
-            if (!existingPlayer && allPlayers && allPlayers.length > 0) {
+            if (!existingPlayer && allPlayers.length > 0) {
               const candidateNames = allPlayers.map((p) => p.name)
               const bestMatch = findBestMatch(sanitizedPlayerName, candidateNames, 70)
 
@@ -162,64 +204,55 @@ export async function POST(request: NextRequest) {
 
             if (!existingPlayer) {
               // 플레이어 생성 (자동 등록)
-              const { data: newPlayer, error: playerError } = await supabase
-                .from('players')
-                .insert({
-                  name: sanitizedPlayerName,
-                  country: null, // 나중에 업데이트 가능
-                })
-                .select()
-                .single()
+              const newPlayerRef = adminFirestore
+                .collection(COLLECTION_PATHS.PLAYERS)
+                .doc()
 
-              if (playerError || !newPlayer) {
-                console.error('플레이어 생성 실패:', playerError)
-                continue
+              const newPlayerData: Omit<FirestorePlayer, 'createdAt' | 'updatedAt'> & {
+                createdAt: FieldValue
+                updatedAt: FieldValue
+              } = {
+                name: sanitizedPlayerName,
+                normalizedName: sanitizedPlayerName.toLowerCase().replace(/[^a-z0-9]/g, ''),
+                createdAt: FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
               }
-              playerId = newPlayer.id
-            } else {
-              playerId = existingPlayer.id ?? newPlayer?.id ?? ''
-            }
 
-            if (!playerId) continue
+              await newPlayerRef.set(newPlayerData)
+              playerId = newPlayerRef.id
+
+              // allPlayers에 새 플레이어 추가 (다음 핸드에서 사용)
+              allPlayers.push({ id: playerId, name: sanitizedPlayerName })
+            } else {
+              playerId = existingPlayer.id
+            }
 
             // 매핑 저장 (액션 저장 시 사용)
             playerNameMap.set(sanitizedPlayerName, playerId)
 
-            // hand_players 연결
-            const { error: handPlayerError } = await supabase
-              .from('hand_players')
-              .insert({
-                hand_id: handData.id,
-                player_id: playerId,
-                position: player.position || null,
-                cards: player.cards ? player.cards.split('').map(c => c).join('') : null,
-              })
-
-            if (handPlayerError) {
-              console.error('hand_players 저장 실패:', handPlayerError)
+            // 임베딩 플레이어 데이터 생성
+            const embeddedPlayer: HandPlayerEmbedded = {
+              playerId,
+              name: matchedName,
+              position: (player.position as PokerPosition) || undefined,
+              cards: player.cards ? player.cards.match(/.{1,2}/g) || undefined : undefined,
+              startStack: player.stack,
             }
+            embeddedPlayers.push(embeddedPlayer)
           }
         }
 
-        // 3. 액션 정보 저장
-        const actions: Array<{
-          playerId: string
-          actionType: string
-          street: string
-          amount: number
-          order: number
-          description?: string
-        }> = []
-
-        let actionOrder = 1
+        // 2. 액션 추출
+        const embeddedActions: HandActionEmbedded[] = []
+        let actionSequence = 1
 
         // 액션 추출 함수
-        const extractActions = (street: string, actionsData: any) => {
+        const extractActions = (street: PokerStreet, actionsData: ImportStreetActions['actions']) => {
           if (!actionsData) return
 
           // 문자열 배열 형식 (간단한 형식)
           if (Array.isArray(actionsData) && typeof actionsData[0] === 'string') {
-            actionsData.forEach((actionStr: string) => {
+            (actionsData as string[]).forEach((actionStr: string) => {
               // 예: "Tom Dwan raises to 1500"
               const parts = actionStr.split(' ')
               if (parts.length >= 2) {
@@ -227,27 +260,58 @@ export async function POST(request: NextRequest) {
                 const actionType = parts[parts.length - 2]
                 const amount = parseInt(parts[parts.length - 1]) || 0
 
-                actions.push({
-                  playerId: playerName, // 나중에 매핑
-                  actionType: actionType.toLowerCase(),
-                  street,
-                  amount,
-                  order: actionOrder++,
-                })
+                const sanitizedPlayerName = sanitizeText(playerName, 100)
+                const playerId = playerNameMap.get(sanitizedPlayerName) || ''
+
+                if (playerId) {
+                  embeddedActions.push({
+                    playerId,
+                    playerName: sanitizedPlayerName,
+                    street,
+                    sequence: actionSequence++,
+                    actionType: actionType.toLowerCase() as PokerActionType,
+                    amount: amount > 0 ? amount : undefined,
+                  })
+                }
               }
             })
           }
           // 객체 배열 형식 (상세 형식)
           else if (Array.isArray(actionsData)) {
-            actionsData.forEach((action: any) => {
-              actions.push({
-                playerId: action.player || action.playerName,
-                actionType: action.action || action.actionType,
-                street,
-                amount: action.amount || 0,
-                order: actionOrder++,
-                description: action.description,
-              })
+            actionsData.forEach((action) => {
+              if (typeof action === 'object' && action !== null) {
+                const playerName = action.player || action.playerName || ''
+                const sanitizedPlayerName = sanitizeText(playerName, 100)
+                const playerId = playerNameMap.get(sanitizedPlayerName)
+
+                // 플레이어 매핑에 없으면 fuzzy matching 시도
+                let resolvedPlayerId = playerId
+                if (!resolvedPlayerId && allPlayers.length > 0) {
+                  const candidateNames = allPlayers.map((p) => p.name)
+                  const bestMatch = findBestMatch(sanitizedPlayerName, candidateNames, 70)
+
+                  if (bestMatch && bestMatch.confidence !== 'low') {
+                    const matchedPlayer = allPlayers.find((p) => p.name === bestMatch.name)
+                    if (matchedPlayer) {
+                      resolvedPlayerId = matchedPlayer.id
+                      console.log(
+                        `Action fuzzy match: "${sanitizedPlayerName}" → "${bestMatch.name}"`
+                      )
+                    }
+                  }
+                }
+
+                if (resolvedPlayerId) {
+                  embeddedActions.push({
+                    playerId: resolvedPlayerId,
+                    playerName: sanitizedPlayerName,
+                    street,
+                    sequence: actionSequence++,
+                    actionType: ((action.action || action.actionType) as PokerActionType) || 'fold',
+                    amount: action.amount || undefined,
+                  })
+                }
+              }
             })
           }
         }
@@ -275,65 +339,77 @@ export async function POST(request: NextRequest) {
           if (hand.river) extractActions('river', hand.river)
         }
 
-        // 액션 저장
-        for (const action of actions) {
-          // 플레이어 ID 찾기 (매핑 사용)
-          const sanitizedPlayerName = sanitizeText(action.playerId, 100)
-          let playerId = playerNameMap.get(sanitizedPlayerName)
+        // 3. 핸드 데이터 저장
+        const handRef = adminFirestore.collection(COLLECTION_PATHS.HANDS).doc()
 
-          // 매핑에 없으면 DB에서 직접 찾기
-          if (!playerId) {
-            const { data: player } = await supabase
-              .from('players')
-              .select('id')
-              .eq('name', sanitizedPlayerName)
-              .maybeSingle()
+        const streamData = streamDoc.data()
+        const handData: Omit<FirestoreHand, 'createdAt' | 'updatedAt'> & {
+          createdAt: FieldValue
+          updatedAt: FieldValue
+        } = {
+          streamId,
+          eventId: streamData?.eventId || '',
+          tournamentId: streamData?.tournamentId || '',
+          number: hand.number,
+          description: hand.description,
+          aiSummary: hand.summary,
+          timestamp: hand.timestamp,
+          potSize: hand.pot_size,
+          boardFlop: hand.board_cards?.slice(0, 3),
+          boardTurn: hand.board_cards?.[3],
+          boardRiver: hand.board_cards?.[4],
+          players: embeddedPlayers,
+          actions: embeddedActions,
+          engagement: {
+            likesCount: 0,
+            bookmarksCount: 0,
+          },
+          favorite: false,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        }
 
-            if (player) {
-              playerId = player.id
-            } else if (allPlayers) {
-              // Fuzzy matching 시도
-              const candidateNames = allPlayers.map((p) => p.name)
-              const bestMatch = findBestMatch(sanitizedPlayerName, candidateNames, 70)
+        await handRef.set(handData)
 
-              if (bestMatch && bestMatch.confidence !== 'low') {
-                const matchedPlayer = allPlayers.find((p) => p.name === bestMatch.name)
-                if (matchedPlayer) {
-                  playerId = matchedPlayer.id
-                  console.log(
-                    `Action fuzzy match: "${sanitizedPlayerName}" → "${bestMatch.name}"`
-                  )
-                }
-              }
-            }
-          }
+        // 4. 플레이어별 핸드 인덱스 업데이트 (선택적)
+        for (const embeddedPlayer of embeddedPlayers) {
+          const playerHandRef = adminFirestore
+            .collection(COLLECTION_PATHS.PLAYER_HANDS(embeddedPlayer.playerId))
+            .doc(handRef.id)
 
-          if (playerId) {
-            const { error: actionError } = await supabase
-              .from('hand_actions')
-              .insert({
-                hand_id: handData.id,
-                player_id: playerId,
-                action_type: action.actionType,
-                street: action.street,
-                amount: action.amount,
-                action_order: action.order,
-                description: action.description,
-              })
-
-            if (actionError) {
-              console.error('hand_actions 저장 실패:', actionError)
-            }
-          }
+          await playerHandRef.set({
+            tournamentRef: {
+              id: streamData?.tournamentId || '',
+              name: streamData?.tournamentName || '',
+              category: streamData?.category || 'WSOP',
+            },
+            position: embeddedPlayer.position,
+            cards: embeddedPlayer.cards,
+            result: {
+              isWinner: embeddedPlayer.isWinner || false,
+            },
+            handDate: FieldValue.serverTimestamp(),
+          })
         }
 
         imported++
-      } catch (error: any) {
+      } catch (error: unknown) {
         failed++
         logError(`import-hands-hand-${hand.number}`, error)
         const errorMsg = sanitizeErrorMessage(error, '핸드 처리 중 오류가 발생했습니다')
         errors.push(`Hand #${hand.number}: ${errorMsg}`)
       }
+    }
+
+    // Stream의 핸드 카운트 업데이트
+    if (imported > 0) {
+      await adminFirestore
+        .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
+        .doc(streamId)
+        .update({
+          'stats.handsCount': FieldValue.increment(imported),
+          updatedAt: FieldValue.serverTimestamp(),
+        })
     }
 
     return NextResponse.json({
@@ -344,7 +420,7 @@ export async function POST(request: NextRequest) {
       matchResults: matchResults.length > 0 ? matchResults : undefined
     } as ImportHandsResponse & { matchResults?: PlayerMatchResult[] })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     logError('import-hands', error)
     return NextResponse.json(
       {
