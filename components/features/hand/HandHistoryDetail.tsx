@@ -362,7 +362,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {hand.players.map((player, idx) => (
+                {hand.players?.map((player, idx) => (
                   <TableRow key={idx}>
                     <TableCell className="font-medium">{player.name}</TableCell>
                     <TableCell>

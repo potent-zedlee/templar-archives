@@ -71,7 +71,7 @@ export function HandListAccordion({
         const commentsCount = handId ? commentsCountMap.get(handId) || 0 : 0
 
         const winnerHand = hand.winner
-          ? hand.players.find(p => p.name === hand.winner)?.cards
+          ? hand.players?.find(p => p.name === hand.winner)?.cards
           : undefined
 
         return (
