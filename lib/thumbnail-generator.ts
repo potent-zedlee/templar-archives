@@ -1,11 +1,14 @@
 /**
  * Hand Thumbnail Generator
  *
- * 핸드 썸네일을 자동으로 생성하고 Supabase Storage에 업로드
+ * 핸드 썸네일을 자동으로 생성하고 Firebase Storage에 업로드
  */
 
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { extractSingleFrame } from './frame-extractor'
-import { createClientSupabaseClient } from './supabase-client'
+import { storage, firestore } from './firebase'
+import { COLLECTION_PATHS } from './firestore-types'
 
 /**
  * 타임스탬프를 초 단위로 변환
@@ -47,8 +50,6 @@ export async function generateHandThumbnail(
   timestamp: string,
   onProgress?: (progress: number, status: string) => void
 ): Promise<string> {
-  const supabase = createClientSupabaseClient()
-
   try {
     // 1. 타임스탬프를 초 단위로 변환
     onProgress?.(10, '타임스탬프 파싱 중...')
@@ -63,36 +64,34 @@ export async function generateHandThumbnail(
     const fileName = `${handId}.jpg`
     const file = blobToFile(frame.blob, fileName)
 
-    // 4. Supabase Storage에 업로드
+    // 4. Firebase Storage에 업로드
     onProgress?.(70, 'Storage 업로드 중...')
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('hand-thumbnails')
-      .upload(fileName, file, {
-        contentType: 'image/jpeg',
-        upsert: true, // 기존 파일 덮어쓰기
-      })
+    const storageRef = ref(storage, `hand-thumbnails/${fileName}`)
 
-    if (uploadError) {
-      throw new Error(`Storage 업로드 실패: ${uploadError.message}`)
-    }
+    // Blob을 Uint8Array로 변환하여 업로드
+    const arrayBuffer = await file.arrayBuffer()
+    const uint8Array = new Uint8Array(arrayBuffer)
 
-    // 5. 공개 URL 가져오기
-    const { data: urlData } = supabase.storage
-      .from('hand-thumbnails')
-      .getPublicUrl(fileName)
+    await uploadBytes(storageRef, uint8Array, {
+      contentType: 'image/jpeg',
+      customMetadata: {
+        handId,
+        timestamp,
+        uploadedAt: new Date().toISOString(),
+      },
+    })
 
-    const thumbnailUrl = urlData.publicUrl
+    // 5. 다운로드 URL 가져오기
+    onProgress?.(85, 'URL 생성 중...')
+    const thumbnailUrl = await getDownloadURL(storageRef)
 
-    // 6. hands 테이블 업데이트
+    // 6. hands 컬렉션 업데이트
     onProgress?.(90, 'DB 업데이트 중...')
-    const { error: updateError } = await supabase
-      .from('hands')
-      .update({ thumbnail_url: thumbnailUrl })
-      .eq('id', handId)
-
-    if (updateError) {
-      throw new Error(`DB 업데이트 실패: ${updateError.message}`)
-    }
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, handId)
+    await updateDoc(handRef, {
+      thumbnailUrl,
+      updatedAt: serverTimestamp(),
+    })
 
     onProgress?.(100, '완료')
     return thumbnailUrl
@@ -180,5 +179,22 @@ export function getYouTubeThumbnail(youtubeUrl: string, quality: 'default' | 'hq
 
   } catch {
     return null
+  }
+}
+
+/**
+ * 썸네일 삭제 (Firebase Storage에서)
+ *
+ * @param handId 핸드 ID
+ */
+export async function deleteThumbnail(handId: string): Promise<void> {
+  const { deleteObject } = await import('firebase/storage')
+  const storageRef = ref(storage, `hand-thumbnails/${handId}.jpg`)
+
+  try {
+    await deleteObject(storageRef)
+  } catch (error) {
+    // 파일이 없는 경우 무시
+    console.warn(`Thumbnail not found for hand ${handId}:`, error)
   }
 }

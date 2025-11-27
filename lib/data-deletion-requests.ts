@@ -2,11 +2,29 @@
  * Data Deletion Requests Library
  *
  * GDPR/CCPA/PIPL 데이터 삭제 요청 관리
+ * Firestore 기반 구현
  */
 
-import { createClientSupabaseClient } from './supabase-client'
+import {
+  collection,
+  doc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  writeBatch,
+  serverTimestamp,
+} from 'firebase/firestore'
+import { firestore } from './firebase'
+import {
+  COLLECTION_PATHS,
+  type DeletionRequestStatus,
+  type FirestoreDataDeletionRequest,
+} from './firestore-types'
 
-export type DeletionRequestStatus = 'pending' | 'approved' | 'rejected' | 'completed'
+export type { DeletionRequestStatus }
 
 export interface DeletionRequest {
   id: string
@@ -37,6 +55,41 @@ export interface DeletionRequestWithUser extends DeletionRequest {
 }
 
 /**
+ * Firestore 문서를 레거시 형식으로 변환
+ */
+function toLegacyFormat(
+  docId: string,
+  data: FirestoreDataDeletionRequest
+): DeletionRequestWithUser {
+  return {
+    id: docId,
+    user_id: data.userId,
+    reason: data.reason,
+    status: data.status,
+    requested_at: data.requestedAt.toDate().toISOString(),
+    reviewed_at: data.reviewedAt?.toDate().toISOString(),
+    reviewed_by: data.reviewedBy,
+    completed_at: data.completedAt?.toDate().toISOString(),
+    admin_notes: data.adminNotes,
+    created_at: data.createdAt.toDate().toISOString(),
+    updated_at: data.updatedAt.toDate().toISOString(),
+    user: {
+      id: data.user?.id || data.userId,
+      email: data.user?.email || '',
+      nickname: data.user?.nickname || '',
+      avatar_url: data.user?.avatarUrl || '',
+    },
+    reviewed_by_user: data.reviewedByUser
+      ? {
+          id: data.reviewedByUser.id,
+          email: data.reviewedByUser.email,
+          nickname: data.reviewedByUser.nickname,
+        }
+      : undefined,
+  }
+}
+
+/**
  * Get all deletion requests (admin)
  */
 export async function getAllDeletionRequests(): Promise<{
@@ -44,29 +97,15 @@ export async function getAllDeletionRequests(): Promise<{
   error: Error | null
 }> {
   try {
-    const supabase = createClientSupabaseClient()
+    const requestsRef = collection(firestore, COLLECTION_PATHS.DATA_DELETION_REQUESTS)
+    const q = query(requestsRef, orderBy('requestedAt', 'desc'))
+    const snapshot = await getDocs(q)
 
-    const { data, error } = await supabase
-      .from('data_deletion_requests')
-      .select(`
-        *,
-        user:users!user_id (
-          id,
-          email,
-          nickname,
-          avatar_url
-        ),
-        reviewed_by_user:users!reviewed_by (
-          id,
-          email,
-          nickname
-        )
-      `)
-      .order('requested_at', { ascending: false })
+    const data = snapshot.docs.map((doc) =>
+      toLegacyFormat(doc.id, doc.data() as FirestoreDataDeletionRequest)
+    )
 
-    if (error) throw error
-
-    return { data: data as DeletionRequestWithUser[], error: null }
+    return { data, error: null }
   } catch (error) {
     console.error('Error fetching deletion requests:', error)
     return { data: [], error: error as Error }
@@ -81,25 +120,19 @@ export async function getPendingDeletionRequests(): Promise<{
   error: Error | null
 }> {
   try {
-    const supabase = createClientSupabaseClient()
+    const requestsRef = collection(firestore, COLLECTION_PATHS.DATA_DELETION_REQUESTS)
+    const q = query(
+      requestsRef,
+      where('status', '==', 'pending'),
+      orderBy('requestedAt', 'asc')
+    )
+    const snapshot = await getDocs(q)
 
-    const { data, error } = await supabase
-      .from('data_deletion_requests')
-      .select(`
-        *,
-        user:users!user_id (
-          id,
-          email,
-          nickname,
-          avatar_url
-        )
-      `)
-      .eq('status', 'pending')
-      .order('requested_at', { ascending: true })
+    const data = snapshot.docs.map((doc) =>
+      toLegacyFormat(doc.id, doc.data() as FirestoreDataDeletionRequest)
+    )
 
-    if (error) throw error
-
-    return { data: data as DeletionRequestWithUser[], error: null }
+    return { data, error: null }
   } catch (error) {
     console.error('Error fetching pending deletion requests:', error)
     return { data: [], error: error as Error }
@@ -119,19 +152,15 @@ export async function approveDeletionRequest({
   adminNotes?: string
 }): Promise<{ error: Error | null }> {
   try {
-    const supabase = createClientSupabaseClient()
+    const requestRef = doc(firestore, COLLECTION_PATHS.DATA_DELETION_REQUESTS, requestId)
 
-    const { error } = await supabase
-      .from('data_deletion_requests')
-      .update({
-        status: 'approved',
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: adminId,
-        admin_notes: adminNotes,
-      })
-      .eq('id', requestId)
-
-    if (error) throw error
+    await updateDoc(requestRef, {
+      status: 'approved',
+      reviewedAt: serverTimestamp(),
+      reviewedBy: adminId,
+      adminNotes: adminNotes || null,
+      updatedAt: serverTimestamp(),
+    })
 
     return { error: null }
   } catch (error) {
@@ -155,23 +184,19 @@ export async function rejectDeletionRequest({
   adminNotes?: string
 }): Promise<{ error: Error | null }> {
   try {
-    const supabase = createClientSupabaseClient()
+    const requestRef = doc(firestore, COLLECTION_PATHS.DATA_DELETION_REQUESTS, requestId)
 
     const combinedNotes = adminNotes
       ? `Rejection Reason: ${rejectedReason}\n\nAdmin Notes: ${adminNotes}`
       : `Rejection Reason: ${rejectedReason}`
 
-    const { error } = await supabase
-      .from('data_deletion_requests')
-      .update({
-        status: 'rejected',
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: adminId,
-        admin_notes: combinedNotes,
-      })
-      .eq('id', requestId)
-
-    if (error) throw error
+    await updateDoc(requestRef, {
+      status: 'rejected',
+      reviewedAt: serverTimestamp(),
+      reviewedBy: adminId,
+      adminNotes: combinedNotes,
+      updatedAt: serverTimestamp(),
+    })
 
     return { error: null }
   } catch (error) {
@@ -186,23 +211,18 @@ export async function rejectDeletionRequest({
  */
 export async function completeDeletionRequest({
   requestId,
-  adminId,
 }: {
   requestId: string
   adminId: string
 }): Promise<{ error: Error | null }> {
   try {
-    const supabase = createClientSupabaseClient()
+    const requestRef = doc(firestore, COLLECTION_PATHS.DATA_DELETION_REQUESTS, requestId)
 
-    const { error } = await supabase
-      .from('data_deletion_requests')
-      .update({
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', requestId)
-
-    if (error) throw error
+    await updateDoc(requestRef, {
+      status: 'completed',
+      completedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    })
 
     return { error: null }
   } catch (error) {
@@ -215,41 +235,160 @@ export async function completeDeletionRequest({
  * Delete all user data (admin)
  * WARNING: This permanently deletes ALL user data
  * Should only be called after deletion request is approved
+ *
+ * Firestore 배치 삭제 - 500개 제한을 고려하여 분할 처리
  */
 export async function deleteUserData(userId: string): Promise<{ error: Error | null }> {
   try {
-    const supabase = createClientSupabaseClient()
+    // Firestore 배치는 500개 작업 제한이 있으므로 분할 처리
+    const BATCH_SIZE = 450
 
-    // Delete in order (respecting foreign key constraints)
+    /**
+     * 컬렉션에서 사용자 문서 삭제 (필드명으로 쿼리)
+     */
+    const deleteUserDocsFromCollection = async (
+      collectionPath: string,
+      userIdField: string
+    ): Promise<number> => {
+      const collRef = collection(firestore, collectionPath)
+      const q = query(collRef, where(userIdField, '==', userId))
+      const snapshot = await getDocs(q)
 
-    // 1. Delete user's comments
-    await supabase.from('comments').delete().eq('user_id', userId)
+      if (snapshot.empty) return 0
 
-    // 2. Delete user's posts
-    await supabase.from('posts').delete().eq('user_id', userId)
+      const docs = snapshot.docs
+      let deletedCount = 0
 
-    // 3. Delete user's bookmarks
-    await supabase.from('bookmarks').delete().eq('user_id', userId)
+      // 배치 단위로 삭제
+      for (let i = 0; i < docs.length; i += BATCH_SIZE) {
+        const batch = writeBatch(firestore)
+        const chunk = docs.slice(i, i + BATCH_SIZE)
 
-    // 4. Delete user's bookmark folders
-    await supabase.from('bookmark_folders').delete().eq('user_id', userId)
+        chunk.forEach((docSnap) => {
+          batch.delete(docSnap.ref)
+        })
 
-    // 5. Delete user's hand edit requests
-    await supabase.from('hand_edit_requests').delete().eq('user_id', userId)
+        await batch.commit()
+        deletedCount += chunk.length
+      }
 
-    // 6. Delete user's activity logs
-    await supabase.from('activity_logs').delete().eq('user_id', userId)
+      return deletedCount
+    }
 
-    // 7. Delete user's player claims
-    await supabase.from('player_claims').delete().eq('user_id', userId)
+    /**
+     * 서브컬렉션 문서 삭제 (부모 문서 ID로)
+     * 현재는 사용되지 않으나 향후 확장을 위해 유지
+     */
+    const _deleteSubcollectionDocs = async (
+      parentCollectionPath: string,
+      subcollectionName: string,
+      parentIds: string[]
+    ): Promise<number> => {
+      let deletedCount = 0
 
-    // 8. Delete user's content reports
-    await supabase.from('content_reports').delete().eq('reporter_id', userId)
+      for (const parentId of parentIds) {
+        const subCollRef = collection(
+          firestore,
+          parentCollectionPath,
+          parentId,
+          subcollectionName
+        )
+        const snapshot = await getDocs(subCollRef)
 
-    // 9. Delete user's profile (this will cascade to deletion requests due to ON DELETE CASCADE)
-    const { error } = await supabase.from('users').delete().eq('id', userId)
+        if (snapshot.empty) continue
 
-    if (error) throw error
+        const docs = snapshot.docs
+        for (let i = 0; i < docs.length; i += BATCH_SIZE) {
+          const batch = writeBatch(firestore)
+          const chunk = docs.slice(i, i + BATCH_SIZE)
+
+          chunk.forEach((docSnap) => {
+            batch.delete(docSnap.ref)
+          })
+
+          await batch.commit()
+          deletedCount += chunk.length
+        }
+      }
+
+      return deletedCount
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    void _deleteSubcollectionDocs
+
+    // 삭제 순서 (의존성 고려)
+    // 1. 댓글 삭제 (posts/{postId}/comments에서 author.id로)
+    const postsRef = collection(firestore, COLLECTION_PATHS.POSTS)
+    const postsSnapshot = await getDocs(postsRef)
+    const postIds = postsSnapshot.docs.map((doc) => doc.id)
+
+    for (const postId of postIds) {
+      const commentsRef = collection(firestore, COLLECTION_PATHS.POST_COMMENTS(postId))
+      const commentsQuery = query(commentsRef, where('author.id', '==', userId))
+      const commentsSnapshot = await getDocs(commentsQuery)
+
+      if (!commentsSnapshot.empty) {
+        for (let i = 0; i < commentsSnapshot.docs.length; i += BATCH_SIZE) {
+          const batch = writeBatch(firestore)
+          const chunk = commentsSnapshot.docs.slice(i, i + BATCH_SIZE)
+          chunk.forEach((docSnap) => batch.delete(docSnap.ref))
+          await batch.commit()
+        }
+      }
+    }
+
+    // 2. 포스트 삭제
+    await deleteUserDocsFromCollection(COLLECTION_PATHS.POSTS, 'author.id')
+
+    // 3. 북마크 삭제 (users/{userId}/bookmarks)
+    const bookmarksRef = collection(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId))
+    const bookmarksSnapshot = await getDocs(bookmarksRef)
+    if (!bookmarksSnapshot.empty) {
+      for (let i = 0; i < bookmarksSnapshot.docs.length; i += BATCH_SIZE) {
+        const batch = writeBatch(firestore)
+        const chunk = bookmarksSnapshot.docs.slice(i, i + BATCH_SIZE)
+        chunk.forEach((docSnap) => batch.delete(docSnap.ref))
+        await batch.commit()
+      }
+    }
+
+    // 4. 알림 삭제 (users/{userId}/notifications)
+    const notificationsRef = collection(firestore, COLLECTION_PATHS.USER_NOTIFICATIONS(userId))
+    const notificationsSnapshot = await getDocs(notificationsRef)
+    if (!notificationsSnapshot.empty) {
+      for (let i = 0; i < notificationsSnapshot.docs.length; i += BATCH_SIZE) {
+        const batch = writeBatch(firestore)
+        const chunk = notificationsSnapshot.docs.slice(i, i + BATCH_SIZE)
+        chunk.forEach((docSnap) => batch.delete(docSnap.ref))
+        await batch.commit()
+      }
+    }
+
+    // 5. 태그 히스토리 삭제 (users/{userId}/tagHistory)
+    const tagHistoryRef = collection(firestore, COLLECTION_PATHS.USER_TAG_HISTORY(userId))
+    const tagHistorySnapshot = await getDocs(tagHistoryRef)
+    if (!tagHistorySnapshot.empty) {
+      for (let i = 0; i < tagHistorySnapshot.docs.length; i += BATCH_SIZE) {
+        const batch = writeBatch(firestore)
+        const chunk = tagHistorySnapshot.docs.slice(i, i + BATCH_SIZE)
+        chunk.forEach((docSnap) => batch.delete(docSnap.ref))
+        await batch.commit()
+      }
+    }
+
+    // 6. 라이브 리포트 삭제 (작성자)
+    await deleteUserDocsFromCollection(COLLECTION_PATHS.LIVE_REPORTS, 'author.id')
+
+    // 7. 분석 작업 삭제
+    await deleteUserDocsFromCollection(COLLECTION_PATHS.ANALYSIS_JOBS, 'userId')
+
+    // 8. 데이터 삭제 요청 삭제 (자기 것만)
+    await deleteUserDocsFromCollection(COLLECTION_PATHS.DATA_DELETION_REQUESTS, 'userId')
+
+    // 9. 사용자 문서 삭제
+    const userRef = doc(firestore, COLLECTION_PATHS.USERS, userId)
+    await deleteDoc(userRef)
 
     return { error: null }
   } catch (error) {

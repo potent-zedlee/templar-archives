@@ -751,6 +751,55 @@ export interface FirestoreUserTagHistory {
   createdAt: Timestamp
 }
 
+// ==================== Data Deletion Requests Collection ====================
+
+/**
+ * 데이터 삭제 요청 상태 (GDPR/CCPA)
+ */
+export type DeletionRequestStatus = 'pending' | 'approved' | 'rejected' | 'completed'
+
+/**
+ * DataDeletionRequest 문서
+ *
+ * Collection: /dataDeletionRequests/{requestId}
+ * GDPR/CCPA/PIPL 데이터 삭제 요청 관리
+ */
+export interface FirestoreDataDeletionRequest {
+  /** 사용자 ID */
+  userId: string
+  /** 사용자 정보 (임베딩) */
+  user?: {
+    id: string
+    email: string
+    nickname: string
+    avatarUrl?: string
+  }
+  /** 삭제 사유 */
+  reason: string
+  /** 요청 상태 */
+  status: DeletionRequestStatus
+  /** 요청일 */
+  requestedAt: Timestamp
+  /** 검토일 */
+  reviewedAt?: Timestamp
+  /** 검토자 ID */
+  reviewedBy?: string
+  /** 검토자 정보 (임베딩) */
+  reviewedByUser?: {
+    id: string
+    email: string
+    nickname: string
+  }
+  /** 완료일 */
+  completedAt?: Timestamp
+  /** 관리자 메모 */
+  adminNotes?: string
+  /** 생성일 */
+  createdAt: Timestamp
+  /** 수정일 */
+  updatedAt: Timestamp
+}
+
 // ==================== System Collections ====================
 
 /**
@@ -787,6 +836,245 @@ export interface FirestoreSystemConfig {
   updatedAt: Timestamp
   /** 수정자 */
   updatedBy?: string
+}
+
+// ==================== Admin Collections ====================
+
+/**
+ * 플레이어 클레임 상태
+ */
+export type ClaimStatus = 'pending' | 'approved' | 'rejected'
+
+/**
+ * 인증 방법
+ */
+export type VerificationMethod = 'social_media' | 'email' | 'admin' | 'other'
+
+/**
+ * PlayerClaim 문서
+ *
+ * Collection: /playerClaims/{claimId}
+ */
+export interface FirestorePlayerClaim {
+  /** 사용자 ID */
+  userId: string
+  /** 플레이어 ID */
+  playerId: string
+  /** 클레임 상태 */
+  status: ClaimStatus
+  /** 인증 방법 */
+  verificationMethod: VerificationMethod
+  /** 인증 데이터 */
+  verificationData?: Record<string, unknown>
+  /** 관리자 메모 */
+  adminNotes?: string
+  /** 클레임 신청일 */
+  claimedAt: Timestamp
+  /** 검증일 */
+  verifiedAt?: Timestamp
+  /** 검증자 ID */
+  verifiedBy?: string
+  /** 거절 사유 */
+  rejectedReason?: string
+  /** 사용자 정보 (임베딩) */
+  user?: {
+    nickname: string
+    email: string
+    avatarUrl?: string
+  }
+  /** 플레이어 정보 (임베딩) */
+  player?: {
+    name: string
+    photoUrl?: string
+  }
+  /** 생성일 */
+  createdAt: Timestamp
+  /** 수정일 */
+  updatedAt: Timestamp
+}
+
+/**
+ * 신고 사유
+ */
+export type ReportReason = 'spam' | 'harassment' | 'inappropriate' | 'misinformation' | 'other'
+
+/**
+ * 신고 상태
+ */
+export type ReportStatus = 'pending' | 'approved' | 'rejected'
+
+/**
+ * ContentReport 문서
+ *
+ * Collection: /contentReports/{reportId}
+ */
+export interface FirestoreContentReport {
+  /** 포스트 ID (신고 대상이 포스트인 경우) */
+  postId?: string
+  /** 댓글 ID (신고 대상이 댓글인 경우) */
+  commentId?: string
+  /** 신고자 ID */
+  reporterId: string
+  /** 신고자 이름 */
+  reporterName: string
+  /** 신고 사유 */
+  reason: ReportReason
+  /** 신고 상세 설명 */
+  description?: string
+  /** 신고 상태 */
+  status: ReportStatus
+  /** 검토자 ID */
+  reviewedBy?: string
+  /** 검토일 */
+  reviewedAt?: Timestamp
+  /** 관리자 코멘트 */
+  adminComment?: string
+  /** 생성일 */
+  createdAt: Timestamp
+}
+
+/**
+ * 핸드 수정 유형
+ */
+export type EditType = 'basic_info' | 'players' | 'actions' | 'board'
+
+/**
+ * 수정 요청 상태
+ */
+export type EditRequestStatus = 'pending' | 'approved' | 'rejected'
+
+/**
+ * HandEditRequest 문서
+ *
+ * Collection: /handEditRequests/{requestId}
+ */
+export interface FirestoreHandEditRequest {
+  /** 핸드 ID */
+  handId: string
+  /** 요청자 ID */
+  requesterId: string
+  /** 요청자 이름 */
+  requesterName: string
+  /** 수정 유형 */
+  editType: EditType
+  /** 원본 데이터 */
+  originalData: Record<string, unknown>
+  /** 제안된 수정 데이터 */
+  proposedData: Record<string, unknown>
+  /** 수정 사유 */
+  reason: string
+  /** 요청 상태 */
+  status: EditRequestStatus
+  /** 검토자 ID */
+  reviewedBy?: string
+  /** 검토일 */
+  reviewedAt?: Timestamp
+  /** 관리자 코멘트 */
+  adminComment?: string
+  /** 핸드 정보 (임베딩) */
+  hand?: {
+    number: string
+    description: string
+    streamName?: string
+    eventName?: string
+    tournamentName?: string
+  }
+  /** 생성일 */
+  createdAt: Timestamp
+}
+
+/**
+ * AdminLog 문서
+ *
+ * Collection: /adminLogs/{logId}
+ */
+export interface FirestoreAdminLog {
+  /** 관리자 ID */
+  adminId: string
+  /** 액션 */
+  action: string
+  /** 대상 유형 */
+  targetType: 'user' | 'post' | 'comment' | 'hand' | 'player'
+  /** 대상 ID */
+  targetId?: string
+  /** 상세 정보 */
+  details?: Record<string, unknown>
+  /** 관리자 정보 (임베딩) */
+  admin?: {
+    nickname: string
+    avatarUrl?: string
+  }
+  /** 생성일 */
+  createdAt: Timestamp
+}
+
+/**
+ * 게임 타입
+ */
+export type GameType = 'tournament' | 'cash_game' | 'both'
+
+/**
+ * TournamentCategory 문서 (상세 버전)
+ *
+ * Collection: /tournamentCategories/{categoryId}
+ */
+export interface FirestoreTournamentCategory {
+  /** 카테고리 ID (문서 ID와 동일) */
+  id: string
+  /** 카테고리 이름 */
+  name: string
+  /** 표시 이름 */
+  displayName: string
+  /** 짧은 이름 */
+  shortName?: string
+  /** 별칭 목록 */
+  aliases: string[]
+  /** 로고 URL */
+  logoUrl?: string
+  /** 활성화 여부 */
+  isActive: boolean
+  /** 게임 타입 */
+  gameType: GameType
+  /** 상위 카테고리 ID */
+  parentId?: string
+  /** 테마 그라디언트 */
+  themeGradient?: string
+  /** 테마 텍스트 색상 */
+  themeText?: string
+  /** 테마 그림자 */
+  themeShadow?: string
+  /** 생성일 */
+  createdAt: Timestamp
+  /** 수정일 */
+  updatedAt: Timestamp
+}
+
+/**
+ * UnsortedStream 문서 (미분류 영상)
+ *
+ * Collection: /streams/{streamId}
+ */
+export interface FirestoreUnsortedStream {
+  /** 스트림 이름 */
+  name: string
+  /** 영상 URL */
+  videoUrl?: string
+  /** 영상 파일명 */
+  videoFile?: string
+  /** 영상 소스 */
+  videoSource?: 'youtube' | 'local' | 'nas'
+  /** 발행일 */
+  publishedAt?: Timestamp
+  /** 이벤트 ID (정리된 경우) */
+  eventId?: string
+  /** 정리 여부 */
+  isOrganized: boolean
+  /** 정리일 */
+  organizedAt?: Timestamp
+  /** 생성일 */
+  createdAt: Timestamp
+  /** 수정일 */
+  updatedAt: Timestamp
 }
 
 // ==================== Helper Types ====================
@@ -831,4 +1119,16 @@ export const COLLECTION_PATHS = {
   SYSTEM_CONFIGS: 'systemConfigs',
   /** Hand likes (서브컬렉션) */
   HAND_LIKES: (handId: string) => `hands/${handId}/likes`,
+  /** Data deletion requests (GDPR/CCPA) */
+  DATA_DELETION_REQUESTS: 'dataDeletionRequests',
+  /** Player claims (플레이어 클레임 요청) */
+  PLAYER_CLAIMS: 'playerClaims',
+  /** Hand edit requests (핸드 수정 요청) */
+  HAND_EDIT_REQUESTS: 'handEditRequests',
+  /** Content reports (콘텐츠 신고) */
+  CONTENT_REPORTS: 'contentReports',
+  /** Admin logs (관리자 활동 로그) */
+  ADMIN_LOGS: 'adminLogs',
+  /** Tournament categories (카테고리 관리) */
+  TOURNAMENT_CATEGORIES: 'tournamentCategories',
 } as const
