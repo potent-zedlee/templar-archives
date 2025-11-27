@@ -1,9 +1,9 @@
 # Templar Archives Index - Product Requirements Document (PRD)
 
-**Version**: 3.0
+**Version**: 3.1
 **Last Updated**: 2025-11-27
 **Document Owner**: Product Team
-**Status**: Phase 44 - Firebase/GCP Migration
+**Status**: Phase 45 - Firebase Hosting + Cloud Build CI/CD
 
 ---
 
@@ -44,13 +44,15 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 | 통계 부족 | Hendon Mob 수동 조회 | 자동 클레임 시스템 + 실시간 통계 |
 
 ### Current Status
-- ✅ **프로덕션**: https://templar-archives.vercel.app
+- ✅ **프로덕션**: https://templar-archives-index.web.app
 - ✅ **기술 스택**: React 19.2.0, Next.js 16.0.1, TypeScript 5.9.3
 - ✅ **AI**: Gemini 2.5 Flash (Vertex AI)
 - ✅ **데이터베이스**: Firebase Firestore (NoSQL)
 - ✅ **인증**: Firebase Auth (Google OAuth)
 - ✅ **검색**: Algolia (전체텍스트 검색)
 - ✅ **영상 분석**: Cloud Run + Cloud Tasks
+- ✅ **호스팅**: Firebase Hosting + Cloud Build CI/CD
+- ✅ **인프라**: GCP 완전 통합 (단일 프로젝트, 단일 청구서)
 
 ---
 
@@ -124,7 +126,7 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 
 **Video Processing**: Cloud Run + Cloud Tasks + GCS
 
-**Deployment**: Vercel (Edge Runtime)
+**Deployment**: Firebase Hosting + Cloud Build CI/CD
 
 ---
 
@@ -236,34 +238,35 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 ### System Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│          Vercel Edge Network                    │
-│  Next.js 16.0.1, React 19.2.0, TypeScript 5.9.3│
-│                                                  │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐      │
-│  │App Router│  │API Routes│  │Server    │      │
-│  │(43 pages)│  │(REST)    │  │Actions   │      │
-│  └──────────┘  └──────────┘  └──────────┘      │
-│                                                  │
-│  ┌──────────────────────────────────────────┐   │
-│  │ Client Components (50+)                  │   │
-│  │ - Zustand (4 stores)                     │   │
-│  │ - React Query (Server State)             │   │
-│  │ - shadcn/ui (UI Components)              │   │
-│  └──────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│       Firebase Hosting (Cloud Build CI/CD)            │
+│  Next.js 16.0.1, React 19.2.0, TypeScript 5.9.3      │
+│                                                       │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐           │
+│  │App Router│  │API Routes│  │Server    │           │
+│  │(43 pages)│  │(REST)    │  │Actions   │           │
+│  └──────────┘  └──────────┘  └──────────┘           │
+│                                                       │
+│  ┌───────────────────────────────────────────────┐   │
+│  │ Client Components (50+)                        │   │
+│  │ - Zustand (4 stores)                          │   │
+│  │ - React Query (Server State)                   │   │
+│  │ - shadcn/ui (UI Components)                    │   │
+│  └───────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────┘
               │
     ┌─────────┼──────────────────┐
     │         │                  │
 ┌───▼─────────▼───┐  ┌───────────▼──────────┐
-│ Firebase/GCP    │  │ External Services    │
+│ GCP 완전 통합    │  │ External Services    │
 │ - Firestore DB  │  │ - Algolia (Search)   │
 │ - Firebase Auth │  │ - YouTube API        │
 │ - Cloud Functions│ │                      │
 │ - GCS (Storage) │  └──────────────────────┘
 │ - Vertex AI     │
-│ - Cloud Run     │
+│ - Cloud Run     │  ← 내부 네트워크 통신
 │ - Cloud Tasks   │
+│ - Cloud Build   │  ← CI/CD
 └─────────────────┘
 ```
 
@@ -375,7 +378,7 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 - ✅ Cloud Functions (서버 사이드 검증)
 - ✅ Rate Limiting (User ID 기반)
 - ✅ 콘텐츠 신고 시스템
-- ✅ HTTPS (Vercel)
+- ✅ HTTPS (Firebase Hosting)
 
 ---
 
@@ -402,7 +405,7 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 | 핸드 데이터 | 10,000 | 1,000,000 |
 | DB 연결 | 100 | 1,000 |
 
-**확장 전략**: Firestore 자동 스케일링, Vercel Serverless, CDN 캐싱, Cloud Functions
+**확장 전략**: Firestore 자동 스케일링, Firebase Hosting CDN, Cloud Functions, Cloud Run 자동 스케일링
 
 ### Reliability
 
@@ -412,7 +415,7 @@ Templar Archives Index는 포커 핸드 데이터의 자동 추출, 보관, 분�
 | Error Rate | < 0.1% | ✅ 0.05% |
 | Data Loss | 0% | ✅ 0% (Firestore 자동 백업) |
 
-**복구 전략**: Firestore PITR, Vercel 자동 롤백, Error Boundary, Sentry (Future)
+**복구 전략**: Firestore PITR, Firebase Hosting 버전 롤백, Cloud Build 재배포, Error Boundary, Sentry (Future)
 
 ### Usability
 
@@ -605,14 +608,16 @@ ALGOLIA_ADMIN_KEY=xxx
 ANTHROPIC_API_KEY=sk-ant-xxx...
 
 # Next.js
-NEXT_PUBLIC_APP_URL=https://templar-archives.vercel.app
+NEXT_PUBLIC_APP_URL=https://templar-archives-index.web.app
 ```
 
 ### Links
 
 | 리소스 | URL |
 |---|---|
-| **프로덕션** | https://templar-archives.vercel.app |
+| **프로덕션** | https://templar-archives-index.web.app |
+| **Firebase Console** | https://console.firebase.google.com |
+| **GCP Console** | https://console.cloud.google.com |
 | **Firebase Docs** | https://firebase.google.com/docs |
 | **Firestore Docs** | https://firebase.google.com/docs/firestore |
 | **Vertex AI Docs** | https://cloud.google.com/vertex-ai/docs |
@@ -624,5 +629,5 @@ NEXT_PUBLIC_APP_URL=https://templar-archives.vercel.app
 **END OF DOCUMENT**
 
 **마지막 업데이트**: 2025-11-27
-**버전**: 3.0
-**Status**: Phase 44 - Firebase/GCP Migration Planning
+**버전**: 3.1
+**Status**: Phase 45 - Firebase Hosting + Cloud Build CI/CD

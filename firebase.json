@@ -6,5 +6,18 @@
   "functions": {
     "source": "functions",
     "predeploy": ["npm --prefix functions run build"]
+  },
+  "hosting": {
+    "source": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/cloud-run/**",
+      "**/functions/**"
+    ],
+    "frameworksBackend": {
+      "region": "asia-northeast3"
+    }
   }
 }

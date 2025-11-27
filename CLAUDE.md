@@ -8,9 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Templar Archives는 포커 영상을 자동으로 핸드 히스토리로 변환하고 분석하는 프로덕션 플랫폼입니다.
 
-- **프로덕션**: https://templar-archives.vercel.app
+- **프로덕션**: https://templar-archives-index.web.app
 - **로컬**: http://localhost:3000
 - **레이아웃**: 3-Column (Desktop 전용, lg+)
+- **인프라**: GCP 완전 통합 (Firebase Hosting, Firestore, Cloud Run, Cloud Tasks)
 
 ---
 
@@ -32,6 +33,9 @@ npx playwright test e2e/archive.spec.ts   # 단일 파일
 
 # Firebase 에뮬레이터 (로컬 개발)
 firebase emulators:start
+
+# Firebase Hosting 배포 (자동: Cloud Build, 수동: 아래 명령어)
+firebase deploy --only hosting
 
 # Cloud Functions 배포
 firebase deploy --only functions
@@ -64,6 +68,7 @@ npm run admin -- --action=check-jobs      # 분석 작업 상태
 | Background Jobs | Cloud Run + Cloud Tasks |
 | Video | GCS 직접 업로드, fluent-ffmpeg |
 | Functions | Firebase Cloud Functions (트리거) |
+| Hosting | Firebase Hosting (Cloud Build CI/CD) |
 
 **Node.js**: >=22.0.0
 **패키지 매니저**: npm (pnpm 사용 금지)
@@ -240,4 +245,4 @@ gcloud run services logs read segment-analyzer --region=asia-northeast3
 ---
 
 **마지막 업데이트**: 2025-11-27
-**문서 버전**: 4.0 (Firebase/Firestore 마이그레이션)
+**문서 버전**: 4.1 (Firebase Hosting + Cloud Build)
