@@ -136,8 +136,8 @@ export function Footer() {
               React
             </a>
             {", "}
-            <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="hover:text-gold-400 dark:hover:text-gold-300 transition-colors">
-              Supabase
+            <a href="https://firebase.google.com" target="_blank" rel="noopener noreferrer" className="hover:text-gold-400 dark:hover:text-gold-300 transition-colors">
+              Firebase
             </a>
             {", and "}
             <a href="https://tailwindcss.com" target="_blank" rel="noopener noreferrer" className="hover:text-gold-400 dark:hover:text-gold-300 transition-colors">

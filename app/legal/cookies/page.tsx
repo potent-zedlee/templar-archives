@@ -49,12 +49,12 @@ export default function CookiePolicyPage() {
             </thead>
             <tbody>
               <tr>
-                <td className="border border-gray-300 dark:border-gray-700 p-2"><code>sb-access-token</code></td>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">Authentication (Supabase)</td>
+                <td className="border border-gray-300 dark:border-gray-700 p-2"><code>firebase-auth-token</code></td>
+                <td className="border border-gray-300 dark:border-gray-700 p-2">Authentication (Firebase)</td>
                 <td className="border border-gray-300 dark:border-gray-700 p-2">Session</td>
               </tr>
               <tr>
-                <td className="border border-gray-300 dark:border-gray-700 p-2"><code>sb-refresh-token</code></td>
+                <td className="border border-gray-300 dark:border-gray-700 p-2"><code>firebase-refresh-token</code></td>
                 <td className="border border-gray-300 dark:border-gray-700 p-2">Session persistence</td>
                 <td className="border border-gray-300 dark:border-gray-700 p-2">30 days</td>
               </tr>

@@ -231,7 +231,6 @@ Git Push (main) → GitHub Actions → npm ci → npm run build → firebase dep
 - `FIREBASE_TOKEN`, `FIREBASE_SERVICE_ACCOUNT`
 - `GOOGLE_APPLICATION_CREDENTIALS`
 - `NEXT_PUBLIC_FIREBASE_*` (6개)
-- `NEXT_PUBLIC_SUPABASE_*` (legacy, 3개)
 - `CLOUD_RUN_ORCHESTRATOR_URL`, `TRIGGER_SECRET_KEY`, `GOOGLE_API_KEY`
 
 ---

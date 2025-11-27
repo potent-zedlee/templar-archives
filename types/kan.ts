@@ -108,7 +108,7 @@ export interface Winner {
   hand?: string
 }
 
-// Database Types (for Supabase integration)
+// Database Types (for Firestore integration)
 export interface AnalysisJob {
   id: string
   video_id: string

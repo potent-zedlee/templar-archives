@@ -13,8 +13,8 @@ async function navigateToArchive(page: Page) {
   await page.waitForTimeout(3000) // 데이터 로딩 대기
 }
 
-// Helper: Supabase API를 Mock
-async function mockSupabaseAPIs(page: Page) {
+// Helper: Database API를 Mock
+async function mockDatabaseAPIs(page: Page) {
   // Streams API Mock
   await page.route('**/rest/v1/streams*', async (route) => {
     await route.fulfill({
@@ -88,7 +88,7 @@ test.describe('KAN AI Analysis - Core UI', () => {
 
 test.describe('KAN AI Analysis - With Mock Data', () => {
   test.beforeEach(async ({ page }) => {
-    await mockSupabaseAPIs(page)
+    await mockDatabaseAPIs(page)
   })
 
   test('should render archive page with mock data', async ({ page }) => {
@@ -129,7 +129,7 @@ test.describe('KAN AI Analysis - With Mock Data', () => {
 
 test.describe('KAN AI Analysis - Dialog Tests', () => {
   test('should open analyze dialog when conditions met', async ({ page }) => {
-    await mockSupabaseAPIs(page)
+    await mockDatabaseAPIs(page)
     await navigateToArchive(page)
 
     // Try to find and click stream item first
@@ -162,7 +162,7 @@ test.describe('KAN AI Analysis - Dialog Tests', () => {
   })
 
   test('should display start analysis button in dialog', async ({ page }) => {
-    await mockSupabaseAPIs(page)
+    await mockDatabaseAPIs(page)
     await navigateToArchive(page)
 
     const streamItems = page.locator('[data-testid="stream-item"]')

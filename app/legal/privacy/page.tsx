@@ -116,7 +116,7 @@ export default function PrivacyPolicyPage() {
 
           <h3>5.1 Service Providers</h3>
           <ul>
-            <li><strong>Supabase:</strong> Database hosting (data stored in AWS)</li>
+            <li><strong>Firebase:</strong> Database hosting and authentication (Google Cloud)</li>
             <li><strong>Vercel:</strong> Hosting and analytics</li>
             <li><strong>Anthropic (Claude API):</strong> AI video analysis (no PII sent)</li>
             <li><strong>Google (YouTube API):</strong> Video metadata retrieval</li>
@@ -183,7 +183,7 @@ export default function PrivacyPolicyPage() {
           <p>We implement security measures including:</p>
           <ul>
             <li>Encryption in transit (HTTPS/TLS)</li>
-            <li>Encryption at rest (Supabase database encryption)</li>
+            <li>Encryption at rest (Firebase/Google Cloud encryption)</li>
             <li>Access controls and authentication</li>
             <li>Regular security audits</li>
           </ul>
@@ -196,8 +196,8 @@ export default function PrivacyPolicyPage() {
             Your data may be transferred to and stored in countries outside your residence, including:
           </p>
           <ul>
-            <li><strong>United States:</strong> Supabase (AWS), Vercel</li>
-            <li><strong>European Union:</strong> Supabase (AWS EU regions available)</li>
+            <li><strong>United States:</strong> Firebase (Google Cloud), Vercel</li>
+            <li><strong>European Union:</strong> Firebase (Google Cloud EU regions available)</li>
           </ul>
           <p>
             We use Standard Contractual Clauses (SCCs) approved by the European Commission for EU data transfers.

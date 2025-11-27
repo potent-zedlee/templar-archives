@@ -66,18 +66,18 @@ npx playwright test e2e/kan-analysis.spec.ts -g "should display AI Analysis butt
 
 #### 환경 변수
 - `KHALAI_ARCHIVE_NETWORK_URL`: KAN 백엔드 URL 설정 필요
-- `NEXT_PUBLIC_SUPABASE_URL`: Supabase URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase Anon Key
+- `NEXT_PUBLIC_FIREBASE_API_KEY`: Firebase API Key
+- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`: Firebase Project ID
 
 ### 테스트 제한사항
 
 #### 현재 스킵되는 테스트
-- Realtime 업데이트 테스트 (Supabase Realtime Mock 필요)
+- Realtime 업데이트 테스트 (Firebase Realtime Mock 필요)
 - 실제 AI 분석 완료까지의 전체 플로우 (시간 소요)
 - 권한 기반 테스트 (로그인 플로우 구현 필요)
 
 #### Mock 필요 항목
-- Supabase Realtime 구독
+- Firebase Realtime 구독
 - KAN 백엔드 API 응답
 - 분석 진행 상태 업데이트
 
@@ -89,7 +89,7 @@ npx playwright test e2e/kan-analysis.spec.ts -g "should display AI Analysis butt
 3. API Mock 개선
 
 #### 중기
-1. Supabase Realtime Mock 구현
+1. Firebase Realtime Mock 구현
 2. E2E 테스트 자동화 (CI/CD)
 3. 스크린샷 비교 테스트
 

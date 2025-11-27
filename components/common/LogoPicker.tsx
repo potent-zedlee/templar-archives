@@ -162,7 +162,7 @@ export function LogoPicker({ selectedLogo, onSelect }: LogoPickerProps) {
         <p className="text-xs text-muted-foreground">
           {activeTab === "static"
             ? "public/logos/ 폴더의 정적 로고 파일"
-            : "Supabase Storage에 업로드된 커스텀 로고"}
+            : "Firebase Storage에 업로드된 커스텀 로고"}
         </p>
       )}
     </div>

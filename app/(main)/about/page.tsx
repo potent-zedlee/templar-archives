@@ -71,7 +71,7 @@ export default function AboutPage() {
   const techStack = [
     { name: "Next.js 15", logo: "⚡" },
     { name: "React 19", logo: "⚛️" },
-    { name: "Supabase", logo: "🔥" },
+    { name: "Firebase", logo: "🔥" },
     { name: "Claude AI", logo: "🤖" },
     { name: "Tailwind CSS", logo: "🎨" },
     { name: "TypeScript", logo: "📘" },

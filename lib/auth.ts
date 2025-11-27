@@ -2,7 +2,6 @@
  * Firebase 인증 모듈
  *
  * Google OAuth 로그인 및 인증 상태 관리를 제공합니다.
- * Supabase Auth에서 Firebase Auth로 마이그레이션됨.
  *
  * @module lib/auth
  */
@@ -20,10 +19,9 @@ import {
  * 인증된 사용자 타입
  *
  * Firebase User에서 필요한 필드만 추출한 간소화된 타입
- * Supabase와의 호환성을 위해 id와 uid 모두 제공
  */
 export type AuthUser = {
-  /** 사용자 고유 ID (Supabase 호환) */
+  /** 사용자 고유 ID */
   id: string
   /** 사용자 고유 ID (Firebase 네이티브) */
   uid: string
@@ -34,7 +32,7 @@ export type AuthUser = {
   /** 프로필 사진 URL */
   photoURL: string | null
   /**
-   * Supabase 호환용 user_metadata
+   * user_metadata
    * 기존 컴포넌트에서 user.user_metadata.avatar_url 등으로 접근 가능
    */
   user_metadata?: {
@@ -68,12 +66,11 @@ function toAuthUser(user: User | null): AuthUser | null {
   if (!user) return null
 
   return {
-    id: user.uid, // Supabase 호환
+    id: user.uid,
     uid: user.uid,
     email: user.email,
     displayName: user.displayName,
     photoURL: user.photoURL,
-    // Supabase 호환용 user_metadata 매핑
     user_metadata: {
       avatar_url: user.photoURL,
       full_name: user.displayName,

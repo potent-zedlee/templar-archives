@@ -61,7 +61,6 @@ credentials*.json
 # GCS service account keys (sensitive)
 gcs-service-account-key.json
 *-service-account*.json
-supabase/.branches/
 .vercel
 trigger/trigger_logs/
 

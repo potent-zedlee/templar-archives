@@ -75,7 +75,7 @@ interface UseServerSortingReturn<T = string> {
 /**
  * 서버 사이드 정렬 및 페이지네이션 훅
  *
- * Supabase order() 및 range()와 함께 사용
+ * Firestore orderBy() 및 limit()와 함께 사용
  *
  * @example
  * ```tsx
@@ -184,15 +184,15 @@ export function calculatePagination(
 }
 
 /**
- * Supabase range 계산 헬퍼
+ * 페이지네이션 범위 계산 헬퍼
  *
  * @example
  * ```ts
- * const { from, to } = getSupabaseRange(1, 50) // { from: 0, to: 49 }
- * const { from, to } = getSupabaseRange(2, 50) // { from: 50, to: 99 }
+ * const { from, to } = getPaginationRange(1, 50) // { from: 0, to: 49 }
+ * const { from, to } = getPaginationRange(2, 50) // { from: 50, to: 99 }
  * ```
  */
-export function getSupabaseRange(page: number, pageSize: number) {
+export function getPaginationRange(page: number, pageSize: number) {
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 
@@ -200,19 +200,19 @@ export function getSupabaseRange(page: number, pageSize: number) {
 }
 
 /**
- * Supabase order 컬럼 매핑 헬퍼
+ * 정렬 필드 매핑 헬퍼
  *
- * 프론트엔드 필드명을 Supabase 컬럼명으로 변환
+ * 프론트엔드 필드명을 DB 컬럼명으로 변환
  *
  * @example
  * ```ts
  * const mapping = {
  *   name: "name",
- *   category: "tournament_categories(name)",
- *   date: "created_at"
+ *   category: "categoryName",
+ *   date: "createdAt"
  * }
  * const column = mapSortFieldToColumn("category", mapping)
- * // "tournament_categories(name)"
+ * // "categoryName"
  * ```
  */
 export function mapSortFieldToColumn<T extends string>(
