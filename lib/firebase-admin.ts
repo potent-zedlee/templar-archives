@@ -55,6 +55,7 @@ function getAdminApp(): App {
 
   const credential = getAdminCredential()
 
+  // 명시적 credential이 있는 경우 (로컬 개발, Cloud Run)
   if (credential) {
     return initializeApp({
       credential: cert(credential),
@@ -62,10 +63,9 @@ function getAdminApp(): App {
     })
   }
 
-  // GOOGLE_APPLICATION_CREDENTIALS 환경에서는 credential 없이 초기화
-  return initializeApp({
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'templar-archives-index',
-  })
+  // Cloud Functions 환경: 인자 없이 호출하면 ADC 자동 사용
+  // GOOGLE_APPLICATION_CREDENTIALS 환경도 동일하게 처리
+  return initializeApp()
 }
 
 /**
