@@ -164,12 +164,9 @@ export function useUpdateProfileMutation() {
     }) => {
       return await updateProfile(userId, updates)
     },
-    onSuccess: (data, variables) => {
-      // Invalidate current user profile
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: profileKeys.current() })
-      // Invalidate specific user profile
       queryClient.invalidateQueries({ queryKey: profileKeys.detail(variables.userId) })
-      // Invalidate nickname check if nickname was changed
       if (variables.updates.nickname) {
         queryClient.invalidateQueries({
           queryKey: profileKeys.nickname(variables.updates.nickname, variables.userId),
@@ -191,8 +188,7 @@ export function useUploadAvatarMutation(userId: string) {
     mutationFn: async (file: File) => {
       return await uploadAvatar(userId, file)
     },
-    onSuccess: (avatarUrl) => {
-      // Update profile with new avatar URL
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: profileKeys.current() })
       queryClient.invalidateQueries({ queryKey: profileKeys.detail(userId) })
     },

@@ -16,7 +16,6 @@ import {
   query,
   where,
   orderBy,
-  limit,
   Timestamp,
   DocumentData,
   QueryDocumentSnapshot,

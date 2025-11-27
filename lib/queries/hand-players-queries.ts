@@ -14,7 +14,7 @@ import {
   updatePlayerInHand,
   searchPlayers,
 } from '@/lib/hand-players'
-import type { HandPlayer, Player } from '@/lib/hand-players'
+import type { HandPlayer } from '@/lib/hand-players'
 import { toast } from 'sonner'
 
 // ==================== Query Keys ====================
@@ -125,8 +125,7 @@ export function useAddPlayerMutation(handId: string) {
 
       return { previousPlayers }
     },
-    onError: (error, variables, context) => {
-      // Rollback on error
+    onError: (error, _variables, context) => {
       if (context?.previousPlayers) {
         queryClient.setQueryData(handPlayersKeys.byHand(handId), context.previousPlayers)
       }
@@ -173,8 +172,7 @@ export function useRemovePlayerMutation(handId: string) {
 
       return { previousPlayers }
     },
-    onError: (error, variables, context) => {
-      // Rollback on error
+    onError: (error, _variables, context) => {
       if (context?.previousPlayers) {
         queryClient.setQueryData(handPlayersKeys.byHand(handId), context.previousPlayers)
       }
@@ -243,8 +241,7 @@ export function useUpdatePlayerMutation(handId: string) {
 
       return { previousPlayers }
     },
-    onError: (error, variables, context) => {
-      // Rollback on error
+    onError: (error, _variables, context) => {
       if (context?.previousPlayers) {
         queryClient.setQueryData(handPlayersKeys.byHand(handId), context.previousPlayers)
       }

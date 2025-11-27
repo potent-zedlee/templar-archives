@@ -171,8 +171,7 @@ export function useDeleteHandActionMutation(handId: string) {
 
       return { previousActions }
     },
-    onError: (err, actionId, context) => {
-      // 에러 시 롤백
+    onError: (_err, _actionId, context) => {
       if (context?.previousActions) {
         queryClient.setQueryData(handActionsKeys.byHand(handId), context.previousActions)
       }
@@ -257,8 +256,7 @@ export function useReorderHandActionsMutation(handId: string, street: Street) {
 
       return { previousActions }
     },
-    onError: (err, newOrder, context) => {
-      // 에러 시 롤백
+    onError: (_err, _newOrder, context) => {
       if (context?.previousActions) {
         queryClient.setQueryData(handActionsKeys.byHand(handId), context.previousActions)
       }

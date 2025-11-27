@@ -361,7 +361,7 @@ async function toggleCategoryActiveFirestore(id: string): Promise<TournamentCate
  * 카테고리 우선순위 일괄 업데이트
  * @deprecated Priority 필드가 제거되어 더 이상 사용되지 않습니다. 카테고리는 이름 순으로 자동 정렬됩니다.
  */
-async function reorderCategoriesFirestore(categoryIds: string[]): Promise<TournamentCategory[]> {
+async function reorderCategoriesFirestore(_categoryIds: string[]): Promise<TournamentCategory[]> {
   console.warn('reorderCategories is deprecated. Categories are now sorted by name automatically.')
   return getAllCategoriesFirestore(true)
 }
@@ -370,8 +370,7 @@ async function reorderCategoriesFirestore(categoryIds: string[]): Promise<Tourna
  * 로고 업로드
  * Note: Firestore는 파일 저장소가 아니므로 Firebase Storage 또는 GCS 사용 필요
  */
-async function uploadCategoryLogoFirestore(categoryId: string, file: File): Promise<string> {
-  // TODO: Firebase Storage 또는 GCS로 업로드 구현 필요
+async function uploadCategoryLogoFirestore(_categoryId: string, _file: File): Promise<string> {
   throw new Error('uploadCategoryLogo: Firebase Storage 연동 필요')
 }
 
@@ -380,7 +379,7 @@ async function uploadCategoryLogoFirestore(categoryId: string, file: File): Prom
  */
 async function deleteCategoryLogoFirestore(categoryId: string): Promise<void> {
   try {
-    await updateCategoryFirestore(categoryId, { logo_url: null })
+    await updateCategoryFirestore(categoryId, { logo_url: undefined })
   } catch (error) {
     console.error('Error deleting category logo from Firestore:', error)
     throw error
@@ -520,15 +519,12 @@ export function useCreateCategoryMutation() {
       return await createCategoryFirestore(input)
     },
     onMutate: async (newCategory) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: categoryKeys.lists() })
 
-      // Snapshot previous value
       const previousCategories = queryClient.getQueryData<TournamentCategory[]>(
         categoryKeys.list({ includeInactive: false })
       )
 
-      // Optimistically update cache
       if (previousCategories) {
         const optimisticCategory: TournamentCategory = {
           id: newCategory.id,
@@ -558,7 +554,7 @@ export function useCreateCategoryMutation() {
     onSuccess: (newCategory) => {
       toast.success(`카테고리 "${newCategory.display_name}"이 생성되었습니다.`)
     },
-    onError: (error, newCategory, context) => {
+    onError: (error, _newCategory, context) => {
       // Rollback on error
       if (context?.previousCategories) {
         queryClient.setQueryData(
@@ -587,15 +583,12 @@ export function useUpdateCategoryMutation(categoryId: string) {
       return await updateCategoryFirestore(categoryId, input)
     },
     onMutate: async (updatedFields) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: categoryKeys.detail(categoryId) })
 
-      // Snapshot previous value
       const previousCategory = queryClient.getQueryData<TournamentCategory>(
         categoryKeys.detail(categoryId)
       )
 
-      // Optimistically update cache
       if (previousCategory) {
         queryClient.setQueryData<TournamentCategory>(categoryKeys.detail(categoryId), {
           ...previousCategory,
@@ -609,7 +602,7 @@ export function useUpdateCategoryMutation(categoryId: string) {
     onSuccess: (updatedCategory) => {
       toast.success(`카테고리 "${updatedCategory.display_name}"이 수정되었습니다.`)
     },
-    onError: (error, updatedFields, context) => {
+    onError: (error, _updatedFields, context) => {
       // Rollback on error
       if (context?.previousCategory) {
         queryClient.setQueryData(categoryKeys.detail(categoryId), context.previousCategory)
@@ -658,7 +651,7 @@ export function useDeleteCategoryMutation() {
     onSuccess: () => {
       toast.success('카테고리가 삭제되었습니다.')
     },
-    onError: (error, categoryId, context) => {
+    onError: (error, _categoryId, context) => {
       // Rollback on error
       if (context?.previousCategories) {
         queryClient.setQueryData(

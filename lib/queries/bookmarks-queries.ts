@@ -15,9 +15,7 @@ import {
   where,
   orderBy,
   Timestamp,
-  DocumentData,
   QueryDocumentSnapshot,
-  serverTimestamp,
 } from 'firebase/firestore'
 import { firestore } from '@/lib/firebase'
 import type { FirestoreBookmark, FirestoreHand, FirestoreTournament, FirestoreEvent, FirestoreStream } from '@/lib/firestore-types'

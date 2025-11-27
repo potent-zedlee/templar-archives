@@ -95,8 +95,7 @@ export function useMarkAsReadMutation() {
 
       return { previousNotifications, previousUnreadCount }
     },
-    onError: (err, variables, context) => {
-      // Rollback on error
+    onError: (_err, _variables, context) => {
       if (context?.previousNotifications) {
         context.previousNotifications.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data)
@@ -141,7 +140,7 @@ export function useMarkAllAsReadMutation() {
 
       return { previousNotifications, previousUnreadCount }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       if (context?.previousNotifications) {
         context.previousNotifications.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data)
@@ -192,7 +191,7 @@ export function useDeleteNotificationMutation() {
 
       return { previousNotifications, previousUnreadCount, wasUnread }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       if (context?.previousNotifications) {
         context.previousNotifications.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data)
@@ -232,7 +231,7 @@ export function useDeleteAllReadMutation() {
 
       return { previousNotifications }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       if (context?.previousNotifications) {
         context.previousNotifications.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data)

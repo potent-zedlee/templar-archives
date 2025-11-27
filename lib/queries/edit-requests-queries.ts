@@ -15,7 +15,6 @@ import {
   orderBy,
   limit as firestoreLimit,
   Timestamp,
-  DocumentData,
   QueryDocumentSnapshot,
 } from 'firebase/firestore'
 import { firestore } from '@/lib/firebase'
@@ -60,9 +59,6 @@ export type HandEditRequest = {
 // ==================== Converters ====================
 
 const editRequestConverter = {
-  toFirestore(editRequest: Partial<HandEditRequest>): DocumentData {
-    return editRequest as DocumentData
-  },
   fromFirestore(snapshot: QueryDocumentSnapshot): HandEditRequest {
     const data = snapshot.data()
     return {
@@ -115,7 +111,7 @@ async function fetchUserEditRequests({
   console.warn('Edit requests feature is not yet implemented in Firestore')
 
   try {
-    const editRequestsRef = collection(firestore, 'editRequests').withConverter(editRequestConverter)
+    const editRequestsRef = collection(firestore, 'editRequests')
 
     let q = query(
       editRequestsRef,
@@ -140,7 +136,7 @@ async function fetchUserEditRequests({
 
     const editRequests = await Promise.all(
       querySnapshot.docs.map(async (editRequestDoc) => {
-        const editRequest = editRequestDoc.data()
+        const editRequest = editRequestConverter.fromFirestore(editRequestDoc as any)
 
         // Fetch hand details
         try {
