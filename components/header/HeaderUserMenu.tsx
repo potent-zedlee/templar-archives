@@ -115,29 +115,27 @@ export function HeaderUserMenu({
           <span className="block text-xs text-muted-foreground truncate">{user.email}</span>
         </div>
 
-        {/* Main Menu - Admin이 아닌 경우에만 표시 */}
-        {!isUserAdmin && (
-          <ul className="py-2 text-sm text-foreground">
-            <li>
-              <button
-                onClick={() => router.push("/profile")}
-                className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-              >
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </button>
-            </li>
-            <li>
-              <button
-                onClick={() => router.push("/bookmarks")}
-                className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-              >
-                <Bookmark className="mr-2 h-4 w-4" />
-                Bookmarks
-              </button>
-            </li>
-          </ul>
-        )}
+        {/* Main Menu - 모든 사용자에게 표시 */}
+        <ul className="py-2 text-sm text-foreground">
+          <li>
+            <button
+              onClick={() => router.push("/profile")}
+              className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
+            >
+              <User className="mr-2 h-4 w-4" />
+              Profile
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => router.push("/bookmarks")}
+              className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
+            >
+              <Bookmark className="mr-2 h-4 w-4" />
+              Bookmarks
+            </button>
+          </li>
+        </ul>
 
         {/* Admin Menu - 간소화된 단일 메뉴 */}
         {isUserAdmin && (
