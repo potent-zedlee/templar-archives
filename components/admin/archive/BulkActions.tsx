@@ -26,15 +26,23 @@ import {
 } from '@/components/ui/alert-dialog'
 
 interface BulkActionsProps {
+  selectedTournamentIds?: string[]
+  selectedEventIds?: string[]
   selectedStreamIds: string[]
   selectedStreamMeta: Map<string, {tournamentId: string, eventId: string}>
+  subEvents?: Map<string, any[]>
+  streams?: Map<string, any[]>
   onSuccess?: () => void
   onClearSelection?: () => void
 }
 
 export function BulkActions({
+  selectedTournamentIds = [],
+  selectedEventIds = [],
   selectedStreamIds,
   selectedStreamMeta,
+  subEvents: _subEvents,
+  streams: _streams,
   onSuccess,
   onClearSelection
 }: BulkActionsProps) {
@@ -43,7 +51,8 @@ export function BulkActions({
   const [deleting, setDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
-  if (selectedStreamIds.length === 0) return null
+  const totalSelected = selectedTournamentIds.length + selectedEventIds.length + selectedStreamIds.length
+  if (totalSelected === 0) return null
 
   const handleBulkPublish = async () => {
     setPublishing(true)
@@ -189,7 +198,12 @@ export function BulkActions({
   return (
     <div className="flex items-center gap-2 p-4 border rounded-lg bg-muted/50">
       <span className="text-sm font-medium">
-        {selectedStreamIds.length} stream{selectedStreamIds.length > 1 ? 's' : ''} selected
+        {selectedTournamentIds.length > 0 && `${selectedTournamentIds.length} tournament${selectedTournamentIds.length > 1 ? 's' : ''}`}
+        {selectedTournamentIds.length > 0 && (selectedEventIds.length > 0 || selectedStreamIds.length > 0) && ', '}
+        {selectedEventIds.length > 0 && `${selectedEventIds.length} event${selectedEventIds.length > 1 ? 's' : ''}`}
+        {selectedEventIds.length > 0 && selectedStreamIds.length > 0 && ', '}
+        {selectedStreamIds.length > 0 && `${selectedStreamIds.length} stream${selectedStreamIds.length > 1 ? 's' : ''}`}
+        {' selected'}
       </span>
 
       <div className="flex items-center gap-2 ml-auto">

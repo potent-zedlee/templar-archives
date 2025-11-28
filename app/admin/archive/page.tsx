@@ -73,6 +73,8 @@ export default function AdminArchivePage() {
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [gameTypeFilter, setGameTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState<ContentStatus | 'all'>('all')
+  const [selectedTournamentIds, setSelectedTournamentIds] = useState<Set<string>>(new Set())
+  const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set())
   const [selectedStreamIds, setSelectedStreamIds] = useState<Set<string>>(new Set())
   const [selectedStreamMeta, setSelectedStreamMeta] = useState<Map<string, {tournamentId: string, eventId: string}>>(new Map())
   const [sortField, setSortField] = useState<AdminArchiveSortField>('date')
@@ -258,6 +260,177 @@ export default function AdminArchivePage() {
       setSortField(field)
       setSortDirection('asc')
     }
+  }
+
+  // 전체 토너먼트 선택 (모든 항목 선택)
+  const handleSelectAllTournaments = () => {
+    const allTournamentIds = filteredTournaments.map(t => t.id)
+
+    if (selectedTournamentIds.size === allTournamentIds.length && allTournamentIds.length > 0) {
+      // 전체 해제
+      setSelectedTournamentIds(new Set())
+      setSelectedEventIds(new Set())
+      setSelectedStreamIds(new Set())
+      setSelectedStreamMeta(new Map())
+    } else {
+      // 전체 선택
+      setSelectedTournamentIds(new Set(allTournamentIds))
+      // 로드된 모든 이벤트 선택
+      const allEventIds: string[] = []
+      subEvents.forEach((events) => {
+        events.forEach(e => allEventIds.push(e.id))
+      })
+      setSelectedEventIds(new Set(allEventIds))
+      // 로드된 모든 스트림 선택
+      const allStreamIds: string[] = []
+      const newMeta = new Map<string, {tournamentId: string, eventId: string}>()
+      streams.forEach((streamList, eventId) => {
+        // Find tournament ID for this event
+        for (const [tournamentId, events] of subEvents.entries()) {
+          if (events.some(e => e.id === eventId)) {
+            streamList.forEach(s => {
+              allStreamIds.push(s.id)
+              newMeta.set(s.id, { tournamentId, eventId })
+            })
+            break
+          }
+        }
+      })
+      setSelectedStreamIds(new Set(allStreamIds))
+      setSelectedStreamMeta(newMeta)
+    }
+  }
+
+  // 전체 이벤트 선택 (토너먼트 제외)
+  const handleSelectAllEvents = () => {
+    const allEventIds: string[] = []
+    subEvents.forEach((events) => {
+      events.forEach(e => allEventIds.push(e.id))
+    })
+
+    if (selectedEventIds.size === allEventIds.length && allEventIds.length > 0) {
+      // 이벤트, 스트림 해제 (토너먼트는 유지)
+      setSelectedEventIds(new Set())
+      setSelectedStreamIds(new Set())
+      setSelectedStreamMeta(new Map())
+    } else {
+      // 모든 이벤트 선택
+      setSelectedEventIds(new Set(allEventIds))
+      // 모든 스트림 선택
+      const allStreamIds: string[] = []
+      const newMeta = new Map<string, {tournamentId: string, eventId: string}>()
+      streams.forEach((streamList, eventId) => {
+        for (const [tournamentId, events] of subEvents.entries()) {
+          if (events.some(e => e.id === eventId)) {
+            streamList.forEach(s => {
+              allStreamIds.push(s.id)
+              newMeta.set(s.id, { tournamentId, eventId })
+            })
+            break
+          }
+        }
+      })
+      setSelectedStreamIds(new Set(allStreamIds))
+      setSelectedStreamMeta(newMeta)
+    }
+  }
+
+  // 전체 스트림 선택 (토너먼트, 이벤트 제외)
+  const handleSelectAllStreams = () => {
+    const allStreamIds: string[] = []
+    const newMeta = new Map<string, {tournamentId: string, eventId: string}>()
+
+    streams.forEach((streamList, eventId) => {
+      for (const [tournamentId, events] of subEvents.entries()) {
+        if (events.some(e => e.id === eventId)) {
+          streamList.forEach(s => {
+            allStreamIds.push(s.id)
+            newMeta.set(s.id, { tournamentId, eventId })
+          })
+          break
+        }
+      }
+    })
+
+    if (selectedStreamIds.size === allStreamIds.length && allStreamIds.length > 0) {
+      // 스트림만 해제
+      setSelectedStreamIds(new Set())
+      setSelectedStreamMeta(new Map())
+    } else {
+      // 모든 스트림 선택
+      setSelectedStreamIds(new Set(allStreamIds))
+      setSelectedStreamMeta(newMeta)
+    }
+  }
+
+  // 개별 토너먼트 선택 (하위 이벤트, 스트림도 선택)
+  const handleSelectTournament = (tournamentId: string, checked: boolean) => {
+    const newTournamentIds = new Set(selectedTournamentIds)
+    const newEventIds = new Set(selectedEventIds)
+    const newStreamIds = new Set(selectedStreamIds)
+    const newMeta = new Map(selectedStreamMeta)
+
+    if (checked) {
+      newTournamentIds.add(tournamentId)
+      // 하위 이벤트 선택
+      const tournamentEvents = subEvents.get(tournamentId) || []
+      tournamentEvents.forEach(e => {
+        newEventIds.add(e.id)
+        // 하위 스트림 선택
+        const eventStreams = streams.get(e.id) || []
+        eventStreams.forEach(s => {
+          newStreamIds.add(s.id)
+          newMeta.set(s.id, { tournamentId, eventId: e.id })
+        })
+      })
+    } else {
+      newTournamentIds.delete(tournamentId)
+      // 하위 이벤트 해제
+      const tournamentEvents = subEvents.get(tournamentId) || []
+      tournamentEvents.forEach(e => {
+        newEventIds.delete(e.id)
+        // 하위 스트림 해제
+        const eventStreams = streams.get(e.id) || []
+        eventStreams.forEach(s => {
+          newStreamIds.delete(s.id)
+          newMeta.delete(s.id)
+        })
+      })
+    }
+
+    setSelectedTournamentIds(newTournamentIds)
+    setSelectedEventIds(newEventIds)
+    setSelectedStreamIds(newStreamIds)
+    setSelectedStreamMeta(newMeta)
+  }
+
+  // 개별 이벤트 선택 (하위 스트림도 선택)
+  const handleSelectEvent = (eventId: string, tournamentId: string, checked: boolean) => {
+    const newEventIds = new Set(selectedEventIds)
+    const newStreamIds = new Set(selectedStreamIds)
+    const newMeta = new Map(selectedStreamMeta)
+
+    if (checked) {
+      newEventIds.add(eventId)
+      // 하위 스트림 선택
+      const eventStreams = streams.get(eventId) || []
+      eventStreams.forEach(s => {
+        newStreamIds.add(s.id)
+        newMeta.set(s.id, { tournamentId, eventId })
+      })
+    } else {
+      newEventIds.delete(eventId)
+      // 하위 스트림 해제
+      const eventStreams = streams.get(eventId) || []
+      eventStreams.forEach(s => {
+        newStreamIds.delete(s.id)
+        newMeta.delete(s.id)
+      })
+    }
+
+    setSelectedEventIds(newEventIds)
+    setSelectedStreamIds(newStreamIds)
+    setSelectedStreamMeta(newMeta)
   }
 
   const handleCreateTournament = () => {
@@ -595,10 +768,14 @@ export default function AdminArchivePage() {
           </div>
 
       {/* Bulk Actions */}
-      {selectedStreamIds.size > 0 && (
+      {(selectedTournamentIds.size > 0 || selectedEventIds.size > 0 || selectedStreamIds.size > 0) && (
         <BulkActions
+          selectedTournamentIds={Array.from(selectedTournamentIds)}
+          selectedEventIds={Array.from(selectedEventIds)}
           selectedStreamIds={Array.from(selectedStreamIds)}
           selectedStreamMeta={selectedStreamMeta}
+          subEvents={subEvents}
+          streams={streams}
           onSuccess={() => {
             // Reload streams for expanded subevents
             for (const subEventId of expandedSubEvents) {
@@ -611,6 +788,8 @@ export default function AdminArchivePage() {
             }
           }}
           onClearSelection={() => {
+            setSelectedTournamentIds(new Set())
+            setSelectedEventIds(new Set())
             setSelectedStreamIds(new Set())
             setSelectedStreamMeta(new Map())
           }}
@@ -652,7 +831,55 @@ export default function AdminArchivePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-10" />
+                <TableHead className="w-10">
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      title="Select All Tournaments"
+                      checked={selectedTournamentIds.size === filteredTournaments.length && filteredTournaments.length > 0}
+                      onChange={handleSelectAllTournaments}
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary"
+                    />
+                  </div>
+                </TableHead>
+                <TableHead className="w-10">
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      title="Select All Events"
+                      checked={
+                        (() => {
+                          const allEventIds: string[] = []
+                          subEvents.forEach((events) => {
+                            events.forEach(e => allEventIds.push(e.id))
+                          })
+                          return selectedEventIds.size === allEventIds.length && allEventIds.length > 0
+                        })()
+                      }
+                      onChange={handleSelectAllEvents}
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary"
+                    />
+                  </div>
+                </TableHead>
+                <TableHead className="w-10">
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="checkbox"
+                      title="Select All Streams"
+                      checked={
+                        (() => {
+                          const allStreamIds: string[] = []
+                          streams.forEach((streamList) => {
+                            streamList.forEach(s => allStreamIds.push(s.id))
+                          })
+                          return selectedStreamIds.size === allStreamIds.length && allStreamIds.length > 0
+                        })()
+                      }
+                      onChange={handleSelectAllStreams}
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary"
+                    />
+                  </div>
+                </TableHead>
                 <TableHead
                   className="min-w-[200px] cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('name')}
@@ -729,7 +956,7 @@ export default function AdminArchivePage() {
             <TableBody>
               {filteredTournaments.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                     No tournaments found
                   </TableCell>
                 </TableRow>
@@ -747,6 +974,17 @@ export default function AdminArchivePage() {
                       className="hover:bg-muted/50 cursor-pointer"
                       onClick={() => toggleTournamentExpand(tournament.id)}
                     >
+                        <TableCell className="w-10">
+                          <input
+                            type="checkbox"
+                            checked={selectedTournamentIds.has(tournament.id)}
+                            onChange={(e) => handleSelectTournament(tournament.id, e.target.checked)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary"
+                          />
+                        </TableCell>
+                        <TableCell className="w-10" />
+                        <TableCell className="w-10" />
                         <TableCell className="font-medium min-w-[200px]">
                           <div className="flex items-center gap-2">
                             <Button
@@ -829,7 +1067,7 @@ export default function AdminArchivePage() {
                     if (tournamentSubEvents.length === 0) {
                       rows.push(
                         <TableRow key={`${tournament.id}-no-subevents`}>
-                          <TableCell colSpan={6} className="bg-muted/30 text-center py-3 text-sm text-muted-foreground">
+                          <TableCell colSpan={9} className="bg-muted/30 text-center py-3 text-sm text-muted-foreground">
                             No events yet. Add one to get started.
                           </TableCell>
                         </TableRow>
@@ -846,6 +1084,17 @@ export default function AdminArchivePage() {
                             className="hover:bg-muted/30 cursor-pointer bg-muted/20"
                             onClick={() => toggleSubEventExpand(tournament.id, subEvent.id)}
                           >
+                            <TableCell className="w-10" />
+                            <TableCell className="w-10">
+                              <input
+                                type="checkbox"
+                                checked={selectedEventIds.has(subEvent.id)}
+                                onChange={(e) => handleSelectEvent(subEvent.id, tournament.id, e.target.checked)}
+                                onClick={(e) => e.stopPropagation()}
+                                className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary"
+                              />
+                            </TableCell>
+                            <TableCell className="w-10" />
                             <TableCell className="font-medium min-w-[200px]">
                               <div className="flex items-center gap-2 pl-4">
                                                 <Button
@@ -917,7 +1166,7 @@ export default function AdminArchivePage() {
                           if (subEventStreams.length === 0) {
                             rows.push(
                               <TableRow key={`${subEvent.id}-no-streams`}>
-                                <TableCell colSpan={6} className="bg-muted/10 text-center py-2 text-xs text-muted-foreground">
+                                <TableCell colSpan={9} className="bg-muted/10 text-center py-2 text-xs text-muted-foreground">
                                   No streams yet. Add one to get started.
                                 </TableCell>
                               </TableRow>
@@ -932,6 +1181,8 @@ export default function AdminArchivePage() {
                                   key={stream.id}
                                   className={`bg-muted/10 hover:bg-muted/20 h-10 ${isSelected ? 'bg-primary/10' : ''}`}
                                 >
+                                  <TableCell className="w-10 py-2" />
+                                  <TableCell className="w-10 py-2" />
                                   {/* Checkbox */}
                                   <TableCell className="w-10 py-2">
                                     <input
