@@ -10,7 +10,7 @@ interface StatsSectionProps {
 
 export function StatsSection({ stats }: StatsSectionProps) {
   return (
-    <section className="py-12 md:py-16 bg-gray-800">
+    <section className="py-12 md:py-16 bg-muted">
       <div className="container max-w-7xl mx-auto px-4 md:px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatCard
@@ -59,7 +59,7 @@ function StatCard({ icon: Icon, label, value }: StatCardProps) {
   }, [value])
 
   return (
-    <div className="group bg-gray-900 border border-gray-700 rounded-lg p-8 hover:border-gold-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-gold-400/10">
+    <div className="group bg-background border border-border rounded-lg p-8 hover:border-gold-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-gold-400/10">
       <div className="flex flex-col items-center gap-4 text-center">
         {/* Icon */}
         <div className="p-4 bg-gold-400/10 rounded-full group-hover:bg-gold-400/20 transition-colors">
@@ -67,12 +67,12 @@ function StatCard({ icon: Icon, label, value }: StatCardProps) {
         </div>
 
         {/* Number */}
-        <div className="text-4xl md:text-5xl font-bold text-gray-50 tabular-nums">
+        <div className="text-4xl md:text-5xl font-bold text-foreground tabular-nums">
           {count.toLocaleString()}
         </div>
 
         {/* Label */}
-        <div className="text-sm md:text-base text-gray-400 font-medium uppercase tracking-wider">
+        <div className="text-sm md:text-base text-muted-foreground font-medium uppercase tracking-wider">
           {label}
         </div>
       </div>
