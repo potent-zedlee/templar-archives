@@ -32,14 +32,6 @@ import { useAuth } from "@/components/layout/AuthProvider"
 import { ReportButton } from "@/components/dialogs/ReportButton"
 
 // Dynamic imports for heavy components
-const PopularPostsSidebar = dynamic(
-  () => import("@/components/home/PopularPostsSidebar").then(mod => ({ default: mod.PopularPostsSidebar })),
-  {
-    ssr: false,
-    loading: () => <CardSkeleton count={3} variant="compact" />
-  }
-)
-
 const HandSearchDialog = dynamic(
   () => import("@/components/features/hand/HandSearchDialog").then(mod => ({ default: mod.HandSearchDialog })),
   {
@@ -192,9 +184,9 @@ export default function communityClient() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main id="main-content" role="main">
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="max-w-4xl mx-auto">
           {/* Main Content */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="space-y-6">
             {/* Search Bar */}
             <CommunitySearchBar
               onSearch={setSearchQuery}
@@ -475,11 +467,6 @@ export default function communityClient() {
                 )}
               </TabsContent>
             </Tabs>
-          </div>
-
-          {/* Sidebar - Hidden on mobile */}
-          <div className="hidden lg:block">
-            <PopularPostsSidebar onCategoryClick={handleCategoryClick} />
           </div>
         </div>
         </div>
