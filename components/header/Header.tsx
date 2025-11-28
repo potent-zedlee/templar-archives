@@ -56,7 +56,6 @@ export function Header() {
     { href: "/archive/tournament", label: "TOURNAMENT" },
     { href: "/archive/cash-game", label: "CASH GAME" },
     { href: "/players", label: "PLAYER" },
-    { href: "/community", label: "FORUM" },
   ]
 
   return (

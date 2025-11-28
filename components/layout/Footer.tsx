@@ -10,13 +10,10 @@ export function Footer() {
     { href: "/search", label: "Search" },
     { href: "/archive", label: "Archive" },
     { href: "/players", label: "Players" },
-    { href: "/community", label: "Forum" },
   ]
 
   const aboutLinks = [
     { href: "/about", label: "About Us" },
-    { href: "/news", label: "News" },
-    { href: "/live-reporting", label: "Live Reporting" },
   ]
 
   const legalLinks = [

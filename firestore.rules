@@ -131,30 +131,6 @@ service cloud.firestore {
       }
     }
 
-    // ==================== Community Collections ====================
-
-    /**
-     * 게시글: 모두 읽기 가능, 인증된 사용자만 생성, 작성자/Admin만 수정/삭제
-     */
-    match /posts/{postId} {
-      allow read: if true;
-      allow create: if isAuthenticated();
-      allow update, delete: if isOwner(resource.data.author.id) || isAdmin();
-
-      // 댓글
-      match /comments/{commentId} {
-        allow read: if true;
-        allow create: if isAuthenticated();
-        allow update, delete: if isOwner(resource.data.author.id) || isAdmin();
-      }
-
-      // 좋아요 (likeId = userId)
-      match /likes/{likeId} {
-        allow read: if true;
-        allow create, delete: if isAuthenticated() && isOwner(likeId);
-      }
-    }
-
     // ==================== Unsorted Streams Collection ====================
 
     /**
@@ -239,15 +215,6 @@ service cloud.firestore {
     match /handEditRequests/{requestId} {
       allow read: if isOwner(resource.data.requesterId) || isAdmin();
       allow create: if isAuthenticated() && request.resource.data.requesterId == request.auth.uid;
-      allow update, delete: if isAdmin();
-    }
-
-    /**
-     * 콘텐츠 신고: 인증된 사용자만 생성, Admin만 읽기/수정
-     */
-    match /contentReports/{reportId} {
-      allow read: if isAdmin();
-      allow create: if isAuthenticated() && request.resource.data.reporterId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 

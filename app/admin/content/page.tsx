@@ -4,48 +4,30 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/components/layout/AuthProvider"
 import { isAdmin } from "@/lib/admin"
-import { type Report } from "@/lib/content-moderation"
 import {
-  useAllPostsQuery,
   useAllCommentsQuery,
-  useReportsQuery,
-  useApproveReportMutation,
-  useRejectReportMutation,
-  useHideContentMutation,
-  useUnhideContentMutation,
-  useDeleteContentMutation,
+  useHideCommentMutation,
+  useUnhideCommentMutation,
+  useDeleteCommentMutation,
 } from "@/lib/queries/admin-queries"
-import { ReportsTab } from "@/components/admin/content/ReportsTab"
-import { PostsTab } from "@/components/admin/content/PostsTab"
 import { CommentsTab } from "@/components/admin/content/CommentsTab"
-import { ReportDetailDialog } from "@/components/admin/content/ReportDetailDialog"
 
 export default function ContentPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [actionDialog, setActionDialog] = useState<{
     open: boolean
     type: "hide" | "unhide" | "delete"
-    targetId: string
-    targetType: "post" | "comment"
+    commentId: string
+    handId: string
   } | null>(null)
 
-  // Tabs state
-  const [activeTab, setActiveTab] = useState<"reports" | "posts" | "comments">("reports")
-
   // React Query hooks
-  const { data: posts = [], isLoading: postsLoading } = useAllPostsQuery(true)
   const { data: comments = [], isLoading: commentsLoading } = useAllCommentsQuery(true)
-  const { data: reports = [], isLoading: reportsLoading } = useReportsQuery()
 
-  const approveReportMutation = useApproveReportMutation()
-  const rejectReportMutation = useRejectReportMutation()
-  const hideContentMutation = useHideContentMutation()
-  const unhideContentMutation = useUnhideContentMutation()
-  const deleteContentMutation = useDeleteContentMutation()
-
-  const loading = postsLoading || commentsLoading || reportsLoading
+  const hideCommentMutation = useHideCommentMutation()
+  const unhideCommentMutation = useUnhideCommentMutation()
+  const deleteCommentMutation = useDeleteCommentMutation()
 
   useEffect(() => {
     async function checkAdminAccess() {
@@ -67,55 +49,31 @@ export default function ContentPage() {
   }, [user, authLoading, router])
 
   // Handler functions
-  function handleApproveReport(comment: string) {
-    if (!selectedReport || !user) return
-
-    approveReportMutation.mutate(
-      { reportId: selectedReport.id, adminId: user.id, adminComment: comment },
-      {
-        onSuccess: () => setSelectedReport(null),
-        onError: (error) => console.error("Error approving report:", error),
-      }
-    )
-  }
-
-  function handleRejectReport(comment: string) {
-    if (!selectedReport || !user) return
-
-    rejectReportMutation.mutate(
-      { reportId: selectedReport.id, adminId: user.id, adminComment: comment },
-      {
-        onSuccess: () => setSelectedReport(null),
-        onError: (error) => console.error("Error rejecting report:", error),
-      }
-    )
-  }
-
   function handleContentAction() {
     if (!actionDialog) return
 
-    const { type, targetId, targetType } = actionDialog
-    const params = targetType === "post" ? { postId: targetId } : { commentId: targetId }
+    const { type, commentId, handId } = actionDialog
+    const params = { commentId, handId }
 
     if (type === "hide") {
-      hideContentMutation.mutate(params, {
+      hideCommentMutation.mutate(params, {
         onSuccess: () => setActionDialog(null),
-        onError: (error) => console.error("Error hiding content:", error),
+        onError: (error) => console.error("Error hiding comment:", error),
       })
     } else if (type === "unhide") {
-      unhideContentMutation.mutate(params, {
+      unhideCommentMutation.mutate(params, {
         onSuccess: () => setActionDialog(null),
-        onError: (error) => console.error("Error unhiding content:", error),
+        onError: (error) => console.error("Error unhiding comment:", error),
       })
     } else if (type === "delete") {
-      deleteContentMutation.mutate(params, {
+      deleteCommentMutation.mutate(params, {
         onSuccess: () => setActionDialog(null),
-        onError: (error) => console.error("Error deleting content:", error),
+        onError: (error) => console.error("Error deleting comment:", error),
       })
     }
   }
 
-  if (loading) {
+  if (commentsLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="text-muted-foreground">Loading...</div>
@@ -123,131 +81,45 @@ export default function ContentPage() {
     )
   }
 
-  const pendingReportsCount = reports.filter((r) => r.status === "pending").length
-
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4">
       <div className="mb-6">
-        <h1 className="text-title-lg mb-2">Content Management</h1>
+        <h1 className="text-title-lg mb-2">Hand Comments Management</h1>
         <p className="text-body text-muted-foreground">
-          Manage posts, comments and reports
+          Manage comments on hand analysis pages
         </p>
       </div>
 
-      {/* Custom Tabs */}
+      {/* Comments Section */}
       <div className="space-y-6">
-        {/* Tab List */}
-        <div className="border-b border-border">
-          <nav className="flex gap-6 -mb-px" aria-label="Content tabs">
-            <button
-              onClick={() => setActiveTab("reports")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === "reports"
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-              }`}
-              aria-current={activeTab === "reports" ? "page" : undefined}
-            >
-              Report Management
-              {pendingReportsCount > 0 && (
-                <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-destructive text-destructive-foreground">
-                  {pendingReportsCount}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab("posts")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === "posts"
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-              }`}
-              aria-current={activeTab === "posts" ? "page" : undefined}
-            >
-              Posts
-            </button>
-            <button
-              onClick={() => setActiveTab("comments")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === "comments"
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-              }`}
-              aria-current={activeTab === "comments" ? "page" : undefined}
-            >
-              Comment
-            </button>
-          </nav>
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === "reports" && (
-          <ReportsTab reports={reports} onReview={setSelectedReport} />
-        )}
-
-        {activeTab === "posts" && (
-          <PostsTab
-            posts={posts as any}
-            onHide={(postId) =>
-              setActionDialog({ open: true, type: "hide", targetId: postId, targetType: "post" })
-            }
-            onUnhide={(postId) =>
-              setActionDialog({
-                open: true,
-                type: "unhide",
-                targetId: postId,
-                targetType: "post",
-              })
-            }
-            onDelete={(postId) =>
-              setActionDialog({
-                open: true,
-                type: "delete",
-                targetId: postId,
-                targetType: "post",
-              })
-            }
-          />
-        )}
-
-        {activeTab === "comments" && (
-          <CommentsTab
-            comments={comments as any}
-            onHide={(commentId) =>
-              setActionDialog({
-                open: true,
-                type: "hide",
-                targetId: commentId,
-                targetType: "comment",
-              })
-            }
-            onUnhide={(commentId) =>
-              setActionDialog({
-                open: true,
-                type: "unhide",
-                targetId: commentId,
-                targetType: "comment",
-              })
-            }
-            onDelete={(commentId) =>
-              setActionDialog({
-                open: true,
-                type: "delete",
-                targetId: commentId,
-                targetType: "comment",
-              })
-            }
-          />
-        )}
+        <CommentsTab
+          comments={comments}
+          onHide={(commentId, handId) =>
+            setActionDialog({
+              open: true,
+              type: "hide",
+              commentId,
+              handId,
+            })
+          }
+          onUnhide={(commentId, handId) =>
+            setActionDialog({
+              open: true,
+              type: "unhide",
+              commentId,
+              handId,
+            })
+          }
+          onDelete={(commentId, handId) =>
+            setActionDialog({
+              open: true,
+              type: "delete",
+              commentId,
+              handId,
+            })
+          }
+        />
       </div>
-
-      <ReportDetailDialog
-        report={selectedReport}
-        open={!!selectedReport}
-        onClose={() => setSelectedReport(null)}
-        onApprove={handleApproveReport}
-        onReject={handleRejectReport}
-      />
 
       {/* Content Action Dialog */}
       {actionDialog && (
@@ -268,7 +140,7 @@ export default function ContentPage() {
             <p className="text-muted-foreground mb-6">
               {actionDialog.type === "delete"
                 ? "This action cannot be undone."
-                : "Change the status of selected content."}
+                : "Change the status of selected comment."}
             </p>
 
             <div className="flex justify-end gap-3">

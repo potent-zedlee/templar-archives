@@ -358,32 +358,6 @@ export async function changeUserRole(userId: string, role: AdminRole, adminId: s
   }
 }
 
-/**
- * Delete post (admin)
- */
-export async function deletePost(postId: string, reason: string, adminId: string) {
-  try {
-    const postRef = doc(firestore, COLLECTION_PATHS.POSTS, postId)
-    await deleteDoc(postRef)
-
-    // Log action
-    await logAdminAction(adminId, 'delete_post', 'post', postId, { reason })
-  } catch (error) {
-    console.error('deletePost 실패:', error)
-    throw error
-  }
-}
-
-/**
- * Delete comment (admin)
- */
-export async function deleteComment(_commentId: string, _reason: string, _adminId: string) {
-  // 댓글은 posts/{postId}/comments/{commentId} 서브컬렉션에 있음
-  // postId를 알아야 하므로, commentId만으로는 삭제 불가
-  // 대안: commentId에 postId 정보 포함 또는 별도 조회
-  console.error('deleteComment: postId가 필요합니다. 현재 구현에서는 지원하지 않습니다.')
-  throw new Error('deleteComment requires postId')
-}
 
 /**
  * Log admin action
@@ -424,43 +398,7 @@ export async function logAdminAction(
 }
 
 /**
- * Get recent posts (for moderation)
- */
-export async function getRecentPosts(limitCount: number = 50) {
-  try {
-    const q = query(
-      collection(firestore, COLLECTION_PATHS.POSTS),
-      orderBy('createdAt', 'desc'),
-      limit(limitCount)
-    )
-
-    const snapshot = await getDocs(q)
-
-    return snapshot.docs.map((doc) => {
-      const data = doc.data()
-      return {
-        id: doc.id,
-        title: data.title,
-        content: data.content,
-        author_id: data.author?.id,
-        created_at: data.createdAt?.toDate().toISOString(),
-        author: data.author
-          ? {
-              nickname: data.author.name,
-              avatar_url: data.author.avatarUrl,
-              is_banned: false, // 별도 조회 필요
-            }
-          : undefined,
-      }
-    })
-  } catch (error) {
-    console.error('getRecentPosts 실패:', error)
-    throw error
-  }
-}
-
-/**
- * Get recent comments (for moderation)
+ * Get recent comments (for moderation) - Hand 댓글
  * 참고: Firestore에서 서브컬렉션의 모든 문서를 조회하려면 Collection Group Query 사용
  */
 export async function getRecentComments(limitCount: number = 50) {

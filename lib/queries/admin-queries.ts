@@ -12,22 +12,14 @@ import {
   banUser,
   unbanUser,
   changeUserRole,
-  deletePost,
-  deleteComment,
-  getRecentPosts,
   getRecentComments,
   type AdminRole,
 } from '@/lib/admin'
 import {
-  fetchAllPosts,
   fetchAllComments,
-  fetchReports,
-  approveReport,
-  rejectReport,
-  hideContent,
-  unhideContent,
-  deleteContent,
-  type ReportStatus,
+  hideComment,
+  unhideComment,
+  deleteComment,
 } from '@/lib/content-moderation'
 import {
   getPendingClaims,
@@ -59,11 +51,8 @@ export const adminKeys = {
   claims: () => [...adminKeys.all, 'claims'] as const,
   pendingClaims: () => [...adminKeys.claims(), 'pending'] as const,
   allClaims: () => [...adminKeys.claims(), 'all'] as const,
-  posts: (limit?: number) => [...adminKeys.all, 'posts', limit] as const,
   comments: (limit?: number) => [...adminKeys.all, 'comments', limit] as const,
   editRequests: (status?: EditRequestStatus) => [...adminKeys.all, 'edit-requests', status] as const,
-  reports: (status?: ReportStatus) => [...adminKeys.all, 'reports', status] as const,
-  allPosts: (includeHidden?: boolean) => [...adminKeys.all, 'all-posts', includeHidden] as const,
   allComments: (includeHidden?: boolean) => [...adminKeys.all, 'all-comments', includeHidden] as const,
   deletionRequests: () => [...adminKeys.all, 'deletion-requests'] as const,
   pendingDeletionRequests: () => [...adminKeys.deletionRequests(), 'pending'] as const,
@@ -134,13 +123,9 @@ export function useBanUserMutation(adminId: string) {
       return { userId, reason }
     },
     onMutate: async ({ userId, reason }) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['admin', 'users'] })
-
-      // Snapshot previous value
       const previousData = queryClient.getQueriesData({ queryKey: ['admin', 'users'] })
 
-      // Optimistically update all user queries
       queryClient.setQueriesData<any>(
         { queryKey: ['admin', 'users'] },
         (old: any) => {
@@ -157,7 +142,6 @@ export function useBanUserMutation(adminId: string) {
       return { previousData }
     },
     onError: (_, __, context) => {
-      // Rollback on error
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data)
@@ -165,7 +149,6 @@ export function useBanUserMutation(adminId: string) {
       }
     },
     onSuccess: () => {
-      // Invalidate users queries
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
       queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
     },
@@ -184,13 +167,9 @@ export function useUnbanUserMutation(adminId: string) {
       return { userId }
     },
     onMutate: async (userId) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['admin', 'users'] })
-
-      // Snapshot previous value
       const previousData = queryClient.getQueriesData({ queryKey: ['admin', 'users'] })
 
-      // Optimistically update all user queries
       queryClient.setQueriesData<any>(
         { queryKey: ['admin', 'users'] },
         (old: any) => {
@@ -207,7 +186,6 @@ export function useUnbanUserMutation(adminId: string) {
       return { previousData }
     },
     onError: (_, __, context) => {
-      // Rollback on error
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data)
@@ -233,13 +211,9 @@ export function useChangeRoleMutation(adminId: string) {
       return { userId, role }
     },
     onMutate: async ({ userId, role }) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['admin', 'users'] })
-
-      // Snapshot previous value
       const previousData = queryClient.getQueriesData({ queryKey: ['admin', 'users'] })
 
-      // Optimistically update all user queries
       queryClient.setQueriesData<any>(
         { queryKey: ['admin', 'users'] },
         (old: any) => {
@@ -256,7 +230,6 @@ export function useChangeRoleMutation(adminId: string) {
       return { previousData }
     },
     onError: (_, __, context) => {
-      // Rollback on error
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data)
@@ -264,7 +237,6 @@ export function useChangeRoleMutation(adminId: string) {
       }
     },
     onSuccess: () => {
-      // Invalidate all user queries to ensure sync
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
     },
   })
@@ -362,21 +334,7 @@ export function useRejectClaimMutation() {
   })
 }
 
-// ==================== Content Queries & Mutations ====================
-
-/**
- * Get recent posts (for moderation)
- */
-export function useRecentPostsQuery(limit: number = 50) {
-  return useQuery({
-    queryKey: adminKeys.posts(limit),
-    queryFn: async () => {
-      return await getRecentPosts(limit)
-    },
-    staleTime: 2 * 60 * 1000, // 2분
-    gcTime: 5 * 60 * 1000, // 5분
-  })
-}
+// ==================== Comments Management ====================
 
 /**
  * Get recent comments (for moderation)
@@ -393,34 +351,63 @@ export function useRecentCommentsQuery(limit: number = 50) {
 }
 
 /**
- * Delete post (admin)
+ * Get all comments (including hidden) - Hand 댓글 관리용
  */
-export function useDeletePostMutation(adminId: string) {
+export function useAllCommentsQuery(includeHidden: boolean = true) {
+  return useQuery({
+    queryKey: adminKeys.allComments(includeHidden),
+    queryFn: async () => {
+      return await fetchAllComments({ includeHidden })
+    },
+    staleTime: 2 * 60 * 1000, // 2분
+    gcTime: 5 * 60 * 1000, // 5분
+  })
+}
+
+/**
+ * Hide comment (Hand 댓글)
+ */
+export function useHideCommentMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ postId, reason }: { postId: string; reason: string }) => {
-      await deletePost(postId, reason, adminId)
+    mutationFn: async ({ commentId, handId }: { commentId: string; handId: string }) => {
+      await hideComment({ commentId, handId })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.posts() })
-      queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'all-comments'] })
     },
   })
 }
 
 /**
- * Delete comment (admin)
+ * Unhide comment (Hand 댓글)
  */
-export function useDeleteCommentMutation(adminId: string) {
+export function useUnhideCommentMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ commentId, reason }: { commentId: string; reason: string }) => {
-      await deleteComment(commentId, reason, adminId)
+    mutationFn: async ({ commentId, handId }: { commentId: string; handId: string }) => {
+      await unhideComment({ commentId, handId })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.comments() })
+      queryClient.invalidateQueries({ queryKey: ['admin', 'all-comments'] })
+    },
+  })
+}
+
+/**
+ * Delete comment (Hand 댓글)
+ */
+export function useDeleteCommentMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ commentId, handId }: { commentId: string; handId: string }) => {
+      await deleteComment({ commentId, handId })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'all-comments'] })
       queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
     },
   })
@@ -479,173 +466,6 @@ export function useRejectEditRequestMutation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.editRequests() })
-    },
-  })
-}
-
-// ==================== Content Moderation Queries & Mutations ====================
-
-/**
- * Get all posts (including hidden)
- */
-export function useAllPostsQuery(includeHidden: boolean = true) {
-  return useQuery({
-    queryKey: adminKeys.allPosts(includeHidden),
-    queryFn: async () => {
-      return await fetchAllPosts({ includeHidden })
-    },
-    staleTime: 2 * 60 * 1000, // 2분
-    gcTime: 5 * 60 * 1000, // 5분
-  })
-}
-
-/**
- * Get all comments (including hidden)
- */
-export function useAllCommentsQuery(includeHidden: boolean = true) {
-  return useQuery({
-    queryKey: adminKeys.allComments(includeHidden),
-    queryFn: async () => {
-      return await fetchAllComments({ includeHidden })
-    },
-    staleTime: 2 * 60 * 1000, // 2분
-    gcTime: 5 * 60 * 1000, // 5분
-  })
-}
-
-/**
- * Get reports
- */
-export function useReportsQuery(status?: ReportStatus) {
-  return useQuery({
-    queryKey: adminKeys.reports(status),
-    queryFn: async () => {
-      return await fetchReports({ status })
-    },
-    staleTime: 2 * 60 * 1000, // 2분
-    gcTime: 5 * 60 * 1000, // 5분
-  })
-}
-
-/**
- * Approve report (and hide content)
- */
-export function useApproveReportMutation() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      reportId,
-      adminId,
-      adminComment,
-    }: {
-      reportId: string
-      adminId: string
-      adminComment?: string
-    }) => {
-      await approveReport({ reportId, adminId, adminComment })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.reports() })
-      queryClient.invalidateQueries({ queryKey: adminKeys.allPosts() })
-      queryClient.invalidateQueries({ queryKey: adminKeys.allComments() })
-    },
-  })
-}
-
-/**
- * Reject report
- */
-export function useRejectReportMutation() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      reportId,
-      adminId,
-      adminComment,
-    }: {
-      reportId: string
-      adminId: string
-      adminComment?: string
-    }) => {
-      await rejectReport({ reportId, adminId, adminComment })
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.reports() })
-    },
-  })
-}
-
-/**
- * Hide content (post or comment)
- */
-export function useHideContentMutation() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      postId,
-      commentId,
-    }: {
-      postId?: string
-      commentId?: string
-    }) => {
-      await hideContent(postId ? { postId } : { commentId: commentId! })
-    },
-    onSuccess: () => {
-      // Use prefix matching to invalidate all variants (with/without includeHidden)
-      queryClient.invalidateQueries({ queryKey: ['admin', 'all-posts'] })
-      queryClient.invalidateQueries({ queryKey: ['admin', 'all-comments'] })
-    },
-  })
-}
-
-/**
- * Unhide content (post or comment)
- */
-export function useUnhideContentMutation() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      postId,
-      commentId,
-    }: {
-      postId?: string
-      commentId?: string
-    }) => {
-      await unhideContent(postId ? { postId } : { commentId: commentId! })
-    },
-    onSuccess: () => {
-      // Use prefix matching to invalidate all variants (with/without includeHidden)
-      queryClient.invalidateQueries({ queryKey: ['admin', 'all-posts'] })
-      queryClient.invalidateQueries({ queryKey: ['admin', 'all-comments'] })
-    },
-  })
-}
-
-/**
- * Delete content (post or comment)
- */
-export function useDeleteContentMutation() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: async ({
-      postId,
-      commentId,
-    }: {
-      postId?: string
-      commentId?: string
-    }) => {
-      await deleteContent(postId ? { postId } : { commentId: commentId! })
-    },
-    onSuccess: () => {
-      // Use prefix matching to invalidate all variants (with/without includeHidden)
-      queryClient.invalidateQueries({ queryKey: ['admin', 'all-posts'] })
-      queryClient.invalidateQueries({ queryKey: ['admin', 'all-comments'] })
-      queryClient.invalidateQueries({ queryKey: adminKeys.dashboardStats() })
     },
   })
 }

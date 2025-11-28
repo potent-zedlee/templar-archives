@@ -3,18 +3,13 @@
 import { PostComments } from "@/components/features/community/PostComments"
 
 interface CommentSectionProps {
-  entityType: 'post' | 'hand'
-  entityId: string
+  handId: string
 }
 
 /**
- * Unified comment section for both posts and hands
- * Supports Reddit-style nested comments and replies
+ * Hand 댓글 섹션
+ * Reddit 스타일 중첩 댓글 지원
  */
-export function CommentSection({ entityType, entityId }: CommentSectionProps) {
-  return (
-    <PostComments
-      {...(entityType === 'post' ? { postId: entityId } : { handId: entityId })}
-    />
-  )
+export function CommentSection({ handId }: CommentSectionProps) {
+  return <PostComments handId={handId} />
 }

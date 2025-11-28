@@ -603,34 +603,9 @@ export interface FirestoreLiveReport {
 }
 
 /**
- * Post 문서
+ * Comment 문서 (Hand 댓글)
  *
- * Collection: /posts/{postId}
- */
-export interface FirestorePost {
-  /** 게시글 제목 */
-  title: string
-  /** 게시글 내용 */
-  content: string
-  /** 작성자 (임베딩) */
-  author: AuthorInfo
-  /** 통계 */
-  stats: {
-    likesCount: number
-    commentsCount: number
-  }
-  /** 태그 */
-  tags?: string[]
-  /** 생성일 */
-  createdAt: Timestamp
-  /** 수정일 */
-  updatedAt: Timestamp
-}
-
-/**
- * Comment 문서
- *
- * Collection: /posts/{postId}/comments/{commentId}
+ * Collection: /hands/{handId}/comments/{commentId}
  */
 export interface FirestoreComment {
   /** 댓글 내용 */
@@ -917,46 +892,6 @@ export interface FirestorePlayerClaim {
 }
 
 /**
- * 신고 사유
- */
-export type ReportReason = 'spam' | 'harassment' | 'inappropriate' | 'misinformation' | 'other'
-
-/**
- * 신고 상태
- */
-export type ReportStatus = 'pending' | 'approved' | 'rejected'
-
-/**
- * ContentReport 문서
- *
- * Collection: /contentReports/{reportId}
- */
-export interface FirestoreContentReport {
-  /** 포스트 ID (신고 대상이 포스트인 경우) */
-  postId?: string
-  /** 댓글 ID (신고 대상이 댓글인 경우) */
-  commentId?: string
-  /** 신고자 ID */
-  reporterId: string
-  /** 신고자 이름 */
-  reporterName: string
-  /** 신고 사유 */
-  reason: ReportReason
-  /** 신고 상세 설명 */
-  description?: string
-  /** 신고 상태 */
-  status: ReportStatus
-  /** 검토자 ID */
-  reviewedBy?: string
-  /** 검토일 */
-  reviewedAt?: Timestamp
-  /** 관리자 코멘트 */
-  adminComment?: string
-  /** 생성일 */
-  createdAt: Timestamp
-}
-
-/**
  * 핸드 수정 유형
  */
 export type EditType = 'basic_info' | 'players' | 'actions' | 'board'
@@ -1133,9 +1068,7 @@ export const COLLECTION_PATHS = {
   USER_NOTIFICATIONS: (userId: string) => `users/${userId}/notifications`,
   USER_BOOKMARKS: (userId: string) => `users/${userId}/bookmarks`,
   USER_TAG_HISTORY: (userId: string) => `users/${userId}/tagHistory`,
-  POSTS: 'posts',
-  POST_COMMENTS: (postId: string) => `posts/${postId}/comments`,
-  POST_LIKES: (postId: string) => `posts/${postId}/likes`,
+  HAND_COMMENTS: (handId: string) => `hands/${handId}/comments`,
   LIVE_REPORTS: 'liveReports',
   ANALYSIS_JOBS: 'analysisJobs',
   CATEGORIES: 'categories',
@@ -1148,8 +1081,6 @@ export const COLLECTION_PATHS = {
   PLAYER_CLAIMS: 'playerClaims',
   /** Hand edit requests (핸드 수정 요청) */
   HAND_EDIT_REQUESTS: 'handEditRequests',
-  /** Content reports (콘텐츠 신고) */
-  CONTENT_REPORTS: 'contentReports',
   /** Admin logs (관리자 활동 로그) */
   ADMIN_LOGS: 'adminLogs',
   /** Tournament categories (카테고리 관리) */

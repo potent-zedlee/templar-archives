@@ -15,9 +15,8 @@ import {
   type Comment,
 } from "@/lib/queries/community-queries"
 
-type PostCommentsProps = {
-  postId?: string
-  handId?: string
+type HandCommentsProps = {
+  handId: string
   onCommentsCountChange?: (count: number) => void
 }
 
@@ -27,7 +26,11 @@ type CommentWithReplies = Comment & {
   hasLiked?: boolean
 }
 
-export function PostComments({ postId, handId, onCommentsCountChange }: PostCommentsProps) {
+/**
+ * Hand 댓글 컴포넌트
+ * Reddit 스타일 중첩 댓글 지원
+ */
+export function PostComments({ handId, onCommentsCountChange }: HandCommentsProps) {
   const { user } = useAuth()
   const router = useRouter()
   const [comments, setComments] = useState<CommentWithReplies[]>([])
@@ -39,10 +42,9 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
 
   useEffect(() => {
     loadComments()
-  }, [postId, handId])
+  }, [handId])
 
   useEffect(() => {
-    // 댓글 개수 변경 알림
     if (onCommentsCountChange) {
       const totalCount = comments.reduce(
         (acc, comment) => acc + 1 + (comment.replies?.length || 0),
@@ -55,7 +57,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
   const loadComments = async () => {
     setLoading(true)
     try {
-      const data = await fetchComments({ postId, handId })
+      const data = await fetchComments(handId)
       setComments(data)
     } catch (error) {
       console.error('댓글 로드 실패:', error)
@@ -73,7 +75,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     )
 
     try {
-      const replies = await fetchReplies(commentId, postId, handId)
+      const replies = await fetchReplies(commentId, handId)
       setComments((prev) =>
         prev.map((c) =>
           c.id === commentId
@@ -107,7 +109,6 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     setSubmitting(true)
     try {
       await createComment({
-        postId,
         handId,
         authorId: user.id,
         authorName: (user.user_metadata?.full_name as string | undefined) || user.email || 'Anonymous',
@@ -142,7 +143,6 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     setSubmitting(true)
     try {
       await createComment({
-        postId,
         handId,
         parentId: parentCommentId,
         authorId: user.id,
@@ -171,7 +171,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     }
 
     try {
-      const liked = await toggleCommentLike(commentId, user.id, postId, handId)
+      const liked = await toggleCommentLike(commentId, user.id, handId)
 
       // Optimistic UI update
       setComments((prev) =>
@@ -183,7 +183,6 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
               hasLiked: liked,
             }
           }
-          // Update replies too
           if (c.replies) {
             const updatedReplies = c.replies.map((r) =>
               r.id === commentId
@@ -374,3 +373,6 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     </div>
   )
 }
+
+// Alias for backwards compatibility
+export { PostComments as HandComments }

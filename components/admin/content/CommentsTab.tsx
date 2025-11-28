@@ -1,7 +1,7 @@
 /**
- * Comments Tab Component
+ * Comments Tab Component (Hand Comments Only)
  *
- * Displays comments table with hide/unhide/delete actions
+ * Displays hand comments table with hide/unhide/delete actions
  */
 
 'use client'
@@ -18,20 +18,22 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Eye, EyeOff, Trash2 } from 'lucide-react'
+import Link from 'next/link'
 
 type Comment = {
   id: string
   content: string
   author_name: string
+  hand_id: string
   is_hidden: boolean
   created_at: string
 }
 
 type Props = {
-  comments: (Comment & { post?: { title: string } })[]
-  onHide: (commentId: string) => void
-  onUnhide: (commentId: string) => void
-  onDelete: (commentId: string) => void
+  comments: Comment[]
+  onHide: (commentId: string, handId: string) => void
+  onUnhide: (commentId: string, handId: string) => void
+  onDelete: (commentId: string, handId: string) => void
 }
 
 export function CommentsTab({ comments, onHide, onUnhide, onDelete }: Props) {
@@ -42,52 +44,77 @@ export function CommentsTab({ comments, onHide, onUnhide, onDelete }: Props) {
           <TableRow>
             <TableHead>Comment</TableHead>
             <TableHead>Author</TableHead>
-            <TableHead>Posts</TableHead>
+            <TableHead>Hand</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {comments.map((comment) => (
-            <TableRow key={comment.id}>
-              <TableCell className="max-w-md truncate">{comment.content}</TableCell>
-              <TableCell>{comment.author_name}</TableCell>
-              <TableCell className="max-w-xs truncate">
-                {(comment as any).post?.title || '-'}
-              </TableCell>
-              <TableCell>
-                {comment.is_hidden ? (
-                  <Badge variant="destructive">Hidden</Badge>
-                ) : (
-                  <Badge variant="default">Public</Badge>
-                )}
-              </TableCell>
-              <TableCell>
-                {new Date(comment.created_at).toLocaleDateString('ko-KR')}
-              </TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  {comment.is_hidden ? (
-                    <Button size="sm" variant="outline" onClick={() => onUnhide(comment.id)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button size="sm" variant="outline" onClick={() => onHide(comment.id)}>
-                      <EyeOff className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => onDelete(comment.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+          {comments.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                No comments found
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            comments.map((comment) => (
+              <TableRow key={comment.id}>
+                <TableCell className="max-w-md truncate">{comment.content}</TableCell>
+                <TableCell>{comment.author_name}</TableCell>
+                <TableCell>
+                  {comment.hand_id ? (
+                    <Link
+                      href={`/hand/${comment.hand_id}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      View Hand
+                    </Link>
+                  ) : (
+                    '-'
+                  )}
+                </TableCell>
+                <TableCell>
+                  {comment.is_hidden ? (
+                    <Badge variant="destructive">Hidden</Badge>
+                  ) : (
+                    <Badge variant="default">Public</Badge>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {new Date(comment.created_at).toLocaleDateString('ko-KR')}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    {comment.is_hidden ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onUnhide(comment.id, comment.hand_id)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onHide(comment.id, comment.hand_id)}
+                      >
+                        <EyeOff className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => onDelete(comment.id, comment.hand_id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </Card>
