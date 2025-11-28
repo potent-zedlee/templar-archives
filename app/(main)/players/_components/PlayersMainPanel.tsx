@@ -73,23 +73,23 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-background">
       {/* Search Bar - Fixed at top */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:p-6">
+      <div className="bg-card border-b border-border p-4 md:p-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="플레이어 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all"
           />
         </div>
 
         {/* Results Count */}
-        <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-          <span className="font-semibold text-gray-900 dark:text-gray-100">
+        <div className="mt-3 text-sm text-muted-foreground">
+          <span className="font-semibold text-foreground">
             {startIndex + 1}-{Math.min(endIndex, filteredPlayers.length)}
           </span>
           {' '}/ {filteredPlayers.length} 플레이어
@@ -107,14 +107,14 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
                   className="block w-full text-left"
                 >
                   <AnimatedCard>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200 cursor-pointer">
+                    <div className="bg-card rounded-lg shadow-sm border border-border p-6 hover:shadow-md transition-all duration-200 cursor-pointer">
                       {/* Player Header */}
                       <div className="flex items-start gap-4 mb-4">
                         {/* Profile Image */}
                         <div className="relative flex-shrink-0">
-                          <Avatar className="w-16 h-16 rounded-full border-2 border-gray-100 dark:border-gray-700">
+                          <Avatar className="w-16 h-16 rounded-full border-2 border-muted">
                             <AvatarImage src={player.photo_url} alt={player.name} />
-                            <AvatarFallback className="text-base font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                            <AvatarFallback className="text-base font-semibold bg-muted text-foreground">
                               {player.name.split(' ').map(n => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
@@ -122,13 +122,13 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
 
                         {/* Player Info */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate mb-1">
+                          <h3 className="text-base font-semibold text-foreground truncate mb-1">
                             {player.name}
                           </h3>
 
                           {/* Country */}
                           {player.country && (
-                            <div className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium rounded">
+                            <div className="inline-flex items-center px-2 py-1 bg-muted text-foreground text-xs font-medium rounded">
                               {player.country}
                             </div>
                           )}
@@ -136,16 +136,16 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
                       </div>
 
                       {/* Player Stats */}
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                         <div className="space-y-1">
-                          <span className="text-xs text-gray-500 dark:text-gray-400 block">Total Hands</span>
-                          <span className="text-lg font-semibold text-gray-900 dark:text-gray-100 font-mono">
+                          <span className="text-xs text-muted-foreground block">Total Hands</span>
+                          <span className="text-lg font-semibold text-foreground font-mono">
                             {player.hand_count}
                           </span>
                         </div>
 
                         <div className="space-y-1">
-                          <span className="text-xs text-gray-500 dark:text-gray-400 block">Winnings</span>
+                          <span className="text-xs text-muted-foreground block">Winnings</span>
                           <span className="text-lg font-semibold text-green-600 dark:text-green-400 font-mono">
                             {formatWinnings(player.total_winnings)}
                           </span>
@@ -171,10 +171,10 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
 
       {/* Pagination - Fixed at bottom */}
       {totalPages > 1 && (
-        <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
+        <div className="bg-card border-t border-border p-4">
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <button
-              className="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 bg-card border border-border text-foreground rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
             >
@@ -191,11 +191,11 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
                 const showEllipsisBefore = index > 0 && page - arr[index - 1] > 1
                 return (
                   <div key={page} className="flex items-center gap-2">
-                    {showEllipsisBefore && <span className="text-gray-400 dark:text-gray-500">...</span>}
+                    {showEllipsisBefore && <span className="text-muted-foreground">...</span>}
                     <button
                       className={currentPage === page
                         ? "px-4 py-2 bg-green-600 dark:bg-green-700 text-white font-medium rounded-lg text-sm"
-                        : "px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        : "px-4 py-2 bg-card border border-border text-foreground font-medium rounded-lg text-sm hover:bg-muted transition-colors"
                       }
                       onClick={() => setCurrentPage(page)}
                     >
@@ -206,7 +206,7 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
               })}
 
             <button
-              className="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 bg-card border border-border text-foreground rounded-lg hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
             >

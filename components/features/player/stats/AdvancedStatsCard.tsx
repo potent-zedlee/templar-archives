@@ -147,9 +147,9 @@ export function AdvancedStatsCard({ playerId }: AdvancedStatsCardProps) {
         </div>
 
         {playStyle && (
-          <div className="mt-6 rounded-lg bg-gray-100 dark:bg-gray-700 p-4">
-            <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">플레이 스타일</p>
-            <p className="text-xs text-gray-600 dark:text-gray-400">{playStyle.description}</p>
+          <div className="mt-6 rounded-lg bg-muted p-4">
+            <p className="text-sm font-medium mb-1 text-foreground">플레이 스타일</p>
+            <p className="text-xs text-muted-foreground">{playStyle.description}</p>
           </div>
         )}
       </CardContent>

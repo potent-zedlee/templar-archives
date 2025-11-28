@@ -350,15 +350,15 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
             {totalHandsCount > 0 && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Prize History Chart */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">상금 히스토리</h3>
+                <div className="bg-card rounded-lg shadow-sm border border-border p-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">상금 히스토리</h3>
                   <PrizeHistoryChart data={prizeHistory} />
                 </div>
 
                 {/* Tournament Categories */}
                 {statistics.tournamentCategories.length > 0 && (
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">토너먼트 카테고리 분포</h3>
+                  <div className="bg-card rounded-lg shadow-sm border border-border p-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">토너먼트 카테고리 분포</h3>
                     <TournamentCategoryChart data={statistics.tournamentCategories} />
                   </div>
                 )}
@@ -367,14 +367,14 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
           </div>
 
           {/* Hands List */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
+            <h2 className="text-xl font-semibold text-foreground mb-4">
               핸드 히스토리
-              <span className="font-mono ml-2 text-gray-600 dark:text-gray-400">({totalHandsCount})</span>
+              <span className="font-mono ml-2 text-muted-foreground">({totalHandsCount})</span>
             </h2>
             {tournaments.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-base text-gray-600 dark:text-gray-400">
+                <p className="text-base text-muted-foreground">
                   이 플레이어의 핸드가 없습니다
                 </p>
               </div>
@@ -384,7 +384,7 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
                   <div key={tournament.id}>
                     {/* Tournament Level */}
                     <div
-                      className="flex items-center gap-3 py-3 px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-b border-gray-200 dark:border-gray-700"
+                      className="flex items-center gap-3 py-3 px-4 hover:bg-accent transition-colors cursor-pointer border-b border-border"
                       onClick={() => toggleTournament(tournament.id)}
                     >
                       {tournament.expanded ? (
@@ -395,7 +395,7 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
                       <div className="flex h-6 w-6 items-center justify-center bg-green-600 dark:bg-green-700 text-xs font-bold text-white rounded flex-shrink-0">
                         {tournament.category.charAt(0)}
                       </div>
-                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="text-sm font-semibold text-foreground">
                         {tournament.name}
                       </span>
                     </div>
@@ -406,7 +406,7 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
                         {tournament.events?.map((event: any) => (
                           <div key={event.id}>
                             <div
-                              className="flex items-center gap-3 py-2 px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700"
+                              className="flex items-center gap-3 py-2 px-4 hover:bg-accent transition-colors cursor-pointer border-b border-border"
                               onClick={() => toggleSubEvent(tournament.id, event.id)}
                             >
                               {event.expanded ? (
@@ -414,10 +414,10 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
                               ) : (
                                 <ChevronRight className="h-4 w-4 text-green-500 dark:text-green-400" />
                               )}
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              <span className="text-sm font-medium text-foreground">
                                 {event.name}
                               </span>
-                              <div className="ml-auto inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded">
+                              <div className="ml-auto inline-flex items-center px-2 py-1 bg-muted text-foreground text-xs font-medium rounded">
                                 {event.days.reduce((total: number, day: any) => total + day.hands.length, 0)} hands
                               </div>
                             </div>
@@ -427,11 +427,11 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
                               <div className="ml-8 mt-2">
                                 {event.days?.map((day: any) => (
                                   <div key={day.id} className="mb-4">
-                                    <div className="flex items-center gap-2 py-2 px-3 mb-2 bg-gray-50 dark:bg-gray-700 rounded">
-                                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 font-mono">
+                                    <div className="flex items-center gap-2 py-2 px-3 mb-2 bg-muted rounded">
+                                      <span className="text-xs font-semibold text-foreground font-mono">
                                         {day.name}
                                       </span>
-                                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                                      <span className="text-xs text-muted-foreground">
                                         ({day.hands.length} hands)
                                       </span>
                                     </div>
