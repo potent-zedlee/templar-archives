@@ -151,7 +151,7 @@ Templar Archives 개발을 위한 포커 도메인 지식 문서입니다.
 | `country` | 국가 | `"Canada"` |
 | `gender` | 성별 | `"female"`, `"male"`, `"other"` |
 | `total_winnings` | 총 상금 (cents) | `402060300` ($4,020,603) |
-| `photo_url` | 프로필 사진 URL | Supabase Storage URL |
+| `photo_url` | 프로필 사진 URL | GCS URL |
 
 ---
 

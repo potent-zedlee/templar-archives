@@ -2,7 +2,6 @@
  * Security Event Logger
  *
  * Logs security events to Firestore for monitoring and auditing.
- * Firestore 버전으로 마이그레이션됨
  *
  * Note: 보안 이벤트 컬렉션은 아직 Firestore에 완전히 구현되지 않았으므로
  * 로그 메시지만 출력합니다.
@@ -33,20 +32,6 @@ export interface SecurityEventData {
   details?: Record<string, unknown> | null
 }
 
-// Legacy snake_case interface for backward compatibility
-export interface SecurityEventDataLegacy {
-  event_type: SecurityEventType
-  severity: SecurityEventSeverity
-  user_id?: string | null
-  ip_address?: string | null
-  user_agent?: string | null
-  request_method?: string | null
-  request_path?: string | null
-  request_body?: Record<string, unknown> | null
-  response_status?: number | null
-  details?: Record<string, unknown> | null
-}
-
 /**
  * Log a security event
  * TODO: Firestore 보안 이벤트 컬렉션 구현 시 실제 저장 로직 추가
@@ -55,37 +40,21 @@ export interface SecurityEventDataLegacy {
  * @returns Promise<{ success: boolean; eventId?: string; error?: string }>
  */
 export async function logSecurityEventToDb(
-  eventData: SecurityEventData | SecurityEventDataLegacy
+  eventData: SecurityEventData
 ): Promise<{ success: boolean; eventId?: string; error?: string }> {
   try {
-    // Convert legacy format if needed
-    const normalizedData: SecurityEventData = 'event_type' in eventData
-      ? {
-          eventType: eventData.event_type,
-          severity: eventData.severity,
-          userId: eventData.user_id,
-          ipAddress: eventData.ip_address,
-          userAgent: eventData.user_agent,
-          requestMethod: eventData.request_method,
-          requestPath: eventData.request_path,
-          requestBody: eventData.request_body,
-          responseStatus: eventData.response_status,
-          details: eventData.details,
-        }
-      : eventData
-
     // Log to console for now
     console.log('[security-logger] Security event:', {
-      type: normalizedData.eventType,
-      severity: normalizedData.severity,
-      path: normalizedData.requestPath,
+      type: eventData.eventType,
+      severity: eventData.severity,
+      path: eventData.requestPath,
       timestamp: new Date().toISOString(),
     })
 
     // TODO: Firestore에 저장
     // const db = getAdminFirestore()
     // const docRef = await db.collection('securityEvents').add({
-    //   ...normalizedData,
+    //   ...eventData,
     //   createdAt: FieldValue.serverTimestamp(),
     // })
     // return { success: true, eventId: docRef.id }

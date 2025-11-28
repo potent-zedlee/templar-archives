@@ -227,7 +227,7 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
   - claim_approved - 플레이어 클레임 승인
   - claim_rejected - 플레이어 클레임 거부
 - **All/Unread 탭 필터링**
-- **실시간 알림** (Supabase Realtime)
+- **실시간 알림** (Firestore 실시간)
 - **Toast 알림** (새 알림 실시간 표시)
 - **읽음/읽지 않음 관리**
 - **알림 클릭 시 자동 읽음 처리 및 관련 페이지 이동**
@@ -366,7 +366,7 @@ WSOP, Triton, EPT, APL, Hustler Casino Live, WSOP Classic, GGPOKER
 **파일**: `app/reporter/news/page.tsx`
 - **뉴스 작성/수정/삭제** (Phase 22)
 - 5가지 카테고리 (Tournament News, Player News, Industry, General, Other)
-- Markdown 에디터, 이미지 업로드 (Supabase Storage)
+- Markdown 에디터, 이미지 업로드 (Firebase Storage)
 - 상태 워크플로우: draft → pending → published
 - 태그 관리, 외부 링크 지원
 

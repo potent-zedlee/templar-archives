@@ -1,7 +1,6 @@
 /**
  * Firestore 컬렉션 타입 정의
  *
- * Supabase PostgreSQL에서 마이그레이션된 NoSQL 구조
  * 쿼리 최적화를 위한 데이터 비정규화 적용
  *
  * @module lib/firestore-types
