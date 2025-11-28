@@ -31,7 +31,6 @@ hands/{handId}           # 플랫 컬렉션 (쿼리 유연성)
 | `hands` | auto-generated | 핸드 데이터 (플랫) |
 | `players` | auto-generated | 플레이어 프로필 |
 | `users` | Firebase Auth UID | 사용자 정보 |
-| `posts` | auto-generated | 커뮤니티 게시글 |
 | `analysisJobs` | auto-generated | Cloud Run 분석 작업 |
 | `categories` | auto-generated | 카테고리 마스터 |
 | `systemConfigs` | config key | 시스템 설정 |
@@ -111,7 +110,7 @@ hands/{handId}           # 플랫 컬렉션 (쿼리 유연성)
   email: string
   nickname?: string
   avatarUrl?: string
-  role: 'admin' | 'high_templar' | 'arbiter' | 'reporter' | 'user'
+  role: 'admin' | 'high_templar' | 'arbiter' | 'user'
   emailVerified?: boolean
   bio?: string
   pokerExperience?: string
@@ -122,7 +121,6 @@ hands/{handId}           # 플랫 컬렉션 (쿼리 유연성)
   profileVisibility?: 'public' | 'private' | 'friends'
   likesReceived?: number
   stats: {
-    postsCount: number
     commentsCount: number
   }
   createdAt: Timestamp
@@ -260,8 +258,6 @@ const COLLECTION_PATHS = {
   USERS: 'users',
   USER_NOTIFICATIONS: (userId) => `users/${userId}/notifications`,
   USER_BOOKMARKS: (userId) => `users/${userId}/bookmarks`,
-  POSTS: 'posts',
-  POST_COMMENTS: (postId) => `posts/${postId}/comments`,
   ANALYSIS_JOBS: 'analysisJobs',
   CATEGORIES: 'categories',
   SYSTEM_CONFIGS: 'systemConfigs',
@@ -283,7 +279,6 @@ Firebase Security Rules는 `firestore.rules` 파일에서 관리됩니다.
 | `admin` | 시스템 관리자 | 전체 접근 |
 | `high_templar` | 아카이브 관리자 | 아카이브 CUD |
 | `arbiter` | 핸드 수정자 | 핸드 데이터 수정 |
-| `reporter` | 리포터 | 라이브 리포트 작성 |
 | `user` | 일반 사용자 | 읽기 + 커뮤니티 참여 |
 
 ---

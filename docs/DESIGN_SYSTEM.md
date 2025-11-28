@@ -468,89 +468,7 @@ a:not(.no-underline-animation):hover::after {
 
 ---
 
-## 7. Community 전용 컴포넌트
-
-### Post Type Badge
-
-```css
-.post-type-badge {
-  background: var(--black-200);
-  color: var(--gold-400);
-  border: 2px solid var(--gold-700);
-  padding: 0.375rem 1rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-```
-
-**용도**: 포스트 카테고리 (Analysis, Strategy, etc.)
-
-### Community Action Button
-
-```css
-.community-action-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  color: var(--gold-300);
-  border: 1px solid transparent;
-  transition: all 0.15s;
-}
-
-.community-action-btn:hover {
-  color: var(--gold-400);
-  background: var(--black-200);
-  border-color: var(--gold-700);
-}
-```
-
-**용도**: 좋아요, 댓글, 북마크 버튼
-
-### Community Tab (탭 네비게이션)
-
-```css
-.community-tab {
-  padding: 1rem 2rem;
-  font-size: 0.875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--gold-300);
-  border-bottom: 3px solid transparent;
-  transition: all 0.2s;
-  position: relative;
-}
-
-.community-tab.active {
-  color: var(--gold-400);
-  border-bottom-color: var(--gold-400);
-  background: var(--black-100);
-}
-
-.community-tab::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 3px;
-  height: 0;
-  background: var(--gold-400);
-  transition: height 0.2s;
-}
-
-.community-tab.active::before {
-  height: 100%;
-}
-```
-
-**용도**: Trending, Recent, Popular 탭
-
----
-
-## 8. Players 전용 컴포넌트
+## 7. Players 전용 컴포넌트
 
 ### Player Badge (국가/플랫폼)
 
@@ -613,7 +531,7 @@ a:not(.no-underline-animation):hover::after {
 
 ---
 
-## 9. 반응형 디자인
+## 8. 반응형 디자인
 
 ### 모바일 최적화 (< 768px)
 
@@ -675,7 +593,7 @@ a:not(.no-underline-animation):hover::after {
 
 ---
 
-## 10. 접근성 (Accessibility)
+## 9. 접근성 (Accessibility)
 
 ### 색상 대비 (WCAG AA 준수)
 
@@ -706,7 +624,7 @@ a:not(.no-underline-animation):hover::after {
 
 ---
 
-## 11. 성능 최적화
+## 10. 성능 최적화
 
 ### CSS 최적화
 
@@ -734,7 +652,7 @@ transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
 ---
 
-## 12. 사용 예시
+## 11. 사용 예시
 
 ### Tournament Card
 
@@ -758,41 +676,9 @@ transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 </div>
 ```
 
-### Community Post Card
-
-```tsx
-<div className="post-card">
-  <div className="flex items-start gap-4">
-    <div className="author-avatar">
-      <Avatar />
-    </div>
-
-    <div className="flex-1 space-y-3">
-      <div className="flex items-center gap-2">
-        <span className="post-type-badge">Analysis</span>
-        <span className="post-meta">2 hours ago</span>
-      </div>
-
-      <h3 className="text-heading-sm">Amazing Bluff by Phil Ivey</h3>
-
-      <div className="flex gap-2">
-        <button className="community-action-btn">
-          <ThumbsUp className="w-5 h-5" />
-          <span>42</span>
-        </button>
-        <button className="community-action-btn">
-          <MessageSquare className="w-5 h-5" />
-          <span>12</span>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-```
-
 ---
 
-## 13. 디자인 토큰 (Tailwind Config)
+## 12. 디자인 토큰 (Tailwind Config)
 
 프로젝트의 Tailwind 설정에서 사용 가능한 토큰들:
 
@@ -822,7 +708,7 @@ theme: {
 
 ---
 
-## 14. 브랜딩 가이드라인
+## 13. 브랜딩 가이드라인
 
 ### 로고
 
@@ -838,7 +724,7 @@ theme: {
 
 ---
 
-## 15. 금지 사항
+## 14. 금지 사항
 
 ❌ **다음을 절대 사용하지 마세요**:
 
@@ -850,15 +736,15 @@ theme: {
 
 ---
 
-## 16. 참고 자료
+## 15. 참고 자료
 
 - **globals.css**: `/app/globals.css` - 전체 CSS 유틸리티
 - **Tailwind Config**: `/tailwind.config.ts` - 색상 토큰
 - **컴포넌트**: `/components/ui/*` - 재사용 가능 UI
-- **PAGES_STRUCTURE.md**: 49개 페이지 구조
+- **PAGES_STRUCTURE.md**: 22개 페이지 구조
 
 ---
 
-**마지막 업데이트**: 2025-11-16
-**문서 버전**: 1.0
-**적용 Phase**: Phase 1-9 완료
+**마지막 업데이트**: 2025-11-28
+**문서 버전**: 1.1
+**변경 이력**: Community 섹션 제거 (Forum 기능 삭제)
