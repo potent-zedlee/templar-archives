@@ -241,9 +241,9 @@ export default function PlayerDetailClient() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         <div className="container max-w-7xl mx-auto py-16 text-center">
-          <p className="text-base text-gray-600 dark:text-gray-400">Loading...</p>
+          <p className="text-base text-muted-foreground">Loading...</p>
         </div>
       </div>
     )
@@ -251,9 +251,9 @@ export default function PlayerDetailClient() {
 
   if (!player) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
         <div className="container max-w-7xl mx-auto py-16 text-center">
-          <p className="text-base text-gray-600 dark:text-gray-400">Player not found</p>
+          <p className="text-base text-muted-foreground">Player not found</p>
           <button
             className="mt-4 px-4 py-2 bg-green-600 dark:bg-green-700 text-white font-medium rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors inline-flex items-center gap-2"
             onClick={() => router.push('/players')}
@@ -267,11 +267,11 @@ export default function PlayerDetailClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="mb-6">
           <button
-            className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors inline-flex items-center gap-2"
+            className="px-4 py-2 bg-card border border-border text-foreground font-medium rounded-lg hover:bg-muted transition-colors inline-flex items-center gap-2"
             onClick={() => router.push('/players')}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -280,14 +280,14 @@ export default function PlayerDetailClient() {
         </div>
 
         {/* Player Profile Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 md:p-8 mb-8">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-6 md:p-8 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 md:gap-8">
             {/* Large Profile Image: 모바일 중앙 정렬 */}
             <div className="flex flex-col items-center md:items-start">
               <div className="relative">
-                <Avatar className="w-32 h-32 rounded-full border-4 border-gray-100 dark:border-gray-700">
+                <Avatar className="w-32 h-32 rounded-full border-4 border-muted">
                   <AvatarImage src={player.photo_url} alt={player.name} />
-                  <AvatarFallback className="text-3xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                  <AvatarFallback className="text-3xl font-semibold bg-muted text-foreground">
                     {player.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
@@ -301,7 +301,7 @@ export default function PlayerDetailClient() {
                       onChange={handlePhotoUpload}
                     />
                     <button
-                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-xs font-medium rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-card border border-border text-foreground text-xs font-medium rounded hover:bg-muted transition-colors"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={updatePhotoMutation.isPending}
                     >
@@ -316,10 +316,10 @@ export default function PlayerDetailClient() {
             <div className="space-y-6">
               {/* Name & Meta */}
               <div>
-                <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{player.name}</h1>
+                <h1 className="text-3xl font-semibold text-foreground mb-2">{player.name}</h1>
                 <div className="flex gap-3 items-center flex-wrap">
                   {player.country && (
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted text-foreground text-sm font-medium rounded-lg">
                       <span className="text-lg">{getCountryFlag(player.country)}</span>
                       {player.country}
                     </div>
@@ -347,29 +347,29 @@ export default function PlayerDetailClient() {
               {/* Stats Grid - 모바일 2x2, 데스크톱 4x1 */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 <div className="space-y-1">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 block">Total Hands</span>
-                  <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100 font-mono">
+                  <span className="text-xs text-muted-foreground block">Total Hands</span>
+                  <span className="text-2xl font-semibold text-foreground font-mono">
                     {totalHandsCount}
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 block">Winnings</span>
+                  <span className="text-xs text-muted-foreground block">Winnings</span>
                   <span className="text-2xl font-semibold text-green-600 dark:text-green-400 font-mono">
                     {formatWinnings(player.total_winnings)}
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 block">Tournaments</span>
-                  <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100 font-mono">
+                  <span className="text-xs text-muted-foreground block">Tournaments</span>
+                  <span className="text-2xl font-semibold text-foreground font-mono">
                     {statistics.tournamentsCount}
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 block">Events</span>
-                  <span className="text-2xl font-semibold text-gray-900 dark:text-gray-100 font-mono">
+                  <span className="text-xs text-muted-foreground block">Events</span>
+                  <span className="text-2xl font-semibold text-foreground font-mono">
                     {statistics.eventsCount}
                   </span>
                 </div>
@@ -391,15 +391,15 @@ export default function PlayerDetailClient() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex gap-0 border-b border-gray-200 dark:border-gray-700">
+        <div className="mb-6 bg-card rounded-lg shadow-sm border border-border">
+          <div className="flex gap-0 border-b border-border">
             <button className="px-6 py-3 text-sm font-medium text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400 bg-green-50 dark:bg-green-900/20">
               핸드 히스토리
             </button>
-            <button className="px-6 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <button className="px-6 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
               토너먼트
             </button>
-            <button className="px-6 py-3 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            <button className="px-6 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
               통계
             </button>
           </div>
@@ -420,15 +420,15 @@ export default function PlayerDetailClient() {
           {totalHandsCount > 0 && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Prize History Chart */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">상금 히스토리</h3>
+              <div className="bg-card rounded-lg shadow-sm border border-border p-6">
+                <h3 className="text-lg font-semibold text-foreground mb-4">상금 히스토리</h3>
                 <PrizeHistoryChart data={prizeHistory} />
               </div>
 
               {/* Pie Chart - Tournament Categories */}
               {statistics.tournamentCategories.length > 0 && (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">토너먼트 카테고리 분포</h3>
+                <div className="bg-card rounded-lg shadow-sm border border-border p-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">토너먼트 카테고리 분포</h3>
                   <TournamentCategoryChart data={statistics.tournamentCategories} />
                 </div>
               )}
@@ -437,15 +437,15 @@ export default function PlayerDetailClient() {
         </div>
 
         {/* Hands List - Hierarchical */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mt-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-6 mt-6">
+          <h2 className="text-xl font-semibold text-foreground mb-4">
             핸드 히스토리
-            <span className="font-mono ml-2 text-gray-600 dark:text-gray-400">({totalHandsCount})</span>
+            <span className="font-mono ml-2 text-muted-foreground">({totalHandsCount})</span>
           </h2>
           <ScrollArea className="h-[calc(100vh-480px)]">
             {tournaments.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-base text-gray-600 dark:text-gray-400">
+                <p className="text-base text-muted-foreground">
                   이 플레이어의 핸드가 없습니다
                 </p>
               </div>
@@ -455,7 +455,7 @@ export default function PlayerDetailClient() {
                   <div key={tournament.id}>
                     {/* Tournament Level */}
                     <div
-                      className="flex items-center gap-3 py-3 px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-b border-gray-200 dark:border-gray-700"
+                      className="flex items-center gap-3 py-3 px-4 hover:bg-accent transition-colors cursor-pointer border-b border-border"
                       onClick={() => toggleTournament(tournament.id)}
                     >
                       {tournament.expanded ? (
@@ -466,7 +466,7 @@ export default function PlayerDetailClient() {
                       <div className="flex h-6 w-6 items-center justify-center bg-green-600 dark:bg-green-700 text-xs font-bold text-white rounded flex-shrink-0">
                         {tournament.category.charAt(0)}
                       </div>
-                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="text-sm font-semibold text-foreground">
                         {tournament.name}
                       </span>
                     </div>
@@ -477,7 +477,7 @@ export default function PlayerDetailClient() {
                         {tournament.events?.map((event) => (
                           <div key={event.id}>
                             <div
-                              className="flex items-center gap-3 py-2 px-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-700"
+                              className="flex items-center gap-3 py-2 px-4 hover:bg-accent transition-colors cursor-pointer border-b border-border"
                               onClick={() => toggleEvent(tournament.id, event.id)}
                             >
                               {event.expanded ? (
@@ -485,10 +485,10 @@ export default function PlayerDetailClient() {
                               ) : (
                                 <ChevronRight className="h-4 w-4 text-green-500 dark:text-green-400" />
                               )}
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              <span className="text-sm font-medium text-foreground">
                                 {event.name}
                               </span>
-                              <div className="ml-auto inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded">
+                              <div className="ml-auto inline-flex items-center px-2 py-1 bg-muted text-foreground text-xs font-medium rounded">
                                 {event.days.reduce((total, day) => total + day.hands.length, 0)} hands
                               </div>
                             </div>
@@ -498,11 +498,11 @@ export default function PlayerDetailClient() {
                               <div className="ml-8 mt-2">
                                 {event.days?.map((day) => (
                                   <div key={day.id} className="mb-4">
-                                    <div className="flex items-center gap-2 py-2 px-3 mb-2 bg-gray-50 dark:bg-gray-700 rounded">
-                                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 font-mono">
+                                    <div className="flex items-center gap-2 py-2 px-3 mb-2 bg-muted rounded">
+                                      <span className="text-xs font-semibold text-foreground font-mono">
                                         {day.name}
                                       </span>
-                                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                                      <span className="text-xs text-muted-foreground">
                                         ({day.hands.length} hands)
                                       </span>
                                     </div>

@@ -111,10 +111,10 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 w-full">
+    <div className="flex flex-col h-full bg-background w-full">
       {/* YouTube 플레이어 (상단 고정) */}
       {videoId && (
-        <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+        <div className="sticky top-0 z-10 bg-card border-b border-border p-4">
           <YouTubePlayer
             ref={playerRef}
             videoId={videoId}
@@ -125,12 +125,12 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
       )}
 
       {/* 헤더 + 검색바 */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-card border-b border-border p-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h2 className="text-lg font-semibold text-foreground">
             Hand History
             {selectedHand && (
-              <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
                 - Hand #{selectedHand.number}
               </span>
             )}
@@ -138,17 +138,17 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="플레이어 이름 검색..."
             value={searchQuery}
             onChange={handleSearchChange}
-            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all"
           />
         </div>
 
-        <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <div className="mt-2 text-sm text-muted-foreground">
           {filteredHands.length} hands
           {searchQuery && ` (전체 ${hands.length})`}
         </div>
@@ -193,10 +193,10 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
 
       {/* 페이지네이션 */}
       {totalPages > 1 && (
-        <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
+        <div className="bg-card border-t border-border p-4">
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <button
-              className="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 bg-card border border-border text-foreground rounded-lg hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
             >
@@ -214,13 +214,13 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
                 return (
                   <div key={page} className="flex items-center gap-2">
                     {showEllipsisBefore && (
-                      <span className="text-gray-400 dark:text-gray-500">...</span>
+                      <span className="text-muted-foreground">...</span>
                     )}
                     <button
                       className={
                         currentPage === page
                           ? "px-4 py-2 bg-green-600 dark:bg-green-700 text-white font-medium rounded-lg text-sm"
-                          : "px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                          : "px-4 py-2 bg-card border border-border text-foreground font-medium rounded-lg text-sm hover:bg-accent transition-colors"
                       }
                       onClick={() => setCurrentPage(page)}
                     >
@@ -231,7 +231,7 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
               })}
 
             <button
-              className="p-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-2 bg-card border border-border text-foreground rounded-lg hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
             >
@@ -239,7 +239,7 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
             </button>
           </div>
 
-          <div className="text-center mt-2 text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-center mt-2 text-xs text-muted-foreground">
             Page {currentPage} of {totalPages}
           </div>
         </div>

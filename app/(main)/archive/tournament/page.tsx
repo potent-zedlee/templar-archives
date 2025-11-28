@@ -159,12 +159,12 @@ export default function ArchiveTournamentPage() {
         {/* Desktop: 3-column layout */}
         <>
           {/* 1. Left: Filter Sidebar (320px) */}
-          <aside className="hidden lg:block w-80 flex-shrink-0 h-full border-r border-gray-200 dark:border-gray-700">
+          <aside className="hidden lg:block w-80 flex-shrink-0 h-full border-r border-border">
             <ArchiveFilterSidebar {...filterSidebarProps} />
           </aside>
 
           {/* 2. Center: Navigation Sidebar (400px) */}
-          <aside className="hidden lg:block w-[400px] flex-shrink-0 h-full border-r border-gray-200 dark:border-gray-700">
+          <aside className="hidden lg:block w-[400px] flex-shrink-0 h-full border-r border-border">
             <ArchiveNavigationSidebar
               tournaments={filteredTournaments}
               selectedStreamId={selectedStreamId}
