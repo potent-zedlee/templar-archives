@@ -51,11 +51,11 @@ export function ArchiveFilterSidebar({
   const [isHandRangeExpanded, setIsHandRangeExpanded] = useState(false)
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+    <div className="flex flex-col h-full bg-card border-r border-border">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="font-semibold text-lg text-gray-900 dark:text-gray-100">Filters</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="p-4 border-b border-border">
+        <h2 className="font-semibold text-lg text-foreground">Filters</h2>
+        <p className="text-sm text-muted-foreground">
           토너먼트 필터링
         </p>
       </div>
@@ -66,16 +66,16 @@ export function ArchiveFilterSidebar({
           <div>
             <button
               onClick={() => setIsCategoryExpanded(!isCategoryExpanded)}
-              className="w-full flex items-center justify-between mb-3 text-sm font-medium text-gray-900 dark:text-gray-100"
+              className="w-full flex items-center justify-between mb-3 text-sm font-medium text-foreground"
             >
               <div className="flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <Trophy className="h-4 w-4 text-muted-foreground" />
                 <span>Category</span>
               </div>
               {isCategoryExpanded ? (
-                <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               )}
             </button>
 
@@ -91,7 +91,7 @@ export function ArchiveFilterSidebar({
                       className={`w-full flex items-center justify-between p-2 rounded-md text-sm transition-colors ${
                         isSelected
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-100'
-                          : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          : 'hover:bg-accent text-foreground'
                       }`}
                     >
                       <span className="truncate">{category}</span>
@@ -100,7 +100,7 @@ export function ArchiveFilterSidebar({
                         className={`ml-2 ${
                           isSelected
                             ? 'bg-green-600 dark:bg-green-700'
-                            : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
+                            : 'bg-muted text-foreground'
                         }`}
                       >
                         {count}
@@ -112,22 +112,22 @@ export function ArchiveFilterSidebar({
             )}
           </div>
 
-          <Separator className="bg-gray-200 dark:bg-gray-700" />
+          <Separator className="bg-border" />
 
           {/* Location Filter */}
           <div>
             <button
               onClick={() => setIsLocationExpanded(!isLocationExpanded)}
-              className="w-full flex items-center justify-between mb-3 text-sm font-medium text-gray-900 dark:text-gray-100"
+              className="w-full flex items-center justify-between mb-3 text-sm font-medium text-foreground"
             >
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <MapPin className="h-4 w-4 text-muted-foreground" />
                 <span>Location</span>
               </div>
               {isLocationExpanded ? (
-                <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               )}
             </button>
 
@@ -143,7 +143,7 @@ export function ArchiveFilterSidebar({
                       className={`w-full flex items-center justify-between p-2 rounded-md text-sm transition-colors ${
                         isSelected
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-100'
-                          : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          : 'hover:bg-accent text-foreground'
                       }`}
                     >
                       <span className="truncate">{location}</span>
@@ -152,7 +152,7 @@ export function ArchiveFilterSidebar({
                         className={`ml-2 ${
                           isSelected
                             ? 'bg-green-600 dark:bg-green-700'
-                            : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
+                            : 'bg-muted text-foreground'
                         }`}
                       >
                         {count}
@@ -164,29 +164,29 @@ export function ArchiveFilterSidebar({
             )}
           </div>
 
-          <Separator className="bg-gray-200 dark:bg-gray-700" />
+          <Separator className="bg-border" />
 
           {/* Date Range Filter */}
           <div>
             <button
               onClick={() => setIsDateExpanded(!isDateExpanded)}
-              className="w-full flex items-center justify-between mb-3 text-sm font-medium text-gray-900 dark:text-gray-100"
+              className="w-full flex items-center justify-between mb-3 text-sm font-medium text-foreground"
             >
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span>Date Range</span>
               </div>
               {isDateExpanded ? (
-                <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               )}
             </button>
 
             {isDateExpanded && (
               <div className="space-y-2">
                 <div>
-                  <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+                  <label className="text-xs text-muted-foreground mb-1 block">
                     Start Date
                   </label>
                   <input
@@ -196,11 +196,11 @@ export function ArchiveFilterSidebar({
                       ...selectedDateRange,
                       start: e.target.value || null
                     })}
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400"
+                    className="w-full px-3 py-2 bg-card border border-border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-400"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+                  <label className="text-xs text-muted-foreground mb-1 block">
                     End Date
                   </label>
                   <input
@@ -210,36 +210,36 @@ export function ArchiveFilterSidebar({
                       ...selectedDateRange,
                       end: e.target.value || null
                     })}
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400"
+                    className="w-full px-3 py-2 bg-card border border-border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-400"
                   />
                 </div>
               </div>
             )}
           </div>
 
-          <Separator className="bg-gray-200 dark:bg-gray-700" />
+          <Separator className="bg-border" />
 
           {/* Hand Count Range Filter */}
           <div>
             <button
               onClick={() => setIsHandRangeExpanded(!isHandRangeExpanded)}
-              className="w-full flex items-center justify-between mb-3 text-sm font-medium text-gray-900 dark:text-gray-100"
+              className="w-full flex items-center justify-between mb-3 text-sm font-medium text-foreground"
             >
               <div className="flex items-center gap-2">
-                <Hash className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <Hash className="h-4 w-4 text-muted-foreground" />
                 <span>Hand Count</span>
               </div>
               {isHandRangeExpanded ? (
-                <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               )}
             </button>
 
             {isHandRangeExpanded && (
               <div className="space-y-2">
                 <div>
-                  <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+                  <label className="text-xs text-muted-foreground mb-1 block">
                     Min Hands
                   </label>
                   <input
@@ -251,11 +251,11 @@ export function ArchiveFilterSidebar({
                       ...selectedHandRange,
                       min: e.target.value ? parseInt(e.target.value) : null
                     })}
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400"
+                    className="w-full px-3 py-2 bg-card border border-border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-400"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-600 dark:text-gray-400 mb-1 block">
+                  <label className="text-xs text-muted-foreground mb-1 block">
                     Max Hands
                   </label>
                   <input
@@ -267,7 +267,7 @@ export function ArchiveFilterSidebar({
                       ...selectedHandRange,
                       max: e.target.value ? parseInt(e.target.value) : null
                     })}
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-green-400"
+                    className="w-full px-3 py-2 bg-card border border-border rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-green-400"
                   />
                 </div>
               </div>
@@ -276,13 +276,13 @@ export function ArchiveFilterSidebar({
         </div>
       </ScrollArea>
 
-      <Separator className="bg-gray-200 dark:bg-gray-700" />
+      <Separator className="bg-border" />
 
       {/* Footer Actions */}
       <div className="p-4">
         <Button
           variant="ghost"
-          className="w-full rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+          className="w-full rounded-lg hover:bg-accent text-foreground"
           onClick={onReset}
         >
           <RotateCcw className="h-4 w-4 mr-2" />

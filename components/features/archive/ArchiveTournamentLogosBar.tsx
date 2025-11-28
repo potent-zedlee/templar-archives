@@ -107,7 +107,7 @@ export function ArchiveTournamentLogosBar({
                 "w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200",
                 selectedCategory === 'All'
                   ? "text-white ring-2 ring-primary shadow-lg scale-110"
-                  : "text-gray-400"
+                  : "text-muted-foreground"
               )}
             >
               <LayoutGrid className="w-8 h-8" />
@@ -117,7 +117,7 @@ export function ArchiveTournamentLogosBar({
                 "text-xs font-medium transition-colors duration-200",
                 selectedCategory === 'All'
                   ? "text-white"
-                  : "text-gray-400"
+                  : "text-muted-foreground"
               )}
             >
               All
@@ -237,7 +237,7 @@ function TournamentLogoButton({
           isChildCategory ? "max-w-[48px]" : "max-w-[64px]",
           isSelected
             ? "text-white"
-            : "text-gray-400 group-hover:text-gray-300"
+            : "text-muted-foreground group-hover:text-foreground"
         )}
       >
         {category.display_name}

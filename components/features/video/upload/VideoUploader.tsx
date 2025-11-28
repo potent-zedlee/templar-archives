@@ -187,7 +187,7 @@ export function VideoUploader({
           'cursor-pointer',
           isDragging
             ? 'border-gold-500 bg-gold-500/10'
-            : 'border-gray-600 bg-gray-800/50 hover:border-gold-600 hover:bg-gray-800',
+            : 'border-border bg-muted/50 hover:border-gold-600 hover:bg-muted',
           disabled && 'cursor-not-allowed opacity-50'
         )}
       >
@@ -195,26 +195,26 @@ export function VideoUploader({
         <div
           className={cn(
             'rounded-full p-4 transition-colors',
-            isDragging ? 'bg-gold-500/20' : 'bg-gray-700'
+            isDragging ? 'bg-gold-500/20' : 'bg-muted'
           )}
         >
           <Upload
             className={cn(
               'h-12 w-12 transition-colors',
-              isDragging ? 'text-gold-400' : 'text-gray-400'
+              isDragging ? 'text-gold-400' : 'text-muted-foreground'
             )}
           />
         </div>
 
         {/* 메시지 */}
         <div className="text-center">
-          <p className="text-lg font-medium text-gray-200">
+          <p className="text-lg font-medium text-foreground">
             {isDragging
               ? '파일을 놓아주세요'
               : '영상 파일을 드래그하거나 클릭하여 선택하세요'}
           </p>
 
-          <div className="mt-3 space-y-1 text-sm text-gray-400">
+          <div className="mt-3 space-y-1 text-sm text-muted-foreground">
             <p>지원 형식: {ACCEPTED_FORMATS.join(', ')}</p>
             <p>최대 크기: 50GB</p>
           </div>

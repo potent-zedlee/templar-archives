@@ -211,7 +211,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
     return (
       <div
         key={comment.id}
-        className={`${isReply ? "ml-6 md:ml-10 pl-3 md:pl-4 border-l-2 border-gray-200 dark:border-gray-700" : ""}`}
+        className={`${isReply ? "ml-6 md:ml-10 pl-3 md:pl-4 border-l-2 border-border" : ""}`}
       >
         <div className="flex gap-3">
           <Avatar className="h-8 w-8 rounded-full">
@@ -223,8 +223,8 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{comment.author.name}</span>
-              <span className="text-xs text-gray-600 dark:text-gray-400">
+              <span className="text-sm font-semibold text-foreground">{comment.author.name}</span>
+              <span className="text-xs text-muted-foreground">
                 {new Date(comment.createdAt).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "short",
@@ -235,14 +235,14 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
               </span>
             </div>
 
-            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-3 leading-normal">
+            <p className="text-sm text-foreground whitespace-pre-wrap mb-3 leading-normal">
               {comment.content}
             </p>
 
             <div className="flex items-center gap-3">
               <button
                 onClick={() => handleLikeComment(comment.id)}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium text-foreground hover:bg-accent transition-colors focus:ring-2 focus:ring-blue-400"
               >
                 <ThumbsUp className="h-3 w-3" />
                 <span className="font-mono">{comment.likesCount}</span>
@@ -260,7 +260,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
                       }
                     }
                   }}
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium text-foreground hover:bg-accent transition-colors focus:ring-2 focus:ring-blue-400"
                 >
                   <MessageCircle className="h-3 w-3" />
                   <span>Reply</span>
@@ -282,12 +282,12 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
                     }))
                   }
                   rows={2}
-                  className="w-full resize-none rounded-md bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
+                  className="w-full resize-none rounded-md bg-card border text-foreground"
                 />
                 <div className="flex gap-2 justify-end">
                   <button
                     onClick={() => setReplyingTo(null)}
-                    className="px-3 py-1 text-xs font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="px-3 py-1 text-xs font-medium bg-card border text-foreground rounded-md hover:bg-accent transition-colors"
                   >
                     Cancel
                   </button>
@@ -312,7 +312,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
 
             {/* Loading replies */}
             {comment.isLoadingReplies && (
-              <div className="mt-3 text-xs text-gray-600 dark:text-gray-400">
+              <div className="mt-3 text-xs text-muted-foreground">
                 Loading replies...
               </div>
             )}
@@ -323,8 +323,8 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 mb-6">
+    <div className="bg-card rounded-lg border p-6">
+      <h4 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-6">
         <MessageCircle className="h-5 w-5" />
         <span className="font-mono">
           Comments ({comments.reduce((acc, c) => acc + 1 + (c.replies?.length || 0), 0)})
@@ -343,7 +343,7 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
           onChange={(e) => setNewComment(e.target.value)}
           rows={3}
           disabled={!user}
-          className="w-full resize-none mb-2 rounded-md bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
+          className="w-full resize-none mb-2 rounded-md bg-muted border text-foreground placeholder:text-muted-foreground"
         />
         <div className="flex justify-end">
           <button
@@ -360,11 +360,11 @@ export function PostComments({ postId, handId, onCommentsCountChange }: PostComm
       {/* Comments list */}
       <div className="space-y-4">
         {loading ? (
-          <div className="text-center text-sm text-gray-600 dark:text-gray-400 py-8">
+          <div className="text-center text-sm text-muted-foreground py-8">
             Loading comments...
           </div>
         ) : comments.length === 0 ? (
-          <div className="text-center text-sm text-gray-600 dark:text-gray-400 py-8">
+          <div className="text-center text-sm text-muted-foreground py-8">
             첫 댓글을 작성해보세요!
           </div>
         ) : (

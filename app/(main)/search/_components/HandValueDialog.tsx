@@ -165,25 +165,25 @@ export function HandValueDialog({ open, onOpenChange, onSelect }: HandValueDialo
                 "w-full h-auto py-3 px-4 justify-between",
                 selectedHandType === handType.name
                   ? "border-green-500 bg-green-600/10 hover:bg-green-600/20"
-                  : "border-gray-600 bg-gray-800 hover:bg-gray-700"
+                  : "border-border bg-muted hover:bg-accent"
               )}
               onClick={() => setSelectedHandType(handType.name)}
             >
-              <span className="text-sm font-semibold text-gray-200">
+              <span className="text-sm font-semibold text-foreground">
                 {handType.name}
               </span>
               <div className="flex gap-1">
                 {handType.cards.map((card, idx) => (
                   <div
                     key={idx}
-                    className="w-10 h-14 bg-white rounded flex flex-col items-center justify-center border border-gray-300"
+                    className="w-10 h-14 bg-white rounded flex flex-col items-center justify-center border border-border"
                   >
                     <div
                       className={cn(
                         "text-lg font-bold",
                         card.color === 'red' && "text-red-600",
                         card.color === 'black' && "text-black",
-                        card.color === 'gray' && "text-gray-400"
+                        card.color === 'gray' && "text-muted-foreground"
                       )}
                     >
                       {card.rank}
@@ -207,8 +207,8 @@ export function HandValueDialog({ open, onOpenChange, onSelect }: HandValueDialo
         </div>
 
         {/* Match Type Selection */}
-        <div className="space-y-2 pt-4 border-t border-gray-700">
-          <div className="text-sm text-gray-400 mb-2">Match Type</div>
+        <div className="space-y-2 pt-4 border-t border-border">
+          <div className="text-sm text-muted-foreground mb-2">Match Type</div>
           <div className="grid grid-cols-3 gap-2">
             {matchTypes.map((type) => (
               <Button
@@ -219,7 +219,7 @@ export function HandValueDialog({ open, onOpenChange, onSelect }: HandValueDialo
                   "text-xs",
                   matchType === type
                     ? "border-green-500 bg-green-600 hover:bg-green-600 text-white"
-                    : "border-gray-600 bg-gray-800 hover:bg-gray-700 text-gray-300"
+                    : "border-border bg-muted hover:bg-accent text-foreground"
                 )}
                 onClick={() => setMatchType(type)}
               >

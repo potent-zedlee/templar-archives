@@ -305,7 +305,7 @@ export default function UsersClient() {
                           targetUser.role === "high_templar" ? "bg-purple-700 text-white" :
                           targetUser.role === "arbiter" ? "bg-blue-700 text-white" :
                           targetUser.role === "templar" ? "bg-green-700 text-white" :
-                          "bg-gray-700 text-white"
+                          "bg-muted text-foreground"
                         }`}>
                           {targetUser.role === "admin" ? "ADMIN" :
                            targetUser.role === "high_templar" ? "HIGH TEMPLAR" :
@@ -331,13 +331,13 @@ export default function UsersClient() {
                             new Date().getTime() - new Date((targetUser as any).last_sign_in_at).getTime() < 7 * 24 * 60 * 60 * 1000
                               ? "text-green-400"
                               : new Date().getTime() - new Date((targetUser as any).last_sign_in_at).getTime() > 30 * 24 * 60 * 60 * 1000
-                              ? "text-gray-600"
+                              ? "text-muted-foreground"
                               : ""
                           }>
                             LAST SIGN IN: {new Date((targetUser as any).last_sign_in_at).toLocaleDateString("ko-KR")}
                           </span>
                         ) : (
-                          <span className="text-gray-600">LAST SIGN IN: NEVER</span>
+                          <span className="text-muted-foreground">LAST SIGN IN: NEVER</span>
                         )}
                       </div>
                       {targetUser.is_banned && targetUser.ban_reason && (

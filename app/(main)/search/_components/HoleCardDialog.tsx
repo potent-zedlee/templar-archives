@@ -48,7 +48,7 @@ export function HoleCardDialog({ open, onOpenChange, onSelect }: HoleCardDialogP
         <div className="space-y-4">
           {/* Card 1 Selection */}
           <div className="space-y-2">
-            <Label className="text-sm text-gray-300">Card 1</Label>
+            <Label className="text-sm text-foreground">Card 1</Label>
             <div className="grid grid-cols-7 gap-2">
               {RANKS.map((rank) => (
                 <Button
@@ -59,7 +59,7 @@ export function HoleCardDialog({ open, onOpenChange, onSelect }: HoleCardDialogP
                     "h-10 w-full text-sm font-semibold",
                     card1 === rank
                       ? "border-green-500 bg-green-600 hover:bg-green-600 text-white"
-                      : "border-gray-600 bg-gray-800 hover:bg-gray-700 text-gray-300"
+                      : "border-border bg-muted hover:bg-accent text-foreground"
                   )}
                   onClick={() => setCard1(rank)}
                 >
@@ -71,7 +71,7 @@ export function HoleCardDialog({ open, onOpenChange, onSelect }: HoleCardDialogP
 
           {/* Card 2 Selection */}
           <div className="space-y-2">
-            <Label className="text-sm text-gray-300">Card 2</Label>
+            <Label className="text-sm text-foreground">Card 2</Label>
             <div className="grid grid-cols-7 gap-2">
               {RANKS.map((rank) => (
                 <Button
@@ -82,7 +82,7 @@ export function HoleCardDialog({ open, onOpenChange, onSelect }: HoleCardDialogP
                     "h-10 w-full text-sm font-semibold",
                     card2 === rank
                       ? "border-green-500 bg-green-600 hover:bg-green-600 text-white"
-                      : "border-gray-600 bg-gray-800 hover:bg-gray-700 text-gray-300"
+                      : "border-border bg-muted hover:bg-accent text-foreground"
                   )}
                   onClick={() => setCard2(rank)}
                 >
@@ -101,7 +101,7 @@ export function HoleCardDialog({ open, onOpenChange, onSelect }: HoleCardDialogP
             />
             <label
               htmlFor="suited"
-              className="text-sm font-medium text-gray-300 cursor-pointer"
+              className="text-sm font-medium text-foreground cursor-pointer"
             >
               Suited only
             </label>

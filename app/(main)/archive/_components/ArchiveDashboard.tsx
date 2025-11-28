@@ -47,12 +47,12 @@ export function ArchiveDashboard({ tournaments }: ArchiveDashboardProps) {
   }, [tournaments])
 
   return (
-    <div data-testid="archive-dashboard" className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 p-6">
+    <div data-testid="archive-dashboard" className="flex-1 overflow-auto bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Archive Dashboard</h1>
-          <p data-testid="dashboard-hint" className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Archive Dashboard</h1>
+          <p data-testid="dashboard-hint" className="text-sm text-muted-foreground mt-1">
             왼쪽에서 스트림을 선택하면 핸드 히스토리를 확인할 수 있습니다.
           </p>
         </div>
@@ -86,17 +86,17 @@ export function ArchiveDashboard({ tournaments }: ArchiveDashboardProps) {
         </div>
 
         {/* 카테고리별 분포 */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+        <div className="bg-card rounded-lg p-6 border border-border">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">
             Category Distribution
           </h2>
           <div className="space-y-3">
             {categoryStats.map(({ name, tournaments: count }) => (
               <div key={name} className="flex items-center gap-3">
-                <div className="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                <div className="w-32 text-sm font-medium text-foreground truncate">
                   {name}
                 </div>
-                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-8 overflow-hidden">
+                <div className="flex-1 bg-muted rounded-full h-8 overflow-hidden">
                   <div
                     className="bg-green-600 dark:bg-green-500 h-full flex items-center justify-end px-3 text-xs text-white font-semibold transition-all"
                     style={{ width: `${(count / stats.totalTournaments) * 100}%` }}
@@ -104,7 +104,7 @@ export function ArchiveDashboard({ tournaments }: ArchiveDashboardProps) {
                     {count > 0 && count}
                   </div>
                 </div>
-                <div className="w-20 text-right text-sm text-gray-600 dark:text-gray-400">
+                <div className="w-20 text-right text-sm text-muted-foreground">
                   {((count / stats.totalTournaments) * 100).toFixed(1)}%
                 </div>
               </div>
@@ -112,18 +112,18 @@ export function ArchiveDashboard({ tournaments }: ArchiveDashboardProps) {
           </div>
 
           {categoryStats.length === 0 && (
-            <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-center py-8 text-sm text-muted-foreground">
               카테고리 데이터가 없습니다
             </div>
           )}
         </div>
 
         {/* Recent Activity Placeholder */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+        <div className="bg-card rounded-lg p-6 border border-border">
+          <h2 className="text-lg font-semibold mb-4 text-foreground">
             Recent Hands
           </h2>
-          <div className="text-center py-8 text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-center py-8 text-sm text-muted-foreground">
             최근 핸드 데이터를 보려면 스트림을 선택하세요
           </div>
         </div>
@@ -147,14 +147,14 @@ function StatCard({ icon: Icon, label, value, color }: {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
+    <div className="bg-card rounded-lg p-6 border border-border hover:shadow-lg transition-shadow">
       <div className="flex items-center gap-3">
         <div className={cn("p-3 rounded-lg", colorClasses[color])}>
           <Icon className="w-6 h-6" />
         </div>
         <div className="flex-1">
-          <div className="text-sm text-gray-600 dark:text-gray-400">{label}</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          <div className="text-sm text-muted-foreground">{label}</div>
+          <div className="text-2xl font-bold text-foreground">
             {value.toLocaleString()}
           </div>
         </div>

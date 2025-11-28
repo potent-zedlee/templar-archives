@@ -72,7 +72,7 @@ export function HandTagDialog({
       red: "border-red-500 text-red-700 bg-red-50 hover:bg-red-100",
       green: "border-green-500 text-green-700 bg-green-50 hover:bg-green-100",
     }
-    return colorMap[colorName] || "border-gray-500 text-gray-700 bg-gray-50 hover:bg-gray-100"
+    return colorMap[colorName] || "border-border text-foreground bg-muted hover:bg-accent"
   }
 
   const getSelectedClass = (colorName: string) => {
@@ -81,7 +81,7 @@ export function HandTagDialog({
       red: "bg-red-500 text-white border-red-600",
       green: "bg-green-500 text-white border-green-600",
     }
-    return colorMap[colorName] || "bg-gray-500 text-white border-gray-600"
+    return colorMap[colorName] || "bg-accent text-accent-foreground border-border"
   }
 
   return (

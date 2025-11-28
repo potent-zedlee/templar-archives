@@ -40,10 +40,10 @@ export function PlayerCard({ player, className, index = 0 }: PlayerCardProps) {
       className={cn('flex-shrink-0', className)}
     >
       <Link href={`/players/${player.id}`}>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-200 p-4 cursor-pointer min-w-[140px]">
+        <div className="bg-card rounded-lg shadow-sm border border-border hover:shadow-md transition-all duration-200 p-4 cursor-pointer min-w-[140px]">
           <div className="flex flex-col items-center space-y-3">
             {/* Avatar */}
-            <div className="w-16 h-16 rounded-full border-2 border-gray-100 dark:border-gray-700 overflow-hidden bg-gray-100 dark:bg-gray-700">
+            <div className="w-16 h-16 rounded-full border-2 border-muted overflow-hidden bg-muted">
               {player.photo_url ? (
                 <img
                   src={player.photo_url}
@@ -65,13 +65,13 @@ export function PlayerCard({ player, className, index = 0 }: PlayerCardProps) {
 
             {/* Name */}
             <div className="text-center space-y-1 w-full">
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-tight line-clamp-2">
+              <p className="text-sm font-semibold text-foreground leading-tight line-clamp-2">
                 {player.name}
               </p>
 
               {/* Country */}
               {player.country && (
-                <p className="text-xs text-gray-600 dark:text-gray-400">{player.country}</p>
+                <p className="text-xs text-muted-foreground">{player.country}</p>
               )}
             </div>
 

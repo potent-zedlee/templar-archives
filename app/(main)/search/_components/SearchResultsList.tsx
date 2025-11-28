@@ -30,11 +30,11 @@ export function SearchResultsList({
   onHandSelect,
 }: SearchResultsListProps) {
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-800">
+    <div className="flex flex-col h-full bg-background">
       {/* Header */}
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold">검색 결과</h2>
-        <div className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="text-sm text-muted-foreground">
           {loading ? "검색 중..." : `${hands.length}개의 핸드 발견`}
         </div>
       </div>
@@ -64,7 +64,7 @@ export function SearchResultsList({
                   "w-full p-3 text-left rounded-md border transition-colors",
                   selectedHandId === hand.id
                     ? "border-green-400 bg-green-50 dark:bg-green-900/20"
-                    : "border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-600"
+                    : "border-border hover:border-green-300 dark:hover:border-green-600"
                 )}
               >
                 {/* Hand Number & Pot */}
@@ -79,7 +79,7 @@ export function SearchResultsList({
 
                 {/* Tournament & Day */}
                 {(hand.tournament_name || hand.day_name) && (
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  <div className="text-sm text-muted-foreground mb-2">
                     {hand.tournament_name}
                     {hand.tournament_name && hand.day_name && " • "}
                     {hand.day_name}
@@ -88,7 +88,7 @@ export function SearchResultsList({
 
                 {/* Description */}
                 {hand.description && (
-                  <div className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
+                  <div className="text-sm text-foreground mb-2 line-clamp-2">
                     {hand.description}
                   </div>
                 )}
@@ -99,13 +99,13 @@ export function SearchResultsList({
                     {hand.player_names.slice(0, 3).map((name, i) => (
                       <span
                         key={i}
-                        className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs"
+                        className="px-2 py-0.5 bg-muted rounded text-xs"
                       >
                         {name}
                       </span>
                     ))}
                     {hand.player_names.length > 3 && (
-                      <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">
+                      <span className="px-2 py-0.5 bg-muted rounded text-xs">
                         +{hand.player_names.length - 3}
                       </span>
                     )}

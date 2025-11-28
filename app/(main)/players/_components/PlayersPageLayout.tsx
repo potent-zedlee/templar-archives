@@ -80,7 +80,7 @@ export function PlayersPageLayout({ players, loading }: PlayersPageLayoutProps) 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden flex flex-col">
         {/* Mobile Menu Button */}
-        <div className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+        <div className="lg:hidden bg-card border-b border-border p-4">
           <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button

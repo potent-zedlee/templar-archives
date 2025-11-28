@@ -38,7 +38,7 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
             >
               <div className={cn(
                 "text-sm font-bold uppercase tracking-wide transition-colors hover:text-gold-400 relative inline-flex items-center gap-1 cursor-pointer",
-                isActive ? "text-gold-400" : "text-gray-300"
+                isActive ? "text-gold-400" : "text-foreground"
               )}>
                 {link.label}
                 <ChevronRight className={cn(
@@ -58,7 +58,7 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
                     animate={{ opacity: 1, width: "auto", x: 0 }}
                     exit={{ opacity: 0, width: 0, x: -10 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="ml-2 flex items-center gap-3 bg-gray-800 border-2 border-gold-500 rounded-lg shadow-lg px-4 py-2 whitespace-nowrap"
+                    className="ml-2 flex items-center gap-3 bg-muted border-2 border-gold-500 rounded-lg shadow-lg px-4 py-2 whitespace-nowrap"
                   >
                     {link.subItems.map((subItem) => {
                       const subIsActive = pathname === subItem.href ||
@@ -71,7 +71,7 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
                             "text-sm font-semibold uppercase tracking-wide transition-colors hover:text-gold-400",
                             subIsActive
                               ? "text-gold-400"
-                              : "text-gray-300"
+                              : "text-foreground"
                           )}
                         >
                           {subItem.label}
@@ -97,7 +97,7 @@ export function HeaderDesktopNav({ navLinks }: HeaderDesktopNavProps) {
               "text-sm font-bold uppercase tracking-wide transition-colors hover:text-gold-400 relative",
               isActive
                 ? "text-gold-400"
-                : "text-gray-300"
+                : "text-foreground"
             )}
           >
             {link.label}

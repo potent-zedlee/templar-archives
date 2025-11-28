@@ -112,17 +112,17 @@ export function UploadProgress({
   return (
     <div
       className={cn(
-        'rounded-lg border border-gray-700 bg-gray-800 p-6',
+        'rounded-lg border border-border bg-card p-6',
         className
       )}
     >
       {/* Header: 파일명 + 상태 */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-100 truncate">
+          <h3 className="text-lg font-semibold text-foreground truncate">
             {fileName}
           </h3>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             {formatFileSize(fileSize)}
           </p>
         </div>
@@ -150,12 +150,12 @@ export function UploadProgress({
       {/* Progress Bar */}
       <div className="mt-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-300">
+          <span className="text-sm font-medium text-foreground">
             {progress}%
           </span>
 
           {status === 'uploading' && (
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-muted-foreground">
               {formatSpeed(uploadSpeed)}
             </span>
           )}
@@ -165,7 +165,7 @@ export function UploadProgress({
 
         {/* 남은 시간 */}
         {status === 'uploading' && remainingTime > 0 && (
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             남은 시간: {formatTime(remainingTime)}
           </p>
         )}

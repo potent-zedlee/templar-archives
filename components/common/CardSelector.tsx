@@ -21,10 +21,10 @@ interface CardSelectorProps {
 
 const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2']
 const SUITS = [
-  { symbol: 's', name: '♠', color: 'text-gray-900 dark:text-white' },
+  { symbol: 's', name: '♠', color: 'text-foreground' },
   { symbol: 'h', name: '♥', color: 'text-red-600 dark:text-red-400' },
   { symbol: 'd', name: '♦', color: 'text-red-600 dark:text-red-400' },
-  { symbol: 'c', name: '♣', color: 'text-gray-900 dark:text-white' },
+  { symbol: 'c', name: '♣', color: 'text-foreground' },
 ]
 
 export function CardSelector({
@@ -55,7 +55,7 @@ export function CardSelector({
 
   const getSuitColor = (suitSymbol: string) => {
     const suit = SUITS.find(s => s.symbol === suitSymbol)
-    return suit?.color || 'text-gray-900 dark:text-white'
+    return suit?.color || 'text-foreground'
   }
 
   const getSuitName = (suitSymbol: string) => {
@@ -70,7 +70,7 @@ export function CardSelector({
           <div>
             <Label className="text-sm font-medium">{label}</Label>
             {description && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {description}
               </p>
             )}
@@ -99,7 +99,7 @@ export function CardSelector({
             return (
               <div
                 key={card}
-                className="px-2 py-1 bg-white dark:bg-gray-800 border border-green-500 rounded text-sm font-mono font-bold flex items-center gap-1"
+                className="px-2 py-1 bg-card border border-green-500 rounded text-sm font-mono font-bold flex items-center gap-1"
               >
                 <span>{rank}</span>
                 <span className={getSuitColor(suit)}>{getSuitName(suit)}</span>
@@ -128,8 +128,8 @@ export function CardSelector({
                     "w-full px-1.5 py-1 text-xs font-mono font-bold rounded border transition-all",
                     isSelected
                       ? "bg-green-600 text-white border-green-600 shadow-md scale-105"
-                      : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20",
-                    isDisabled && "opacity-30 cursor-not-allowed hover:border-gray-300 hover:bg-white dark:hover:bg-gray-800"
+                      : "bg-card border-border hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20",
+                    isDisabled && "opacity-30 cursor-not-allowed hover:border-border hover:bg-card"
                   )}
                 >
                   <span>{rank}</span>

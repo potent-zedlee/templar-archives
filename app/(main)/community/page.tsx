@@ -43,7 +43,7 @@ const categoryColors: Record<PostCategory, string> = {
   "analysis": "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300",
   "strategy": "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300",
   "hand-review": "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300",
-  "general": "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+  "general": "bg-muted text-foreground"
 }
 
 export default function communityClient() {
@@ -181,7 +181,7 @@ export default function communityClient() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-background">
       <main id="main-content" role="main">
         <div className="container max-w-7xl mx-auto py-8 md:py-12 px-4 md:px-6">
         <div className="max-w-4xl mx-auto">
@@ -209,7 +209,7 @@ export default function communityClient() {
             )}
 
             {/* Create Post Button */}
-            <Card className="p-4 dark:bg-gray-800 dark:border-gray-700">
+            <Card className="p-4">
               <Dialog open={isDialogOpen} onOpenChange={(open) => {
                 if (!user && open) {
                   toast.error('Login required')
@@ -225,9 +225,9 @@ export default function communityClient() {
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
-                    <DialogTitle className="text-gray-900 dark:text-gray-100">Create new post</DialogTitle>
+                    <DialogTitle className="text-foreground">Create new post</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4 py-4 bg-white dark:bg-gray-900">
+                  <div className="space-y-4 py-4 bg-card">
                     <div className="space-y-2">
                       <Label htmlFor="title">Title</Label>
                       <Input
@@ -266,13 +266,13 @@ export default function communityClient() {
 
                     {/* Hand Attachment */}
                     <div className="space-y-2">
-                      <Label className="text-gray-900 dark:text-gray-100">Attach hand (optional)</Label>
+                      <Label className="text-foreground">Attach hand (optional)</Label>
                       {selectedHand ? (
-                        <Card className="p-3 relative bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <Card className="p-3 relative bg-card border-border">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="absolute top-2 right-2 h-6 w-6 p-0 text-gray-900 dark:text-gray-100"
+                            className="absolute top-2 right-2 h-6 w-6 p-0 text-foreground"
                             onClick={() => setSelectedHand(null)}
                           >
                             <X className="h-4 w-4" />
@@ -280,13 +280,13 @@ export default function communityClient() {
                           <div className="pr-8">
                             <div className="flex items-center gap-2 mb-1">
                               <Badge className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">#{selectedHand.number}</Badge>
-                              <Link2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                              <Link2 className="h-4 w-4 text-muted-foreground" />
                             </div>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                            <p className="text-xs text-muted-foreground">
                               {selectedHand.tournament} &gt; {selectedHand.day}
                             </p>
                             {selectedHand.description && (
-                              <p className="text-sm text-gray-900 dark:text-gray-100 mt-1 line-clamp-1">{selectedHand.description}</p>
+                              <p className="text-sm text-foreground mt-1 line-clamp-1">{selectedHand.description}</p>
                             )}
                           </div>
                         </Card>
@@ -328,13 +328,13 @@ export default function communityClient() {
 
             {/* Tabs: 모바일 스크롤 */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-              <div className="flex gap-0 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+              <div className="flex gap-0 border-b border-border overflow-x-auto">
                 <button
                   onClick={() => setActiveTab('trending')}
                   className={`px-6 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
                     activeTab === 'trending'
                       ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:border-gray-300 dark:hover:border-gray-600'
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                   }`}
                 >
                   <TrendingUp className="inline-block h-4 w-4 mr-2" />
@@ -345,7 +345,7 @@ export default function communityClient() {
                   className={`px-6 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
                     activeTab === 'recent'
                       ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:border-gray-300 dark:hover:border-gray-600'
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                   }`}
                 >
                   <Clock className="inline-block h-4 w-4 mr-2" />
@@ -356,7 +356,7 @@ export default function communityClient() {
                   className={`px-6 py-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 ${
                     activeTab === 'popular'
                       ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                      : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:border-gray-300 dark:hover:border-gray-600'
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                   }`}
                 >
                   <Star className="inline-block h-4 w-4 mr-2" />
@@ -370,12 +370,12 @@ export default function communityClient() {
                 ) : posts.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="flex justify-center mb-4">
-                      <div className="h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                        <MessageSquare className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                      <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                        <MessageSquare className="h-8 w-8 text-muted-foreground" />
                       </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No posts yet</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                    <h3 className="text-lg font-semibold text-foreground mb-2">No posts yet</h3>
+                    <p className="text-sm text-muted-foreground mb-6">
                       Be the first to create a post in the community!
                     </p>
                     <Button onClick={() => setIsDialogOpen(true)}>
@@ -386,7 +386,7 @@ export default function communityClient() {
                   <StaggerContainer staggerDelay={0.1}>
                     {posts.map((post) => (
                       <StaggerItem key={post.id}>
-                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200">
+                        <div className="bg-card rounded-lg border border-border p-6 hover:shadow-md transition-all duration-200">
                           <div className="flex gap-4">
                         <Avatar className="h-12 w-12 rounded-full">
                           <AvatarImage src={post.author.avatarUrl} alt={post.author.name} />
@@ -398,10 +398,10 @@ export default function communityClient() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-4 mb-3">
                             <div className="flex-1">
-                              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                              <h3 className="text-lg font-semibold text-foreground mb-1">
                                 {post.title}
                               </h3>
-                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <span>{post.author.name}</span>
                                 <span>-</span>
                                 <span>{new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
@@ -412,27 +412,27 @@ export default function communityClient() {
                             </Badge>
                           </div>
 
-                          <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 mb-4">
+                          <p className="text-sm text-foreground line-clamp-2 mb-4">
                             {post.content}
                           </p>
 
                           {/* Attached Hand */}
                           {post.hand && (
-                            <div className="mb-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
+                            <div className="mb-4 bg-background border border-border rounded-lg p-3">
                               <div className="flex items-center gap-3">
                                 <Link2 className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="text-sm font-mono font-semibold text-blue-600 dark:text-blue-400">#{post.hand.number}</span>
-                                    <span className="text-xs text-gray-600 dark:text-gray-400">{post.hand.timestamp}</span>
+                                    <span className="text-xs text-muted-foreground">{post.hand.timestamp}</span>
                                   </div>
                                   {post.hand.description && (
-                                    <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-1">{post.hand.description}</p>
+                                    <p className="text-xs text-foreground line-clamp-1">{post.hand.description}</p>
                                   )}
                                 </div>
                                 <Link
                                   href={`/archive?hand=${post.hand.id}`}
-                                  className="px-3 py-1 text-xs font-medium bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                                  className="px-3 py-1 text-xs font-medium bg-card border border-border text-foreground rounded-md hover:bg-muted transition-colors"
                                 >
                                   View
                                 </Link>
@@ -440,16 +440,16 @@ export default function communityClient() {
                             </div>
                           )}
 
-                          <div className="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                          <div className="flex items-center gap-4 pt-4 border-t border-border">
                             <button
                               onClick={() => handleLike(post.id)}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors focus:ring-2 focus:ring-blue-400"
                             >
                               <ThumbsUp className="w-4 h-4" />
                               <span className="font-mono">{post.stats.likesCount}</span>
                             </button>
 
-                            <Link href={`/community/${post.id}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:ring-2 focus:ring-blue-400">
+                            <Link href={`/community/${post.id}`} className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium text-foreground hover:bg-muted transition-colors focus:ring-2 focus:ring-blue-400">
                               <MessageSquare className="w-4 h-4" />
                               <span className="font-mono">{post.stats.commentsCount}</span>
                             </Link>

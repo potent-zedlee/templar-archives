@@ -49,7 +49,7 @@ function PlayingCard({ card }: { card: string }) {
   return (
     <div
       className={`w-8 h-11 rounded border bg-white flex flex-col items-center justify-center font-bold text-xs shadow-sm ${
-        isRed ? "text-red-600 border-red-300" : "text-gray-900 border-gray-300"
+        isRed ? "text-red-600 border-red-300" : "text-foreground border-border"
       }`}
     >
       <div>{rank}</div>
@@ -235,7 +235,7 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
             )}
           </DialogTitle>
           {hand && (
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-muted-foreground">
               {tournament?.name}
               {hand.stream?.name && ` - ${hand.stream.name}`}
               {hand.stakes && ` - ${hand.stakes}`}
@@ -250,7 +250,7 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
                 <Loader2 className="w-8 h-8 animate-spin text-green-500" />
               </div>
             ) : !hand ? (
-              <div className="text-center py-12 text-gray-400">
+              <div className="text-center py-12 text-muted-foreground">
                 핸드를 찾을 수 없습니다
               </div>
             ) : (
@@ -258,7 +258,7 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
                 {/* Pot Size */}
                 {hand.potSize && (
                   <div className="bg-green-900/20 border border-green-800 rounded-lg p-4">
-                    <div className="text-sm text-gray-400">최종 팟</div>
+                    <div className="text-sm text-muted-foreground">최종 팟</div>
                     <div className="text-xl font-bold text-green-400">
                       {hand.potSize.toLocaleString()} chips
                     </div>
@@ -275,8 +275,8 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
 
                 {/* Board Cards */}
                 {(hand.boardFlop || hand.boardTurn || hand.boardRiver) && (
-                  <div className="bg-gray-800 rounded-lg p-4">
-                    <div className="text-sm font-semibold text-gray-300 mb-3">보드</div>
+                  <div className="bg-card rounded-lg p-4">
+                    <div className="text-sm font-semibold text-foreground mb-3">보드</div>
                     <div className="flex gap-2 flex-wrap">
                       {hand.boardFlop && hand.boardFlop.map((card: string, i: number) => (
                         <PlayingCard key={`flop-${i}`} card={card} />
@@ -289,13 +289,13 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
 
                 {/* Players */}
                 {hand.players && hand.players.length > 0 && (
-                  <div className="bg-gray-800 rounded-lg p-4">
-                    <div className="text-sm font-semibold text-gray-300 mb-3">플레이어</div>
+                  <div className="bg-card rounded-lg p-4">
+                    <div className="text-sm font-semibold text-foreground mb-3">플레이어</div>
                     <div className="space-y-2">
                       {hand.players.map((hp) => (
                         <div
                           key={hp.id}
-                          className="flex items-center justify-between p-2 bg-gray-900 rounded"
+                          className="flex items-center justify-between p-2 bg-muted rounded"
                         >
                           <div className="flex items-center gap-2">
                             <Avatar className="w-8 h-8">
@@ -305,10 +305,10 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <div className="text-sm font-medium text-gray-200">
+                              <div className="text-sm font-medium text-foreground">
                                 {hp.name}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-muted-foreground">
                                 {hp.position || "-"}
                               </div>
                             </div>
@@ -335,21 +335,21 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
 
                 {/* Actions */}
                 {hand.actions && hand.actions.length > 0 && (
-                  <div className="bg-gray-800 rounded-lg p-4">
-                    <div className="text-sm font-semibold text-gray-300 mb-3">액션</div>
+                  <div className="bg-card rounded-lg p-4">
+                    <div className="text-sm font-semibold text-foreground mb-3">액션</div>
                     <div className="space-y-1">
                       {hand.actions
                         .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
                         .map((action) => (
                           <div
                             key={action.id}
-                            className="flex items-center gap-2 p-2 bg-gray-900 rounded text-sm"
+                            className="flex items-center gap-2 p-2 bg-muted rounded text-sm"
                           >
                             <Badge variant="outline" className="text-xs w-16 justify-center">
                               {action.street}
                             </Badge>
-                            <span className="text-gray-300 flex-1">{action.playerName}</span>
-                            <span className="text-gray-400 capitalize">{action.actionType}</span>
+                            <span className="text-foreground flex-1">{action.playerName}</span>
+                            <span className="text-muted-foreground capitalize">{action.actionType}</span>
                             {action.amount && action.amount > 0 && (
                               <span className="text-green-400 font-medium">
                                 {action.amount.toLocaleString()}

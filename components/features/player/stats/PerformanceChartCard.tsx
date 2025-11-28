@@ -92,7 +92,7 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
   const isPremium = posStats.length >= 5 // 5개 이상 포지션 데이터
 
   return (
-    <Card className={isPremium ? 'border-gold-500/50 bg-gradient-to-br from-gray-800 to-gray-900' : undefined}>
+    <Card className={isPremium ? 'border-gold-500/50 bg-gradient-to-br from-muted to-background' : undefined}>
       <CardHeader>
         <CardTitle className={isPremium ? 'bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent' : undefined}>
           성과 차트
@@ -112,10 +112,10 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis
                   dataKey="position"
-                  className="text-xs text-gray-600 dark:text-gray-400"
+                  className="text-xs text-muted-foreground"
                   tick={{ fill: 'currentColor' }}
                 />
-                <YAxis className="text-xs text-gray-600 dark:text-gray-400" tick={{ fill: 'currentColor' }} />
+                <YAxis className="text-xs text-muted-foreground" tick={{ fill: 'currentColor' }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'var(--tw-bg-opacity, 1)',
@@ -131,9 +131,9 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
               </RechartsBarChart>
             </ResponsiveContainer>
 
-            <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
+            <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-muted-foreground">
               <div>
-                <p className="font-medium mb-1 text-gray-900 dark:text-gray-100">차트 설명</p>
+                <p className="font-medium mb-1 text-foreground">차트 설명</p>
                 <ul className="space-y-1">
                   <li>• 파란색: VPIP (자발적 팟 참여율)</li>
                   <li>• 초록색: PFR (프리플롭 레이즈율)</li>
@@ -141,7 +141,7 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
                 </ul>
               </div>
               <div>
-                <p className="font-medium mb-1 text-gray-900 dark:text-gray-100">분석 포인트</p>
+                <p className="font-medium mb-1 text-foreground">분석 포인트</p>
                 <ul className="space-y-1">
                   <li>• BTN, CO: 높은 VPIP/PFR 권장</li>
                   <li>• UTG: 낮은 VPIP/PFR 권장</li>
@@ -154,16 +154,16 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
           <TabsContent value="radar" className="mt-6">
             <ResponsiveContainer width="100%" height={300}>
               <RadarChart data={radarChartData}>
-                <PolarGrid className="stroke-gray-200 dark:stroke-gray-700" />
+                <PolarGrid className="stroke-border" />
                 <PolarAngleAxis
                   dataKey="stat"
-                  className="text-xs text-gray-600 dark:text-gray-400"
+                  className="text-xs text-muted-foreground"
                   tick={{ fill: 'currentColor' }}
                 />
                 <PolarRadiusAxis
                   angle={90}
                   domain={[0, 100]}
-                  className="text-xs text-gray-600 dark:text-gray-400"
+                  className="text-xs text-muted-foreground"
                   tick={{ fill: 'currentColor' }}
                 />
                 <Radar
@@ -185,9 +185,9 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
               </RadarChart>
             </ResponsiveContainer>
 
-            <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-gray-600 dark:text-gray-400">
+            <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-muted-foreground">
               <div>
-                <p className="font-medium mb-1 text-gray-900 dark:text-gray-100">현재 통계</p>
+                <p className="font-medium mb-1 text-foreground">현재 통계</p>
                 <ul className="space-y-1">
                   <li>• VPIP: {formatStatPercentage(stats.vpip)}</li>
                   <li>• PFR: {formatStatPercentage(stats.pfr)}</li>
@@ -197,7 +197,7 @@ export function PerformanceChartCard({ playerId }: PerformanceChartCardProps) {
                 </ul>
               </div>
               <div>
-                <p className="font-medium mb-1 text-gray-900 dark:text-gray-100">권장 범위</p>
+                <p className="font-medium mb-1 text-foreground">권장 범위</p>
                 <ul className="space-y-1">
                   <li>• VPIP: 20-30%</li>
                   <li>• PFR: 15-25%</li>

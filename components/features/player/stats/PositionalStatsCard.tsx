@@ -67,7 +67,7 @@ export function PositionalStatsCard({ playerId }: PositionalStatsCardProps) {
   const isPremium = posStats.length >= 5 // 5개 이상 포지션 데이터
 
   return (
-    <Card className={isPremium ? 'border-gold-500/50 bg-gradient-to-br from-gray-800 to-gray-900' : undefined}>
+    <Card className={isPremium ? 'border-gold-500/50 bg-gradient-to-br from-muted to-background' : undefined}>
       <CardHeader>
         <CardTitle className={isPremium ? 'bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent' : undefined}>
           포지션별 통계
@@ -137,7 +137,7 @@ export function PositionalStatsCard({ playerId }: PositionalStatsCardProps) {
           </TableBody>
         </Table>
 
-        <div className="mt-4 text-xs text-gray-600 dark:text-gray-400">
+        <div className="mt-4 text-xs text-muted-foreground">
           <p>• VPIP: 자발적 팟 참여율</p>
           <p>• PFR: 프리플롭 레이즈율</p>
           <p>• 승률: 해당 포지션에서 승리한 핸드 비율</p>

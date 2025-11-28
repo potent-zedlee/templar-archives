@@ -11,7 +11,7 @@ type PrizeHistoryChartProps = {
 export function PrizeHistoryChart({ data }: PrizeHistoryChartProps) {
   if (data.length === 0) {
     return (
-      <div className="h-[300px] flex items-center justify-center text-gray-600 dark:text-gray-400">
+      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
         <p>No prize history available</p>
       </div>
     )
@@ -26,7 +26,7 @@ export function PrizeHistoryChart({ data }: PrizeHistoryChartProps) {
             <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
+        <CartesianGrid strokeDasharray="3 3" className="stroke-border" opacity={0.2} />
         <XAxis
           dataKey="date"
           tickFormatter={(value) => {
@@ -34,7 +34,7 @@ export function PrizeHistoryChart({ data }: PrizeHistoryChartProps) {
             return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
           }}
           tick={{ fontSize: 12, fill: 'currentColor' }}
-          className="text-gray-600 dark:text-gray-400"
+          className="text-muted-foreground"
         />
         <YAxis
           tickFormatter={(value) => {
@@ -43,7 +43,7 @@ export function PrizeHistoryChart({ data }: PrizeHistoryChartProps) {
             return `$${value}`
           }}
           tick={{ fontSize: 12, fill: 'currentColor' }}
-          className="text-gray-600 dark:text-gray-400"
+          className="text-muted-foreground"
         />
         <Tooltip
           formatter={(value: any) => [`$${value.toLocaleString()}`, 'Prize']}
@@ -52,9 +52,10 @@ export function PrizeHistoryChart({ data }: PrizeHistoryChartProps) {
             return item ? `${item.eventName} (Rank ${item.rank})` : label
           }}
           contentStyle={{
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            border: '1px solid rgba(209, 213, 219, 1)',
+            backgroundColor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
             borderRadius: '8px',
+            color: 'hsl(var(--foreground))'
           }}
         />
         <Area
@@ -93,9 +94,10 @@ export function TournamentCategoryChart({ data }: TournamentCategoryChartProps) 
         </Pie>
         <Tooltip
           contentStyle={{
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            border: '1px solid rgba(209, 213, 219, 1)',
+            backgroundColor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
             borderRadius: '8px',
+            color: 'hsl(var(--foreground))'
           }}
         />
       </RechartsPie>

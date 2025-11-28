@@ -105,7 +105,7 @@ export function ArchiveSidebarCategories({
           "w-full flex items-center gap-3 px-4 h-12 text-sm font-medium rounded-lg transition-colors overflow-hidden",
           selectedCategory === 'All'
             ? "bg-gold-600 text-white"
-            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            : "text-foreground hover:bg-accent"
         )}
       >
         <LayoutGrid className="w-5 h-5 flex-shrink-0" />
@@ -132,12 +132,12 @@ export function ArchiveSidebarCategories({
                   <button
                     type="button"
                     onClick={() => toggleParent(category.id)}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors flex-shrink-0"
+                    className="p-2 hover:bg-accent rounded-md transition-colors flex-shrink-0"
                     aria-label={isExpanded ? 'Collapse' : 'Expand'}
                   >
                     <ChevronRight
                       className={cn(
-                        "w-4 h-4 text-gray-500 transition-transform",
+                        "w-4 h-4 text-muted-foreground transition-transform",
                         isExpanded && "rotate-90"
                       )}
                     />
@@ -153,7 +153,7 @@ export function ArchiveSidebarCategories({
                     "flex-1 flex items-center gap-3 px-3 h-11 text-sm font-medium rounded-lg transition-colors overflow-hidden",
                     isSelected
                       ? "bg-gold-600 text-white"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      : "text-foreground hover:bg-accent"
                   )}
                 >
                   <CategoryLogo
@@ -173,7 +173,7 @@ export function ArchiveSidebarCategories({
 
               {/* Child Categories */}
               {isExpanded && hasChildren && (
-                <ul className="ml-10 mt-2 space-y-0.5 border-l-2 border-gray-200 dark:border-gray-700 pl-3 overflow-hidden">
+                <ul className="ml-10 mt-2 space-y-0.5 border-l-2 border-border pl-3 overflow-hidden">
                   {children.map((child) => {
                     const isChildSelected = selectedCategory === child.id
                     return (
@@ -185,7 +185,7 @@ export function ArchiveSidebarCategories({
                             "w-full flex items-center gap-2.5 px-3 h-9 text-sm rounded-lg transition-colors overflow-hidden",
                             isChildSelected
                               ? "bg-gold-600 text-white font-medium"
-                              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              : "text-muted-foreground hover:bg-accent"
                           )}
                         >
                           <CategoryLogo

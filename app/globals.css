@@ -45,32 +45,32 @@
   --red-500: #EF4444;    /* Error */
   --red-600: #DC2626;
 
-  /* === SEMANTIC COLORS (DARK MODE ONLY) === */
-  --background: var(--gray-900);
-  --foreground: var(--gray-50);
-  --muted: var(--gray-800);
-  --muted-foreground: var(--gray-400);
-  --border: var(--gray-700);
-  --input: var(--gray-700);
-  --primary: var(--gold-400);
-  --primary-foreground: var(--gray-900);
-  --accent: var(--gray-800);
-  --accent-foreground: var(--gold-300);
+  /* === SEMANTIC COLORS (LIGHT MODE DEFAULT) === */
+  --background: #FFFFFF;
+  --foreground: var(--gray-900);
+  --muted: var(--gray-100);
+  --muted-foreground: var(--gray-500);
+  --border: var(--gray-200);
+  --input: var(--gray-200);
+  --primary: var(--gold-600);
+  --primary-foreground: #FFFFFF;
+  --accent: var(--gold-100);
+  --accent-foreground: var(--gold-700);
   --destructive: var(--red-500);
   --destructive-foreground: white;
-  --ring: var(--gold-400);
+  --ring: var(--gold-500);
 
   /* Card */
-  --card: var(--gray-900);
-  --card-foreground: var(--gray-50);
+  --card: #FFFFFF;
+  --card-foreground: var(--gray-900);
 
   /* Popover */
-  --popover: var(--gray-800);
-  --popover-foreground: var(--gray-50);
+  --popover: #FFFFFF;
+  --popover-foreground: var(--gray-900);
 
   /* Secondary */
-  --secondary: var(--gray-800);
-  --secondary-foreground: var(--gray-50);
+  --secondary: var(--gray-100);
+  --secondary-foreground: var(--gray-900);
 
   /* Chart Colors */
   --chart-1: var(--gold-400);
@@ -80,14 +80,14 @@
   --chart-5: #F472B6;
 
   /* Sidebar */
-  --sidebar: var(--gray-900);
-  --sidebar-foreground: var(--gray-300);
-  --sidebar-primary: var(--gold-400);
-  --sidebar-primary-foreground: var(--gray-900);
-  --sidebar-accent: var(--gray-800);
-  --sidebar-accent-foreground: var(--gray-50);
-  --sidebar-border: var(--gray-700);
-  --sidebar-ring: var(--gold-400);
+  --sidebar: var(--gray-50);
+  --sidebar-foreground: var(--gray-600);
+  --sidebar-primary: var(--gold-600);
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: var(--gold-100);
+  --sidebar-accent-foreground: var(--gray-900);
+  --sidebar-border: var(--gray-200);
+  --sidebar-ring: var(--gold-500);
 
   /* === TYPOGRAPHY === */
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -154,7 +154,44 @@
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
 }
 
-/* Dark mode class removed - dark mode is now the only theme */
+/* === DARK MODE === */
+.dark {
+  --background: var(--gray-900);
+  --foreground: var(--gray-50);
+  --muted: var(--gray-800);
+  --muted-foreground: var(--gray-400);
+  --border: var(--gray-700);
+  --input: var(--gray-700);
+  --primary: var(--gold-400);
+  --primary-foreground: var(--gray-900);
+  --accent: var(--gray-800);
+  --accent-foreground: var(--gold-300);
+  --destructive: var(--red-500);
+  --destructive-foreground: white;
+  --ring: var(--gold-400);
+
+  /* Card */
+  --card: var(--gray-900);
+  --card-foreground: var(--gray-50);
+
+  /* Popover */
+  --popover: var(--gray-800);
+  --popover-foreground: var(--gray-50);
+
+  /* Secondary */
+  --secondary: var(--gray-800);
+  --secondary-foreground: var(--gray-50);
+
+  /* Sidebar */
+  --sidebar: var(--gray-900);
+  --sidebar-foreground: var(--gray-300);
+  --sidebar-primary: var(--gold-400);
+  --sidebar-primary-foreground: var(--gray-900);
+  --sidebar-accent: var(--gray-800);
+  --sidebar-accent-foreground: var(--gray-50);
+  --sidebar-border: var(--gray-700);
+  --sidebar-ring: var(--gold-400);
+}
 
 /* ============================================
    2. TAILWIND THEME INLINE

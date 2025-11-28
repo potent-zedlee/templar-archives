@@ -183,7 +183,7 @@ export function SearchFilterSidebar({ onApplyFilters }: SearchFilterSidebarProps
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-800 border-r">
+    <div className="flex flex-col h-full bg-background border-r">
       {/* Header */}
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold">검색 필터</h2>
@@ -353,7 +353,7 @@ export function SearchFilterSidebar({ onApplyFilters }: SearchFilterSidebarProps
                     }
                   />
                 </div>
-                <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>${(filters.smallBlindRange[0] / 100).toLocaleString()}</span>
                   <span>${(filters.smallBlindRange[1] / 100).toLocaleString()}</span>
                 </div>
@@ -373,7 +373,7 @@ export function SearchFilterSidebar({ onApplyFilters }: SearchFilterSidebarProps
                     }
                   />
                 </div>
-                <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>${(filters.bigBlindRange[0] / 100).toLocaleString()}</span>
                   <span>${(filters.bigBlindRange[1] / 100).toLocaleString()}</span>
                 </div>
@@ -636,7 +636,7 @@ export function SearchFilterSidebar({ onApplyFilters }: SearchFilterSidebarProps
                     }
                   />
                 </div>
-                <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>${(filters.stackRange[0] / 100).toLocaleString()}</span>
                   <span>${(filters.stackRange[1] / 100).toLocaleString()}</span>
                 </div>
@@ -705,7 +705,7 @@ export function SearchFilterSidebar({ onApplyFilters }: SearchFilterSidebarProps
                     }
                   />
                 </div>
-                <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>${(filters.potSizeRange[0] / 100).toLocaleString()}</span>
                   <span>${(filters.potSizeRange[1] / 100).toLocaleString()}</span>
                 </div>
@@ -766,7 +766,7 @@ export function SearchFilterSidebar({ onApplyFilters }: SearchFilterSidebarProps
       </div>
 
       {/* Footer Buttons */}
-      <div className="p-4 border-t space-y-2 bg-white dark:bg-gray-800">
+      <div className="p-4 border-t space-y-2 bg-background">
         <Button onClick={applyFilters} className="w-full" size="lg">
           필터 적용
         </Button>

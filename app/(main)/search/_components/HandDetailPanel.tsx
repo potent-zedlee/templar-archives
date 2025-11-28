@@ -50,7 +50,7 @@ function Card({ card }: CardProps) {
     <div
       className={cn(
         "w-12 h-16 rounded border-2 bg-white flex flex-col items-center justify-center font-bold shadow-sm",
-        isRed ? "text-red-600 border-red-300" : "text-gray-900 border-gray-300"
+        isRed ? "text-red-600 border-red-300" : "text-foreground border-border"
       )}
     >
       <div className="text-lg">{rank}</div>
@@ -80,7 +80,7 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="flex-1 flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-green-600 dark:text-green-400" />
       </div>
     )
@@ -88,7 +88,7 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
 
   if (error) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-8">
+      <div className="flex-1 flex items-center justify-center bg-background p-8">
         <EmptyState
           icon={Search}
           title="핸드를 불러올 수 없습니다"
@@ -101,7 +101,7 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
 
   if (!hand) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-8">
+      <div className="flex-1 flex items-center justify-center bg-background p-8">
         <EmptyState
           icon={Search}
           title="핸드를 찾을 수 없습니다"
@@ -117,11 +117,11 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
   const videoId = extractVideoId(stream?.video_url)
 
   return (
-    <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="flex-1 overflow-auto bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* YouTube Player (상단 고정) */}
         {videoId && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border sticky top-0 z-10">
+          <div className="bg-card rounded-lg p-6 border sticky top-0 z-10">
             <h2 className="text-lg font-semibold mb-4">영상</h2>
             <YouTubePlayer
               videoId={videoId}
@@ -131,7 +131,7 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
           </div>
         )}
         {/* Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border">
+        <div className="bg-card rounded-lg p-6 border">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Hand #{hand.number}</h1>
             <Link
@@ -142,7 +142,7 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
               <ExternalLink className="w-4 h-4" />
             </Link>
           </div>
-          <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-2 text-sm text-muted-foreground">
             {tournament?.name}
             {stream?.name && ` • ${stream.name}`}
             {hand.stakes && ` • ${hand.stakes}`}
@@ -166,7 +166,7 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
 
         {/* Board Cards */}
         {(hand.board_flop || hand.board_turn || hand.board_river) && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border">
+          <div className="bg-card rounded-lg p-6 border">
             <h2 className="text-lg font-semibold mb-4">보드</h2>
             <div className="flex gap-2 flex-wrap">
               {/* Flop */}
@@ -195,13 +195,13 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
 
         {/* Players */}
         {hand.hand_players && hand.hand_players.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border">
+          <div className="bg-card rounded-lg p-6 border">
             <h2 className="text-lg font-semibold mb-4">플레이어</h2>
             <div className="space-y-3">
               {hand.hand_players.map((hp: any) => (
                 <div
                   key={hp.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded"
+                  className="flex items-center justify-between p-3 bg-muted rounded"
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="w-10 h-10">
@@ -210,7 +210,7 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
                     </Avatar>
                     <div>
                       <div className="font-medium">{hp.player?.name}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-muted-foreground">
                         {hp.poker_position || "Position N/A"}
                       </div>
                     </div>
@@ -242,7 +242,7 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
 
         {/* Actions Timeline */}
         {hand.hand_actions && hand.hand_actions.length > 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border">
+          <div className="bg-card rounded-lg p-6 border">
             <h2 className="text-lg font-semibold mb-4">액션 타임라인</h2>
             <div className="space-y-2">
               {hand.hand_actions
@@ -250,11 +250,11 @@ export function HandDetailPanel({ handId }: HandDetailPanelProps) {
                 .map((action: any) => (
                   <div
                     key={action.id}
-                    className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-900 rounded"
+                    className="flex items-center gap-3 p-2 bg-muted rounded"
                   >
-                    <div className="text-xs text-gray-500 w-16 uppercase">{action.street}</div>
+                    <div className="text-xs text-muted-foreground w-16 uppercase">{action.street}</div>
                     <div className="font-medium flex-1">{action.player_name}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 capitalize">
+                    <div className="text-sm text-muted-foreground capitalize">
                       {action.action_type}
                     </div>
                     {action.amount > 0 && (

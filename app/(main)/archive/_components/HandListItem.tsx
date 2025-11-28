@@ -43,7 +43,7 @@ export const HandListItem = memo(function HandListItem({
       className={`card-postmodern hand-list-item mb-3 p-4 rounded-lg hover:shadow-lg transition-all cursor-pointer ${
         isSelected
           ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500 dark:border-green-600'
-          : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+          : 'bg-card border border-border'
       }`}
       onClick={handleCardClick}
     >
@@ -55,18 +55,18 @@ export const HandListItem = memo(function HandListItem({
           </Badge>
           {/* 타임코드 표시: video_timestamp가 있으면 사용, 없으면 timestamp 필드 fallback */}
           {(hand.video_timestamp_start !== undefined && hand.video_timestamp_end !== undefined) ? (
-            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono text-gray-700 dark:text-gray-300">
+            <div className="flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs font-mono text-foreground">
               <Play className="w-3 h-3" />
               {formatTime(hand.video_timestamp_start)} ~ {formatTime(hand.video_timestamp_end)}
             </div>
           ) : hand.timestamp && hand.timestamp !== '00:00' ? (
-            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono text-gray-700 dark:text-gray-300">
+            <div className="flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs font-mono text-foreground">
               <Play className="w-3 h-3" />
               {hand.timestamp}
             </div>
           ) : null}
         </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-muted-foreground">
           {hand.created_at && formatDistanceToNow(new Date(hand.created_at), { addSuffix: true })}
         </span>
       </div>
@@ -97,7 +97,7 @@ export const HandListItem = memo(function HandListItem({
 
       {/* Description */}
       {hand.ai_summary && (
-        <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 line-clamp-2">
+        <p className="text-sm text-foreground mb-3 line-clamp-2">
           {hand.ai_summary}
         </p>
       )}
@@ -111,11 +111,11 @@ export const HandListItem = memo(function HandListItem({
               img={hp.player?.photo_url}
               alt={hp.player?.name || 'Player'}
               size="sm"
-              className="ring-2 ring-white dark:ring-gray-800"
+              className="ring-2 ring-card"
             />
           ))}
           {hand.hand_players.length > 5 && (
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300 ring-2 ring-white dark:ring-gray-800">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-xs font-medium text-muted-foreground ring-2 ring-card">
               +{hand.hand_players.length - 5}
             </div>
           )}
@@ -123,8 +123,8 @@ export const HandListItem = memo(function HandListItem({
       )}
 
       {/* Actions */}
-      <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+      <div className="flex items-center justify-between pt-3 border-t border-border">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Eye className="w-4 h-4" />
             <span>{hand.likes_count || 0}</span>
@@ -141,7 +141,7 @@ export const HandListItem = memo(function HandListItem({
 
         <div className="flex items-center gap-2">
           {hand.pot_river && (
-            <div className="text-sm font-semibold text-gray-900 dark:text-white">
+            <div className="text-sm font-semibold text-foreground">
               Pot: ${(hand.pot_river / 100).toLocaleString()}
             </div>
           )}

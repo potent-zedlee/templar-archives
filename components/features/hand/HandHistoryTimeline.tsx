@@ -33,7 +33,7 @@ function ActionBadge({ action }: { action: HandAction }) {
   // Check
   if (action_type === 'check') {
     return (
-      <div className="px-3 py-1.5 rounded bg-white border border-gray-300 text-black text-sm font-medium">
+      <div className="px-3 py-1.5 rounded bg-white border border-border text-black text-sm font-medium">
         Check
       </div>
     )
@@ -50,7 +50,7 @@ function ActionBadge({ action }: { action: HandAction }) {
 
   // Call, Bet, Raise (흰색 배경 with amount)
   return (
-    <div className="px-3 py-1.5 rounded bg-white border border-gray-300 text-black text-sm font-medium">
+    <div className="px-3 py-1.5 rounded bg-white border border-border text-black text-sm font-medium">
       {action_type.charAt(0).toUpperCase() + action_type.slice(1)}{' '}
       {amount && amount > 0 && `(${amount.toLocaleString()})`}
     </div>
@@ -138,16 +138,16 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
     <div className="overflow-x-auto">
       <div className="min-w-[800px]">
         {/* CSS Grid: 5 columns (player + 4 streets) */}
-        <div className="grid grid-cols-5 gap-0 border border-gray-700 rounded-lg overflow-hidden">
+        <div className="grid grid-cols-5 gap-0 border border-border rounded-lg overflow-hidden">
           {/* Header Row */}
-          <div className="bg-gray-900" /> {/* Empty top-left cell */}
+          <div className="bg-background" /> {/* Empty top-left cell */}
 
           {streets.map(({ key, label }) => (
             <div
               key={key}
-              className="bg-gray-800 p-4 text-center border-l border-gray-700 first:border-l-0"
+              className="bg-muted p-4 text-center border-l border-border first:border-l-0"
             >
-              <div className="text-white font-semibold text-lg mb-1">{label}</div>
+              <div className="text-foreground font-semibold text-lg mb-1">{label}</div>
               <div className="text-yellow-500 font-medium">
                 {potSizes[key] > 0 ? potSizes[key].toLocaleString() : '-'}
               </div>
@@ -160,27 +160,27 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
               key={player.id}
               className={cn(
                 'contents',
-                idx !== players.length - 1 && 'border-b border-gray-700'
+                idx !== players.length - 1 && 'border-b border-border'
               )}
             >
               {/* Column 1: Player Info (NO HEADER) */}
-              <div className="bg-gray-700 p-4 flex items-center gap-3 border-t border-gray-700 first:border-t-0">
+              <div className="bg-muted p-4 flex items-center gap-3 border-t border-border first:border-t-0">
                 {player.player?.photo_url && (
                   <img
                     src={player.player.photo_url}
                     alt={player.player.name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-gray-600"
+                    className="w-12 h-12 rounded-full object-cover border-2 border-border"
                   />
                 )}
                 <div className="flex-1 min-w-0">
                   {player.player ? (
                     <PlayerHoverCard player={player.player}>
-                      <div className="text-white font-medium truncate">
+                      <div className="text-foreground font-medium truncate">
                         {player.player.name}
                       </div>
                     </PlayerHoverCard>
                   ) : (
-                    <div className="text-white font-medium truncate">
+                    <div className="text-foreground font-medium truncate">
                       Unknown Player
                     </div>
                   )}
@@ -190,7 +190,7 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
                     </div>
                   )}
                   {player.cards && (
-                    <div className="text-xs text-gray-400 mt-1">{player.cards}</div>
+                    <div className="text-xs text-muted-foreground mt-1">{player.cards}</div>
                   )}
                 </div>
               </div>
@@ -202,7 +202,7 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
                 return (
                   <div
                     key={key}
-                    className="p-4 bg-gray-900 border-l border-t border-gray-700 first:border-l-0 first:border-t-0"
+                    className="p-4 bg-background border-l border-t border-border first:border-l-0 first:border-t-0"
                   >
                     {playerActions.length > 0 ? (
                       <div className="flex flex-col gap-2">
@@ -211,7 +211,7 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
                         ))}
                       </div>
                     ) : (
-                      <div className="text-gray-600 text-sm text-center">-</div>
+                      <div className="text-muted-foreground text-sm text-center">-</div>
                     )}
                   </div>
                 )

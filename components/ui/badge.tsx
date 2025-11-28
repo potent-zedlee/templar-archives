@@ -12,11 +12,11 @@ const badgeVariants = cva(
         default:
           'border-transparent bg-gold-600 text-white [a&]:hover:bg-gold-700 focus-visible:ring-gold-500',
         secondary:
-          'border-transparent bg-gray-700 text-gray-200 [a&]:hover:bg-gray-600 focus-visible:ring-gray-500',
+          'border-transparent bg-muted text-foreground [a&]:hover:bg-accent focus-visible:ring-ring',
         destructive:
           'border-transparent bg-red-600 text-white [a&]:hover:bg-red-700 focus-visible:ring-red-500',
         outline:
-          'border-gray-600 text-gray-300 bg-transparent [a&]:hover:bg-gray-800 [a&]:hover:border-gray-500 focus-visible:ring-gray-500',
+          'border-border text-foreground bg-transparent [a&]:hover:bg-accent [a&]:hover:border-border focus-visible:ring-ring',
         warning:
           'border-transparent bg-yellow-600 text-white [a&]:hover:bg-yellow-700 focus-visible:ring-yellow-500',
       },

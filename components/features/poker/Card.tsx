@@ -36,14 +36,14 @@ export function Card({ card, className, size = 'md' }: CardProps) {
     return (
       <div
         className={cn(
-          'bg-gray-700 border border-gray-600 rounded flex items-center justify-center',
+          'bg-muted border border-border rounded flex items-center justify-center',
           size === 'sm' && 'w-8 h-12 text-xs',
           size === 'md' && 'w-12 h-16 text-sm',
           size === 'lg' && 'w-16 h-24 text-base',
           className
         )}
       >
-        <span className="text-gray-500">?</span>
+        <span className="text-muted-foreground">?</span>
       </div>
     )
   }
@@ -57,8 +57,8 @@ export function Card({ card, className, size = 'md' }: CardProps) {
   return (
     <div
       className={cn(
-        'bg-white border-2 rounded flex flex-col items-center justify-center font-bold shadow-md',
-        isRed ? 'text-red-600 border-red-200' : 'text-gray-900 border-gray-200',
+        'bg-white dark:bg-card border-2 rounded flex flex-col items-center justify-center font-bold shadow-md',
+        isRed ? 'text-red-600 border-red-200' : 'text-foreground border-border',
         size === 'sm' && 'w-8 h-12 text-xs',
         size === 'md' && 'w-12 h-16 text-sm',
         size === 'lg' && 'w-16 h-24 text-base',
