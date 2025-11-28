@@ -273,17 +273,50 @@ tournaments/
       └── streams/ (subcollection)
 
 hands/                    # 핸드 데이터 (players, actions 임베딩)
+  └── likes/              # 좋아요/싫어요
+  └── tags/               # 핸드 태그
+  └── comments/           # 핸드 댓글
 players/                  # 플레이어 프로필
 users/                    # 사용자 정보, 역할
   └── notifications/
   └── bookmarks/
-posts/                    # 커뮤니티 게시글
-  └── comments/
-  └── likes/
 analysisJobs/             # Cloud Run 분석 작업 상태
 categories/               # 카테고리 마스터
 systemConfigs/            # 시스템 설정 (Admin 전용)
 ```
+
+---
+
+## 네이밍 컨벤션
+
+### 파일명
+
+| 유형 | 패턴 | 예시 |
+|------|------|------|
+| 컴포넌트 | PascalCase.tsx | `PlayerStatsCard.tsx` |
+| 라이브러리 | kebab-case.ts | `player-stats.ts` |
+| 상수 | UPPER_SNAKE_CASE | `MAX_FILE_SIZE` |
+
+### 코드 스타일
+
+```typescript
+// 컴포넌트: PascalCase
+function PlayerStatsCard() { }
+
+// 함수/변수: camelCase
+const playerStats = await calculateStats()
+
+// React Query 키: 배열, 계층적
+['players', 'detail', playerId]
+
+// Zustand Store: use{Name}Store
+const useArchiveDataStore = create<ArchiveDataStore>()
+```
+
+### 포커 용어 (업계 표준 약어 허용)
+
+- 포지션: BTN, SB, BB, CO, UTG
+- 통계: VPIP, PFR, 3-Bet, ATS
 
 ---
 
@@ -292,6 +325,8 @@ systemConfigs/            # 시스템 설정 (Admin 전용)
 | 문서 | 설명 |
 |------|------|
 | `docs/POKER_DOMAIN.md` | 포커 도메인 지식 |
+| `docs/DATABASE_SCHEMA.md` | Firestore 스키마 상세 |
+| `docs/NAMING_CONVENTIONS.md` | 네이밍 규칙 상세 |
 | `docs/REACT_QUERY_GUIDE.md` | 데이터 페칭 패턴 |
 | `docs/DESIGN_SYSTEM.md` | 디자인 시스템 |
 | `firestore.rules` | Firebase Security Rules |
@@ -299,4 +334,4 @@ systemConfigs/            # 시스템 설정 (Admin 전용)
 ---
 
 **마지막 업데이트**: 2025-11-28
-**문서 버전**: 4.4 (CLAUDE.md 개선 - 명령어 상세화, CI/CD Secrets 업데이트)
+**문서 버전**: 4.5 (Firestore 스키마 업데이트, 네이밍 컨벤션 추가)
