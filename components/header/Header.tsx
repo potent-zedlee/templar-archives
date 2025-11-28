@@ -10,6 +10,7 @@ import { HeaderLogo } from "./HeaderLogo"
 import { HeaderDesktopNav } from "./HeaderDesktopNav"
 import { HeaderUserMenu } from "./HeaderUserMenu"
 import { HeaderMobileMenu } from "./HeaderMobileMenu"
+import { ThemeToggle } from "./ThemeToggle"
 import type { NavLink } from "./HeaderDesktopNav"
 
 export function Header() {
@@ -75,8 +76,9 @@ export function Header() {
             <HeaderDesktopNav navLinks={navLinks} />
           </div>
 
-          {/* Right: Notification, Profile */}
+          {/* Right: Theme Toggle, Notification, Profile */}
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <NotificationBell />
 
             {/* Login/Profile UI */}

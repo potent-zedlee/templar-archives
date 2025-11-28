@@ -26,8 +26,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
         attribute="class"
-        defaultTheme="dark"
-        forcedTheme="dark"
+        defaultTheme="system"
+        enableSystem={true}
+        storageKey="templar-theme"
         disableTransitionOnChange
       >
         <AuthProvider>

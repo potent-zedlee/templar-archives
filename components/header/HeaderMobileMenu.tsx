@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
-import { User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, Newspaper, Radio, Folder, Archive } from "lucide-react"
+import { User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, Newspaper, Radio, Folder, Archive, Sun, Moon, Monitor } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { AuthUser } from "@/lib/auth"
 import type { UserProfile } from "@/lib/user-profile"
@@ -41,6 +42,12 @@ export function HeaderMobileMenu({
   const pathname = usePathname()
   const router = useRouter()
   const [archiveExpandedMobile, setArchiveExpandedMobile] = useState(false)
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   if (!isOpen) return null
 
@@ -140,6 +147,53 @@ export function HeaderMobileMenu({
             </Link>
           )
         })}
+
+        {/* Theme Section */}
+        {mounted && (
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <div className="px-4 py-2 text-xs text-gray-500 font-semibold uppercase tracking-wider">
+              테마 설정
+            </div>
+            <div className="flex gap-2 px-4 py-2">
+              <button
+                onClick={() => setTheme("light")}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  theme === "light"
+                    ? "bg-gold-500 text-gray-900"
+                    : "text-gray-300 hover:bg-gray-800"
+                )}
+              >
+                <Sun className="h-4 w-4" />
+                라이트
+              </button>
+              <button
+                onClick={() => setTheme("dark")}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  theme === "dark"
+                    ? "bg-gold-500 text-gray-900"
+                    : "text-gray-300 hover:bg-gray-800"
+                )}
+              >
+                <Moon className="h-4 w-4" />
+                다크
+              </button>
+              <button
+                onClick={() => setTheme("system")}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  theme === "system"
+                    ? "bg-gold-500 text-gray-900"
+                    : "text-gray-300 hover:bg-gray-800"
+                )}
+              >
+                <Monitor className="h-4 w-4" />
+                시스템
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* User Section */}
         {!authLoading && (
