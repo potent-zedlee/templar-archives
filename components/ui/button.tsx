@@ -9,9 +9,9 @@ const buttonVariants = cva(
       variant: {
         default: 'bg-gold-600 hover:bg-gold-700 text-white focus:ring-gold-300 shadow-sm hover:shadow-md',
         primary: 'bg-gradient-to-r from-gold-600 to-gold-700 hover:from-gold-700 hover:to-gold-800 text-white focus:ring-gold-300 shadow-sm hover:shadow-md',
-        secondary: 'bg-gray-800 hover:bg-gray-700 text-gray-100 focus:ring-gray-700 shadow-sm hover:shadow-md',
-        outline: 'border border-gray-600 bg-transparent hover:bg-gray-800 text-gray-300 focus:ring-gray-700',
-        ghost: 'bg-transparent hover:bg-gray-800 text-gray-300 focus:ring-gray-700',
+        secondary: 'bg-muted hover:bg-accent text-foreground focus:ring-ring shadow-sm hover:shadow-md',
+        outline: 'border border-border bg-transparent hover:bg-accent text-foreground focus:ring-ring',
+        ghost: 'bg-transparent hover:bg-accent text-foreground focus:ring-ring',
         destructive: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-300 shadow-sm hover:shadow-md',
       },
       size: {

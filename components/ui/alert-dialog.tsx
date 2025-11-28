@@ -59,8 +59,8 @@ function AlertDialogContent({
           'grid gap-4',
 
           // Minimal/Clean Flowbite style
-          'bg-gray-900',
-          'border border-gray-700',
+          'bg-background',
+          'border border-border',
           'rounded-lg',
           'p-6',
 
@@ -90,8 +90,8 @@ function AlertDialogHeader({
       data-slot="alert-dialog-header"
       className={cn(
         'flex flex-col gap-2 text-center sm:text-left',
-        'bg-gray-800',
-        'border-b border-gray-700',
+        'bg-muted',
+        'border-b border-border',
         'p-6',
         '-mx-6 -mt-6 mb-2',
         className
@@ -110,8 +110,8 @@ function AlertDialogFooter({
       data-slot="alert-dialog-footer"
       className={cn(
         'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
-        'bg-gray-800',
-        'border-t border-gray-700',
+        'bg-muted',
+        'border-t border-border',
         'p-6',
         '-mx-6 -mb-6 mt-2',
         className,
@@ -130,7 +130,7 @@ function AlertDialogTitle({
       data-slot="alert-dialog-title"
       className={cn(
         'text-2xl leading-none font-semibold',
-        'text-gray-50',
+        'text-foreground',
         className
       )}
       {...props}
@@ -145,7 +145,7 @@ function AlertDialogDescription({
   return (
     <AlertDialogPrimitive.Description
       data-slot="alert-dialog-description"
-      className={cn('text-sm text-gray-400', className)}
+      className={cn('text-sm text-muted-foreground', className)}
       {...props}
     />
   )
@@ -189,10 +189,10 @@ function AlertDialogCancel({
         'rounded-lg',
         'px-5 py-2.5',
         'text-sm font-medium',
-        'text-gray-300',
-        'border border-gray-600',
-        'bg-transparent hover:bg-gray-800',
-        'focus:outline-none focus:ring-4 focus:ring-gray-700',
+        'text-foreground',
+        'border border-border',
+        'bg-transparent hover:bg-accent',
+        'focus:outline-none focus:ring-4 focus:ring-ring',
         'transition-colors',
         'disabled:opacity-50 disabled:pointer-events-none',
         className

@@ -66,8 +66,8 @@ function DialogContent({
           'grid gap-4',
 
           // Minimal/Clean style
-          'bg-gray-900',
-          'border border-gray-700',
+          'bg-background',
+          'border border-border',
           'rounded-lg',
 
           // Subtle shadow
@@ -114,8 +114,8 @@ function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
       data-slot="dialog-header"
       className={cn(
         'flex flex-col gap-2 text-center sm:text-left',
-        'bg-gray-800',
-        'border-b border-gray-700',
+        'bg-muted',
+        'border-b border-border',
         'p-6',
         '-mx-4 -mt-4 mb-2',
         className
@@ -131,8 +131,8 @@ function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
       data-slot="dialog-footer"
       className={cn(
         'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
-        'bg-gray-800',
-        'border-t border-gray-700',
+        'bg-muted',
+        'border-t border-border',
         'p-6',
         '-mx-4 -mb-4 mt-2',
         className,
@@ -151,7 +151,7 @@ function DialogTitle({
       data-slot="dialog-title"
       className={cn(
         'text-2xl leading-none font-semibold',
-        'text-gray-50',
+        'text-foreground',
         className
       )}
       {...props}
@@ -166,7 +166,7 @@ function DialogDescription({
   return (
     <DialogPrimitive.Description
       data-slot="dialog-description"
-      className={cn('text-sm text-gray-400', className)}
+      className={cn('text-sm text-muted-foreground', className)}
       {...props}
     />
   )
