@@ -1,72 +1,82 @@
-"use client"
-
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Play, Search, MessageSquare } from "lucide-react"
+import Link from 'next/link'
+import { Sparkles } from 'lucide-react'
 
 export function HeroSection() {
-  const router = useRouter()
-
-  const handleExplore = () => {
-    // Archive 페이지로 이동
-    router.push("/archive")
-  }
-
   return (
-    <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-b from-background to-background/80">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-600/10" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
+    <section className="relative py-20 md:py-32 overflow-hidden">
+      {/* Background with gold glow effect */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-800/50 to-gray-900" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gold-400/10 via-transparent to-transparent" />
 
-      <div className="container relative py-20 md:py-28">
-        <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-3 inline-block">
-            <span className="text-caption-lg text-primary">AI 기반 포커 영상 분석</span>
+      {/* Grid pattern overlay */}
+      <div
+        className="absolute inset-0 opacity-10"
+        style={{
+          backgroundImage: `linear-gradient(rgba(251, 191, 36, 0.1) 1px, transparent 1px),
+                           linear-gradient(90deg, rgba(251, 191, 36, 0.1) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px'
+        }}
+      />
+
+      <div className="container max-w-7xl mx-auto px-4 md:px-6 relative z-10">
+        <div className="flex flex-col items-center text-center space-y-8">
+          {/* Decorative icon */}
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gold-400/10 rounded-full border border-gold-400/20 mb-4">
+            <Sparkles className="w-8 h-8 text-gold-400" />
           </div>
 
-          <h1 className="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl text-balance">
-            YouTube 포커 영상을{" "}
-            <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-              Hand History로
-            </span>
-          </h1>
-
-          <p className="mb-10 text-body-lg text-muted-foreground text-pretty">
-            영상에서 자동으로 핸드를 추출하고, 체계적으로 보관하며, 지능적으로 Search하세요
-          </p>
-
-          <div className="mx-auto max-w-2xl space-y-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <Button
-                size="lg"
-                onClick={handleExplore}
-                className="h-12 px-8 bg-gradient-to-r from-primary to-purple-600 text-primary-foreground hover:opacity-90 shadow-lg hover:shadow-xl transition-all"
-              >
-                <Play className="mr-2 h-5 w-5" />
-                Explore Archive
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => router.push("/search")}
-                className="h-12 px-8 hover:bg-muted transition-all"
-              >
-                <Search className="mr-2 h-5 w-5" />
-                Search Hands
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => router.push("/community")}
-                className="h-12 px-8 hover:bg-muted transition-all"
-              >
-                <MessageSquare className="mr-2 h-5 w-5" />
-                Join Forum
-              </Button>
-            </div>
-
-            <p className="text-caption text-muted-foreground">
-              10,000+ 프로 포커 핸드 | GGPoker, PokerStars 영상 분석 완료
+          {/* Title */}
+          <div className="space-y-4">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+              <span className="text-gold-400">TEMPLAR</span>{' '}
+              <span className="text-gray-50">ARCHIVES</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto">
+              프로 포커 토너먼트의 모든 핸드 히스토리를 분석하고 학습하세요
             </p>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <Link
+              href="/archive"
+              className="group px-8 py-4 bg-gold-400 text-gray-900 font-bold text-lg rounded-lg hover:bg-gold-500 transition-all duration-300 shadow-lg shadow-gold-400/20 hover:shadow-gold-400/40 hover:scale-105"
+            >
+              <span className="flex items-center gap-2">
+                Archive 둘러보기
+                <svg
+                  className="w-5 h-5 group-hover:translate-x-1 transition-transform"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </span>
+            </Link>
+            <Link
+              href="/search"
+              className="px-8 py-4 bg-gray-800 text-gray-50 font-bold text-lg rounded-lg hover:bg-gray-700 transition-all duration-300 border border-gray-700 hover:border-gold-400/50"
+            >
+              핸드 검색하기
+            </Link>
+          </div>
+
+          {/* Feature badges */}
+          <div className="flex flex-wrap gap-3 justify-center pt-8">
+            {['AI 영상 분석', 'GTO 분석', '실시간 통계'].map((feature) => (
+              <span
+                key={feature}
+                className="px-4 py-2 bg-gray-800/80 text-gray-400 text-sm rounded-full border border-gray-700/50 backdrop-blur-sm"
+              >
+                {feature}
+              </span>
+            ))}
           </div>
         </div>
       </div>
