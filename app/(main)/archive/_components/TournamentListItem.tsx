@@ -25,16 +25,16 @@ export function TournamentListItem({ tournament, onClick }: TournamentListItemPr
   return (
     <button className="block w-full text-left" onClick={onClick}>
       <AnimatedCard>
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md hover:border-green-400 dark:hover:border-green-600 transition-all duration-200 cursor-pointer">
+        <div className="bg-card rounded-lg shadow-sm border border-border p-4 hover:shadow-md hover:border-green-400 dark:hover:border-green-600 transition-all duration-200 cursor-pointer">
           <div className="flex items-center gap-4">
             {/* Logo */}
             <div className="relative flex-shrink-0">
-              <Avatar className="w-16 h-16 rounded-lg border-2 border-gray-100 dark:border-gray-700">
+              <Avatar className="w-16 h-16 rounded-lg border-2 border-muted">
                 <AvatarImage
                   src={tournament.category_logo_url || `/logos/${tournament.category}.png`}
                   alt={tournament.name}
                 />
-                <AvatarFallback className="text-base font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg">
+                <AvatarFallback className="text-base font-semibold bg-muted text-foreground rounded-lg">
                   {tournament.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
@@ -42,13 +42,13 @@ export function TournamentListItem({ tournament, onClick }: TournamentListItemPr
 
             {/* Tournament Info */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 truncate mb-1">
+              <h3 className="text-base font-semibold text-foreground truncate mb-1">
                 {tournament.name}
               </h3>
 
-              <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 flex-wrap">
+              <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                 {/* Category Badge */}
-                <div className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium rounded">
+                <div className="inline-flex items-center gap-1 px-2 py-1 bg-muted text-foreground text-xs font-medium rounded">
                   <Trophy className="h-3 w-3" />
                   {tournament.category}
                 </div>
@@ -86,24 +86,24 @@ export function TournamentListItem({ tournament, onClick }: TournamentListItemPr
             {/* Stats */}
             <div className="flex items-center gap-6 flex-shrink-0">
               <div className="text-center">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Events</div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 font-mono">
+                <div className="text-xs text-muted-foreground mb-1">Events</div>
+                <div className="text-lg font-semibold text-foreground font-mono">
                   {eventCount}
                 </div>
               </div>
 
               <div className="text-center">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+                <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
                   <Video className="h-3 w-3" />
                   <span>Streams</span>
                 </div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-gray-100 font-mono">
+                <div className="text-lg font-semibold text-foreground font-mono">
                   {streamCount}
                 </div>
               </div>
 
               <div className="text-center">
-                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
+                <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
                   <Hash className="h-3 w-3" />
                   <span>Hands</span>
                 </div>

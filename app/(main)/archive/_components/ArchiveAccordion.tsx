@@ -39,7 +39,7 @@ export function ArchiveAccordion({
 
   if (tournaments.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12 text-gray-500 dark:text-gray-400">
+      <div className="flex items-center justify-center py-12 text-muted-foreground">
         <p className="text-sm">No tournaments available</p>
       </div>
     )
@@ -48,14 +48,14 @@ export function ArchiveAccordion({
   return (
     <div className="space-y-4">
       {tournaments.map((tournament) => (
-        <details key={tournament.id} className="group bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-          <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        <details key={tournament.id} className="group bg-card rounded-lg shadow-md overflow-hidden">
+          <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-accent transition-colors">
             <div className="flex items-center gap-3">
               <ChevronRight className="w-5 h-5 transition-transform group-open:rotate-90" />
               <Trophy className="w-5 h-5 text-yellow-500" />
               <div>
                 <h3 className="text-lg font-bold">{tournament.name}</h3>
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="w-4 h-4" />
                   <span>{tournament.location}</span>
                   <Calendar className="w-4 h-4 ml-2" />
@@ -66,18 +66,18 @@ export function ArchiveAccordion({
             <Badge color="info">{tournament.events?.length || 0} Events</Badge>
           </summary>
 
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="p-4 border-t border-border">
             {/* Events */}
             {tournament.events && tournament.events.length > 0 ? (
               <div className="space-y-3">
                 {tournament.events.map((event) => (
-                  <details key={event.id} className="group/event bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden">
-                    <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                  <details key={event.id} className="group/event bg-muted rounded-lg overflow-hidden">
+                    <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-accent transition-colors">
                       <div className="flex items-center gap-2">
                         <ChevronRight className="w-4 h-4 transition-transform group-open/event:rotate-90" />
                         <div>
                           <h4 className="font-semibold">{event.name}</h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <p className="text-sm text-muted-foreground">
                             {event.date} • {event.buy_in || 'N/A'}
                           </p>
                         </div>
@@ -85,13 +85,13 @@ export function ArchiveAccordion({
                       <Badge color="success">{event.streams?.length || 0} Streams</Badge>
                     </summary>
 
-                    <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                    <div className="p-3 border-t border-border">
                       {/* Streams */}
                       {event.streams && event.streams.length > 0 ? (
                         <div className="space-y-2">
                           {event.streams.map((stream) => (
-                            <details key={stream.id} className="group/stream bg-white dark:bg-gray-800 rounded-lg overflow-hidden">
-                              <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <details key={stream.id} className="group/stream bg-card rounded-lg overflow-hidden">
+                              <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-accent transition-colors">
                                 <div className="flex items-center gap-2">
                                   <ChevronRight className="w-4 h-4 transition-transform group-open/stream:rotate-90" />
                                   <Video className="w-4 h-4" />
@@ -102,7 +102,7 @@ export function ArchiveAccordion({
                                 </Badge>
                               </summary>
 
-                              <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+                              <div className="p-3 border-t border-border">
                                 {/* Virtual Hand List */}
                                 <VirtualHandList
                                   hands={hands.get(stream.id) || []}
@@ -114,7 +114,7 @@ export function ArchiveAccordion({
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-8 text-gray-500">
+                        <div className="text-center py-8 text-muted-foreground">
                           <p className="text-sm">No streams available</p>
                           {isAdmin && onAddStream && (
                             <Button
@@ -134,7 +134,7 @@ export function ArchiveAccordion({
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground">
                 <p className="text-sm">No events available</p>
                 {isAdmin && onAddEvent && (
                   <Button
