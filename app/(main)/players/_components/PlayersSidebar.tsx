@@ -52,11 +52,11 @@ export function PlayersSidebar({
   ]
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+    <div className="flex flex-col h-full bg-card border-r border-border">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="font-semibold text-lg text-gray-900 dark:text-gray-100">Leaderboards</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="p-4 border-b border-border">
+        <h2 className="font-semibold text-lg text-foreground">Leaderboards</h2>
+        <p className="text-sm text-muted-foreground">
           플레이어 순위 및 통계
         </p>
       </div>
@@ -65,7 +65,7 @@ export function PlayersSidebar({
         <div className="p-4 space-y-6">
           {/* Leaderboard Menu */}
           <div>
-            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Rankings</h3>
+            <h3 className="text-sm font-medium text-foreground mb-3">Rankings</h3>
             <div className="space-y-2">
               {leaderboards.map((board) => {
                 const Icon = board.icon
@@ -83,26 +83,26 @@ export function PlayersSidebar({
                     className={`w-full flex items-start gap-3 p-3 rounded-lg transition-all ${
                       isSelected
                         ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500 dark:border-green-600'
-                        : 'bg-gray-50 dark:bg-gray-700/50 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                        : 'bg-muted/50 border-2 border-transparent hover:border-border'
                     }`}
                   >
                     <Icon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${
                       isSelected
                         ? 'text-green-600 dark:text-green-400'
-                        : 'text-gray-500 dark:text-gray-400'
+                        : 'text-muted-foreground'
                     }`} />
                     <div className="flex-1 text-left">
                       <div className={`text-sm font-medium ${
                         isSelected
                           ? 'text-green-900 dark:text-green-100'
-                          : 'text-gray-900 dark:text-gray-100'
+                          : 'text-foreground'
                       }`}>
                         {board.label}
                       </div>
                       <div className={`text-xs ${
                         isSelected
                           ? 'text-green-700 dark:text-green-300'
-                          : 'text-gray-500 dark:text-gray-400'
+                          : 'text-muted-foreground'
                       }`}>
                         {board.description}
                       </div>
@@ -113,7 +113,7 @@ export function PlayersSidebar({
             </div>
           </div>
 
-          <Separator className="bg-gray-200 dark:bg-gray-700" />
+          <Separator className="bg-border" />
 
           {/* Country Leaderboard Accordion */}
           <div>
@@ -127,36 +127,36 @@ export function PlayersSidebar({
               className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
                 selectedLeaderboard === 'country'
                   ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500 dark:border-green-600'
-                  : 'bg-gray-50 dark:bg-gray-700/50 border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                  : 'bg-muted/50 border-2 border-transparent hover:border-border'
               }`}
             >
               <div className="flex items-center gap-3">
                 <Globe className={`h-5 w-5 ${
                   selectedLeaderboard === 'country'
                     ? 'text-green-600 dark:text-green-400'
-                    : 'text-gray-500 dark:text-gray-400'
+                    : 'text-muted-foreground'
                 }`} />
                 <div className="text-left">
                   <div className={`text-sm font-medium ${
                     selectedLeaderboard === 'country'
                       ? 'text-green-900 dark:text-green-100'
-                      : 'text-gray-900 dark:text-gray-100'
+                      : 'text-foreground'
                   }`}>
                     Country Leaderboard
                   </div>
                   <div className={`text-xs ${
                     selectedLeaderboard === 'country'
                       ? 'text-green-700 dark:text-green-300'
-                      : 'text-gray-500 dark:text-gray-400'
+                      : 'text-muted-foreground'
                   }`}>
                     국가별 순위
                   </div>
                 </div>
               </div>
               {isCountryExpanded ? (
-                <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
               ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               )}
             </button>
 
@@ -177,7 +177,7 @@ export function PlayersSidebar({
                       className={`w-full flex items-center justify-between p-2 rounded-md text-sm transition-colors ${
                         isSelected
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-100'
-                          : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          : 'hover:bg-accent text-foreground'
                       }`}
                     >
                       <span className="truncate">{country}</span>
@@ -186,7 +186,7 @@ export function PlayersSidebar({
                         className={`ml-2 ${
                           isSelected
                             ? 'bg-green-600 dark:bg-green-700'
-                            : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
+                            : 'bg-muted text-foreground'
                         }`}
                       >
                         {count}
@@ -200,13 +200,13 @@ export function PlayersSidebar({
         </div>
       </ScrollArea>
 
-      <Separator className="bg-gray-200 dark:bg-gray-700" />
+      <Separator className="bg-border" />
 
       {/* Footer Actions */}
       <div className="p-4">
         <Button
           variant="ghost"
-          className="w-full rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+          className="w-full rounded-lg hover:bg-muted text-foreground"
           onClick={onReset}
         >
           <RotateCcw className="h-4 w-4 mr-2" />

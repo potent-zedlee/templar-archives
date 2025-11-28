@@ -10,78 +10,78 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
  */
 export default function CommunityLoading() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <div className="container max-w-5xl mx-auto py-8 md:py-12 px-4 md:px-6">
         {/* Page Header */}
         <div className="mb-8 space-y-4">
           <div className="flex items-center justify-between">
-            <Skeleton className="h-10 w-[200px] rounded-lg bg-gray-200 dark:bg-gray-700" />
-            <Skeleton className="h-10 w-[140px] rounded-lg bg-gray-200 dark:bg-gray-700" />
+            <Skeleton className="h-10 w-[200px] rounded-lg bg-muted" />
+            <Skeleton className="h-10 w-[140px] rounded-lg bg-muted" />
           </div>
 
           {/* Tabs Skeleton */}
           <div className="flex gap-2">
-            <Skeleton className="h-10 w-[100px] rounded-lg bg-gray-200 dark:bg-gray-700" />
-            <Skeleton className="h-10 w-[100px] rounded-lg bg-gray-200 dark:bg-gray-700" />
-            <Skeleton className="h-10 w-[100px] rounded-lg bg-gray-200 dark:bg-gray-700" />
+            <Skeleton className="h-10 w-[100px] rounded-lg bg-muted" />
+            <Skeleton className="h-10 w-[100px] rounded-lg bg-muted" />
+            <Skeleton className="h-10 w-[100px] rounded-lg bg-muted" />
           </div>
 
           {/* Search Bar */}
-          <Skeleton className="h-10 w-full rounded-lg bg-gray-200 dark:bg-gray-700" />
+          <Skeleton className="h-10 w-full rounded-lg bg-muted" />
         </div>
 
         {/* Post Cards */}
         <div className="space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="hover:shadow-md transition-shadow rounded-lg border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <Card key={i} className="hover:shadow-md transition-shadow rounded-lg border-border bg-card">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="space-y-2 flex-1">
                     {/* Author Info */}
                     <div className="flex items-center gap-2">
-                      <Skeleton className="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700" />
-                      <Skeleton className="h-4 w-[120px] rounded bg-gray-200 dark:bg-gray-700" />
-                      <Skeleton className="h-4 w-[80px] rounded bg-gray-200 dark:bg-gray-700" />
+                      <Skeleton className="h-8 w-8 rounded-full bg-muted" />
+                      <Skeleton className="h-4 w-[120px] rounded bg-muted" />
+                      <Skeleton className="h-4 w-[80px] rounded bg-muted" />
                     </div>
 
                     {/* Title */}
-                    <Skeleton className="h-6 w-[90%] rounded bg-gray-200 dark:bg-gray-700" />
+                    <Skeleton className="h-6 w-[90%] rounded bg-muted" />
                   </div>
 
                   {/* Category Badge */}
-                  <Skeleton className="h-6 w-[80px] rounded-full bg-gray-200 dark:bg-gray-700" />
+                  <Skeleton className="h-6 w-[80px] rounded-full bg-muted" />
                 </div>
               </CardHeader>
 
               <CardContent className="space-y-3">
                 {/* Content */}
                 <div className="space-y-2">
-                  <Skeleton className="h-4 w-full rounded bg-gray-200 dark:bg-gray-700" />
-                  <Skeleton className="h-4 w-[95%] rounded bg-gray-200 dark:bg-gray-700" />
-                  <Skeleton className="h-4 w-[85%] rounded bg-gray-200 dark:bg-gray-700" />
+                  <Skeleton className="h-4 w-full rounded bg-muted" />
+                  <Skeleton className="h-4 w-[95%] rounded bg-muted" />
+                  <Skeleton className="h-4 w-[85%] rounded bg-muted" />
                 </div>
 
                 {/* Attached Hand (optional) */}
                 {i === 0 && (
-                  <div className="border rounded-lg p-3 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                    <Skeleton className="h-4 w-[150px] mb-2 rounded bg-gray-200 dark:bg-gray-700" />
-                    <Skeleton className="h-3 w-[200px] rounded bg-gray-200 dark:bg-gray-700" />
+                  <div className="border rounded-lg p-3 border-border bg-background">
+                    <Skeleton className="h-4 w-[150px] mb-2 rounded bg-muted" />
+                    <Skeleton className="h-3 w-[200px] rounded bg-muted" />
                   </div>
                 )}
 
                 {/* Actions */}
                 <div className="flex items-center gap-4 pt-2">
                   <div className="flex items-center gap-1">
-                    <Skeleton className="h-5 w-5 rounded bg-gray-200 dark:bg-gray-700" />
-                    <Skeleton className="h-4 w-[30px] rounded bg-gray-200 dark:bg-gray-700" />
+                    <Skeleton className="h-5 w-5 rounded bg-muted" />
+                    <Skeleton className="h-4 w-[30px] rounded bg-muted" />
                   </div>
                   <div className="flex items-center gap-1">
-                    <Skeleton className="h-5 w-5 rounded bg-gray-200 dark:bg-gray-700" />
-                    <Skeleton className="h-4 w-[30px] rounded bg-gray-200 dark:bg-gray-700" />
+                    <Skeleton className="h-5 w-5 rounded bg-muted" />
+                    <Skeleton className="h-4 w-[30px] rounded bg-muted" />
                   </div>
                   <div className="flex items-center gap-1">
-                    <Skeleton className="h-5 w-5 rounded bg-gray-200 dark:bg-gray-700" />
-                    <Skeleton className="h-4 w-[30px] rounded bg-gray-200 dark:bg-gray-700" />
+                    <Skeleton className="h-5 w-5 rounded bg-muted" />
+                    <Skeleton className="h-4 w-[30px] rounded bg-muted" />
                   </div>
                 </div>
               </CardContent>
