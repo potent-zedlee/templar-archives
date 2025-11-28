@@ -54,7 +54,7 @@ export function StreamActions({
           size="sm"
           onClick={onOpenAnalyze}
           title="KAN 분석 시작"
-          className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20"
+          className="text-primary hover:text-primary/80 hover:bg-primary/10"
         >
           <Sparkles className="h-4 w-4" />
         </Button>

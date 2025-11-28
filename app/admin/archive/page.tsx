@@ -54,6 +54,7 @@ import { StreamStatusBadge } from '@/components/admin/archive/StreamStatusBadge'
 import { StreamActions } from '@/components/admin/archive/StreamActions'
 import { StreamProgressIndicator } from '@/components/admin/archive/StreamProgressIndicator'
 import { StatusFilter } from '@/components/admin/archive/StatusFilter'
+import { CategoryFilter } from '@/components/admin/archive/CategoryFilter'
 import { BulkActions } from '@/components/admin/archive/BulkActions'
 
 // Helper: Timestamp to string
@@ -581,8 +582,12 @@ export default function AdminArchivePage() {
         {/* Tournaments Tab */}
         {activeTab === 'tournaments' && (
           <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <StatusFilter value={statusFilter} onChange={setStatusFilter} />
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-4 flex-wrap">
+              <StatusFilter value={statusFilter} onChange={setStatusFilter} />
+              <div className="h-6 w-px bg-border" />
+              <CategoryFilter value={categoryFilter} onChange={setCategoryFilter} />
+            </div>
             <Button onClick={handleCreateTournament}>
               <Plus className="mr-2 h-4 w-4" />
               Add Tournament
@@ -625,21 +630,6 @@ export default function AdminArchivePage() {
             />
           </div>
         </div>
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary min-w-[180px]"
-          aria-label="Category filter"
-        >
-          <option value="All">All Categories</option>
-          <option value="WSOP">WSOP</option>
-          <option value="Triton">Triton</option>
-          <option value="EPT">EPT</option>
-          <option value="APT">APT</option>
-          <option value="APL">APL</option>
-          <option value="Hustler Casino Live">Hustler Casino Live</option>
-          <option value="GGPOKER">GGPOKER</option>
-        </select>
         <select
           value={gameTypeFilter}
           onChange={(e) => setGameTypeFilter(e.target.value)}
@@ -940,7 +930,7 @@ export default function AdminArchivePage() {
                               rows.push(
                                 <TableRow
                                   key={stream.id}
-                                  className={`bg-muted/10 hover:bg-muted/20 h-10 ${isSelected ? 'bg-blue-50 dark:bg-blue-950' : ''}`}
+                                  className={`bg-muted/10 hover:bg-muted/20 h-10 ${isSelected ? 'bg-primary/10' : ''}`}
                                 >
                                   {/* Checkbox */}
                                   <TableCell className="w-10 py-2">
@@ -964,7 +954,7 @@ export default function AdminArchivePage() {
                                         setSelectedStreamIds(newSelected)
                                         setSelectedStreamMeta(newMeta)
                                       }}
-                                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary"
                                     />
                                   </TableCell>
 

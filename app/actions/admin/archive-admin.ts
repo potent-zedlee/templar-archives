@@ -700,3 +700,71 @@ export async function validateStreamChecklist(
     return { success: false, error: error.message || 'Unknown error' }
   }
 }
+
+// ==================== Delete Operations ====================
+
+/**
+ * 여러 Stream을 한 번에 삭제
+ *
+ * 주의: 삭제된 Stream은 복구할 수 없습니다.
+ * 연결된 Hand 데이터도 함께 삭제됩니다.
+ */
+export async function bulkDeleteStreams(
+  streamMeta: Array<{ streamId: string; tournamentId: string; eventId: string }>
+): Promise<ActionResult<{ deleted: number; errors: string[] }>> {
+  try {
+    // 1. 권한 검증
+    const authCheck = await verifyAdmin()
+    if (!authCheck.authorized) {
+      return { success: false, error: authCheck.error }
+    }
+
+    // 2. 입력 검증
+    if (!streamMeta || streamMeta.length === 0) {
+      return { success: false, error: 'No streams provided' }
+    }
+
+    const errors: string[] = []
+    let deletedCount = 0
+
+    // 3. 각 스트림 삭제 (배치 제한 때문에 순차 처리)
+    for (const meta of streamMeta) {
+      try {
+        const batch = adminFirestore.batch()
+
+        // 3a. 스트림 문서 삭제
+        const streamRef = adminFirestore
+          .collection(COLLECTION_PATHS.STREAMS(meta.tournamentId, meta.eventId))
+          .doc(meta.streamId)
+
+        batch.delete(streamRef)
+
+        // 3b. 연결된 핸드 데이터 삭제
+        const handsSnapshot = await adminFirestore
+          .collection(COLLECTION_PATHS.HANDS)
+          .where('streamId', '==', meta.streamId)
+          .get()
+
+        handsSnapshot.docs.forEach((doc) => {
+          batch.delete(doc.ref)
+        })
+
+        await batch.commit()
+        deletedCount++
+      } catch (err: any) {
+        errors.push(`Failed to delete stream ${meta.streamId}: ${err.message}`)
+      }
+    }
+
+    // 4. 캐시 무효화
+    invalidateCache()
+
+    return {
+      success: deletedCount > 0,
+      data: { deleted: deletedCount, errors }
+    }
+  } catch (error: any) {
+    console.error('[bulkDeleteStreams] Error:', error)
+    return { success: false, error: error.message || 'Unknown error' }
+  }
+}

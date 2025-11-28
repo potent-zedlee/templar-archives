@@ -11,9 +11,19 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Loader2, Eye, EyeOff } from 'lucide-react'
+import { Loader2, Eye, EyeOff, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { bulkPublishStreams, bulkUnpublishStreams } from '@/app/actions/admin/archive-admin'
+import { bulkPublishStreams, bulkUnpublishStreams, bulkDeleteStreams } from '@/app/actions/admin/archive-admin'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface BulkActionsProps {
   selectedStreamIds: string[]
@@ -30,6 +40,8 @@ export function BulkActions({
 }: BulkActionsProps) {
   const [publishing, setPublishing] = useState(false)
   const [unpublishing, setUnpublishing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   if (selectedStreamIds.length === 0) return null
 
@@ -135,6 +147,45 @@ export function BulkActions({
     }
   }
 
+  const handleBulkDelete = async () => {
+    setDeleting(true)
+    setShowDeleteDialog(false)
+    try {
+      // 스트림 메타데이터 배열 생성
+      const streamMetaArray = selectedStreamIds
+        .map(streamId => {
+          const meta = selectedStreamMeta.get(streamId)
+          if (!meta) return null
+          return {
+            streamId,
+            tournamentId: meta.tournamentId,
+            eventId: meta.eventId
+          }
+        })
+        .filter((meta): meta is NonNullable<typeof meta> => meta !== null)
+
+      const result = await bulkDeleteStreams(streamMetaArray)
+
+      if (result.success && result.data) {
+        toast.success(`${result.data.deleted} streams deleted successfully`)
+        if (result.data.errors.length > 0) {
+          toast.warning(`${result.data.errors.length} streams failed to delete`)
+        }
+        onSuccess?.()
+        onClearSelection?.()
+      } else {
+        toast.error(result.error || 'Failed to delete streams')
+      }
+    } catch (error) {
+      console.error('Error bulk deleting:', error)
+      toast.error('Failed to delete streams')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const isProcessing = publishing || unpublishing || deleting
+
   return (
     <div className="flex items-center gap-2 p-4 border rounded-lg bg-muted/50">
       <span className="text-sm font-medium">
@@ -146,7 +197,7 @@ export function BulkActions({
           variant="outline"
           size="sm"
           onClick={handleBulkPublish}
-          disabled={publishing || unpublishing}
+          disabled={isProcessing}
         >
           {publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           <Eye className="mr-2 h-4 w-4" />
@@ -157,7 +208,7 @@ export function BulkActions({
           variant="outline"
           size="sm"
           onClick={handleBulkUnpublish}
-          disabled={publishing || unpublishing}
+          disabled={isProcessing}
         >
           {unpublishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           <EyeOff className="mr-2 h-4 w-4" />
@@ -165,14 +216,50 @@ export function BulkActions({
         </Button>
 
         <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => setShowDeleteDialog(true)}
+          disabled={isProcessing}
+        >
+          {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
+        </Button>
+
+        <Button
           variant="ghost"
           size="sm"
           onClick={onClearSelection}
-          disabled={publishing || unpublishing}
+          disabled={isProcessing}
         >
           Clear
         </Button>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>스트림 삭제 확인</AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedStreamIds.length}개의 스트림을 삭제하시겠습니까?
+              <br />
+              <span className="text-destructive font-medium">
+                이 작업은 취소할 수 없으며, 연결된 핸드 데이터도 함께 삭제됩니다.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
