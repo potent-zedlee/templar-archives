@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/components/layout/AuthProvider"
-import { isReporterOrAdmin } from "@/lib/admin"
+import { isAdmin } from "@/lib/admin"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AdminSidebar } from "@/components/admin/AdminSidebar"
 import { AdminHeader } from "@/components/admin/AdminHeader"
@@ -12,12 +12,12 @@ import { Loader2 } from "lucide-react"
 /**
  * Admin Layout
  *
- * 모든 /admin/* 및 /reporter/* 페이지에 공통으로 적용되는 레이아웃
+ * 모든 /admin/* 페이지에 공통으로 적용되는 레이아웃
  * - AdminSidebar + AdminHeader 통합
  * - 권한 체크:
  *   - 비로그인: /auth/login?redirect=/admin/dashboard
  *   - user 역할: / (홈)
- *   - admin/high_templar/reporter: 접근 허용
+ *   - admin/high_templar: 접근 허용
  * - 로딩 상태 처리
  */
 export default function AdminLayout({
@@ -44,8 +44,8 @@ export default function AdminLayout({
         return
       }
 
-      // 권한 확인
-      const hasAccess = await isReporterOrAdmin(user.id)
+      // 권한 확인 (admin, high_templar만 접근 가능)
+      const hasAccess = await isAdmin(user.id)
 
       if (!hasAccess) {
         // 권한 없음: 홈으로 리다이렉트

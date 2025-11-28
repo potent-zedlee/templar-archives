@@ -15,33 +15,15 @@ import {
   useUnhideContentMutation,
   useDeleteContentMutation,
 } from "@/lib/queries/admin-queries"
-import {
-  usePendingNewsQuery,
-  useApproveNewsMutation,
-  useRejectNewsMutation,
-  type News,
-} from "@/lib/queries/news-queries"
-import {
-  usePendingLiveReportsQuery,
-  useApproveLiveReportMutation,
-  useRejectLiveReportMutation,
-  type LiveReport,
-} from "@/lib/queries/live-reports-queries"
 import { ReportsTab } from "@/components/admin/content/ReportsTab"
-import { NewsApprovalTab } from "@/components/admin/content/NewsApprovalTab"
-import { LiveReportsApprovalTab } from "@/components/admin/content/LiveReportsApprovalTab"
 import { PostsTab } from "@/components/admin/content/PostsTab"
 import { CommentsTab } from "@/components/admin/content/CommentsTab"
 import { ReportDetailDialog } from "@/components/admin/content/ReportDetailDialog"
-import { NewsPreviewDialog } from "@/components/admin/content/NewsPreviewDialog"
-import { LiveReportPreviewDialog } from "@/components/admin/content/LiveReportPreviewDialog"
 
 export default function ContentPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
-  const [selectedNews, setSelectedNews] = useState<News | null>(null)
-  const [selectedLiveReport, setSelectedLiveReport] = useState<LiveReport | null>(null)
   const [actionDialog, setActionDialog] = useState<{
     open: boolean
     type: "hide" | "unhide" | "delete"
@@ -50,28 +32,20 @@ export default function ContentPage() {
   } | null>(null)
 
   // Tabs state
-  const [activeTab, setActiveTab] = useState<"reports" | "news" | "live-reports" | "posts" | "comments">("reports")
+  const [activeTab, setActiveTab] = useState<"reports" | "posts" | "comments">("reports")
 
   // React Query hooks
   const { data: posts = [], isLoading: postsLoading } = useAllPostsQuery(true)
   const { data: comments = [], isLoading: commentsLoading } = useAllCommentsQuery(true)
   const { data: reports = [], isLoading: reportsLoading } = useReportsQuery()
-  const { data: pendingNews = [], isLoading: newsLoading } = usePendingNewsQuery()
-  const { data: pendingLiveReports = [], isLoading: liveReportsLoading } =
-    usePendingLiveReportsQuery()
 
   const approveReportMutation = useApproveReportMutation()
   const rejectReportMutation = useRejectReportMutation()
   const hideContentMutation = useHideContentMutation()
   const unhideContentMutation = useUnhideContentMutation()
   const deleteContentMutation = useDeleteContentMutation()
-  const approveNewsMutation = useApproveNewsMutation()
-  const rejectNewsMutation = useRejectNewsMutation()
-  const approveLiveReportMutation = useApproveLiveReportMutation()
-  const rejectLiveReportMutation = useRejectLiveReportMutation()
 
-  const loading =
-    postsLoading || commentsLoading || reportsLoading || newsLoading || liveReportsLoading
+  const loading = postsLoading || commentsLoading || reportsLoading
 
   useEffect(() => {
     async function checkAdminAccess() {
@@ -115,42 +89,6 @@ export default function ContentPage() {
         onError: (error) => console.error("Error rejecting report:", error),
       }
     )
-  }
-
-  function handleApproveNews() {
-    if (!selectedNews) return
-
-    approveNewsMutation.mutate(selectedNews.id, {
-      onSuccess: () => setSelectedNews(null),
-      onError: (error) => console.error("Error approving news:", error),
-    })
-  }
-
-  function handleRejectNews() {
-    if (!selectedNews) return
-
-    rejectNewsMutation.mutate(selectedNews.id, {
-      onSuccess: () => setSelectedNews(null),
-      onError: (error) => console.error("Error rejecting news:", error),
-    })
-  }
-
-  function handleApproveLiveReport() {
-    if (!selectedLiveReport) return
-
-    approveLiveReportMutation.mutate(selectedLiveReport.id, {
-      onSuccess: () => setSelectedLiveReport(null),
-      onError: (error) => console.error("Error approving live report:", error),
-    })
-  }
-
-  function handleRejectLiveReport() {
-    if (!selectedLiveReport) return
-
-    rejectLiveReportMutation.mutate(selectedLiveReport.id, {
-      onSuccess: () => setSelectedLiveReport(null),
-      onError: (error) => console.error("Error rejecting live report:", error),
-    })
   }
 
   function handleContentAction() {
@@ -218,38 +156,6 @@ export default function ContentPage() {
               )}
             </button>
             <button
-              onClick={() => setActiveTab("news")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === "news"
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-              }`}
-              aria-current={activeTab === "news" ? "page" : undefined}
-            >
-              News Approval
-              {pendingNews.length > 0 && (
-                <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-destructive text-destructive-foreground">
-                  {pendingNews.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab("live-reports")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === "live-reports"
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
-              }`}
-              aria-current={activeTab === "live-reports" ? "page" : undefined}
-            >
-              Live Reports Approval
-              {pendingLiveReports.length > 0 && (
-                <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold rounded-full bg-destructive text-destructive-foreground">
-                  {pendingLiveReports.length}
-                </span>
-              )}
-            </button>
-            <button
               onClick={() => setActiveTab("posts")}
               className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === "posts"
@@ -277,17 +183,6 @@ export default function ContentPage() {
         {/* Tab Content */}
         {activeTab === "reports" && (
           <ReportsTab reports={reports} onReview={setSelectedReport} />
-        )}
-
-        {activeTab === "news" && (
-          <NewsApprovalTab pendingNews={pendingNews} onReview={setSelectedNews} />
-        )}
-
-        {activeTab === "live-reports" && (
-          <LiveReportsApprovalTab
-            pendingLiveReports={pendingLiveReports}
-            onReview={setSelectedLiveReport}
-          />
         )}
 
         {activeTab === "posts" && (
@@ -399,22 +294,6 @@ export default function ContentPage() {
           </div>
         </div>
       )}
-
-      <NewsPreviewDialog
-        news={selectedNews}
-        open={!!selectedNews}
-        onClose={() => setSelectedNews(null)}
-        onApprove={handleApproveNews}
-        onReject={handleRejectNews}
-      />
-
-      <LiveReportPreviewDialog
-        liveReport={selectedLiveReport}
-        open={!!selectedLiveReport}
-        onClose={() => setSelectedLiveReport(null)}
-        onApprove={handleApproveLiveReport}
-        onReject={handleRejectLiveReport}
-      />
     </div>
   )
 }

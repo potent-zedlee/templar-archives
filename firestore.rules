@@ -41,13 +41,6 @@ service cloud.firestore {
       return isAuthenticated() && getUserRole() in ['admin', 'high_templar', 'arbiter'];
     }
 
-    /**
-     * Reporter 이상의 권한 확인 (리포트 작성 권한)
-     */
-    function isReporter() {
-      return isAuthenticated() && getUserRole() in ['admin', 'high_templar', 'reporter'];
-    }
-
     // ==================== Tournaments Collection ====================
 
     /**
@@ -160,17 +153,6 @@ service cloud.firestore {
         allow read: if true;
         allow create, delete: if isAuthenticated() && isOwner(likeId);
       }
-    }
-
-    // ==================== Live Reports Collection ====================
-
-    /**
-     * 라이브 리포트: 모두 읽기 가능, Reporter 이상만 생성, 작성자/Admin만 수정/삭제
-     */
-    match /liveReports/{reportId} {
-      allow read: if true;
-      allow create: if isReporter();
-      allow update, delete: if isOwner(resource.data.author.id) || isAdmin();
     }
 
     // ==================== Unsorted Streams Collection ====================

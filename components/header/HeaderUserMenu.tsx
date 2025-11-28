@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { User, LogOut, LayoutDashboard, Bookmark, Newspaper, Radio } from "lucide-react"
+import { User, LogOut, LayoutDashboard, Bookmark } from "lucide-react"
 import type { AuthUser } from "@/lib/auth"
 import type { UserProfile } from "@/lib/user-profile"
 
@@ -10,7 +10,6 @@ interface HeaderUserMenuProps {
   user: AuthUser
   profile: UserProfile | null
   isUserAdmin: boolean
-  isUserReporter: boolean
   onSignOut: () => void
   getUserInitials: () => string
   getDisplayName: () => string
@@ -27,7 +26,6 @@ interface DropdownInstance {
 export function HeaderUserMenu({
   user,
   isUserAdmin,
-  isUserReporter,
   onSignOut,
   getUserInitials,
   getDisplayName,
@@ -139,37 +137,6 @@ export function HeaderUserMenu({
               </button>
             </li>
           </ul>
-        )}
-
-        {/* Reporter Menu - Admin이 아닌 경우에만 표시 */}
-        {!isUserAdmin && isUserReporter && (
-          <>
-            <div className="px-4 py-2">
-              <span className="block text-xs text-muted-foreground uppercase font-semibold tracking-wider">
-                Reporter Menu
-              </span>
-            </div>
-            <ul className="py-2 text-sm text-foreground">
-              <li>
-                <button
-                  onClick={() => router.push("/reporter/news")}
-                  className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-                >
-                  <Newspaper className="mr-2 h-4 w-4" />
-                  My News
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => router.push("/reporter/live")}
-                  className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-                >
-                  <Radio className="mr-2 h-4 w-4" />
-                  My Live Reports
-                </button>
-              </li>
-            </ul>
-          </>
         )}
 
         {/* Admin Menu - 간소화된 단일 메뉴 */}

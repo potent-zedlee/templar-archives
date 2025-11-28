@@ -25,7 +25,7 @@ import { firestore, auth } from '@/lib/firebase'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'
 import type { FirestoreAdminLog } from '@/lib/firestore-types'
 
-export type AdminRole = 'user' | 'templar' | 'arbiter' | 'high_templar' | 'admin' | 'reporter'
+export type AdminRole = 'user' | 'templar' | 'arbiter' | 'high_templar' | 'admin'
 
 export type AdminLog = {
   id: string
@@ -84,34 +84,6 @@ export async function isAdmin(userId?: string): Promise<boolean> {
 
   const role = await getUserRole(userId)
   return role === 'admin' || role === 'high_templar'
-}
-
-/**
- * Check if current user is reporter (Firestore)
- */
-export async function isReporter(userId?: string): Promise<boolean> {
-  if (!userId) {
-    const currentUser = auth.currentUser
-    if (!currentUser) return false
-    userId = currentUser.uid
-  }
-
-  const role = await getUserRole(userId)
-  return role === 'reporter'
-}
-
-/**
- * Check if current user is reporter or admin (Firestore)
- */
-export async function isReporterOrAdmin(userId?: string): Promise<boolean> {
-  if (!userId) {
-    const currentUser = auth.currentUser
-    if (!currentUser) return false
-    userId = currentUser.uid
-  }
-
-  const role = await getUserRole(userId)
-  return role === 'reporter' || role === 'admin' || role === 'high_templar'
 }
 
 /**

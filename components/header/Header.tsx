@@ -23,10 +23,6 @@ export function Header() {
     return profile?.role === 'admin' || profile?.role === 'high_templar'
   }, [profile?.role])
 
-  const isUserReporter = useMemo(() => {
-    return profile?.role === 'reporter' || profile?.role === 'admin' || profile?.role === 'high_templar'
-  }, [profile?.role])
-
   const handleSignOut = async () => {
     try {
       await signOut()
@@ -56,8 +52,6 @@ export function Header() {
   }
 
   const navLinks: NavLink[] = [
-    { href: "/news", label: "NEWS" },
-    { href: "/live-reporting", label: "LIVE" },
     { href: "/search", label: "SEARCH" },
     { href: "/archive/tournament", label: "TOURNAMENT" },
     { href: "/archive/cash-game", label: "CASH GAME" },
@@ -89,7 +83,6 @@ export function Header() {
                     user={user}
                     profile={profile}
                     isUserAdmin={isUserAdmin}
-                    isUserReporter={isUserReporter}
                     onSignOut={handleSignOut}
                     getUserInitials={getUserInitials}
                     getDisplayName={getDisplayName}
@@ -135,7 +128,6 @@ export function Header() {
           user={user}
           profile={profile}
           isUserAdmin={isUserAdmin}
-          isUserReporter={isUserReporter}
           authLoading={authLoading}
           onSignOut={handleSignOut}
           getUserInitials={getUserInitials}

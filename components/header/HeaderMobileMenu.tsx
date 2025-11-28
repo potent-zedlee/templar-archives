@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
-import { User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, Newspaper, Radio, Folder, Archive, Sun, Moon, Monitor } from "lucide-react"
+import { User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, ChevronDown, Folder, Archive, Sun, Moon, Monitor } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import type { AuthUser } from "@/lib/auth"
 import type { UserProfile } from "@/lib/user-profile"
@@ -18,7 +18,6 @@ interface HeaderMobileMenuProps {
   user: AuthUser | null
   profile: UserProfile | null
   isUserAdmin: boolean
-  isUserReporter: boolean
   authLoading: boolean
   onSignOut: () => void
   getUserInitials: () => string
@@ -32,7 +31,6 @@ export function HeaderMobileMenu({
   navLinks,
   user,
   isUserAdmin,
-  isUserReporter,
   authLoading,
   onSignOut,
   getUserInitials,
@@ -246,35 +244,6 @@ export function HeaderMobileMenu({
                   <Bookmark className="mr-2 h-4 w-4" />
                   Bookmarks
                 </button>
-
-                {/* Reporter Menu */}
-                {isUserReporter && (
-                  <>
-                    <div className="px-4 py-2 text-xs text-muted-foreground font-semibold uppercase tracking-wider">
-                      Reporter Menu
-                    </div>
-                    <button
-                      onClick={() => {
-                        router.push("/reporter/news")
-                        onClose()
-                      }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
-                    >
-                      <Newspaper className="mr-2 h-4 w-4" />
-                      My News
-                    </button>
-                    <button
-                      onClick={() => {
-                        router.push("/reporter/live")
-                        onClose()
-                      }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
-                    >
-                      <Radio className="mr-2 h-4 w-4" />
-                      My Live Reports
-                    </button>
-                  </>
-                )}
 
                 {/* Admin Menu */}
                 {isUserAdmin && (

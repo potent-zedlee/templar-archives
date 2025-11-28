@@ -32,7 +32,7 @@ export type UserProfile = {
   id: string
   email: string
   nickname: string
-  role: 'user' | 'high_templar' | 'arbiter' | 'reporter' | 'admin'
+  role: 'user' | 'high_templar' | 'arbiter' | 'admin'
   avatar_url?: string
   bio?: string
   poker_experience?: string
