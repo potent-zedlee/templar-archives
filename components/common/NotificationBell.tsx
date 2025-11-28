@@ -110,8 +110,8 @@ export function NotificationBell() {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 dark:hover:bg-gray-800">
-          <Bell className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+        <Button variant="ghost" size="icon" className="relative hover:bg-muted">
+          <Bell className="h-5 w-5 text-muted-foreground" />
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
@@ -122,9 +122,9 @@ export function NotificationBell() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[380px] p-0 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="font-semibold text-gray-900 dark:text-gray-100">Notifications</h3>
+      <DropdownMenuContent align="end" className="w-[380px] p-0 bg-background border-border">
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h3 className="font-semibold text-foreground">Notifications</h3>
           <div className="flex gap-2">
             {unreadCount > 0 && (
               <Button
@@ -132,14 +132,14 @@ export function NotificationBell() {
                 size="sm"
                 onClick={handleMarkAllAsRead}
                 disabled={markAllAsReadMutation.isPending}
-                className="h-8 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300"
+                className="h-8 text-xs hover:bg-muted text-muted-foreground"
               >
                 <Check className="h-3 w-3 mr-1" />
                 Mark all read
               </Button>
             )}
             <Link href="/notifications">
-              <Button variant="ghost" size="sm" className="h-8 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-300">
+              <Button variant="ghost" size="sm" className="h-8 text-xs hover:bg-muted text-muted-foreground">
                 View all
               </Button>
             </Link>
@@ -148,7 +148,7 @@ export function NotificationBell() {
 
         <ScrollArea className="h-[400px]">
           {notifications.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+            <div className="p-8 text-center text-muted-foreground">
               <Bell className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p className="text-sm">No notifications yet</p>
             </div>
@@ -157,7 +157,7 @@ export function NotificationBell() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`group relative px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer border-b border-gray-200 dark:border-gray-700 last:border-b-0 ${
+                  className={`group relative px-4 py-3 hover:bg-muted cursor-pointer border-b border-border last:border-b-0 ${
                     !notification.is_read ? "bg-gold-50 dark:bg-gold-900/10" : ""
                   }`}
                   onClick={() => handleNotificationClick(notification)}
@@ -176,27 +176,27 @@ export function NotificationBell() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 hover:bg-gray-200 dark:hover:bg-gray-600"
+                        className="h-6 w-6 hover:bg-muted"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
                           handleMarkAsRead(notification.id)
                         }}
                       >
-                        <Check className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+                        <Check className="h-3 w-3 text-muted-foreground" />
                       </Button>
                     )}
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6 hover:bg-gray-200 dark:hover:bg-gray-600"
+                      className="h-6 w-6 hover:bg-muted"
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
                         handleDelete(notification.id)
                       }}
                     >
-                      <Trash2 className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+                      <Trash2 className="h-3 w-3 text-muted-foreground" />
                     </Button>
                   </div>
 
@@ -229,11 +229,11 @@ function NotificationItem({ notification }: { notification: Notification }) {
         </Avatar>
       )}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium mb-1 text-gray-900 dark:text-gray-100">{notification.title}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-1">
+        <p className="text-sm font-medium mb-1 text-foreground">{notification.title}</p>
+        <p className="text-xs text-muted-foreground line-clamp-2 mb-1">
           {notification.message}
         </p>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <p className="text-xs text-muted-foreground">
           {formatNotificationTime(notification.created_at)}
         </p>
       </div>
