@@ -201,11 +201,11 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-background">
       {/* Header with Back Button - Fixed at top */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:p-6 flex items-center justify-between">
+      <div className="bg-card border-b border-border p-4 md:p-6 flex items-center justify-between">
         <button
-          className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors inline-flex items-center gap-2"
+          className="px-4 py-2 bg-card border border-border text-foreground font-medium rounded-lg hover:bg-muted transition-colors inline-flex items-center gap-2"
           onClick={handleBack}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -213,7 +213,7 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
         </button>
 
         <button
-          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          className="p-2 text-muted-foreground hover:text-foreground transition-colors"
           onClick={handleBack}
           title="Close"
         >
@@ -225,14 +225,14 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
       <div className="flex-1 overflow-y-auto">
         <div className="p-4 md:p-6 space-y-6">
           {/* Player Profile Header */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
             <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6">
               {/* Profile Image */}
               <div className="flex flex-col items-center md:items-start">
                 <div className="relative">
-                  <Avatar className="w-32 h-32 rounded-full border-4 border-gray-100 dark:border-gray-700">
+                  <Avatar className="w-32 h-32 rounded-full border-4 border-muted">
                     <AvatarImage src={player.photo_url} alt={player.name} />
-                    <AvatarFallback className="text-3xl font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                    <AvatarFallback className="text-3xl font-semibold bg-muted text-foreground">
                       {player.name.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
@@ -246,7 +246,7 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
                         onChange={handlePhotoUpload}
                       />
                       <button
-                        className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-xs font-medium rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-card border border-border text-foreground text-xs font-medium rounded hover:bg-muted transition-colors"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={updatePhotoMutation.isPending}
                       >
@@ -261,10 +261,10 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
               <div className="space-y-4">
                 {/* Name & Meta */}
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">{player.name}</h1>
+                  <h1 className="text-2xl md:text-3xl font-semibold text-foreground mb-2">{player.name}</h1>
                   <div className="flex gap-2 items-center flex-wrap">
                     {player.country && (
-                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 bg-muted text-foreground text-sm font-medium rounded-lg">
                         <span className="text-lg">{getCountryFlag(player.country)}</span>
                         {player.country}
                       </div>
@@ -292,29 +292,29 @@ export function PlayerDetailPanel({ player }: PlayerDetailPanelProps) {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400 block">Total Hands</span>
-                    <span className="text-xl font-semibold text-gray-900 dark:text-gray-100 font-mono">
+                    <span className="text-xs text-muted-foreground block">Total Hands</span>
+                    <span className="text-xl font-semibold text-foreground font-mono">
                       {totalHandsCount}
                     </span>
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400 block">Winnings</span>
+                    <span className="text-xs text-muted-foreground block">Winnings</span>
                     <span className="text-xl font-semibold text-green-600 dark:text-green-400 font-mono">
                       {formatWinnings(player.total_winnings)}
                     </span>
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400 block">Tournaments</span>
-                    <span className="text-xl font-semibold text-gray-900 dark:text-gray-100 font-mono">
+                    <span className="text-xs text-muted-foreground block">Tournaments</span>
+                    <span className="text-xl font-semibold text-foreground font-mono">
                       {statistics.tournamentsCount}
                     </span>
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400 block">Events</span>
-                    <span className="text-xl font-semibold text-gray-900 dark:text-gray-100 font-mono">
+                    <span className="text-xs text-muted-foreground block">Events</span>
+                    <span className="text-xl font-semibold text-foreground font-mono">
                       {statistics.eventsCount}
                     </span>
                   </div>
