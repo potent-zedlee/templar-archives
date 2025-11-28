@@ -67,8 +67,8 @@ export function Header() {
 
   return (
     <>
-      {/* Flowbite Navbar - Dark Mode */}
-      <nav className="sticky top-0 z-[100] w-full border-b-[3px] border-gold-500 bg-gray-900" role="banner">
+      {/* Flowbite Navbar */}
+      <nav className="sticky top-0 z-[100] w-full border-b-[3px] border-gold-500 bg-background" role="banner">
         <div className="w-full px-6 h-16 flex items-center justify-between">
           {/* Left: Logo + Navigation Menu */}
           <div className="flex items-center gap-8">
@@ -99,7 +99,7 @@ export function Header() {
                   <button
                     type="button"
                     data-testid="login-button"
-                    className="hidden md:inline-flex text-gray-100 bg-transparent border border-gray-600 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-700 font-medium rounded-lg text-sm px-4 py-2 transition-colors"
+                    className="hidden md:inline-flex text-foreground bg-transparent border border-border hover:bg-muted focus:ring-4 focus:outline-none focus:ring-ring font-medium rounded-lg text-sm px-4 py-2 transition-colors"
                     onClick={() => router.push("/auth/login")}
                   >
                     LOGIN
@@ -111,7 +111,7 @@ export function Header() {
             {/* Mobile Menu Toggle Button */}
             <button
               type="button"
-              className="md:hidden inline-flex items-center p-2 w-9 h-9 justify-center text-gray-400 rounded-lg hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-700 transition-colors"
+              className="md:hidden inline-flex items-center p-2 w-9 h-9 justify-center text-muted-foreground rounded-lg hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle navigation"
               aria-controls="mobile-menu"
