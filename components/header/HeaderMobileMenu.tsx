@@ -63,7 +63,7 @@ export function HeaderMobileMenu({
   return (
     <div
       id="mobile-menu"
-      className="md:hidden border-b border-gray-700 bg-gray-900"
+      className="md:hidden border-b border-border bg-background"
     >
       <div className="w-full px-4 py-4 space-y-2">
         {/* Navigation Links */}
@@ -81,7 +81,7 @@ export function HeaderMobileMenu({
                     "w-full flex items-center justify-between px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                     isActive
                       ? "bg-gold-900/20 text-gold-400"
-                      : "text-gray-300 hover:bg-gray-800 hover:text-gray-100"
+                      : "text-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
                   <span>{link.label}</span>
@@ -113,7 +113,7 @@ export function HeaderMobileMenu({
                                 "block px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                                 subIsActive
                                   ? "bg-gold-900/20 text-gold-400"
-                                  : "text-gray-400 hover:bg-gray-800 hover:text-gray-100"
+                                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
                               )}
                             >
                               {subItem.label}
@@ -140,7 +140,7 @@ export function HeaderMobileMenu({
                 "block px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                 isActive
                   ? "bg-gold-900/20 text-gold-400"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-gray-100"
+                  : "text-foreground hover:bg-muted hover:text-foreground"
               )}
             >
               {link.label}
@@ -150,8 +150,8 @@ export function HeaderMobileMenu({
 
         {/* Theme Section */}
         {mounted && (
-          <div className="mt-4 pt-4 border-t border-gray-700">
-            <div className="px-4 py-2 text-xs text-gray-500 font-semibold uppercase tracking-wider">
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="px-4 py-2 text-xs text-muted-foreground font-semibold uppercase tracking-wider">
               테마 설정
             </div>
             <div className="flex gap-2 px-4 py-2">
@@ -161,7 +161,7 @@ export function HeaderMobileMenu({
                   "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                   theme === "light"
                     ? "bg-gold-500 text-gray-900"
-                    : "text-gray-300 hover:bg-gray-800"
+                    : "text-foreground hover:bg-muted"
                 )}
               >
                 <Sun className="h-4 w-4" />
@@ -173,7 +173,7 @@ export function HeaderMobileMenu({
                   "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                   theme === "dark"
                     ? "bg-gold-500 text-gray-900"
-                    : "text-gray-300 hover:bg-gray-800"
+                    : "text-foreground hover:bg-muted"
                 )}
               >
                 <Moon className="h-4 w-4" />
@@ -185,7 +185,7 @@ export function HeaderMobileMenu({
                   "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                   theme === "system"
                     ? "bg-gold-500 text-gray-900"
-                    : "text-gray-300 hover:bg-gray-800"
+                    : "text-foreground hover:bg-muted"
                 )}
               >
                 <Monitor className="h-4 w-4" />
@@ -199,7 +199,7 @@ export function HeaderMobileMenu({
         {!authLoading && (
           <>
             {user ? (
-              <div className="mt-4 pt-4 border-t border-gray-700 space-y-2">
+              <div className="mt-4 pt-4 border-t border-border space-y-2">
                 {/* User Info */}
                 <div className="px-4 py-2">
                   <div className="flex items-center gap-3">
@@ -215,10 +215,10 @@ export function HeaderMobileMenu({
                       </div>
                     )}
                     <div className="flex flex-col">
-                      <p className="text-sm font-medium text-gray-100">
+                      <p className="text-sm font-medium text-foreground">
                         {displayName}
                       </p>
-                      <p className="text-xs text-gray-400 truncate">
+                      <p className="text-xs text-muted-foreground truncate">
                         {user.email}
                       </p>
                     </div>
@@ -231,7 +231,7 @@ export function HeaderMobileMenu({
                     router.push("/profile")
                     onClose()
                   }}
-                  className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                  className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                 >
                   <User className="mr-2 h-4 w-4" />
                   Profile
@@ -241,7 +241,7 @@ export function HeaderMobileMenu({
                     router.push("/bookmarks")
                     onClose()
                   }}
-                  className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                  className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                 >
                   <Bookmark className="mr-2 h-4 w-4" />
                   Bookmarks
@@ -250,7 +250,7 @@ export function HeaderMobileMenu({
                 {/* Reporter Menu */}
                 {isUserReporter && (
                   <>
-                    <div className="px-4 py-2 text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                    <div className="px-4 py-2 text-xs text-muted-foreground font-semibold uppercase tracking-wider">
                       Reporter Menu
                     </div>
                     <button
@@ -258,7 +258,7 @@ export function HeaderMobileMenu({
                         router.push("/reporter/news")
                         onClose()
                       }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                       <Newspaper className="mr-2 h-4 w-4" />
                       My News
@@ -268,7 +268,7 @@ export function HeaderMobileMenu({
                         router.push("/reporter/live")
                         onClose()
                       }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                       <Radio className="mr-2 h-4 w-4" />
                       My Live Reports
@@ -279,7 +279,7 @@ export function HeaderMobileMenu({
                 {/* Admin Menu */}
                 {isUserAdmin && (
                   <>
-                    <div className="px-4 py-2 text-xs text-gray-500 font-semibold uppercase tracking-wider">
+                    <div className="px-4 py-2 text-xs text-muted-foreground font-semibold uppercase tracking-wider">
                       Admin Menu
                     </div>
                     <button
@@ -287,7 +287,7 @@ export function HeaderMobileMenu({
                         router.push("/admin/dashboard")
                         onClose()
                       }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       Dashboard
@@ -297,7 +297,7 @@ export function HeaderMobileMenu({
                         router.push("/admin/users")
                         onClose()
                       }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                       <Users className="mr-2 h-4 w-4" />
                       Users
@@ -307,7 +307,7 @@ export function HeaderMobileMenu({
                         router.push("/admin/claims")
                         onClose()
                       }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                       <Shield className="mr-2 h-4 w-4" />
                       Claims
@@ -317,7 +317,7 @@ export function HeaderMobileMenu({
                         router.push("/admin/content")
                         onClose()
                       }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                       <FileText className="mr-2 h-4 w-4" />
                       Content
@@ -327,7 +327,7 @@ export function HeaderMobileMenu({
                         router.push("/admin/edit-requests")
                         onClose()
                       }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                       <Edit className="mr-2 h-4 w-4" />
                       Edit Requests
@@ -337,7 +337,7 @@ export function HeaderMobileMenu({
                         router.push("/admin/archive")
                         onClose()
                       }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                       <Archive className="mr-2 h-4 w-4" />
                       Archive
@@ -347,7 +347,7 @@ export function HeaderMobileMenu({
                         router.push("/admin/categories")
                         onClose()
                       }}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                      className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                     >
                       <Folder className="mr-2 h-4 w-4" />
                       Categories
@@ -358,7 +358,7 @@ export function HeaderMobileMenu({
                 {/* Logout */}
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
+                  className="w-full flex items-center px-4 py-2 text-sm text-foreground hover:bg-muted rounded-lg transition-colors"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
@@ -370,7 +370,7 @@ export function HeaderMobileMenu({
                   router.push("/auth/login")
                   onClose()
                 }}
-                className="w-full mt-4 text-gray-100 bg-transparent border border-gray-600 hover:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-gray-700 font-medium rounded-lg text-sm px-4 py-2 transition-colors"
+                className="w-full mt-4 text-foreground bg-transparent border border-border hover:bg-muted focus:ring-4 focus:outline-none focus:ring-border font-medium rounded-lg text-sm px-4 py-2 transition-colors"
               >
                 LOGIN
               </button>
