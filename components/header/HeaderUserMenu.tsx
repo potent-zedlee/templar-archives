@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { User, LogOut, Shield, Users, LayoutDashboard, FileText, Edit, Bookmark, Newspaper, Radio, Folder, Archive } from "lucide-react"
+import { User, LogOut, LayoutDashboard, Bookmark, Newspaper, Radio } from "lucide-react"
 import type { AuthUser } from "@/lib/auth"
 import type { UserProfile } from "@/lib/user-profile"
 
@@ -117,30 +117,32 @@ export function HeaderUserMenu({
           <span className="block text-xs text-muted-foreground truncate">{user.email}</span>
         </div>
 
-        {/* Main Menu */}
-        <ul className="py-2 text-sm text-foreground">
-          <li>
-            <button
-              onClick={() => router.push("/profile")}
-              className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-            >
-              <User className="mr-2 h-4 w-4" />
-              Profile
-            </button>
-          </li>
-          <li>
-            <button
-              onClick={() => router.push("/bookmarks")}
-              className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-            >
-              <Bookmark className="mr-2 h-4 w-4" />
-              Bookmarks
-            </button>
-          </li>
-        </ul>
+        {/* Main Menu - Admin이 아닌 경우에만 표시 */}
+        {!isUserAdmin && (
+          <ul className="py-2 text-sm text-foreground">
+            <li>
+              <button
+                onClick={() => router.push("/profile")}
+                className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
+              >
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => router.push("/bookmarks")}
+                className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
+              >
+                <Bookmark className="mr-2 h-4 w-4" />
+                Bookmarks
+              </button>
+            </li>
+          </ul>
+        )}
 
-        {/* Reporter Menu */}
-        {isUserReporter && (
+        {/* Reporter Menu - Admin이 아닌 경우에만 표시 */}
+        {!isUserAdmin && isUserReporter && (
           <>
             <div className="px-4 py-2">
               <span className="block text-xs text-muted-foreground uppercase font-semibold tracking-wider">
@@ -170,80 +172,19 @@ export function HeaderUserMenu({
           </>
         )}
 
-        {/* Admin Menu */}
+        {/* Admin Menu - 간소화된 단일 메뉴 */}
         {isUserAdmin && (
-          <>
-            <div className="px-4 py-2">
-              <span className="block text-xs text-muted-foreground uppercase font-semibold tracking-wider">
-                Admin Menu
-              </span>
-            </div>
-            <ul className="py-2 text-sm text-foreground">
-              <li>
-                <button
-                  onClick={() => router.push("/admin/dashboard")}
-                  className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-                >
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  Dashboard
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => router.push("/admin/users")}
-                  className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-                >
-                  <Users className="mr-2 h-4 w-4" />
-                  Users
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => router.push("/admin/claims")}
-                  className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-                >
-                  <Shield className="mr-2 h-4 w-4" />
-                  Claims
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => router.push("/admin/content")}
-                  className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-                >
-                  <FileText className="mr-2 h-4 w-4" />
-                  Content
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => router.push("/admin/edit-requests")}
-                  className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Requests
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => router.push("/admin/archive")}
-                  className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-                >
-                  <Archive className="mr-2 h-4 w-4" />
-                  Archive
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => router.push("/admin/categories")}
-                  className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-                >
-                  <Folder className="mr-2 h-4 w-4" />
-                  Categories
-                </button>
-              </li>
-            </ul>
-          </>
+          <ul className="py-2 text-sm text-foreground">
+            <li>
+              <button
+                onClick={() => router.push("/admin")}
+                className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
+              >
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                Admin Dashboard
+              </button>
+            </li>
+          </ul>
         )}
 
         {/* Logout */}

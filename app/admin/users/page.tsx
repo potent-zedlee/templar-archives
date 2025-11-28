@@ -297,7 +297,7 @@ export default function UsersClient() {
 
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-body font-semibold text-white">
+                        <h3 className="text-body font-semibold text-foreground">
                           {targetUser.nickname}
                         </h3>
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
@@ -360,7 +360,7 @@ export default function UsersClient() {
                       <div className="absolute right-0 mt-2 w-48 card-postmodern py-2 z-10">
                         <Link
                           href={`/profile/${targetUser.id}`}
-                          className="block px-4 py-2 text-sm hover:bg-gold-700/20 text-white"
+                          className="block px-4 py-2 text-sm hover:bg-gold-700/20 text-foreground"
                           onClick={() => setOpenDropdownId(null)}
                         >
                           VIEW PROFILE
@@ -370,7 +370,7 @@ export default function UsersClient() {
                             openRoleDialog(targetUser)
                             setOpenDropdownId(null)
                           }}
-                          className="w-full text-left px-4 py-2 text-sm hover:bg-gold-700/20 text-white flex items-center"
+                          className="w-full text-left px-4 py-2 text-sm hover:bg-gold-700/20 text-foreground flex items-center"
                         >
                           <Shield className="h-4 w-4 mr-2" />
                           CHANGE ROLE
@@ -381,7 +381,7 @@ export default function UsersClient() {
                               handleUnbanUser(targetUser)
                               setOpenDropdownId(null)
                             }}
-                            className="w-full text-left px-4 py-2 text-sm hover:bg-gold-700/20 text-white flex items-center"
+                            className="w-full text-left px-4 py-2 text-sm hover:bg-gold-700/20 text-foreground flex items-center"
                           >
                             <UserCheck className="h-4 w-4 mr-2" />
                             UNBAN
@@ -417,7 +417,7 @@ export default function UsersClient() {
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="text-body text-white">
+            <span className="text-body text-foreground">
               {currentPage} / {totalPages}
             </span>
             <button

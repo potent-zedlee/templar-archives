@@ -178,7 +178,7 @@ export default function ClaimsClient() {
             className={`px-4 py-2 font-medium transition-colors ${
               activeTab === "pending"
                 ? "border-b-2 border-gold-700 text-gold-400"
-                : "text-text-secondary hover:text-white"
+                : "text-text-secondary hover:text-foreground"
             }`}
           >
             PENDING ({pendingClaims.length})
@@ -188,7 +188,7 @@ export default function ClaimsClient() {
             className={`px-4 py-2 font-medium transition-colors ${
               activeTab === "all"
                 ? "border-b-2 border-gold-700 text-gold-400"
-                : "text-text-secondary hover:text-white"
+                : "text-text-secondary hover:text-foreground"
             }`}
           >
             ALL ({allClaims.length})
@@ -224,7 +224,7 @@ export default function ClaimsClient() {
                           <div className="h-8 w-8 rounded-full bg-gold-700/20 flex items-center justify-center text-gold-400 text-xs font-bold">
                             {claim.player.name.charAt(0)}
                           </div>
-                          <span className="font-medium text-white">{claim.player.name}</span>
+                          <span className="font-medium text-foreground">{claim.player.name}</span>
                         </div>
                       </td>
                       <td className="p-3">
@@ -233,7 +233,7 @@ export default function ClaimsClient() {
                             {claim.user.nickname.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-medium text-white">{claim.user.nickname}</p>
+                            <p className="font-medium text-foreground">{claim.user.nickname}</p>
                             <p className="text-caption text-text-secondary">
                               {claim.user.email}
                             </p>
@@ -318,7 +318,7 @@ export default function ClaimsClient() {
                         <div className="h-8 w-8 rounded-full bg-gold-700/20 flex items-center justify-center text-gold-400 text-xs font-bold">
                           {claim.player.name.charAt(0)}
                         </div>
-                        <span className="font-medium text-white">{claim.player.name}</span>
+                        <span className="font-medium text-foreground">{claim.player.name}</span>
                       </div>
                     </td>
                     <td className="p-3">
@@ -374,11 +374,11 @@ export default function ClaimsClient() {
             <div className="p-4 bg-black-200 rounded mb-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-caption text-text-secondary">PLAYER</span>
-                <span className="font-medium text-white">{selectedClaim.player.name}</span>
+                <span className="font-medium text-foreground">{selectedClaim.player.name}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-caption text-text-secondary">REQUESTER</span>
-                <span className="font-medium text-white">{selectedClaim.user.nickname}</span>
+                <span className="font-medium text-foreground">{selectedClaim.user.nickname}</span>
               </div>
             </div>
 

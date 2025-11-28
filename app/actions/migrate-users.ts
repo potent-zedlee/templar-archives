@@ -286,3 +286,105 @@ export async function deleteSupabaseUserDoc(email: string): Promise<{
     }
   }
 }
+
+/**
+ * 이메일로 사용자 문서 삭제
+ *
+ * 특정 이메일의 사용자 문서를 Firestore에서 삭제합니다.
+ */
+export async function deleteUserByEmail(email: string): Promise<{
+  success: boolean
+  deletedId?: string
+  error?: string
+}> {
+  try {
+    const usersRef = adminFirestore.collection(COLLECTION_PATHS.USERS)
+    const snapshot = await usersRef.where('email', '==', email).limit(1).get()
+
+    if (snapshot.empty) {
+      return { success: false, error: `User not found: ${email}` }
+    }
+
+    const userDoc = snapshot.docs[0]
+    await userDoc.ref.delete()
+
+    console.log(`[deleteUserByEmail] Deleted user: ${email} (${userDoc.id})`)
+
+    return {
+      success: true,
+      deletedId: userDoc.id,
+    }
+  } catch (error) {
+    console.error('[deleteUserByEmail] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+/**
+ * 여러 사용자 삭제
+ */
+export async function deleteUsersByEmails(emails: string[]): Promise<{
+  success: boolean
+  deleted: string[]
+  failed: string[]
+  errors: string[]
+}> {
+  const result = {
+    success: false,
+    deleted: [] as string[],
+    failed: [] as string[],
+    errors: [] as string[],
+  }
+
+  for (const email of emails) {
+    const { success, deletedId, error } = await deleteUserByEmail(email)
+    if (success && deletedId) {
+      result.deleted.push(email)
+    } else {
+      result.failed.push(email)
+      if (error) result.errors.push(`${email}: ${error}`)
+    }
+  }
+
+  result.success = result.failed.length === 0
+  return result
+}
+
+/**
+ * 사용자 닉네임 업데이트
+ */
+export async function updateUserNickname(
+  email: string,
+  nickname: string
+): Promise<{
+  success: boolean
+  error?: string
+}> {
+  try {
+    const usersRef = adminFirestore.collection(COLLECTION_PATHS.USERS)
+    const snapshot = await usersRef.where('email', '==', email).limit(1).get()
+
+    if (snapshot.empty) {
+      return { success: false, error: `User not found: ${email}` }
+    }
+
+    const userDoc = snapshot.docs[0]
+    await userDoc.ref.update({
+      nickname,
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+
+    console.log(`[updateUserNickname] Updated ${email} nickname to: ${nickname}`)
+
+    return { success: true }
+  } catch (error) {
+    console.error('[updateUserNickname] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}

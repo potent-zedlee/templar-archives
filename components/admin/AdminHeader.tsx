@@ -9,7 +9,7 @@ import { useAuth } from "@/components/layout/AuthProvider"
 
 export function AdminHeader() {
   const { theme, setTheme } = useTheme()
-  const { profile } = useAuth()
+  const { user, profile } = useAuth()
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -39,7 +39,7 @@ export function AdminHeader() {
           {/* User Info */}
           {profile && (
             <div className="ml-2 text-sm">
-              <span className="font-medium">{profile.nickname || "Admin"}</span>
+              <span className="font-medium">{user?.displayName || profile.nickname || "Admin"}</span>
             </div>
           )}
         </div>

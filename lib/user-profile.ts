@@ -111,9 +111,8 @@ export async function createProfile(user: {
       return firestoreUserToProfile(existing.id, existing.data() as FirestoreUser)
     }
 
-    // 임시 닉네임 생성 (user + 6자리 랜덤)
-    const randomSuffix = Math.random().toString(36).substring(2, 8)
-    const tempNickname = `user${randomSuffix}`
+    // Google displayName이 있으면 사용, 없으면 임시 닉네임 생성
+    const tempNickname = user.displayName || `user${Math.random().toString(36).substring(2, 8)}`
 
     // 관리자 이메일인 경우 admin 역할 부여
     const userRole = isAdminEmail(user.email) ? 'admin' : 'user'
