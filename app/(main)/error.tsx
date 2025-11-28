@@ -16,17 +16,17 @@ export default function Error({
   }, [error])
 
   return (
-    <main className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+    <main className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="max-w-md w-full text-center space-y-6">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-red-500/10 rounded-full mb-4">
           <AlertTriangle className="w-8 h-8 text-red-500" />
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-gray-50">
+          <h1 className="text-2xl font-bold text-foreground">
             페이지 로딩 실패
           </h1>
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.
           </p>
         </div>
@@ -40,14 +40,14 @@ export default function Error({
           </button>
           <Link
             href="/"
-            className="px-6 py-3 bg-gray-800 text-gray-50 font-semibold rounded-lg hover:bg-gray-700 transition-colors border border-gray-700"
+            className="px-6 py-3 bg-muted text-foreground font-semibold rounded-lg hover:bg-muted/80 transition-colors border border-border"
           >
             홈으로 이동
           </Link>
         </div>
 
         {error.digest && (
-          <p className="text-sm text-gray-600 font-mono">
+          <p className="text-sm text-muted-foreground font-mono">
             Error ID: {error.digest}
           </p>
         )}

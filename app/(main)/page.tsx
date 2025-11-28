@@ -15,7 +15,7 @@ export default async function HomePage() {
   ])
 
   return (
-    <main className="min-h-screen bg-gray-900">
+    <main className="min-h-screen bg-background">
       <HeroSection />
       <StatsSection stats={stats} />
       <HighlightsSection highlights={highlights} />
