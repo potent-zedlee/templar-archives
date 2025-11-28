@@ -212,7 +212,7 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
                       </div>
                     ) : (
                       <div className="text-muted-foreground text-sm text-center">-</div>
-                    ))}
+                    )}
                   </div>
                 )
               })}
