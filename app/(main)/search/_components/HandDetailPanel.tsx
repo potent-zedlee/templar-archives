@@ -50,7 +50,7 @@ function Card({ card }: CardProps) {
     <div
       className={cn(
         "w-12 h-16 rounded border-2 bg-white flex flex-col items-center justify-center font-bold shadow-sm",
-        isRed ? "text-red-600 border-red-300" : "text-gray-900 border-gray-300"
+        isRed ? "text-red-600 border-red-300" : "text-foreground border-border"
       )}
     >
       <div className="text-lg">{rank}</div>

@@ -67,7 +67,7 @@ export function PositionalStatsCard({ playerId }: PositionalStatsCardProps) {
   const isPremium = posStats.length >= 5 // 5개 이상 포지션 데이터
 
   return (
-    <Card className={isPremium ? 'border-gold-500/50 bg-gradient-to-br from-gray-800 to-gray-900' : undefined}>
+    <Card className={isPremium ? 'border-gold-500/50 bg-gradient-to-br from-muted to-background' : undefined}>
       <CardHeader>
         <CardTitle className={isPremium ? 'bg-gradient-to-r from-gold-400 to-gold-600 bg-clip-text text-transparent' : undefined}>
           포지션별 통계

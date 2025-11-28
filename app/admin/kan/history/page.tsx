@@ -16,7 +16,7 @@ export default function HistoryPage() {
     <div className="container mx-auto py-8 px-4 max-w-7xl">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <History className="h-8 w-8 text-gray-500" />
+          <History className="h-8 w-8 text-muted-foreground" />
           <h1 className="text-3xl font-bold">분석 기록</h1>
         </div>
         <p className="text-muted-foreground">

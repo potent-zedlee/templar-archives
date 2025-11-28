@@ -65,7 +65,7 @@ export function AdvancedStatsCard({ playerId }: AdvancedStatsCardProps) {
   const isPremium = stats.totalHands > 50
 
   return (
-    <Card className={isPremium ? 'border-gold-500/50 bg-gradient-to-br from-gray-800 to-gray-900' : undefined}>
+    <Card className={isPremium ? 'border-gold-500/50 bg-gradient-to-br from-muted to-background' : undefined}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
