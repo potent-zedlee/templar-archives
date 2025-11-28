@@ -54,7 +54,7 @@ export function PokerTable({
 
   if (totalSeats === 0) {
     return (
-      <div className="w-full aspect-[16/10] flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
+      <div className="w-full aspect-[16/10] flex items-center justify-center border-2 border-dashed border-border rounded-lg">
         <p className="text-muted-foreground">No players in this hand</p>
       </div>
     )

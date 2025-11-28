@@ -39,29 +39,29 @@ export default function CookiePolicyPage() {
           <p>
             These cookies are necessary for the Service to function and cannot be disabled:
           </p>
-          <table className="w-full border-collapse border border-gray-300 dark:border-gray-700 my-4">
+          <table className="w-full border-collapse border border-border my-4">
             <thead>
               <tr className="bg-muted">
-                <th className="border border-gray-300 dark:border-gray-700 p-2">Cookie Name</th>
-                <th className="border border-gray-300 dark:border-gray-700 p-2">Purpose</th>
-                <th className="border border-gray-300 dark:border-gray-700 p-2">Duration</th>
+                <th className="border border-border p-2">Cookie Name</th>
+                <th className="border border-border p-2">Purpose</th>
+                <th className="border border-border p-2">Duration</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="border border-gray-300 dark:border-gray-700 p-2"><code>firebase-auth-token</code></td>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">Authentication (Firebase)</td>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">Session</td>
+                <td className="border border-border p-2"><code>firebase-auth-token</code></td>
+                <td className="border border-border p-2">Authentication (Firebase)</td>
+                <td className="border border-border p-2">Session</td>
               </tr>
               <tr>
-                <td className="border border-gray-300 dark:border-gray-700 p-2"><code>firebase-refresh-token</code></td>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">Session persistence</td>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">30 days</td>
+                <td className="border border-border p-2"><code>firebase-refresh-token</code></td>
+                <td className="border border-border p-2">Session persistence</td>
+                <td className="border border-border p-2">30 days</td>
               </tr>
               <tr>
-                <td className="border border-gray-300 dark:border-gray-700 p-2"><code>theme</code></td>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">Dark/Light mode preference</td>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">1 year</td>
+                <td className="border border-border p-2"><code>theme</code></td>
+                <td className="border border-border p-2">Dark/Light mode preference</td>
+                <td className="border border-border p-2">1 year</td>
               </tr>
             </tbody>
           </table>
@@ -70,24 +70,24 @@ export default function CookiePolicyPage() {
           <p>
             These cookies help us understand how visitors use our Service:
           </p>
-          <table className="w-full border-collapse border border-gray-300 dark:border-gray-700 my-4">
+          <table className="w-full border-collapse border border-border my-4">
             <thead>
               <tr className="bg-muted">
-                <th className="border border-gray-300 dark:border-gray-700 p-2">Provider</th>
-                <th className="border border-gray-300 dark:border-gray-700 p-2">Purpose</th>
-                <th className="border border-gray-300 dark:border-gray-700 p-2">Duration</th>
+                <th className="border border-border p-2">Provider</th>
+                <th className="border border-border p-2">Purpose</th>
+                <th className="border border-border p-2">Duration</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">Vercel Analytics</td>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">Page views, performance metrics</td>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">Session</td>
+                <td className="border border-border p-2">Vercel Analytics</td>
+                <td className="border border-border p-2">Page views, performance metrics</td>
+                <td className="border border-border p-2">Session</td>
               </tr>
               <tr>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">Vercel Speed Insights</td>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">Core Web Vitals monitoring</td>
-                <td className="border border-gray-300 dark:border-gray-700 p-2">Session</td>
+                <td className="border border-border p-2">Vercel Speed Insights</td>
+                <td className="border border-border p-2">Core Web Vitals monitoring</td>
+                <td className="border border-border p-2">Session</td>
               </tr>
             </tbody>
           </table>

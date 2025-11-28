@@ -82,17 +82,17 @@ export function AdvancedStatsCard({ playerId }: { playerId: string }) {
   ]
 
   const getTrendIcon = (value: number, benchmark?: { low: number; high: number }) => {
-    if (!benchmark) return <Minus className="h-4 w-4 text-gray-400" />
+    if (!benchmark) return <Minus className="h-4 w-4 text-muted-foreground" />
     if (value > benchmark.high) return <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
     if (value < benchmark.low) return <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
-    return <Minus className="h-4 w-4 text-gray-400" />
+    return <Minus className="h-4 w-4 text-muted-foreground" />
   }
 
   const getStatColor = (value: number, benchmark?: { low: number; high: number }) => {
-    if (!benchmark) return 'text-gray-900 dark:text-gray-100'
+    if (!benchmark) return 'text-foreground'
     if (value > benchmark.high) return 'text-green-600 dark:text-green-400'
     if (value < benchmark.low) return 'text-red-600 dark:text-red-400'
-    return 'text-gray-900 dark:text-gray-100'
+    return 'text-foreground'
   }
 
   return (
