@@ -59,7 +59,7 @@ function PaginationLink({
           size,
         }),
         isActive && 'bg-gold-600 text-white hover:bg-gold-700 border-transparent',
-        !isActive && 'text-gray-100 hover:bg-gray-700',
+        !isActive && 'text-foreground hover:bg-muted',
         'transition-all duration-200',
         className,
       )}

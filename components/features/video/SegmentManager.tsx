@@ -22,8 +22,8 @@ const SEGMENT_TYPES: Record<SegmentType, { label: string; icon: any; color: stri
   countdown: {
     label: '카운트다운',
     icon: Clock,
-    color: 'text-gray-600 dark:text-gray-400',
-    bgColor: 'bg-gray-100 dark:bg-gray-800'
+    color: 'text-muted-foreground',
+    bgColor: 'bg-muted'
   },
   opening: {
     label: '오프닝',
