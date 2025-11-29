@@ -108,8 +108,8 @@
       "collectionGroup": "streams",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "pipelineStatus", "order": "ASCENDING" },
-        { "fieldPath": "pipelineUpdatedAt", "order": "DESCENDING" }
+        { "fieldPath": "pipeline_status", "order": "ASCENDING" },
+        { "fieldPath": "pipeline_updated_at", "order": "DESCENDING" }
       ]
     }
   ],

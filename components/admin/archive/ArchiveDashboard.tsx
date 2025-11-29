@@ -26,8 +26,11 @@ import { FlatView } from './views/FlatView'
 import { ClassifyDialog } from './ClassifyDialog'
 import { ReviewPanel } from './ReviewPanel'
 import { Button } from '@/components/ui/button'
-import { Plus, Upload } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useAdminArchiveStore } from '@/stores/admin-archive-store'
+import { QuickUploadDialog } from '@/components/features/admin/upload/QuickUploadDialog'
+import { TournamentDialog } from '@/components/features/archive/TournamentDialog'
+import type { TournamentCategory } from '@/lib/firestore-types'
 import {
   useStreamsByPipelineStatus,
   usePipelineStatusCounts,
@@ -100,6 +103,18 @@ function DashboardContent() {
   const [reviewPanelOpen, setReviewPanelOpen] = useState(false)
   const [reviewStreamId, setReviewStreamId] = useState<string | null>(null)
   const [reviewStreamName, setReviewStreamName] = useState<string>('')
+
+  // TournamentDialog 상태
+  const [tournamentDialogOpen, setTournamentDialogOpen] = useState(false)
+  const [newTournamentName, setNewTournamentName] = useState('')
+  const [newCategory, setNewCategory] = useState<TournamentCategory>('EPT')
+  const [newGameType, setNewGameType] = useState<'tournament' | 'cash-game'>('tournament')
+  const [newLocation, setNewLocation] = useState('')
+  const [newCity, setNewCity] = useState('')
+  const [newCountry, setNewCountry] = useState('')
+  const [newStartDate, setNewStartDate] = useState('')
+  const [newEndDate, setNewEndDate] = useState('')
+  const [newCategoryLogo, setNewCategoryLogo] = useState('')
 
   // URL에서 상태 필터 읽기
   const statusParam = searchParams?.get('status') as PipelineStatus | null
@@ -179,11 +194,8 @@ function DashboardContent() {
       <div className="flex items-center justify-between p-4 border-b">
         <h1 className="text-2xl font-bold">Archive</h1>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Upload className="h-4 w-4 mr-2" />
-            업로드
-          </Button>
-          <Button size="sm">
+          <QuickUploadDialog onSuccess={() => refetch()} />
+          <Button size="sm" onClick={() => setTournamentDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             토너먼트
           </Button>
@@ -284,6 +296,59 @@ function DashboardContent() {
           setClassifyDialogOpen(false)
           setClassifyStream(null)
         }}
+      />
+
+      {/* TournamentDialog */}
+      <TournamentDialog
+        isOpen={tournamentDialogOpen}
+        onOpenChange={setTournamentDialogOpen}
+        editingTournamentId=""
+        onSave={() => {
+          refetch()
+          setTournamentDialogOpen(false)
+          // Reset form
+          setNewTournamentName('')
+          setNewCategory('EPT')
+          setNewGameType('tournament')
+          setNewLocation('')
+          setNewCity('')
+          setNewCountry('')
+          setNewStartDate('')
+          setNewEndDate('')
+          setNewCategoryLogo('')
+        }}
+        onCancel={() => {
+          setTournamentDialogOpen(false)
+          // Reset form
+          setNewTournamentName('')
+          setNewCategory('EPT')
+          setNewGameType('tournament')
+          setNewLocation('')
+          setNewCity('')
+          setNewCountry('')
+          setNewStartDate('')
+          setNewEndDate('')
+          setNewCategoryLogo('')
+        }}
+        newTournamentName={newTournamentName}
+        setNewTournamentName={setNewTournamentName}
+        newCategory={newCategory}
+        setNewCategory={setNewCategory}
+        newGameType={newGameType}
+        setNewGameType={setNewGameType}
+        newLocation={newLocation}
+        setNewLocation={setNewLocation}
+        newCity={newCity}
+        setNewCity={setNewCity}
+        newCountry={newCountry}
+        setNewCountry={setNewCountry}
+        newStartDate={newStartDate}
+        setNewStartDate={setNewStartDate}
+        newEndDate={newEndDate}
+        setNewEndDate={setNewEndDate}
+        newCategoryLogo={newCategoryLogo}
+        setNewCategoryLogo={setNewCategoryLogo}
+        isUserAdmin={true}
       />
     </div>
   )
