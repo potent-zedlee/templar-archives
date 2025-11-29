@@ -122,7 +122,7 @@ const playerConverter = {
     return {
       id: snapshot.id,
       name: data.name,
-      photoUrl: data.photoUrl,
+      photoUrl: data.photo_url,
       country: data.country,
     }
   }
@@ -151,18 +151,18 @@ async function fetchHandsWithDetails(options: {
 }): Promise<{ hands: Hand[]; count: number }> {
   const handsRef = collection(firestore, 'hands').withConverter(handConverter)
 
-  let q = query(handsRef, orderBy('createdAt', 'desc'))
+  let q = query(handsRef, orderBy('created_at', 'desc'))
 
   if (options.streamId) {
-    q = query(handsRef, where('streamId', '==', options.streamId), orderBy('createdAt', 'desc'))
+    q = query(handsRef, where('stream_id', '==', options.streamId), orderBy('created_at', 'desc'))
   }
 
   if (options.playerId) {
-    q = query(handsRef, where('playerIds', 'array-contains', options.playerId), orderBy('createdAt', 'desc'))
+    q = query(handsRef, where('player_ids', 'array-contains', options.playerId), orderBy('created_at', 'desc'))
   }
 
   if (options.favoriteOnly) {
-    q = query(handsRef, where('favorite', '==', true), orderBy('createdAt', 'desc'))
+    q = query(handsRef, where('favorite', '==', true), orderBy('created_at', 'desc'))
   }
 
   if (options.limit) {
@@ -336,7 +336,7 @@ export function useHandQuery(handId: string) {
 
           hand.stream = {
             name: streamData.name,
-            videoUrl: streamData.videoUrl,
+            videoUrl: streamData.video_url,
             subEvent: eventSnap.exists() ? {
               name: (eventSnap.data() as FirestoreEvent).name,
               tournament: tournamentSnap.exists() ? {
