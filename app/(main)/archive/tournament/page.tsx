@@ -1,26 +1,31 @@
 "use client"
 
 /**
- * Archive Tournament Page - 3-Column Layout
+ * Archive Tournament Page - 2-Column Layout (VSCode Style)
  *
- * Desktop only (lg+):
- * - Left: Filter sidebar (320px)
- * - Center: Navigation sidebar (400px) - Tournament → SubEvent → Stream
+ * Desktop (lg+):
+ * - Header: Category Tabs + Search + Breadcrumb
+ * - Left: Tree Explorer (280px)
  * - Right: Main panel - Dashboard or Hands List
  *
- * Mobile (< lg): Desktop-only message
+ * Mobile (< lg): Card-based tournament list
  */
 
 import { useState, useMemo } from "react"
 import { ErrorBoundary } from "@/components/common/ErrorBoundary"
-import { ArchiveFilterSidebar } from "../_components/ArchiveFilterSidebar"
-import { ArchiveNavigationSidebar } from "../_components/ArchiveNavigationSidebar"
+import { FileTreeExplorer } from "../_components/FileTreeExplorer"
 import { ArchiveDashboard } from "../_components/ArchiveDashboard"
 import { HandsListPanel } from "../_components/HandsListPanel"
 import { useTournamentsQuery } from "@/lib/queries/archive-queries"
-import type { TournamentCategory, Stream } from "@/lib/types/archive"
+import type { Tournament, Event, Stream, BreadcrumbItem, TournamentCategory } from "@/lib/types/archive"
 import { GridSkeleton } from "@/components/ui/skeletons/GridSkeleton"
 import { MobileArchiveView } from "../_components/MobileArchiveView"
+import { ArchiveBreadcrumb } from "@/components/features/archive/ArchiveBreadcrumb"
+import { useArchiveTreeStore, type TreeNodeType } from "@/stores/archive-tree-store"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { PanelLeftClose, PanelLeft, Filter } from "lucide-react"
 
 export default function ArchiveTournamentPage() {
   // ============================================================
@@ -29,25 +34,39 @@ export default function ArchiveTournamentPage() {
   const { data: tournaments = [], isLoading } = useTournamentsQuery("tournament")
 
   // ============================================================
-  // 2. UI State (Local)
+  // 2. Tree Store State
   // ============================================================
-  const [selectedStreamId, setSelectedStreamId] = useState<string | null>(null)
+  const {
+    breadcrumbPath,
+    selectedNodeType,
+    navigateToBreadcrumb,
+  } = useArchiveTreeStore()
+
+  // ============================================================
+  // 3. Local UI State
+  // ============================================================
   const [selectedStream, setSelectedStream] = useState<Stream | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  // Filter states
+  // Filter states (임시 - Phase 3에서 QuickFiltersBar로 이동)
   const [selectedCategory, setSelectedCategory] = useState<TournamentCategory | null>(null)
-  const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
-  const [selectedDateRange, setSelectedDateRange] = useState<{
-    start: string | null
-    end: string | null
-  }>({ start: null, end: null })
-  const [selectedHandRange, setSelectedHandRange] = useState<{
-    min: number | null
-    max: number | null
-  }>({ min: null, max: null })
 
   // ============================================================
-  // 3. Aggregated Data (Categories, Locations)
+  // 4. Filtered Tournaments
+  // ============================================================
+  const filteredTournaments = useMemo(() => {
+    let filtered = [...tournaments]
+
+    // Category filter
+    if (selectedCategory) {
+      filtered = filtered.filter(t => t.category === selectedCategory)
+    }
+
+    return filtered
+  }, [tournaments, selectedCategory])
+
+  // ============================================================
+  // 5. Aggregated Categories for Quick Filter
   // ============================================================
   const categories = useMemo(() => {
     const categoryMap = new Map<TournamentCategory, number>()
@@ -61,69 +80,28 @@ export default function ArchiveTournamentPage() {
       .sort((a, b) => b.count - a.count)
   }, [tournaments])
 
-  const locations = useMemo(() => {
-    const locationMap = new Map<string, number>()
-    tournaments.forEach(t => {
-      if (t.location) {
-        locationMap.set(t.location, (locationMap.get(t.location) || 0) + 1)
-      }
-    })
-    return Array.from(locationMap.entries())
-      .map(([location, count]) => ({ location, count }))
-      .sort((a, b) => b.count - a.count)
-  }, [tournaments])
-
   // ============================================================
-  // 4. Filtered Tournaments
+  // 6. Event Handlers
   // ============================================================
-  const filteredTournaments = useMemo(() => {
-    let filtered = [...tournaments]
-
-    // Category filter
-    if (selectedCategory) {
-      filtered = filtered.filter(t => t.category === selectedCategory)
+  const handleNodeSelect = (
+    _nodeId: string,
+    nodeType: TreeNodeType,
+    data: Tournament | Event | Stream | null
+  ) => {
+    if (nodeType === 'stream' && data) {
+      setSelectedStream(data as Stream)
+    } else {
+      setSelectedStream(null)
     }
+  }
 
-    // Location filter
-    if (selectedLocation) {
-      filtered = filtered.filter(t => t.location === selectedLocation)
-    }
-
-    // Date range filter
-    if (selectedDateRange.start) {
-      filtered = filtered.filter(t =>
-        t.start_date && new Date(t.start_date) >= new Date(selectedDateRange.start!)
-      )
-    }
-    if (selectedDateRange.end) {
-      filtered = filtered.filter(t =>
-        t.start_date && new Date(t.start_date) <= new Date(selectedDateRange.end!)
-      )
-    }
-
-    // Hand count range filter (TODO: 구현 필요)
-    // if (selectedHandRange.min !== null) {
-    //   filtered = filtered.filter(t => (t.hand_count || 0) >= selectedHandRange.min!)
-    // }
-    // if (selectedHandRange.max !== null) {
-    //   filtered = filtered.filter(t => (t.hand_count || 0) <= selectedHandRange.max!)
-    // }
-
-    return filtered
-  }, [tournaments, selectedCategory, selectedLocation, selectedDateRange])
-
-  // ============================================================
-  // 5. Event Handlers
-  // ============================================================
-  const handleResetFilters = () => {
-    setSelectedCategory(null)
-    setSelectedLocation(null)
-    setSelectedDateRange({ start: null, end: null })
-    setSelectedHandRange({ min: null, max: null })
+  const handleBreadcrumbNavigate = (item: BreadcrumbItem | null) => {
+    navigateToBreadcrumb(item)
+    setSelectedStream(null)
   }
 
   // ============================================================
-  // 6. Loading State
+  // 7. Loading State
   // ============================================================
   if (isLoading) {
     return (
@@ -134,58 +112,105 @@ export default function ArchiveTournamentPage() {
   }
 
   // ============================================================
-  // 7. Sidebar Props
-  // ============================================================
-  const filterSidebarProps = {
-    selectedCategory,
-    onCategoryChange: setSelectedCategory,
-    selectedDateRange,
-    onDateRangeChange: setSelectedDateRange,
-    selectedHandRange,
-    onHandRangeChange: setSelectedHandRange,
-    selectedLocation,
-    onLocationChange: setSelectedLocation,
-    onReset: handleResetFilters,
-    categories,
-    locations
-  }
-
-  // ============================================================
   // 8. Main Render
   // ============================================================
   return (
     <ErrorBoundary>
-      <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-        {/* Desktop: 3-column layout */}
-        <>
-          {/* 1. Left: Filter Sidebar (320px) */}
-          <aside className="hidden lg:block w-80 flex-shrink-0 h-full border-r border-border">
-            <ArchiveFilterSidebar {...filterSidebarProps} />
-          </aside>
+      <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+        {/* ========== Desktop Header ========== */}
+        <header className="hidden lg:flex flex-shrink-0 h-12 items-center justify-between px-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          {/* Left: Sidebar toggle + Breadcrumb */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+            >
+              {sidebarCollapsed ? (
+                <PanelLeft className="h-4 w-4" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4" />
+              )}
+            </Button>
 
-          {/* 2. Center: Navigation Sidebar (400px) */}
-          <aside className="hidden lg:block w-[400px] flex-shrink-0 h-full border-r border-border">
-            <ArchiveNavigationSidebar
+            <div className="h-4 w-px bg-border" />
+
+            <ArchiveBreadcrumb
+              items={breadcrumbPath}
+              onNavigate={handleBreadcrumbNavigate}
+            />
+          </div>
+
+          {/* Right: Quick Category Filter */}
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-1 overflow-x-auto max-w-[500px] scrollbar-hide">
+              <Button
+                variant={selectedCategory === null ? "secondary" : "ghost"}
+                size="sm"
+                className="h-7 text-xs whitespace-nowrap"
+                onClick={() => setSelectedCategory(null)}
+              >
+                All
+                <Badge variant="outline" className="ml-1 h-4 px-1 text-[10px]">
+                  {tournaments.length}
+                </Badge>
+              </Button>
+              {categories.slice(0, 6).map(({ category, count }) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 text-xs whitespace-nowrap"
+                  onClick={() => setSelectedCategory(
+                    selectedCategory === category ? null : category
+                  )}
+                >
+                  {category}
+                  <Badge variant="outline" className="ml-1 h-4 px-1 text-[10px]">
+                    {count}
+                  </Badge>
+                </Button>
+              ))}
+            </div>
+          </div>
+        </header>
+
+        {/* ========== Desktop: 2-Column Layout ========== */}
+        <div className="hidden lg:flex flex-1 overflow-hidden">
+          {/* Left: Tree Explorer (280px, collapsible) */}
+          <aside
+            className={cn(
+              "flex-shrink-0 h-full transition-all duration-300 ease-in-out overflow-hidden",
+              sidebarCollapsed ? "w-0" : "w-72"
+            )}
+          >
+            <FileTreeExplorer
               tournaments={filteredTournaments}
-              selectedStreamId={selectedStreamId}
-              onStreamSelect={(streamId, stream) => {
-                setSelectedStreamId(streamId)
-                setSelectedStream(stream)
-              }}
+              onNodeSelect={handleNodeSelect}
+              className={cn(
+                "transition-opacity duration-200",
+                sidebarCollapsed && "opacity-0"
+              )}
             />
           </aside>
 
-          {/* 3. Right: Main Panel (flex-1) */}
-          <main className="hidden lg:flex flex-1 overflow-hidden">
-            {selectedStreamId && selectedStream ? (
-              <HandsListPanel streamId={selectedStreamId} stream={selectedStream} />
+          {/* Right: Main Panel (flex-1) */}
+          <main className="flex-1 overflow-hidden">
+            {selectedNodeType === 'stream' && selectedStream ? (
+              <HandsListPanel
+                streamId={selectedStream.id}
+                stream={selectedStream}
+              />
             ) : (
               <ArchiveDashboard tournaments={filteredTournaments} />
             )}
           </main>
-        </>
+        </div>
 
-        {/* Mobile: Card-based tournament list */}
+        {/* ========== Mobile: Card-based tournament list ========== */}
         <div className="lg:hidden h-full w-full">
           <MobileArchiveView
             tournaments={filteredTournaments}

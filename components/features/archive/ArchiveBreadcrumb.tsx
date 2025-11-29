@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 interface BreadcrumbItem {
   id: string
   name: string
-  type: 'home' | 'tournament' | 'subevent'
+  type: 'home' | 'tournament' | 'subevent' | 'event'
 }
 
 interface ArchiveBreadcrumbProps {

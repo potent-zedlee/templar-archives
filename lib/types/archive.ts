@@ -358,7 +358,7 @@ export interface FolderItem {
 export interface BreadcrumbItem {
   id: string
   name: string
-  type: "home" | "tournament" | "event"
+  type: "home" | "tournament" | "event" | "subevent"
 }
 
 // ==================== Video Player Types ====================
