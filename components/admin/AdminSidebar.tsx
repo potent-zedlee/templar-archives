@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import {
   Sidebar,
   SidebarContent,
@@ -25,9 +25,39 @@ import {
   Settings,
   Newspaper,
   Radio,
-  Workflow,
+  Upload,
+  FolderTree,
+  Sparkles,
+  CheckCircle,
+  ClipboardCheck,
+  Globe,
+  AlertCircle,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { usePipelineStatusCounts, type PipelineStatusCounts } from "@/lib/queries/admin-archive-queries"
+import { cn } from "@/lib/utils"
+import type { PipelineStatus } from "@/lib/types/archive"
+
+/**
+ * Archive 파이프라인 서브메뉴 아이템
+ */
+interface PipelineSubItem {
+  title: string
+  status: PipelineStatus
+  icon: LucideIcon
+  color?: string
+}
+
+const pipelineSubItems: PipelineSubItem[] = [
+  { title: "Pending", status: "pending", icon: Upload, color: "text-muted-foreground" },
+  { title: "Classify", status: "needs_classify", icon: FolderTree, color: "text-yellow-500" },
+  { title: "Analyzing", status: "analyzing", icon: Sparkles, color: "text-blue-500" },
+  { title: "Completed", status: "completed", icon: CheckCircle, color: "text-green-500" },
+  { title: "Review", status: "needs_review", icon: ClipboardCheck, color: "text-orange-500" },
+  { title: "Published", status: "published", icon: Globe, color: "text-emerald-500" },
+  { title: "Failed", status: "failed", icon: AlertCircle, color: "text-red-500" },
+]
 
 interface MenuItem {
   title: string
@@ -55,13 +85,7 @@ const adminMenuItems: MenuItem[] = [
     title: "Archive",
     href: "/admin/archive",
     icon: Archive,
-    subItems: [
-      {
-        title: "파이프라인",
-        href: "/admin/archive/pipeline",
-        icon: Workflow,
-      },
-    ],
+    // subItems는 동적으로 렌더링 (파이프라인 상태별)
   },
   {
     title: "Edit Requests",
@@ -93,15 +117,94 @@ const reporterMenuItems = [
   },
 ]
 
+/**
+ * 파이프라인 카운트 배지 컴포넌트
+ */
+function CountBadge({
+  count,
+  isActive,
+  isFailed
+}: {
+  count: number
+  isActive?: boolean
+  isFailed?: boolean
+}) {
+  if (count === 0) return null
+
+  return (
+    <Badge
+      variant={isFailed ? "destructive" : isActive ? "default" : "secondary"}
+      className={cn(
+        "ml-auto h-5 min-w-[20px] px-1.5 text-xs font-medium",
+        !isFailed && !isActive && "bg-muted text-muted-foreground"
+      )}
+    >
+      {count > 99 ? "99+" : count}
+    </Badge>
+  )
+}
+
+/**
+ * Archive 파이프라인 서브메뉴 컴포넌트
+ */
+function ArchivePipelineSubMenu() {
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const { data: counts } = usePipelineStatusCounts()
+
+  const currentStatus = searchParams?.get("status")
+  const isArchivePage = pathname === "/admin/archive"
+
+  return (
+    <SidebarMenuSub>
+      {pipelineSubItems.map((item) => {
+        const Icon = item.icon
+        const count = counts?.[item.status as keyof PipelineStatusCounts] ?? 0
+        const isActive = isArchivePage && currentStatus === item.status
+        const isFailed = item.status === "failed"
+
+        return (
+          <SidebarMenuSubItem key={item.status}>
+            <SidebarMenuSubButton
+              asChild
+              isActive={isActive}
+            >
+              <Link href={`/admin/archive?status=${item.status}`}>
+                <Icon className={cn("h-4 w-4", item.color)} />
+                <span>{item.title}</span>
+                <CountBadge
+                  count={count}
+                  isActive={isActive}
+                  isFailed={isFailed}
+                />
+              </Link>
+            </SidebarMenuSubButton>
+          </SidebarMenuSubItem>
+        )
+      })}
+    </SidebarMenuSub>
+  )
+}
+
 export function AdminSidebar() {
   const pathname = usePathname()
+  const { data: counts } = usePipelineStatusCounts()
 
   const isActive = (href: string) => {
     if (href === "/admin/dashboard") {
       return pathname === href
     }
+    // Archive의 경우 쿼리 파라미터 있어도 active
+    if (href === "/admin/archive") {
+      return pathname === href || pathname?.startsWith("/admin/archive")
+    }
     return pathname?.startsWith(href)
   }
+
+  // Archive 전체 대기 작업 수 (pending + needs_classify + failed)
+  const archivePendingCount = counts
+    ? (counts.pending + counts.needs_classify + counts.failed)
+    : 0
 
   return (
     <Sidebar>
@@ -113,6 +216,8 @@ export function AdminSidebar() {
             <SidebarMenu>
               {adminMenuItems.map((item) => {
                 const Icon = item.icon
+                const isArchive = item.href === "/admin/archive"
+
                 return (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
@@ -122,10 +227,23 @@ export function AdminSidebar() {
                       <Link href={item.href}>
                         <Icon className="h-4 w-4" />
                         <span>{item.title}</span>
+                        {/* Archive 메뉴에 전체 대기 작업 수 표시 */}
+                        {isArchive && archivePendingCount > 0 && (
+                          <Badge
+                            variant="secondary"
+                            className="ml-auto h-5 min-w-[20px] px-1.5 text-xs"
+                          >
+                            {archivePendingCount > 99 ? "99+" : archivePendingCount}
+                          </Badge>
+                        )}
                       </Link>
                     </SidebarMenuButton>
-                    {/* Sub Items */}
-                    {item.subItems && item.subItems.length > 0 && (
+
+                    {/* Archive 파이프라인 서브메뉴 */}
+                    {isArchive && <ArchivePipelineSubMenu />}
+
+                    {/* 일반 서브메뉴 (Archive 제외) */}
+                    {!isArchive && item.subItems && item.subItems.length > 0 && (
                       <SidebarMenuSub>
                         {item.subItems.map((subItem) => {
                           const SubIcon = subItem.icon
