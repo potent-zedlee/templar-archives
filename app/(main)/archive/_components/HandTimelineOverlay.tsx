@@ -10,7 +10,7 @@
 
 'use client'
 
-import { useState, useMemo, useRef, useCallback } from 'react'
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
@@ -96,6 +96,20 @@ export function HandTimelineOverlay({
   const containerRef = useRef<HTMLDivElement>(null)
   const [hoveredHand, setHoveredHand] = useState<Hand | null>(null)
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
+  const [containerWidth, setContainerWidth] = useState(300)
+
+  // 컨테이너 너비 추적
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth)
+      }
+    }
+
+    updateWidth()
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
 
   // 핸드 마커 계산
   const markers: HandMarker[] = useMemo(() => {
@@ -249,7 +263,7 @@ export function HandTimelineOverlay({
             style={{
               left: Math.min(
                 Math.max(tooltipPosition.x, 100),
-                (containerRef.current?.offsetWidth || 300) - 100
+                containerWidth - 100
               ),
               bottom: '100%',
               transform: 'translateX(-50%)',
