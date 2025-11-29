@@ -2,23 +2,83 @@
  * Admin Archive React Query Hooks
  *
  * Admin 전용 Archive 쿼리 (모든 상태 조회 가능)
+ * 파이프라인 상태별 스트림 조회 및 통계
+ *
  * Firestore 기반
+ *
+ * @module lib/queries/admin-archive-queries
  */
 
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { firestore } from '@/lib/firebase'
 import {
   collection,
+  doc,
+  getDoc,
   query,
   where,
   orderBy,
+  limit,
   getDocs,
+  updateDoc,
   Timestamp,
   CollectionReference,
-  QueryConstraint
+  QueryConstraint,
+  getCountFromServer,
 } from 'firebase/firestore'
+import { toast } from 'sonner'
 import { publishStream, unpublishStream, bulkPublishStreams, bulkUnpublishStreams } from '@/app/actions/admin/archive-admin'
-import type { Tournament, Event, Stream, ContentStatus } from '@/lib/types/archive'
+import type { Tournament, Event, Stream, ContentStatus, PipelineStatus } from '@/lib/types/archive'
+
+// ============================================
+// Pipeline Types
+// ============================================
+
+/**
+ * 파이프라인 스트림 (비정규화된 관계 데이터 포함)
+ */
+export interface PipelineStream {
+  id: string
+  name: string
+  description?: string
+  videoUrl?: string
+  gcsUri?: string
+
+  // 파이프라인 상태
+  pipelineStatus: PipelineStatus
+  pipelineProgress: number
+  pipelineError?: string
+  pipelineUpdatedAt?: Date
+
+  // 분석 관련
+  currentJobId?: string
+  lastAnalysisAt?: Date
+  analysisAttempts: number
+  handCount: number
+
+  // 참조 정보 (비정규화)
+  eventId?: string
+  eventName?: string
+  tournamentId?: string
+  tournamentName?: string
+
+  createdAt: Date
+  updatedAt: Date
+}
+
+/**
+ * 파이프라인 상태별 카운트
+ */
+export interface PipelineStatusCounts {
+  all: number
+  pending: number
+  needs_classify: number
+  analyzing: number
+  completed: number
+  needs_review: number
+  published: number
+  failed: number
+}
 
 // ==================== Query Keys ====================
 
@@ -30,6 +90,18 @@ export const adminArchiveKeys = {
     [...adminArchiveKeys.all, 'events', tournamentId, statusFilter] as const,
   streams: (eventId: string, statusFilter?: ContentStatus | 'all') =>
     [...adminArchiveKeys.all, 'streams', eventId, statusFilter] as const,
+}
+
+/**
+ * Admin Archive Pipeline Query Keys
+ */
+export const adminArchiveQueryKeys = {
+  all: ['admin', 'archive'] as const,
+  streams: () => [...adminArchiveQueryKeys.all, 'streams'] as const,
+  streamsByStatus: (status: PipelineStatus | 'all') =>
+    [...adminArchiveQueryKeys.streams(), 'status', status] as const,
+  stream: (id: string) => [...adminArchiveQueryKeys.streams(), id] as const,
+  statusCounts: () => [...adminArchiveQueryKeys.all, 'counts'] as const,
 }
 
 // ==================== Admin Tournaments Query ====================
@@ -325,6 +397,224 @@ export function useBulkUnpublishMutation() {
     onSuccess: () => {
       // 모든 admin archive 쿼리 무효화
       queryClient.invalidateQueries({ queryKey: adminArchiveKeys.all })
+    },
+  })
+}
+
+// ============================================
+// Pipeline Query Functions
+// ============================================
+
+/**
+ * 파이프라인 상태별 스트림 조회
+ */
+async function getStreamsByPipelineStatus(
+  status: PipelineStatus | 'all',
+  pageLimit = 50
+): Promise<PipelineStream[]> {
+  try {
+    const streamsRef = collection(firestore, 'streams')
+
+    let q
+    if (status === 'all') {
+      q = query(
+        streamsRef,
+        orderBy('pipelineUpdatedAt', 'desc'),
+        limit(pageLimit)
+      )
+    } else {
+      q = query(
+        streamsRef,
+        where('pipelineStatus', '==', status),
+        orderBy('pipelineUpdatedAt', 'desc'),
+        limit(pageLimit)
+      )
+    }
+
+    const snapshot = await getDocs(q)
+
+    return snapshot.docs.map((docSnapshot) => {
+      const data = docSnapshot.data()
+      return {
+        id: docSnapshot.id,
+        name: data.name || '',
+        description: data.description,
+        videoUrl: data.videoUrl,
+        gcsUri: data.gcsUri,
+        pipelineStatus: data.pipelineStatus || 'pending',
+        pipelineProgress: data.pipelineProgress || 0,
+        pipelineError: data.pipelineError,
+        pipelineUpdatedAt: data.pipelineUpdatedAt?.toDate(),
+        currentJobId: data.currentJobId,
+        lastAnalysisAt: data.lastAnalysisAt?.toDate(),
+        analysisAttempts: data.analysisAttempts || 0,
+        handCount: data.stats?.handsCount || 0,
+        eventId: data.eventId,
+        eventName: data.eventName,
+        tournamentId: data.tournamentId,
+        tournamentName: data.tournamentName,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+      }
+    })
+  } catch (error) {
+    console.error('[getStreamsByPipelineStatus] Error:', error)
+    throw error
+  }
+}
+
+/**
+ * 파이프라인 상태별 카운트 조회
+ */
+async function getPipelineStatusCounts(): Promise<PipelineStatusCounts> {
+  try {
+    const streamsRef = collection(firestore, 'streams')
+
+    const statuses: PipelineStatus[] = [
+      'pending', 'needs_classify', 'analyzing',
+      'completed', 'needs_review', 'published', 'failed'
+    ]
+
+    const countPromises = statuses.map(async (status) => {
+      const q = query(streamsRef, where('pipelineStatus', '==', status))
+      const snapshot = await getCountFromServer(q)
+      return { status, count: snapshot.data().count }
+    })
+
+    const results = await Promise.all(countPromises)
+
+    const counts: PipelineStatusCounts = {
+      all: 0,
+      pending: 0,
+      needs_classify: 0,
+      analyzing: 0,
+      completed: 0,
+      needs_review: 0,
+      published: 0,
+      failed: 0,
+    }
+
+    results.forEach(({ status, count }) => {
+      counts[status] = count
+      counts.all += count
+    })
+
+    return counts
+  } catch (error) {
+    console.error('[getPipelineStatusCounts] Error:', error)
+    throw error
+  }
+}
+
+// ============================================
+// Pipeline React Query Hooks
+// ============================================
+
+/**
+ * 파이프라인 상태별 스트림 목록 훅
+ */
+export function useStreamsByPipelineStatus(
+  status: PipelineStatus | 'all',
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: adminArchiveQueryKeys.streamsByStatus(status),
+    queryFn: () => getStreamsByPipelineStatus(status),
+    enabled: options?.enabled !== false,
+    refetchInterval: status === 'analyzing' ? 3000 : false, // 분석 중일 때 3초마다 갱신
+  })
+}
+
+/**
+ * 파이프라인 상태 카운트 훅
+ */
+export function usePipelineStatusCounts() {
+  return useQuery({
+    queryKey: adminArchiveQueryKeys.statusCounts(),
+    queryFn: getPipelineStatusCounts,
+    refetchInterval: 10000, // 10초마다 갱신
+  })
+}
+
+/**
+ * 스트림 파이프라인 상태 업데이트 뮤테이션
+ */
+export function useUpdatePipelineStatus() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      streamId,
+      status,
+      error
+    }: {
+      streamId: string
+      status: PipelineStatus
+      error?: string
+    }) => {
+      const streamRef = doc(firestore, 'streams', streamId)
+
+      const updateData: Record<string, unknown> = {
+        pipelineStatus: status,
+        pipelineUpdatedAt: Timestamp.now(),
+      }
+
+      if (error) {
+        updateData.pipelineError = error
+      }
+
+      if (status === 'analyzing') {
+        updateData.pipelineProgress = 0
+      }
+
+      await updateDoc(streamRef, updateData)
+      return { streamId, status }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminArchiveQueryKeys.all })
+      toast.success('상태가 업데이트되었습니다')
+    },
+    onError: (error) => {
+      console.error('[useUpdatePipelineStatus] Error:', error)
+      toast.error('상태 업데이트 실패')
+    },
+  })
+}
+
+/**
+ * 분석 재시도 뮤테이션
+ */
+export function useRetryAnalysis() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (streamId: string) => {
+      const streamRef = doc(firestore, 'streams', streamId)
+      const streamDoc = await getDoc(streamRef)
+
+      if (!streamDoc.exists()) {
+        throw new Error('스트림을 찾을 수 없습니다')
+      }
+
+      const currentAttempts = streamDoc.data().analysisAttempts || 0
+
+      await updateDoc(streamRef, {
+        pipelineStatus: 'pending',
+        pipelineProgress: 0,
+        pipelineError: null,
+        pipelineUpdatedAt: Timestamp.now(),
+        analysisAttempts: currentAttempts + 1,
+      })
+
+      return { streamId, attempts: currentAttempts + 1 }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: adminArchiveQueryKeys.all })
+      toast.success(`분석을 재시작합니다 (시도 #${data.attempts})`)
+    },
+    onError: (error) => {
+      console.error('[useRetryAnalysis] Error:', error)
+      toast.error('분석 재시도 실패')
     },
   })
 }
