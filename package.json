@@ -9,7 +9,7 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
-    "lint": "next lint",
+    "lint": "npx eslint .",
     "start": "next start",
     "analyze": "ANALYZE=true next build",
     "test": "vitest",
@@ -109,6 +109,7 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
     "@next/bundle-analyzer": "^15.5.6",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.16",
@@ -123,6 +124,8 @@
     "@vitejs/plugin-react": "^5.0.4",
     "@vitest/coverage-v8": "^3.2.4",
     "babel-plugin-react-compiler": "^1.0.0",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "^16.0.5",
     "jsdom": "^27.0.1",
     "pg": "^8.16.3",
     "postcss": "^8.5",
