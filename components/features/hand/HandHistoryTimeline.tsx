@@ -6,6 +6,7 @@
  */
 
 import { useMemo } from 'react'
+import Image from 'next/image'
 import { useHandPlayersQuery } from '@/lib/queries/hand-players-queries'
 import { useHandActionsQuery } from '@/lib/queries/hand-actions-queries'
 import { PositionBadge } from '@/components/common/PositionBadge'
@@ -166,11 +167,14 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
               {/* Column 1: Player Info (NO HEADER) */}
               <div className="bg-muted p-4 flex items-center gap-3 border-t border-border first:border-t-0">
                 {player.player?.photo_url && (
-                  <img
-                    src={player.player.photo_url}
-                    alt={player.player.name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-border"
-                  />
+                  <div className="w-12 h-12 rounded-full relative border-2 border-border overflow-hidden">
+                    <Image
+                      src={player.player.photo_url}
+                      alt={player.player.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
                 )}
                 <div className="flex-1 min-w-0">
                   {player.player ? (

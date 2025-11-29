@@ -35,7 +35,6 @@ function initializeFfmpeg(): void {
 
   // 2. 로컬 개발 환경: @ffmpeg-installer/ffmpeg 사용
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
     console.log(`[FFmpegProcessor] Using @ffmpeg-installer/ffmpeg: ${ffmpegInstaller.path}`);
     ffmpeg.setFfmpegPath(ffmpegInstaller.path);
@@ -94,7 +93,6 @@ export class FFmpegProcessor {
       }
     } else {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
         ffprobePath = ffprobeInstaller.path;
       } catch {
@@ -301,7 +299,6 @@ export class FFmpegProcessor {
       ffmpegPath = process.env.FFMPEG_PATH;
     } else {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
         ffmpegPath = ffmpegInstaller.path;
       } catch {

@@ -7,6 +7,7 @@
  */
 
 import { useState, useMemo } from "react"
+import Image from "next/image"
 import {
   Dialog,
   DialogContent,
@@ -195,11 +196,14 @@ export function AddPlayersDialog({
                       onCheckedChange={() => togglePlayer(player.id)}
                     />
                     {player.photo_url && (
-                      <img
-                        src={player.photo_url}
-                        alt={player.name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
+                      <div className="w-10 h-10 rounded-full relative overflow-hidden">
+                        <Image
+                          src={player.photo_url}
+                          alt={player.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
                     )}
                     <div className="flex-1">
                       <div className="font-medium">{player.name}</div>

@@ -69,9 +69,11 @@ export function TournamentEventCard({
                 className="w-full h-full"
                 fallback="icon"
               />
-            ) : (
+            ) : logo ? (
+              // Legacy logo URL fallback (not used in production)
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={logo} alt="" className="w-full h-full object-contain" />
-            )}
+            ) : null}
           </div>
         )}
 

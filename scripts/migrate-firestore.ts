@@ -12,7 +12,6 @@ import * as admin from 'firebase-admin'
 
 // Firebase Admin 초기화
 if (admin.apps.length === 0) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const serviceAccount = require('../gcs-service-account-key.json')
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),

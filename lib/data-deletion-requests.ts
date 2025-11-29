@@ -314,9 +314,6 @@ export async function deleteUserData(userId: string): Promise<{ error: Error | n
       return deletedCount
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    void _deleteSubcollectionDocs
-
     // 삭제 순서 (의존성 고려)
     // 1. 댓글 삭제 (posts/{postId}/comments에서 author.id로)
     const postsRef = collection(firestore, COLLECTION_PATHS.POSTS)

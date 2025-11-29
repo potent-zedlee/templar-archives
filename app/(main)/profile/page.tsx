@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Loader2, Check, X, AlertTriangle, Trash2 } from "lucide-react"
 import { useAuth } from "@/components/layout/AuthProvider"
 import { toast } from "sonner"
@@ -145,7 +146,14 @@ export default function ProfileClient() {
               <div className="relative">
                 <div className="h-20 w-20 border-2 border-gold-700 gold-glow overflow-hidden bg-black-200 flex items-center justify-center">
                   {profile.avatar_url ? (
-                    <img src={profile.avatar_url} alt={profile.nickname} className="w-full h-full object-cover" />
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={profile.avatar_url}
+                        alt={profile.nickname}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                   ) : (
                     <span className="text-2xl font-bold text-gold-400">
                       {profile.nickname.charAt(0).toUpperCase()}

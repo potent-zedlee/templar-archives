@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
@@ -204,11 +205,14 @@ export function HeaderMobileMenu({
                 <div className="px-4 py-2">
                   <div className="flex items-center gap-3">
                     {avatarUrl ? (
-                      <img
-                        className="w-10 h-10 rounded-full object-cover"
-                        src={avatarUrl}
-                        alt={displayName}
-                      />
+                      <div className="w-10 h-10 rounded-full relative overflow-hidden">
+                        <Image
+                          src={avatarUrl}
+                          alt={displayName}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gold-500 flex items-center justify-center">
                         <span className="text-sm font-semibold text-gray-900">{initials}</span>
