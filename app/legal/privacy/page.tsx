@@ -135,7 +135,7 @@ export default function PrivacyPolicyPage() {
           <ul>
             <li><strong>Access:</strong> Request a copy of your data</li>
             <li><strong>Rectification:</strong> Correct inaccurate data</li>
-            <li><strong>Erasure:</strong> Request deletion ("right to be forgotten")</li>
+            <li><strong>Erasure:</strong> Request deletion (&quot;right to be forgotten&quot;)</li>
             <li><strong>Portability:</strong> Receive your data in machine-readable format</li>
             <li><strong>Object:</strong> Opt out of processing based on legitimate interest</li>
             <li><strong>Restrict:</strong> Limit how we use your data</li>
@@ -145,9 +145,9 @@ export default function PrivacyPolicyPage() {
           <h3>6.2 CCPA Rights (California Users)</h3>
           <p>You have the right to:</p>
           <ul>
-            <li><strong>Know:</strong> What personal information we collect and how it's used</li>
+            <li><strong>Know:</strong> What personal information we collect and how it&apos;s used</li>
             <li><strong>Delete:</strong> Request deletion of your data</li>
-            <li><strong>Opt-Out:</strong> "Do Not Sell My Personal Information" (we don't sell data)</li>
+            <li><strong>Opt-Out:</strong> &quot;Do Not Sell My Personal Information&quot; (we don&apos;t sell data)</li>
             <li><strong>Non-Discrimination:</strong> Equal service regardless of privacy choices</li>
           </ul>
 
@@ -203,7 +203,7 @@ export default function PrivacyPolicyPage() {
             We use Standard Contractual Clauses (SCCs) approved by the European Commission for EU data transfers.
           </p>
 
-          <h2>10. Children's Privacy</h2>
+          <h2>10. Children&apos;s Privacy</h2>
           <p>
             Our Service is not directed to children under 18 (or 16 in the EU).
             We do not knowingly collect data from children. If you believe we have collected data from a child,
@@ -244,7 +244,7 @@ export default function PrivacyPolicyPage() {
           </p>
           <ul>
             <li><strong>EU:</strong> <a href="https://edpb.europa.eu/about-edpb/board/members_en" target="_blank" rel="noopener noreferrer">European Data Protection Board</a></li>
-            <li><strong>UK:</strong> <a href="https://ico.org.uk" target="_blank" rel="noopener noreferrer">Information Commissioner's Office (ICO)</a></li>
+            <li><strong>UK:</strong> <a href="https://ico.org.uk" target="_blank" rel="noopener noreferrer">Information Commissioner&apos;s Office (ICO)</a></li>
             <li><strong>Korea:</strong> <a href="https://www.pipc.go.kr" target="_blank" rel="noopener noreferrer">Personal Information Protection Commission</a></li>
           </ul>
 

@@ -30,6 +30,7 @@ export function ArchiveStatsWidget({
   useEffect(() => {
     const saved = localStorage.getItem('archive-stats-collapsed')
     if (saved !== null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsCollapsed(saved === 'true')
     }
   }, [])

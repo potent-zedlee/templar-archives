@@ -154,6 +154,7 @@ export function SearchFilterSidebar({ onApplyFilters }: SearchFilterSidebarProps
         if (parsed.dateRange?.to) {
           parsed.dateRange.to = new Date(parsed.dateRange.to)
         }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFilters(parsed)
       } catch (error) {
         console.error("Failed to parse saved filters:", error)

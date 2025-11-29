@@ -35,6 +35,7 @@ export function HandListAccordion({
     if (handIds && handIds.length > 0) {
       loadLikeStatuses()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handIds, user?.id])
 
   const loadLikeStatuses = async () => {

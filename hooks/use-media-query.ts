@@ -20,7 +20,8 @@ export function useMediaQuery(query: string): boolean {
     // 클라이언트에서만 실행
     const media = window.matchMedia(query)
 
-    // 초기값 설정
+    // 초기값 설정 - SSR hydration fix
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMatches(media.matches)
 
     // 리스너 추가

@@ -43,7 +43,9 @@ export function HeaderMobileMenu({
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
+  // SSR hydration fix - intentional setState in effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
   }, [])
 

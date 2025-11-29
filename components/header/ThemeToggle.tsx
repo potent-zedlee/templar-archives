@@ -24,8 +24,9 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false)
   const { theme, setTheme, resolvedTheme } = useTheme()
 
-  // SSR hydration 이슈 방지
+  // SSR hydration fix - intentional setState in effect
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true)
   }, [])
 

@@ -102,7 +102,7 @@ export default function AffiliateDisclosurePage() {
             <li>Results may vary; we do not guarantee winnings or success</li>
           </ul>
 
-          <h2>7. Where You'll Find Affiliate Links</h2>
+          <h2>7. Where You&apos;ll Find Affiliate Links</h2>
           <p>
             Affiliate links may appear in:
           </p>
@@ -120,7 +120,7 @@ export default function AffiliateDisclosurePage() {
           </p>
           <ul>
             <li>You can visit poker sites directly by typing their URL</li>
-            <li>You can use browser extensions to block affiliate tracking (we won't prevent this)</li>
+            <li>You can use browser extensions to block affiliate tracking (we won&apos;t prevent this)</li>
             <li>You can enjoy all features of Templar Archives Index without clicking any affiliate links</li>
           </ul>
           <p>

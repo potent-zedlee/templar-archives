@@ -59,9 +59,11 @@ export function SearchHistory({ onSelectQuery }: SearchHistoryProps) {
     const savedFavorites = localStorage.getItem("search_favorites")
 
     if (savedHistory) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHistory(JSON.parse(savedHistory))
     }
     if (savedFavorites) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFavorites(JSON.parse(savedFavorites))
     }
   }, [])

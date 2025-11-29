@@ -48,6 +48,7 @@ export function ArchiveUnifiedFilters({
   useEffect(() => {
     const saved = localStorage.getItem('archive-unified-filters-open')
     if (saved !== null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsOpen(saved === 'true')
     }
   }, [])

@@ -45,11 +45,13 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
 
   // Reset to page 1 when search changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1)
   }, [searchQuery])
 
   // Reset to page 1 when players array changes (e.g., leaderboard filter)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCurrentPage(1)
   }, [players])
 

@@ -34,6 +34,7 @@ export function CookieSettingsDialog({ children }: CookieSettingsDialogProps) {
       if (savedConsent) {
         try {
           const consent: CookieConsent = JSON.parse(savedConsent)
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setAnalytics(consent.analytics)
         } catch (e) {
           // Ignore

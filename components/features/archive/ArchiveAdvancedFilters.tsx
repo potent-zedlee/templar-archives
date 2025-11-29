@@ -31,6 +31,7 @@ export function ArchiveAdvancedFilters({
   useEffect(() => {
     const saved = localStorage.getItem('archive-filters-collapsed')
     if (saved !== null) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsCollapsed(saved === 'true')
     }
   }, [])

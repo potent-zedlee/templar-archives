@@ -99,6 +99,7 @@ export default function UsersClient() {
         return
       }
 
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasAccess(true)
     } catch (error) {
       console.error("Error checking admin access:", error)

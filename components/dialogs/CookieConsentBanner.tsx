@@ -44,10 +44,12 @@ export function CookieConsentBanner() {
       "Atlantic/Madeira",
     ]
     const isEUUser = euTimezones.some((tz) => timezone.startsWith(tz))
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsEU(isEUUser)
 
     // Show banner after short delay
     const timer = setTimeout(() => {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowBanner(true)
     }, 1000)
 
@@ -163,8 +165,10 @@ export function useCookieConsent() {
     const savedConsent = localStorage.getItem(CONSENT_KEY)
     if (savedConsent) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setConsent(JSON.parse(savedConsent))
       } catch (e) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setConsent(null)
       }
     }

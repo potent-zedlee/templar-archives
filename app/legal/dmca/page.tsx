@@ -82,13 +82,13 @@ export default function DMCAPolicyPage() {
             <li>
               <strong>Statement of good faith:</strong>
               <br />
-              "              &quot;I have a good faith belief that use of the material is not authorized by the copyright owner, its agent, or the law.&quot;"
+              &quot;I have a good faith belief that use of the material is not authorized by the copyright owner, its agent, or the law.&quot;
             </li>
             <li>
               <strong>Statement of accuracy:</strong>
               <br />
-              "              &quot;The information in this notification is accurate, and under penalty of perjury,
-              I am the copyright owner or authorized to act on behalf of the owner.&quot;"
+              &quot;The information in this notification is accurate, and under penalty of perjury,
+              I am the copyright owner or authorized to act on behalf of the owner.&quot;
             </li>
             <li>
               <strong>Physical or electronic signature</strong>
@@ -151,7 +151,7 @@ export default function DMCAPolicyPage() {
           <h2>8. Misrepresentation</h2>
           <p className="bg-red-50 dark:bg-red-950 p-4 rounded-md border border-red-200 dark:border-red-800">
             <strong>Warning:</strong> Under 17 U.S.C. § 512(f), anyone who knowingly materially misrepresents that material is infringing
-            (or was removed by mistake) may be liable for damages, including costs and attorney's fees.
+            (or was removed by mistake) may be liable for damages, including costs and attorney&apos;s fees.
           </p>
 
           <h2>9. Not Legal Advice</h2>
