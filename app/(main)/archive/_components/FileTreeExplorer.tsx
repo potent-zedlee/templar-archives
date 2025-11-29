@@ -10,7 +10,7 @@
 
 'use client'
 
-import { useEffect, useRef, useMemo } from 'react'
+import { useEffect, useRef, useMemo, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
@@ -18,6 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search, X, FolderTree, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TreeNode } from './TreeNode'
+import { TreeContextMenu } from './TreeContextMenu'
 import {
   useArchiveTreeStore,
   type TreeNode as TreeNodeType,
@@ -163,6 +164,11 @@ export function FileTreeExplorer({
   const containerRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
+  // Context menu state
+  const [contextMenuOpen, setContextMenuOpen] = useState(false)
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 })
+  const [contextMenuNode, setContextMenuNode] = useState<TreeNodeType | null>(null)
+
   // Store state
   const {
     expandedNodes,
@@ -297,9 +303,61 @@ export function FileTreeExplorer({
   }
 
   // 컨텍스트 메뉴 핸들러
-  const handleContextMenu = (node: TreeNodeType, e: React.MouseEvent) => {
+  const handleContextMenu = useCallback((node: TreeNodeType, e: React.MouseEvent) => {
+    e.preventDefault()
+    setContextMenuNode(node)
+    setContextMenuPosition({ x: e.clientX, y: e.clientY })
+    setContextMenuOpen(true)
     onContextMenu?.(node, e)
-  }
+  }, [onContextMenu])
+
+  // 컨텍스트 메뉴 닫기
+  const handleContextMenuClose = useCallback(() => {
+    setContextMenuOpen(false)
+    setContextMenuNode(null)
+  }, [])
+
+  // 컨텍스트 메뉴 액션: 링크 복사
+  const handleCopyLink = useCallback((node: TreeNodeType) => {
+    const url = `${window.location.origin}/archive/${node.type}/${node.id}`
+    navigator.clipboard.writeText(url)
+  }, [])
+
+  // 컨텍스트 메뉴 액션: 노드 하위 모두 확장
+  const handleExpandAllFromNode = useCallback((nodeId: string) => {
+    const findAndExpand = (nodes: TreeNodeType[]) => {
+      nodes.forEach(n => {
+        if (n.id === nodeId || expandedNodes.has(n.parentId || '')) {
+          expandNode(n.id)
+        }
+        if (n.children) {
+          findAndExpand(n.children)
+        }
+      })
+    }
+    expandNode(nodeId)
+    findAndExpand(treeNodes)
+  }, [treeNodes, expandedNodes, expandNode])
+
+  // 컨텍스트 메뉴 액션: 노드 하위 모두 축소
+  const handleCollapseAllFromNode = useCallback((nodeId: string) => {
+    const findAndCollapse = (nodes: TreeNodeType[]) => {
+      nodes.forEach(n => {
+        if (n.id === nodeId) {
+          toggleNode(n.id)
+        }
+        if (n.children) {
+          n.children.forEach(child => {
+            if (expandedNodes.has(child.id)) {
+              toggleNode(child.id)
+            }
+          })
+          findAndCollapse(n.children)
+        }
+      })
+    }
+    findAndCollapse(treeNodes)
+  }, [treeNodes, expandedNodes, toggleNode])
 
   // 키보드 이벤트 핸들러
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -479,6 +537,17 @@ export function FileTreeExplorer({
           )}
         </div>
       </div>
+
+      {/* 컨텍스트 메뉴 */}
+      <TreeContextMenu
+        node={contextMenuNode}
+        position={contextMenuPosition}
+        isOpen={contextMenuOpen}
+        onClose={handleContextMenuClose}
+        onExpandAll={handleExpandAllFromNode}
+        onCollapseAll={handleCollapseAllFromNode}
+        onCopyLink={handleCopyLink}
+      />
     </div>
   )
 }
