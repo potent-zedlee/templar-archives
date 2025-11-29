@@ -9,6 +9,9 @@ scripts/
 ├── admin-cli.ts              # 통합 관리 CLI (핵심)
 ├── logo-management.ts        # 로고 관리
 ├── generate-hand-thumbnails.ts  # 썸네일 생성
+├── migrate-field-names.ts    # Firestore 필드명 마이그레이션
+├── rollback-field-names.ts   # 필드명 마이그레이션 롤백
+├── migrate-firestore.ts      # Firestore 데이터 마이그레이션
 ├── README.md
 │
 ├── operations/              # 자주 사용하는 운영 스크립트 (27개)
@@ -69,6 +72,84 @@ npm run admin -- --action=check-db
      Progress: 100%
      Hands Found: 12
 ```
+
+## Firestore 필드명 마이그레이션
+
+필드명을 camelCase에서 snake_case로 변경하는 스크립트입니다.
+
+### 사용법
+
+```bash
+# 1. Dry Run (미리보기) - 실제 변경하지 않음
+npx ts-node scripts/migrate-field-names.ts --dry-run
+
+# 2. 실제 마이그레이션 실행
+npx ts-node scripts/migrate-field-names.ts
+
+# 3. 특정 컬렉션만 마이그레이션
+npx ts-node scripts/migrate-field-names.ts --collections=tournaments,events
+
+# 4. 롤백 (snake_case → camelCase)
+npx ts-node scripts/rollback-field-names.ts --dry-run
+npx ts-node scripts/rollback-field-names.ts
+```
+
+### 마이그레이션 대상 필드
+
+**tournaments**
+- categoryInfo → category_info
+- gameType → game_type
+- startDate → start_date
+- endDate → end_date
+- totalPrize → total_prize
+- createdAt → created_at
+- updatedAt → updated_at
+
+**events** (서브컬렉션 포함)
+- eventNumber → event_number
+- buyIn → buy_in
+- totalPrize → total_prize
+- entryCount → entry_count
+- blindStructure → blind_structure
+- levelDuration → level_duration
+- startingStack → starting_stack
+
+**streams** (서브컬렉션 포함)
+- videoUrl → video_url
+- videoFile → video_file
+- videoSource → video_source
+- publishedAt → published_at
+- gcsPath → gcs_path
+- gcsUri → gcs_uri
+- pipelineStatus → pipeline_status
+- currentJobId → current_job_id
+
+**players**
+- normalizedName → normalized_name
+- photoUrl → photo_url
+- isPro → is_pro
+- totalWinnings → total_winnings
+
+**users**
+- avatarUrl → avatar_url
+- emailVerified → email_verified
+- pokerExperience → poker_experience
+- profileVisibility → profile_visibility
+- lastLoginAt → last_login_at
+
+**analysisJobs**
+- streamId → stream_id
+- userId → user_id
+- errorMessage → error_message
+- startedAt → started_at
+- completedAt → completed_at
+
+### 주의사항
+
+- 배치 처리: 500개 단위로 커밋
+- 서브컬렉션 자동 처리 (tournaments/{id}/events/{id}/streams)
+- 실행 전 반드시 **백업** 권장
+- Dry Run 모드로 먼저 테스트
 
 ## NPM Scripts
 
@@ -150,12 +231,15 @@ node scripts/operations/cleanup-stuck-job.mjs
 스크립트 실행에 필요한 환경 변수 (`.env.local`):
 
 ```bash
-# 필수
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
-SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
+# Firebase Admin SDK (필수)
+FIREBASE_ADMIN_SDK_KEY='{"type":"service_account"...}'  # JSON 문자열
+# 또는
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
 
-# KAN 분석용
+# Firebase 프로젝트 (필수)
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=templar-archives-index
+
+# Vertex AI (영상 분석용)
 GOOGLE_API_KEY=AIzaSy...
 ```
 
@@ -185,5 +269,5 @@ npm install dotenv
 
 ---
 
-**마지막 업데이트**: 2025-11-22
-**Phase 1**: 기반 시설 대청소 완료
+**마지막 업데이트**: 2025-11-30
+**최근 추가**: Firestore 필드명 마이그레이션 스크립트 (camelCase → snake_case)
