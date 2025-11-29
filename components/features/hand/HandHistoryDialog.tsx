@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useRef, useState } from "react"
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,12 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { VideoPlayer } from "@/components/features/video/VideoPlayer"
 import { PokerTable } from "@/components/features/poker/PokerTable"
 import { HandNavigator } from "./HandNavigator"
@@ -20,10 +26,14 @@ import {
   ChevronLeft,
   Share2,
   Bookmark,
+  BookmarkCheck,
   MessageSquare,
   Heart,
-  MoreHorizontal
+  MoreHorizontal,
+  Flag,
+  Copy
 } from "lucide-react"
+import { toast } from "sonner"
 import type { FirestoreStream } from "@/lib/firestore-types"
 
 interface HandData {
@@ -84,6 +94,11 @@ export function HandHistoryDialog({
   currentHandIndex = 0,
   onHandChange
 }: HandHistoryDialogProps) {
+  // Local state
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [isLiked, setIsLiked] = useState(false)
+  const commentsRef = useRef<HTMLDivElement>(null)
+
   // Video seek time (currently not implemented, but reserved for future use)
   const seekTime = null
 
@@ -136,6 +151,48 @@ export function HandHistoryDialog({
     linkElement.click()
   }
 
+  // Share hand link
+  const handleShare = async () => {
+    const url = `${window.location.origin}/hands/${hand.id}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success('Link copied to clipboard')
+    } catch {
+      toast.error('Failed to copy link')
+    }
+  }
+
+  // Toggle bookmark
+  const handleBookmark = () => {
+    setIsBookmarked(!isBookmarked)
+    if (!isBookmarked) {
+      toast.success('Added to bookmarks')
+    } else {
+      toast.success('Removed from bookmarks')
+    }
+    // TODO: Implement actual bookmark persistence
+  }
+
+  // Scroll to comments section
+  const handleScrollToComments = () => {
+    commentsRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // Toggle like
+  const handleLike = () => {
+    setIsLiked(!isLiked)
+    if (!isLiked) {
+      toast.success('Added to liked hands')
+    }
+    // TODO: Implement actual like persistence
+  }
+
+  // Report hand
+  const handleReport = () => {
+    toast.info('Report feature coming soon')
+    // TODO: Implement report dialog
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] h-[95vh] p-0 gap-0">
@@ -163,24 +220,56 @@ export function HandHistoryDialog({
 
             {/* Action Buttons */}
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={handleDownload}>
+              <Button variant="ghost" size="icon" onClick={handleDownload} title="Download JSON">
                 <Download className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" onClick={handleShare} title="Copy link">
                 <Share2 className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon">
-                <Bookmark className="h-5 w-5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleBookmark}
+                title={isBookmarked ? "Remove bookmark" : "Add bookmark"}
+              >
+                {isBookmarked ? (
+                  <BookmarkCheck className="h-5 w-5 text-primary" />
+                ) : (
+                  <Bookmark className="h-5 w-5" />
+                )}
               </Button>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" onClick={handleScrollToComments} title="Go to comments">
                 <MessageSquare className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon">
-                <Heart className="h-5 w-5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLike}
+                title={isLiked ? "Unlike" : "Like"}
+              >
+                <Heart className={`h-5 w-5 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
               </Button>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-5 w-5" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" title="More options">
+                    <MoreHorizontal className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleShare}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy link
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDownload}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleReport}>
+                    <Flag className="h-4 w-4 mr-2" />
+                    Report
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </DialogHeader>
@@ -215,7 +304,9 @@ export function HandHistoryDialog({
                 />
 
                 {/* Comments */}
-                <HandComments handId={hand.id} />
+                <div ref={commentsRef}>
+                  <HandComments handId={hand.id} />
+                </div>
               </div>
             </ScrollArea>
           </div>

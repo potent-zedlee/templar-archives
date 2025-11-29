@@ -90,18 +90,18 @@ function mapFirestoreCategory(snapshot: any): TournamentCategory {
   return {
     id: snapshot.id,
     name: data.name || '',
-    display_name: data.displayName || data.name || '',
-    short_name: data.shortName || null,
+    display_name: data.display_name || data.name || '',
+    short_name: data.short_name || null,
     aliases: data.aliases || [],
-    logo_url: data.logoUrl || null,
-    is_active: data.isActive ?? true,
-    game_type: (data.gameType || 'both') as GameType,
-    parent_id: data.parentId || null,
-    theme_gradient: data.themeGradient || null,
-    theme_text: data.themeText || null,
-    theme_shadow: data.themeShadow || null,
-    created_at: timestampToString(data.createdAt),
-    updated_at: timestampToString(data.updatedAt),
+    logo_url: data.logo_url || null,
+    is_active: data.is_active ?? true,
+    game_type: (data.game_type || 'both') as GameType,
+    parent_id: data.parent_id || null,
+    theme_gradient: data.theme_gradient || null,
+    theme_text: data.theme_text || null,
+    theme_shadow: data.theme_shadow || null,
+    created_at: timestampToString(data.created_at),
+    updated_at: timestampToString(data.updated_at),
   }
 }
 
@@ -118,11 +118,11 @@ async function getAllCategoriesFirestore(
     const constraints: QueryConstraint[] = [orderBy('name', 'asc')]
 
     if (!includeInactive) {
-      constraints.push(where('isActive', '==', true))
+      constraints.push(where('is_active', '==', true))
     }
 
     if (gameType) {
-      constraints.push(where('gameType', 'in', [gameType, 'both']))
+      constraints.push(where('game_type', 'in', [gameType, 'both']))
     }
 
     const q = query(collection(db, COLLECTION_PATHS.CATEGORIES), ...constraints)
@@ -222,7 +222,7 @@ async function searchCategoriesFirestore(searchQuery: string): Promise<Tournamen
 
     // Firestore는 부분 일치 검색을 직접 지원하지 않으므로 모든 활성 카테고리를 가져와서 필터링
     const categoriesRef = collection(db, COLLECTION_PATHS.CATEGORIES)
-    const q = query(categoriesRef, where('isActive', '==', true))
+    const q = query(categoriesRef, where('is_active', '==', true))
     const snapshot = await getDocs(q)
 
     const categories = snapshot.docs.map(mapFirestoreCategory)
@@ -256,19 +256,19 @@ async function createCategoryFirestore(input: CategoryInput): Promise<Tournament
     const now = Timestamp.now()
     const categoryData = {
       name: input.name,
-      displayName: input.display_name,
-      shortName: input.short_name || null,
+      display_name: input.display_name,
+      short_name: input.short_name || null,
       aliases: input.aliases || [],
-      logoUrl: input.logo_url || null,
-      isActive: input.is_active ?? true,
-      gameType: input.game_type || 'both',
-      parentId: input.parent_id || null,
-      themeGradient: input.theme_gradient || null,
-      themeText: input.theme_text || null,
-      themeShadow: input.theme_shadow || null,
+      logo_url: input.logo_url || null,
+      is_active: input.is_active ?? true,
+      game_type: input.game_type || 'both',
+      parent_id: input.parent_id || null,
+      theme_gradient: input.theme_gradient || null,
+      theme_text: input.theme_text || null,
+      theme_shadow: input.theme_shadow || null,
       order: 0, // 기본값
-      createdAt: now,
-      updatedAt: now,
+      created_at: now,
+      updated_at: now,
     }
 
     const docRef = doc(db, COLLECTION_PATHS.CATEGORIES, input.id)
@@ -291,20 +291,20 @@ async function updateCategoryFirestore(
 ): Promise<TournamentCategory> {
   try {
     const updateData: any = {
-      updatedAt: Timestamp.now(),
+      updated_at: Timestamp.now(),
     }
 
     if (input.name !== undefined) updateData.name = input.name
-    if (input.display_name !== undefined) updateData.displayName = input.display_name
-    if (input.short_name !== undefined) updateData.shortName = input.short_name || null
+    if (input.display_name !== undefined) updateData.display_name = input.display_name
+    if (input.short_name !== undefined) updateData.short_name = input.short_name || null
     if (input.aliases !== undefined) updateData.aliases = input.aliases
-    if (input.logo_url !== undefined) updateData.logoUrl = input.logo_url || null
-    if (input.is_active !== undefined) updateData.isActive = input.is_active
-    if (input.game_type !== undefined) updateData.gameType = input.game_type
-    if (input.parent_id !== undefined) updateData.parentId = input.parent_id
-    if (input.theme_gradient !== undefined) updateData.themeGradient = input.theme_gradient || null
-    if (input.theme_text !== undefined) updateData.themeText = input.theme_text || null
-    if (input.theme_shadow !== undefined) updateData.themeShadow = input.theme_shadow || null
+    if (input.logo_url !== undefined) updateData.logo_url = input.logo_url || null
+    if (input.is_active !== undefined) updateData.is_active = input.is_active
+    if (input.game_type !== undefined) updateData.game_type = input.game_type
+    if (input.parent_id !== undefined) updateData.parent_id = input.parent_id
+    if (input.theme_gradient !== undefined) updateData.theme_gradient = input.theme_gradient || null
+    if (input.theme_text !== undefined) updateData.theme_text = input.theme_text || null
+    if (input.theme_shadow !== undefined) updateData.theme_shadow = input.theme_shadow || null
 
     const docRef = doc(db, COLLECTION_PATHS.CATEGORIES, id)
     await updateDoc(docRef, updateData)

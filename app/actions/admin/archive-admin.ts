@@ -580,10 +580,10 @@ export async function validateStreamChecklist(
       errors.push('YouTube link is required for publishing')
     }
 
-    // 4. 핸드 개수 확인 (streamId로 필터링)
+    // 4. 핸드 개수 확인 (stream_id로 필터링)
     const handsSnapshot = await adminFirestore
       .collection(COLLECTION_PATHS.HANDS)
-      .where('streamId', '==', streamId)
+      .where('stream_id', '==', streamId)
       .get()
 
     const handCount = handsSnapshot.size
@@ -610,7 +610,7 @@ export async function validateStreamChecklist(
       for (const sid of streamIds) {
         const streamHandsSnapshot = await adminFirestore
           .collection(COLLECTION_PATHS.HANDS)
-          .where('streamId', '==', sid)
+          .where('stream_id', '==', sid)
           .get()
 
         totalHands += streamHandsSnapshot.size
@@ -630,8 +630,8 @@ export async function validateStreamChecklist(
     if (handCount > 0) {
       const handsWithThumbnailSnapshot = await adminFirestore
         .collection(COLLECTION_PATHS.HANDS)
-        .where('streamId', '==', streamId)
-        .where('thumbnailUrl', '!=', null)
+        .where('stream_id', '==', streamId)
+        .where('thumbnail_url', '!=', null)
         .limit(1)
         .get()
 
@@ -742,7 +742,7 @@ export async function bulkDeleteStreams(
         // 3b. 연결된 핸드 데이터 삭제
         const handsSnapshot = await adminFirestore
           .collection(COLLECTION_PATHS.HANDS)
-          .where('streamId', '==', meta.streamId)
+          .where('stream_id', '==', meta.streamId)
           .get()
 
         handsSnapshot.docs.forEach((doc) => {
