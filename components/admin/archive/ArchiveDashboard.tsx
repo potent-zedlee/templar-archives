@@ -8,10 +8,12 @@
  * - Tree/Flat 뷰 전환
  * - 상세 패널
  * - 실시간 분석 모니터링 (Analyzing 상태)
+ * - ClassifyDialog: 스트림 분류
+ * - ReviewPanel: 핸드 검토
  */
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useCallback, useMemo, Suspense } from 'react'
+import { useCallback, useMemo, useState, Suspense } from 'react'
 import {
   ResizableHandle,
   ResizablePanel,
@@ -21,6 +23,8 @@ import { PipelineTabs } from '@/components/admin/PipelineTabs'
 import { StreamDetailPanel } from '@/components/admin/StreamDetailPanel'
 import { ViewToggle } from './ViewToggle'
 import { FlatView } from './views/FlatView'
+import { ClassifyDialog } from './ClassifyDialog'
+import { ReviewPanel } from './ReviewPanel'
 import { Button } from '@/components/ui/button'
 import { Plus, Upload } from 'lucide-react'
 import { useAdminArchiveStore } from '@/stores/admin-archive-store'
@@ -28,6 +32,8 @@ import {
   useStreamsByPipelineStatus,
   usePipelineStatusCounts,
   useRetryAnalysis,
+  useUpdatePipelineStatus,
+  type PipelineStream,
 } from '@/lib/queries/admin-archive-queries'
 import { useActiveJobs } from '@/lib/queries/kan-queries'
 import type { PipelineStatus } from '@/lib/types/archive'
@@ -88,14 +94,22 @@ function DashboardContent() {
   const searchParams = useSearchParams()
   const { viewMode, selectedItem, setSelectedItem, setCurrentStatusFilter } = useAdminArchiveStore()
 
+  // Dialog/Panel 상태
+  const [classifyDialogOpen, setClassifyDialogOpen] = useState(false)
+  const [classifyStream, setClassifyStream] = useState<PipelineStream | null>(null)
+  const [reviewPanelOpen, setReviewPanelOpen] = useState(false)
+  const [reviewStreamId, setReviewStreamId] = useState<string | null>(null)
+  const [reviewStreamName, setReviewStreamName] = useState<string>('')
+
   // URL에서 상태 필터 읽기
   const statusParam = searchParams?.get('status') as PipelineStatus | null
   const currentStatus: PipelineStatus | 'all' = statusParam || 'all'
 
   // 쿼리
-  const { data: streams, isLoading } = useStreamsByPipelineStatus(currentStatus)
+  const { data: streams, isLoading, refetch } = useStreamsByPipelineStatus(currentStatus)
   const { data: counts } = usePipelineStatusCounts()
   const retryMutation = useRetryAnalysis()
+  const updateStatusMutation = useUpdatePipelineStatus()
 
   // 상태 변경 핸들러
   const handleStatusChange = useCallback(
@@ -116,6 +130,41 @@ function DashboardContent() {
       retryMutation.mutate(streamId)
     },
     [retryMutation]
+  )
+
+  // 분류 다이얼로그 열기
+  const handleClassify = useCallback((stream: PipelineStream) => {
+    setClassifyStream(stream)
+    setClassifyDialogOpen(true)
+  }, [])
+
+  // 분석 시작 핸들러
+  const handleAnalyze = useCallback(
+    (streamId: string) => {
+      updateStatusMutation.mutate({
+        streamId,
+        status: 'analyzing',
+      })
+    },
+    [updateStatusMutation]
+  )
+
+  // 리뷰 패널 열기
+  const handleReview = useCallback((stream: PipelineStream) => {
+    setReviewStreamId(stream.id)
+    setReviewStreamName(stream.name)
+    setReviewPanelOpen(true)
+  }, [])
+
+  // 발행 핸들러
+  const handlePublish = useCallback(
+    (streamId: string) => {
+      updateStatusMutation.mutate({
+        streamId,
+        status: 'published',
+      })
+    },
+    [updateStatusMutation]
   )
 
   // 선택된 스트림 데이터
@@ -186,26 +235,31 @@ function DashboardContent() {
           {/* Detail Panel */}
           <ResizablePanel defaultSize={40} minSize={25}>
             <div className="h-full overflow-auto border-l">
-              {selectedStream ? (
+              {reviewPanelOpen && reviewStreamId ? (
+                <ReviewPanel
+                  streamId={reviewStreamId}
+                  streamName={reviewStreamName}
+                  onClose={() => {
+                    setReviewPanelOpen(false)
+                    setReviewStreamId(null)
+                    setReviewStreamName('')
+                  }}
+                  onApprove={() => {
+                    refetch()
+                    setReviewPanelOpen(false)
+                    setReviewStreamId(null)
+                    setReviewStreamName('')
+                  }}
+                />
+              ) : selectedStream ? (
                 <StreamDetailPanel
                   stream={selectedStream}
                   onClose={() => setSelectedItem(null)}
-                  onClassify={() => {
-                    // TODO: ClassifyDialog 열기
-                    console.log('Classify:', selectedStream.id)
-                  }}
-                  onAnalyze={() => {
-                    // TODO: 분석 시작
-                    console.log('Analyze:', selectedStream.id)
-                  }}
-                  onReview={() => {
-                    // TODO: Review 페이지로 이동
-                    console.log('Review:', selectedStream.id)
-                  }}
-                  onPublish={() => {
-                    // TODO: 발행
-                    console.log('Publish:', selectedStream.id)
-                  }}
+                  onClassify={() => handleClassify(selectedStream)}
+                  onAnalyze={() => handleAnalyze(selectedStream.id)}
+                  onReview={() => handleReview(selectedStream)}
+                  onPublish={() => handlePublish(selectedStream.id)}
+                  onRetry={() => handleRetry(selectedStream.id)}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -219,6 +273,18 @@ function DashboardContent() {
 
       {/* Active Jobs Panel (Analyzing 상태에서만 표시) */}
       {currentStatus === 'analyzing' && <ActiveJobsPanel />}
+
+      {/* ClassifyDialog */}
+      <ClassifyDialog
+        open={classifyDialogOpen}
+        onOpenChange={setClassifyDialogOpen}
+        stream={classifyStream}
+        onSuccess={() => {
+          refetch()
+          setClassifyDialogOpen(false)
+          setClassifyStream(null)
+        }}
+      />
     </div>
   )
 }
