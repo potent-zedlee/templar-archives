@@ -382,3 +382,4 @@ const useArchiveDataStore = create<ArchiveDataStore>()
 
 **마지막 업데이트**: 2025-11-29
 **문서 버전**: 5.0 (Admin Archive Pipeline Dashboard 추가, Stream 파이프라인 상태 시스템)
+- camelCase 필드들을 snake_case로
