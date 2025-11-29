@@ -44,9 +44,7 @@ export default function CategoriesPage() {
   // Update local categories when data changes
   useEffect(() => {
     if (categories) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalCategories(categories)
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasChanges(false)
     }
   }, [categories])
@@ -69,7 +67,6 @@ export default function CategoriesPage() {
         return
       }
 
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasAccess(true)
     } catch (error) {
       console.error("Error checking admin access:", error)

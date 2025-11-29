@@ -44,7 +44,6 @@ export function VideoPlayerDialog({
 
   useEffect(() => {
     if (isOpen && typeof window !== 'undefined' && !isPipMode) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPosition({
         x: (window.innerWidth - size.width) / 2,
         y: (window.innerHeight - size.height) / 2,

@@ -79,7 +79,7 @@ export function ActiveJobsMonitor() {
               진행 중인 작업이 없습니다
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              새로운 분석을 시작하려면 "새 분석 요청" 페이지로 이동하세요
+              새로운 분석을 시작하려면 &quot;새 분석 요청&quot; 페이지로 이동하세요
             </p>
           </div>
         </CardContent>

@@ -97,7 +97,6 @@ export default function DashboardPage() {
         return
       }
 
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasAccess(true)
     } catch (error) {
       console.error("Error checking admin access:", error)

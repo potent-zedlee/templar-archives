@@ -49,7 +49,6 @@ export function CookieConsentBanner() {
 
     // Show banner after short delay
     const timer = setTimeout(() => {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowBanner(true)
     }, 1000)
 
@@ -168,7 +167,6 @@ export function useCookieConsent() {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setConsent(JSON.parse(savedConsent))
       } catch (e) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setConsent(null)
       }
     }

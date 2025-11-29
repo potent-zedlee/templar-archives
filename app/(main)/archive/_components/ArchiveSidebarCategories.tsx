@@ -76,7 +76,6 @@ export function ArchiveSidebarCategories({
     else if (selectedCat) {
       const children = getChildren(selectedCat.id)
       if (children.length > 0) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setExpandedParentIds(prev => {
           const newSet = new Set(prev)
           newSet.add(selectedCat.id)

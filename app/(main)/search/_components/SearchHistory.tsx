@@ -63,7 +63,6 @@ export function SearchHistory({ onSelectQuery }: SearchHistoryProps) {
       setHistory(JSON.parse(savedHistory))
     }
     if (savedFavorites) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFavorites(JSON.parse(savedFavorites))
     }
   }, [])

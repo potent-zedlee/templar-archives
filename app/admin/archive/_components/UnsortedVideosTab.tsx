@@ -480,8 +480,8 @@ export function UnsortedVideosTab({ onRefresh }: UnsortedVideosTabProps) {
             <DialogTitle>Organize Videos</DialogTitle>
             <DialogDescription>
               Selected {selectedVideos.size} video(s) will be organized to an
-              event. This feature is coming soon - please use Day Dialog's "From
-              Unsorted" tab for now.
+              event. This feature is coming soon - please use Day Dialog&apos;s &quot;From
+              Unsorted&quot; tab for now.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

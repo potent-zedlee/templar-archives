@@ -23,15 +23,15 @@ export function SearchEmptyState() {
       <div className="w-full max-w-2xl space-y-3 text-sm text-muted-foreground">
         <div className="flex items-start gap-2">
           <span className="text-purple-400">•</span>
-          <p>Use natural language: <span className="text-foreground">"Show me hands with AA vs KK"</span></p>
+          <p>Use natural language: <span className="text-foreground">&quot;Show me hands with AA vs KK&quot;</span></p>
         </div>
         <div className="flex items-start gap-2">
           <span className="text-blue-400">•</span>
-          <p>Search by tournament: <span className="text-foreground">"WSOP Main Event big pots"</span></p>
+          <p>Search by tournament: <span className="text-foreground">&quot;WSOP Main Event big pots&quot;</span></p>
         </div>
         <div className="flex items-start gap-2">
           <span className="text-purple-400">•</span>
-          <p>Find specific scenarios: <span className="text-foreground">"Bluff catches over 100k"</span></p>
+          <p>Find specific scenarios: <span className="text-foreground">&quot;Bluff catches over 100k&quot;</span></p>
         </div>
       </div>
     </div>
