@@ -131,10 +131,10 @@ export default function EditHandActionsPage() {
       let eventName = ""
       let tournamentName = ""
 
-      if (handData.streamId && handData.eventId && handData.tournamentId) {
+      if (handData.stream_id && handData.event_id && handData.tournament_id) {
         try {
           // Get tournament
-          const tournamentRef = doc(firestore, COLLECTION_PATHS.TOURNAMENTS, handData.tournamentId)
+          const tournamentRef = doc(firestore, COLLECTION_PATHS.TOURNAMENTS, handData.tournament_id)
           const tournamentSnap = await getDoc(tournamentRef)
           if (tournamentSnap.exists()) {
             const tournamentData = tournamentSnap.data() as FirestoreTournament
@@ -144,8 +144,8 @@ export default function EditHandActionsPage() {
           // Get event
           const eventRef = doc(
             firestore,
-            COLLECTION_PATHS.EVENTS(handData.tournamentId),
-            handData.eventId
+            COLLECTION_PATHS.EVENTS(handData.tournament_id),
+            handData.event_id
           )
           const eventSnap = await getDoc(eventRef)
           if (eventSnap.exists()) {
@@ -156,8 +156,8 @@ export default function EditHandActionsPage() {
           // Get stream
           const streamRef = doc(
             firestore,
-            COLLECTION_PATHS.STREAMS(handData.tournamentId, handData.eventId),
-            handData.streamId
+            COLLECTION_PATHS.STREAMS(handData.tournament_id, handData.event_id),
+            handData.stream_id
           )
           const streamSnap = await getDoc(streamRef)
           if (streamSnap.exists()) {
@@ -174,7 +174,7 @@ export default function EditHandActionsPage() {
         number: handData.number,
         description: handData.description || "",
         day: {
-          id: handData.streamId || "",
+          id: handData.stream_id || "",
           name: streamName || "Unknown Stream",
           sub_event: {
             name: eventName || "Unknown Event",

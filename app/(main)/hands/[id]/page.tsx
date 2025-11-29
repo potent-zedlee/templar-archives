@@ -50,9 +50,9 @@ async function getHandDetails(handId: string): Promise<HandDetailsResult | null>
     let event: (FirestoreEvent & { id: string }) | null = null
     let tournament: (FirestoreTournament & { id: string }) | null = null
 
-    if (handData.tournamentId && handData.eventId && handData.streamId) {
+    if (handData.tournament_id && handData.event_id && handData.stream_id) {
       // Get tournament
-      const tournamentRef = adminFirestore.collection(COLLECTION_PATHS.TOURNAMENTS).doc(handData.tournamentId)
+      const tournamentRef = adminFirestore.collection(COLLECTION_PATHS.TOURNAMENTS).doc(handData.tournament_id)
       const tournamentSnap = await tournamentRef.get()
       if (tournamentSnap.exists) {
         tournament = { id: tournamentSnap.id, ...tournamentSnap.data() as FirestoreTournament }
@@ -60,8 +60,8 @@ async function getHandDetails(handId: string): Promise<HandDetailsResult | null>
 
       // Get event
       const eventRef = adminFirestore
-        .collection(COLLECTION_PATHS.EVENTS(handData.tournamentId))
-        .doc(handData.eventId)
+        .collection(COLLECTION_PATHS.EVENTS(handData.tournament_id))
+        .doc(handData.event_id)
       const eventSnap = await eventRef.get()
       if (eventSnap.exists) {
         event = { id: eventSnap.id, ...eventSnap.data() as FirestoreEvent }
@@ -69,8 +69,8 @@ async function getHandDetails(handId: string): Promise<HandDetailsResult | null>
 
       // Get stream
       const streamRef = adminFirestore
-        .collection(COLLECTION_PATHS.STREAMS(handData.tournamentId, handData.eventId))
-        .doc(handData.streamId)
+        .collection(COLLECTION_PATHS.STREAMS(handData.tournament_id, handData.event_id))
+        .doc(handData.stream_id)
       const streamSnap = await streamRef.get()
       if (streamSnap.exists) {
         stream = { id: streamSnap.id, ...streamSnap.data() as FirestoreStream }
@@ -166,7 +166,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
       player_name: action.playerName,
     })) || []
 
-  const adjacent = await getAdjacentHands(handId, hand.streamId)
+  const adjacent = await getAdjacentHands(handId, hand.stream_id)
 
   return (
     <div className="min-h-screen bg-background">

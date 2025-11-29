@@ -203,8 +203,7 @@ async function saveSingleHand(
 
   // 핸드 문서 저장 (Firestore 스키마에 맞게 - snake_case 필드명 사용)
   await handRef.set({
-    day_id: streamId, // 프론트엔드 조회용 (day_id로 쿼리)
-    stream_id: streamId, // 참조용
+    stream_id: streamId, // 스트림 ID (프론트엔드 조회용)
     event_id: '', // 나중에 업데이트
     tournament_id: '', // 나중에 업데이트
     player_ids: playerIds, // array-contains 쿼리용

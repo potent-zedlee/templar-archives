@@ -301,12 +301,12 @@ export function useAdminStreamsQuery(
         for (let i = 0; i < streamIds.length; i += chunkSize) {
           const chunk = streamIds.slice(i, i + chunkSize)
           const handsRef = collection(firestore, 'hands')
-          const handsQuery = query(handsRef, where('day_id', 'in', chunk))
+          const handsQuery = query(handsRef, where('stream_id', 'in', chunk))
           const handsSnapshot = await getDocs(handsQuery)
 
           handsSnapshot.forEach(doc => {
-            const dayId = doc.data().day_id
-            handCounts[dayId] = (handCounts[dayId] || 0) + 1
+            const streamId = doc.data().stream_id
+            handCounts[streamId] = (handCounts[streamId] || 0) + 1
           })
         }
 
@@ -702,7 +702,7 @@ export function useStreamHands(streamId: string) {
       const handsRef = collection(firestore, 'hands')
       const q = query(
         handsRef,
-        where('day_id', '==', streamId),
+        where('stream_id', '==', streamId),
         orderBy('number', 'asc')
       )
       const snapshot = await getDocs(q)
@@ -712,7 +712,7 @@ export function useStreamHands(streamId: string) {
         const data = docSnapshot.data()
         hands.push({
           id: docSnapshot.id,
-          day_id: data.day_id,
+          stream_id: data.stream_id,
           number: data.number,
           description: data.description,
           ai_summary: data.ai_summary,

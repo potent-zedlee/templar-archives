@@ -168,18 +168,18 @@ async function enrichHand(
   const handId = handDoc.id
 
   // 스트림 정보 가져오기 (캐시 사용)
-  let streamInfo = streamCache.get(hand.streamId)
+  let streamInfo = streamCache.get(hand.stream_id)
 
   if (!streamInfo) {
     // 스트림, 이벤트, 토너먼트 정보를 가져와야 함
     // hands는 flat collection이므로 참조 ID로 조회
-    const tournamentRef = doc(firestore, COLLECTION_PATHS.TOURNAMENTS, hand.tournamentId)
+    const tournamentRef = doc(firestore, COLLECTION_PATHS.TOURNAMENTS, hand.tournament_id)
     const tournamentDoc = await getDoc(tournamentRef)
 
     if (tournamentDoc.exists()) {
       const tournament = tournamentDoc.data() as FirestoreTournament
 
-      const eventRef = doc(firestore, COLLECTION_PATHS.EVENTS(hand.tournamentId), hand.eventId)
+      const eventRef = doc(firestore, COLLECTION_PATHS.EVENTS(hand.tournament_id), hand.event_id)
       const eventDoc = await getDoc(eventRef)
 
       if (eventDoc.exists()) {
@@ -187,15 +187,15 @@ async function enrichHand(
 
         const streamRef = doc(
           firestore,
-          COLLECTION_PATHS.STREAMS(hand.tournamentId, hand.eventId),
-          hand.streamId,
+          COLLECTION_PATHS.STREAMS(hand.tournament_id, hand.event_id),
+          hand.stream_id,
         )
         const streamDoc = await getDoc(streamRef)
 
         if (streamDoc.exists()) {
           const stream = streamDoc.data() as FirestoreStream
           streamInfo = { stream, event, tournament }
-          streamCache.set(hand.streamId, streamInfo)
+          streamCache.set(hand.stream_id, streamInfo)
         }
       }
     }
@@ -305,18 +305,18 @@ export async function fetchHandDetails(handId: string): Promise<HandDetails | nu
     const hand = handDoc.data() as FirestoreHand
 
     // 토너먼트, 이벤트, 스트림 정보 가져오기
-    const tournamentRef = doc(firestore, COLLECTION_PATHS.TOURNAMENTS, hand.tournamentId)
+    const tournamentRef = doc(firestore, COLLECTION_PATHS.TOURNAMENTS, hand.tournament_id)
     const tournamentDoc = await getDoc(tournamentRef)
     const tournament = tournamentDoc.data() as FirestoreTournament
 
-    const eventRef = doc(firestore, COLLECTION_PATHS.EVENTS(hand.tournamentId), hand.eventId)
+    const eventRef = doc(firestore, COLLECTION_PATHS.EVENTS(hand.tournament_id), hand.event_id)
     const eventDoc = await getDoc(eventRef)
     const event = eventDoc.data() as FirestoreEvent
 
     const streamRef = doc(
       firestore,
-      COLLECTION_PATHS.STREAMS(hand.tournamentId, hand.eventId),
-      hand.streamId,
+      COLLECTION_PATHS.STREAMS(hand.tournament_id, hand.event_id),
+      hand.stream_id,
     )
     const streamDoc = await getDoc(streamRef)
     const stream = streamDoc.data() as FirestoreStream
@@ -355,17 +355,17 @@ export async function fetchHandDetails(handId: string): Promise<HandDetails | nu
       favorite: hand.favorite,
       created_at: timestampToString(hand.createdAt as Timestamp),
       stream: {
-        id: hand.streamId,
+        id: hand.stream_id,
         name: stream?.name || '',
         video_url: stream?.videoUrl,
         video_file: stream?.videoFile,
         video_source: stream?.videoSource,
         event: {
-          id: hand.eventId,
+          id: hand.event_id,
           name: event?.name || '',
           date: event?.date ? timestampToString(event.date as Timestamp) || '' : '',
           tournament: {
-            id: hand.tournamentId,
+            id: hand.tournament_id,
             name: tournament?.name || '',
             category: tournament?.category || '',
             location: tournament?.location || '',
@@ -749,8 +749,8 @@ export async function fetchPlayerHandsGrouped(playerId: string): Promise<
       if (!handDoc.exists()) continue
 
       const hand = handDoc.data() as FirestoreHand
-      const tournamentId = hand.tournamentId
-      const eventId = hand.eventId
+      const tournamentId = hand.tournament_id
+      const eventId = hand.event_id
 
       // 플레이어 정보 찾기
       const playerInfo = hand.players?.find((p) => p.playerId === playerId)

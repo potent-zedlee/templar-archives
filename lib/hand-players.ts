@@ -259,7 +259,7 @@ export async function addPlayerToHand(
     const playerHandRef = doc(firestore, COLLECTION_PATHS.PLAYER_HANDS(playerId), handId)
     batch.set(playerHandRef, {
       tournamentRef: {
-        id: hand.tournamentId,
+        id: hand.tournament_id,
         name: '', // 필요시 조회
         category: '',
       },

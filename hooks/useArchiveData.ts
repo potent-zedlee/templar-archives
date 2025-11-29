@@ -124,7 +124,7 @@ export function useArchiveData() {
           timestamp: data.timestamp,
           pot_size: data.potSize,
           ai_summary: data.aiSummary,
-          day_id: data.streamId,
+          stream_id: data.stream_id,
           favorite: data.favorite,
           checked: false,
           hand_players: data.players?.map((p) => ({

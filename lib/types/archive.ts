@@ -149,7 +149,7 @@ export interface Stream {
 
 export interface Hand {
   id: string
-  day_id: string
+  stream_id: string
   number: string
   description: string
 

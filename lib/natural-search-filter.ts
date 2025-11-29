@@ -327,35 +327,35 @@ export async function buildQueryFromFilter(
 
     // 스트림/이벤트/토너먼트 정보 가져오기 (캐싱)
     let streamData = null
-    if (hand.streamId) {
-      if (streamCache.has(hand.streamId)) {
-        streamData = streamCache.get(hand.streamId)
+    if (hand.stream_id) {
+      if (streamCache.has(hand.stream_id)) {
+        streamData = streamCache.get(hand.stream_id)
       } else {
         const streamDoc = await firestore
           .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
-          .doc(hand.streamId)
+          .doc(hand.stream_id)
           .get()
 
         if (streamDoc.exists) {
           streamData = streamDoc.data()
-          streamCache.set(hand.streamId, streamData)
+          streamCache.set(hand.stream_id, streamData)
         }
       }
     }
 
     let tournamentData = null
-    if (hand.tournamentId) {
-      if (tournamentCache.has(hand.tournamentId)) {
-        tournamentData = tournamentCache.get(hand.tournamentId)
+    if (hand.tournament_id) {
+      if (tournamentCache.has(hand.tournament_id)) {
+        tournamentData = tournamentCache.get(hand.tournament_id)
       } else {
         const tournamentDoc = await firestore
           .collection(COLLECTION_PATHS.TOURNAMENTS)
-          .doc(hand.tournamentId)
+          .doc(hand.tournament_id)
           .get()
 
         if (tournamentDoc.exists) {
           tournamentData = tournamentDoc.data()
-          tournamentCache.set(hand.tournamentId, tournamentData)
+          tournamentCache.set(hand.tournament_id, tournamentData)
         }
       }
     }

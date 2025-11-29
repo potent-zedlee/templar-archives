@@ -91,9 +91,9 @@ const handConverter = {
       number: data.number,
       description: data.description,
       timestamp: data.timestamp,
-      streamId: data.streamId,
-      eventId: data.eventId,
-      tournamentId: data.tournamentId,
+      streamId: data.stream_id,
+      eventId: data.event_id,
+      tournamentId: data.tournament_id,
       handPlayers: data.players?.map(p => ({
         playerId: p.playerId,
         player: {

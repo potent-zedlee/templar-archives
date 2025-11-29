@@ -148,7 +148,7 @@ function mapFirestoreHand(docSnap: DocumentSnapshot | QueryDocumentSnapshot): Ha
   const data = docSnap.data() as FirestoreHand
   return {
     id: docSnap.id,
-    day_id: data.streamId,
+    stream_id: data.stream_id,
     number: data.number,
     description: data.description,
     ai_summary: data.aiSummary,

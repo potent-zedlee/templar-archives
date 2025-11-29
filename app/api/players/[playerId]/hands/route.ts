@@ -167,8 +167,8 @@ async function groupHandsByTournament(
   const eventIds = new Set<string>()
 
   hands.forEach((hand) => {
-    if (hand.tournamentId) tournamentIds.add(hand.tournamentId)
-    if (hand.eventId) eventIds.add(hand.eventId)
+    if (hand.tournament_id) tournamentIds.add(hand.tournament_id)
+    if (hand.event_id) eventIds.add(hand.event_id)
   })
 
   // 토너먼트 정보 조회
@@ -215,8 +215,8 @@ async function groupHandsByTournament(
   const groupMap = new Map<string, PlayerHandGroup>()
 
   hands.forEach((hand) => {
-    const tournamentId = hand.tournamentId || 'unknown'
-    const eventId = hand.eventId || 'unknown'
+    const tournamentId = hand.tournament_id || 'unknown'
+    const eventId = hand.event_id || 'unknown'
     const tournamentInfo = tournamentMap.get(tournamentId) || {
       name: 'Unknown Tournament',
       category: 'Unknown',

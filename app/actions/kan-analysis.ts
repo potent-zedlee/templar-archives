@@ -431,9 +431,9 @@ async function saveHandToDatabase(
 
   // Hand 문서 생성
   const handData: Partial<FirestoreHand> = {
-    streamId,
-    eventId,
-    tournamentId,
+    stream_id: streamId,
+    event_id: eventId,
+    tournament_id: tournamentId,
     playerIds, // array-contains 쿼리용
     number: String(hand.handNumber),
     description: generateHandDescription(hand),

@@ -108,16 +108,16 @@ async function getUserBookmarks(userId: string): Promise<HandBookmarkWithDetails
             // Fetch stream details
             const streamRef = doc(
               firestore,
-              `tournaments/${handData.tournamentId}/events/${handData.eventId}/streams/${handData.streamId}`
+              `tournaments/${handData.tournament_id}/events/${handData.event_id}/streams/${handData.stream_id}`
             )
             const streamSnap = await getDoc(streamRef)
 
             // Fetch event details
-            const eventRef = doc(firestore, `tournaments/${handData.tournamentId}/events/${handData.eventId}`)
+            const eventRef = doc(firestore, `tournaments/${handData.tournament_id}/events/${handData.event_id}`)
             const eventSnap = await getDoc(eventRef)
 
             // Fetch tournament details
-            const tournamentRef = doc(firestore, `tournaments/${handData.tournamentId}`)
+            const tournamentRef = doc(firestore, `tournaments/${handData.tournament_id}`)
             const tournamentSnap = await getDoc(tournamentRef)
 
             return {
@@ -129,15 +129,15 @@ async function getUserBookmarks(userId: string): Promise<HandBookmarkWithDetails
                 timestamp: handData.timestamp,
                 day: streamSnap.exists()
                   ? {
-                      id: handData.streamId,
+                      id: handData.stream_id,
                       name: (streamSnap.data() as FirestoreStream).name,
                       subEvent: eventSnap.exists()
                         ? {
-                            id: handData.eventId,
+                            id: handData.event_id,
                             name: (eventSnap.data() as FirestoreEvent).name,
                             tournament: tournamentSnap.exists()
                               ? {
-                                  id: handData.tournamentId,
+                                  id: handData.tournament_id,
                                   name: (tournamentSnap.data() as FirestoreTournament).name,
                                   category: (tournamentSnap.data() as FirestoreTournament).category,
                                 }

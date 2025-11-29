@@ -115,12 +115,12 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
       // 2. 스트림 정보 조회 (계층 구조: tournaments/{tid}/events/{eid}/streams/{sid})
       let streamInfo: HandDetailData["stream"] = undefined
 
-      if (handData.streamId && handData.eventId && handData.tournamentId) {
+      if (handData.stream_id && handData.event_id && handData.tournament_id) {
         try {
           const streamRef = doc(
             db,
-            COLLECTION_PATHS.STREAMS(handData.tournamentId, handData.eventId),
-            handData.streamId
+            COLLECTION_PATHS.STREAMS(handData.tournament_id, handData.event_id),
+            handData.stream_id
           )
           const streamSnap = await getDoc(streamRef)
 
@@ -130,14 +130,14 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
             // 이벤트 정보 조회
             const eventRef = doc(
               db,
-              COLLECTION_PATHS.EVENTS(handData.tournamentId),
-              handData.eventId
+              COLLECTION_PATHS.EVENTS(handData.tournament_id),
+              handData.event_id
             )
             const eventSnap = await getDoc(eventRef)
             const eventData = eventSnap.exists() ? eventSnap.data() as FirestoreEvent : null
 
             // 토너먼트 정보 조회
-            const tournamentRef = doc(db, COLLECTION_PATHS.TOURNAMENTS, handData.tournamentId)
+            const tournamentRef = doc(db, COLLECTION_PATHS.TOURNAMENTS, handData.tournament_id)
             const tournamentSnap = await getDoc(tournamentRef)
             const tournamentData = tournamentSnap.exists() ? tournamentSnap.data() as FirestoreTournament : null
 

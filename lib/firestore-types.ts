@@ -313,11 +313,11 @@ export interface FirestoreHandLike {
  */
 export interface FirestoreHand {
   /** 스트림 ID (참조) */
-  streamId: string
+  stream_id: string
   /** 이벤트 ID (참조) */
-  eventId: string
+  event_id: string
   /** 토너먼트 ID (참조) */
-  tournamentId: string
+  tournament_id: string
 
   /** 플레이어 ID 목록 (array-contains 쿼리용) */
   playerIds: string[]

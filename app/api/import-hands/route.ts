@@ -347,9 +347,9 @@ export async function POST(request: NextRequest) {
           createdAt: FieldValue
           updatedAt: FieldValue
         } = {
-          streamId,
-          eventId: streamData?.eventId || '',
-          tournamentId: streamData?.tournamentId || '',
+          stream_id: streamId,
+          event_id: streamData?.eventId || '',
+          tournament_id: streamData?.tournamentId || '',
           number: hand.number,
           description: hand.description,
           aiSummary: hand.summary,
