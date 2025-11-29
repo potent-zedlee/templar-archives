@@ -165,7 +165,7 @@ export function VideoSegmentInput({ segments, onChange, currentTime, className }
           <div className="text-center text-sm text-muted-foreground">
             <p className="mb-2">아직 구간이 설정되지 않았습니다</p>
             <p className="text-xs">
-              "템플릿 불러오기"로 시작하거나 "추가" 버튼으로 직접 설정하세요
+              &quot;템플릿 불러오기&quot;로 시작하거나 &quot;추가&quot; 버튼으로 직접 설정하세요
             </p>
           </div>
         </Card>

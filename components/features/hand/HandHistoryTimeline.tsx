@@ -122,7 +122,7 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         <p>No players in this hand yet.</p>
-        <p className="text-sm mt-2">Add players using the "Add Players" button above.</p>
+        <p className="text-sm mt-2">Add players using the &quot;Add Players&quot; button above.</p>
       </div>
     )
   }

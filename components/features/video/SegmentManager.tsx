@@ -266,7 +266,7 @@ export function SegmentManager({ segments, onChange, currentTime, videoDuration 
           <div className="text-center py-8 text-muted-foreground">
             <p>아직 추가된 구간이 없습니다</p>
             <p className="text-sm mt-1">
-              플레이어로 구간을 찾아 "현재" 버튼을 눌러 시작/종료 지점을 지정하세요
+              플레이어로 구간을 찾아 &quot;현재&quot; 버튼을 눌러 시작/종료 지점을 지정하세요
             </p>
           </div>
         )}

@@ -122,7 +122,7 @@ export default function loginClient() {
           )}
 
           <div className="text-caption text-text-muted text-center">
-            By signing in, you agree to Templar Archives Index'{" "}
+            By signing in, you agree to Templar Archives Index&apos;{" "}
             <a href="#" className="text-gold-400 hover:text-gold-300">
               Terms of Service
             </a>

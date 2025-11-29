@@ -67,7 +67,7 @@ export function DeleteDialog({
         </DialogHeader>
         <div className="py-4">
           <p className="text-body text-muted-foreground">
-            Are you sure you want to delete "{item?.name}"? This action cannot be undone.
+            Are you sure you want to delete &quot;{item?.name}&quot;? This action cannot be undone.
           </p>
         </div>
         <div className="flex justify-end gap-2">

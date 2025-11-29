@@ -212,7 +212,7 @@ export function ActionEditor({
         <Card className="p-4 bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800">
           <p className="text-sm text-orange-800 dark:text-orange-200">
             You have {pendingActions.length} pending action(s) that need to be saved.
-            Click "Save Actions" at the bottom to persist these changes.
+            Click &quot;Save Actions&quot; at the bottom to persist these changes.
           </p>
         </Card>
       )}
