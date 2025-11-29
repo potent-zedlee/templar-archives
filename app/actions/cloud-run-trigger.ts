@@ -125,8 +125,11 @@ export async function startCloudRunAnalysis(
       .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
       .doc(streamId)
       .update({
-        status: 'analyzing',
-        updatedAt: new Date(),
+        pipeline_status: 'analyzing',
+        pipeline_progress: 0,
+        pipeline_updated_at: new Date(),
+        current_job_id: jobId,
+        updated_at: new Date(),
       })
 
     // 캐시 무효화

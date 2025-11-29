@@ -93,11 +93,12 @@ export async function updateStreamStatus(
   const firestore = getFirestore()
 
   await firestore.collection(COLLECTION_PATHS.UNSORTED_STREAMS).doc(streamId).update({
-    status,
-    updatedAt: FieldValue.serverTimestamp(),
+    pipeline_status: status,
+    pipeline_updated_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
   })
 
-  console.log(`[HandSaver] Stream ${streamId} status updated to: ${status}`)
+  console.log(`[HandSaver] Stream ${streamId} pipeline_status updated to: ${status}`)
 }
 
 async function saveSingleHand(
@@ -200,33 +201,34 @@ async function saveSingleHand(
   // playerIds 배열 생성 (array-contains 쿼리용)
   const playerIds = playersEmbedded.map((p) => p.playerId)
 
-  // 핸드 문서 저장 (Firestore 스키마에 맞게)
+  // 핸드 문서 저장 (Firestore 스키마에 맞게 - snake_case 필드명 사용)
   await handRef.set({
-    streamId,
-    eventId: '', // 나중에 업데이트
-    tournamentId: '', // 나중에 업데이트
-    playerIds, // array-contains 쿼리용
+    day_id: streamId, // 프론트엔드 조회용 (day_id로 쿼리)
+    stream_id: streamId, // 참조용
+    event_id: '', // 나중에 업데이트
+    tournament_id: '', // 나중에 업데이트
+    player_ids: playerIds, // array-contains 쿼리용
     number: String(hand.handNumber),
     description: generateHandDescription(hand),
     timestamp: formatTimestampDisplay(hand),
-    videoTimestampStart: hand.absolute_timestamp_start ?? null,
-    videoTimestampEnd: hand.absolute_timestamp_end ?? null,
-    potSize: hand.pot || 0,
-    boardFlop: hand.board?.flop || null,
-    boardTurn: hand.board?.turn || null,
-    boardRiver: hand.board?.river || null,
-    smallBlind: blinds.smallBlind,
-    bigBlind: blinds.bigBlind,
+    video_timestamp_start: hand.absolute_timestamp_start ?? null,
+    video_timestamp_end: hand.absolute_timestamp_end ?? null,
+    pot_size: hand.pot || 0,
+    board_flop: hand.board?.flop || null,
+    board_turn: hand.board?.turn || null,
+    board_river: hand.board?.river || null,
+    small_blind: blinds.smallBlind,
+    big_blind: blinds.bigBlind,
     ante: blinds.ante,
     players: playersEmbedded,
     actions: actionsEmbedded,
     engagement: {
-      likesCount: 0,
-      dislikesCount: 0,
-      bookmarksCount: 0,
+      likes_count: 0,
+      dislikes_count: 0,
+      bookmarks_count: 0,
     },
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
+    created_at: FieldValue.serverTimestamp(),
+    updated_at: FieldValue.serverTimestamp(),
   })
 }
 
