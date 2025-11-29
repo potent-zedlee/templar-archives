@@ -25,6 +25,7 @@ export function VirtualHandList({
 }: VirtualHandListProps) {
   const parentRef = useRef<HTMLDivElement>(null)
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Virtual is not fully compatible with React Compiler
   const rowVirtualizer = useVirtualizer({
     count: hands.length,
     getScrollElement: () => parentRef.current,
