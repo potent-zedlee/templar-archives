@@ -322,7 +322,7 @@ export function EditHandDialog({
 
               {players.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
-                  플레이어가 없습니다. "플레이어 추가" 버튼을 클릭하세요.
+                  플레이어가 없습니다. &quot;플레이어 추가&quot; 버튼을 클릭하세요.
                 </div>
               )}
             </div>
