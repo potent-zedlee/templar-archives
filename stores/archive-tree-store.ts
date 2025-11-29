@@ -109,11 +109,39 @@ export const useArchiveTreeStore = create<ArchiveTreeState>()(
     (set, get) => ({
       ...initialState,
 
-      // 트리 확장/축소
+      // 트리 확장/축소 (Accordion 스타일: 같은 레벨의 형제 노드는 닫힘)
       expandNode: (nodeId) =>
         set((state) => {
-          const newSet = new Set(state.expandedNodes)
+          const newSet = new Set<string>()
+
+          // 클릭한 노드 찾기
+          const clickedNode = state.flatNodeList.find((n) => n.id === nodeId)
+          if (!clickedNode) {
+            // 노드를 찾을 수 없으면 단순히 추가
+            const fallbackSet = new Set(state.expandedNodes)
+            fallbackSet.add(nodeId)
+            return { expandedNodes: fallbackSet }
+          }
+
+          // 부모 체인 유지 (클릭한 노드의 조상들)
+          let currentNode: TreeNode | undefined = clickedNode
+          const ancestorIds = new Set<string>()
+
+          while (currentNode?.parentId) {
+            ancestorIds.add(currentNode.parentId)
+            currentNode = state.flatNodeList.find((n) => n.id === currentNode!.parentId)
+          }
+
+          // 기존 확장된 노드 중 조상만 유지
+          state.expandedNodes.forEach((expandedId) => {
+            if (ancestorIds.has(expandedId)) {
+              newSet.add(expandedId)
+            }
+          })
+
+          // 클릭한 노드 추가
           newSet.add(nodeId)
+
           return { expandedNodes: newSet }
         }),
 

@@ -504,7 +504,7 @@ export function FileTreeExplorer({
       </div>
 
       {/* 트리 컨텐츠 */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 h-0 min-h-0">
         <div className="py-1">
           {filteredNodes.length > 0 ? (
             renderTreeNodes(filteredNodes)

@@ -24,9 +24,13 @@ import { GridSkeleton } from "@/components/ui/skeletons/GridSkeleton"
 import { MobileArchiveView } from "../_components/MobileArchiveView"
 import { ArchiveBreadcrumb } from "@/components/features/archive/ArchiveBreadcrumb"
 import { useArchiveTreeStore, type TreeNodeType } from "@/stores/archive-tree-store"
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { PanelLeftClose, PanelLeft } from "lucide-react"
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable"
 
 export default function ArchiveTournamentPage() {
   // ============================================================
@@ -232,36 +236,48 @@ export default function ArchiveTournamentPage() {
           </div>
         </header>
 
-        {/* ========== Desktop: 2-Column Layout ========== */}
+        {/* ========== Desktop: 2-Column Resizable Layout ========== */}
         <div className="hidden lg:flex flex-1 overflow-hidden">
-          {/* Left: Tree Explorer (280px, collapsible) */}
-          <aside
-            className={cn(
-              "flex-shrink-0 h-full transition-all duration-300 ease-in-out overflow-hidden",
-              sidebarCollapsed ? "w-0" : "w-72"
-            )}
+          <ResizablePanelGroup
+            direction="horizontal"
+            className="h-full"
+            autoSaveId="archive-sidebar-size"
           >
-            <FileTreeExplorer
-              tournaments={filteredTournaments}
-              onNodeSelect={handleNodeSelect}
-              className={cn(
-                "transition-opacity duration-200",
-                sidebarCollapsed && "opacity-0"
-              )}
-            />
-          </aside>
+            {/* Left: Tree Explorer (Resizable, collapsible) */}
+            {!sidebarCollapsed && (
+              <>
+                <ResizablePanel
+                  defaultSize={20}
+                  minSize={15}
+                  maxSize={40}
+                  className="h-full"
+                >
+                  <aside className="h-full overflow-hidden">
+                    <FileTreeExplorer
+                      tournaments={filteredTournaments}
+                      onNodeSelect={handleNodeSelect}
+                    />
+                  </aside>
+                </ResizablePanel>
 
-          {/* Right: Main Panel (flex-1) */}
-          <main className="flex-1 overflow-hidden">
-            {selectedNodeType === 'stream' && selectedStream ? (
-              <HandsListPanel
-                streamId={selectedStream.id}
-                stream={selectedStream}
-              />
-            ) : (
-              <ArchiveDashboard tournaments={filteredTournaments} />
+                <ResizableHandle withHandle className="bg-border hover:bg-primary/20 transition-colors" />
+              </>
             )}
-          </main>
+
+            {/* Right: Main Panel */}
+            <ResizablePanel defaultSize={sidebarCollapsed ? 100 : 80} className="h-full">
+              <main className="h-full overflow-hidden">
+                {selectedNodeType === 'stream' && selectedStream ? (
+                  <HandsListPanel
+                    streamId={selectedStream.id}
+                    stream={selectedStream}
+                  />
+                ) : (
+                  <ArchiveDashboard tournaments={filteredTournaments} />
+                )}
+              </main>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </div>
 
         {/* ========== Mobile: Card-based tournament list ========== */}
