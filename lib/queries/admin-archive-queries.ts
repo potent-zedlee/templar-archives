@@ -28,7 +28,7 @@ import {
 } from 'firebase/firestore'
 import { toast } from 'sonner'
 import { publishStream, unpublishStream, bulkPublishStreams, bulkUnpublishStreams } from '@/app/actions/admin/archive-admin'
-import type { Tournament, Event, Stream, ContentStatus, PipelineStatus } from '@/lib/types/archive'
+import type { Tournament, Event, Stream, ContentStatus, PipelineStatus, Hand } from '@/lib/types/archive'
 
 // ============================================
 // Pipeline Types
@@ -102,6 +102,7 @@ export const adminArchiveQueryKeys = {
     [...adminArchiveQueryKeys.streams(), 'status', status] as const,
   stream: (id: string) => [...adminArchiveQueryKeys.streams(), id] as const,
   statusCounts: () => [...adminArchiveQueryKeys.all, 'counts'] as const,
+  hands: (streamId: string) => [...adminArchiveQueryKeys.all, 'hands', streamId] as const,
 }
 
 // ==================== Admin Tournaments Query ====================
@@ -684,5 +685,73 @@ export function useClassifyStream() {
       console.error('[useClassifyStream] Error:', error)
       toast.error('스트림 분류 실패')
     },
+  })
+}
+
+// ============================================
+// Stream Hands Query
+// ============================================
+
+/**
+ * 스트림별 핸드 목록 조회
+ */
+export function useStreamHands(streamId: string) {
+  return useQuery({
+    queryKey: adminArchiveQueryKeys.hands(streamId),
+    queryFn: async () => {
+      const handsRef = collection(firestore, 'hands')
+      const q = query(
+        handsRef,
+        where('day_id', '==', streamId),
+        orderBy('number', 'asc')
+      )
+      const snapshot = await getDocs(q)
+
+      const hands: Hand[] = []
+      snapshot.forEach((docSnapshot) => {
+        const data = docSnapshot.data()
+        hands.push({
+          id: docSnapshot.id,
+          day_id: data.day_id,
+          number: data.number,
+          description: data.description,
+          ai_summary: data.ai_summary,
+          confidence: data.confidence,
+          timestamp: data.timestamp,
+          board_flop: data.board_flop,
+          board_turn: data.board_turn,
+          board_river: data.board_river,
+          board_cards: data.board_cards,
+          pot_size: data.pot_size,
+          stakes: data.stakes,
+          small_blind: data.small_blind,
+          big_blind: data.big_blind,
+          ante: data.ante,
+          pot_preflop: data.pot_preflop,
+          pot_flop: data.pot_flop,
+          pot_turn: data.pot_turn,
+          pot_river: data.pot_river,
+          video_timestamp_start: data.video_timestamp_start,
+          video_timestamp_end: data.video_timestamp_end,
+          job_id: data.job_id,
+          raw_data: data.raw_data,
+          pokerkit_format: data.pokerkit_format,
+          hand_history_format: data.hand_history_format,
+          favorite: data.favorite,
+          thumbnail_url: data.thumbnail_url,
+          likes_count: data.likes_count,
+          dislikes_count: data.dislikes_count,
+          bookmarks_count: data.bookmarks_count,
+          created_at: data.created_at instanceof Timestamp
+            ? data.created_at.toDate().toISOString()
+            : data.created_at,
+          hand_players: data.hand_players || [],
+        })
+      })
+
+      return hands
+    },
+    enabled: !!streamId,
+    staleTime: 1 * 60 * 1000, // 1분
   })
 }
