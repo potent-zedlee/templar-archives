@@ -5,17 +5,19 @@
  *
  * 선택된 스트림의 핸드 리스트 표시
  * - YouTube 플레이어 통합 (상단 고정)
+ * - 핸드 타임라인 오버레이
  * - 핸드 클릭 시 플레이어 타임코드 이동
  * - 플레이어 이름 검색
  * - 페이지네이션
  */
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useCallback } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search, Inbox, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useHandsQuery } from '@/lib/queries/archive-queries'
 import { HandListItem } from './HandListItem'
 import { HandDetailDialog } from './HandDetailDialog'
+import { HandTimelineOverlay } from './HandTimelineOverlay'
 import { GridSkeleton } from '@/components/ui/skeletons/GridSkeleton'
 import { EmptyState } from '@/components/common/EmptyState'
 import { StaggerContainer, StaggerItem } from '@/components/layout/PageTransition'
@@ -55,6 +57,10 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
   const [detailHandId, setDetailHandId] = useState<string | null>(null)
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
   const playerRef = useRef<YouTubePlayerHandle>(null)
+
+  // Video player state
+  const [currentTime, setCurrentTime] = useState(0)
+  const [videoDuration, setVideoDuration] = useState(0)
 
   // React Query
   const { data: hands = [], isLoading } = useHandsQuery(streamId)
@@ -110,17 +116,39 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
     setDetailDialogOpen(true)
   }
 
+  /**
+   * 타임라인에서 시간 이동
+   */
+  const handleTimelineSeek = useCallback((time: number) => {
+    if (playerRef.current) {
+      playerRef.current.seekTo(time)
+    }
+  }, [])
+
   return (
     <div className="flex flex-col h-full bg-background w-full">
-      {/* YouTube 플레이어 (상단 고정) */}
+      {/* YouTube 플레이어 + 타임라인 (상단 고정) */}
       {videoId && (
-        <div className="sticky top-0 z-10 bg-card border-b border-border p-4">
+        <div className="sticky top-0 z-10 bg-card border-b border-border p-4 space-y-3">
           <YouTubePlayer
             ref={playerRef}
             videoId={videoId}
             startTime={selectedHand?.video_timestamp_start}
+            onTimeUpdate={setCurrentTime}
+            onDurationChange={setVideoDuration}
             className="w-full"
           />
+
+          {/* 핸드 타임라인 오버레이 */}
+          {videoDuration > 0 && hands.length > 0 && (
+            <HandTimelineOverlay
+              hands={hands}
+              videoDuration={videoDuration}
+              currentTime={currentTime}
+              onSeek={handleTimelineSeek}
+              selectedHandId={selectedHand?.id}
+            />
+          )}
         </div>
       )}
 
