@@ -133,8 +133,9 @@ export function ActiveJobsMonitor() {
       <div className="space-y-4">
         {jobs.map((job) => {
           const isHighlighted = job.id === highlightJobId
+          const currentTime = new Date().getTime()
           const processingTime = job.started_at
-            ? Math.floor((Date.now() - new Date(job.started_at).getTime()) / 1000)
+            ? Math.floor((currentTime - new Date(job.started_at).getTime()) / 1000)
             : 0
 
           return (

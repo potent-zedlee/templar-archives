@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 import { MetricsCard } from "@/components/admin/MetricsCard"
@@ -51,11 +51,7 @@ export default function PerformancePage() {
   const pageAverages = getAverageMetricsByPage()
   const recentMetrics = getRecentMetrics(20)
 
-  useEffect(() => {
-    checkAccess()
-  }, [user, authLoading])
-
-  async function checkAccess() {
+  const checkAccess = useCallback(async () => {
     // Wait for auth loading to complete
     if (authLoading) return
 
@@ -78,7 +74,11 @@ export default function PerformancePage() {
       toast.error("Error checking permissions")
       router.push("/")
     }
-  }
+  }, [user, authLoading, router])
+
+  useEffect(() => {
+    checkAccess()
+  }, [checkAccess])
 
   function handleClearHistory() {
     if (confirm("Are you sure you want to clear all performance metrics history?")) {

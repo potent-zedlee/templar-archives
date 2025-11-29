@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
+import Image from "next/image"
 import {
   MapPin,
   Globe,
@@ -89,9 +90,14 @@ export default function ProfileIdClient() {
         <div className="card-postmodern p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Avatar */}
-            <div className="h-24 w-24 md:h-32 md:w-32 border-2 border-gold-700 gold-glow bg-black-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+            <div className="h-24 w-24 md:h-32 md:w-32 border-2 border-gold-700 gold-glow bg-black-200 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.nickname} className="w-full h-full object-cover" />
+                <Image
+                  src={profile.avatar_url}
+                  alt={profile.nickname}
+                  fill
+                  className="object-cover"
+                />
               ) : (
                 <span className="text-4xl font-bold text-gold-400">
                   {profile.nickname.slice(0, 2).toUpperCase()}

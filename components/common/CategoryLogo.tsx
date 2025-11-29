@@ -112,8 +112,7 @@ export function CategoryLogo({
     )
   }
 
-  // SVG는 img 태그로 렌더링하여 원본 컬러 유지
-  // eslint-disable-next-line @next/next/no-img-element
+  // SVG는 img 태그로 렌더링하여 원본 컬러 유지 (Next.js Image는 SVG 최적화 지원 안 함)
   return (
     <div
       className={cn(
@@ -122,6 +121,7 @@ export function CategoryLogo({
         className
       )}
     >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={logoPath}
         alt={`${displayName} logo`}

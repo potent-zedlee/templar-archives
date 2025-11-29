@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import dynamic from "next/dynamic"
 import { StatsCard } from "@/components/admin/StatsCard"
@@ -77,11 +77,7 @@ export default function DashboardPage() {
 
   const loading = statsLoading || activitiesLoading
 
-  useEffect(() => {
-    checkAccess()
-  }, [user, authLoading])
-
-  async function checkAccess() {
+  const checkAccess = useCallback(async () => {
     if (authLoading) return
 
     if (!user) {
@@ -103,7 +99,11 @@ export default function DashboardPage() {
       toast.error("Error checking permissions")
       router.push("/")
     }
-  }
+  }, [user, authLoading, router])
+
+  useEffect(() => {
+    checkAccess()
+  }, [checkAccess])
 
   if (!hasAccess || loading) {
     return (

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react"
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle, useCallback } from "react"
 import { formatTime } from "@/types/segments"
 
 interface YouTubePlayerProps {
@@ -55,41 +55,7 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
       }
     }))
 
-  useEffect(() => {
-    // YouTube IFrame API 로드
-    if (!window.YT) {
-      const tag = document.createElement('script')
-      tag.src = 'https://www.youtube.com/iframe_api'
-      const firstScriptTag = document.getElementsByTagName('script')[0]
-      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
-
-      window.onYouTubeIframeAPIReady = initializePlayer
-    } else {
-      initializePlayer()
-    }
-
-    return () => {
-      if (playerRef.current) {
-        playerRef.current.destroy()
-      }
-    }
-  }, [videoId])
-
-  useEffect(() => {
-    if (!isReady) return
-
-    const interval = setInterval(() => {
-      if (playerRef.current && playerRef.current.getCurrentTime) {
-        const time = playerRef.current.getCurrentTime()
-        setCurrentTime(time)
-        onTimeUpdate?.(time)
-      }
-    }, 100)
-
-    return () => clearInterval(interval)
-  }, [isReady, onTimeUpdate])
-
-  const initializePlayer = () => {
+  const initializePlayer = useCallback(() => {
     if (!containerRef.current) return
 
     playerRef.current = new window.YT.Player(containerRef.current, {
@@ -114,7 +80,41 @@ export const YouTubePlayer = forwardRef<YouTubePlayerHandle, YouTubePlayerProps>
         },
       },
     })
-  }
+  }, [videoId, onDurationChange, startTime])
+
+  useEffect(() => {
+    // YouTube IFrame API 로드
+    if (!window.YT) {
+      const tag = document.createElement('script')
+      tag.src = 'https://www.youtube.com/iframe_api'
+      const firstScriptTag = document.getElementsByTagName('script')[0]
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag)
+
+      window.onYouTubeIframeAPIReady = initializePlayer
+    } else {
+      initializePlayer()
+    }
+
+    return () => {
+      if (playerRef.current) {
+        playerRef.current.destroy()
+      }
+    }
+  }, [initializePlayer])
+
+  useEffect(() => {
+    if (!isReady) return
+
+    const interval = setInterval(() => {
+      if (playerRef.current && playerRef.current.getCurrentTime) {
+        const time = playerRef.current.getCurrentTime()
+        setCurrentTime(time)
+        onTimeUpdate?.(time)
+      }
+    }, 100)
+
+    return () => clearInterval(interval)
+  }, [isReady, onTimeUpdate])
 
   return (
     <div className={className}>

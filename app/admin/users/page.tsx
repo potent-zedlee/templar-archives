@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { CardSkeleton } from "@/components/ui/skeletons/CardSkeleton"
 import {
@@ -79,11 +79,7 @@ export default function UsersClient() {
   const unbanUserMutation = useUnbanUserMutation(user?.id || "")
   const changeRoleMutation = useChangeRoleMutation(user?.id || "")
 
-  useEffect(() => {
-    checkAccess()
-  }, [user, loading])
-
-  async function checkAccess() {
+  const checkAccess = useCallback(async () => {
     if (loading) return
 
     if (!user) {
@@ -105,7 +101,11 @@ export default function UsersClient() {
       toast.error("Error checking permissions")
       router.push("/")
     }
-  }
+  }, [user, loading, router])
+
+  useEffect(() => {
+    checkAccess()
+  }, [checkAccess])
 
   function handleBanUser() {
     if (!selectedUser || !user) return

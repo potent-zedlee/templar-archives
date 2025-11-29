@@ -41,14 +41,6 @@ export default function CategoriesPage() {
   const { data: usageCounts } = useAllCategoryUsageQuery()
   const reorderMutation = useReorderCategoriesMutation()
 
-  // Update local categories when data changes
-  useEffect(() => {
-    if (categories) {
-      setLocalCategories(categories)
-      setHasChanges(false)
-    }
-  }, [categories])
-
   // Check admin access
   const checkAccess = useCallback(async () => {
     // Wait for auth loading to complete
@@ -77,8 +69,15 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     checkAccess()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, loading])
+  }, [checkAccess])
+
+  // Update local categories when data changes
+  useEffect(() => {
+    if (categories) {
+      setLocalCategories(categories)
+      setHasChanges(false)
+    }
+  }, [categories])
 
   // Filter categories
   const filteredCategories = useMemo(() => {
