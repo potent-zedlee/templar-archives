@@ -3,6 +3,22 @@
  * 모든 any 타입을 제거하고 명확한 타입 시스템 구축
  */
 
+// ==================== Pipeline Status ====================
+
+/**
+ * Stream 파이프라인 상태
+ *
+ * Upload -> Classify -> Analyze -> Review -> Publish 워크플로우
+ */
+export type PipelineStatus =
+  | 'pending'        // 업로드 대기
+  | 'needs_classify' // 분류 필요 (토너먼트/이벤트 할당 필요)
+  | 'analyzing'      // AI 분석 중
+  | 'completed'      // 분석 완료 (핸드 추출됨)
+  | 'needs_review'   // 검토 필요
+  | 'published'      // 발행 완료
+  | 'failed'         // 분석 실패
+
 // ==================== Enums & Constants ====================
 
 export type TournamentCategory =
@@ -117,6 +133,16 @@ export interface Stream {
   gcs_uploaded_at?: string // 업로드 완료 시각
   upload_status?: 'none' | 'uploading' | 'uploaded' | 'analyzing' | 'completed' | 'failed'
   video_duration?: number // 영상 길이 (초)
+
+  // 파이프라인 필드 (Admin Archive 워크플로우)
+  pipeline_status?: PipelineStatus
+  pipeline_progress?: number
+  pipeline_error?: string
+  pipeline_updated_at?: string
+  current_job_id?: string
+  last_analysis_at?: string
+  analysis_attempts?: number
+
   // UI state (클라이언트 전용)
   selected?: boolean
 }

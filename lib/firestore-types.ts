@@ -202,6 +202,23 @@ export interface FirestoreStream {
   createdAt: Timestamp
   /** 수정일 */
   updatedAt: Timestamp
+
+  // ==================== 파이프라인 필드 (Admin Archive 워크플로우) ====================
+
+  /** 파이프라인 상태 */
+  pipelineStatus?: 'pending' | 'needs_classify' | 'analyzing' | 'completed' | 'needs_review' | 'published' | 'failed'
+  /** 파이프라인 진행률 (0-100) */
+  pipelineProgress?: number
+  /** 파이프라인 에러 메시지 */
+  pipelineError?: string
+  /** 파이프라인 상태 업데이트 시각 */
+  pipelineUpdatedAt?: Timestamp
+  /** 현재 분석 작업 ID (analysisJobs 참조) */
+  currentJobId?: string
+  /** 마지막 분석 완료 시각 */
+  lastAnalysisAt?: Timestamp
+  /** 분석 시도 횟수 */
+  analysisAttempts?: number
 }
 
 // ==================== Hands Collection (Flat) ====================
