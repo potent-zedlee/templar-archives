@@ -47,9 +47,9 @@ export async function GET() {
       const hand = doc.data() as FirestoreHand
       if (hand.players && Array.isArray(hand.players)) {
         hand.players.forEach((player) => {
-          if (player.playerId) {
-            const currentCount = handCountMap.get(player.playerId) || 0
-            handCountMap.set(player.playerId, currentCount + 1)
+          if (player.player_id) {
+            const currentCount = handCountMap.get(player.player_id) || 0
+            handCountMap.set(player.player_id, currentCount + 1)
           }
         })
       }
@@ -59,18 +59,18 @@ export async function GET() {
     const playersWithHandCount = players.map((player) => ({
       id: player.id,
       name: player.name,
-      normalized_name: player.normalizedName,
-      photo_url: player.photoUrl,
+      normalized_name: player.normalized_name,
+      photo_url: player.photo_url,
       country: player.country,
       gender: undefined, // Firestore 스키마에 없음
-      is_pro: player.isPro,
+      is_pro: player.is_pro,
       bio: player.bio,
-      total_winnings: player.totalWinnings,
+      total_winnings: player.total_winnings,
       aliases: player.aliases,
       stats: player.stats,
       hand_count: handCountMap.get(player.id) || 0,
-      created_at: timestampToString(player.createdAt),
-      updated_at: timestampToString(player.updatedAt),
+      created_at: timestampToString(player.created_at),
+      updated_at: timestampToString(player.updated_at),
     }))
 
     // 4. 기본 정렬: 핸드 수 내림차순

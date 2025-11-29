@@ -57,19 +57,19 @@ function firestoreUserToProfile(id: string, data: FirestoreUser): UserProfile {
     email: data.email,
     nickname: data.nickname || `user${id.substring(0, 6)}`,
     role: data.role,
-    avatar_url: data.avatarUrl,
+    avatar_url: data.avatar_url,
     bio: data.bio,
-    poker_experience: data.pokerExperience,
+    poker_experience: data.poker_experience,
     location: data.location,
     website: data.website,
-    twitter_handle: data.twitterHandle,
-    instagram_handle: data.instagramHandle,
-    profile_visibility: data.profileVisibility || 'public',
-    posts_count: data.stats.postsCount,
-    comments_count: data.stats.commentsCount,
-    likes_received: data.likesReceived || 0,
-    created_at: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
-    updated_at: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
+    twitter_handle: data.twitter_handle,
+    instagram_handle: data.instagram_handle,
+    profile_visibility: data.profile_visibility || 'public',
+    posts_count: data.stats.posts_count,
+    comments_count: data.stats.comments_count,
+    likes_received: data.likes_received || 0,
+    created_at: data.created_at instanceof Timestamp ? data.created_at.toDate().toISOString() : new Date().toISOString(),
+    updated_at: data.updated_at instanceof Timestamp ? data.updated_at.toDate().toISOString() : new Date().toISOString(),
   }
 }
 
@@ -120,15 +120,15 @@ export async function createProfile(user: {
     const newUser: FirestoreUser = {
       email: user.email || '',
       nickname: tempNickname,
-      avatarUrl: user.photoURL || undefined,
+      avatar_url: user.photoURL || undefined,
       role: userRole,
-      emailVerified: true,
+      email_verified: true,
       stats: {
-        postsCount: 0,
-        commentsCount: 0,
+        posts_count: 0,
+        comments_count: 0,
       },
-      createdAt: serverTimestamp() as Timestamp,
-      updatedAt: serverTimestamp() as Timestamp,
+      created_at: serverTimestamp() as Timestamp,
+      updated_at: serverTimestamp() as Timestamp,
     }
 
     await setDoc(userRef, newUser)
@@ -139,7 +139,7 @@ export async function createProfile(user: {
       email: newUser.email,
       nickname: tempNickname,
       role: userRole,
-      avatar_url: newUser.avatarUrl,
+      avatar_url: newUser.avatar_url,
       posts_count: 0,
       comments_count: 0,
       likes_received: 0,
@@ -182,7 +182,7 @@ export async function updateProfile(
 
     // UserProfile 필드를 FirestoreUser 필드로 매핑
     const firestoreUpdates: Partial<FirestoreUser> = {
-      updatedAt: serverTimestamp() as Timestamp,
+      updated_at: serverTimestamp() as Timestamp,
     }
 
     if (updates.nickname !== undefined) {
@@ -190,7 +190,7 @@ export async function updateProfile(
     }
 
     if (updates.avatar_url !== undefined) {
-      firestoreUpdates.avatarUrl = updates.avatar_url
+      firestoreUpdates.avatar_url = updates.avatar_url
     }
 
     if (updates.bio !== undefined) {
@@ -198,7 +198,7 @@ export async function updateProfile(
     }
 
     if (updates.poker_experience !== undefined) {
-      firestoreUpdates.pokerExperience = updates.poker_experience
+      firestoreUpdates.poker_experience = updates.poker_experience
     }
 
     if (updates.location !== undefined) {
@@ -210,15 +210,15 @@ export async function updateProfile(
     }
 
     if (updates.twitter_handle !== undefined) {
-      firestoreUpdates.twitterHandle = updates.twitter_handle
+      firestoreUpdates.twitter_handle = updates.twitter_handle
     }
 
     if (updates.instagram_handle !== undefined) {
-      firestoreUpdates.instagramHandle = updates.instagram_handle
+      firestoreUpdates.instagram_handle = updates.instagram_handle
     }
 
     if (updates.profile_visibility !== undefined) {
-      firestoreUpdates.profileVisibility = updates.profile_visibility
+      firestoreUpdates.profile_visibility = updates.profile_visibility
     }
 
     await updateDoc(userRef, firestoreUpdates as Record<string, unknown>)

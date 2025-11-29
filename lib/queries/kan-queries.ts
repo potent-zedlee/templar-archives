@@ -152,9 +152,9 @@ function docToAnalysisJob(
 
   const data = docSnap.data() as ExtendedFirestoreAnalysisJob
 
-  const createdAt = data.createdAt.toDate()
-  const startedAt = toDate(data.startedAt)
-  const completedAt = toDate(data.completedAt)
+  const createdAt = data.created_at.toDate()
+  const startedAt = toDate(data.started_at)
+  const completedAt = toDate(data.completed_at)
 
   // 처리 시간 계산 (completedAt - startedAt)
   let processingTime = data.processingTime
@@ -163,24 +163,24 @@ function docToAnalysisJob(
   }
 
   // 발견된 핸드 수
-  const handsFound = data.handsFound ?? data.result?.totalHands ?? 0
+  const handsFound = data.handsFound ?? data.result?.total_hands ?? 0
 
   return {
     id: docSnap.id,
-    streamId: data.streamId,
-    userId: data.userId,
+    streamId: data.stream_id,
+    userId: data.user_id,
     status: data.status,
     progress: data.progress,
 
     // camelCase
-    errorMessage: data.errorMessage,
+    errorMessage: data.error_message,
     result: data.result,
     createdAt,
     startedAt,
     completedAt,
 
     // snake_case (컴포넌트 호환)
-    error_message: data.errorMessage,
+    error_message: data.error_message,
     created_at: createdAt.toISOString(),
     started_at: startedAt?.toISOString(),
     completed_at: completedAt?.toISOString(),
@@ -195,14 +195,14 @@ function docToAnalysisJob(
     // 관계 데이터 (비정규화된 경우)
     video: data.videoTitle
       ? {
-          id: data.streamId,
+          id: data.stream_id,
           title: data.videoTitle,
           url: data.videoUrl,
         }
       : undefined,
     stream: data.streamName
       ? {
-          id: data.streamId,
+          id: data.stream_id,
           name: data.streamName,
           eventId: data.eventId,
           tournamentId: data.tournamentId,
@@ -237,7 +237,7 @@ async function getAnalysisJob(
     if (!job) return null
 
     // 스트림 정보 조회 (선택적)
-    // job.stream = await fetchStreamInfo(job.streamId)
+    // job.stream = await fetchStreamInfo(job.stream_id)
 
     return job
   } catch (error) {

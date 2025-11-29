@@ -168,13 +168,13 @@ export async function updateHandPlayer(
 
     // 플레이어 찾아서 업데이트
     const updatedPlayers = players.map((p) => {
-      if (p.playerId === playerId) {
+      if (p.player_id === playerId) {
         return {
           ...p,
           position: data.position ?? p.position,
           cards: data.cards ? data.cards.match(/.{1,2}/g) || [] : p.cards,
-          startStack: data.starting_stack ?? p.startStack,
-          endStack: data.ending_stack ?? p.endStack,
+          start_stack: data.starting_stack ?? p.start_stack,
+          end_stack: data.ending_stack ?? p.end_stack,
         }
       }
       return p
@@ -182,7 +182,7 @@ export async function updateHandPlayer(
 
     await updateDoc(handRef, {
       players: updatedPlayers,
-      updatedAt: serverTimestamp(),
+      updated_at: serverTimestamp(),
     })
 
     return { success: true }
@@ -225,14 +225,14 @@ export async function updateHandPlayers(
 
     // 플레이어 정보 업데이트
     const updatedPlayers = existingPlayers.map((p) => {
-      const update = updateMap.get(p.playerId)
+      const update = updateMap.get(p.player_id)
       if (update) {
         return {
           ...p,
           position: update.position ?? p.position,
           cards: update.cards ? update.cards.match(/.{1,2}/g) || [] : p.cards,
-          startStack: update.starting_stack ?? p.startStack,
-          endStack: update.ending_stack ?? p.endStack,
+          start_stack: update.starting_stack ?? p.start_stack,
+          end_stack: update.ending_stack ?? p.end_stack,
         }
       }
       return p
@@ -240,7 +240,7 @@ export async function updateHandPlayers(
 
     await updateDoc(handRef, {
       players: updatedPlayers,
-      updatedAt: serverTimestamp(),
+      updated_at: serverTimestamp(),
     })
 
     return { success: true }
@@ -275,23 +275,23 @@ export async function addHandAction(data: {
     const hand = handDoc.data() as FirestoreHand
 
     // 플레이어 이름 찾기
-    const player = hand.players?.find((p) => p.playerId === data.player_id)
+    const player = hand.players?.find((p) => p.player_id === data.player_id)
     const playerName = player?.name || 'Unknown'
 
     // 새 액션 생성
     const newAction: HandActionEmbedded = {
-      playerId: data.player_id,
-      playerName,
+      player_id: data.player_id,
+      player_name: playerName,
       street: data.street,
       sequence: data.sequence,
-      actionType: data.action_type,
+      action_type: data.action_type,
       amount: data.amount,
     }
 
     // 액션 배열에 추가
     await updateDoc(handRef, {
       actions: arrayUnion(newAction),
-      updatedAt: serverTimestamp(),
+      updated_at: serverTimestamp(),
     })
 
     return { success: true }
@@ -313,7 +313,7 @@ export async function deleteHandActions(handId: string): Promise<{ success: bool
 
     await updateDoc(handRef, {
       actions: [],
-      updatedAt: serverTimestamp(),
+      updated_at: serverTimestamp(),
     })
 
     return { success: true }
@@ -352,22 +352,22 @@ export async function updateHandActions(
 
     // 플레이어 이름 맵 생성
     const playerNameMap = new Map(
-      (hand.players || []).map((p) => [p.playerId, p.name]),
+      (hand.players || []).map((p) => [p.player_id, p.name]),
     )
 
     // 새 액션 목록 생성
     const newActions: HandActionEmbedded[] = actions.map((action) => ({
-      playerId: action.player_id,
-      playerName: playerNameMap.get(action.player_id) || 'Unknown',
+      player_id: action.player_id,
+      player_name: playerNameMap.get(action.player_id) || 'Unknown',
       street: action.street,
       sequence: action.sequence,
-      actionType: action.action_type,
+      action_type: action.action_type,
       amount: action.amount,
     }))
 
     await updateDoc(handRef, {
       actions: newActions,
-      updatedAt: serverTimestamp(),
+      updated_at: serverTimestamp(),
     })
 
     return { success: true }
@@ -416,7 +416,7 @@ export async function updateHandComplete(
 
     // 업데이트 데이터 준비
     const updateData: any = {
-      updatedAt: serverTimestamp(),
+      updated_at: serverTimestamp(),
     }
 
     // 1. 기본 정보 업데이트
@@ -447,14 +447,14 @@ export async function updateHandComplete(
       const updateMap = new Map(data.players.map((p) => [p.id, p]))
 
       updateData.players = existingPlayers.map((p) => {
-        const update = updateMap.get(p.playerId)
+        const update = updateMap.get(p.player_id)
         if (update) {
           return {
             ...p,
             position: update.position ?? p.position,
             cards: update.cards ? update.cards.match(/.{1,2}/g) || [] : p.cards,
-            startStack: update.starting_stack ?? p.startStack,
-            endStack: update.ending_stack ?? p.endStack,
+            start_stack: update.starting_stack ?? p.start_stack,
+            end_stack: update.ending_stack ?? p.end_stack,
           }
         }
         return p
@@ -464,15 +464,15 @@ export async function updateHandComplete(
     // 3. 액션 정보 업데이트
     if (data.actions) {
       const playerNameMap = new Map(
-        (hand.players || []).map((p) => [p.playerId, p.name]),
+        (hand.players || []).map((p) => [p.player_id, p.name]),
       )
 
       updateData.actions = data.actions.map((action) => ({
-        playerId: action.player_id,
-        playerName: playerNameMap.get(action.player_id) || 'Unknown',
+        player_id: action.player_id,
+        player_name: playerNameMap.get(action.player_id) || 'Unknown',
         street: action.street,
         sequence: action.sequence,
-        actionType: action.action_type,
+        action_type: action.action_type,
         amount: action.amount,
       })) as HandActionEmbedded[]
     }
@@ -507,7 +507,7 @@ export async function deleteHand(handId: string): Promise<{ success: boolean }> 
       for (const player of hand.players || []) {
         const playerHandRef = doc(
           firestore,
-          COLLECTION_PATHS.PLAYER_HANDS(player.playerId),
+          COLLECTION_PATHS.PLAYER_HANDS(player.player_id),
           handId,
         )
         batch.delete(playerHandRef)
@@ -545,7 +545,7 @@ export async function toggleHandFavorite(
 
     await updateDoc(handRef, {
       favorite,
-      updatedAt: serverTimestamp(),
+      updated_at: serverTimestamp(),
     })
 
     return { success: true }

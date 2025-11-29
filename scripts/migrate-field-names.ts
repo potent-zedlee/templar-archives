@@ -137,10 +137,7 @@ interface MigrationStats {
   errors: Array<{ docId: string; error: string }>
 }
 
-/**
- * 필드 변환 (forward 또는 rollback)
- */
-function transformFields(
+export function transformFields(
   data: Record<string, unknown>,
   mapping: Record<string, string>,
   isRollback: boolean

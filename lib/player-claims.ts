@@ -62,18 +62,18 @@ export type PlayerClaimWithDetails = PlayerClaim & {
 function toPlayerClaim(id: string, data: FirestorePlayerClaim): PlayerClaim {
   return {
     id,
-    user_id: data.userId,
-    player_id: data.playerId,
+    user_id: data.user_id,
+    player_id: data.player_id,
     status: data.status,
-    verification_method: data.verificationMethod,
-    verification_data: data.verificationData,
-    admin_notes: data.adminNotes,
-    claimed_at: data.claimedAt.toDate().toISOString(),
-    verified_at: data.verifiedAt?.toDate().toISOString(),
-    verified_by: data.verifiedBy,
-    rejected_reason: data.rejectedReason,
-    created_at: data.createdAt.toDate().toISOString(),
-    updated_at: data.updatedAt.toDate().toISOString(),
+    verification_method: data.verification_method,
+    verification_data: data.verification_data,
+    admin_notes: data.admin_notes,
+    claimed_at: data.claimed_at.toDate().toISOString(),
+    verified_at: data.verified_at?.toDate().toISOString(),
+    verified_by: data.verified_by,
+    rejected_reason: data.rejected_reason,
+    created_at: data.created_at.toDate().toISOString(),
+    updated_at: data.updated_at.toDate().toISOString(),
   }
 }
 
@@ -87,13 +87,13 @@ function toPlayerClaimWithDetails(id: string, data: FirestorePlayerClaim): Playe
     user: {
       nickname: data.user?.nickname || 'Unknown',
       email: data.user?.email || '',
-      avatar_url: data.user?.avatarUrl,
+      avatar_url: data.user?.avatar_url,
     },
     player: {
       name: data.player?.name || 'Unknown',
-      photo_url: data.player?.photoUrl,
+      photo_url: data.player?.photo_url,
     },
-    verified_by_user: data.verifiedBy
+    verified_by_user: data.verified_by
       ? {
           nickname: 'Admin', // 별도 조회 필요
         }
@@ -119,8 +119,8 @@ export async function requestPlayerClaim({
     // 이미 클레임 요청이 있는지 확인
     const existingQuery = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      where('userId', '==', userId),
-      where('playerId', '==', playerId),
+      where('user_id', '==', userId),
+      where('player_id', '==', playerId),
       where('status', 'in', ['pending', 'approved'])
     )
 
@@ -147,28 +147,28 @@ export async function requestPlayerClaim({
     const playerData = playerDoc.data()
 
     const now = Timestamp.now()
-    const claimData: Omit<FirestorePlayerClaim, 'verifiedAt' | 'verifiedBy' | 'rejectedReason'> = {
-      userId,
-      playerId,
+    const claimData: Omit<FirestorePlayerClaim, 'verified_at' | 'verified_by' | 'rejected_reason'> = {
+      user_id: userId,
+      player_id: playerId,
       status: 'pending',
-      verificationMethod,
-      verificationData,
-      claimedAt: now,
+      verification_method: verificationMethod,
+      verification_data: verificationData,
+      claimed_at: now,
       user: userData
         ? {
             nickname: userData.nickname || 'Unknown',
             email: userData.email || '',
-            avatarUrl: userData.avatarUrl,
+            avatar_url: userData.avatar_url,
           }
         : undefined,
       player: playerData
         ? {
             name: playerData.name || 'Unknown',
-            photoUrl: playerData.photoUrl,
+            photo_url: playerData.photo_url,
           }
         : undefined,
-      createdAt: now,
-      updatedAt: now,
+      created_at: now,
+      updated_at: now,
     }
 
     const docRef = await addDoc(collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS), claimData)
@@ -195,7 +195,7 @@ export async function getPlayerClaimInfo(
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      where('playerId', '==', playerId),
+      where('player_id', '==', playerId),
       where('status', '==', 'approved')
     )
 
@@ -226,7 +226,7 @@ export async function getUserClaimedPlayer(userId: string): Promise<{
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      where('userId', '==', userId),
+      where('user_id', '==', userId),
       where('status', '==', 'approved')
     )
 
@@ -257,8 +257,8 @@ export async function getUserClaims(userId: string): Promise<{
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
+      where('user_id', '==', userId),
+      orderBy('created_at', 'desc')
     )
 
     const snapshot = await getDocs(q)
@@ -285,7 +285,7 @@ export async function getPendingClaims(): Promise<{
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
       where('status', '==', 'pending'),
-      orderBy('createdAt', 'desc')
+      orderBy('created_at', 'desc')
     )
 
     const snapshot = await getDocs(q)
@@ -311,7 +311,7 @@ export async function getAllClaims(): Promise<{
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      orderBy('createdAt', 'desc')
+      orderBy('created_at', 'desc')
     )
 
     const snapshot = await getDocs(q)
@@ -344,10 +344,10 @@ export async function approvePlayerClaim({
 
     await updateDoc(claimRef, {
       status: 'approved',
-      verifiedAt: Timestamp.now(),
-      verifiedBy: adminId,
-      adminNotes: adminNotes || null,
-      updatedAt: Timestamp.now(),
+      verified_at: Timestamp.now(),
+      verified_by: adminId,
+      admin_notes: adminNotes || null,
+      updated_at: Timestamp.now(),
     })
 
     const updatedDoc = await getDoc(claimRef)
@@ -384,11 +384,11 @@ export async function rejectPlayerClaim({
 
     await updateDoc(claimRef, {
       status: 'rejected',
-      verifiedAt: Timestamp.now(),
-      verifiedBy: adminId,
-      rejectedReason,
-      adminNotes: adminNotes || null,
-      updatedAt: Timestamp.now(),
+      verified_at: Timestamp.now(),
+      verified_by: adminId,
+      rejected_reason: rejectedReason,
+      admin_notes: adminNotes || null,
+      updated_at: Timestamp.now(),
     })
 
     const updatedDoc = await getDoc(claimRef)
@@ -425,7 +425,7 @@ export async function cancelPlayerClaim(
     const claimData = claimDoc.data() as FirestorePlayerClaim
 
     // 본인 확인
-    if (claimData.userId !== userId) {
+    if (claimData.user_id !== userId) {
       return { error: new Error('Unauthorized') }
     }
 
@@ -456,8 +456,8 @@ export async function checkUserPlayerClaim(
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      where('userId', '==', userId),
-      where('playerId', '==', playerId),
+      where('user_id', '==', userId),
+      where('player_id', '==', playerId),
       where('status', 'in', ['pending', 'approved'])
     )
 

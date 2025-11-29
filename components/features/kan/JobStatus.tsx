@@ -101,10 +101,10 @@ export function JobStatus({ jobId, onComplete }: JobStatusProps) {
           <Progress value={job.progress} className="w-full" />
         )}
 
-        {job.status === 'failed' && job.errorMessage && (
+        {job.status === 'failed' && job.error_message && (
           <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
             <p className="text-sm font-medium">오류 메시지:</p>
-            <p className="text-sm mt-1">{job.errorMessage}</p>
+            <p className="text-sm mt-1">{job.error_message}</p>
           </div>
         )}
 
@@ -126,16 +126,16 @@ export function JobStatus({ jobId, onComplete }: JobStatusProps) {
 
         <div className="text-sm text-muted-foreground space-y-1">
           <p>작업 ID: {jobId}</p>
-          {job.startedAt && (
+          {job.started_at && (
             <p>
               시작 시간:{' '}
-              {job.startedAt.toDate().toLocaleString('ko-KR')}
+              {job.started_at.toDate().toLocaleString('ko-KR')}
             </p>
           )}
-          {job.completedAt && (
+          {job.completed_at && (
             <p>
               완료 시간:{' '}
-              {job.completedAt.toDate().toLocaleString('ko-KR')}
+              {job.completed_at.toDate().toLocaleString('ko-KR')}
             </p>
           )}
         </div>

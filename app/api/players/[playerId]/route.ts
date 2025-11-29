@@ -53,17 +53,17 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const player = {
       id: playerDoc.id,
       name: playerData.name,
-      normalized_name: playerData.normalizedName,
-      photo_url: playerData.photoUrl,
+      normalized_name: playerData.normalized_name,
+      photo_url: playerData.photo_url,
       country: playerData.country,
       gender: undefined, // Firestore 스키마에 없음
-      is_pro: playerData.isPro,
+      is_pro: playerData.is_pro,
       bio: playerData.bio,
-      total_winnings: playerData.totalWinnings,
+      total_winnings: playerData.total_winnings,
       aliases: playerData.aliases,
       stats: playerData.stats,
-      created_at: timestampToString(playerData.createdAt),
-      updated_at: timestampToString(playerData.updatedAt),
+      created_at: timestampToString(playerData.created_at),
+      updated_at: timestampToString(playerData.updated_at),
     }
 
     return NextResponse.json({

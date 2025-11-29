@@ -45,7 +45,7 @@ function HandCard({ hand }: { hand: HandWithId }) {
     hand.board_river,
   ].filter(Boolean)
 
-  const winners = hand.players?.filter((p: HandPlayerEmbedded) => p.isWinner) || []
+  const winners = hand.players?.filter((p: HandPlayerEmbedded) => p.is_winner) || []
   const allPlayers = hand.players || []
 
   return (
@@ -94,8 +94,8 @@ function HandCard({ hand }: { hand: HandWithId }) {
             <div className="flex flex-wrap gap-2">
               {allPlayers.slice(0, 6).map((hp: HandPlayerEmbedded, idx: number) => (
                 <Badge
-                  key={hp.playerId || idx}
-                  variant={hp.isWinner ? 'default' : 'secondary'}
+                  key={hp.player_id || idx}
+                  variant={hp.is_winner ? 'default' : 'secondary'}
                 >
                   {hp.name || 'Unknown'}
                   {hp.cards && hp.cards.length > 0 && (
@@ -118,9 +118,9 @@ function HandCard({ hand }: { hand: HandWithId }) {
                 <span className="font-medium">
                   {winners.map((w: HandPlayerEmbedded) => w.name).join(', ')}
                 </span>
-                {winners[0]?.handDescription && (
+                {winners[0]?.hand_description && (
                   <span className="text-sm text-muted-foreground">
-                    ({winners[0].handDescription})
+                    ({winners[0].hand_description})
                   </span>
                 )}
               </div>

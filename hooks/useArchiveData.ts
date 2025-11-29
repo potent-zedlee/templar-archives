@@ -53,8 +53,8 @@ export function useArchiveData() {
                 return {
                   id: streamDoc.id,
                   name: streamData.name,
-                  video_url: streamData.videoUrl,
-                  video_source: streamData.videoSource,
+                  video_url: streamData.video_url,
+                  video_source: streamData.video_source,
                   status: streamData.status,
                   selected: false,
                 }
@@ -63,7 +63,7 @@ export function useArchiveData() {
               return {
                 id: eventId,
                 name: eventData.name,
-                buy_in: eventData.buyIn,
+                buy_in: eventData.buy_in,
                 date: eventData.date?.toDate?.()?.toISOString(),
                 streams,
                 days: streams, // Legacy compatibility
@@ -77,8 +77,8 @@ export function useArchiveData() {
             name: tournamentData.name,
             category: tournamentData.category,
             location: tournamentData.location,
-            start_date: tournamentData.startDate?.toDate?.()?.toISOString(),
-            end_date: tournamentData.endDate?.toDate?.()?.toISOString(),
+            start_date: tournamentData.start_date?.toDate?.()?.toISOString(),
+            end_date: tournamentData.end_date?.toDate?.()?.toISOString(),
             events: subEvents,
             expanded: true,
           }

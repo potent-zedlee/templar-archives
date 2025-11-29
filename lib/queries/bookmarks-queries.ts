@@ -64,12 +64,12 @@ const bookmarkConverter = {
     const data = snapshot.data() as FirestoreBookmark
     return {
       id: snapshot.id,
-      refId: data.refId,
+      refId: data.ref_id,
       type: data.type,
-      refData: data.refData,
+      refData: data.ref_data,
       folderName: undefined, // Firestore 구조에서는 별도 폴더 없음
       notes: undefined, // Firestore 구조에서는 별도 노트 없음
-      createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
+      createdAt: (data.created_at as Timestamp).toDate().toISOString(),
     }
   }
 }

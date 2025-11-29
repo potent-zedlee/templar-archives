@@ -89,9 +89,9 @@ export function HandHistoryDialog({
 
   // Transform FirestoreStream to VideoPlayer format
   const videoPlayerDay = useMemo(() => ({
-    video_source: day.videoSource,
-    video_url: day.videoUrl,
-    video_file: day.videoFile,
+    video_source: day.video_source,
+    video_url: day.video_url,
+    video_file: day.video_file,
     video_nas_path: undefined
   }), [day])
 

@@ -143,7 +143,7 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
 
             streamInfo = {
               name: streamData.name,
-              videoUrl: streamData.videoUrl,
+              videoUrl: streamData.video_url,
               event: eventData ? {
                 name: eventData.name,
                 tournament: tournamentData ? {
@@ -163,24 +163,24 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
           // 플레이어 컬렉션에서 추가 정보 조회
           let photoUrl: string | undefined = undefined
           try {
-            const playerRef = doc(db, COLLECTION_PATHS.PLAYERS, p.playerId)
+            const playerRef = doc(db, COLLECTION_PATHS.PLAYERS, p.player_id)
             const playerSnap = await getDoc(playerRef)
             if (playerSnap.exists()) {
               const playerData = playerSnap.data()
-              photoUrl = playerData.photoUrl
+              photoUrl = playerData.photo_url
             }
           } catch {
             // 플레이어 정보 없으면 무시
           }
 
           return {
-            id: p.playerId,
-            playerId: p.playerId,
+            id: p.player_id,
+            playerId: p.player_id,
             name: p.name,
             photoUrl,
             position: p.position,
             cards: p.cards,
-            isWinner: p.isWinner,
+            isWinner: p.is_winner,
           }
         })
       )
@@ -189,8 +189,8 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
       const actions = (handData.actions || []).map((a, index) => ({
         id: `${handId}-action-${index}`,
         street: a.street,
-        playerName: a.playerName,
-        actionType: a.actionType,
+        playerName: a.player_name,
+        actionType: a.action_type,
         amount: a.amount,
         sequence: a.sequence,
       }))

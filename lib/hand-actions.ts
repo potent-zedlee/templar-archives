@@ -61,9 +61,9 @@ function convertToLegacyFormat(
   return {
     id: `${handId}_${action.street}_${action.sequence}`,
     hand_id: handId,
-    player_id: action.playerId,
+    player_id: action.player_id,
     street: action.street as Street,
-    action_type: action.actionType as ActionType,
+    action_type: action.action_type as ActionType,
     amount: action.amount,
     action_order: action.sequence,
     sequence: action.sequence, // action_order와 동일한 값
@@ -79,11 +79,11 @@ function convertToFirestoreFormat(
   playerName: string = ''
 ): HandActionEmbedded {
   return {
-    playerId: input.player_id,
-    playerName,
+    player_id: input.player_id,
+    player_name: playerName,
     street: input.street as PokerStreet,
     sequence: input.action_order,
-    actionType: input.action_type as PokerActionType,
+    action_type: input.action_type as PokerActionType,
     amount: input.amount || 0,
   }
 }
@@ -159,7 +159,7 @@ export async function createHandAction(action: HandActionInput): Promise<HandAct
     const existingActions = handData.actions || []
 
     // 플레이어 이름 찾기
-    const player = handData.players?.find((p) => p.playerId === action.player_id)
+    const player = handData.players?.find((p) => p.player_id === action.player_id)
     const playerName = player?.name || ''
 
     const newAction = convertToFirestoreFormat(action, playerName)
@@ -207,7 +207,7 @@ export async function bulkCreateHandActions(
     // 플레이어 이름 매핑
     const playerMap = new Map<string, string>()
     handData.players?.forEach((p) => {
-      playerMap.set(p.playerId, p.name)
+      playerMap.set(p.player_id, p.name)
     })
 
     const newActions = actions.map((action) =>
@@ -271,9 +271,9 @@ export async function updateHandAction(
     // 액션 업데이트
     const updatedAction: HandActionEmbedded = {
       ...actions[actionIndex],
-      ...(updates.player_id && { playerId: updates.player_id }),
+      ...(updates.player_id && { player_id: updates.player_id }),
       ...(updates.street && { street: updates.street as PokerStreet }),
-      ...(updates.action_type && { actionType: updates.action_type as PokerActionType }),
+      ...(updates.action_type && { action_type: updates.action_type as PokerActionType }),
       ...(updates.amount !== undefined && { amount: updates.amount }),
       ...(updates.action_order !== undefined && { sequence: updates.action_order }),
     }

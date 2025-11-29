@@ -259,7 +259,7 @@ export async function fetchHandsWithDetails(options: {
       constraints.push(where('playerIds', 'array-contains', playerId))
     }
 
-    constraints.push(orderBy('createdAt', 'desc'))
+    constraints.push(orderBy('created_at', 'desc'))
     constraints.push(limit(queryLimit))
 
     const q = query(handsRef, ...constraints)
@@ -324,7 +324,7 @@ export async function fetchHandDetails(handId: string): Promise<HandDetails | nu
     // 플레이어 상세 정보 가져오기
     const playersWithDetails = await Promise.all(
       (hand.players || []).map(async (hp) => {
-        const playerRef = doc(firestore, COLLECTION_PATHS.PLAYERS, hp.playerId)
+        const playerRef = doc(firestore, COLLECTION_PATHS.PLAYERS, hp.player_id)
         const playerDoc = await getDoc(playerRef)
         const player = playerDoc.data() as FirestorePlayer
 
@@ -332,9 +332,9 @@ export async function fetchHandDetails(handId: string): Promise<HandDetails | nu
           position: hp.position,
           cards: hp.cards?.join(''),
           player: {
-            id: hp.playerId,
+            id: hp.player_id,
             name: player?.name || hp.name,
-            photo_url: player?.photoUrl,
+            photo_url: player?.photo_url,
             country: player?.country,
           },
         }
@@ -357,9 +357,9 @@ export async function fetchHandDetails(handId: string): Promise<HandDetails | nu
       stream: {
         id: hand.stream_id,
         name: stream?.name || '',
-        video_url: stream?.videoUrl,
-        video_file: stream?.videoFile,
-        video_source: stream?.videoSource,
+        video_url: stream?.video_url,
+        video_file: stream?.video_file,
+        video_source: stream?.video_source,
         event: {
           id: hand.event_id,
           name: event?.name || '',
@@ -394,10 +394,10 @@ export async function fetchTournamentsTree(
     const constraints: Parameters<typeof query>[1][] = []
 
     if (gameType) {
-      constraints.push(where('gameType', '==', gameType))
+      constraints.push(where('game_type', '==', gameType))
     }
 
-    constraints.push(orderBy('startDate', 'desc'))
+    constraints.push(orderBy('start_date', 'desc'))
 
     const q = query(tournamentsRef, ...constraints)
     const tournamentsSnapshot = await getDocs(q)
@@ -434,7 +434,7 @@ export async function fetchTournamentsTree(
           firestore,
           COLLECTION_PATHS.STREAMS(tournamentId, eventId),
         )
-        const streamsQuery = query(streamsRef, orderBy('publishedAt', 'desc'))
+        const streamsQuery = query(streamsRef, orderBy('published_at', 'desc'))
         const streamsSnapshot = await getDocs(streamsQuery)
 
         const streams: StreamTreeItem[] = []
@@ -450,12 +450,12 @@ export async function fetchTournamentsTree(
           streams.push({
             id: streamDoc.id,
             name: stream.name,
-            video_url: stream.videoUrl,
-            video_source: stream.videoSource,
-            published_at: timestampToString(stream.publishedAt as Timestamp),
+            video_url: stream.video_url,
+            video_source: stream.video_source,
+            published_at: timestampToString(stream.published_at as Timestamp),
             status: stream.status,
-            hand_count: stream.stats?.handsCount || 0,
-            player_count: stream.stats?.playersCount || 0,
+            hand_count: stream.stats?.hands_count || 0,
+            player_count: stream.stats?.players_count || 0,
           })
         }
 
@@ -472,12 +472,12 @@ export async function fetchTournamentsTree(
         id: tournamentId,
         name: tournament.name,
         category: tournament.category,
-        category_logo_url: tournament.categoryInfo?.logo,
+        category_logo_url: tournament.category_info?.logo,
         location: tournament.location,
-        start_date: timestampToString(tournament.startDate as Timestamp) || '',
-        end_date: timestampToString(tournament.endDate as Timestamp) || '',
+        start_date: timestampToString(tournament.start_date as Timestamp) || '',
+        end_date: timestampToString(tournament.end_date as Timestamp) || '',
         status: tournament.status,
-        game_type: tournament.gameType,
+        game_type: tournament.game_type,
         events: subEvents,
       })
     }
@@ -506,14 +506,14 @@ export async function fetchPlayersWithHandCount(): Promise<PlayerWithHandCount[]
       const playerId = playerDoc.id
 
       // 핸드 수 계산 (players subcollection의 hands 또는 stats에서)
-      const handCount = player.stats?.totalHands || 0
+      const handCount = player.stats?.total_hands || 0
 
       players.push({
         id: playerId,
         name: player.name,
-        photo_url: player.photoUrl,
+        photo_url: player.photo_url,
         country: player.country,
-        total_winnings: player.totalWinnings,
+        total_winnings: player.total_winnings,
         hand_count: handCount,
       })
     }
@@ -541,7 +541,7 @@ export async function fetchPlayerHands(playerId: string): Promise<{
   try {
     // 플레이어의 핸드 인덱스 조회
     const playerHandsRef = collection(firestore, COLLECTION_PATHS.PLAYER_HANDS(playerId))
-    const playerHandsQuery = query(playerHandsRef, orderBy('handDate', 'desc'))
+    const playerHandsQuery = query(playerHandsRef, orderBy('hand_date', 'desc'))
     const playerHandsSnapshot = await getDocs(playerHandsQuery)
 
     const handIds = playerHandsSnapshot.docs.map((doc) => doc.id)
@@ -565,7 +565,7 @@ export async function fetchPlayerHands(playerId: string): Promise<{
         const endTime = parts[1] || parts[0] || '00:00'
 
         // 현재 플레이어의 정보 찾기
-        const winner = hand.players?.find((p) => p.isWinner)?.name || 'Unknown'
+        const winner = hand.players?.find((p) => p.is_winner)?.name || 'Unknown'
 
         return {
           handNumber: hand.number || '???',
@@ -581,7 +581,7 @@ export async function fetchPlayerHands(playerId: string): Promise<{
               name: hp.name || 'Unknown',
               position: hp.position || 'Unknown',
               cards: hp.cards?.join('') || '',
-              stack: hp.startStack || 0,
+              stack: hp.start_stack || 0,
             })) || [],
           streets: {
             preflop: { actions: [], pot: hand.pot_preflop || 0 },
@@ -625,7 +625,7 @@ export async function fetchPlayerPrizeHistory(playerId: string): Promise<
   try {
     // 플레이어 핸드 인덱스에서 결과 정보 추출
     const playerHandsRef = collection(firestore, COLLECTION_PATHS.PLAYER_HANDS(playerId))
-    const playerHandsQuery = query(playerHandsRef, orderBy('handDate', 'asc'))
+    const playerHandsQuery = query(playerHandsRef, orderBy('hand_date', 'asc'))
     const playerHandsSnapshot = await getDocs(playerHandsQuery)
 
     const prizeHistory: Array<{
@@ -646,16 +646,16 @@ export async function fetchPlayerPrizeHistory(playerId: string): Promise<
     for (const handDoc of playerHandsSnapshot.docs) {
       const playerHand = handDoc.data()
 
-      if (playerHand.result?.finalAmount && playerHand.tournamentRef) {
-        const key = playerHand.tournamentRef.id
+      if (playerHand.result?.final_amount && playerHand.tournament_ref) {
+        const key = playerHand.tournament_ref.id
         const existing = tournamentResults.get(key)
 
         if (existing) {
-          existing.totalPrize += playerHand.result.finalAmount
+          existing.totalPrize += playerHand.result.final_amount
         } else {
           tournamentResults.set(key, {
-            tournamentRef: playerHand.tournamentRef,
-            totalPrize: playerHand.result.finalAmount,
+            tournamentRef: playerHand.tournament_ref,
+            totalPrize: playerHand.result.final_amount,
             rank: 0, // 실제 순위는 별도 저장 필요
           })
         }
@@ -753,14 +753,14 @@ export async function fetchPlayerHandsGrouped(playerId: string): Promise<
       const eventId = hand.event_id
 
       // 플레이어 정보 찾기
-      const playerInfo = hand.players?.find((p) => p.playerId === playerId)
+      const playerInfo = hand.players?.find((p) => p.player_id === playerId)
 
       // 토너먼트 그룹 생성/업데이트
       if (!tournamentMap.has(tournamentId)) {
         tournamentMap.set(tournamentId, {
           tournament_id: tournamentId,
-          tournament_name: handIndex.tournamentRef?.name || '',
-          category: handIndex.tournamentRef?.category || '',
+          tournament_name: handIndex.tournament_ref?.name || '',
+          category: handIndex.tournament_ref?.category || '',
           eventMap: new Map(),
         })
       }

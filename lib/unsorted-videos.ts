@@ -75,11 +75,11 @@ function toUnsortedVideo(id: string, data: FirestoreUnsortedStream): UnsortedVid
   return {
     id,
     name: data.name,
-    video_url: data.videoUrl || null,
-    video_file: data.videoFile || null,
-    video_source: data.videoSource || null,
-    created_at: data.createdAt.toDate().toISOString(),
-    published_at: data.publishedAt?.toDate().toISOString() || null,
+    video_url: data.video_url || null,
+    video_file: data.video_file || null,
+    video_source: data.video_source || null,
+    created_at: data.created_at.toDate().toISOString(),
+    published_at: data.published_at?.toDate().toISOString() || null,
   }
 }
 
@@ -126,13 +126,13 @@ export async function createUnsortedVideo(params: {
     const now = Timestamp.now()
     const streamData: FirestoreUnsortedStream = {
       name: params.name,
-      videoUrl: normalizedUrl || undefined,
-      videoFile: params.video_file,
-      videoSource: params.video_source || 'youtube',
-      publishedAt: params.published_at ? Timestamp.fromDate(new Date(params.published_at)) : undefined,
-      isOrganized: false,
-      createdAt: now,
-      updatedAt: now,
+      video_url: normalizedUrl || undefined,
+      video_file: params.video_file,
+      video_source: params.video_source || 'youtube',
+      published_at: params.published_at ? Timestamp.fromDate(new Date(params.published_at)) : undefined,
+      is_organized: false,
+      created_at: now,
+      updated_at: now,
     }
 
     const docRef = await addDoc(collection(firestore, COLLECTION_PATHS.UNSORTED_STREAMS), streamData)
@@ -254,14 +254,14 @@ export async function createUnsortedVideosBatch(
 
         const streamData: FirestoreUnsortedStream = {
           name: video.name,
-          videoUrl: normalizedUrl,
-          videoSource: video.video_source || 'youtube',
-          publishedAt: video.published_at
+          video_url: normalizedUrl,
+          video_source: video.video_source || 'youtube',
+          published_at: video.published_at
             ? Timestamp.fromDate(new Date(video.published_at))
             : undefined,
-          isOrganized: false,
-          createdAt: now,
-          updatedAt: now,
+          is_organized: false,
+          created_at: now,
+          updated_at: now,
         }
 
         const docRef = doc(collection(firestore, COLLECTION_PATHS.UNSORTED_STREAMS))

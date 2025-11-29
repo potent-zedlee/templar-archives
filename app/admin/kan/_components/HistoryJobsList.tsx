@@ -157,7 +157,7 @@ export function HistoryJobsList() {
       <div className="space-y-4">
         {jobs.map((job) => {
           const isExpanded = expandedJobs.has(job.id)
-          const jobResult = job.result as { segment_results?: SegmentResult[] } | null
+          const jobResult = job.result as unknown as { segment_results?: SegmentResult[] } | null
           const segmentResults = jobResult?.segment_results || []
           const successCount = segmentResults.filter((s: SegmentResult) => s.status === 'success').length
           const failedCount = segmentResults.filter((s: SegmentResult) => s.status === 'failed').length

@@ -101,10 +101,10 @@ export function useAddHandTagMutation(handId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ tagName, userId }: { tagName: HandTagName; userId: string }) => {
-      return await addHandTag(handId, tagName, userId)
+    mutationFn: async ({ tag_name, userId }: { tag_name: HandTagName; userId: string }) => {
+      return await addHandTag(handId, tag_name, userId)
     },
-    onMutate: async ({ tagName, userId }) => {
+    onMutate: async ({ tag_name, userId }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: handTagsKeys.byHand(handId) })
 
@@ -115,7 +115,7 @@ export function useAddHandTagMutation(handId: string) {
       const newTag: HandTag = {
         id: 'temp-' + Date.now(),
         handId: handId,
-        tagName: tagName,
+        tag_name: tag_name,
         createdBy: userId,
         createdAt: new Date().toISOString(),
       }
@@ -158,10 +158,10 @@ export function useRemoveHandTagMutation(handId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ tagName, userId }: { tagName: HandTagName; userId: string }) => {
-      return await removeHandTag(handId, tagName, userId)
+    mutationFn: async ({ tag_name, userId }: { tag_name: HandTagName; userId: string }) => {
+      return await removeHandTag(handId, tag_name, userId)
     },
-    onMutate: async ({ tagName, userId }) => {
+    onMutate: async ({ tag_name, userId }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: handTagsKeys.byHand(handId) })
 
@@ -170,7 +170,7 @@ export function useRemoveHandTagMutation(handId: string) {
 
       // Optimistically update (remove the tag)
       queryClient.setQueryData<HandTag[]>(handTagsKeys.byHand(handId), (old) =>
-        (old || []).filter((tag) => !(tag.tagName === tagName && tag.createdBy === userId))
+        (old || []).filter((tag) => !(tag.tag_name === tag_name && tag.createdBy === userId))
       )
 
       return { previousTags }

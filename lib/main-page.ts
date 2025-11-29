@@ -106,7 +106,7 @@ export async function getLatestPosts(limitCount: number = 5) {
   try {
     const postsQuery = query(
       collection(firestore, COLLECTION_PATHS.POSTS),
-      orderBy('createdAt', 'desc'),
+      orderBy('created_at', 'desc'),
       limit(limitCount)
     )
 
@@ -119,12 +119,12 @@ export async function getLatestPosts(limitCount: number = 5) {
         title: data.title || '',
         content: data.content || '',
         category: data.category || '',
-        created_at: data.createdAt?.toDate?.()?.toISOString() || '',
-        likes_count: data.engagement?.likesCount || 0,
-        comments_count: data.engagement?.commentsCount || 0,
+        created_at: data.created_at?.toDate?.()?.toISOString() || '',
+        likes_count: data.engagement?.likes_count || 0,
+        comments_count: data.engagement?.comments_count || 0,
         author: {
-          nickname: data.author?.nickname || 'Unknown',
-          avatar_url: data.author?.avatarUrl || ''
+          nickname: data.author?.name || 'Unknown',
+          avatar_url: data.author?.avatar_url || ''
         }
       }
     })
@@ -141,7 +141,7 @@ export async function getTopPlayers(limitCount: number = 5): Promise<TopPlayer[]
   try {
     const playersQuery = query(
       collection(firestore, COLLECTION_PATHS.PLAYERS),
-      orderBy('totalWinnings', 'desc'),
+      orderBy('total_winnings', 'desc'),
       limit(limitCount)
     )
 
@@ -152,10 +152,10 @@ export async function getTopPlayers(limitCount: number = 5): Promise<TopPlayer[]
       return {
         id: doc.id,
         name: data.name || '',
-        photo_url: data.photoUrl,
-        total_winnings: data.totalWinnings || 0,
-        tournament_count: data.stats?.tournamentCount || 0,
-        hands_count: data.stats?.totalHands || 0
+        photo_url: data.photo_url,
+        total_winnings: data.total_winnings || 0,
+        tournament_count: data.stats?.tournament_count || 0,
+        hands_count: data.stats?.total_hands || 0
       }
     })
   } catch (error) {

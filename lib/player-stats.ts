@@ -39,7 +39,7 @@ export async function fetchPlayerActions(playerId: string) {
     // 각 핸드에서 해당 플레이어의 액션만 추출
     handsSnapshot.docs.forEach((doc) => {
       const hand = doc.data() as FirestoreHand
-      const playerActions = hand.actions.filter((action) => action.playerId === playerId)
+      const playerActions = hand.actions.filter((action) => action.player_id === playerId)
 
       playerActions.forEach((action) => {
         allActions.push({
@@ -79,16 +79,16 @@ export async function fetchPlayerHandsInfo(playerId: string) {
 
     handsSnapshot.docs.forEach((doc) => {
       const hand = doc.data() as FirestoreHand
-      const playerData = hand.players.find((p) => p.playerId === playerId)
+      const playerData = hand.players.find((p) => p.player_id === playerId)
 
       if (playerData) {
         handPlayersData.push({
           hand_id: doc.id,
           player_id: playerId,
           position: playerData.position,
-          starting_stack: playerData.startStack,
-          ending_stack: playerData.endStack,
-          is_winner: playerData.isWinner,
+          starting_stack: playerData.start_stack,
+          ending_stack: playerData.end_stack,
+          is_winner: playerData.is_winner,
           pot_size: hand.pot_size,
         })
       }

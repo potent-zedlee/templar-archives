@@ -136,20 +136,20 @@ async function HandDetailContent({ handId }: { handId: string }) {
   }
 
   const { hand, stream, event, tournament } = result
-  const videoId = stream?.videoUrl ? extractYouTubeId(stream.videoUrl) : null
+  const videoId = stream?.video_url ? extractYouTubeId(stream.video_url) : null
 
   // Transform players to PlayerSeatData
   const players: PlayerSeatData[] =
     hand.players?.map((hp) => ({
-      id: hp.playerId,
+      id: hp.player_id,
       seat: hp.seat || 1,
       position: hp.position,
       name: hp.name || 'Unknown',
-      stack: hp.startStack ?? hp.endStack ?? 0,
+      stack: hp.start_stack ?? hp.end_stack ?? 0,
       holeCards: hp.cards,
-      isWinner: hp.isWinner,
+      isWinner: hp.is_winner,
       finalAmount: undefined,
-      handDescription: hp.handDescription,
+      handDescription: hp.hand_description,
       flagCode: undefined,
     })) || []
 
@@ -157,13 +157,13 @@ async function HandDetailContent({ handId }: { handId: string }) {
   const handActions: HandAction[] =
     hand.actions?.map((action, index) => ({
       id: `${hand.id}-action-${index}`,
-      hand_player_id: action.playerId,
+      hand_player_id: action.player_id,
       street: action.street,
-      action_type: action.actionType,
+      action_type: action.action_type,
       amount: action.amount || 0,
       timestamp: undefined,
       action_sequence: action.sequence,
-      player_name: action.playerName,
+      player_name: action.player_name,
     })) || []
 
   const adjacent = await getAdjacentHands(handId, hand.stream_id)

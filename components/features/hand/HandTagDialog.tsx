@@ -46,7 +46,7 @@ export function HandTagDialog({
   // Check if user has already added a specific tag
   const hasUserTag = (tagName: HandTagName) => {
     return existingTags.some(
-      tag => tag.tagName === tagName && tag.createdBy === user.id
+      tag => tag.tag_name === tagName && tag.createdBy === user.id
     )
   }
 
@@ -54,13 +54,13 @@ export function HandTagDialog({
     if (hasUserTag(tagName)) {
       // Remove tag
       removeTagMutation.mutate({
-        tagName,
+        tag_name: tagName,
         userId: user.id,
       })
     } else {
       // Add tag
       addTagMutation.mutate({
-        tagName,
+        tag_name: tagName,
         userId: user.id,
       })
     }
@@ -124,7 +124,7 @@ export function HandTagDialog({
                     const colorName = getTagColor(tagName)
                     const tagNameTyped = tagName as HandTagName
                     const isSelected = hasUserTag(tagNameTyped)
-                    const tagCount = existingTags.filter(t => t.tagName === tagName).length
+                    const tagCount = existingTags.filter(t => t.tag_name === tagName).length
 
                     return (
                       <Button

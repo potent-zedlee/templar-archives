@@ -95,7 +95,7 @@ const handConverter = {
       eventId: data.event_id,
       tournamentId: data.tournament_id,
       handPlayers: data.players?.map(p => ({
-        playerId: p.playerId,
+        playerId: p.player_id,
         player: {
           name: p.name,
           photoUrl: undefined,
@@ -103,10 +103,10 @@ const handConverter = {
         }
       })),
       handActions: data.actions?.map(a => ({
-        playerId: a.playerId,
+        playerId: a.player_id,
         street: a.street,
         sequence: a.sequence,
-        actionType: a.actionType,
+        actionType: a.action_type,
         amount: a.amount,
       })),
     }

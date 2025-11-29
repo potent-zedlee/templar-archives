@@ -189,11 +189,11 @@ export default function EditHandActionsPage() {
       const players: HandPlayer[] = (handData.players || []).map((p, index) => ({
         id: `${handId}-player-${index}`,
         hand_id: handId,
-        player_id: p.playerId,
+        player_id: p.player_id,
         position: p.position || null,
         hole_cards: p.cards ? p.cards.join(" ") : null,
         player: {
-          id: p.playerId,
+          id: p.player_id,
           name: p.name,
         },
       }))

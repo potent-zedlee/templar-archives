@@ -63,7 +63,7 @@ export async function getHandLikeStatus(handId: string, userId?: string): Promis
 
       if (likeDoc.exists()) {
         const likeData = likeDoc.data() as FirestoreHandLike
-        userVote = likeData.voteType as 'like' | 'dislike'
+        userVote = likeData.vote_type as 'like' | 'dislike'
       }
     }
 
@@ -95,19 +95,19 @@ export async function toggleHandLike(
       // 기존 투표 확인
       const likeDoc = await transaction.get(likeDocRef)
       const existingVote = likeDoc.exists()
-        ? (likeDoc.data() as FirestoreHandLike).voteType
+        ? (likeDoc.data() as FirestoreHandLike).vote_type
         : null
 
       // 경우 1: 기존 투표 없음 -> 새로 추가
       if (!existingVote) {
-        const newLike: Omit<FirestoreHandLike, 'createdAt' | 'updatedAt'> & {
-          createdAt: ReturnType<typeof serverTimestamp>
-          updatedAt: ReturnType<typeof serverTimestamp>
+        const newLike: Omit<FirestoreHandLike, 'created_at' | 'updated_at'> & {
+          created_at: ReturnType<typeof serverTimestamp>
+          updated_at: ReturnType<typeof serverTimestamp>
         } = {
-          userId,
-          voteType,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
+          user_id: userId,
+          vote_type: voteType,
+          created_at: serverTimestamp(),
+          updated_at: serverTimestamp(),
         }
 
         transaction.set(likeDocRef, newLike)
@@ -134,8 +134,8 @@ export async function toggleHandLike(
 
       // 경우 3: 다른 투표 클릭 -> 변경 (업데이트)
       transaction.update(likeDocRef, {
-        voteType,
-        updatedAt: serverTimestamp(),
+        vote_type: voteType,
+        updated_at: serverTimestamp(),
       })
 
       // 기존 투표 카운트 감소, 새 투표 카운트 증가
@@ -230,7 +230,7 @@ export async function getBatchHandLikeStatus(
           const likeData = likeDoc.data() as FirestoreHandLike
           const status = result.get(handId)
           if (status) {
-            status.userVote = likeData.voteType as 'like' | 'dislike'
+            status.userVote = likeData.vote_type as 'like' | 'dislike'
           }
         }
       })

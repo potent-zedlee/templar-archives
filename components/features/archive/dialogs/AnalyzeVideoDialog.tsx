@@ -141,7 +141,7 @@ export function AnalyzeVideoDialog({
     console.log('[AnalyzeVideoDialog] Props changed')
     console.log('[AnalyzeVideoDialog] isOpen:', isOpen)
     console.log('[AnalyzeVideoDialog] day:', day)
-    console.log('[AnalyzeVideoDialog] day?.videoUrl:', day?.videoUrl)
+    console.log('[AnalyzeVideoDialog] day?.video_url:', day?.video_url)
     console.log('============================================')
   }, [isOpen, day])
 
@@ -171,11 +171,11 @@ export function AnalyzeVideoDialog({
     // DB는 'none'인데 LocalStorage에 상태가 있으면 정리
     const savedState = localStorage.getItem(`gcs_upload_${day.id}`)
 
-    if (day.uploadStatus === 'none' && savedState) {
+    if (day.upload_status === 'none' && savedState) {
       localStorage.removeItem(`gcs_upload_${day.id}`)
       console.log('[AnalyzeVideoDialog] Cleared stale LocalStorage state')
     }
-  }, [isOpen, day?.id, day?.uploadStatus])
+  }, [isOpen, day?.id, day?.upload_status])
 
   // Cloud Run 작업 상태 폴링 (React Query 기반)
   const { data: cloudRunJobData } = useCloudRunJob(jobId, {
@@ -327,7 +327,7 @@ export function AnalyzeVideoDialog({
 
     toast.info("분석 요청을 처리하고 있습니다...")
 
-    if (!day?.gcsUri) {
+    if (!day?.gcs_uri) {
       console.error('[AnalyzeVideoDialog] No GCS URI')
       setStatus("error")
       setError("GCS URI가 없습니다")
@@ -336,7 +336,7 @@ export function AnalyzeVideoDialog({
     }
 
     // gcsUri가 있으면 uploadStatus와 관계없이 분석 허용
-    if (day.uploadStatus !== 'uploaded' && !day.gcsUri) {
+    if (day.upload_status !== 'uploaded' && !day.gcs_uri) {
       console.error('[AnalyzeVideoDialog] Video not uploaded')
       setStatus("error")
       setError("영상이 업로드되지 않았습니다")
@@ -390,7 +390,7 @@ export function AnalyzeVideoDialog({
 
       // Use Cloud Run for GCS-based analysis
       const result = await startKanAnalysis({
-        videoUrl: day.gcsUri,
+        videoUrl: day.gcs_uri,
         segments: timeSegments,
         platform: platform as 'ept' | 'triton' | 'wsop',
         streamId: day.id,
@@ -488,9 +488,9 @@ export function AnalyzeVideoDialog({
             {/* Left Column: Video Player + Timeline */}
             <div className="flex-1 md:flex-[3] space-y-4 overflow-y-auto">
               <VideoPlayerWithTimestamp
-                videoUrl={day?.videoUrl}
-                videoSource={day?.videoSource}
-                videoFile={day?.videoFile}
+                videoUrl={day?.video_url}
+                videoSource={day?.video_source}
+                videoFile={day?.video_file}
                 onTimeUpdate={setCurrentVideoTime}
                 onDurationUpdate={setVideoDuration}
               />
@@ -510,7 +510,7 @@ export function AnalyzeVideoDialog({
               <Label>영상 업로드</Label>
 
               {/* 업로드 가능 상태: DB가 none이고 gcsUri가 없고 훅도 idle일 때 */}
-              {day?.uploadStatus === 'none' && !day?.gcsUri && uploadStatus === 'idle' && (
+              {day?.upload_status === 'none' && !day?.gcs_uri && uploadStatus === 'idle' && (
                 <VideoUploader
                   onFileSelect={(file) => {
                     console.log('[AnalyzeVideoDialog] File selected:', file.name)
@@ -521,9 +521,9 @@ export function AnalyzeVideoDialog({
               )}
 
               {/* 업로드 진행 중: 훅 상태가 uploading이거나 DB가 uploading일 때 */}
-              {(uploadStatus === 'uploading' || uploadStatus === 'paused' || day?.uploadStatus === 'uploading') && (
+              {(uploadStatus === 'uploading' || uploadStatus === 'paused' || day?.upload_status === 'uploading') && (
                 <UploadProgress
-                  fileName={selectedFile?.name || day?.videoFile || '업로드 중...'}
+                  fileName={selectedFile?.name || day?.video_file || '업로드 중...'}
                   fileSize={selectedFile?.size || 0}
                   progress={uploadProgress}
                   status={uploadStatus === 'idle' ? 'uploading' : uploadStatus}
@@ -536,7 +536,7 @@ export function AnalyzeVideoDialog({
                 />
               )}
 
-              {(day?.uploadStatus === 'uploaded' || day?.gcsUri || uploadStatus === 'completed') && (
+              {(day?.upload_status === 'uploaded' || day?.gcs_uri || uploadStatus === 'completed') && (
                 <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-3">
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
                   <span className="text-sm font-medium text-green-400">
@@ -545,7 +545,7 @@ export function AnalyzeVideoDialog({
                 </div>
               )}
 
-              {(day?.uploadStatus === 'failed' || uploadStatus === 'error') && (
+              {(day?.upload_status === 'failed' || uploadStatus === 'error') && (
                 <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3">
                   <AlertCircle className="h-5 w-5 text-red-500" />
                   <div>
@@ -687,7 +687,7 @@ export function AnalyzeVideoDialog({
               </Button>
               <Button
                 onClick={handleAnalyze}
-                disabled={!day?.gcsUri && day?.uploadStatus !== 'uploaded' && uploadStatus !== 'completed'}
+                disabled={!day?.gcs_uri && day?.upload_status !== 'uploaded' && uploadStatus !== 'completed'}
                 data-testid="start-analysis-button"
               >
                 <Sparkles className="h-4 w-4 mr-2" />

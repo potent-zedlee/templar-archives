@@ -192,16 +192,16 @@ export async function getRecentActivity(limitCount: number = 20): Promise<AdminL
       const data = doc.data() as FirestoreAdminLog
       return {
         id: doc.id,
-        admin_id: data.adminId,
+        admin_id: data.admin_id,
         action: data.action,
-        target_type: data.targetType,
-        target_id: data.targetId,
+        target_type: data.target_type,
+        target_id: data.target_id,
         details: data.details,
-        created_at: data.createdAt.toDate().toISOString(),
+        created_at: data.created_at.toDate().toISOString(),
         admin: data.admin
           ? {
               nickname: data.admin.nickname,
-              avatar_url: data.admin.avatarUrl,
+              avatar_url: data.admin.avatar_url,
             }
           : undefined,
       }
@@ -254,13 +254,13 @@ export async function getUsers(options?: {
         id: doc.id,
         email: data.email,
         nickname: data.nickname,
-        avatar_url: data.avatarUrl,
+        avatar_url: data.avatar_url,
         role: data.role,
         is_banned: data.isBanned || false,
         ban_reason: data.banReason,
         banned_at: data.bannedAt?.toDate().toISOString(),
         banned_by: data.bannedBy,
-        created_at: data.createdAt?.toDate().toISOString(),
+        created_at: data.created_at?.toDate().toISOString(),
         updated_at: data.updatedAt?.toDate().toISOString(),
       }
     })
@@ -374,19 +374,19 @@ export async function logAdminAction(
     const adminSnap = await getDoc(adminRef)
     const adminData = adminSnap.data()
 
-    const logData: Omit<FirestoreAdminLog, 'createdAt'> & { createdAt: Timestamp } = {
-      adminId,
+    const logData: Omit<FirestoreAdminLog, 'created_at'> & { created_at: Timestamp } = {
+      admin_id: adminId,
       action,
-      targetType,
-      targetId,
+      target_type: targetType,
+      target_id: targetId,
       details,
       admin: adminData
         ? {
             nickname: adminData.nickname || 'Unknown',
-            avatarUrl: adminData.avatarUrl,
+            avatar_url: adminData.avatar_url,
           }
         : undefined,
-      createdAt: Timestamp.now(),
+      created_at: Timestamp.now(),
     }
 
     await addDoc(collection(firestore, COLLECTION_PATHS.ADMIN_LOGS), logData)
@@ -423,11 +423,11 @@ export async function getRecentComments(limitCount: number = 50) {
         content: data.content,
         author_id: data.author?.id,
         post_id: postId,
-        created_at: data.createdAt?.toDate().toISOString(),
+        created_at: data.created_at?.toDate().toISOString(),
         author: data.author
           ? {
               nickname: data.author.name,
-              avatar_url: data.author.avatarUrl,
+              avatar_url: data.author.avatar_url,
               is_banned: false,
             }
           : undefined,

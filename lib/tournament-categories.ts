@@ -73,18 +73,18 @@ function toTournamentCategory(id: string, data: FirestoreTournamentCategory): To
   return {
     id,
     name: data.name,
-    display_name: data.displayName,
-    short_name: data.shortName || null,
+    display_name: data.display_name,
+    short_name: data.short_name || null,
     aliases: data.aliases || [],
-    logo_url: data.logoUrl || null,
-    is_active: data.isActive,
-    game_type: data.gameType,
-    parent_id: data.parentId || null,
-    theme_gradient: data.themeGradient || null,
-    theme_text: data.themeText || null,
-    theme_shadow: data.themeShadow || null,
-    created_at: data.createdAt.toDate().toISOString(),
-    updated_at: data.updatedAt.toDate().toISOString(),
+    logo_url: data.logo_url || null,
+    is_active: data.is_active,
+    game_type: data.game_type,
+    parent_id: data.parent_id || null,
+    theme_gradient: data.theme_gradient || null,
+    theme_text: data.theme_text || null,
+    theme_shadow: data.theme_shadow || null,
+    created_at: data.created_at.toDate().toISOString(),
+    updated_at: data.updated_at.toDate().toISOString(),
   }
 }
 
@@ -172,8 +172,8 @@ export async function getChildCategories(
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES),
-      where('parentId', '==', parentId),
-      where('isActive', '==', true),
+      where('parent_id', '==', parentId),
+      where('is_active', '==', true),
       orderBy('name', 'asc')
     )
 
@@ -266,18 +266,18 @@ export async function createCategory(input: CategoryInput): Promise<TournamentCa
     const categoryData: FirestoreTournamentCategory = {
       id: input.id,
       name: input.name,
-      displayName: input.display_name,
-      shortName: input.short_name,
+      display_name: input.display_name,
+      short_name: input.short_name,
       aliases: input.aliases || [],
-      logoUrl: input.logo_url,
-      isActive: input.is_active ?? true,
-      gameType: input.game_type || 'both',
-      parentId: input.parent_id || undefined,
-      themeGradient: input.theme_gradient,
-      themeText: input.theme_text,
-      themeShadow: input.theme_shadow,
-      createdAt: now,
-      updatedAt: now,
+      logo_url: input.logo_url,
+      is_active: input.is_active ?? true,
+      game_type: input.game_type || 'both',
+      parent_id: input.parent_id || undefined,
+      theme_gradient: input.theme_gradient,
+      theme_text: input.theme_text,
+      theme_shadow: input.theme_shadow,
+      created_at: now,
+      updated_at: now,
     }
 
     await setDoc(doc(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES, input.id), categoryData)
@@ -303,20 +303,20 @@ export async function updateCategory(
     const docRef = doc(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES, id)
 
     const updateData: Record<string, unknown> = {
-      updatedAt: Timestamp.now(),
+      updated_at: Timestamp.now(),
     }
 
     if (input.name !== undefined) updateData.name = input.name
-    if (input.display_name !== undefined) updateData.displayName = input.display_name
-    if (input.short_name !== undefined) updateData.shortName = input.short_name || null
+    if (input.display_name !== undefined) updateData.display_name = input.display_name
+    if (input.short_name !== undefined) updateData.short_name = input.short_name || null
     if (input.aliases !== undefined) updateData.aliases = input.aliases
-    if (input.logo_url !== undefined) updateData.logoUrl = input.logo_url || null
-    if (input.is_active !== undefined) updateData.isActive = input.is_active
-    if (input.game_type !== undefined) updateData.gameType = input.game_type
-    if (input.parent_id !== undefined) updateData.parentId = input.parent_id || null
-    if (input.theme_gradient !== undefined) updateData.themeGradient = input.theme_gradient || null
-    if (input.theme_text !== undefined) updateData.themeText = input.theme_text || null
-    if (input.theme_shadow !== undefined) updateData.themeShadow = input.theme_shadow || null
+    if (input.logo_url !== undefined) updateData.logo_url = input.logo_url || null
+    if (input.is_active !== undefined) updateData.is_active = input.is_active
+    if (input.game_type !== undefined) updateData.game_type = input.game_type
+    if (input.parent_id !== undefined) updateData.parent_id = input.parent_id || null
+    if (input.theme_gradient !== undefined) updateData.theme_gradient = input.theme_gradient || null
+    if (input.theme_text !== undefined) updateData.theme_text = input.theme_text || null
+    if (input.theme_shadow !== undefined) updateData.theme_shadow = input.theme_shadow || null
 
     await updateDoc(docRef, updateData)
 

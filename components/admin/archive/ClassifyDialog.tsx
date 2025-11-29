@@ -6,7 +6,7 @@
  * 미분류 스트림을 토너먼트/이벤트에 할당
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -62,18 +62,20 @@ export function ClassifyDialog({
   // 분류 mutation
   const classifyMutation = useClassifyStream()
 
-  // 다이얼로그 열릴 때 초기화
-  useEffect(() => {
-    if (open) {
+  // 다이얼로그 열릴 때 초기화 (onOpenChange 핸들러에서 처리)
+  const handleOpenChange = useCallback((newOpen: boolean) => {
+    if (newOpen) {
       setSelectedTournamentId('')
       setSelectedEventId('')
     }
-  }, [open])
+    onOpenChange(newOpen)
+  }, [onOpenChange])
 
-  // 토너먼트 변경 시 이벤트 선택 초기화
-  useEffect(() => {
+  // 토너먼트 변경 핸들러 (이벤트 선택 초기화 포함)
+  const handleTournamentChange = useCallback((value: string) => {
+    setSelectedTournamentId(value)
     setSelectedEventId('')
-  }, [selectedTournamentId])
+  }, [])
 
   const handleClassify = async () => {
     if (!stream || !selectedTournamentId || !selectedEventId) return
@@ -98,7 +100,7 @@ export function ClassifyDialog({
   const canSubmit = selectedTournamentId && selectedEventId && !classifyMutation.isPending
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px] p-4">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -126,7 +128,7 @@ export function ClassifyDialog({
             <Label htmlFor="tournament-select">토너먼트</Label>
             <Select
               value={selectedTournamentId}
-              onValueChange={setSelectedTournamentId}
+              onValueChange={handleTournamentChange}
               disabled={tournamentsLoading || classifyMutation.isPending}
             >
               <SelectTrigger id="tournament-select" className="w-full">

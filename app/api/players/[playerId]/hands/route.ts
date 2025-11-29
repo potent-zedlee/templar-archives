@@ -67,11 +67,11 @@ export async function GET(_request: Request, { params }: RouteParams) {
         .collection(COLLECTION_PATHS.HANDS)
         .get()
 
-      const playerHands: Array<FirestoreHand & { id: string; playerInfo?: { position?: string; cards?: string[]; isWinner?: boolean } }> = []
+      const playerHands: Array<FirestoreHand & { id: string; playerInfo?: { position?: string; cards?: string[]; is_winner?: boolean } }> = []
 
       allHandsSnapshot.forEach((doc) => {
         const hand = doc.data() as FirestoreHand
-        const playerInHand = hand.players?.find((p) => p.playerId === playerId)
+        const playerInHand = hand.players?.find((p) => p.player_id === playerId)
         if (playerInHand) {
           playerHands.push({
             id: doc.id,
@@ -79,7 +79,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
             playerInfo: {
               position: playerInHand.position,
               cards: playerInHand.cards,
-              isWinner: playerInHand.isWinner,
+              is_winner: playerInHand.is_winner,
             },
           })
         }

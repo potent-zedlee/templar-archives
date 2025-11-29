@@ -48,17 +48,17 @@ export function HandTagBadges({ handId }: HandTagBadgesProps) {
     }
 
     removeTagMutation.mutate({
-      tagName: tagName as any,
+      tag_name: tagName as any,
       userId: user.id,
     })
   }
 
   // Group tags by tag name
   const groupedTags = tags.reduce((acc, tag) => {
-    if (!acc[tag.tagName]) {
-      acc[tag.tagName] = []
+    if (!acc[tag.tag_name]) {
+      acc[tag.tag_name] = []
     }
-    acc[tag.tagName].push(tag)
+    acc[tag.tag_name].push(tag)
     return acc
   }, {} as Record<string, typeof tags>)
 

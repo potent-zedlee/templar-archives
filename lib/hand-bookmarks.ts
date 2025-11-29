@@ -64,36 +64,36 @@ function convertToLegacyFormat(
   bookmark: FirestoreBookmark
 ): HandBookmarkWithDetails {
   const createdAt =
-    bookmark.createdAt instanceof Timestamp
-      ? bookmark.createdAt.toDate().toISOString()
+    bookmark.created_at instanceof Timestamp
+      ? bookmark.created_at.toDate().toISOString()
       : new Date().toISOString()
 
   return {
     id: bookmarkId,
-    hand_id: bookmark.refId,
+    hand_id: bookmark.ref_id,
     user_id: userId,
-    folder_name: bookmark.folderName,
+    folder_name: bookmark.folder_name,
     notes: bookmark.notes,
     created_at: createdAt,
-    hand: bookmark.refData
+    hand: bookmark.ref_data
       ? {
-          id: bookmark.refId,
-          number: bookmark.refData.number || '',
-          description: bookmark.refData.description || '',
-          timestamp: bookmark.refData.timestamp || '',
-          day: bookmark.refData.streamName
+          id: bookmark.ref_id,
+          number: bookmark.ref_data.number || '',
+          description: bookmark.ref_data.description || '',
+          timestamp: bookmark.ref_data.timestamp || '',
+          day: bookmark.ref_data.stream_name
             ? {
                 id: '',
-                name: bookmark.refData.streamName,
-                sub_event: bookmark.refData.eventName
+                name: bookmark.ref_data.stream_name,
+                sub_event: bookmark.ref_data.event_name
                   ? {
                       id: '',
-                      name: bookmark.refData.eventName,
-                      tournament: bookmark.refData.tournamentName
+                      name: bookmark.ref_data.event_name,
+                      tournament: bookmark.ref_data.tournament_name
                         ? {
                             id: '',
-                            name: bookmark.refData.tournamentName,
-                            category: bookmark.refData.tournamentCategory || '',
+                            name: bookmark.ref_data.tournament_name,
+                            category: bookmark.ref_data.tournament_category || '',
                           }
                         : undefined,
                     }
@@ -117,8 +117,8 @@ export async function addHandBookmark(
   const bookmarksRef = collection(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId))
   const bookmarkDocRef = doc(bookmarksRef, handId) // handId를 문서 ID로 사용
 
-  // 핸드 정보 가져오기 (refData용)
-  let refData: FirestoreBookmark['refData'] = {
+  // 핸드 정보 가져오기 (ref_data용)
+  let ref_data: FirestoreBookmark['ref_data'] = {
     title: '',
     description: '',
   }
@@ -128,7 +128,7 @@ export async function addHandBookmark(
     const handDoc = await getDoc(handDocRef)
     if (handDoc.exists()) {
       const handData = handDoc.data()
-      refData = {
+      ref_data = {
         title: handData.description || `Hand #${handData.number}`,
         description: handData.description,
         number: handData.number,
@@ -139,13 +139,13 @@ export async function addHandBookmark(
     console.error('핸드 정보 조회 실패:', error)
   }
 
-  const bookmarkData: Omit<FirestoreBookmark, 'createdAt'> & { createdAt: ReturnType<typeof serverTimestamp> } = {
+  const bookmarkData: Omit<FirestoreBookmark, 'created_at'> & { created_at: ReturnType<typeof serverTimestamp> } = {
     type: 'hand',
-    refId: handId,
-    folderName: folderName || undefined,
+    ref_id: handId,
+    folder_name: folderName || undefined,
     notes: notes || undefined,
-    refData,
-    createdAt: serverTimestamp(),
+    ref_data,
+    created_at: serverTimestamp(),
   }
 
   try {
@@ -275,8 +275,8 @@ export async function getUserBookmarkFolders(userId: string): Promise<string[]> 
     const folders = new Set<string>()
     snapshot.forEach((docSnap) => {
       const data = docSnap.data() as FirestoreBookmark
-      if (data.folderName) {
-        folders.add(data.folderName)
+      if (data.folder_name) {
+        folders.add(data.folder_name)
       }
     })
 
@@ -316,7 +316,7 @@ export async function updateBookmarkFolder(
   const bookmarkDocRef = doc(firestore, COLLECTION_PATHS.USER_BOOKMARKS(userId), handId)
 
   try {
-    await updateDoc(bookmarkDocRef, { folderName: folderName || null })
+    await updateDoc(bookmarkDocRef, { folder_name: folderName || null })
   } catch (error) {
     console.error('북마크 폴더 변경 실패:', error)
     throw error

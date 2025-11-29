@@ -208,7 +208,7 @@ export function ActiveJobsMonitor() {
                     <div className="text-xs text-muted-foreground">세그먼트</div>
                     <div className="text-2xl font-bold">
                       {(() => {
-                        const jobResult = job.result as { segment_results?: SegmentResult[] } | null
+                        const jobResult = job.result as unknown as { segment_results?: SegmentResult[] } | null
                         const segmentResults = jobResult?.segment_results || []
                         const jobSegments = job.segments as unknown[] | null
                         const total = jobSegments?.length || 0
@@ -235,7 +235,7 @@ export function ActiveJobsMonitor() {
 
                 {/* Segment Results */}
                 {(() => {
-                  const jobResult = job.result as { segment_results?: SegmentResult[] } | null
+                  const jobResult = job.result as unknown as { segment_results?: SegmentResult[] } | null
                   const segmentResults = jobResult?.segment_results || []
                   if (segmentResults.length === 0) return null
                   return (
