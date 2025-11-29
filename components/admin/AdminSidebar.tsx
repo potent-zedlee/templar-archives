@@ -25,8 +25,6 @@ import {
   Settings,
   Newspaper,
   Radio,
-  Activity,
-  History,
   Workflow,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -79,19 +77,6 @@ const adminMenuItems: MenuItem[] = [
     title: "Content",
     href: "/admin/content",
     icon: Settings,
-  },
-]
-
-const kanMenuItems = [
-  {
-    title: "진행 중 작업",
-    href: "/admin/kan/active",
-    icon: Activity,
-  },
-  {
-    title: "분석 기록",
-    href: "/admin/kan/history",
-    icon: History,
   },
 ]
 
@@ -160,31 +145,6 @@ export function AdminSidebar() {
                         })}
                       </SidebarMenuSub>
                     )}
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* KAN Analysis Section */}
-        <SidebarGroup>
-          <SidebarGroupLabel>KAN Analysis</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {kanMenuItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(item.href)}
-                    >
-                      <Link href={item.href}>
-                        <Icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
                   </SidebarMenuItem>
                 )
               })}
