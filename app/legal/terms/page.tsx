@@ -29,7 +29,7 @@ export default function TermsOfServicePage() {
         <div className="prose prose-sm max-w-none dark:prose-invert">
           <h2>1. Acceptance of Terms</h2>
           <p>
-            By accessing and using Templar Archives Index ("Service", "we", "us", "our"), you accept and agree to be bound by the terms
+            By accessing and using Templar Archives Index (&quot;Service&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;), you accept and agree to be bound by the terms
             and provisions of this agreement. If you do not agree to these Terms of Service, please do not use this Service.
           </p>
 
@@ -136,9 +136,9 @@ export default function TermsOfServicePage() {
           </p>
 
           <h2>10. Disclaimers</h2>
-          <h3>10.1 Service "As Is"</h3>
+          <h3>10.1 Service &quot;As Is&quot;</h3>
           <p>
-            THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED.
+            THE SERVICE IS PROVIDED &quot;AS IS&quot; WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED.
             WE DO NOT GUARANTEE ACCURACY, COMPLETENESS, OR RELIABILITY OF HAND HISTORY DATA.
           </p>
 

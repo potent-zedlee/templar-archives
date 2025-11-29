@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Bell, Check, Trash2, CheckCheck } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -215,9 +216,15 @@ export default function NotificationsPage() {
 
                     {/* Sender avatar */}
                     {notification.sender && (
-                      <div className="h-10 w-10 flex-shrink-0 border-2 border-gold-700 gold-glow bg-black-200 flex items-center justify-center overflow-hidden">
+                      <div className="h-10 w-10 flex-shrink-0 border-2 border-gold-700 gold-glow bg-black-200 flex items-center justify-center overflow-hidden relative">
                         {notification.sender.avatar_url ? (
-                          <img src={notification.sender.avatar_url} alt={notification.sender.nickname} className="w-full h-full object-cover" />
+                          <Image
+                            src={notification.sender.avatar_url}
+                            alt={notification.sender.nickname}
+                            fill
+                            className="object-cover"
+                            sizes="40px"
+                          />
                         ) : (
                           <span className="text-sm font-bold text-gold-400">
                             {notification.sender.nickname

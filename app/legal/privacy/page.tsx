@@ -29,7 +29,7 @@ export default function PrivacyPolicyPage() {
         <div className="prose prose-sm max-w-none dark:prose-invert">
           <h2>1. Introduction</h2>
           <p>
-            Templar Archives Index ("we", "us", "our") respects your privacy and is committed to protecting your personal data.
+            Templar Archives Index (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) respects your privacy and is committed to protecting your personal data.
             This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our Service.
           </p>
           <p>
@@ -224,7 +224,7 @@ export default function PrivacyPolicyPage() {
 
           <h2>13. Changes to This Policy</h2>
           <p>
-            We may update this Privacy Policy periodically. Changes will be posted with a new "Last updated" date.
+            We may update this Privacy Policy periodically. Changes will be posted with a new &quot;Last updated&quot; date.
             Continued use after changes constitutes acceptance.
           </p>
 

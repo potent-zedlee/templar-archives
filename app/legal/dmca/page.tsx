@@ -36,7 +36,7 @@ export default function DMCAPolicyPage() {
 
           <h2>2. DMCA Safe Harbor</h2>
           <p>
-            As a service provider, we qualify for DMCA "safe harbor" protection under 17 U.S.C. § 512(c) because:
+            As a service provider, we qualify for DMCA &quot;safe harbor&quot; protection under 17 U.S.C. § 512(c) because:
           </p>
           <ul>
             <li>We do not have actual knowledge of infringing material</li>
@@ -82,13 +82,13 @@ export default function DMCAPolicyPage() {
             <li>
               <strong>Statement of good faith:</strong>
               <br />
-              "I have a good faith belief that use of the material is not authorized by the copyright owner, its agent, or the law."
+              "              &quot;I have a good faith belief that use of the material is not authorized by the copyright owner, its agent, or the law.&quot;"
             </li>
             <li>
               <strong>Statement of accuracy:</strong>
               <br />
-              "The information in this notification is accurate, and under penalty of perjury,
-              I am the copyright owner or authorized to act on behalf of the owner."
+              "              &quot;The information in this notification is accurate, and under penalty of perjury,
+              I am the copyright owner or authorized to act on behalf of the owner.&quot;"
             </li>
             <li>
               <strong>Physical or electronic signature</strong>
@@ -124,8 +124,8 @@ export default function DMCAPolicyPage() {
           <ol>
             <li>Your name, address, phone number, and email</li>
             <li>Identification of the removed material and its former location</li>
-            <li>Statement under penalty of perjury: "I have a good faith belief that the material was removed as a result of mistake or misidentification."</li>
-            <li>Consent to jurisdiction: "I consent to the jurisdiction of the Federal District Court for [DISTRICT], and I will accept service of process from the person who filed the DMCA notice."</li>
+            <li>Statement under penalty of perjury: &quot;I have a good faith belief that the material was removed as a result of mistake or misidentification.&quot;</li>
+            <li>Consent to jurisdiction: &quot;I consent to the jurisdiction of the Federal District Court for [DISTRICT], and I will accept service of process from the person who filed the DMCA notice.&quot;</li>
             <li>Physical or electronic signature</li>
           </ol>
 

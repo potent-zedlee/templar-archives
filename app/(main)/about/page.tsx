@@ -223,7 +223,7 @@ export default function AboutPage() {
         <div className="card-postmodern p-12 text-center border-gold-600">
           <h2 className="text-heading-lg mb-4">START ANALYZING HANDS TODAY</h2>
           <p className="text-body text-text-secondary mb-8 max-w-2xl mx-auto">
-            Join thousands of players using Templar Archives Index to study poker hands from the world's best tournaments and cash games.
+            Join thousands of players using Templar Archives Index to study poker hands from the world&apos;s best tournaments and cash games.
           </p>
           <div className="flex gap-4 justify-center">
             <Link href="/auth/login" className="btn-primary">

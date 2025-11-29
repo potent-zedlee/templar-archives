@@ -7,6 +7,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { User } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -43,12 +44,14 @@ export function PlayerCard({ player, className, index = 0 }: PlayerCardProps) {
         <div className="bg-card rounded-lg shadow-sm border border-border hover:shadow-md transition-all duration-200 p-4 cursor-pointer min-w-[140px]">
           <div className="flex flex-col items-center space-y-3">
             {/* Avatar */}
-            <div className="w-16 h-16 rounded-full border-2 border-muted overflow-hidden bg-muted">
+            <div className="w-16 h-16 rounded-full border-2 border-muted overflow-hidden bg-muted relative">
               {player.photo_url ? (
-                <img
+                <Image
                   src={player.photo_url}
                   alt={player.name}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
+                  sizes="64px"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-green-500 to-green-600 dark:from-green-600 dark:to-green-700">

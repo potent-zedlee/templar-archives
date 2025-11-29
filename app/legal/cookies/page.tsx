@@ -129,12 +129,12 @@ export default function CookiePolicyPage() {
           </p>
           <ul>
             <li>Browser extensions like uBlock Origin or Privacy Badger</li>
-            <li>Your browser's "Do Not Track" setting</li>
+            <li>Your browser&apos;s &quot;Do Not Track&quot; setting</li>
           </ul>
 
           <h3>3.3 Withdraw Consent (EU Users)</h3>
           <p>
-            You can change your cookie preferences at any time by clicking the "Cookie Settings" link in the footer
+            You can change your cookie preferences at any time by clicking the &quot;Cookie Settings&quot; link in the footer
             or by clearing your browser cookies.
           </p>
 
@@ -153,7 +153,7 @@ export default function CookiePolicyPage() {
           <h2>5. Updates to This Policy</h2>
           <p>
             We may update this Cookie Policy to reflect changes in technology or regulations.
-            Check the "Last updated" date at the top of this page.
+            Check the &quot;Last updated&quot; date at the top of this page.
           </p>
 
           <h2>6. Contact Us</h2>

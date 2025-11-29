@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { User, LogOut, LayoutDashboard, Bookmark } from "lucide-react"
 import type { AuthUser } from "@/lib/auth"
 import type { UserProfile } from "@/lib/user-profile"
@@ -92,11 +93,15 @@ export function HeaderUserMenu({
       >
         <span className="sr-only">Open user menu</span>
         {avatarUrl ? (
-          <img
-            className="w-8 h-8 rounded-full object-cover"
-            src={avatarUrl}
-            alt={displayName}
-          />
+          <div className="w-8 h-8 rounded-full overflow-hidden relative">
+            <Image
+              src={avatarUrl}
+              alt={displayName}
+              fill
+              className="object-cover"
+              sizes="32px"
+            />
+          </div>
         ) : (
           <div className="w-8 h-8 rounded-full bg-gold-500 flex items-center justify-center">
             <span className="text-sm font-semibold text-background">{initials}</span>

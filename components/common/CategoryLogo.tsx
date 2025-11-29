@@ -113,6 +113,7 @@ export function CategoryLogo({
   }
 
   // SVG는 img 태그로 렌더링하여 원본 컬러 유지
+  // eslint-disable-next-line @next/next/no-img-element
   return (
     <div
       className={cn(
