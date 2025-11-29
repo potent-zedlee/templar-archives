@@ -1,11 +1,19 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { User, LogOut, LayoutDashboard, Bookmark } from "lucide-react"
 import type { AuthUser } from "@/lib/auth"
 import type { UserProfile } from "@/lib/user-profile"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface HeaderUserMenuProps {
   user: AuthUser
@@ -17,13 +25,6 @@ interface HeaderUserMenuProps {
   getAvatarUrl: () => string | undefined
 }
 
-interface DropdownInstance {
-  show?: () => void
-  hide?: () => void
-  toggle?: () => void
-  destroyAndRemoveInstance?: () => void
-}
-
 export function HeaderUserMenu({
   user,
   isUserAdmin,
@@ -33,143 +34,84 @@ export function HeaderUserMenu({
   getAvatarUrl,
 }: HeaderUserMenuProps) {
   const router = useRouter()
-  const [mounted, setMounted] = useState(false)
-  const dropdownRef = useRef<DropdownInstance | null>(null)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Flowbite Dropdown 초기화
-  useEffect(() => {
-    if (!mounted || typeof window === 'undefined') return
-
-    const initDropdown = async () => {
-      try {
-        const { Dropdown } = await import('flowbite')
-
-        const targetEl = document.getElementById('user-menu-dropdown')
-        const triggerEl = document.getElementById('user-menu-button')
-
-        if (targetEl && triggerEl) {
-          const options = {
-            placement: 'bottom' as const,
-            triggerType: 'click' as const,
-            offsetSkidding: 0,
-            offsetDistance: 10,
-            delay: 300,
-          }
-
-          dropdownRef.current = new Dropdown(targetEl, triggerEl, options) as DropdownInstance
-        }
-      } catch (error) {
-        console.error('Flowbite Dropdown initialization failed:', error)
-      }
-    }
-
-    initDropdown()
-
-    return () => {
-      if (dropdownRef.current && dropdownRef.current.destroyAndRemoveInstance) {
-        dropdownRef.current.destroyAndRemoveInstance()
-      }
-    }
-  }, [mounted])
-
-  if (!mounted) return null
-
   const avatarUrl = getAvatarUrl()
   const displayName = getDisplayName()
   const initials = getUserInitials()
 
   return (
     <div className="relative hidden md:block">
-      {/* Dropdown Toggle Button */}
-      <button
-        id="user-menu-button"
-        type="button"
-        className="flex text-sm bg-muted rounded-full focus:ring-4 focus:ring-border transition-all hover:ring-2 hover:ring-border"
-        aria-expanded="false"
-      >
-        <span className="sr-only">Open user menu</span>
-        {avatarUrl ? (
-          <div className="w-8 h-8 rounded-full overflow-hidden relative">
-            <Image
-              src={avatarUrl}
-              alt={displayName}
-              fill
-              className="object-cover"
-              sizes="32px"
-            />
-          </div>
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-gold-500 flex items-center justify-center">
-            <span className="text-sm font-semibold text-background">{initials}</span>
-          </div>
-        )}
-      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="flex text-sm bg-muted rounded-full focus:ring-4 focus:ring-border transition-all hover:ring-2 hover:ring-border"
+          >
+            <span className="sr-only">Open user menu</span>
+            {avatarUrl ? (
+              <div className="w-8 h-8 rounded-full overflow-hidden relative">
+                <Image
+                  src={avatarUrl}
+                  alt={displayName}
+                  fill
+                  className="object-cover"
+                  sizes="32px"
+                />
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gold-500 flex items-center justify-center">
+                <span className="text-sm font-semibold text-background">{initials}</span>
+              </div>
+            )}
+          </button>
+        </DropdownMenuTrigger>
 
-      {/* Dropdown Menu */}
-      <div
-        id="user-menu-dropdown"
-        className="z-50 hidden bg-muted divide-y divide-border rounded-lg shadow-lg w-56 border border-border"
-      >
-        {/* User Info */}
-        <div className="px-4 py-3">
-          <span className="block text-sm text-foreground font-medium">{displayName}</span>
-          <span className="block text-xs text-muted-foreground truncate">{user.email}</span>
-        </div>
+        <DropdownMenuContent className="w-56" align="end">
+          {/* User Info */}
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">{displayName}</p>
+              <p className="text-xs leading-none text-muted-foreground truncate">
+                {user.email}
+              </p>
+            </div>
+          </DropdownMenuLabel>
 
-        {/* Main Menu - 모든 사용자에게 표시 */}
-        <ul className="py-2 text-sm text-foreground">
-          <li>
-            <button
-              onClick={() => router.push("/profile")}
-              className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-            >
+          <DropdownMenuSeparator />
+
+          {/* Main Menu - 모든 사용자에게 표시 */}
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => router.push("/profile")}>
               <User className="mr-2 h-4 w-4" />
               Profile
-            </button>
-          </li>
-          <li>
-            <button
-              onClick={() => router.push("/bookmarks")}
-              className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-            >
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/bookmarks")}>
               <Bookmark className="mr-2 h-4 w-4" />
               Bookmarks
-            </button>
-          </li>
-        </ul>
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
 
-        {/* Admin Menu - 간소화된 단일 메뉴 */}
-        {isUserAdmin && (
-          <ul className="py-2 text-sm text-foreground">
-            <li>
-              <button
-                onClick={() => router.push("/admin/dashboard")}
-                className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-              >
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-                Admin Dashboard
-              </button>
-            </li>
-          </ul>
-        )}
+          {/* Admin Menu */}
+          {isUserAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={() => router.push("/admin/dashboard")}>
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Admin Dashboard
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </>
+          )}
 
-        {/* Logout */}
-        <ul className="py-2 text-sm text-foreground">
-          <li>
-            <button
-              onClick={onSignOut}
-              className="w-full flex items-center px-4 py-2 hover:bg-muted transition-colors text-left"
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </button>
-          </li>
-        </ul>
-      </div>
+          <DropdownMenuSeparator />
+
+          {/* Logout */}
+          <DropdownMenuItem onClick={onSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

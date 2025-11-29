@@ -4,12 +4,14 @@
  * Hand List Item Component
  *
  * 포스트모던 디자인의 핸드 카드 컴포넌트
- * - Flowbite Badge, Button 사용
+ * - shadcn/ui Badge, Button, Avatar 사용
  * - 카드 표시, 플레이어 아바타, 좋아요/댓글 수
  */
 
 import { memo } from 'react'
-import { Badge, Avatar, Button } from 'flowbite-react'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import { Heart, MessageCircle, Eye, Play } from 'lucide-react'
 import type { Hand } from '@/lib/types/archive'
 import { formatDistanceToNow } from 'date-fns'
@@ -50,7 +52,7 @@ export const HandListItem = memo(function HandListItem({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Badge color="warning" className="font-mono">
+          <Badge variant="warning" className="font-mono">
             #{hand.number}
           </Badge>
           {/* 타임코드 표시: video_timestamp가 있으면 사용, 없으면 timestamp 필드 fallback */}
@@ -106,13 +108,12 @@ export const HandListItem = memo(function HandListItem({
       {hand.hand_players && hand.hand_players.length > 0 && (
         <div className="flex -space-x-2 mb-3">
           {hand.hand_players.slice(0, 5).map((hp) => (
-            <Avatar
-              key={hp.id}
-              img={hp.player?.photo_url}
-              alt={hp.player?.name || 'Player'}
-              size="sm"
-              className="ring-2 ring-card"
-            />
+            <Avatar key={hp.id} className="ring-2 ring-card h-8 w-8">
+              <AvatarImage src={hp.player?.photo_url} alt={hp.player?.name || 'Player'} />
+              <AvatarFallback>
+                {hp.player?.name?.substring(0, 2).toUpperCase() || 'P'}
+              </AvatarFallback>
+            </Avatar>
           ))}
           {hand.hand_players.length > 5 && (
             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-xs font-medium text-muted-foreground ring-2 ring-card">
@@ -147,8 +148,8 @@ export const HandListItem = memo(function HandListItem({
           )}
           {onDetailClick && (
             <Button
-              size="xs"
-              color="gray"
+              size="sm"
+              variant="outline"
               onClick={handleDetailClick}
             >
               상세보기

@@ -12,7 +12,8 @@
  * - Postmodern design
  */
 
-import { Badge, Button } from 'flowbite-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Calendar, MapPin, Trophy, Video, Plus, ChevronRight } from 'lucide-react'
 import type { Tournament, Hand } from '@/lib/types/archive'
 import { VirtualHandList } from './VirtualHandList'
@@ -63,7 +64,7 @@ export function ArchiveAccordion({
                 </div>
               </div>
             </div>
-            <Badge color="info">{tournament.events?.length || 0} Events</Badge>
+            <Badge variant="secondary">{tournament.events?.length || 0} Events</Badge>
           </summary>
 
           <div className="p-4 border-t border-border">
@@ -82,7 +83,9 @@ export function ArchiveAccordion({
                           </p>
                         </div>
                       </div>
-                      <Badge color="success">{event.streams?.length || 0} Streams</Badge>
+                      <Badge className="bg-green-600 text-white border-transparent hover:bg-green-700">
+                        {event.streams?.length || 0} Streams
+                      </Badge>
                     </summary>
 
                     <div className="p-3 border-t border-border">
@@ -97,7 +100,7 @@ export function ArchiveAccordion({
                                   <Video className="w-4 h-4" />
                                   <span className="font-medium">{stream.name}</span>
                                 </div>
-                                <Badge size="sm" color="warning">
+                                <Badge variant="warning">
                                   {hands.get(stream.id)?.length || 0} Hands
                                 </Badge>
                               </summary>
@@ -119,7 +122,7 @@ export function ArchiveAccordion({
                           {isAdmin && onAddStream && (
                             <Button
                               size="sm"
-                              color="light"
+                              variant="outline"
                               className="mt-3"
                               onClick={() => onAddStream(event.id)}
                             >
@@ -139,7 +142,7 @@ export function ArchiveAccordion({
                 {isAdmin && onAddEvent && (
                   <Button
                     size="sm"
-                    color="light"
+                    variant="outline"
                     className="mt-3"
                     onClick={() => onAddEvent(tournament.id)}
                   >

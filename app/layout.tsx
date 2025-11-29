@@ -6,7 +6,6 @@ import { Footer } from "@/components/layout/Footer"
 import { CookieConsentBanner } from "@/components/dialogs/CookieConsentBanner"
 import "./globals.css"
 import { Providers } from "@/components/layout/Providers"
-import { FlowbiteInitializer } from "@/components/layout/FlowbiteInitializer"
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://templar-archives-index.web.app'),
@@ -77,7 +76,6 @@ export default function RootLayout({
           <Footer />
           <CookieConsentBanner />
         </Providers>
-        <FlowbiteInitializer />
         <WebVitalsReporter />
       </body>
     </html>
