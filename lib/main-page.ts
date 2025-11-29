@@ -71,9 +71,9 @@ export async function getWeeklyHighlights(limitCount: number = 3): Promise<Weekl
 
     const handsQuery = query(
       collection(firestore, COLLECTION_PATHS.HANDS),
-      where('createdAt', '>=', Timestamp.fromDate(sevenDaysAgo)),
-      orderBy('createdAt', 'desc'),
-      orderBy('engagement.likesCount', 'desc'),
+      where('created_at', '>=', Timestamp.fromDate(sevenDaysAgo)),
+      orderBy('created_at', 'desc'),
+      orderBy('engagement.likes_count', 'desc'),
       limit(limitCount)
     )
 
@@ -86,8 +86,8 @@ export async function getWeeklyHighlights(limitCount: number = 3): Promise<Weekl
         number: data.number || '',
         description: data.description || '',
         timestamp: data.timestamp || '',
-        pot_size: data.potSize || 0,
-        likes_count: data.engagement?.likesCount || 0,
+        pot_size: data.pot_size || 0,
+        likes_count: data.engagement?.likes_count || 0,
         video_url: data.refData?.streamVideoUrl || '',
         tournament_name: data.refData?.tournamentName || 'Unknown',
         day_name: data.refData?.streamName || 'Unknown'

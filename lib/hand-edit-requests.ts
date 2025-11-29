@@ -338,12 +338,12 @@ async function applyEditToHand(
     case 'board':
       // Update board cards and pot
       const boardUpdate: Record<string, unknown> = {
-        updatedAt: Timestamp.now(),
+        updated_at: Timestamp.now(),
       }
-      if (proposedData.boardFlop) boardUpdate.boardFlop = proposedData.boardFlop
-      if (proposedData.boardTurn) boardUpdate.boardTurn = proposedData.boardTurn
-      if (proposedData.boardRiver) boardUpdate.boardRiver = proposedData.boardRiver
-      if (proposedData.potSize) boardUpdate.potSize = proposedData.potSize
+      if (proposedData.boardFlop) boardUpdate.board_flop = proposedData.boardFlop
+      if (proposedData.boardTurn) boardUpdate.board_turn = proposedData.boardTurn
+      if (proposedData.boardRiver) boardUpdate.board_river = proposedData.boardRiver
+      if (proposedData.potSize) boardUpdate.pot_size = proposedData.potSize
 
       await updateDoc(handRef, boardUpdate)
       break
@@ -353,7 +353,7 @@ async function applyEditToHand(
       if (proposedData.players && Array.isArray(proposedData.players)) {
         await updateDoc(handRef, {
           players: proposedData.players,
-          updatedAt: Timestamp.now(),
+          updated_at: Timestamp.now(),
         })
       }
       break
@@ -363,7 +363,7 @@ async function applyEditToHand(
       if (proposedData.actions && Array.isArray(proposedData.actions)) {
         await updateDoc(handRef, {
           actions: proposedData.actions,
-          updatedAt: Timestamp.now(),
+          updated_at: Timestamp.now(),
         })
       }
       break

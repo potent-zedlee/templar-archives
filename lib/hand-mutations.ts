@@ -63,31 +63,31 @@ export interface HandActionData {
 
 /**
  * board_cards 문자열을 Firestore 형식으로 변환
- * "As Kh Qd 7c 3s" -> { boardFlop: ["As", "Kh", "Qd"], boardTurn: "7c", boardRiver: "3s" }
+ * "As Kh Qd 7c 3s" -> { board_flop: ["As", "Kh", "Qd"], board_turn: "7c", board_river: "3s" }
  */
 function parseBoardCards(boardCardsStr: string): {
-  boardFlop?: string[]
-  boardTurn?: string
-  boardRiver?: string
+  board_flop?: string[]
+  board_turn?: string
+  board_river?: string
 } {
   const cards = boardCardsStr.trim().split(/\s+/).filter(Boolean)
 
   if (cards.length === 0) return {}
 
   const result: {
-    boardFlop?: string[]
-    boardTurn?: string
-    boardRiver?: string
+    board_flop?: string[]
+    board_turn?: string
+    board_river?: string
   } = {}
 
   if (cards.length >= 3) {
-    result.boardFlop = cards.slice(0, 3)
+    result.board_flop = cards.slice(0, 3)
   }
   if (cards.length >= 4) {
-    result.boardTurn = cards[3]
+    result.board_turn = cards[3]
   }
   if (cards.length >= 5) {
-    result.boardRiver = cards[4]
+    result.board_river = cards[4]
   }
 
   return result
@@ -111,7 +111,7 @@ export async function updateHandBasicInfo(
 
     // Firestore 형식으로 변환
     const updateData: any = {
-      updatedAt: serverTimestamp(),
+      updated_at: serverTimestamp(),
     }
 
     if (data.number !== undefined) {
@@ -124,13 +124,13 @@ export async function updateHandBasicInfo(
       updateData.timestamp = data.timestamp
     }
     if (data.pot_size !== undefined) {
-      updateData.potSize = data.pot_size
+      updateData.pot_size = data.pot_size
     }
     if (data.board_cards !== undefined) {
       const boardData = parseBoardCards(data.board_cards)
-      if (boardData.boardFlop) updateData.boardFlop = boardData.boardFlop
-      if (boardData.boardTurn) updateData.boardTurn = boardData.boardTurn
-      if (boardData.boardRiver) updateData.boardRiver = boardData.boardRiver
+      if (boardData.board_flop) updateData.board_flop = boardData.board_flop
+      if (boardData.board_turn) updateData.board_turn = boardData.board_turn
+      if (boardData.board_river) updateData.board_river = boardData.board_river
     }
 
     await updateDoc(handRef, updateData)
@@ -431,13 +431,13 @@ export async function updateHandComplete(
         updateData.timestamp = data.basicInfo.timestamp
       }
       if (data.basicInfo.pot_size !== undefined) {
-        updateData.potSize = data.basicInfo.pot_size
+        updateData.pot_size = data.basicInfo.pot_size
       }
       if (data.basicInfo.board_cards !== undefined) {
         const boardData = parseBoardCards(data.basicInfo.board_cards)
-        if (boardData.boardFlop) updateData.boardFlop = boardData.boardFlop
-        if (boardData.boardTurn) updateData.boardTurn = boardData.boardTurn
-        if (boardData.boardRiver) updateData.boardRiver = boardData.boardRiver
+        if (boardData.board_flop) updateData.board_flop = boardData.board_flop
+        if (boardData.board_turn) updateData.board_turn = boardData.board_turn
+        if (boardData.board_river) updateData.board_river = boardData.board_river
       }
     }
 
