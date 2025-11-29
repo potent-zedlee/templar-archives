@@ -104,12 +104,12 @@ export async function loadHandsHelper(
         number: data.number,
         description: data.description,
         timestamp: data.timestamp,
-        pot_size: data.potSize,
-        board_flop: data.boardFlop,
-        board_turn: data.boardTurn,
-        board_river: data.boardRiver,
+        pot_size: data.pot_size,
+        board_flop: data.board_flop,
+        board_turn: data.board_turn,
+        board_river: data.board_river,
         favorite: data.favorite,
-        created_at: timestampToString(data.createdAt as Timestamp),
+        created_at: timestampToString(data.created_at as Timestamp),
         // 플레이어 정보 변환
         hand_players: data.players?.map((hp) => ({
           position: hp.position,

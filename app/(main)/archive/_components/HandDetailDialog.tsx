@@ -198,14 +198,14 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
       return {
         id: handSnap.id,
         number: handData.number,
-        potSize: handData.potSize,
-        aiSummary: handData.aiSummary,
-        stakes: handData.smallBlind && handData.bigBlind
-          ? `${handData.smallBlind}/${handData.bigBlind}${handData.ante ? `/${handData.ante}` : ""}`
+        potSize: handData.pot_size,
+        aiSummary: handData.ai_summary,
+        stakes: handData.small_blind && handData.big_blind
+          ? `${handData.small_blind}/${handData.big_blind}${handData.ante ? `/${handData.ante}` : ""}`
           : undefined,
-        boardFlop: handData.boardFlop,
-        boardTurn: handData.boardTurn,
-        boardRiver: handData.boardRiver,
+        boardFlop: handData.board_flop,
+        boardTurn: handData.board_turn,
+        boardRiver: handData.board_river,
         stream: streamInfo,
         players,
         actions,

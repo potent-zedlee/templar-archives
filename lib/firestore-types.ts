@@ -204,21 +204,22 @@ export interface FirestoreStream {
   updatedAt: Timestamp
 
   // ==================== 파이프라인 필드 (Admin Archive 워크플로우) ====================
+  // Firestore에 snake_case로 저장됨
 
   /** 파이프라인 상태 */
-  pipelineStatus?: 'pending' | 'needs_classify' | 'analyzing' | 'completed' | 'needs_review' | 'published' | 'failed'
+  pipeline_status?: 'pending' | 'needs_classify' | 'analyzing' | 'completed' | 'needs_review' | 'published' | 'failed'
   /** 파이프라인 진행률 (0-100) */
-  pipelineProgress?: number
+  pipeline_progress?: number
   /** 파이프라인 에러 메시지 */
-  pipelineError?: string
+  pipeline_error?: string
   /** 파이프라인 상태 업데이트 시각 */
-  pipelineUpdatedAt?: Timestamp
+  pipeline_updated_at?: Timestamp
   /** 현재 분석 작업 ID (analysisJobs 참조) */
-  currentJobId?: string
+  current_job_id?: string
   /** 마지막 분석 완료 시각 */
-  lastAnalysisAt?: Timestamp
+  last_analysis_at?: Timestamp
   /** 분석 시도 횟수 */
-  analysisAttempts?: number
+  analysis_attempts?: number
 }
 
 // ==================== Hands Collection (Flat) ====================
@@ -273,14 +274,15 @@ export interface HandActionEmbedded {
 
 /**
  * 핸드 참여 정보 (Engagement)
+ * Firestore에 snake_case로 저장됨
  */
 export interface HandEngagement {
   /** 좋아요 수 */
-  likesCount: number
+  likes_count: number
   /** 싫어요 수 */
-  dislikesCount: number
+  dislikes_count: number
   /** 북마크 수 */
-  bookmarksCount: number
+  bookmarks_count: number
 }
 
 /**
@@ -310,6 +312,7 @@ export interface FirestoreHandLike {
  *
  * Collection: /hands/{handId}
  * 플랫 컬렉션으로 쿼리 유연성 확보
+ * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreHand {
   /** 스트림 ID (참조) */
@@ -320,45 +323,45 @@ export interface FirestoreHand {
   tournament_id: string
 
   /** 플레이어 ID 목록 (array-contains 쿼리용) */
-  playerIds: string[]
+  player_ids: string[]
 
   /** 핸드 번호 */
   number: string
   /** 핸드 설명 */
   description: string
   /** AI 생성 요약 */
-  aiSummary?: string
+  ai_summary?: string
   /** 타임스탬프 (영상 내) */
   timestamp: string
 
   /** 보드 카드 - 플랍 (3장) */
-  boardFlop?: string[]
+  board_flop?: string[]
   /** 보드 카드 - 턴 (1장) */
-  boardTurn?: string
+  board_turn?: string
   /** 보드 카드 - 리버 (1장) */
-  boardRiver?: string
+  board_river?: string
 
   /** 팟 크기 */
-  potSize?: number
+  pot_size?: number
   /** 스몰 블라인드 */
-  smallBlind?: number
+  small_blind?: number
   /** 빅 블라인드 */
-  bigBlind?: number
+  big_blind?: number
   /** 앤티 */
   ante?: number
 
   /** 스트리트별 팟 */
-  potPreflop?: number
-  potFlop?: number
-  potTurn?: number
-  potRiver?: number
+  pot_preflop?: number
+  pot_flop?: number
+  pot_turn?: number
+  pot_river?: number
 
   /** 영상 시작 타임스탬프 (초) */
-  videoTimestampStart?: number
+  video_timestamp_start?: number
   /** 영상 종료 타임스탬프 (초) */
-  videoTimestampEnd?: number
+  video_timestamp_end?: number
   /** 분석 작업 ID */
-  jobId?: string
+  job_id?: string
 
   /** 참여 플레이어 (임베딩) */
   players: HandPlayerEmbedded[]
@@ -369,14 +372,14 @@ export interface FirestoreHand {
   engagement: HandEngagement
 
   /** 썸네일 URL */
-  thumbnailUrl?: string
+  thumbnail_url?: string
   /** 즐겨찾기 */
   favorite?: boolean
 
   /** 생성일 */
-  createdAt: Timestamp
+  created_at: Timestamp
   /** 수정일 */
-  updatedAt: Timestamp
+  updated_at: Timestamp
 }
 
 // ==================== Players Collection ====================

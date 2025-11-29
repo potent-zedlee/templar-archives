@@ -434,29 +434,29 @@ async function saveHandToDatabase(
     stream_id: streamId,
     event_id: eventId,
     tournament_id: tournamentId,
-    playerIds, // array-contains 쿼리용
+    player_ids: playerIds, // array-contains 쿼리용
     number: String(hand.handNumber),
     description: generateHandDescription(hand),
     timestamp: formatTimestampDisplay(hand), // 사용자 표시용 타임코드
-    videoTimestampStart: hand.absolute_timestamp_start ?? undefined, // 초 단위
-    videoTimestampEnd: hand.absolute_timestamp_end ?? undefined, // 초 단위
-    potSize: hand.pot || 0,
-    boardFlop: boardFlop.length > 0 ? boardFlop : undefined,
-    boardTurn: boardTurn || undefined,
-    boardRiver: boardRiver || undefined,
+    video_timestamp_start: hand.absolute_timestamp_start ?? undefined, // 초 단위
+    video_timestamp_end: hand.absolute_timestamp_end ?? undefined, // 초 단위
+    pot_size: hand.pot || 0,
+    board_flop: boardFlop.length > 0 ? boardFlop : undefined,
+    board_turn: boardTurn || undefined,
+    board_river: boardRiver || undefined,
     // 블라인드 정보 파싱 (stakes에서)
-    smallBlind: parseBlindFromStakes(hand.stakes, 'sb'),
-    bigBlind: parseBlindFromStakes(hand.stakes, 'bb'),
+    small_blind: parseBlindFromStakes(hand.stakes, 'sb'),
+    big_blind: parseBlindFromStakes(hand.stakes, 'bb'),
     ante: parseBlindFromStakes(hand.stakes, 'ante'),
     players,
     actions,
     engagement: {
-      likesCount: 0,
-      dislikesCount: 0,
-      bookmarksCount: 0,
+      likes_count: 0,
+      dislikes_count: 0,
+      bookmarks_count: 0,
     },
-    createdAt: FieldValue.serverTimestamp() as any,
-    updatedAt: FieldValue.serverTimestamp() as any,
+    created_at: FieldValue.serverTimestamp() as any,
+    updated_at: FieldValue.serverTimestamp() as any,
   }
 
   // Hands 컬렉션에 저장

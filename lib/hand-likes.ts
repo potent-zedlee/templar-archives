@@ -3,7 +3,7 @@
  *
  * Firestore를 사용하여 핸드별 좋아요/싫어요를 관리합니다.
  * - 좋아요 문서: /hands/{handId}/likes/{userId}
- * - 카운트: /hands/{handId}.engagement.likesCount, dislikesCount
+ * - 카운트: /hands/{handId}.engagement.likes_count, dislikes_count
  *
  * @module lib/hand-likes
  */
@@ -52,8 +52,8 @@ export async function getHandLikeStatus(handId: string, userId?: string): Promis
     }
 
     const handData = handDoc.data() as FirestoreHand
-    const likesCount = handData.engagement?.likesCount || 0
-    const dislikesCount = handData.engagement?.dislikesCount || 0
+    const likesCount = handData.engagement?.likes_count || 0
+    const dislikesCount = handData.engagement?.dislikes_count || 0
 
     // 사용자 투표 상태 조회
     let userVote: 'like' | 'dislike' | null = null
@@ -114,7 +114,7 @@ export async function toggleHandLike(
 
         // 카운트 증가
         const incrementField =
-          voteType === 'like' ? 'engagement.likesCount' : 'engagement.dislikesCount'
+          voteType === 'like' ? 'engagement.likes_count' : 'engagement.dislikes_count'
         transaction.update(handDocRef, { [incrementField]: increment(1) })
 
         return voteType
@@ -126,7 +126,7 @@ export async function toggleHandLike(
 
         // 카운트 감소
         const decrementField =
-          voteType === 'like' ? 'engagement.likesCount' : 'engagement.dislikesCount'
+          voteType === 'like' ? 'engagement.likes_count' : 'engagement.dislikes_count'
         transaction.update(handDocRef, { [decrementField]: increment(-1) })
 
         return null
@@ -140,9 +140,9 @@ export async function toggleHandLike(
 
       // 기존 투표 카운트 감소, 새 투표 카운트 증가
       const oldField =
-        existingVote === 'like' ? 'engagement.likesCount' : 'engagement.dislikesCount'
+        existingVote === 'like' ? 'engagement.likes_count' : 'engagement.dislikes_count'
       const newField =
-        voteType === 'like' ? 'engagement.likesCount' : 'engagement.dislikesCount'
+        voteType === 'like' ? 'engagement.likes_count' : 'engagement.dislikes_count'
 
       transaction.update(handDocRef, {
         [oldField]: increment(-1),
@@ -176,8 +176,8 @@ export async function getHandLikeCounts(handId: string): Promise<{
     const handData = handDoc.data() as FirestoreHand
 
     return {
-      likesCount: handData.engagement?.likesCount || 0,
-      dislikesCount: handData.engagement?.dislikesCount || 0,
+      likesCount: handData.engagement?.likes_count || 0,
+      dislikesCount: handData.engagement?.dislikes_count || 0,
     }
   } catch (error) {
     console.error('카운트 조회 실패:', error)
@@ -206,8 +206,8 @@ export async function getBatchHandLikeStatus(
         const handData = handDoc.data() as FirestoreHand
         result.set(handId, {
           userVote: null,
-          likesCount: handData.engagement?.likesCount || 0,
-          dislikesCount: handData.engagement?.dislikesCount || 0,
+          likesCount: handData.engagement?.likes_count || 0,
+          dislikesCount: handData.engagement?.dislikes_count || 0,
         })
       } else {
         result.set(handId, {

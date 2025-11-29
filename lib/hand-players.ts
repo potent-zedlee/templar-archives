@@ -136,7 +136,7 @@ export async function fetchHandPlayers(handId: string): Promise<HandPlayer[]> {
         cards: hp.cards?.join('') || null,
         starting_stack: hp.startStack || 0,
         ending_stack: hp.endStack || 0,
-        created_at: timestampToString(hand.createdAt as Timestamp),
+        created_at: timestampToString(hand.created_at as Timestamp),
         player: player
           ? {
               id: hp.playerId,
@@ -268,7 +268,7 @@ export async function addPlayerToHand(
       result: {
         isWinner: false,
       },
-      handDate: hand.createdAt,
+      handDate: hand.created_at,
     })
 
     await batch.commit()

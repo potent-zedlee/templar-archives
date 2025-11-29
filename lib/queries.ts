@@ -209,12 +209,12 @@ async function enrichHand(
     number: hand.number,
     description: hand.description,
     timestamp: hand.timestamp,
-    pot_size: hand.potSize,
-    board_cards: hand.boardFlop
-      ? [...(hand.boardFlop || []), hand.boardTurn, hand.boardRiver].filter(Boolean) as string[]
+    pot_size: hand.pot_size,
+    board_cards: hand.board_flop
+      ? [...(hand.board_flop || []), hand.board_turn, hand.board_river].filter(Boolean) as string[]
       : undefined,
     favorite: hand.favorite,
-    created_at: timestampToString(hand.createdAt as Timestamp),
+    created_at: timestampToString(hand.created_at as Timestamp),
     tournament_name: streamInfo?.tournament.name,
     tournament_category: streamInfo?.tournament.category,
     event_name: streamInfo?.event.name,
@@ -346,14 +346,14 @@ export async function fetchHandDetails(handId: string): Promise<HandDetails | nu
       number: hand.number,
       description: hand.description,
       timestamp: hand.timestamp,
-      pot_size: hand.potSize,
-      board_flop: hand.boardFlop,
-      board_turn: hand.boardTurn,
-      board_river: hand.boardRiver,
-      video_timestamp_start: hand.videoTimestampStart,
-      video_timestamp_end: hand.videoTimestampEnd,
+      pot_size: hand.pot_size,
+      board_flop: hand.board_flop,
+      board_turn: hand.board_turn,
+      board_river: hand.board_river,
+      video_timestamp_start: hand.video_timestamp_start,
+      video_timestamp_end: hand.video_timestamp_end,
       favorite: hand.favorite,
-      created_at: timestampToString(hand.createdAt as Timestamp),
+      created_at: timestampToString(hand.created_at as Timestamp),
       stream: {
         id: hand.stream_id,
         name: stream?.name || '',
@@ -575,7 +575,7 @@ export async function fetchPlayerHands(playerId: string): Promise<{
           duration: 0,
           confidence: 0,
           winner,
-          potSize: hand.potSize || 0,
+          potSize: hand.pot_size || 0,
           players:
             hand.players?.map((hp) => ({
               name: hp.name || 'Unknown',
@@ -584,10 +584,10 @@ export async function fetchPlayerHands(playerId: string): Promise<{
               stack: hp.startStack || 0,
             })) || [],
           streets: {
-            preflop: { actions: [], pot: hand.potPreflop || 0 },
-            flop: { actions: [], pot: hand.potFlop || 0, cards: hand.boardFlop?.join(' ') },
-            turn: { actions: [], pot: hand.potTurn || 0, cards: hand.boardTurn },
-            river: { actions: [], pot: hand.potRiver || 0, cards: hand.boardRiver },
+            preflop: { actions: [], pot: hand.pot_preflop || 0 },
+            flop: { actions: [], pot: hand.pot_flop || 0, cards: hand.board_flop?.join(' ') },
+            turn: { actions: [], pot: hand.pot_turn || 0, cards: hand.board_turn },
+            river: { actions: [], pot: hand.pot_river || 0, cards: hand.board_river },
           },
         } as HandHistory
       }),

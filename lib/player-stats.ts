@@ -89,7 +89,7 @@ export async function fetchPlayerHandsInfo(playerId: string) {
           starting_stack: playerData.startStack,
           ending_stack: playerData.endStack,
           is_winner: playerData.isWinner,
-          pot_size: hand.potSize,
+          pot_size: hand.pot_size,
         })
       }
     })

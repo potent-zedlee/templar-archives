@@ -343,32 +343,32 @@ export async function POST(request: NextRequest) {
         const handRef = adminFirestore.collection(COLLECTION_PATHS.HANDS).doc()
 
         const streamData = streamDoc.data()
-        const handData: Omit<FirestoreHand, 'createdAt' | 'updatedAt'> & {
-          createdAt: FieldValue
-          updatedAt: FieldValue
+        const handData: Omit<FirestoreHand, 'created_at' | 'updated_at'> & {
+          created_at: FieldValue
+          updated_at: FieldValue
         } = {
           stream_id: streamId,
           event_id: streamData?.eventId || '',
           tournament_id: streamData?.tournamentId || '',
           number: hand.number,
           description: hand.description,
-          aiSummary: hand.summary,
+          ai_summary: hand.summary,
           timestamp: hand.timestamp,
-          potSize: hand.pot_size,
-          boardFlop: hand.board_cards?.slice(0, 3),
-          boardTurn: hand.board_cards?.[3],
-          boardRiver: hand.board_cards?.[4],
-          playerIds: embeddedPlayers.map(p => p.playerId).filter(Boolean),
+          pot_size: hand.pot_size,
+          board_flop: hand.board_cards?.slice(0, 3),
+          board_turn: hand.board_cards?.[3],
+          board_river: hand.board_cards?.[4],
+          player_ids: embeddedPlayers.map(p => p.playerId).filter(Boolean),
           players: embeddedPlayers,
           actions: embeddedActions,
           engagement: {
-            likesCount: 0,
-            dislikesCount: 0,
-            bookmarksCount: 0,
+            likes_count: 0,
+            dislikes_count: 0,
+            bookmarks_count: 0,
           },
           favorite: false,
-          createdAt: FieldValue.serverTimestamp(),
-          updatedAt: FieldValue.serverTimestamp(),
+          created_at: FieldValue.serverTimestamp(),
+          updated_at: FieldValue.serverTimestamp(),
         }
 
         await handRef.set(handData)

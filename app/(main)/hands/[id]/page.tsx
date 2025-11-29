@@ -240,7 +240,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
                   <div className="aspect-square bg-black">
                     <YouTubePlayer
                       videoId={videoId}
-                      startTime={hand.videoTimestampStart || 0}
+                      startTime={hand.video_timestamp_start || 0}
                     />
                   </div>
                 ) : (
@@ -261,7 +261,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground leading-relaxed">
-                  {hand.aiSummary || 'Hand summary will be generated automatically after analysis...'}
+                  {hand.ai_summary || 'Hand summary will be generated automatically after analysis...'}
                 </p>
               </CardContent>
             </Card>
@@ -287,10 +287,10 @@ async function HandDetailContent({ handId }: { handId: string }) {
               <CardContent className="p-6">
                 <div className="space-y-4">
                   {/* Stakes Badge */}
-                  {hand.smallBlind && hand.bigBlind && (
+                  {hand.small_blind && hand.big_blind && (
                     <div className="flex items-center justify-center">
                       <Badge variant="outline" className="text-lg py-1 px-4">
-                        {hand.smallBlind}/{hand.bigBlind}
+                        {hand.small_blind}/{hand.big_blind}
                       </Badge>
                     </div>
                   )}
@@ -300,10 +300,10 @@ async function HandDetailContent({ handId }: { handId: string }) {
                     <div className="w-full h-full">
                       <PokerTable
                         players={players}
-                        flop={hand.boardFlop}
-                        turn={hand.boardTurn}
-                        river={hand.boardRiver}
-                        potSize={hand.potSize}
+                        flop={hand.board_flop}
+                        turn={hand.board_turn}
+                        river={hand.board_river}
+                        potSize={hand.pot_size}
                         showCards={true}
                       />
                     </div>

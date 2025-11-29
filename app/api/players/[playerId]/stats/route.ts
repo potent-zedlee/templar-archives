@@ -253,8 +253,8 @@ function calculatePlayerStats(
     }
 
     // 팟 크기
-    if (hand.potSize) {
-      totalPotSize += hand.potSize
+    if (hand.pot_size) {
+      totalPotSize += hand.pot_size
     }
   })
 

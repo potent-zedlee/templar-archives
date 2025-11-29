@@ -260,15 +260,15 @@ export async function buildQueryFromFilter(
 
   // 팟 크기 필터
   if (filter.pot_min !== undefined) {
-    handsQuery = handsQuery.where('potSize', '>=', filter.pot_min)
+    handsQuery = handsQuery.where('pot_size', '>=', filter.pot_min)
   }
   if (filter.pot_max !== undefined) {
-    handsQuery = handsQuery.where('potSize', '<=', filter.pot_max)
+    handsQuery = handsQuery.where('pot_size', '<=', filter.pot_max)
   }
 
   // 정렬
-  const orderBy = filter.order_by === 'pot_size' ? 'potSize' :
-                  filter.order_by === 'created_at' ? 'createdAt' : 'timestamp'
+  const orderBy = filter.order_by === 'pot_size' ? 'pot_size' :
+                  filter.order_by === 'created_at' ? 'created_at' : 'timestamp'
   const orderDirection = filter.order_direction || 'desc'
   handsQuery = handsQuery.orderBy(orderBy, orderDirection)
 
@@ -312,9 +312,9 @@ export async function buildQueryFromFilter(
     // 보드 카드 필터
     if (filter.board_cards && filter.board_cards.length > 0) {
       const boardCards = [
-        ...(hand.boardFlop || []),
-        hand.boardTurn,
-        hand.boardRiver,
+        ...(hand.board_flop || []),
+        hand.board_turn,
+        hand.board_river,
       ].filter(Boolean)
 
       const hasAllCards = filter.board_cards.every(card =>
@@ -367,11 +367,11 @@ export async function buildQueryFromFilter(
       description: hand.description,
       timestamp: hand.timestamp,
       favorite: hand.favorite,
-      potSize: hand.potSize,
+      potSize: hand.pot_size,
       boardCards: [
-        ...(hand.boardFlop || []),
-        hand.boardTurn,
-        hand.boardRiver,
+        ...(hand.board_flop || []),
+        hand.board_turn,
+        hand.board_river,
       ].filter((c): c is string => Boolean(c)),
       stream: streamData ? {
         name: streamData.name || '',

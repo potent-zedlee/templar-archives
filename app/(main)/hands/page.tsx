@@ -20,7 +20,7 @@ async function getHands(): Promise<HandWithId[]> {
   try {
     const snapshot = await adminFirestore
       .collection('hands')
-      .orderBy('createdAt', 'desc')
+      .orderBy('created_at', 'desc')
       .limit(50)
       .get()
 
@@ -40,9 +40,9 @@ async function getHands(): Promise<HandWithId[]> {
 
 function HandCard({ hand }: { hand: HandWithId }) {
   const board = [
-    ...(hand.boardFlop || []),
-    hand.boardTurn,
-    hand.boardRiver,
+    ...(hand.board_flop || []),
+    hand.board_turn,
+    hand.board_river,
   ].filter(Boolean)
 
   const winners = hand.players?.filter((p: HandPlayerEmbedded) => p.isWinner) || []
@@ -56,8 +56,8 @@ function HandCard({ hand }: { hand: HandWithId }) {
             <CardTitle className="text-lg">
               Hand #{hand.number || 'N/A'}
             </CardTitle>
-            {hand.smallBlind && hand.bigBlind && (
-              <Badge variant="outline">{hand.smallBlind}/{hand.bigBlind}</Badge>
+            {hand.small_blind && hand.big_blind && (
+              <Badge variant="outline">{hand.small_blind}/{hand.big_blind}</Badge>
             )}
           </div>
         </CardHeader>
@@ -77,11 +77,11 @@ function HandCard({ hand }: { hand: HandWithId }) {
           )}
 
           {/* Pot Size */}
-          {hand.potSize && (
+          {hand.pot_size && (
             <div className="flex gap-2">
               <span className="text-sm text-muted-foreground">Pot:</span>
               <span className="font-semibold">
-                {hand.potSize.toLocaleString()} chips
+                {hand.pot_size.toLocaleString()} chips
               </span>
             </div>
           )}
@@ -128,14 +128,14 @@ function HandCard({ hand }: { hand: HandWithId }) {
           )}
 
           {/* Timestamp */}
-          {hand.videoTimestampStart !== null && hand.videoTimestampStart !== undefined && (
+          {hand.video_timestamp_start !== null && hand.video_timestamp_start !== undefined && (
             <div className="text-xs text-muted-foreground">
-              Video: {Math.floor(hand.videoTimestampStart / 60)}:
-              {String(hand.videoTimestampStart % 60).padStart(2, '0')} -{' '}
-              {hand.videoTimestampEnd !== undefined && (
+              Video: {Math.floor(hand.video_timestamp_start / 60)}:
+              {String(hand.video_timestamp_start % 60).padStart(2, '0')} -{' '}
+              {hand.video_timestamp_end !== undefined && (
                 <>
-                  {Math.floor(hand.videoTimestampEnd / 60)}:
-                  {String(hand.videoTimestampEnd % 60).padStart(2, '0')}
+                  {Math.floor(hand.video_timestamp_end / 60)}:
+                  {String(hand.video_timestamp_end % 60).padStart(2, '0')}
                 </>
               )}
             </div>
