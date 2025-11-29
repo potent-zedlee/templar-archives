@@ -15,7 +15,7 @@ async function navigateToArchive(page: Page) {
 }
 
 // Helper: Database API를 Mock (Firebase SDK는 mock 어려움)
-async function mockDatabaseAPIs(page: Page) {
+async function mockDatabaseAPIs(_page: Page) {
   // Firestore는 Firebase SDK를 통해 직접 호출되므로 REST API mock은 효과 없음
   // 페이지 로드 및 렌더링만 검증
 }

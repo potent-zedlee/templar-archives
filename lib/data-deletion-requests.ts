@@ -275,45 +275,6 @@ export async function deleteUserData(userId: string): Promise<{ error: Error | n
       return deletedCount
     }
 
-    /**
-     * 서브컬렉션 문서 삭제 (부모 문서 ID로)
-     * 현재는 사용되지 않으나 향후 확장을 위해 유지
-     */
-    const _deleteSubcollectionDocs = async (
-      parentCollectionPath: string,
-      subcollectionName: string,
-      parentIds: string[]
-    ): Promise<number> => {
-      let deletedCount = 0
-
-      for (const parentId of parentIds) {
-        const subCollRef = collection(
-          firestore,
-          parentCollectionPath,
-          parentId,
-          subcollectionName
-        )
-        const snapshot = await getDocs(subCollRef)
-
-        if (snapshot.empty) continue
-
-        const docs = snapshot.docs
-        for (let i = 0; i < docs.length; i += BATCH_SIZE) {
-          const batch = writeBatch(firestore)
-          const chunk = docs.slice(i, i + BATCH_SIZE)
-
-          chunk.forEach((docSnap) => {
-            batch.delete(docSnap.ref)
-          })
-
-          await batch.commit()
-          deletedCount += chunk.length
-        }
-      }
-
-      return deletedCount
-    }
-
     // 삭제 순서 (의존성 고려)
     // 1. 댓글 삭제 (posts/{postId}/comments에서 author.id로)
     const postsRef = collection(firestore, COLLECTION_PATHS.POSTS)

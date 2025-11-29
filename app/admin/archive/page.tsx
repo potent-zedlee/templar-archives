@@ -144,6 +144,42 @@ export default function AdminArchivePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Define loadTournaments before useEffects that use it
+  const loadTournaments = useCallback(async () => {
+    setLoading(true)
+    try {
+      const tournamentsRef = collection(db, COLLECTION_PATHS.TOURNAMENTS)
+      const tournamentsQuery = query(tournamentsRef, orderBy('endDate', 'desc'))
+      const snapshot = await getDocs(tournamentsQuery)
+
+      const tournamentsList: Tournament[] = snapshot.docs.map(doc => {
+        const data = doc.data() as FirestoreTournament
+        return {
+          id: doc.id,
+          name: data.name,
+          category: data.category,
+          category_logo: data.categoryInfo?.logo,
+          game_type: data.gameType,
+          location: data.location,
+          city: data.city,
+          country: data.country,
+          start_date: timestampToString(data.startDate),
+          end_date: timestampToString(data.endDate),
+          total_prize: data.totalPrize,
+          status: data.status,
+          created_at: timestampToString(data.createdAt),
+        }
+      })
+
+      setTournaments(tournamentsList)
+    } catch (error) {
+      console.error('Error loading tournaments:', error)
+      toast.error('Failed to load tournaments')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   // Load tournaments
   useEffect(() => {
     if (!isUserAdmin) return
@@ -219,41 +255,6 @@ export default function AdminArchivePage() {
 
     setFilteredTournaments(sorted)
   }, [tournaments, categoryFilter, gameTypeFilter, searchQuery, sortField, sortDirection])
-
-  const loadTournaments = useCallback(async () => {
-    setLoading(true)
-    try {
-      const tournamentsRef = collection(db, COLLECTION_PATHS.TOURNAMENTS)
-      const tournamentsQuery = query(tournamentsRef, orderBy('endDate', 'desc'))
-      const snapshot = await getDocs(tournamentsQuery)
-
-      const tournamentsList: Tournament[] = snapshot.docs.map(doc => {
-        const data = doc.data() as FirestoreTournament
-        return {
-          id: doc.id,
-          name: data.name,
-          category: data.category,
-          category_logo: data.categoryInfo?.logo,
-          game_type: data.gameType,
-          location: data.location,
-          city: data.city,
-          country: data.country,
-          start_date: timestampToString(data.startDate),
-          end_date: timestampToString(data.endDate),
-          total_prize: data.totalPrize,
-          status: data.status,
-          created_at: timestampToString(data.createdAt),
-        }
-      })
-
-      setTournaments(tournamentsList)
-    } catch (error) {
-      console.error('Error loading tournaments:', error)
-      toast.error('Failed to load tournaments')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
 
   const handleSort = (field: AdminArchiveSortField) => {
     if (sortField === field) {

@@ -9,10 +9,9 @@
  * @module app/actions/migrate-users
  */
 
-import { adminFirestore, adminAuth } from '@/lib/firebase-admin'
+import { adminFirestore } from '@/lib/firebase-admin'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'
 import { FieldValue } from 'firebase-admin/firestore'
-import { cookies } from 'next/headers'
 
 /**
  * UUID 형식인지 확인 (Supabase 형식)

@@ -3,13 +3,11 @@ import type { FolderItem, AdvancedFilters, NavigationLevel, SortOption } from '@
 
 interface UseArchiveNavigationProps {
   tournaments: any[]
-  unsortedVideos: any[]
   selectedCategory: string
 }
 
 export function useArchiveNavigation({
   tournaments,
-  unsortedVideos,
   selectedCategory,
 }: UseArchiveNavigationProps) {
   // Navigation state

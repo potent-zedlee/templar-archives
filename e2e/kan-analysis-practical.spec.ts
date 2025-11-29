@@ -8,11 +8,9 @@ import { test, expect, type Page } from '@playwright/test'
  */
 
 // Mock 헬퍼
-async function mockAllAPIs(page: Page, options: {
+async function mockAllAPIs(_page: Page, _options: {
   streamsSuccess?: boolean
 } = {}) {
-  const { streamsSuccess = true } = options
-
   // Firestore API Mock (Firebase SDK 요청은 mock하기 어려움, 페이지 로드만 검증)
   // 참고: 실제 Firestore 요청은 Firebase SDK를 통해 이루어지므로 REST API mock은 효과 없음
 }

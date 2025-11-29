@@ -24,7 +24,7 @@ type Comment = {
   id: string
   content: string
   author_name: string
-  hand_id: string
+  hand_id?: string
   is_hidden: boolean
   created_at: string
 }
@@ -86,30 +86,34 @@ export function CommentsTab({ comments, onHide, onUnhide, onDelete }: Props) {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
-                    {comment.is_hidden ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onUnhide(comment.id, comment.hand_id)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onHide(comment.id, comment.hand_id)}
-                      >
-                        <EyeOff className="h-4 w-4" />
-                      </Button>
+                    {comment.hand_id && (
+                      <>
+                        {comment.is_hidden ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => onUnhide(comment.id, comment.hand_id!)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => onHide(comment.id, comment.hand_id!)}
+                          >
+                            <EyeOff className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => onDelete(comment.id, comment.hand_id!)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
                     )}
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => onDelete(comment.id, comment.hand_id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
