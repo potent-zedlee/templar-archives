@@ -92,7 +92,7 @@ export async function startKanAnalysis(
     const stream = streamDoc.data() as FirestoreStream
 
     // GCS URI 확인
-    if (!stream.gcsUri) {
+    if (!stream.gcs_uri) {
       return {
         success: false,
         error: 'Stream does not have GCS URI. Please upload video first.',
@@ -106,7 +106,7 @@ export async function startKanAnalysis(
     }))
 
     console.log(`[KAN-CloudRun] Calling Cloud Run: ${CLOUD_RUN_URL}/analyze`)
-    console.log(`[KAN-CloudRun] GCS URI: ${stream.gcsUri}`)
+    console.log(`[KAN-CloudRun] GCS URI: ${stream.gcs_uri}`)
 
     // Cloud Run API 호출
     const response = await fetch(`${CLOUD_RUN_URL}/analyze`, {
@@ -116,7 +116,7 @@ export async function startKanAnalysis(
       },
       body: JSON.stringify({
         streamId,
-        gcsUri: stream.gcsUri,
+        gcsUri: stream.gcs_uri,
         segments: formattedSegments,
         platform,
       }),
@@ -350,7 +350,7 @@ async function saveHandToDatabase(
       // 플레이어 조회 또는 생성
       const playersRef = adminFirestore.collection(COLLECTION_PATHS.PLAYERS)
       const existingPlayerQuery = await playersRef
-        .where('normalizedName', '==', normalizedName)
+        .where('normalized_name', '==', normalizedName)
         .limit(1)
         .get()
 
@@ -360,9 +360,9 @@ async function saveHandToDatabase(
         // 플레이어 생성
         const newPlayerRef = await playersRef.add({
           name: player.name,
-          normalizedName,
-          createdAt: FieldValue.serverTimestamp(),
-          updatedAt: FieldValue.serverTimestamp(),
+          normalized_name: normalizedName,
+          created_at: FieldValue.serverTimestamp(),
+          updated_at: FieldValue.serverTimestamp(),
         })
         playerId = newPlayerRef.id
         console.log(`[KAN-Trigger] Created new player: ${player.name}`)
@@ -380,14 +380,14 @@ async function saveHandToDatabase(
 
       // HandPlayerEmbedded 생성
       players.push({
-        playerId,
+        player_id: playerId,
         name: player.name,
         position: player.position as PokerPosition,
         seat: player.seat,
         cards: player.holeCards, // ["As", "Kd"] 형식
-        startStack: player.stackSize || 0,
-        endStack: player.stackSize || 0, // 초기값
-        isWinner,
+        start_stack: player.stackSize || 0,
+        end_stack: player.stackSize || 0, // 초기값
+        is_winner: isWinner,
       })
     } catch (error) {
       console.error(`[KAN-Trigger] Error processing player ${player.name}:`, error)
@@ -409,11 +409,11 @@ async function saveHandToDatabase(
       }
 
       actions.push({
-        playerId,
-        playerName: action.player,
+        player_id: playerId,
+        player_name: action.player,
         street: action.street as PokerStreet,
         sequence: sequence++,
-        actionType: action.action as PokerActionType,
+        action_type: action.action as PokerActionType,
         amount: action.amount || 0,
       })
     } catch (error) {
@@ -427,7 +427,7 @@ async function saveHandToDatabase(
   const boardRiver = hand.board?.river || null
 
   // playerIds 배열 생성 (array-contains 쿼리용)
-  const playerIds = players.map((p) => p.playerId)
+  const playerIds = players.map((p) => p.player_id)
 
   // Hand 문서 생성
   const handData: Partial<FirestoreHand> = {

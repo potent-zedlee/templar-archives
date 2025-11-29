@@ -136,9 +136,9 @@ export async function publishTournament(id: string): Promise<ActionResult> {
 
     await tournamentRef.update({
       status: 'published' as ContentStatus,
-      publishedBy: authCheck.userId,
-      publishedAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp()
+      published_by: authCheck.userId,
+      published_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -169,9 +169,9 @@ export async function unpublishTournament(id: string): Promise<ActionResult> {
 
     await tournamentRef.update({
       status: 'draft' as ContentStatus,
-      publishedAt: FieldValue.delete(),
-      publishedBy: FieldValue.delete(),
-      updatedAt: FieldValue.serverTimestamp()
+      published_at: FieldValue.delete(),
+      published_by: FieldValue.delete(),
+      updated_at: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -202,7 +202,7 @@ export async function archiveTournament(id: string): Promise<ActionResult> {
 
     await tournamentRef.update({
       status: 'archived' as ContentStatus,
-      updatedAt: FieldValue.serverTimestamp()
+      updated_at: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -238,9 +238,9 @@ export async function publishSubEvent(
 
     await eventRef.update({
       status: 'published' as ContentStatus,
-      publishedBy: authCheck.userId,
-      publishedAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp()
+      published_by: authCheck.userId,
+      published_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -274,9 +274,9 @@ export async function unpublishSubEvent(
 
     await eventRef.update({
       status: 'draft' as ContentStatus,
-      publishedAt: FieldValue.delete(),
-      publishedBy: FieldValue.delete(),
-      updatedAt: FieldValue.serverTimestamp()
+      published_at: FieldValue.delete(),
+      published_by: FieldValue.delete(),
+      updated_at: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -310,7 +310,7 @@ export async function archiveSubEvent(
 
     await eventRef.update({
       status: 'archived' as ContentStatus,
-      updatedAt: FieldValue.serverTimestamp()
+      updated_at: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -347,9 +347,9 @@ export async function publishStream(
 
     await streamRef.update({
       status: 'published' as ContentStatus,
-      publishedBy: authCheck.userId,
-      publishedAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp()
+      published_by: authCheck.userId,
+      published_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -384,9 +384,9 @@ export async function unpublishStream(
 
     await streamRef.update({
       status: 'draft' as ContentStatus,
-      publishedAt: FieldValue.delete(),
-      publishedBy: FieldValue.delete(),
-      updatedAt: FieldValue.serverTimestamp()
+      published_at: FieldValue.delete(),
+      published_by: FieldValue.delete(),
+      updated_at: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -421,7 +421,7 @@ export async function archiveStream(
 
     await streamRef.update({
       status: 'archived' as ContentStatus,
-      updatedAt: FieldValue.serverTimestamp()
+      updated_at: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -466,9 +466,9 @@ export async function bulkPublishStreams(
       const streamRef = streamsCollectionRef.doc(streamId)
       batch.update(streamRef, {
         status: 'published' as ContentStatus,
-        publishedBy: authCheck.userId,
-        publishedAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp()
+        published_by: authCheck.userId,
+        published_at: FieldValue.serverTimestamp(),
+        updated_at: FieldValue.serverTimestamp()
       })
     })
 
@@ -514,9 +514,9 @@ export async function bulkUnpublishStreams(
       const streamRef = streamsCollectionRef.doc(streamId)
       batch.update(streamRef, {
         status: 'draft' as ContentStatus,
-        publishedAt: FieldValue.delete(),
-        publishedBy: FieldValue.delete(),
-        updatedAt: FieldValue.serverTimestamp()
+        published_at: FieldValue.delete(),
+        published_by: FieldValue.delete(),
+        updated_at: FieldValue.serverTimestamp()
       })
     })
 

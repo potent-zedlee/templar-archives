@@ -118,26 +118,26 @@ export async function createTournament(data: {
     const tournamentData = {
       name: data.name.trim(),
       category: data.category,
-      categoryInfo: {
+      category_info: {
         id: getCategoryId(data.category),
         name: data.category,
         logo: data.category_logo || null,
       },
-      gameType: data.game_type,
+      game_type: data.game_type,
       location: data.location.trim(),
       city: data.city?.trim() || null,
       country: data.country?.trim() || null,
-      startDate: Timestamp.fromDate(new Date(data.start_date)),
-      endDate: Timestamp.fromDate(new Date(data.end_date)),
+      start_date: Timestamp.fromDate(new Date(data.start_date)),
+      end_date: Timestamp.fromDate(new Date(data.end_date)),
       status: 'draft' as const,
       stats: {
-        eventsCount: 0,
-        streamsCount: 0,
-        handsCount: 0,
-        playersCount: 0,
+        events_count: 0,
+        streams_count: 0,
+        hands_count: 0,
+        players_count: 0,
       },
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     }
 
     await tournamentRef.set(tournamentData)
@@ -151,8 +151,8 @@ export async function createTournament(data: {
       data: {
         id: tournamentRef.id,
         ...tournamentData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       }
     }
   } catch (error: any) {
@@ -205,18 +205,18 @@ export async function updateTournament(id: string, data: {
     const updateData = {
       name: data.name.trim(),
       category: data.category,
-      categoryInfo: {
+      category_info: {
         id: getCategoryId(data.category),
         name: data.category,
         logo: data.category_logo || null,
       },
-      gameType: data.game_type,
+      game_type: data.game_type,
       location: data.location.trim(),
       city: data.city?.trim() || null,
       country: data.country?.trim() || null,
-      startDate: Timestamp.fromDate(new Date(data.start_date)),
-      endDate: Timestamp.fromDate(new Date(data.end_date)),
-      updatedAt: FieldValue.serverTimestamp(),
+      start_date: Timestamp.fromDate(new Date(data.start_date)),
+      end_date: Timestamp.fromDate(new Date(data.end_date)),
+      updated_at: FieldValue.serverTimestamp(),
     }
 
     await tournamentRef.update(updateData)
@@ -230,7 +230,7 @@ export async function updateTournament(id: string, data: {
       data: {
         id,
         ...updateData,
-        updatedAt: new Date(),
+        updated_at: new Date(),
       }
     }
   } catch (error: any) {
@@ -299,33 +299,33 @@ export async function createEvent(tournamentId: string, data: {
     const eventData = {
       name: data.name.trim(),
       date: Timestamp.fromDate(new Date(data.date)),
-      eventNumber: data.event_number?.trim() || null,
-      totalPrize: data.total_prize?.trim() || null,
+      event_number: data.event_number?.trim() || null,
+      total_prize: data.total_prize?.trim() || null,
       winner: data.winner?.trim() || null,
-      buyIn: data.buy_in?.trim() || null,
-      entryCount: data.entry_count || null,
-      blindStructure: data.blind_structure?.trim() || null,
-      levelDuration: data.level_duration || null,
-      startingStack: data.starting_stack || null,
+      buy_in: data.buy_in?.trim() || null,
+      entry_count: data.entry_count || null,
+      blind_structure: data.blind_structure?.trim() || null,
+      level_duration: data.level_duration || null,
+      starting_stack: data.starting_stack || null,
       notes: data.notes?.trim() || null,
       status: 'draft' as const,
       stats: {
-        streamsCount: 0,
-        handsCount: 0,
+        streams_count: 0,
+        hands_count: 0,
       },
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     }
 
     await eventRef.set(eventData)
 
-    // 4. 부모 Tournament의 eventsCount 증가
+    // 4. 부모 Tournament의 events_count 증가
     await adminFirestore
       .collection(COLLECTION_PATHS.TOURNAMENTS)
       .doc(tournamentId)
       .update({
-        'stats.eventsCount': FieldValue.increment(1),
-        updatedAt: FieldValue.serverTimestamp(),
+        'stats.events_count': FieldValue.increment(1),
+        updated_at: FieldValue.serverTimestamp(),
       })
 
     // 5. 캐시 무효화
@@ -337,8 +337,8 @@ export async function createEvent(tournamentId: string, data: {
       data: {
         id: eventRef.id,
         ...eventData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       }
     }
   } catch (error: any) {
@@ -388,16 +388,16 @@ export async function updateEvent(id: string, data: {
     const updateData = {
       name: data.name.trim(),
       date: Timestamp.fromDate(new Date(data.date)),
-      eventNumber: data.event_number?.trim() || null,
-      totalPrize: data.total_prize?.trim() || null,
+      event_number: data.event_number?.trim() || null,
+      total_prize: data.total_prize?.trim() || null,
       winner: data.winner?.trim() || null,
-      buyIn: data.buy_in?.trim() || null,
-      entryCount: data.entry_count || null,
-      blindStructure: data.blind_structure?.trim() || null,
-      levelDuration: data.level_duration || null,
-      startingStack: data.starting_stack || null,
+      buy_in: data.buy_in?.trim() || null,
+      entry_count: data.entry_count || null,
+      blind_structure: data.blind_structure?.trim() || null,
+      level_duration: data.level_duration || null,
+      starting_stack: data.starting_stack || null,
       notes: data.notes?.trim() || null,
-      updatedAt: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     }
 
     await eventDoc.ref.update(updateData)
@@ -411,7 +411,7 @@ export async function updateEvent(id: string, data: {
       data: {
         id,
         ...updateData,
-        updatedAt: new Date(),
+        updated_at: new Date(),
       }
     }
   } catch (error: any) {
@@ -445,14 +445,14 @@ export async function deleteEvent(id: string) {
     // 3. 문서 삭제
     await eventDoc.ref.delete()
 
-    // 4. 부모 Tournament의 eventsCount 감소
+    // 4. 부모 Tournament의 events_count 감소
     if (tournamentId) {
       await adminFirestore
         .collection(COLLECTION_PATHS.TOURNAMENTS)
         .doc(tournamentId)
         .update({
-          'stats.eventsCount': FieldValue.increment(-1),
-          updatedAt: FieldValue.serverTimestamp(),
+          'stats.events_count': FieldValue.increment(-1),
+          updated_at: FieldValue.serverTimestamp(),
         })
     }
 
@@ -513,34 +513,34 @@ export async function createStream(eventId: string, data: {
 
     const streamData = {
       name: data.name?.trim() || `Stream ${new Date().toISOString()}`,
-      videoSource: data.video_source,
-      videoUrl: data.video_url?.trim() || null,
-      videoFile: data.video_file?.trim() || null,
-      publishedAt: data.published_at ? Timestamp.fromDate(new Date(data.published_at)) : null,
-      uploadStatus: 'none' as const,
+      video_source: data.video_source,
+      video_url: data.video_url?.trim() || null,
+      video_file: data.video_file?.trim() || null,
+      published_at: data.published_at ? Timestamp.fromDate(new Date(data.published_at)) : null,
+      upload_status: 'none' as const,
       status: 'draft' as const,
       stats: {
-        handsCount: 0,
+        hands_count: 0,
       },
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      created_at: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     }
 
     await streamRef.set(streamData)
 
-    // 5. 부모 Event의 streamsCount 증가
+    // 5. 부모 Event의 streams_count 증가
     await eventDoc.ref.update({
-      'stats.streamsCount': FieldValue.increment(1),
-      updatedAt: FieldValue.serverTimestamp(),
+      'stats.streams_count': FieldValue.increment(1),
+      updated_at: FieldValue.serverTimestamp(),
     })
 
-    // 6. Tournament의 streamsCount 증가
+    // 6. Tournament의 streams_count 증가
     await adminFirestore
       .collection(COLLECTION_PATHS.TOURNAMENTS)
       .doc(tournamentId)
       .update({
-        'stats.streamsCount': FieldValue.increment(1),
-        updatedAt: FieldValue.serverTimestamp(),
+        'stats.streams_count': FieldValue.increment(1),
+        updated_at: FieldValue.serverTimestamp(),
       })
 
     // 7. 캐시 무효화
@@ -552,8 +552,8 @@ export async function createStream(eventId: string, data: {
       data: {
         id: streamRef.id,
         ...streamData,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        created_at: new Date(),
+        updated_at: new Date(),
       }
     }
   } catch (error: any) {
@@ -598,11 +598,11 @@ export async function updateStream(id: string, data: {
     const streamDoc = streamsSnapshot.docs[0]
     const updateData = {
       name: data.name?.trim() || `Stream ${new Date().toISOString()}`,
-      videoSource: data.video_source,
-      videoUrl: data.video_url?.trim() || null,
-      videoFile: data.video_file?.trim() || null,
-      publishedAt: data.published_at ? Timestamp.fromDate(new Date(data.published_at)) : null,
-      updatedAt: FieldValue.serverTimestamp(),
+      video_source: data.video_source,
+      video_url: data.video_url?.trim() || null,
+      video_file: data.video_file?.trim() || null,
+      published_at: data.published_at ? Timestamp.fromDate(new Date(data.published_at)) : null,
+      updated_at: FieldValue.serverTimestamp(),
     }
 
     await streamDoc.ref.update(updateData)
@@ -616,7 +616,7 @@ export async function updateStream(id: string, data: {
       data: {
         id,
         ...updateData,
-        updatedAt: new Date(),
+        updated_at: new Date(),
       }
     }
   } catch (error: any) {
@@ -654,23 +654,23 @@ export async function deleteStream(id: string) {
     // 3. 문서 삭제
     await streamDoc.ref.delete()
 
-    // 4. 부모 Event의 streamsCount 감소
+    // 4. 부모 Event의 streams_count 감소
     if (eventId && tournamentId) {
       await adminFirestore
         .collection(COLLECTION_PATHS.EVENTS(tournamentId))
         .doc(eventId)
         .update({
-          'stats.streamsCount': FieldValue.increment(-1),
-          updatedAt: FieldValue.serverTimestamp(),
+          'stats.streams_count': FieldValue.increment(-1),
+          updated_at: FieldValue.serverTimestamp(),
         })
 
-      // 5. Tournament의 streamsCount 감소
+      // 5. Tournament의 streams_count 감소
       await adminFirestore
         .collection(COLLECTION_PATHS.TOURNAMENTS)
         .doc(tournamentId)
         .update({
-          'stats.streamsCount': FieldValue.increment(-1),
-          updatedAt: FieldValue.serverTimestamp(),
+          'stats.streams_count': FieldValue.increment(-1),
+          updated_at: FieldValue.serverTimestamp(),
         })
     }
 
@@ -761,10 +761,10 @@ export async function saveEventPayouts(eventId: string, payouts: Array<{
         const payoutRef = payoutsCollectionRef.doc()
         batch.set(payoutRef, {
           rank: p.rank,
-          playerName: p.playerName.trim(),
-          prizeAmount: parsePrizeAmount(p.prizeAmount),
-          matchedStatus: 'unmatched',
-          createdAt: FieldValue.serverTimestamp(),
+          player_name: p.playerName.trim(),
+          prize_amount: parsePrizeAmount(p.prizeAmount),
+          matched_status: 'unmatched',
+          created_at: FieldValue.serverTimestamp(),
         })
       })
     }
@@ -835,7 +835,7 @@ export async function renameItem(
     // 4. 이름 업데이트
     await docRef.update({
       name: newName.trim(),
-      updatedAt: FieldValue.serverTimestamp(),
+      updated_at: FieldValue.serverTimestamp(),
     })
 
     // 5. 캐시 무효화

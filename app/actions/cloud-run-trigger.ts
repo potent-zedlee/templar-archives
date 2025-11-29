@@ -76,7 +76,7 @@ export async function startCloudRunAnalysis(
     const stream = streamDoc.data()
 
     // GCS URI 확인 (파라미터 또는 DB에서)
-    const videoGcsUri = gcsUri || stream?.gcsUri
+    const videoGcsUri = gcsUri || stream?.gcs_uri
     if (!videoGcsUri) {
       return {
         success: false,
