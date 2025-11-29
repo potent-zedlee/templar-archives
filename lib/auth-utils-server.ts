@@ -55,7 +55,7 @@ async function isUserBanned(userId: string): Promise<boolean> {
 
 /**
  * High Templar 이상의 권한인지 확인
- * (high_templar, reporter, admin)
+ * (high_templar, admin)
  *
  * @param userId - 사용자 ID
  * @returns High Templar 이상 여부
@@ -65,7 +65,7 @@ export async function isHighTemplar(userId: string): Promise<boolean> {
     const role = await getUserRole(userId)
     if (!role) return false
 
-    const highRoles: UserRole[] = ['high_templar', 'reporter', 'admin']
+    const highRoles: UserRole[] = ['high_templar', 'admin']
     return highRoles.includes(role)
   } catch (error) {
     console.error('High Templar 권한 확인 실패:', error)
@@ -75,7 +75,7 @@ export async function isHighTemplar(userId: string): Promise<boolean> {
 
 /**
  * Arbiter 이상의 권한인지 확인
- * (arbiter, high_templar, reporter, admin)
+ * (arbiter, high_templar, admin)
  *
  * @param userId - 사용자 ID
  * @returns Arbiter 이상 여부
@@ -88,7 +88,7 @@ export async function isArbiter(userId: string): Promise<boolean> {
     const role = await getUserRole(userId)
     if (!role) return false
 
-    const arbiterRoles: UserRole[] = ['arbiter', 'high_templar', 'reporter', 'admin']
+    const arbiterRoles: UserRole[] = ['arbiter', 'high_templar', 'admin']
     return arbiterRoles.includes(role)
   } catch (error) {
     console.error('Arbiter 권한 확인 실패:', error)

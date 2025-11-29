@@ -275,7 +275,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <CommentSection entityType="hand" entityId={hand.id} />
+                <CommentSection handId={hand.id} />
               </CardContent>
             </Card>
           </div>

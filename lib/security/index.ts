@@ -234,14 +234,14 @@ export function logSecurityEvent(
           'low'
 
         logSecurityEventToDb({
-          event_type: event,
+          eventType: event,
           severity,
-          user_id: (details.userId as string) || null,
-          ip_address: (details.ipAddress as string) || null,
-          user_agent: (details.userAgent as string) || null,
-          request_method: (details.method as string) || null,
-          request_path: (details.path as string) || null,
-          details: details as Record<string, any>,
+          userId: (details.userId as string) || null,
+          ipAddress: (details.ipAddress as string) || null,
+          userAgent: (details.userAgent as string) || null,
+          requestMethod: (details.method as string) || null,
+          requestPath: (details.path as string) || null,
+          details: details as Record<string, unknown> | null,
         })
       })
     } catch (error) {
