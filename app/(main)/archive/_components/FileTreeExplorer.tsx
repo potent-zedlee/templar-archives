@@ -15,7 +15,47 @@ import { motion, AnimatePresence } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Search, X, FolderTree, ChevronDown, ChevronUp } from 'lucide-react'
+import {
+  Search,
+  X,
+  FolderTree,
+  ChevronsUpDown,
+  ChevronsDownUp,
+  Filter,
+  CalendarDays,
+  MapPin,
+  Video,
+  ChevronDown,
+  RotateCcw,
+} from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import { format } from 'date-fns'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { Button } from '@/components/ui/button'
 import { TreeNode } from './TreeNode'
 import { TreeContextMenu } from './TreeContextMenu'
@@ -25,6 +65,21 @@ import {
   type TreeNodeType as NodeType,
 } from '@/stores/archive-tree-store'
 import type { Tournament, Event, Stream, BreadcrumbItem } from '@/lib/types/archive'
+
+interface FilterConfig {
+  // Date range
+  selectedDateRange: { start: string | null; end: string | null }
+  onDateRangeChange: (range: { start: string | null; end: string | null }) => void
+  // Location
+  selectedLocation: string | null
+  onLocationChange: (location: string | null) => void
+  locations: { location: string; count: number }[]
+  // Has hands filter
+  hasHandsOnly: boolean
+  onHasHandsOnlyChange: (value: boolean) => void
+  // Reset
+  onReset: () => void
+}
 
 interface FileTreeExplorerProps {
   tournaments: Tournament[]
@@ -36,6 +91,7 @@ interface FileTreeExplorerProps {
   ) => void
   onBreadcrumbChange?: (path: BreadcrumbItem[]) => void
   onContextMenu?: (node: TreeNodeType, e: React.MouseEvent) => void
+  filterConfig?: FilterConfig
 }
 
 /**
@@ -160,9 +216,12 @@ export function FileTreeExplorer({
   onNodeSelect,
   onBreadcrumbChange,
   onContextMenu,
+  filterConfig,
 }: FileTreeExplorerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [dateOpen, setDateOpen] = useState(false)
 
   // Context menu state
   const [contextMenuOpen, setContextMenuOpen] = useState(false)
@@ -453,55 +512,224 @@ export function FileTreeExplorer({
       role="tree"
       aria-label="Archive navigation"
     >
-      {/* 헤더 */}
+      {/* 헤더 - 검색창 + Expand/Collapse 토글 */}
       <div className="flex-shrink-0 p-3 border-b border-border">
-        {/* 검색 */}
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search archive... (Ctrl+F)"
-            value={treeSearchQuery}
-            onChange={handleSearchChange}
-            className="pl-8 pr-8 h-8 text-sm"
-          />
-          {treeSearchQuery && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6"
-              onClick={clearSearch}
-            >
-              <X className="w-3.5 h-3.5" />
-            </Button>
-          )}
-        </div>
+        <div className="flex items-center gap-1.5">
+          {/* 검색창 */}
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search... (⌘F)"
+              value={treeSearchQuery}
+              onChange={handleSearchChange}
+              className="pl-8 pr-8 h-8 text-sm"
+            />
+            {treeSearchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6"
+                onClick={clearSearch}
+              >
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            )}
+          </div>
 
-        {/* 액션 버튼 */}
-        <div className="flex items-center gap-1 mt-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs flex-1"
-            onClick={expandAll}
-            title="Expand all"
-          >
-            <ChevronDown className="w-3.5 h-3.5 mr-1" />
-            Expand All
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-xs flex-1"
-            onClick={collapseAll}
-            title="Collapse all"
-          >
-            <ChevronUp className="w-3.5 h-3.5 mr-1" />
-            Collapse All
-          </Button>
+          {/* Expand/Collapse 토글 버튼 */}
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                  onClick={expandAll}
+                >
+                  <ChevronsUpDown className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Expand All</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 flex-shrink-0"
+                  onClick={collapseAll}
+                >
+                  <ChevronsDownUp className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Collapse All</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
+
+      {/* 필터 섹션 (Collapsible) */}
+      {filterConfig && (
+        <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+          <CollapsibleTrigger asChild>
+            <button className="flex items-center justify-between w-full px-3 py-2 text-xs border-b border-border hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5" />
+                <span className="font-medium">Filters</span>
+                {(() => {
+                  const count = [
+                    filterConfig.selectedDateRange.start || filterConfig.selectedDateRange.end,
+                    filterConfig.selectedLocation,
+                    filterConfig.hasHandsOnly,
+                  ].filter(Boolean).length
+                  return count > 0 ? (
+                    <Badge variant="default" className="h-4 px-1 text-[10px]">
+                      {count}
+                    </Badge>
+                  ) : null
+                })()}
+              </div>
+              <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', filtersOpen && 'rotate-180')} />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="p-3 space-y-3 border-b border-border bg-muted/30">
+              {/* 날짜 범위 */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                  <CalendarDays className="w-3 h-3" />
+                  Date Range
+                </Label>
+                <Popover open={dateOpen} onOpenChange={setDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start h-8 text-xs"
+                    >
+                      {filterConfig.selectedDateRange.start || filterConfig.selectedDateRange.end ? (
+                        <span>
+                          {filterConfig.selectedDateRange.start
+                            ? format(new Date(filterConfig.selectedDateRange.start), 'MMM d, yyyy')
+                            : 'Start'}{' '}
+                          -{' '}
+                          {filterConfig.selectedDateRange.end
+                            ? format(new Date(filterConfig.selectedDateRange.end), 'MMM d, yyyy')
+                            : 'End'}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">Any date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start" side="right">
+                    <div className="p-3 space-y-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Start Date</Label>
+                        <Calendar
+                          mode="single"
+                          selected={
+                            filterConfig.selectedDateRange.start
+                              ? new Date(filterConfig.selectedDateRange.start)
+                              : undefined
+                          }
+                          onSelect={(date) =>
+                            filterConfig.onDateRangeChange({
+                              ...filterConfig.selectedDateRange,
+                              start: date ? date.toISOString().split('T')[0] : null,
+                            })
+                          }
+                          className="rounded-md border"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">End Date</Label>
+                        <Calendar
+                          mode="single"
+                          selected={
+                            filterConfig.selectedDateRange.end
+                              ? new Date(filterConfig.selectedDateRange.end)
+                              : undefined
+                          }
+                          onSelect={(date) =>
+                            filterConfig.onDateRangeChange({
+                              ...filterConfig.selectedDateRange,
+                              end: date ? date.toISOString().split('T')[0] : null,
+                            })
+                          }
+                          className="rounded-md border"
+                        />
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* 위치 선택 */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  Location
+                </Label>
+                <Select
+                  value={filterConfig.selectedLocation || ''}
+                  onValueChange={(value) => filterConfig.onLocationChange(value || null)}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Any location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Any location</SelectItem>
+                    {filterConfig.locations.map(({ location, count }) => (
+                      <SelectItem key={location} value={location}>
+                        {location} ({count})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Has Hands 필터 */}
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-muted-foreground flex items-center gap-1 cursor-pointer">
+                  <Video className="w-3 h-3" />
+                  Has analyzed hands
+                </Label>
+                <Switch
+                  checked={filterConfig.hasHandsOnly}
+                  onCheckedChange={filterConfig.onHasHandsOnlyChange}
+                  className="scale-90"
+                />
+              </div>
+
+              {/* Reset 버튼 */}
+              {(filterConfig.selectedDateRange.start ||
+                filterConfig.selectedDateRange.end ||
+                filterConfig.selectedLocation ||
+                filterConfig.hasHandsOnly) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full h-7 text-xs text-muted-foreground"
+                  onClick={filterConfig.onReset}
+                >
+                  <RotateCcw className="w-3 h-3 mr-1" />
+                  Reset filters
+                </Button>
+              )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
 
       {/* 트리 컨텐츠 */}
       <ScrollArea className="flex-1 h-0 min-h-0">

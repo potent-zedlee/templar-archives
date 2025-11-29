@@ -17,7 +17,6 @@ import { FileTreeExplorer } from "../_components/FileTreeExplorer"
 import { ArchiveDashboard } from "../_components/ArchiveDashboard"
 import { HandsListPanel } from "../_components/HandsListPanel"
 import { CategoryTabs } from "../_components/CategoryTabs"
-import { QuickFiltersBar } from "../_components/QuickFiltersBar"
 import { useTournamentsQuery } from "@/lib/queries/archive-queries"
 import type { Tournament, Event, Stream, BreadcrumbItem, TournamentCategory } from "@/lib/types/archive"
 import { GridSkeleton } from "@/components/ui/skeletons/GridSkeleton"
@@ -60,10 +59,6 @@ export default function ArchiveTournamentPage() {
     start: string | null
     end: string | null
   }>({ start: null, end: null })
-  const [selectedHandRange, setSelectedHandRange] = useState<{
-    min: number | null
-    max: number | null
-  }>({ min: null, max: null })
   const [hasHandsOnly, setHasHandsOnly] = useState(false)
 
   // ============================================================
@@ -159,7 +154,6 @@ export default function ArchiveTournamentPage() {
     setSelectedCategory(null)
     setSelectedLocation(null)
     setSelectedDateRange({ start: null, end: null })
-    setSelectedHandRange({ min: null, max: null })
     setHasHandsOnly(false)
   }
 
@@ -182,9 +176,9 @@ export default function ArchiveTournamentPage() {
       <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
         {/* ========== Desktop Header ========== */}
         <header className="hidden lg:block flex-shrink-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          {/* Top Row: Sidebar Toggle + Breadcrumb + Quick Filters */}
-          <div className="flex items-center justify-between h-11 px-4">
-            {/* Left: Sidebar toggle + Breadcrumb */}
+          {/* Top Row: Sidebar Toggle + Breadcrumb */}
+          <div className="flex items-center h-11 px-4">
+            {/* Sidebar toggle + Breadcrumb */}
             <div className="flex items-center gap-2 min-w-0">
               <Button
                 variant="ghost"
@@ -209,20 +203,6 @@ export default function ArchiveTournamentPage() {
                 />
               </div>
             </div>
-
-            {/* Right: Quick Filters */}
-            <QuickFiltersBar
-              selectedDateRange={selectedDateRange}
-              onDateRangeChange={setSelectedDateRange}
-              selectedLocation={selectedLocation}
-              onLocationChange={setSelectedLocation}
-              locations={locations}
-              selectedHandRange={selectedHandRange}
-              onHandRangeChange={setSelectedHandRange}
-              hasHandsOnly={hasHandsOnly}
-              onHasHandsOnlyChange={setHasHandsOnly}
-              onReset={handleResetFilters}
-            />
           </div>
 
           {/* Bottom Row: Category Tabs */}
@@ -256,6 +236,16 @@ export default function ArchiveTournamentPage() {
                     <FileTreeExplorer
                       tournaments={filteredTournaments}
                       onNodeSelect={handleNodeSelect}
+                      filterConfig={{
+                        selectedDateRange,
+                        onDateRangeChange: setSelectedDateRange,
+                        selectedLocation,
+                        onLocationChange: setSelectedLocation,
+                        locations,
+                        hasHandsOnly,
+                        onHasHandsOnlyChange: setHasHandsOnly,
+                        onReset: handleResetFilters,
+                      }}
                     />
                   </aside>
                 </ResizablePanel>
