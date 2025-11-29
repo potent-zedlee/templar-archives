@@ -420,14 +420,14 @@ async function getStreamsByPipelineStatus(
     if (status === 'all') {
       q = query(
         streamsRef,
-        orderBy('pipelineUpdatedAt', 'desc'),
+        orderBy('pipeline_updated_at', 'desc'),
         limit(pageLimit)
       )
     } else {
       q = query(
         streamsRef,
-        where('pipelineStatus', '==', status),
-        orderBy('pipelineUpdatedAt', 'desc'),
+        where('pipeline_status', '==', status),
+        orderBy('pipeline_updated_at', 'desc'),
         limit(pageLimit)
       )
     }
@@ -440,22 +440,22 @@ async function getStreamsByPipelineStatus(
         id: docSnapshot.id,
         name: data.name || '',
         description: data.description,
-        videoUrl: data.videoUrl,
-        gcsUri: data.gcsUri,
-        pipelineStatus: data.pipelineStatus || 'pending',
-        pipelineProgress: data.pipelineProgress || 0,
-        pipelineError: data.pipelineError,
-        pipelineUpdatedAt: data.pipelineUpdatedAt?.toDate(),
-        currentJobId: data.currentJobId,
-        lastAnalysisAt: data.lastAnalysisAt?.toDate(),
-        analysisAttempts: data.analysisAttempts || 0,
-        handCount: data.stats?.handsCount || 0,
-        eventId: data.eventId,
-        eventName: data.eventName,
-        tournamentId: data.tournamentId,
-        tournamentName: data.tournamentName,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
+        videoUrl: data.video_url,
+        gcsUri: data.gcs_uri,
+        pipelineStatus: data.pipeline_status || 'pending',
+        pipelineProgress: data.pipeline_progress || 0,
+        pipelineError: data.pipeline_error,
+        pipelineUpdatedAt: data.pipeline_updated_at?.toDate(),
+        currentJobId: data.current_job_id,
+        lastAnalysisAt: data.last_analysis_at?.toDate(),
+        analysisAttempts: data.analysis_attempts || 0,
+        handCount: data.hand_count || 0,
+        eventId: data.sub_event_id || data.event_id,
+        eventName: data.event_name,
+        tournamentId: data.tournament_id,
+        tournamentName: data.tournament_name,
+        createdAt: data.created_at?.toDate() || new Date(),
+        updatedAt: data.updated_at?.toDate() || new Date(),
       }
     })
   } catch (error) {
@@ -477,7 +477,7 @@ async function getPipelineStatusCounts(): Promise<PipelineStatusCounts> {
     ]
 
     const countPromises = statuses.map(async (status) => {
-      const q = query(streamsRef, where('pipelineStatus', '==', status))
+      const q = query(streamsRef, where('pipeline_status', '==', status))
       const snapshot = await getCountFromServer(q)
       return { status, count: snapshot.data().count }
     })
@@ -556,16 +556,16 @@ export function useUpdatePipelineStatus() {
       const streamRef = doc(firestore, 'streams', streamId)
 
       const updateData: Record<string, unknown> = {
-        pipelineStatus: status,
-        pipelineUpdatedAt: Timestamp.now(),
+        pipeline_status: status,
+        pipeline_updated_at: Timestamp.now(),
       }
 
       if (error) {
-        updateData.pipelineError = error
+        updateData.pipeline_error = error
       }
 
       if (status === 'analyzing') {
-        updateData.pipelineProgress = 0
+        updateData.pipeline_progress = 0
       }
 
       await updateDoc(streamRef, updateData)
@@ -597,14 +597,14 @@ export function useRetryAnalysis() {
         throw new Error('스트림을 찾을 수 없습니다')
       }
 
-      const currentAttempts = streamDoc.data().analysisAttempts || 0
+      const currentAttempts = streamDoc.data().analysis_attempts || 0
 
       await updateDoc(streamRef, {
-        pipelineStatus: 'pending',
-        pipelineProgress: 0,
-        pipelineError: null,
-        pipelineUpdatedAt: Timestamp.now(),
-        analysisAttempts: currentAttempts + 1,
+        pipeline_status: 'pending',
+        pipeline_progress: 0,
+        pipeline_error: null,
+        pipeline_updated_at: Timestamp.now(),
+        analysis_attempts: currentAttempts + 1,
       })
 
       return { streamId, attempts: currentAttempts + 1 }
@@ -660,12 +660,12 @@ export function useClassifyStream() {
       const streamRef = doc(firestore, 'streams', streamId)
       await updateDoc(streamRef, {
         sub_event_id: eventId,
-        tournamentId: tournamentId,
-        tournamentName: tournamentData.name,
-        eventId: eventId,
-        eventName: eventData.name,
-        pipelineStatus: 'pending' as PipelineStatus,
-        pipelineUpdatedAt: Timestamp.now(),
+        tournament_id: tournamentId,
+        tournament_name: tournamentData.name,
+        event_id: eventId,
+        event_name: eventData.name,
+        pipeline_status: 'pending' as PipelineStatus,
+        pipeline_updated_at: Timestamp.now(),
       })
 
       return {
