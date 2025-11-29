@@ -681,14 +681,14 @@ export function FileTreeExplorer({
                   Location
                 </Label>
                 <Select
-                  value={filterConfig.selectedLocation || ''}
-                  onValueChange={(value) => filterConfig.onLocationChange(value || null)}
+                  value={filterConfig.selectedLocation || '__all__'}
+                  onValueChange={(value) => filterConfig.onLocationChange(value === '__all__' ? null : value)}
                 >
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder="Any location" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any location</SelectItem>
+                    <SelectItem value="__all__">Any location</SelectItem>
                     {filterConfig.locations.map(({ location, count }) => (
                       <SelectItem key={location} value={location}>
                         {location} ({count})

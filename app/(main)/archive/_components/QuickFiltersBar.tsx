@@ -233,16 +233,16 @@ export function QuickFiltersBar({
               <PopoverContent className="w-56 p-0" align="start">
                 <div className="p-2">
                   <Select
-                    value={selectedLocation || ''}
+                    value={selectedLocation || '__all__'}
                     onValueChange={(value) =>
-                      onLocationChange(value || null)
+                      onLocationChange(value === '__all__' ? null : value)
                     }
                   >
                     <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Select location" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Any location</SelectItem>
+                      <SelectItem value="__all__">Any location</SelectItem>
                       {locations.map(({ location, count }) => (
                         <SelectItem key={location} value={location}>
                           {location} ({count})
