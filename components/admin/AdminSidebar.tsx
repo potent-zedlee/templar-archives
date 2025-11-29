@@ -11,6 +11,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarFooter,
 } from "@/components/ui/sidebar"
 import {
@@ -24,9 +27,22 @@ import {
   Radio,
   Activity,
   History,
+  Workflow,
 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
-const adminMenuItems = [
+interface MenuItem {
+  title: string
+  href: string
+  icon: LucideIcon
+  subItems?: {
+    title: string
+    href: string
+    icon: LucideIcon
+  }[]
+}
+
+const adminMenuItems: MenuItem[] = [
   {
     title: "Dashboard",
     href: "/admin/dashboard",
@@ -41,6 +57,13 @@ const adminMenuItems = [
     title: "Archive",
     href: "/admin/archive",
     icon: Archive,
+    subItems: [
+      {
+        title: "파이프라인",
+        href: "/admin/archive/pipeline",
+        icon: Workflow,
+      },
+    ],
   },
   {
     title: "Edit Requests",
@@ -116,6 +139,27 @@ export function AdminSidebar() {
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
+                    {/* Sub Items */}
+                    {item.subItems && item.subItems.length > 0 && (
+                      <SidebarMenuSub>
+                        {item.subItems.map((subItem) => {
+                          const SubIcon = subItem.icon
+                          return (
+                            <SidebarMenuSubItem key={subItem.href}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === subItem.href}
+                              >
+                                <Link href={subItem.href}>
+                                  <SubIcon className="h-4 w-4" />
+                                  <span>{subItem.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          )
+                        })}
+                      </SidebarMenuSub>
+                    )}
                   </SidebarMenuItem>
                 )
               })}
