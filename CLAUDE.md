@@ -365,6 +365,46 @@ const useArchiveDataStore = create<ArchiveDataStore>()
 - 포지션: BTN, SB, BB, CO, UTG
 - 통계: VPIP, PFR, 3-Bet, ATS
 
+### Firestore 필드명 규칙
+
+**핸드 관련 컬렉션 (snake_case)**:
+```typescript
+// FirestoreHand - 모든 필드 snake_case
+stream_id, event_id, tournament_id, player_ids
+board_flop, board_turn, board_river, pot_size
+small_blind, big_blind, pot_preflop, pot_flop, pot_turn, pot_river
+video_timestamp_start, video_timestamp_end, job_id, thumbnail_url
+created_at, updated_at, ai_summary
+
+// HandEngagement
+likes_count, dislikes_count, bookmarks_count
+
+// Stream 파이프라인 필드
+pipeline_status, pipeline_progress, pipeline_error
+pipeline_updated_at, current_job_id, last_analysis_at, analysis_attempts
+```
+
+**기존 컬렉션 (camelCase)** - 레거시 호환:
+```typescript
+// Tournament, Event, Player, User 등
+createdAt, updatedAt, startDate, endDate
+videoUrl, photoUrl, avatarUrl
+totalWinnings, normalizedName
+```
+
+**TypeScript 인터페이스 매핑 패턴**:
+```typescript
+// Firestore snake_case → TypeScript camelCase 변환
+const stream: PipelineStream = {
+  pipelineStatus: data.pipeline_status || 'pending',
+  pipelineProgress: data.pipeline_progress || 0,
+  createdAt: data.created_at?.toDate(),
+}
+```
+
+> ⚠️ **주의**: 핸드 관련 쿼리/업데이트 시 반드시 snake_case 사용
+> 타입 정의: `lib/firestore-types.ts`
+
 ---
 
 ## 참고 문서
@@ -381,5 +421,4 @@ const useArchiveDataStore = create<ArchiveDataStore>()
 ---
 
 **마지막 업데이트**: 2025-11-29
-**문서 버전**: 5.0 (Admin Archive Pipeline Dashboard 추가, Stream 파이프라인 상태 시스템)
-- camelCase 필드들을 snake_case로
+**문서 버전**: 5.1 (Firestore 필드명 규칙 명시)
