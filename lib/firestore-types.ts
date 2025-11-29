@@ -1085,4 +1085,8 @@ export const COLLECTION_PATHS = {
   ADMIN_LOGS: 'adminLogs',
   /** Tournament categories (카테고리 관리) */
   TOURNAMENT_CATEGORIES: 'tournamentCategories',
+  /** Community posts (커뮤니티 게시글) */
+  POSTS: 'posts',
+  /** Post comments (게시글 댓글 서브컬렉션) */
+  POST_COMMENTS: (postId: string) => `posts/${postId}/comments`,
 } as const
