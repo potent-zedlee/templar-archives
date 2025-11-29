@@ -22,7 +22,7 @@ const EDIT_TYPE_LABELS: Record<string, string> = {
   "actions": "Actions"
 }
 
-export default function editrequestsClient() {
+export default function EditRequestsClient() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const [selectedRequest, setSelectedRequest] = useState<HandEditRequest | null>(null)

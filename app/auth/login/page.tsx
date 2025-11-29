@@ -7,7 +7,7 @@ import { useAuth } from "@/components/layout/AuthProvider"
 import { Loader2, AlertTriangle, ExternalLink } from "lucide-react"
 import { useWebViewDetection, getOpenInBrowserMessage } from "@/lib/utils/webview-detector"
 
-export default function loginClient() {
+export default function LoginClient() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)

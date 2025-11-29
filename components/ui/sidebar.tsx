@@ -607,12 +607,8 @@ function SidebarMenuSkeleton({
   showIcon?: boolean
 }) {
   // Random width between 50 to 90%.
-  // Use a stable random seed based on component creation time to avoid purity warning
-  const width = React.useMemo(() => {
-    // Generate a stable random-like value using a simple hash
-    const seed = Date.now() % 40
-    return `${50 + seed}%`
-  }, [])
+  // Use a stable width to avoid random flashing (always 70%)
+  const width = React.useMemo(() => '70%', [])
 
   return (
     <div
