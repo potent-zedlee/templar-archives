@@ -74,7 +74,10 @@ export default function CategoriesPage() {
   // Update local categories when data changes
   useEffect(() => {
     if (categories) {
+      // Intentional: Sync React Query data with local state for drag & drop functionality
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalCategories(categories)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasChanges(false)
     }
   }, [categories])
