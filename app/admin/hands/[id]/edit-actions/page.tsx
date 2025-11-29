@@ -79,6 +79,7 @@ export default function EditHandActionsPage() {
   // Check admin access
   useEffect(() => {
     checkAccess()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   // Load hand and players
@@ -86,6 +87,7 @@ export default function EditHandActionsPage() {
     if (hasAccess && handId) {
       loadHandData()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasAccess, handId])
 
   async function checkAccess() {

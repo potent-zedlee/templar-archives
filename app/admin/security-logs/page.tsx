@@ -140,13 +140,15 @@ export default function SecurityLogsPage() {
     })
 
     return () => unsubscribe()
-  }, [router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Reload when filters or page changes
   useEffect(() => {
     if (auth.currentUser && isAdmin(auth.currentUser.email)) {
       loadSecurityEvents()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, eventTypeFilter, severityFilter])
 
   const loadSecurityEvents = async () => {

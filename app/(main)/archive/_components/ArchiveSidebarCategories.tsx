@@ -9,7 +9,7 @@
  * - Flowbite 패턴 적용
  */
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { CategoryLogo } from '@/components/common/CategoryLogo'
 import { useActiveCategoriesQuery } from '@/lib/queries/category-queries'
@@ -46,7 +46,7 @@ export function ArchiveSidebarCategories({
   }, [allCategories, gameType])
 
   // Get children for a parent category
-  const getChildren = (parentId: string) => {
+  const getChildren = useCallback((parentId: string) => {
     let children = allCategories.filter(cat => cat.parent_id === parentId)
 
     // Game type filter for children
@@ -55,7 +55,7 @@ export function ArchiveSidebarCategories({
     }
 
     return children.sort((a, b) => a.name.localeCompare(b.name))
-  }
+  }, [allCategories, gameType])
 
   // Auto-expand parent when child category is selected
   useEffect(() => {
@@ -83,7 +83,7 @@ export function ArchiveSidebarCategories({
         })
       }
     }
-  }, [selectedCategory, allCategories])
+  }, [selectedCategory, allCategories, getChildren])
 
   // Toggle parent expansion
   const toggleParent = (parentId: string) => {

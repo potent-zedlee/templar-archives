@@ -153,7 +153,7 @@ export function useArchiveNavigation({
     })
 
     return items
-  }, [navigationLevel, filteredTournaments, unsortedVideos, tournaments, currentTournamentId, currentSubEventId, searchQuery, advancedFilters, sortBy])
+  }, [navigationLevel, filteredTournaments, tournaments, currentTournamentId, currentSubEventId, searchQuery, advancedFilters, sortBy])
 
   // Handle breadcrumb navigation
   const handleBreadcrumbNavigate = (item: { id: string; name: string; type: 'home' | 'tournament' | 'event' } | null) => {

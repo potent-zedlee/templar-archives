@@ -105,7 +105,8 @@ export default function UsersClient() {
 
   useEffect(() => {
     checkAccess()
-  }, [checkAccess])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading])
 
   function handleBanUser() {
     if (!selectedUser || !user) return

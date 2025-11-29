@@ -49,6 +49,7 @@ export default function DeleteDataPage() {
     }
 
     loadExistingRequest()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user])
 
   const loadExistingRequest = async () => {

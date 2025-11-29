@@ -54,6 +54,7 @@ export function EditRequestDialog({ handId, open, onOpenChange }: EditRequestDia
     if (open && handId) {
       loadHandData()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, handId])
 
   async function loadHandData() {

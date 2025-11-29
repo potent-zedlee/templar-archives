@@ -152,6 +152,7 @@ export function AnalyzeVideoDialog({
       resetDialog()
       uploadCleanup()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
   // day가 바뀌면 업로드 상태 정리
@@ -160,6 +161,7 @@ export function AnalyzeVideoDialog({
       console.log('[AnalyzeVideoDialog] Day changed - cleaning up upload state')
       uploadCleanup()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [day?.id])
 
   // DB 상태와 LocalStorage 상태 동기화
@@ -289,6 +291,7 @@ export function AnalyzeVideoDialog({
       return () => clearTimeout(timer)
     }
     return // Explicit return for TypeScript
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, jobId])
 
   // Add player

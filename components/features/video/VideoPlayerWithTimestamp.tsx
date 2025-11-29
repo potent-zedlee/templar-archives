@@ -152,7 +152,10 @@ export function VideoPlayerWithTimestamp({
         playerRef.current.destroy()
       }
     }
-  }, [videoId, onTimeUpdate])
+    // onDurationUpdate is a callback prop that changes, but this effect only needs to run when videoId changes
+    // The callbacks are called with current values, so we don't need to re-run the effect when they change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoId])
 
   // 비디오가 없을 때
   if (!url) {

@@ -63,6 +63,7 @@ export function SubEventDialog({
     if (isOpen && editingSubEventId) {
       loadSubEventData()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, editingSubEventId])
 
   // Reset form when dialog closes

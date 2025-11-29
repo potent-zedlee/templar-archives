@@ -10,7 +10,7 @@
  * Firestore 버전으로 마이그레이션됨
  */
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   collection,
   query,
@@ -141,13 +141,14 @@ export default function AdminArchivePage() {
     })
 
     return () => unsubscribe()
-  }, [router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Load tournaments
   useEffect(() => {
     if (!isUserAdmin) return
     loadTournaments()
-  }, [isUserAdmin])
+  }, [isUserAdmin, loadTournaments])
 
   // Reload streams when status filter changes
   useEffect(() => {
@@ -161,6 +162,7 @@ export default function AdminArchivePage() {
         }
       }
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter])
 
   // Filter and sort tournaments
@@ -218,7 +220,7 @@ export default function AdminArchivePage() {
     setFilteredTournaments(sorted)
   }, [tournaments, categoryFilter, gameTypeFilter, searchQuery, sortField, sortDirection])
 
-  const loadTournaments = async () => {
+  const loadTournaments = useCallback(async () => {
     setLoading(true)
     try {
       const tournamentsRef = collection(db, COLLECTION_PATHS.TOURNAMENTS)
@@ -251,7 +253,7 @@ export default function AdminArchivePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   const handleSort = (field: AdminArchiveSortField) => {
     if (sortField === field) {

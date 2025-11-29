@@ -42,6 +42,8 @@ export const TypewriterEffect = ({
         }
       );
     }
+    // animate is a stable function from useAnimate hook
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInView]);
 
   const renderWords = () => {

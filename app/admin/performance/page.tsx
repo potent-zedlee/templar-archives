@@ -78,7 +78,8 @@ export default function PerformancePage() {
 
   useEffect(() => {
     checkAccess()
-  }, [checkAccess])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading])
 
   function handleClearHistory() {
     if (confirm("Are you sure you want to clear all performance metrics history?")) {

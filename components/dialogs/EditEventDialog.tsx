@@ -62,6 +62,7 @@ export function EditEventDialog({
     if (isOpen && eventId) {
       loadEventData()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, eventId])
 
   // Reset form when dialog closes

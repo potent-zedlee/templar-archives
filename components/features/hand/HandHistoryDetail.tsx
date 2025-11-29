@@ -80,6 +80,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
     if (handId) {
       loadLikeStatus()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handId, user?.id])
 
   // 북마크 상태 로드
@@ -87,6 +88,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
     if (handId) {
       loadBookmarkStatus()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handId, user?.id])
 
   const loadLikeStatus = async () => {

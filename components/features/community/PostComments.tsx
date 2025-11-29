@@ -42,6 +42,7 @@ export function PostComments({ handId, onCommentsCountChange }: HandCommentsProp
 
   useEffect(() => {
     loadComments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handId])
 
   useEffect(() => {

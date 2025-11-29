@@ -53,6 +53,7 @@ export function BookmarkDialog({
     if (open && userId) {
       loadFolders()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, userId])
 
   useEffect(() => {

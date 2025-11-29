@@ -63,6 +63,7 @@ export function DayDialog({
     if (isOpen && editingDayId) {
       loadDayData()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, editingDayId])
 
   const loadDayData = async () => {
