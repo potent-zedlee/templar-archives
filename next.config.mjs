@@ -10,7 +10,7 @@ const nextConfig = {
   output: 'standalone',
   outputFileTracingRoot: import.meta.dirname,
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   // React 19 Compiler - 자동 메모이제이션 (useMemo/useCallback 불필요)
   reactCompiler: true,
@@ -29,11 +29,6 @@ const nextConfig = {
   },
   images: {
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.supabase.co',
-        pathname: '/storage/v1/object/**',
-      },
       {
         protocol: 'https',
         hostname: 'i.ytimg.com',
@@ -82,7 +77,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' https://diopilmkehygiqpizvga.supabase.co https://api.anthropic.com wss://diopilmkehygiqpizvga.supabase.co https://kan-backend-26yea7ixra-uc.a.run.app https://storage.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://firestore.googleapis.com",
+              "connect-src 'self' https://api.anthropic.com https://storage.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://firestore.googleapis.com",
               "media-src 'self' https: blob:",
               "worker-src 'self' blob:",
               "frame-src 'self' https://www.youtube.com https://accounts.google.com https://*.firebaseapp.com",

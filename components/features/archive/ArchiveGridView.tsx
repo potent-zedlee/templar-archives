@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoreVertical, Edit, Trash, FolderPlus, FolderInput, CheckSquare } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion } from "motion/react"
 import type { FolderItem } from "@/lib/types/archive"
 import Image from "next/image"
 import { ArchiveEventCard } from "@/components/features/archive/ArchiveEventCard"

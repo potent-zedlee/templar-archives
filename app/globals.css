@@ -1,8 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "flowbite";
-
-@plugin "flowbite/plugin";
 
 /* ============================================
    TEMPLAR ARCHIVES - MINIMAL/CLEAN DESIGN SYSTEM
