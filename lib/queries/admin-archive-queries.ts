@@ -618,3 +618,71 @@ export function useRetryAnalysis() {
     },
   })
 }
+
+/**
+ * 스트림 분류 뮤테이션
+ */
+export function useClassifyStream() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      streamId,
+      tournamentId,
+      eventId,
+    }: {
+      streamId: string
+      tournamentId: string
+      eventId: string
+    }) => {
+      // 토너먼트와 이벤트 정보 조회
+      const tournamentRef = doc(firestore, 'tournaments', tournamentId)
+      const eventRef = doc(firestore, 'sub_events', eventId)
+
+      const [tournamentDoc, eventDoc] = await Promise.all([
+        getDoc(tournamentRef),
+        getDoc(eventRef),
+      ])
+
+      if (!tournamentDoc.exists()) {
+        throw new Error('토너먼트를 찾을 수 없습니다')
+      }
+
+      if (!eventDoc.exists()) {
+        throw new Error('이벤트를 찾을 수 없습니다')
+      }
+
+      const tournamentData = tournamentDoc.data()
+      const eventData = eventDoc.data()
+
+      // 스트림 업데이트
+      const streamRef = doc(firestore, 'streams', streamId)
+      await updateDoc(streamRef, {
+        sub_event_id: eventId,
+        tournamentId: tournamentId,
+        tournamentName: tournamentData.name,
+        eventId: eventId,
+        eventName: eventData.name,
+        pipelineStatus: 'pending' as PipelineStatus,
+        pipelineUpdatedAt: Timestamp.now(),
+      })
+
+      return {
+        streamId,
+        tournamentId,
+        tournamentName: tournamentData.name,
+        eventId,
+        eventName: eventData.name,
+      }
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: adminArchiveQueryKeys.all })
+      queryClient.invalidateQueries({ queryKey: adminArchiveKeys.all })
+      toast.success(`스트림이 분류되었습니다: ${data.tournamentName} > ${data.eventName}`)
+    },
+    onError: (error) => {
+      console.error('[useClassifyStream] Error:', error)
+      toast.error('스트림 분류 실패')
+    },
+  })
+}
