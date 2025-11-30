@@ -108,14 +108,14 @@ export function useAddPlayerMutation(handId: string) {
 
       // Optimistically update (Firestore embedded array)
       const newPlayer: HandPlayer = {
-        id: playerId, // Firestore: player ID를 직접 사용 (별도 hand_player ID 없음)
-        hand_id: handId,
-        player_id: playerId,
+        id: playerId, // Firestore: player ID를 직접 사용 (별도 handPlayer ID 없음)
+        handId: handId,
+        playerId: playerId,
         position: position || null,
         cards: cards || null,
-        starting_stack: startingStack || 0,
-        ending_stack: 0,
-        created_at: new Date().toISOString(),
+        startingStack: startingStack || 0,
+        endingStack: 0,
+        createdAt: new Date().toISOString(),
       }
 
       queryClient.setQueryData<HandPlayer[]>(
@@ -167,7 +167,7 @@ export function useRemovePlayerMutation(handId: string) {
       // Optimistically update (remove from players array)
       queryClient.setQueryData<HandPlayer[]>(
         handPlayersKeys.byHand(handId),
-        (old) => (old || []).filter(player => player.player_id !== playerId)
+        (old) => (old || []).filter(player => player.playerId !== playerId)
       )
 
       return { previousPlayers }
@@ -209,8 +209,8 @@ export function useUpdatePlayerMutation(handId: string) {
       data: {
         position?: string
         cards?: string
-        starting_stack?: number
-        ending_stack?: number
+        startingStack?: number
+        endingStack?: number
       }
     }) => {
       return await updatePlayerInHand(handId, playerId, data)
@@ -227,13 +227,13 @@ export function useUpdatePlayerMutation(handId: string) {
         handPlayersKeys.byHand(handId),
         (old) =>
           (old || []).map((player) =>
-            player.player_id === playerId
+            player.playerId === playerId
               ? {
                   ...player,
                   position: data.position ?? player.position,
                   cards: data.cards ?? player.cards,
-                  starting_stack: data.starting_stack ?? player.starting_stack,
-                  ending_stack: data.ending_stack ?? player.ending_stack,
+                  startingStack: data.startingStack ?? player.startingStack,
+                  endingStack: data.endingStack ?? player.endingStack,
                 }
               : player
           )

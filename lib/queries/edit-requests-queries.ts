@@ -149,16 +149,16 @@ async function fetchUserEditRequests({
             // Fetch stream details
             const streamRef = doc(
               firestore,
-              `tournaments/${handData.tournament_id}/events/${handData.event_id}/streams/${handData.stream_id}`
+              `tournaments/${handData.tournamentId}/events/${handData.eventId}/streams/${handData.streamId}`
             )
             const streamSnap = await getDoc(streamRef)
 
             // Fetch event details
-            const eventRef = doc(firestore, `tournaments/${handData.tournament_id}/events/${handData.event_id}`)
+            const eventRef = doc(firestore, `tournaments/${handData.tournamentId}/events/${handData.eventId}`)
             const eventSnap = await getDoc(eventRef)
 
             // Fetch tournament details
-            const tournamentRef = doc(firestore, `tournaments/${handData.tournament_id}`)
+            const tournamentRef = doc(firestore, `tournaments/${handData.tournamentId}`)
             const tournamentSnap = await getDoc(tournamentRef)
 
             return {

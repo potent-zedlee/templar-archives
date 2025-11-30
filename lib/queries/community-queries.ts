@@ -46,11 +46,11 @@ const commentConverter = {
       id: snapshot.id,
       content: data.content,
       author: data.author,
-      parentId: data.parent_id,
+      parentId: data.parentId,
       handId: handId,
       likesCount: data.likesCount || 0,
-      createdAt: (data.created_at as Timestamp)?.toDate?.()?.toISOString() || new Date().toISOString(),
-      updatedAt: (data.updated_at as Timestamp)?.toDate?.()?.toISOString() || new Date().toISOString(),
+      createdAt: (data.createdAt as Timestamp)?.toDate?.()?.toISOString() || new Date().toISOString(),
+      updatedAt: (data.updatedAt as Timestamp)?.toDate?.()?.toISOString() || new Date().toISOString(),
     }
   }
 }

@@ -91,11 +91,11 @@ const handConverter = {
       number: data.number,
       description: data.description,
       timestamp: data.timestamp,
-      streamId: data.stream_id,
-      eventId: data.event_id,
-      tournamentId: data.tournament_id,
+      streamId: data.streamId,
+      eventId: data.eventId,
+      tournamentId: data.tournamentId,
       handPlayers: data.players?.map(p => ({
-        playerId: p.player_id,
+        playerId: p.playerId,
         player: {
           name: p.name,
           photoUrl: undefined,
@@ -103,10 +103,10 @@ const handConverter = {
         }
       })),
       handActions: data.actions?.map(a => ({
-        playerId: a.player_id,
+        playerId: a.playerId,
         street: a.street,
         sequence: a.sequence,
-        actionType: a.action_type,
+        actionType: a.actionType,
         amount: a.amount,
       })),
     }
@@ -122,7 +122,7 @@ const playerConverter = {
     return {
       id: snapshot.id,
       name: data.name,
-      photoUrl: data.photo_url,
+      photoUrl: data.photoUrl,
       country: data.country,
     }
   }
@@ -336,7 +336,7 @@ export function useHandQuery(handId: string) {
 
           hand.stream = {
             name: streamData.name,
-            videoUrl: streamData.video_url,
+            videoUrl: streamData.videoUrl,
             subEvent: eventSnap.exists() ? {
               name: (eventSnap.data() as FirestoreEvent).name,
               tournament: tournamentSnap.exists() ? {

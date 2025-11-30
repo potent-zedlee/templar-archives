@@ -103,13 +103,13 @@ describe('Archive UI Store', () => {
     it('should open video dialog with stream and start time', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        event_id: 'event-1',
+        eventId: 'event-1',
         name: 'Test Stream',
-        video_source: 'youtube',
-        video_url: 'https://youtube.com/watch?v=test',
-        published_at: '2024-01-01',
-        created_at: '2024-01-01',
-        hand_count: 0,
+        videoSource: 'youtube',
+        videoUrl: 'https://youtube.com/watch?v=test',
+        publishedAt: '2024-01-01',
+        createdAt: '2024-01-01',
+        handCount: 0,
       }
 
       const { openVideoDialog } = useArchiveUIStore.getState()
@@ -124,13 +124,13 @@ describe('Archive UI Store', () => {
     it('should close video dialog and clear start time', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        event_id: 'event-1',
+        eventId: 'event-1',
         name: 'Test Stream',
-        video_source: 'youtube',
-        video_url: 'https://youtube.com/watch?v=test',
-        published_at: '2024-01-01',
-        created_at: '2024-01-01',
-        hand_count: 0,
+        videoSource: 'youtube',
+        videoUrl: 'https://youtube.com/watch?v=test',
+        publishedAt: '2024-01-01',
+        createdAt: '2024-01-01',
+        handCount: 0,
       }
 
       const { openVideoDialog, closeVideoDialog } = useArchiveUIStore.getState()
@@ -145,13 +145,13 @@ describe('Archive UI Store', () => {
     it('should open analyze dialog with stream', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        event_id: 'event-1',
+        eventId: 'event-1',
         name: 'Test Stream',
-        video_source: 'youtube',
-        video_url: 'https://youtube.com/watch?v=test',
-        published_at: '2024-01-01',
-        created_at: '2024-01-01',
-        hand_count: 0,
+        videoSource: 'youtube',
+        videoUrl: 'https://youtube.com/watch?v=test',
+        publishedAt: '2024-01-01',
+        createdAt: '2024-01-01',
+        handCount: 0,
       }
 
       const { openAnalyzeDialog } = useArchiveUIStore.getState()
@@ -165,13 +165,13 @@ describe('Archive UI Store', () => {
     it('should close analyze dialog and clear stream', () => {
       const mockStream: Stream = {
         id: 'stream-1',
-        event_id: 'event-1',
+        eventId: 'event-1',
         name: 'Test Stream',
-        video_source: 'youtube',
-        video_url: 'https://youtube.com/watch?v=test',
-        published_at: '2024-01-01',
-        created_at: '2024-01-01',
-        hand_count: 0,
+        videoSource: 'youtube',
+        videoUrl: 'https://youtube.com/watch?v=test',
+        publishedAt: '2024-01-01',
+        createdAt: '2024-01-01',
+        handCount: 0,
       }
 
       const { openAnalyzeDialog, closeAnalyzeDialog } = useArchiveUIStore.getState()

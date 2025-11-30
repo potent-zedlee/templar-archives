@@ -64,12 +64,12 @@ const bookmarkConverter = {
     const data = snapshot.data() as FirestoreBookmark
     return {
       id: snapshot.id,
-      refId: data.ref_id,
+      refId: data.refId,
       type: data.type,
-      refData: data.ref_data,
+      refData: data.refData,
       folderName: undefined, // Firestore 구조에서는 별도 폴더 없음
       notes: undefined, // Firestore 구조에서는 별도 노트 없음
-      createdAt: (data.created_at as Timestamp).toDate().toISOString(),
+      createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
     }
   }
 }
@@ -108,16 +108,16 @@ async function getUserBookmarks(userId: string): Promise<HandBookmarkWithDetails
             // Fetch stream details
             const streamRef = doc(
               firestore,
-              `tournaments/${handData.tournament_id}/events/${handData.event_id}/streams/${handData.stream_id}`
+              `tournaments/${handData.tournamentId}/events/${handData.eventId}/streams/${handData.streamId}`
             )
             const streamSnap = await getDoc(streamRef)
 
             // Fetch event details
-            const eventRef = doc(firestore, `tournaments/${handData.tournament_id}/events/${handData.event_id}`)
+            const eventRef = doc(firestore, `tournaments/${handData.tournamentId}/events/${handData.eventId}`)
             const eventSnap = await getDoc(eventRef)
 
             // Fetch tournament details
-            const tournamentRef = doc(firestore, `tournaments/${handData.tournament_id}`)
+            const tournamentRef = doc(firestore, `tournaments/${handData.tournamentId}`)
             const tournamentSnap = await getDoc(tournamentRef)
 
             return {
@@ -129,15 +129,15 @@ async function getUserBookmarks(userId: string): Promise<HandBookmarkWithDetails
                 timestamp: handData.timestamp,
                 day: streamSnap.exists()
                   ? {
-                      id: handData.stream_id,
+                      id: handData.streamId,
                       name: (streamSnap.data() as FirestoreStream).name,
                       subEvent: eventSnap.exists()
                         ? {
-                            id: handData.event_id,
+                            id: handData.eventId,
                             name: (eventSnap.data() as FirestoreEvent).name,
                             tournament: tournamentSnap.exists()
                               ? {
-                                  id: handData.tournament_id,
+                                  id: handData.tournamentId,
                                   name: (tournamentSnap.data() as FirestoreTournament).name,
                                   category: (tournamentSnap.data() as FirestoreTournament).category,
                                 }

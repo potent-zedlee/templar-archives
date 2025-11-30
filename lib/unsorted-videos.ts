@@ -26,11 +26,11 @@ import type { FirestoreUnsortedStream } from '@/lib/firestore-types'
 export interface UnsortedVideo {
   id: string
   name: string
-  video_url: string | null
-  video_file: string | null
-  video_source: 'youtube' | 'local' | 'nas' | null
-  created_at: string
-  published_at?: string | null
+  videoUrl: string | null
+  videoFile: string | null
+  videoSource: 'youtube' | 'local' | 'nas' | null
+  createdAt: string
+  publishedAt?: string | null
 }
 
 /**
@@ -75,11 +75,11 @@ function toUnsortedVideo(id: string, data: FirestoreUnsortedStream): UnsortedVid
   return {
     id,
     name: data.name,
-    video_url: data.video_url || null,
-    video_file: data.video_file || null,
-    video_source: data.video_source || null,
-    created_at: data.created_at.toDate().toISOString(),
-    published_at: data.published_at?.toDate().toISOString() || null,
+    videoUrl: data.videoUrl || null,
+    videoFile: data.videoFile || null,
+    videoSource: data.videoSource || null,
+    createdAt: data.createdAt.toDate().toISOString(),
+    publishedAt: data.publishedAt?.toDate().toISOString() || null,
   }
 }
 
@@ -110,15 +110,15 @@ export async function getUnsortedVideos(): Promise<UnsortedVideo[]> {
  */
 export async function createUnsortedVideo(params: {
   name: string
-  video_url?: string
-  video_file?: string
-  video_source?: 'youtube' | 'local' | 'nas'
-  published_at?: string
+  videoUrl?: string
+  videoFile?: string
+  videoSource?: 'youtube' | 'local' | 'nas'
+  publishedAt?: string
 }): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     // Normalize YouTube URL if provided
-    let normalizedUrl = params.video_url || null
-    if (normalizedUrl && params.video_source === 'youtube') {
+    let normalizedUrl = params.videoUrl || null
+    if (normalizedUrl && params.videoSource === 'youtube') {
       normalizedUrl = normalizeYoutubeUrl(normalizedUrl)
       console.log('Normalized YouTube URL:', normalizedUrl)
     }
@@ -126,13 +126,13 @@ export async function createUnsortedVideo(params: {
     const now = Timestamp.now()
     const streamData: FirestoreUnsortedStream = {
       name: params.name,
-      video_url: normalizedUrl || undefined,
-      video_file: params.video_file,
-      video_source: params.video_source || 'youtube',
-      published_at: params.published_at ? Timestamp.fromDate(new Date(params.published_at)) : undefined,
-      is_organized: false,
-      created_at: now,
-      updated_at: now,
+      videoUrl: normalizedUrl || undefined,
+      videoFile: params.videoFile,
+      videoSource: params.videoSource || 'youtube',
+      publishedAt: params.publishedAt ? Timestamp.fromDate(new Date(params.publishedAt)) : undefined,
+      isOrganized: false,
+      createdAt: now,
+      updatedAt: now,
     }
 
     const docRef = await addDoc(collection(firestore, COLLECTION_PATHS.UNSORTED_STREAMS), streamData)
@@ -220,9 +220,9 @@ export async function organizeVideos(
 export async function createUnsortedVideosBatch(
   videos: Array<{
     name: string
-    video_url: string
-    video_source?: 'youtube' | 'local' | 'nas'
-    published_at?: string
+    videoUrl: string
+    videoSource?: 'youtube' | 'local' | 'nas'
+    publishedAt?: string
   }>,
   onProgress?: (current: number, total: number) => void
 ): Promise<{
@@ -248,20 +248,20 @@ export async function createUnsortedVideosBatch(
 
       for (const video of batchVideos) {
         const normalizedUrl =
-          video.video_source === 'youtube'
-            ? normalizeYoutubeUrl(video.video_url)
-            : video.video_url
+          video.videoSource === 'youtube'
+            ? normalizeYoutubeUrl(video.videoUrl)
+            : video.videoUrl
 
         const streamData: FirestoreUnsortedStream = {
           name: video.name,
-          video_url: normalizedUrl,
-          video_source: video.video_source || 'youtube',
-          published_at: video.published_at
-            ? Timestamp.fromDate(new Date(video.published_at))
+          videoUrl: normalizedUrl,
+          videoSource: video.videoSource || 'youtube',
+          publishedAt: video.publishedAt
+            ? Timestamp.fromDate(new Date(video.publishedAt))
             : undefined,
-          is_organized: false,
-          created_at: now,
-          updated_at: now,
+          isOrganized: false,
+          createdAt: now,
+          updatedAt: now,
         }
 
         const docRef = doc(collection(firestore, COLLECTION_PATHS.UNSORTED_STREAMS))

@@ -8,32 +8,32 @@ describe('Archive Form Store', () => {
       tournamentForm: {
         name: '',
         category: 'WSOP',
-        game_type: 'tournament',
+        gameType: 'tournament',
         location: '',
         city: '',
         country: '',
-        start_date: '',
-        end_date: '',
+        startDate: '',
+        endDate: '',
       },
       eventForm: {
         name: '',
         date: '',
-        event_number: '',
-        total_prize: '',
+        eventNumber: '',
+        totalPrize: '',
         winner: '',
-        buy_in: '',
-        entry_count: '',
-        blind_structure: '',
-        level_duration: '',
-        starting_stack: '',
+        buyIn: '',
+        entryCount: '',
+        blindStructure: '',
+        levelDuration: '',
+        startingStack: '',
         notes: '',
       },
       streamForm: {
         name: '',
-        video_source: 'youtube',
-        video_url: '',
-        upload_file: null,
-        published_at: '',
+        videoSource: 'youtube',
+        videoUrl: '',
+        uploadFile: null,
+        publishedAt: '',
       },
       payouts: [{ rank: 1, playerName: '', prizeAmount: '' }],
       hendonMobUrl: '',
@@ -59,24 +59,24 @@ describe('Archive Form Store', () => {
       const { setTournamentFormField } = useArchiveFormStore.getState()
       setTournamentFormField('name', 'WSOP 2024')
       setTournamentFormField('location', 'Las Vegas')
-      setTournamentFormField('start_date', '2024-07-01')
+      setTournamentFormField('startDate', '2024-07-01')
 
       const { tournamentForm } = useArchiveFormStore.getState()
       expect(tournamentForm.name).toBe('WSOP 2024')
       expect(tournamentForm.location).toBe('Las Vegas')
-      expect(tournamentForm.start_date).toBe('2024-07-01')
+      expect(tournamentForm.startDate).toBe('2024-07-01')
     })
 
     it('should set entire tournament form', () => {
       const newForm = {
         name: 'EPT Barcelona',
         category: 'EPT',
-        game_type: 'tournament',
+        gameType: 'tournament',
         location: 'Barcelona',
         city: 'Barcelona',
         country: 'Spain',
-        start_date: '2024-08-15',
-        end_date: '2024-08-25',
+        startDate: '2024-08-15',
+        endDate: '2024-08-25',
       }
 
       const { setTournamentForm } = useArchiveFormStore.getState()
@@ -112,27 +112,27 @@ describe('Archive Form Store', () => {
     it('should set multiple sub-event form fields', () => {
       const { setEventFormField } = useArchiveFormStore.getState()
       setEventFormField('name', 'Event #15')
-      setEventFormField('buy_in', '10000')
-      setEventFormField('total_prize', '50000000')
+      setEventFormField('buyIn', '10000')
+      setEventFormField('totalPrize', '50000000')
 
       const { eventForm } = useArchiveFormStore.getState()
       expect(eventForm.name).toBe('Event #15')
-      expect(eventForm.buy_in).toBe('10000')
-      expect(eventForm.total_prize).toBe('50000000')
+      expect(eventForm.buyIn).toBe('10000')
+      expect(eventForm.totalPrize).toBe('50000000')
     })
 
     it('should set entire sub-event form', () => {
       const newForm = {
         name: 'Event #20',
         date: '2024-07-15',
-        event_number: '20',
-        total_prize: '10000000',
+        eventNumber: '20',
+        totalPrize: '10000000',
         winner: 'John Doe',
-        buy_in: '5000',
-        entry_count: '2000',
-        blind_structure: 'Standard',
-        level_duration: '60',
-        starting_stack: '50000',
+        buyIn: '5000',
+        entryCount: '2000',
+        blindStructure: 'Standard',
+        levelDuration: '60',
+        startingStack: '50000',
         notes: 'Test notes',
       }
 
@@ -146,13 +146,13 @@ describe('Archive Form Store', () => {
     it('should reset sub-event form', () => {
       const { setEventFormField, resetEventForm } = useArchiveFormStore.getState()
       setEventFormField('name', 'Test Event')
-      setEventFormField('buy_in', '1000')
+      setEventFormField('buyIn', '1000')
 
       resetEventForm()
 
       const { eventForm } = useArchiveFormStore.getState()
       expect(eventForm.name).toBe('')
-      expect(eventForm.buy_in).toBe('')
+      expect(eventForm.buyIn).toBe('')
     })
   })
 
@@ -167,40 +167,40 @@ describe('Archive Form Store', () => {
 
     it('should set video URL', () => {
       const { setStreamFormField } = useArchiveFormStore.getState()
-      setStreamFormField('video_url', 'https://youtube.com/watch?v=test123')
+      setStreamFormField('videoUrl', 'https://youtube.com/watch?v=test123')
 
       const { streamForm } = useArchiveFormStore.getState()
-      expect(streamForm.video_url).toBe('https://youtube.com/watch?v=test123')
+      expect(streamForm.videoUrl).toBe('https://youtube.com/watch?v=test123')
     })
 
     it('should set video source', () => {
       const { setStreamFormField } = useArchiveFormStore.getState()
-      setStreamFormField('video_source', 'upload')
+      setStreamFormField('videoSource', 'upload')
 
       const { streamForm } = useArchiveFormStore.getState()
-      expect(streamForm.video_source).toBe('upload')
+      expect(streamForm.videoSource).toBe('upload')
     })
 
     it('should set upload file', () => {
       const mockFile = new File(['content'], 'video.mp4', { type: 'video/mp4' })
       const { setStreamFormField } = useArchiveFormStore.getState()
-      setStreamFormField('upload_file', mockFile)
+      setStreamFormField('uploadFile', mockFile)
 
       const { streamForm } = useArchiveFormStore.getState()
-      expect(streamForm.upload_file).toBe(mockFile)
+      expect(streamForm.uploadFile).toBe(mockFile)
     })
 
     it('should reset stream form', () => {
       const { setStreamFormField, resetStreamForm } = useArchiveFormStore.getState()
       setStreamFormField('name', 'Test Stream')
-      setStreamFormField('video_url', 'https://youtube.com/test')
+      setStreamFormField('videoUrl', 'https://youtube.com/test')
 
       resetStreamForm()
 
       const { streamForm } = useArchiveFormStore.getState()
       expect(streamForm.name).toBe('')
-      expect(streamForm.video_url).toBe('')
-      expect(streamForm.video_source).toBe('youtube')
+      expect(streamForm.videoUrl).toBe('')
+      expect(streamForm.videoSource).toBe('youtube')
     })
   })
 
