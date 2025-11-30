@@ -1,19 +1,18 @@
 /**
- * Process Segment Handler
+ * Process Segment Handler - Phase 1 타임스탬프 추출
  *
  * Cloud Tasks에서 받은 세그먼트 분석 요청 처리
  * 1. GCS에서 세그먼트 추출 (FFmpeg)
- * 2. Vertex AI Gemini로 분석
- * 3. DB에 핸드 저장
+ * 2. Vertex AI Gemini로 Phase 1 분석 (타임스탬프만 추출)
+ * 3. Orchestrator에 Phase 1 완료 콜백
  * 4. Firestore 진행 상황 업데이트
  */
 
 import type { Context } from 'hono'
 import { Firestore } from '@google-cloud/firestore'
-import { vertexAnalyzer } from '../lib/vertex-analyzer'
+import { vertexAnalyzer } from '../lib/vertex-analyzer-phase1'
 import { gcsSegmentExtractor } from '../lib/gcs-segment-extractor'
-import { saveHandsToDatabase } from '../lib/hand-saver'
-import type { ProcessSegmentRequest, AnalysisJob, SegmentInfo } from '../types'
+import type { ProcessSegmentRequest, AnalysisJob, SegmentInfo, Phase1Result } from '../types'
 
 const firestore = new Firestore({
   projectId: process.env.GOOGLE_CLOUD_PROJECT,
@@ -40,6 +39,63 @@ function parseTimestampToSeconds(timestamp?: string): number | null {
   }
 
   return null
+}
+
+/**
+ * 초 단위를 HH:MM:SS 또는 MM:SS 형식으로 변환
+ */
+function formatSecondsToTimestamp(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = Math.floor(totalSeconds % 60)
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+  } else {
+    return `${minutes}:${String(seconds).padStart(2, '0')}`
+  }
+}
+
+/**
+ * Orchestrator에 Phase 1 완료 알림
+ */
+async function notifyPhase1Complete(
+  jobId: string,
+  streamId: string,
+  gcsUri: string,
+  platform: 'ept' | 'triton' | 'wsop',
+  hands: Phase1Result['hands']
+) {
+  const orchestratorUrl = process.env.ORCHESTRATOR_URL || 'http://localhost:8080'
+  const callbackUrl = `${orchestratorUrl}/phase1-complete`
+
+  console.log(`[SegmentAnalyzer] Notifying Orchestrator: ${callbackUrl}`)
+
+  try {
+    const response = await fetch(callbackUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jobId,
+        streamId,
+        gcsUri,
+        platform,
+        hands,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Orchestrator callback failed: ${response.status} ${errorText}`)
+    }
+
+    console.log(`[SegmentAnalyzer] Phase 1 complete notification sent successfully`)
+  } catch (error) {
+    console.error('[SegmentAnalyzer] Failed to notify Orchestrator:', error)
+    throw error
+  }
 }
 
 export async function processSegmentHandler(c: Context) {
@@ -82,44 +138,41 @@ export async function processSegmentHandler(c: Context) {
 
     console.log(`[SegmentAnalyzer] Extracted ${extractedSegments.length} sub-segments`)
 
-    // 3. 각 추출된 세그먼트를 Vertex AI로 분석
-    const allHands = []
+    // 3. 각 추출된 세그먼트를 Vertex AI로 Phase 1 분석 (타임스탬프만 추출)
+    const allHandTimestamps: Phase1Result['hands'] = []
 
     for (let i = 0; i < extractedSegments.length; i++) {
       const seg = extractedSegments[i]
 
-      console.log(`[SegmentAnalyzer] Analyzing sub-segment ${i + 1}/${extractedSegments.length}: ${seg.start}s-${seg.end}s`)
+      console.log(`[SegmentAnalyzer] Phase 1 분석 ${i + 1}/${extractedSegments.length}: ${seg.start}s-${seg.end}s`)
 
-      const hands = await vertexAnalyzer.analyzeVideoFromGCS(seg.gcsUri, platform)
+      const result = await vertexAnalyzer.analyzePhase1(seg.gcsUri, platform)
 
-      console.log(`[SegmentAnalyzer] Extracted ${hands.length} hands from sub-segment ${i + 1}`)
+      console.log(`[SegmentAnalyzer] 발견된 핸드: ${result.hands.length}개`)
 
-      // 절대 타임코드 계산
-      for (const hand of hands) {
-        const startSeconds = parseTimestampToSeconds(hand.timestamp_start)
-        const endSeconds = parseTimestampToSeconds(hand.timestamp_end)
+      // 절대 타임코드 계산 (세그먼트 시작점 기준)
+      for (const hand of result.hands) {
+        const startSeconds = parseTimestampToSeconds(hand.start)
+        const endSeconds = parseTimestampToSeconds(hand.end)
 
-        if (startSeconds !== null) {
-          hand.absolute_timestamp_start = seg.start + startSeconds
-        }
-        if (endSeconds !== null) {
-          hand.absolute_timestamp_end = seg.start + endSeconds
+        if (startSeconds !== null && endSeconds !== null) {
+          const absoluteStart = formatSecondsToTimestamp(seg.start + startSeconds)
+          const absoluteEnd = formatSecondsToTimestamp(seg.start + endSeconds)
+
+          allHandTimestamps.push({
+            hand_number: hand.hand_number,
+            start: absoluteStart,
+            end: absoluteEnd,
+          })
         }
       }
-
-      allHands.push(...hands)
     }
 
-    console.log(`[SegmentAnalyzer] Total hands extracted: ${allHands.length}`)
+    console.log(`[SegmentAnalyzer] Total hands found: ${allHandTimestamps.length}`)
 
-    // 4. DB에 핸드 저장
-    console.log(`[SegmentAnalyzer] Saving ${allHands.length} hands to database...`)
-    const saveResult = await saveHandsToDatabase(streamId, allHands)
-
-    if (!saveResult.success) {
-      console.error(`[SegmentAnalyzer] DB save failed: ${saveResult.error}`)
-    } else {
-      console.log(`[SegmentAnalyzer] Saved ${saveResult.saved} hands, ${saveResult.errors} errors`)
+    // 4. Orchestrator에 Phase 1 완료 콜백
+    if (allHandTimestamps.length > 0) {
+      await notifyPhase1Complete(jobId, streamId, gcsUri, platform, allHandTimestamps)
     }
 
     // 5. 임시 세그먼트 파일 정리
@@ -127,7 +180,7 @@ export async function processSegmentHandler(c: Context) {
     await gcsSegmentExtractor.cleanupSegments(extractedSegments)
 
     // 6. Firestore 진행 상황 업데이트
-    await updateSegmentCompleted(jobRef, segmentIndex, allHands.length)
+    await updateSegmentCompleted(jobRef, segmentIndex, allHandTimestamps.length)
 
     // 7. 모든 세그먼트 완료 확인 및 최종화
     await checkAndFinalizeJob(jobRef, jobId, streamId)
@@ -139,7 +192,7 @@ export async function processSegmentHandler(c: Context) {
     return c.json({
       success: true,
       segmentIndex,
-      handsFound: allHands.length,
+      handsFound: allHandTimestamps.length,
       duration,
     })
 
@@ -273,19 +326,9 @@ async function checkAndFinalizeJob(
     console.log(`[SegmentAnalyzer] All segments processed for job ${jobId}`)
 
     // 최종 상태 결정
-    const finalStatus = failedSegments > 0 && completedSegments === 0
-      ? 'failed'
-      : 'completed'
+    // Phase 1 완료 상태만 업데이트 (Phase 2가 진행될 예정)
+    console.log(`[SegmentAnalyzer] Phase 1 completed for job ${jobId}`)
 
-    await jobRef.update({
-      status: finalStatus,
-      completedAt: new Date(),
-    })
-
-    console.log(`[SegmentAnalyzer] Job ${jobId} finalized with status: ${finalStatus}`)
-
-    // 스트림 상태 업데이트 (Supabase)
-    const { updateStreamStatus } = await import('../lib/hand-saver')
-    await updateStreamStatus(streamId, finalStatus)
+    // Phase 2가 시작되면 상태는 Orchestrator에서 관리됨
   }
 }
