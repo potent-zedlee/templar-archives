@@ -12,11 +12,13 @@ Watch this poker video and identify ONLY the start and end timestamps of each ha
 Do NOT extract player names, cards, or actions - only timestamps.
 
 ## Output Format
+IMPORTANT: Output valid JSON using camelCase keys ONLY. Never use snake_case.
+
 Return ONLY a valid JSON object:
 {
   "hands": [
-    { "hand_number": 1, "start": "05:30", "end": "08:45" },
-    { "hand_number": 2, "start": "12:10", "end": "15:22" }
+    { "handNumber": 1, "start": "05:30", "end": "08:45" },
+    { "handNumber": 2, "start": "12:10", "end": "15:22" }
   ]
 }
 

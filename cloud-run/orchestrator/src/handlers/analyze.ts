@@ -192,7 +192,7 @@ export async function phase1CompleteHandler(c: Context) {
       const request: ProcessPhase2Request = {
         jobId: body.jobId,
         streamId: body.streamId,
-        handIndex: hand.hand_number,
+        handIndex: hand.handNumber,
         gcsUri: body.gcsUri,
         handTimestamp: hand,
         platform: body.platform,
@@ -218,7 +218,7 @@ export async function phase1CompleteHandler(c: Context) {
 
       taskPromises.push(
         tasksClient.createTask({ parent: queuePath, task }).then(([response]) => {
-          console.log(`[Orchestrator] Created Phase 2 task for hand ${hand.hand_number}: ${response.name}`)
+          console.log(`[Orchestrator] Created Phase 2 task for hand ${hand.handNumber}: ${response.name}`)
           return response.name!
         })
       )

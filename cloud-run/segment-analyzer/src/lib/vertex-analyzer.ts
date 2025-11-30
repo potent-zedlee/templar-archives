@@ -36,10 +36,10 @@ export interface ExtractedHand {
     amount: number
     hand?: string
   }>
-  timestamp_start?: string
-  timestamp_end?: string
-  absolute_timestamp_start?: number
-  absolute_timestamp_end?: number
+  timestampStart?: string
+  timestampEnd?: string
+  absoluteTimestampStart?: number
+  absoluteTimestampEnd?: number
 }
 
 export interface AnalysisResult {
@@ -276,7 +276,7 @@ export class VertexAnalyzer {
    */
   async analyzePhase2(
     gcsUri: string,
-    handTimestamp: { hand_number: number; start: string; end: string },
+    handTimestamp: { handNumber: number; start: string; end: string },
     platform: Platform,
     maxRetries: number = 3
   ): Promise<Phase2Result> {
@@ -290,7 +290,7 @@ export class VertexAnalyzer {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(
-          `[VertexAnalyzer] Phase 2 시도 ${attempt}/${maxRetries} - Hand #${handTimestamp.hand_number}`
+          `[VertexAnalyzer] Phase 2 시도 ${attempt}/${maxRetries} - Hand #${handTimestamp.handNumber}`
         )
 
         const response = await this.ai.models.generateContent({
@@ -335,7 +335,7 @@ export class VertexAnalyzer {
         const result = this.parsePhase2Response(textPart.text)
 
         console.log(
-          `[VertexAnalyzer] Phase 2 완료. Hand #${handTimestamp.hand_number}, Tags: ${result.semantic_tags.join(', ')}`
+          `[VertexAnalyzer] Phase 2 완료. Hand #${handTimestamp.handNumber}, Tags: ${result.semanticTags.join(', ')}`
         )
 
         return result
@@ -379,7 +379,7 @@ export class VertexAnalyzer {
     // 타임스탬프 형식 검증 (MM:SS 또는 HH:MM:SS)
     const validHands = parsed.hands.filter(
       (
-        hand: { hand_number: number; start: string; end: string },
+        hand: { handNumber: number; start: string; end: string },
         index: number
       ) => {
         const timePattern = /^(\d{1,2}:)?\d{1,2}:\d{2}$/
@@ -437,29 +437,29 @@ export class VertexAnalyzer {
       '#BubblePlay',
     ]
 
-    parsed.semantic_tags = (parsed.semantic_tags || []).filter((tag: unknown) =>
+    parsed.semanticTags = (parsed.semanticTags || []).filter((tag: unknown) =>
       validTags.includes(tag as SemanticTag)
     ) as SemanticTag[]
 
     // AI 분석 검증
-    if (!parsed.ai_analysis) {
-      console.warn('[VertexAnalyzer] Phase 2: ai_analysis 누락, 기본값 설정')
-      parsed.ai_analysis = {
+    if (!parsed.aiAnalysis) {
+      console.warn('[VertexAnalyzer] Phase 2: aiAnalysis 누락, 기본값 설정')
+      parsed.aiAnalysis = {
         confidence: 0.5,
         reasoning: 'No analysis provided',
-        player_states: {},
-        hand_quality: 'routine',
+        playerStates: {},
+        handQuality: 'routine',
       }
     }
 
     // confidence 범위 검증
     if (
-      typeof parsed.ai_analysis.confidence !== 'number' ||
-      parsed.ai_analysis.confidence < 0 ||
-      parsed.ai_analysis.confidence > 1
+      typeof parsed.aiAnalysis.confidence !== 'number' ||
+      parsed.aiAnalysis.confidence < 0 ||
+      parsed.aiAnalysis.confidence > 1
     ) {
       console.warn('[VertexAnalyzer] Phase 2: 잘못된 confidence 값, 0.5로 설정')
-      parsed.ai_analysis.confidence = 0.5
+      parsed.aiAnalysis.confidence = 0.5
     }
 
     return parsed

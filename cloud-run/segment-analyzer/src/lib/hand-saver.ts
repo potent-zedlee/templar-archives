@@ -93,12 +93,12 @@ export async function updateStreamStatus(
   const firestore = getFirestore()
 
   await firestore.collection(COLLECTION_PATHS.UNSORTED_STREAMS).doc(streamId).update({
-    pipeline_status: status,
-    pipeline_updated_at: FieldValue.serverTimestamp(),
-    updated_at: FieldValue.serverTimestamp(),
+    pipelineStatus: status,
+    pipelineUpdatedAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   })
 
-  console.log(`[HandSaver] Stream ${streamId} pipeline_status updated to: ${status}`)
+  console.log(`[HandSaver] Stream ${streamId} pipelineStatus updated to: ${status}`)
 }
 
 async function saveSingleHand(
@@ -201,33 +201,33 @@ async function saveSingleHand(
   // playerIds 배열 생성 (array-contains 쿼리용)
   const playerIds = playersEmbedded.map((p) => p.playerId)
 
-  // 핸드 문서 저장 (Firestore 스키마에 맞게 - snake_case 필드명 사용)
+  // 핸드 문서 저장 (Firestore 스키마에 맞게 - camelCase 필드명 사용)
   await handRef.set({
-    stream_id: streamId, // 스트림 ID (프론트엔드 조회용)
-    event_id: '', // 나중에 업데이트
-    tournament_id: '', // 나중에 업데이트
-    player_ids: playerIds, // array-contains 쿼리용
+    streamId: streamId, // 스트림 ID (프론트엔드 조회용)
+    eventId: '', // 나중에 업데이트
+    tournamentId: '', // 나중에 업데이트
+    playerIds: playerIds, // array-contains 쿼리용
     number: String(hand.handNumber),
     description: generateHandDescription(hand),
     timestamp: formatTimestampDisplay(hand),
-    video_timestamp_start: hand.absolute_timestamp_start ?? null,
-    video_timestamp_end: hand.absolute_timestamp_end ?? null,
-    pot_size: hand.pot || 0,
-    board_flop: hand.board?.flop || null,
-    board_turn: hand.board?.turn || null,
-    board_river: hand.board?.river || null,
-    small_blind: blinds.smallBlind,
-    big_blind: blinds.bigBlind,
+    videoTimestampStart: hand.absoluteTimestampStart ?? null,
+    videoTimestampEnd: hand.absoluteTimestampEnd ?? null,
+    potSize: hand.pot || 0,
+    boardFlop: hand.board?.flop || null,
+    boardTurn: hand.board?.turn || null,
+    boardRiver: hand.board?.river || null,
+    smallBlind: blinds.smallBlind,
+    bigBlind: blinds.bigBlind,
     ante: blinds.ante,
     players: playersEmbedded,
     actions: actionsEmbedded,
     engagement: {
-      likes_count: 0,
-      dislikes_count: 0,
-      bookmarks_count: 0,
+      likesCount: 0,
+      dislikesCount: 0,
+      bookmarksCount: 0,
     },
-    created_at: FieldValue.serverTimestamp(),
-    updated_at: FieldValue.serverTimestamp(),
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
   })
 }
 
@@ -240,8 +240,8 @@ function formatSecondsToTimestamp(seconds: number): string {
 }
 
 function formatTimestampDisplay(hand: ExtractedHand): string {
-  const start = hand.absolute_timestamp_start
-  const end = hand.absolute_timestamp_end
+  const start = hand.absoluteTimestampStart
+  const end = hand.absoluteTimestampEnd
 
   if (typeof start === 'number' && typeof end === 'number') {
     return `${formatSecondsToTimestamp(start)} ~ ${formatSecondsToTimestamp(end)}`
@@ -251,12 +251,12 @@ function formatTimestampDisplay(hand: ExtractedHand): string {
     return formatSecondsToTimestamp(start)
   }
 
-  if (hand.timestamp_start && hand.timestamp_end) {
-    return `${hand.timestamp_start} ~ ${hand.timestamp_end}`
+  if (hand.timestampStart && hand.timestampEnd) {
+    return `${hand.timestampStart} ~ ${hand.timestampEnd}`
   }
 
-  if (hand.timestamp_start) {
-    return hand.timestamp_start
+  if (hand.timestampStart) {
+    return hand.timestampStart
   }
 
   return '00:00'

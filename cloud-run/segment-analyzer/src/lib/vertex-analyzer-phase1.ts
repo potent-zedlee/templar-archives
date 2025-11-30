@@ -187,8 +187,8 @@ export class VertexAnalyzerPhase1 {
 
     // 각 핸드 검증
     const validHands = parsed.hands.filter((hand, index) => {
-      if (typeof hand.hand_number !== 'number') {
-        console.warn(`[Phase1] 핸드 ${index + 1}: hand_number 누락, 스킵`)
+      if (typeof hand.handNumber !== 'number') {
+        console.warn(`[Phase1] 핸드 ${index + 1}: handNumber 누락, 스킵`)
         return false
       }
       if (!hand.start || !hand.end) {

@@ -41,6 +41,8 @@ Analyze this poker hand video clip using a systematic Chain-of-Thought approach.
 - Consider entertainment value and educational merit
 
 ## Output Format
+IMPORTANT: Output valid JSON using camelCase keys ONLY. Never use snake_case.
+
 {
   "handNumber": 1,
   "stakes": "50K/100K",
@@ -74,20 +76,20 @@ Analyze this poker hand video clip using a systematic Chain-of-Thought approach.
       "hand": "Two Pair"
     }
   ],
-  "timestamp_start": "05:30",
-  "timestamp_end": "08:45",
+  "timestampStart": "05:30",
+  "timestampEnd": "08:45",
 
-  "semantic_tags": ["#HeroCall", "#BigPot"],
-  "ai_analysis": {
+  "semanticTags": ["#HeroCall", "#BigPot"],
+  "aiAnalysis": {
     "confidence": 0.92,
     "reasoning": "Player X made a hero call...",
-    "player_states": {
-      "player_name": {
-        "emotional_state": "confident",
-        "play_style": "aggressive"
+    "playerStates": {
+      "playerName": {
+        "emotionalState": "confident",
+        "playStyle": "aggressive"
       }
     },
-    "hand_quality": "highlight"
+    "handQuality": "highlight"
   }
 }
 
@@ -107,8 +109,8 @@ Analyze this poker hand video clip using a systematic Chain-of-Thought approach.
 
 ## Player State Analysis
 Analyze each player's:
-- emotional_state: 'tilting' | 'confident' | 'cautious' | 'neutral'
-- play_style: 'aggressive' | 'passive' | 'balanced'
+- emotionalState: 'tilting' | 'confident' | 'cautious' | 'neutral'
+- playStyle: 'aggressive' | 'passive' | 'balanced'
 
 ## Hand Quality (based on Chain-of-Thought analysis)
 - routine: Standard play, nothing special (no significant equity swings, predictable actions)
@@ -117,9 +119,9 @@ Analyze each player's:
 - epic: Exceptional hand (huge pot, amazing play, rare situations like quad vs quad)
 
 ## Reasoning Requirements
-Your "reasoning" field in ai_analysis MUST include:
+Your "reasoning" field in aiAnalysis MUST include:
 1. Key decision point explanation
-2. Why specific semantic_tags were assigned
+2. Why specific semanticTags were assigned
 3. Brief equity analysis summary when applicable
 
 ## Card/Position Notation

@@ -12,7 +12,7 @@ import type { Phase2Result } from '../types'
 export type Platform = 'ept' | 'triton' | 'wsop'
 
 export interface HandTimestamp {
-  hand_number: number
+  handNumber: number
   start: string  // "HH:MM:SS"
   end: string
 }
@@ -112,7 +112,7 @@ export class VertexAnalyzerPhase2 {
     const extractionResult = await gcsSegmentExtractor.extractSegments({
       sourceGcsUri: gcsUri,
       segments: [{ start: startSeconds, end: endSeconds }],
-      streamId: `phase2_${handTimestamp.hand_number}`,
+      streamId: `phase2_${handTimestamp.handNumber}`,
       maxSegmentDuration: 600, // 최대 10분 (단일 핸드는 보통 2-5분)
     })
 
@@ -249,11 +249,11 @@ export class VertexAnalyzerPhase2 {
     if (!parsed.board) {
       throw new Error('board 필드 누락')
     }
-    if (!parsed.semantic_tags || !Array.isArray(parsed.semantic_tags)) {
-      parsed.semantic_tags = []
+    if (!parsed.semanticTags || !Array.isArray(parsed.semanticTags)) {
+      parsed.semanticTags = []
     }
-    if (!parsed.ai_analysis) {
-      throw new Error('ai_analysis 필드 누락')
+    if (!parsed.aiAnalysis) {
+      throw new Error('aiAnalysis 필드 누락')
     }
 
     return parsed

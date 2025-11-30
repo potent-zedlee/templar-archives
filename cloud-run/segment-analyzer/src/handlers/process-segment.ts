@@ -160,7 +160,7 @@ export async function processSegmentHandler(c: Context) {
           const absoluteEnd = formatSecondsToTimestamp(seg.start + endSeconds)
 
           allHandTimestamps.push({
-            hand_number: hand.hand_number,
+            handNumber: hand.handNumber,
             start: absoluteStart,
             end: absoluteEnd,
           })

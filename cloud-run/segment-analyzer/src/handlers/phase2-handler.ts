@@ -30,7 +30,7 @@ export async function phase2Handler(c: Context) {
       return c.json({ error: 'Missing required fields: jobId, streamId, gcsUri, handTimestamp' }, 400)
     }
 
-    console.log(`[Phase2] Processing hand #${body.handTimestamp.hand_number} for job ${body.jobId}`)
+    console.log(`[Phase2] Processing hand #${body.handTimestamp.handNumber} for job ${body.jobId}`)
     console.log(`[Phase2] Time range: ${body.handTimestamp.start} - ${body.handTimestamp.end}`)
 
     // Phase 2 분석 실행 (GCS에서 특정 타임 구간만 분석)
@@ -44,25 +44,25 @@ export async function phase2Handler(c: Context) {
     const handDocRef = firestore.collection('hands').doc()
     await handDocRef.set({
       id: handDocRef.id,
-      stream_id: body.streamId,
-      job_id: body.jobId,
+      streamId: body.streamId,
+      jobId: body.jobId,
       number: String(result.handNumber),
 
       // 보드 카드
-      board_flop: result.board.flop || null,
-      board_turn: result.board.turn || null,
-      board_river: result.board.river || null,
+      boardFlop: result.board.flop || null,
+      boardTurn: result.board.turn || null,
+      boardRiver: result.board.river || null,
 
       // 팟 정보
-      pot_size: result.pot,
+      potSize: result.pot,
 
       // 플레이어 (임베딩)
       players: result.players.map(p => ({
         name: p.name,
         position: p.position,
         seat: p.seat,
-        stack_size: p.stackSize,
-        hole_cards: p.holeCards || null,
+        stackSize: p.stackSize,
+        holeCards: p.holeCards || null,
       })),
 
       // 액션 (임베딩)
@@ -81,23 +81,23 @@ export async function phase2Handler(c: Context) {
       })),
 
       // 타임스탬프
-      video_timestamp_start: body.handTimestamp.start,
-      video_timestamp_end: body.handTimestamp.end,
+      videoTimestampStart: body.handTimestamp.start,
+      videoTimestampEnd: body.handTimestamp.end,
 
       // 시맨틱 분석 필드
-      semantic_tags: result.semantic_tags,
-      ai_analysis: {
-        confidence: result.ai_analysis.confidence,
-        reasoning: result.ai_analysis.reasoning,
-        player_states: result.ai_analysis.player_states,
-        hand_quality: result.ai_analysis.hand_quality,
+      semanticTags: result.semanticTags,
+      aiAnalysis: {
+        confidence: result.aiAnalysis.confidence,
+        reasoning: result.aiAnalysis.reasoning,
+        playerStates: result.aiAnalysis.playerStates,
+        handQuality: result.aiAnalysis.handQuality,
       },
 
       // 메타데이터
-      analysis_phase: 2,
-      phase2_completed_at: new Date(),
-      created_at: new Date(),
-      updated_at: new Date(),
+      analysisPhase: 2,
+      phase2CompletedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
     })
 
     console.log(`[Phase2] Saved hand #${result.handNumber} to Firestore: ${handDocRef.id}`)

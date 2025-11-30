@@ -53,8 +53,8 @@ export class SemanticAnalyzer {
     const defaultAnalysis: AIAnalysis = {
       confidence: 0.5,
       reasoning: '',
-      player_states: {},
-      hand_quality: 'routine'
+      playerStates: {},
+      handQuality: 'routine'
     }
 
     if (!analysis || typeof analysis !== 'object') {
@@ -66,8 +66,8 @@ export class SemanticAnalyzer {
     return {
       confidence: this.normalizeConfidence(a.confidence),
       reasoning: typeof a.reasoning === 'string' ? a.reasoning : '',
-      player_states: this.normalizePlayerStates(a.player_states),
-      hand_quality: this.normalizeHandQuality(a.hand_quality)
+      playerStates: this.normalizePlayerStates(a.playerStates),
+      handQuality: this.normalizeHandQuality(a.handQuality)
     }
   }
 
@@ -84,10 +84,10 @@ export class SemanticAnalyzer {
    */
   private normalizePlayerStates(
     states: unknown
-  ): Record<string, { emotional_state: EmotionalState; play_style: PlayStyle }> {
+  ): Record<string, { emotionalState: EmotionalState; playStyle: PlayStyle }> {
     if (!states || typeof states !== 'object') return {}
 
-    const normalized: Record<string, { emotional_state: EmotionalState; play_style: PlayStyle }> = {}
+    const normalized: Record<string, { emotionalState: EmotionalState; playStyle: PlayStyle }> = {}
 
     for (const [playerId, state] of Object.entries(states)) {
       if (!state || typeof state !== 'object') continue
@@ -95,11 +95,11 @@ export class SemanticAnalyzer {
       const s = state as Record<string, unknown>
 
       normalized[playerId] = {
-        emotional_state: VALID_EMOTIONAL_STATES.includes(s.emotional_state as EmotionalState)
-          ? s.emotional_state as EmotionalState
+        emotionalState: VALID_EMOTIONAL_STATES.includes(s.emotionalState as EmotionalState)
+          ? s.emotionalState as EmotionalState
           : 'neutral',
-        play_style: VALID_PLAY_STYLES.includes(s.play_style as PlayStyle)
-          ? s.play_style as PlayStyle
+        playStyle: VALID_PLAY_STYLES.includes(s.playStyle as PlayStyle)
+          ? s.playStyle as PlayStyle
           : 'balanced'
       }
     }

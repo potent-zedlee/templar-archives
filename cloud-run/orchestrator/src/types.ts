@@ -37,7 +37,7 @@ export type HandQuality = 'routine' | 'interesting' | 'highlight' | 'epic'
  */
 export interface Phase1Result {
   hands: Array<{
-    hand_number: number
+    handNumber: number
     start: string  // "HH:MM:SS"
     end: string
   }>
@@ -49,11 +49,11 @@ export interface Phase1Result {
 export interface AIAnalysis {
   confidence: number
   reasoning: string
-  player_states: Record<string, {
-    emotional_state: EmotionalState
-    play_style: PlayStyle
+  playerStates: Record<string, {
+    emotionalState: EmotionalState
+    playStyle: PlayStyle
   }>
-  hand_quality: HandQuality
+  handQuality: HandQuality
 }
 
 /**
@@ -87,12 +87,12 @@ export interface Phase2Result {
     amount: number
     hand?: string
   }>
-  timestamp_start: string
-  timestamp_end: string
+  timestampStart: string
+  timestampEnd: string
 
   // 신규: 시맨틱 분석
-  semantic_tags: SemanticTag[]
-  ai_analysis: AIAnalysis
+  semanticTags: SemanticTag[]
+  aiAnalysis: AIAnalysis
 }
 
 /**
@@ -104,7 +104,7 @@ export interface ProcessPhase2Request {
   handIndex: number
   gcsUri: string
   handTimestamp: {
-    hand_number: number
+    handNumber: number
     start: string
     end: string
   }

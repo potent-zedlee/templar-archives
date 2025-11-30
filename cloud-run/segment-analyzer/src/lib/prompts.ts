@@ -46,8 +46,8 @@ Return ONLY a valid JSON object with the following structure:
           "hand": "Two Pair, Aces and Kings"
         }
       ],
-      "timestamp_start": "05:30",
-      "timestamp_end": "08:45"
+      "timestampStart": "05:30",
+      "timestampEnd": "08:45"
     }
   ]
 }
@@ -129,8 +129,8 @@ Return ONLY a valid JSON object with the following structure:
           "hand": "Two Pair, Aces and Kings"
         }
       ],
-      "timestamp_start": "05:30",
-      "timestamp_end": "08:45"
+      "timestampStart": "05:30",
+      "timestampEnd": "08:45"
     }
   ]
 }
@@ -193,12 +193,12 @@ Return ONLY a valid JSON object:
 {
   "hands": [
     {
-      "hand_number": 1,
+      "handNumber": 1,
       "start": "05:30",
       "end": "08:45"
     },
     {
-      "hand_number": 2,
+      "handNumber": 2,
       "start": "08:46",
       "end": "12:20"
     }
@@ -266,19 +266,19 @@ Return ONLY a valid JSON object:
       "hand": "Two Pair, Aces and Kings"
     }
   ],
-  "timestamp_start": "05:30",
-  "timestamp_end": "08:45",
-  "semantic_tags": ["#AllIn", "#BigPot"],
-  "ai_analysis": {
+  "timestampStart": "05:30",
+  "timestampEnd": "08:45",
+  "semanticTags": ["#AllIn", "#BigPot"],
+  "aiAnalysis": {
     "confidence": 0.95,
     "reasoning": "Classic cooler situation with both players holding strong hands...",
-    "player_states": {
+    "playerStates": {
       "Player Name": {
-        "emotional_state": "confident",
-        "play_style": "aggressive"
+        "emotionalState": "confident",
+        "playStyle": "aggressive"
       }
     },
-    "hand_quality": "highlight"
+    "handQuality": "highlight"
   }
 }
 
