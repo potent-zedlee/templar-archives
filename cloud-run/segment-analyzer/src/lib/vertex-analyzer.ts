@@ -7,7 +7,7 @@
 
 import { GoogleGenAI } from '@google/genai'
 import { EPT_PROMPT, TRITON_POKER_PROMPT, PHASE1_PROMPT, getPhase2PromptForPlatform } from './prompts'
-import type { Phase1Result, Phase2Result, AIAnalysis, SemanticTag } from '@shared/types'
+import type { Phase1Result, Phase2Result, AIAnalysis, SemanticTag } from '../types'
 
 export interface ExtractedHand {
   handNumber: string | number

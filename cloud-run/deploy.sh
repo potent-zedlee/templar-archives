@@ -96,9 +96,9 @@ deploy_orchestrator() {
 
   cd "$(dirname "$0")/orchestrator"
 
-  # 빌드
-  echo_info "Building Docker image..."
-  docker build -t "$IMAGE_NAME" .
+  # 빌드 (Cloud Run은 linux/amd64 필요)
+  echo_info "Building Docker image (linux/amd64)..."
+  docker build --platform linux/amd64 -t "$IMAGE_NAME" .
 
   # Push
   echo_info "Pushing to Artifact Registry..."
@@ -136,9 +136,9 @@ deploy_segment_analyzer() {
 
   cd "$(dirname "$0")/segment-analyzer"
 
-  # 빌드
-  echo_info "Building Docker image..."
-  docker build -t "$IMAGE_NAME" .
+  # 빌드 (Cloud Run은 linux/amd64 필요)
+  echo_info "Building Docker image (linux/amd64)..."
+  docker build --platform linux/amd64 -t "$IMAGE_NAME" .
 
   # Push
   echo_info "Pushing to Artifact Registry..."

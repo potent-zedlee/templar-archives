@@ -21,6 +21,8 @@ import { HandNavigator } from "./HandNavigator"
 import { HandSummary } from "./HandSummary"
 import { HandComments } from "./HandComments"
 import { HandHistoryTimeline } from "./HandHistoryTimeline"
+import { SemanticTags } from "./SemanticTags"
+import { AIAnalysisPanel } from "./AIAnalysisPanel"
 import {
   Download,
   ChevronLeft,
@@ -35,6 +37,32 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import type { FirestoreStream } from "@/lib/firestore-types"
+
+// Semantic tag type
+type SemanticTag =
+  | '#BadBeat' | '#Cooler' | '#HeroCall' | '#Tilt'
+  | '#SoulRead' | '#SuckOut' | '#SlowPlay' | '#Bluff'
+  | '#AllIn' | '#BigPot' | '#FinalTable' | '#BubblePlay'
+
+// Emotional state type
+type EmotionalState = 'tilting' | 'confident' | 'cautious' | 'neutral'
+
+// Play style type
+type PlayStyle = 'aggressive' | 'passive' | 'balanced'
+
+// Hand quality type
+type HandQuality = 'routine' | 'interesting' | 'highlight' | 'epic'
+
+// AI Analysis interface
+interface AIAnalysis {
+  confidence: number
+  reasoning: string
+  player_states: Record<string, {
+    emotional_state: EmotionalState
+    play_style: PlayStyle
+  }>
+  hand_quality: HandQuality
+}
 
 interface HandData {
   id: string
@@ -68,6 +96,10 @@ interface HandData {
     turn?: { actions?: any[]; pot?: number }
     river?: { actions?: any[]; pot?: number }
   }
+  // 2-Phase Analysis fields
+  semantic_tags?: SemanticTag[]
+  ai_analysis?: AIAnalysis
+  analysis_phase?: 1 | 2
 }
 
 interface HandHistoryDialogProps {
@@ -324,6 +356,25 @@ export function HandHistoryDialog({
                   potSize={tableData.potSize}
                   showCards={true}
                 />
+
+                {/* Semantic Tags (if Phase 2 analysis available) */}
+                {hand.semantic_tags && hand.semantic_tags.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="text-lg font-semibold mb-3">Highlights</h3>
+                    <SemanticTags
+                      tags={hand.semantic_tags}
+                      size="md"
+                      showTooltip={true}
+                    />
+                  </div>
+                )}
+
+                {/* AI Analysis Panel (if Phase 2 analysis available) */}
+                {hand.ai_analysis && (
+                  <div className="mt-4">
+                    <AIAnalysisPanel analysis={hand.ai_analysis} />
+                  </div>
+                )}
 
                 {/* Hand History Timeline */}
                 <div className="mt-4">
