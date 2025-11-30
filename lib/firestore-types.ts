@@ -58,6 +58,69 @@ export type PokerStreet = 'preflop' | 'flop' | 'turn' | 'river'
  */
 export type PokerActionType = 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in'
 
+/**
+ * 시맨틱 태그 타입
+ */
+export type SemanticTagType =
+  | '#BadBeat'
+  | '#Cooler'
+  | '#HeroCall'
+  | '#Tilt'
+  | '#SoulRead'
+  | '#SuckOut'
+  | '#SlowPlay'
+  | '#Bluff'
+  | '#AllIn'
+  | '#BigPot'
+  | '#FinalTable'
+  | '#BubblePlay'
+
+/**
+ * 플레이어 감정 상태
+ */
+export type EmotionalStateType = 'tilting' | 'confident' | 'cautious' | 'neutral'
+
+/**
+ * 플레이 스타일
+ */
+export type PlayStyleType = 'aggressive' | 'passive' | 'balanced'
+
+/**
+ * 핸드 품질 등급
+ */
+export type HandQualityType = 'routine' | 'interesting' | 'highlight' | 'epic'
+
+/**
+ * 분석 Phase (1: 타임스탬프만, 2: 상세 분석 완료)
+ */
+export type AnalysisPhase = 1 | 2
+
+/**
+ * AI 플레이어 상태 분석
+ * Firestore에 snake_case로 저장됨
+ */
+export interface AIPlayerState {
+  /** 감정 상태 */
+  emotional_state: EmotionalStateType
+  /** 플레이 스타일 */
+  play_style: PlayStyleType
+}
+
+/**
+ * AI 분석 결과
+ * Firestore에 snake_case로 저장됨
+ */
+export interface AIAnalysis {
+  /** 분석 신뢰도 (0.0 - 1.0) */
+  confidence: number
+  /** AI 추론 설명 */
+  reasoning: string
+  /** 플레이어별 상태 분석 */
+  player_states: Record<string, AIPlayerState>
+  /** 핸드 품질 등급 */
+  hand_quality: HandQualityType
+}
+
 // ==================== Firestore Document Types ====================
 
 /**
@@ -382,6 +445,20 @@ export interface FirestoreHand {
   thumbnail_url?: string
   /** 즐겨찾기 */
   favorite?: boolean
+
+  // ==================== AI Semantic Analysis ====================
+
+  /** 시맨틱 태그 배열 */
+  semantic_tags?: string[]
+
+  /** AI 분석 결과 */
+  ai_analysis?: AIAnalysis
+
+  /** 분석 Phase (1: 타임스탬프만, 2: 상세 분석 완료) */
+  analysis_phase?: AnalysisPhase
+
+  /** Phase 2 분석 완료 시각 */
+  phase2_completed_at?: Timestamp
 
   /** 생성일 */
   created_at: Timestamp
