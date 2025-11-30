@@ -12,8 +12,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/search',
     '/players',
     '/community',
-    '/news',
-    '/live-reporting',
     '/bookmarks',
     '/profile',
   ].map((route) => ({
@@ -26,7 +24,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Dynamic routes (can be expanded later with actual data)
   const dynamicRoutes: MetadataRoute.Sitemap = [
     // Players pages will be generated dynamically
-    // News pages will be generated dynamically
     // Community pages will be generated dynamically
   ]
 
