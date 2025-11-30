@@ -166,10 +166,10 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
             >
               {/* Column 1: Player Info (NO HEADER) */}
               <div className="bg-muted p-4 flex items-center gap-3 border-t border-border first:border-t-0">
-                {player.player?.photo_url && (
+                {player.player?.photoUrl && (
                   <div className="w-12 h-12 rounded-full relative border-2 border-border overflow-hidden">
                     <Image
-                      src={player.player.photo_url}
+                      src={player.player.photoUrl}
                       alt={player.player.name}
                       fill
                       className="object-cover"
@@ -178,13 +178,7 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
                 )}
                 <div className="flex-1 min-w-0">
                   {player.player ? (
-                    <PlayerHoverCard player={{
-                      id: player.player.id,
-                      name: player.player.name,
-                      normalizedName: player.player.normalized_name,
-                      photoUrl: player.player.photo_url,
-                      country: player.player.country,
-                    }}>
+                    <PlayerHoverCard player={player.player}>
                       <div className="text-foreground font-medium truncate">
                         {player.player.name}
                       </div>
@@ -207,7 +201,7 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
 
               {/* Columns 2-5: Actions per street */}
               {streets.map(({ key }) => {
-                const playerActions = getActionsForPlayer(player.player_id, key)
+                const playerActions = getActionsForPlayer(player.playerId, key)
 
                 return (
                   <div
