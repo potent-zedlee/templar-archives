@@ -148,46 +148,46 @@ function mapFirestoreHand(docSnap: DocumentSnapshot | QueryDocumentSnapshot): Ha
   const data = docSnap.data() as FirestoreHand
   return {
     id: docSnap.id,
-    stream_id: data.streamId,
+    streamId: data.streamId,
     number: data.number,
     description: data.description,
-    ai_summary: data.aiSummary,
+    aiSummary: data.aiSummary,
     timestamp: data.timestamp,
-    board_flop: data.boardFlop,
-    board_turn: data.boardTurn,
-    board_river: data.boardRiver,
-    pot_size: data.potSize,
-    small_blind: data.smallBlind,
-    big_blind: data.bigBlind,
+    boardFlop: data.boardFlop,
+    boardTurn: data.boardTurn,
+    boardRiver: data.boardRiver,
+    potSize: data.potSize,
+    smallBlind: data.smallBlind,
+    bigBlind: data.bigBlind,
     ante: data.ante,
-    pot_preflop: data.potPreflop,
-    pot_flop: data.potFlop,
-    pot_turn: data.potTurn,
-    pot_river: data.potRiver,
-    video_timestamp_start: data.videoTimestampStart,
-    video_timestamp_end: data.videoTimestampEnd,
-    job_id: data.jobId,
+    potPreflop: data.potPreflop,
+    potFlop: data.potFlop,
+    potTurn: data.potTurn,
+    potRiver: data.potRiver,
+    videoTimestampStart: data.videoTimestampStart,
+    videoTimestampEnd: data.videoTimestampEnd,
+    jobId: data.jobId,
     favorite: data.favorite,
-    thumbnail_url: data.thumbnailUrl,
-    likes_count: data.engagement?.likesCount,
-    bookmarks_count: data.engagement?.bookmarksCount,
-    created_at: timestampToString(data.createdAt),
-    hand_players: data.players?.map((p) => ({
+    thumbnailUrl: data.thumbnailUrl,
+    likesCount: data.engagement?.likesCount,
+    bookmarksCount: data.engagement?.bookmarksCount,
+    createdAt: timestampToString(data.createdAt),
+    handPlayers: data.players?.map((p) => ({
       id: p.playerId,
-      hand_id: docSnap.id,
-      player_id: p.playerId,
-      poker_position: p.position,
+      handId: docSnap.id,
+      playerId: p.playerId,
+      pokerPosition: p.position,
       seat: p.seat,
-      hole_cards: p.cards,
+      holeCards: p.cards,
       cards: p.cards,
-      starting_stack: p.startStack,
-      ending_stack: p.endStack,
-      hand_description: p.handDescription,
-      is_winner: p.isWinner,
+      startingStack: p.startStack,
+      endingStack: p.endStack,
+      handDescription: p.handDescription,
+      isWinner: p.isWinner,
       player: {
         id: p.playerId,
         name: p.name,
-        normalized_name: p.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+        normalizedName: p.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
       },
     })),
     checked: false,
@@ -257,7 +257,7 @@ async function fetchTournamentsTreeFirestore(
 
         // 스트림 조회
         const streamsRef = collection(db, COLLECTION_PATHS.STREAMS(tournamentDoc.id, eventDoc.id))
-        const streamsQuery = query(streamsRef, orderBy('published_at', 'desc'))
+        const streamsQuery = query(streamsRef, orderBy('publishedAt', 'desc'))
         const streamsSnapshot = await getDocs(streamsQuery)
 
         const streams: Stream[] = streamsSnapshot.docs
@@ -323,8 +323,8 @@ export function useTournamentsQuery(
             bValue = b.category
             break
           case 'date':
-            aValue = new Date(a.created_at || 0).getTime()
-            bValue = new Date(b.created_at || 0).getTime()
+            aValue = new Date(a.createdAt || 0).getTime()
+            bValue = new Date(b.createdAt || 0).getTime()
             break
           case 'location':
             aValue = a.location || ''
@@ -475,11 +475,11 @@ async function fetchUnsortedVideosFirestore(): Promise<UnsortedVideo[]> {
       return {
         id: docSnap.id,
         name: data.name || '',
-        video_url: data.videoUrl,
-        video_file: data.videoFile,
-        video_source: data.videoSource || 'youtube',
-        published_at: timestampToString(data.publishedAt),
-        created_at: timestampToString(data.createdAt) || new Date().toISOString(),
+        videoUrl: data.videoUrl,
+        videoFile: data.videoFile,
+        videoSource: data.videoSource || 'youtube',
+        publishedAt: timestampToString(data.publishedAt),
+        createdAt: timestampToString(data.createdAt) || new Date().toISOString(),
       }
     })
   } catch (error) {
@@ -517,17 +517,17 @@ export function useUnsortedVideosQuery(sortParams?: Partial<ServerSortParams>) {
             bValue = b.name
             break
           case 'source':
-            aValue = a.video_source
-            bValue = b.video_source
+            aValue = a.videoSource
+            bValue = b.videoSource
             break
           case 'created':
-            aValue = new Date(a.created_at || 0).getTime()
-            bValue = new Date(b.created_at || 0).getTime()
+            aValue = new Date(a.createdAt || 0).getTime()
+            bValue = new Date(b.createdAt || 0).getTime()
             break
           case 'published':
             // Null-safe date handling
-            aValue = a.published_at ? new Date(a.published_at).getTime() : null
-            bValue = b.published_at ? new Date(b.published_at).getTime() : null
+            aValue = a.publishedAt ? new Date(a.publishedAt).getTime() : null
+            bValue = b.publishedAt ? new Date(b.publishedAt).getTime() : null
             break
           default:
             return 0
