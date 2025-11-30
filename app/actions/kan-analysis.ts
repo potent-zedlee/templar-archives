@@ -9,10 +9,8 @@
 
 import { adminFirestore } from '@/lib/firebase-admin'
 import { COLLECTION_PATHS } from '@/lib/firestore-types'
-import type { ExtractedHand } from '@/lib/video/vertex-analyzer'
-
-export type KanHand = ExtractedHand
 import type {
+  ExtractedHand,
   FirestoreStream,
   FirestoreHand,
   HandPlayerEmbedded,
@@ -22,6 +20,8 @@ import type {
   PokerStreet,
 } from '@/lib/firestore-types'
 import { TimeSegment } from '@/types/segments'
+
+export type KanHand = ExtractedHand
 import { revalidatePath } from 'next/cache'
 import { FieldValue } from 'firebase-admin/firestore'
 

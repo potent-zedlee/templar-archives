@@ -96,6 +96,45 @@ export type HandQualityType = 'routine' | 'interesting' | 'highlight' | 'epic'
 export type AnalysisPhase = 1 | 2
 
 /**
+ * AI 분석에서 추출된 핸드 데이터
+ * Cloud Run Segment Analyzer에서 반환하는 형식
+ */
+export interface ExtractedHand {
+  handNumber: string | number
+  stakes?: string
+  pot: number
+  board: {
+    flop: string[] | null
+    turn: string | null
+    river: string | null
+  }
+  players: Array<{
+    name: string
+    position: string
+    seat: number
+    stackSize: number
+    holeCards: string[] | null
+  }>
+  actions: Array<{
+    player: string
+    street: string
+    action: string
+    amount: number
+  }>
+  winners: Array<{
+    name: string
+    amount: number
+    hand?: string
+  }>
+  /** 타임코드 (세그먼트 내 상대 시간) */
+  timestampStart?: string
+  timestampEnd?: string
+  /** 절대 타임코드 (전체 영상 기준, 초 단위) */
+  absoluteTimestampStart?: number
+  absoluteTimestampEnd?: number
+}
+
+/**
  * AI 플레이어 상태 분석
  */
 export interface AIPlayerState {
