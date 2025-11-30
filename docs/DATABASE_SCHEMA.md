@@ -83,12 +83,19 @@ hands/{handId}           # 플랫 컬렉션 (쿼리 유연성)
   bigBlind?: number
   ante?: number
 
-  videoTimestampStart?: number
-  videoTimestampEnd?: number
+  videoTimestampStart?: string  // "HH:MM:SS" 형식
+  videoTimestampEnd?: string    // "HH:MM:SS" 형식
   jobId?: string
 
   players: HandPlayerEmbedded[]
   actions: HandActionEmbedded[]
+  winners?: HandWinnerEmbedded[]
+
+  // Phase 2 Analysis fields (2-Phase Architecture)
+  semanticTags?: SemanticTag[]  // ['#BadBeat', '#HeroCall', ...]
+  aiAnalysis?: AIAnalysis       // Gemini 3 Pro 분석 결과
+  analysisPhase?: 1 | 2         // 분석 단계
+  phase2CompletedAt?: Timestamp // Phase 2 완료 시간
 
   engagement: {
     likesCount: number
@@ -100,6 +107,40 @@ hands/{handId}           # 플랫 컬렉션 (쿼리 유연성)
   favorite?: boolean
   createdAt: Timestamp
   updatedAt: Timestamp
+}
+```
+
+### SemanticTag (열거형)
+
+```typescript
+type SemanticTag =
+  | '#BadBeat'     // 95%+ 에퀴티에서 역전패
+  | '#Cooler'      // 프리미엄 vs 프리미엄 (AA vs KK)
+  | '#HeroCall'    // 블러프 캐치 성공
+  | '#Tilt'        // 틸트 상태 플레이
+  | '#SoulRead'    // 정확한 핸드 리딩
+  | '#SuckOut'     // 아웃츠로 역전승
+  | '#SlowPlay'    // 강한 핸드로 체크/콜
+  | '#Bluff'       // 약한 핸드로 큰 베팅
+  | '#AllIn'       // 올인 상황
+  | '#BigPot'      // 대형 팟 (100BB+)
+  | '#FinalTable'  // 파이널 테이블
+  | '#BubblePlay'  // 버블 상황 플레이
+```
+
+### AIAnalysis
+
+```typescript
+{
+  confidence: number           // 0-1, 분석 신뢰도
+  reasoning: string            // 분석 근거 설명
+  playerStates: {              // 플레이어별 상태
+    [playerName: string]: {
+      emotionalState: 'tilting' | 'confident' | 'cautious' | 'neutral'
+      playStyle: 'aggressive' | 'passive' | 'balanced'
+    }
+  }
+  handQuality: 'routine' | 'interesting' | 'highlight' | 'epic'
 }
 ```
 
@@ -180,6 +221,16 @@ hands/{handId}           # 플랫 컬렉션 (쿼리 유연성)
   sequence: number
   actionType: 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in'
   amount?: number
+}
+```
+
+### HandWinnerEmbedded
+
+```typescript
+{
+  name: string                  // 위너 이름
+  amount: number                // 획득 금액
+  hand?: string                 // "Two Pair", "Flush" 등
 }
 ```
 

@@ -66,7 +66,7 @@ npm run analyze
 | State | React Query 5, Zustand 5 |
 | Database | Firebase Firestore (NoSQL) |
 | Auth | Firebase Auth (Google OAuth) |
-| AI | Vertex AI Gemini 2.5 Flash |
+| AI | Vertex AI Gemini 3 Pro (Phase 2) / Gemini 2.5 Flash (Phase 1) |
 | Background Jobs | Cloud Run + Cloud Tasks |
 | Video | GCS 직접 업로드 |
 | Hosting | Firebase Hosting (GitHub Actions CI/CD) |
@@ -138,7 +138,9 @@ Tournament → Event → Stream → Hand
 |------|------|
 | `app/actions/cloud-run-trigger.ts` | Server Action - Cloud Run 분석 시작 |
 | `cloud-run/orchestrator/` | Cloud Run - 작업 관리, 세그먼트 분할 |
-| `cloud-run/segment-analyzer/` | Cloud Run - FFmpeg + Gemini 분석 |
+| `cloud-run/segment-analyzer/` | Cloud Run - FFmpeg + Gemini 2-Phase 분석 |
+| `cloud-run/segment-analyzer/src/lib/vertex-analyzer-phase2.ts` | Gemini 3 Pro Phase 2 분석기 |
+| `cloud-run/segment-analyzer/src/lib/prompts/phase2-prompt.ts` | Chain-of-Thought 프롬프트 |
 | `lib/video/vertex-analyzer.ts` | Vertex AI Gemini 분석 및 JSON 파싱 |
 | `lib/ai/prompts.ts` | Platform별 AI 프롬프트 (EPT/Triton) |
 | `lib/hooks/use-cloud-run-job.ts` | Cloud Run 작업 진행률 폴링 |
@@ -148,7 +150,9 @@ Tournament → Event → Stream → Hand
 - 30분 세그먼트 자동 분할
 - Cloud Tasks 재시도: 3회, Exponential Backoff
 - Firestore 실시간 진행률
-- Vertex AI global 리전 (Gemini 2.5 모델 1M 토큰 지원)
+- Vertex AI global 리전 (Gemini 3 Pro 1M 토큰 지원)
+- 2-Phase 분석: Phase 1 (타임스탬프 추출) → Phase 2 (상세 분석 + 시맨틱 태깅)
+- Chain-of-Thought 추론으로 포커 심리 분석
 
 ### Admin Archive Pipeline Dashboard
 
@@ -434,4 +438,4 @@ npx ts-node scripts/rollback-field-names.ts
 ---
 
 **마지막 업데이트**: 2025-11-30
-**문서 버전**: 6.0 (Firestore 전체 snake_case 통일 완료)
+**문서 버전**: 6.1 (Gemini 3 Pro 업그레이드 + 2-Phase 분석 아키텍처)
