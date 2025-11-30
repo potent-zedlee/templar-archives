@@ -2,17 +2,130 @@
  * Cloud Run 영상 분석 서비스 공통 타입
  */
 
+// ============================================
+// 2-Phase 분석 타입
+// ============================================
+
+/**
+ * 시맨틱 태그 타입
+ */
+export type SemanticTag =
+  | '#BadBeat' | '#Cooler' | '#HeroCall' | '#Tilt'
+  | '#SoulRead' | '#SuckOut' | '#SlowPlay' | '#Bluff'
+  | '#AllIn' | '#BigPot' | '#FinalTable' | '#BubblePlay'
+
+/**
+ * 플레이어 감정 상태
+ */
+export type EmotionalState = 'tilting' | 'confident' | 'cautious' | 'neutral'
+
+/**
+ * 플레이 스타일
+ */
+export type PlayStyle = 'aggressive' | 'passive' | 'balanced'
+
+/**
+ * 핸드 품질
+ */
+export type HandQuality = 'routine' | 'interesting' | 'highlight' | 'epic'
+
+/**
+ * Phase 1 결과: 타임스탬프만 추출
+ */
+export interface Phase1Result {
+  hands: Array<{
+    hand_number: number
+    start: string  // "HH:MM:SS"
+    end: string
+  }>
+}
+
+/**
+ * AI 분석 결과
+ */
+export interface AIAnalysis {
+  confidence: number
+  reasoning: string
+  player_states: Record<string, {
+    emotional_state: EmotionalState
+    play_style: PlayStyle
+  }>
+  hand_quality: HandQuality
+}
+
+/**
+ * Phase 2 결과: 상세 분석 + 시맨틱
+ */
+export interface Phase2Result {
+  // 기존 핸드 데이터
+  handNumber: string | number
+  pot: number
+  board: {
+    flop: string[] | null
+    turn: string | null
+    river: string | null
+  }
+  players: Array<{
+    name: string
+    position: string
+    seat: number
+    stackSize: number
+    holeCards: string[] | null
+  }>
+  actions: Array<{
+    player: string
+    street: string
+    action: string
+    amount: number
+  }>
+  winners: Array<{
+    name: string
+    amount: number
+    hand?: string
+  }>
+  timestamp_start: string
+  timestamp_end: string
+
+  // 신규: 시맨틱 분석
+  semantic_tags: SemanticTag[]
+  ai_analysis: AIAnalysis
+}
+
+/**
+ * Phase 2 처리 요청
+ */
+export interface ProcessPhase2Request {
+  jobId: string
+  streamId: string
+  handIndex: number
+  gcsUri: string
+  handTimestamp: {
+    hand_number: number
+    start: string
+    end: string
+  }
+  platform: 'ept' | 'triton' | 'wsop'
+}
+
+// ============================================
+// 분석 작업 관리
+// ============================================
+
 export interface AnalysisJob {
   jobId: string
   streamId: string
   gcsUri: string
   platform: 'ept' | 'triton' | 'wsop'
   status: 'pending' | 'analyzing' | 'completed' | 'failed'
+  phase: 'phase1' | 'phase2' | 'completed'
   totalSegments: number
   completedSegments: number
   failedSegments: number
   handsFound: number
   segments: SegmentInfo[]
+  phase1CompletedSegments?: number
+  phase2TotalHands?: number
+  phase2CompletedHands?: number
   errorMessage?: string
   createdAt: Date
   startedAt?: Date
