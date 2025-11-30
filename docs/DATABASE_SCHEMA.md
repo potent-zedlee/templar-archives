@@ -2,8 +2,9 @@
 
 > **Templar Archives** Firestore NoSQL 구조
 
-**마지막 업데이트**: 2025-11-28
+**마지막 업데이트**: 2025-11-30
 **데이터베이스**: Firebase Firestore
+**필드명 규칙**: camelCase (snake_case 사용 금지)
 
 ---
 
