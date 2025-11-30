@@ -12,7 +12,7 @@ import { GridSkeleton } from "@/components/ui/skeletons/GridSkeleton"
 import { EmptyState } from "@/components/common/EmptyState"
 
 type PlayerWithHandCount = Player & {
-  hand_count: number
+  handCount: number
 }
 
 interface PlayersMainPanelProps {
@@ -115,7 +115,7 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
                         {/* Profile Image */}
                         <div className="relative flex-shrink-0">
                           <Avatar className="w-16 h-16 rounded-full border-2 border-muted">
-                            <AvatarImage src={player.photo_url} alt={player.name} />
+                            <AvatarImage src={player.photoUrl} alt={player.name} />
                             <AvatarFallback className="text-base font-semibold bg-muted text-foreground">
                               {player.name.split(' ').map(n => n[0]).join('')}
                             </AvatarFallback>
@@ -142,14 +142,14 @@ export function PlayersMainPanel({ players, loading }: PlayersMainPanelProps) {
                         <div className="space-y-1">
                           <span className="text-xs text-muted-foreground block">Total Hands</span>
                           <span className="text-lg font-semibold text-foreground font-mono">
-                            {player.hand_count}
+                            {player.handCount}
                           </span>
                         </div>
 
                         <div className="space-y-1">
                           <span className="text-xs text-muted-foreground block">Winnings</span>
                           <span className="text-lg font-semibold text-green-600 dark:text-green-400 font-mono">
-                            {formatWinnings(player.total_winnings)}
+                            {formatWinnings(player.totalWinnings)}
                           </span>
                         </div>
                       </div>

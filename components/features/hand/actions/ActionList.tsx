@@ -66,7 +66,7 @@ export function ActionList({
   return (
     <div className="space-y-2">
       {sortedActions.map((action, index) => {
-        const player = players.find(p => p.id === action.player_id)
+        const player = players.find(p => p.id === action.playerId)
         const isFirst = index === 0
         const isLast = index === sortedActions.length - 1
 
@@ -86,8 +86,8 @@ export function ActionList({
               </div>
 
               {/* Action Type */}
-              <Badge className={`${getActionTypeColor(action.action_type)} text-white`}>
-                {action.action_type.toUpperCase()}
+              <Badge className={`${getActionTypeColor(action.actionType)} text-white`}>
+                {action.actionType.toUpperCase()}
               </Badge>
 
               {/* Amount */}

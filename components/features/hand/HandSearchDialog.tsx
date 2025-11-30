@@ -111,7 +111,7 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
           name: d.name,
           category: d.category,
           location: d.location,
-          startDate: d.start_date?.toDate?.()?.toISOString() || '',
+          startDate: d.startDate?.toDate?.()?.toISOString() || '',
         }
       })
       setTournaments(data)
@@ -135,7 +135,7 @@ export function HandSearchDialog({ open, onOpenChange, onSelect }: HandSearchDia
         return {
           id: doc.id,
           name: d.name,
-          buyIn: d.buy_in,
+          buyIn: d.buyIn,
         }
       })
       setSubEvents(data)

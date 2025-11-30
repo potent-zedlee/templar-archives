@@ -54,17 +54,17 @@ const categoryFormSchema = z.object({
   name: z.string()
     .min(2, "이름은 최소 2자 이상이어야 합니다")
     .max(100, "이름은 최대 100자까지 가능합니다"),
-  display_name: z.string()
+  displayName: z.string()
     .min(2, "표시 이름은 최소 2자 이상이어야 합니다")
     .max(100, "표시 이름은 최대 100자까지 가능합니다"),
-  short_name: z.string().max(20, "약칭은 최대 20자까지 가능합니다").optional(),
+  shortName: z.string().max(20, "약칭은 최대 20자까지 가능합니다").optional(),
   aliases: z.string().optional(), // Comma-separated
-  is_active: z.boolean().default(true),
-  game_type: z.enum(["tournament", "cash_game", "both"]).default("both"),
-  parent_id: z.string().optional(),
-  theme_gradient: z.string().optional(),
-  theme_text: z.string().optional(),
-  theme_shadow: z.string().optional(),
+  isActive: z.boolean().default(true),
+  gameType: z.enum(["tournament", "cash_game", "both"]).default("both"),
+  parentId: z.string().optional(),
+  themeGradient: z.string().optional(),
+  themeText: z.string().optional(),
+  themeShadow: z.string().optional(),
 })
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>
@@ -77,7 +77,7 @@ interface CategoryDialogProps {
 export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
   const [open, setOpen] = useState(false)
   const [logoFile, setLogoFile] = useState<File | null>(null)
-  const [logoPreview, setLogoPreview] = useState<string | null>(category?.logo_url || null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(category?.logoUrl || null)
   const [isUploading, setIsUploading] = useState(false)
   const [logoUploadMode, setLogoUploadMode] = useState<"upload" | "select">("upload")
 
@@ -93,15 +93,15 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
     defaultValues: {
       id: category?.id || "",
       name: category?.name || "",
-      display_name: category?.display_name || "",
-      short_name: category?.short_name || "",
+      displayName: category?.displayName || "",
+      shortName: category?.shortName || "",
       aliases: category?.aliases?.join(", ") || "",
-      is_active: category?.is_active ?? true,
-      game_type: category?.game_type || "both",
-      parent_id: category?.parent_id || "none",
-      theme_gradient: category?.theme_gradient || "",
-      theme_text: category?.theme_text || "",
-      theme_shadow: category?.theme_shadow || "",
+      isActive: category?.isActive ?? true,
+      gameType: category?.gameType || "both",
+      parentId: category?.parentId || "none",
+      themeGradient: category?.themeGradient || "",
+      themeText: category?.themeText || "",
+      themeShadow: category?.themeShadow || "",
     },
   })
 
@@ -154,15 +154,15 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
       const input = {
         id: values.id,
         name: values.name,
-        display_name: values.display_name,
-        short_name: values.short_name || undefined,
+        displayName: values.displayName,
+        shortName: values.shortName || undefined,
         aliases: aliasesArray,
-        is_active: values.is_active,
-        game_type: values.game_type,
-        parent_id: values.parent_id === "none" || !values.parent_id ? null : values.parent_id,
-        theme_gradient: values.theme_gradient || undefined,
-        theme_text: values.theme_text || undefined,
-        theme_shadow: values.theme_shadow || undefined,
+        isActive: values.isActive,
+        gameType: values.gameType,
+        parentId: values.parentId === "none" || !values.parentId ? null : values.parentId,
+        themeGradient: values.themeGradient || undefined,
+        themeText: values.themeText || undefined,
+        themeShadow: values.themeShadow || undefined,
       }
 
       let categoryId: string
@@ -186,11 +186,11 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
         const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`
 
         // Save cache-busted URL to DB
-        await updateMutation.mutateAsync({ logo_url: urlWithTimestamp })
+        await updateMutation.mutateAsync({ logoUrl: urlWithTimestamp })
         setLogoPreview(urlWithTimestamp)
       } else if (logoUploadMode === "select" && logoPreview && categoryId) {
         // Save selected logo URL to DB
-        await updateMutation.mutateAsync({ logo_url: logoPreview })
+        await updateMutation.mutateAsync({ logoUrl: logoPreview })
       }
 
       // Close dialog and reset form
@@ -211,7 +211,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
     setOpen(false)
     form.reset()
     setLogoFile(null)
-    setLogoPreview(category?.logo_url || null)
+    setLogoPreview(category?.logoUrl || null)
   }
 
   // Cleanup blob URLs to prevent memory leaks
@@ -413,7 +413,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
               />
               <FormField
                 control={form.control}
-                name="display_name"
+                name="displayName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>표시 이름 *</FormLabel>
@@ -429,7 +429,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
             {/* Short Name */}
             <FormField
               control={form.control}
-              name="short_name"
+              name="shortName"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>약칭</FormLabel>
@@ -469,7 +469,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
             {/* Game Type */}
             <FormField
               control={form.control}
-              name="game_type"
+              name="gameType"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>게임 타입 *</FormLabel>
@@ -510,7 +510,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
             {/* Parent Category */}
             <FormField
               control={form.control}
-              name="parent_id"
+              name="parentId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>상위 카테고리</FormLabel>
@@ -523,10 +523,10 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
                     <SelectContent>
                       <SelectItem value="none">없음 (최상위 카테고리)</SelectItem>
                       {allCategories
-                        .filter((cat) => cat.id !== category?.id && !cat.parent_id)
+                        .filter((cat) => cat.id !== category?.id && !cat.parentId)
                         .map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
-                            {cat.display_name}
+                            {cat.displayName}
                           </SelectItem>
                         ))}
                     </SelectContent>
@@ -542,7 +542,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
             {/* Active Status */}
             <FormField
               control={form.control}
-              name="is_active"
+              name="isActive"
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
@@ -569,7 +569,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
               </div>
               <FormField
                 control={form.control}
-                name="theme_gradient"
+                name="themeGradient"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Gradient</FormLabel>
@@ -585,7 +585,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
               />
               <FormField
                 control={form.control}
-                name="theme_text"
+                name="themeText"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Text Color</FormLabel>
@@ -598,7 +598,7 @@ export function CategoryDialog({ category, trigger }: CategoryDialogProps) {
               />
               <FormField
                 control={form.control}
-                name="theme_shadow"
+                name="themeShadow"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Shadow</FormLabel>

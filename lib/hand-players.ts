@@ -38,19 +38,19 @@ import {
  */
 export type HandPlayer = {
   id: string
-  hand_id: string
-  player_id: string
+  handId: string
+  playerId: string
   position: string | null
   cards: string | null
-  starting_stack: number
-  ending_stack: number
-  created_at: string
+  startingStack: number
+  endingStack: number
+  createdAt: string
   // Join된 플레이어 정보
   player?: {
     id: string
     name: string
-    normalized_name: string
-    photo_url?: string
+    normalizedName: string
+    photoUrl?: string
     country?: string
   }
 }
@@ -61,9 +61,9 @@ export type HandPlayer = {
 export type Player = {
   id: string
   name: string
-  photo_url: string | null
+  photoUrl: string | null
   country: string | null
-  total_winnings: number
+  totalWinnings: number
 }
 
 /**
@@ -124,32 +124,32 @@ export async function fetchHandPlayers(handId: string): Promise<HandPlayer[]> {
     // 임베딩된 플레이어 정보를 HandPlayer 형식으로 변환
     for (const hp of hand.players || []) {
       // 플레이어 상세 정보 조회
-      const playerRef = doc(firestore, COLLECTION_PATHS.PLAYERS, hp.player_id)
+      const playerRef = doc(firestore, COLLECTION_PATHS.PLAYERS, hp.playerId)
       const playerDoc = await getDoc(playerRef)
       const player = playerDoc.exists() ? (playerDoc.data() as FirestorePlayer) : null
 
       handPlayers.push({
-        id: `${handId}_${hp.player_id}`, // 복합 ID
-        hand_id: handId,
-        player_id: hp.player_id,
+        id: `${handId}_${hp.playerId}`, // 복합 ID
+        handId: handId,
+        playerId: hp.playerId,
         position: hp.position || null,
         cards: hp.cards?.join('') || null,
-        starting_stack: hp.start_stack || 0,
-        ending_stack: hp.end_stack || 0,
-        created_at: timestampToString(hand.created_at as Timestamp),
+        startingStack: hp.startStack || 0,
+        endingStack: hp.endStack || 0,
+        createdAt: timestampToString(hand.createdAt as Timestamp),
         player: player
           ? {
-              id: hp.player_id,
+              id: hp.playerId,
               name: player.name,
-              normalized_name: player.normalized_name || normalizeName(player.name),
-              photo_url: player.photo_url || undefined,
+              normalizedName: player.normalizedName || normalizeName(player.name),
+              photoUrl: player.photoUrl || undefined,
               country: player.country || undefined,
             }
           : {
-              id: hp.player_id,
+              id: hp.playerId,
               name: hp.name,
-              normalized_name: normalizeName(hp.name),
-              photo_url: undefined,
+              normalizedName: normalizeName(hp.name),
+              photoUrl: undefined,
               country: undefined,
             },
       })
@@ -178,9 +178,9 @@ export async function fetchAllPlayers(): Promise<Player[]> {
       return {
         id: doc.id,
         name: data.name,
-        photo_url: data.photo_url || null,
+        photoUrl: data.photoUrl || null,
         country: data.country || null,
-        total_winnings: data.total_winnings || 0,
+        totalWinnings: data.totalWinnings || 0,
       }
     })
 
@@ -220,7 +220,7 @@ export async function addPlayerToHand(
     const existingPlayers = hand.players || []
 
     // 중복 체크
-    if (existingPlayers.some((p) => p.player_id === playerId)) {
+    if (existingPlayers.some((p) => p.playerId === playerId)) {
       return { success: false, error: 'This player is already in this hand' }
     }
 
@@ -236,12 +236,12 @@ export async function addPlayerToHand(
 
     // 새 플레이어 정보 생성
     const newPlayer: HandPlayerEmbedded = {
-      player_id: playerId,
+      playerId: playerId,
       name: player.name,
       position: position as PokerPosition | undefined,
       cards: cards ? cards.match(/.{1,2}/g) || undefined : undefined,
-      start_stack: startingStack || 0,
-      end_stack: 0,
+      startStack: startingStack || 0,
+      endStack: 0,
     }
 
     // 핸드에 플레이어 추가
@@ -258,17 +258,17 @@ export async function addPlayerToHand(
     // 플레이어 핸드 인덱스 추가
     const playerHandRef = doc(firestore, COLLECTION_PATHS.PLAYER_HANDS(playerId), handId)
     batch.set(playerHandRef, {
-      tournament_ref: {
-        id: hand.tournament_id,
+      tournamentRef: {
+        id: hand.tournamentId,
         name: '', // 필요시 조회
         category: '',
       },
       position: position as PokerPosition | undefined,
       cards: cards ? cards.match(/.{1,2}/g) || undefined : undefined,
       result: {
-        is_winner: false,
+        isWinner: false,
       },
-      hand_date: hand.created_at,
+      handDate: hand.createdAt,
     })
 
     await batch.commit()
@@ -304,7 +304,7 @@ export async function removePlayerFromHand(
     const existingPlayers = hand.players || []
 
     // 플레이어 필터링
-    const updatedPlayers = existingPlayers.filter((p) => p.player_id !== playerId)
+    const updatedPlayers = existingPlayers.filter((p) => p.playerId !== playerId)
 
     const batch = writeBatch(firestore)
 
@@ -342,8 +342,8 @@ export async function updatePlayerInHand(
   data: {
     position?: string
     cards?: string
-    starting_stack?: number
-    ending_stack?: number
+    startingStack?: number
+    endingStack?: number
   },
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -359,13 +359,13 @@ export async function updatePlayerInHand(
 
     // 플레이어 찾아서 업데이트
     const updatedPlayers = existingPlayers.map((p) => {
-      if (p.player_id === playerId) {
+      if (p.playerId === playerId) {
         return {
           ...p,
           position: (data.position as PokerPosition) ?? p.position,
           cards: data.cards ? data.cards.match(/.{1,2}/g) || p.cards : p.cards,
-          startStack: data.starting_stack ?? p.start_stack,
-          endStack: data.ending_stack ?? p.end_stack,
+          startStack: data.startingStack ?? p.startStack,
+          endStack: data.endingStack ?? p.endStack,
         }
       }
       return p
@@ -430,9 +430,9 @@ export async function searchPlayers(queryStr: string): Promise<Player[]> {
       return {
         id: doc.id,
         name: data.name,
-        photo_url: data.photo_url || null,
+        photoUrl: data.photoUrl || null,
         country: data.country || null,
-        total_winnings: data.total_winnings || 0,
+        totalWinnings: data.totalWinnings || 0,
       }
     })
 
@@ -452,7 +452,7 @@ export async function searchPlayers(queryStr: string): Promise<Player[]> {
 export async function createPlayer(data: {
   name: string
   country?: string
-  photo_url?: string
+  photoUrl?: string
 }): Promise<{ success: boolean; player?: Player; error?: string }> {
   try {
     const playersRef = collection(firestore, COLLECTION_PATHS.PLAYERS)
@@ -471,12 +471,12 @@ export async function createPlayer(data: {
 
     const newPlayer: FirestorePlayer = {
       name: data.name,
-      normalized_name: normalizedName,
+      normalizedName: normalizedName,
       country: data.country,
-      photo_url: data.photo_url,
-      total_winnings: 0,
-      created_at: serverTimestamp() as Timestamp,
-      updated_at: serverTimestamp() as Timestamp,
+      photoUrl: data.photoUrl,
+      totalWinnings: 0,
+      createdAt: serverTimestamp() as Timestamp,
+      updatedAt: serverTimestamp() as Timestamp,
     }
 
     await setDoc(newPlayerRef, newPlayer)
@@ -486,9 +486,9 @@ export async function createPlayer(data: {
       player: {
         id: newPlayerRef.id,
         name: data.name,
-        photo_url: data.photo_url || null,
+        photoUrl: data.photoUrl || null,
         country: data.country || null,
-        total_winnings: 0,
+        totalWinnings: 0,
       },
     }
   } catch (error: unknown) {
@@ -518,9 +518,9 @@ export async function fetchPlayer(playerId: string): Promise<Player | null> {
     return {
       id: playerId,
       name: data.name,
-      photo_url: data.photo_url || null,
+      photoUrl: data.photoUrl || null,
       country: data.country || null,
-      total_winnings: data.total_winnings || 0,
+      totalWinnings: data.totalWinnings || 0,
     }
   } catch (error) {
     console.error('플레이어 조회 실패:', error)
@@ -540,25 +540,25 @@ export async function updatePlayer(
   data: {
     name?: string
     country?: string
-    photo_url?: string
+    photoUrl?: string
   },
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const playerRef = doc(firestore, COLLECTION_PATHS.PLAYERS, playerId)
 
     const updateData: any = {
-      updated_at: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     }
 
     if (data.name !== undefined) {
       updateData.name = data.name
-      updateData.normalized_name = normalizeName(data.name)
+      updateData.normalizedName = normalizeName(data.name)
     }
     if (data.country !== undefined) {
       updateData.country = data.country
     }
-    if (data.photo_url !== undefined) {
-      updateData.photo_url = data.photo_url
+    if (data.photoUrl !== undefined) {
+      updateData.photoUrl = data.photoUrl
     }
 
     await updateDoc(playerRef, updateData)

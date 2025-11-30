@@ -50,7 +50,7 @@ function getNodeIcon(
   if (type === 'tournament' && logoUrl) {
     return (
       <CategoryLogo
-        category={{ id: '', logo_url: logoUrl }}
+        category={{ id: '', logoUrl: logoUrl }}
         size="sm"
         className="w-4 h-4"
       />

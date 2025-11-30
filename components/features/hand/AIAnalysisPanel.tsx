@@ -162,9 +162,9 @@ export function AIAnalysisPanel({ analysis, isLoading = false, className }: AIAn
     )
   }
 
-  const { confidence, reasoning, player_states, hand_quality } = analysis
+  const { confidence, reasoning, playerStates, handQuality } = analysis
   const confidencePercent = Math.round(confidence * 100)
-  const qualityBadge = getHandQualityBadge(hand_quality)
+  const qualityBadge = getHandQualityBadge(handQuality)
 
   // 추론 설명 텍스트 자르기 (최대 3줄 = 약 200자)
   const reasoningPreview = reasoning.length > 200 ? reasoning.slice(0, 200) + '...' : reasoning
@@ -262,7 +262,7 @@ export function AIAnalysisPanel({ analysis, isLoading = false, className }: AIAn
             </div>
 
             {/* 플레이어 상태 테이블 */}
-            {player_states && Object.keys(player_states).length > 0 && (
+            {playerStates && Object.keys(playerStates).length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-gold-400" />
@@ -284,9 +284,9 @@ export function AIAnalysisPanel({ analysis, isLoading = false, className }: AIAn
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {Object.entries(player_states).map(([playerName, state]) => {
-                        const emotionalDisplay = getEmotionalStateDisplay(state.emotional_state)
-                        const playStyleBadge = getPlayStyleBadge(state.play_style)
+                      {Object.entries(playerStates).map(([playerName, state]) => {
+                        const emotionalDisplay = getEmotionalStateDisplay(state.emotionalState)
+                        const playStyleBadge = getPlayStyleBadge(state.playStyle)
 
                         return (
                           <TableRow key={playerName} className="hover:bg-gold-700/5">

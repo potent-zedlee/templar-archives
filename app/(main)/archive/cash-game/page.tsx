@@ -110,12 +110,12 @@ export default function ArchiveCashGamePage() {
     // Date range filter
     if (selectedDateRange.start) {
       filtered = filtered.filter(t =>
-        t.start_date && new Date(t.start_date) >= new Date(selectedDateRange.start!)
+        t.startDate && new Date(t.startDate) >= new Date(selectedDateRange.start!)
       )
     }
     if (selectedDateRange.end) {
       filtered = filtered.filter(t =>
-        t.start_date && new Date(t.start_date) <= new Date(selectedDateRange.end!)
+        t.startDate && new Date(t.startDate) <= new Date(selectedDateRange.end!)
       )
     }
 

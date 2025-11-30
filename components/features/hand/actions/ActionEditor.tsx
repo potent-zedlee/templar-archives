@@ -24,7 +24,7 @@ type ActionEditorProps = {
   handId: string
   players: Player[]
   onActionsChange?: () => void
-  onPendingActionsChange?: (actions: Omit<HandActionInput, 'hand_id'>[]) => void
+  onPendingActionsChange?: (actions: Omit<HandActionInput, 'handId'>[]) => void
 }
 
 export function ActionEditor({
@@ -35,7 +35,7 @@ export function ActionEditor({
 }: ActionEditorProps) {
   const [activeStreet, setActiveStreet] = useState<Street>('preflop')
   const [isAddingAction, setIsAddingAction] = useState(false)
-  const [pendingActions, setPendingActions] = useState<Omit<HandActionInput, 'hand_id'>[]>([])
+  const [pendingActions, setPendingActions] = useState<Omit<HandActionInput, 'handId'>[]>([])
 
   // Fetch actions
   const { data: actions = [], isLoading } = useHandActionsQuery(handId)
@@ -70,7 +70,7 @@ export function ActionEditor({
     onPendingActionsChange?.(pendingActions)
   }, [pendingActions, onPendingActionsChange])
 
-  function handleAddPendingAction(action: Omit<HandActionInput, 'hand_id'>) {
+  function handleAddPendingAction(action: Omit<HandActionInput, 'handId'>) {
     setPendingActions(prev => [...prev, action])
     setIsAddingAction(false)
     toast.success('Action added (not saved yet)')
@@ -173,8 +173,8 @@ export function ActionEditor({
             actions={pendingStreetActions.map((action, index) => ({
               ...action,
               id: `pending-${index}`,
-              hand_id: handId,
-              created_at: new Date().toISOString(),
+              handId: handId,
+              createdAt: new Date().toISOString(),
             }))}
             players={players}
             onDelete={(id) => {
@@ -222,7 +222,7 @@ export function ActionEditor({
 
 // Export helper to get pending actions
 export function useActionEditorState() {
-  const [pendingActions, setPendingActions] = useState<Omit<HandActionInput, 'hand_id'>[]>([])
+  const [pendingActions, setPendingActions] = useState<Omit<HandActionInput, 'handId'>[]>([])
 
   return {
     pendingActions,
@@ -230,7 +230,7 @@ export function useActionEditorState() {
     getPendingActionsToSave: (handId: string) =>
       pendingActions.map(action => ({
         ...action,
-        hand_id: handId,
+        handId: handId,
       })),
     clearPendingActions: () => setPendingActions([]),
   }

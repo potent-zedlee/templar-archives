@@ -77,8 +77,8 @@ export function PlayerHoverCard({
             <div className="flex items-start gap-3">
               {/* Avatar */}
               <Avatar className="h-16 w-16 border-2 border-primary/20 shadow-lg">
-                {player.photo_url ? (
-                  <AvatarImage src={player.photo_url} alt={player.name} />
+                {player.photoUrl ? (
+                  <AvatarImage src={player.photoUrl} alt={player.name} />
                 ) : (
                   <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary font-semibold text-lg">
                     {initials || <User className="h-6 w-6" />}
@@ -92,7 +92,7 @@ export function PlayerHoverCard({
                   <h3 className="font-bold text-base leading-tight line-clamp-1">
                     {player.name}
                   </h3>
-                  {player.is_pro && (
+                  {player.isPro && (
                     <Badge
                       variant="secondary"
                       className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-600 dark:text-yellow-400 border-yellow-500/30 text-xs px-1.5 py-0"
@@ -122,13 +122,13 @@ export function PlayerHoverCard({
             )}
 
             {/* 상금 정보 */}
-            {player.total_winnings !== undefined && player.total_winnings > 0 && (
+            {player.totalWinnings !== undefined && player.totalWinnings > 0 && (
               <div className="flex items-center gap-2 p-2 rounded-md bg-green-500/10 border border-green-500/20">
                 <Trophy className="w-4 h-4 text-green-600 dark:text-green-400" />
                 <div className="flex-1">
                   <p className="text-xs text-muted-foreground">Total Winnings</p>
                   <p className="font-semibold text-sm text-green-600 dark:text-green-400">
-                    {formatWinnings(player.total_winnings)}
+                    {formatWinnings(player.totalWinnings)}
                   </p>
                 </div>
               </div>

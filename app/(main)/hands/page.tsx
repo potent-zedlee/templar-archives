@@ -40,12 +40,12 @@ async function getHands(): Promise<HandWithId[]> {
 
 function HandCard({ hand }: { hand: HandWithId }) {
   const board = [
-    ...(hand.board_flop || []),
-    hand.board_turn,
-    hand.board_river,
+    ...(hand.boardFlop || []),
+    hand.boardTurn,
+    hand.boardRiver,
   ].filter(Boolean)
 
-  const winners = hand.players?.filter((p: HandPlayerEmbedded) => p.is_winner) || []
+  const winners = hand.players?.filter((p: HandPlayerEmbedded) => p.isWinner) || []
   const allPlayers = hand.players || []
 
   return (
@@ -56,8 +56,8 @@ function HandCard({ hand }: { hand: HandWithId }) {
             <CardTitle className="text-lg">
               Hand #{hand.number || 'N/A'}
             </CardTitle>
-            {hand.small_blind && hand.big_blind && (
-              <Badge variant="outline">{hand.small_blind}/{hand.big_blind}</Badge>
+            {hand.smallBlind && hand.bigBlind && (
+              <Badge variant="outline">{hand.smallBlind}/{hand.bigBlind}</Badge>
             )}
           </div>
         </CardHeader>
@@ -77,11 +77,11 @@ function HandCard({ hand }: { hand: HandWithId }) {
           )}
 
           {/* Pot Size */}
-          {hand.pot_size && (
+          {hand.potSize && (
             <div className="flex gap-2">
               <span className="text-sm text-muted-foreground">Pot:</span>
               <span className="font-semibold">
-                {hand.pot_size.toLocaleString()} chips
+                {hand.potSize.toLocaleString()} chips
               </span>
             </div>
           )}
@@ -94,8 +94,8 @@ function HandCard({ hand }: { hand: HandWithId }) {
             <div className="flex flex-wrap gap-2">
               {allPlayers.slice(0, 6).map((hp: HandPlayerEmbedded, idx: number) => (
                 <Badge
-                  key={hp.player_id || idx}
-                  variant={hp.is_winner ? 'default' : 'secondary'}
+                  key={hp.playerId || idx}
+                  variant={hp.isWinner ? 'default' : 'secondary'}
                 >
                   {hp.name || 'Unknown'}
                   {hp.cards && hp.cards.length > 0 && (
@@ -118,9 +118,9 @@ function HandCard({ hand }: { hand: HandWithId }) {
                 <span className="font-medium">
                   {winners.map((w: HandPlayerEmbedded) => w.name).join(', ')}
                 </span>
-                {winners[0]?.hand_description && (
+                {winners[0]?.handDescription && (
                   <span className="text-sm text-muted-foreground">
-                    ({winners[0].hand_description})
+                    ({winners[0].handDescription})
                   </span>
                 )}
               </div>
@@ -128,14 +128,14 @@ function HandCard({ hand }: { hand: HandWithId }) {
           )}
 
           {/* Timestamp */}
-          {hand.video_timestamp_start !== null && hand.video_timestamp_start !== undefined && (
+          {hand.videoTimestampStart !== null && hand.videoTimestampStart !== undefined && (
             <div className="text-xs text-muted-foreground">
-              Video: {Math.floor(hand.video_timestamp_start / 60)}:
-              {String(hand.video_timestamp_start % 60).padStart(2, '0')} -{' '}
-              {hand.video_timestamp_end !== undefined && (
+              Video: {Math.floor(hand.videoTimestampStart / 60)}:
+              {String(hand.videoTimestampStart % 60).padStart(2, '0')} -{' '}
+              {hand.videoTimestampEnd !== undefined && (
                 <>
-                  {Math.floor(hand.video_timestamp_end / 60)}:
-                  {String(hand.video_timestamp_end % 60).padStart(2, '0')}
+                  {Math.floor(hand.videoTimestampEnd / 60)}:
+                  {String(hand.videoTimestampEnd % 60).padStart(2, '0')}
                 </>
               )}
             </div>

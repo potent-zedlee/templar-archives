@@ -33,7 +33,7 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
   const [imageError, setImageError] = useState(false)
 
   // 썸네일 URL (없으면 플레이스홀더)
-  const thumbnailUrl = hand.thumbnail_url || '/placeholder-hand.jpg'
+  const thumbnailUrl = hand.thumbnailUrl || '/placeholder-hand.jpg'
 
   // 블라인드 포맷팅 함수
   const formatBlinds = (sb?: number, bb?: number, ante?: number): string => {
@@ -179,11 +179,11 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
         </div>
 
         {/* AI 요약 또는 핸드 설명 (Left Border Accent) */}
-        {hand.ai_summary ? (
+        {hand.aiSummary ? (
           <div className="flex items-start gap-2 border-l-3 border-gold-500 pl-3">
             <Sparkles className="h-4 w-4 text-gold-400 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">
-              {hand.ai_summary}
+              {hand.aiSummary}
             </p>
           </div>
         ) : hand.description ? (
@@ -195,23 +195,23 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
         {/* 메타 정보 (블라인드, 팟 사이즈, 보드 카드) */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* 블라인드 정보 (Monospace) */}
-          {(hand.big_blind || hand.small_blind) && (
+          {(hand.bigBlind || hand.smallBlind) && (
             <div className="text-xs text-mono border-2 border-gold-700 px-2 py-1 bg-black-200 text-gold-400 font-bold">
-              {formatBlinds(hand.small_blind, hand.big_blind, hand.ante)}
+              {formatBlinds(hand.smallBlind, hand.bigBlind, hand.ante)}
             </div>
           )}
 
           {/* 최종 팟 사이즈 (Gold Badge) */}
-          {(hand.pot_river || hand.pot_size) && (
+          {(hand.potRiver || hand.potSize) && (
             <div className="bg-gold-500 text-black-0 px-2 py-1 text-xs font-black uppercase border-2 border-gold-600">
-              ${(hand.pot_river || hand.pot_size)!.toLocaleString()}
+              ${(hand.potRiver || hand.potSize)!.toLocaleString()}
             </div>
           )}
 
           {/* 보드 카드 (Monospace) */}
-          {hand.board_cards && hand.board_cards.length > 0 && (
+          {hand.boardCards && hand.boardCards.length > 0 && (
             <div className="text-xs text-mono border-2 border-gold-700 px-2 py-1 bg-black-200 text-text-secondary font-bold">
-              {hand.board_cards.join(' ')}
+              {hand.boardCards.join(' ')}
             </div>
           )}
         </div>
@@ -227,7 +227,7 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
               onClick={handleLikeToggle}
             >
               <Heart className={cn('w-4 h-4 mr-1', isLiked && 'fill-current')} />
-              <span className="text-mono">{(hand.likes_count || 0) + (isLiked ? 1 : 0)}</span>
+              <span className="text-mono">{(hand.likesCount || 0) + (isLiked ? 1 : 0)}</span>
             </button>
 
             <button
@@ -238,14 +238,14 @@ export function HandCard({ hand, onClick, onPlayHand, className }: HandCardProps
               onClick={handleDislikeToggle}
             >
               <ThumbsDown className={cn('w-4 h-4 mr-1', isDisliked && 'fill-current')} />
-              <span className="text-mono">{(hand.dislikes_count || 0) + (isDisliked ? 1 : 0)}</span>
+              <span className="text-mono">{(hand.dislikesCount || 0) + (isDisliked ? 1 : 0)}</span>
             </button>
           </div>
 
           {/* 추가 메타데이터 */}
-          {hand.created_at && (
+          {hand.createdAt && (
             <span className="text-xs text-text-muted text-mono">
-              {new Date(hand.created_at).toLocaleDateString('ko-KR')}
+              {new Date(hand.createdAt).toLocaleDateString('ko-KR')}
             </span>
           )}
         </div>

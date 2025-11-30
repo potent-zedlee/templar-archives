@@ -39,11 +39,11 @@ export function ArchiveTournamentLogosBar({
 
   // Filter categories by game type and get root categories only
   const rootCategories = useMemo(() => {
-    let filtered = allCategories.filter(cat => !cat.parent_id)
+    let filtered = allCategories.filter(cat => !cat.parentId)
 
     // Game type filter
     if (gameType && gameType !== 'both') {
-      filtered = filtered.filter(cat => cat.game_type === gameType || cat.game_type === 'both')
+      filtered = filtered.filter(cat => cat.gameType === gameType || cat.gameType === 'both')
     }
 
     // Sort by name (alphabetical)
@@ -52,11 +52,11 @@ export function ArchiveTournamentLogosBar({
 
   // Get children for a parent category
   const getChildren = (parentId: string) => {
-    let children = allCategories.filter(cat => cat.parent_id === parentId)
+    let children = allCategories.filter(cat => cat.parentId === parentId)
 
     // Game type filter for children
     if (gameType && gameType !== 'both') {
-      children = children.filter(cat => cat.game_type === gameType || cat.game_type === 'both')
+      children = children.filter(cat => cat.gameType === gameType || cat.gameType === 'both')
     }
 
     return children.sort((a, b) => a.name.localeCompare(b.name))
@@ -200,7 +200,7 @@ function TournamentLogoButton({
         "relative",
         isChildCategory && "opacity-90"
       )}
-      aria-label={`Filter by ${category.display_name}`}
+      aria-label={`Filter by ${category.displayName}`}
       aria-pressed={isSelected}
       aria-haspopup={hasChildren}
     >
@@ -240,7 +240,7 @@ function TournamentLogoButton({
             : "text-muted-foreground group-hover:text-foreground"
         )}
       >
-        {category.display_name}
+        {category.displayName}
       </span>
     </button>
   )

@@ -92,7 +92,7 @@ export async function startKanAnalysis(
     const stream = streamDoc.data() as FirestoreStream
 
     // GCS URI 확인
-    if (!stream.gcs_uri) {
+    if (!stream.gcsUri) {
       return {
         success: false,
         error: 'Stream does not have GCS URI. Please upload video first.',
@@ -106,7 +106,7 @@ export async function startKanAnalysis(
     }))
 
     console.log(`[KAN-CloudRun] Calling Cloud Run: ${CLOUD_RUN_URL}/analyze`)
-    console.log(`[KAN-CloudRun] GCS URI: ${stream.gcs_uri}`)
+    console.log(`[KAN-CloudRun] GCS URI: ${stream.gcsUri}`)
 
     // Cloud Run API 호출
     const response = await fetch(`${CLOUD_RUN_URL}/analyze`, {
@@ -116,7 +116,7 @@ export async function startKanAnalysis(
       },
       body: JSON.stringify({
         streamId,
-        gcsUri: stream.gcs_uri,
+        gcsUri: stream.gcsUri,
         segments: formattedSegments,
         platform,
       }),
@@ -302,12 +302,12 @@ function formatSecondsToTimestamp(seconds: number): string {
 
 /**
  * 핸드의 타임코드를 표시용 문자열로 포맷팅
- * @param hand 핸드 데이터 (absolute_timestamp_start/end 포함)
+ * @param hand 핸드 데이터 (absoluteTimestampStart/End 포함)
  * @returns "35:30 ~ 38:45" 형식 또는 기본값 "00:00"
  */
 function formatTimestampDisplay(hand: any): string {
-  const start = hand.absolute_timestamp_start
-  const end = hand.absolute_timestamp_end
+  const start = hand.absoluteTimestampStart
+  const end = hand.absoluteTimestampEnd
 
   if (typeof start === 'number' && typeof end === 'number') {
     return `${formatSecondsToTimestamp(start)} ~ ${formatSecondsToTimestamp(end)}`
@@ -318,12 +318,12 @@ function formatTimestampDisplay(hand: any): string {
   }
 
   // fallback: AI가 추출한 상대 타임코드 사용
-  if (hand.timestamp_start && hand.timestamp_end) {
-    return `${hand.timestamp_start} ~ ${hand.timestamp_end}`
+  if (hand.timestampStart && hand.timestampEnd) {
+    return `${hand.timestampStart} ~ ${hand.timestampEnd}`
   }
 
-  if (hand.timestamp_start) {
-    return hand.timestamp_start
+  if (hand.timestampStart) {
+    return hand.timestampStart
   }
 
   return '00:00'
@@ -350,7 +350,7 @@ async function saveHandToDatabase(
       // 플레이어 조회 또는 생성
       const playersRef = adminFirestore.collection(COLLECTION_PATHS.PLAYERS)
       const existingPlayerQuery = await playersRef
-        .where('normalized_name', '==', normalizedName)
+        .where('normalizedName', '==', normalizedName)
         .limit(1)
         .get()
 
@@ -360,9 +360,9 @@ async function saveHandToDatabase(
         // 플레이어 생성
         const newPlayerRef = await playersRef.add({
           name: player.name,
-          normalized_name: normalizedName,
-          created_at: FieldValue.serverTimestamp(),
-          updated_at: FieldValue.serverTimestamp(),
+          normalizedName: normalizedName,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
         })
         playerId = newPlayerRef.id
         console.log(`[KAN-Trigger] Created new player: ${player.name}`)
@@ -380,14 +380,14 @@ async function saveHandToDatabase(
 
       // HandPlayerEmbedded 생성
       players.push({
-        player_id: playerId,
+        playerId: playerId,
         name: player.name,
         position: player.position as PokerPosition,
         seat: player.seat,
         cards: player.holeCards, // ["As", "Kd"] 형식
-        start_stack: player.stackSize || 0,
-        end_stack: player.stackSize || 0, // 초기값
-        is_winner: isWinner,
+        startStack: player.stackSize || 0,
+        endStack: player.stackSize || 0, // 초기값
+        isWinner: isWinner,
       })
     } catch (error) {
       console.error(`[KAN-Trigger] Error processing player ${player.name}:`, error)
@@ -409,11 +409,11 @@ async function saveHandToDatabase(
       }
 
       actions.push({
-        player_id: playerId,
-        player_name: action.player,
+        playerId: playerId,
+        playerName: action.player,
         street: action.street as PokerStreet,
         sequence: sequence++,
-        action_type: action.action as PokerActionType,
+        actionType: action.action as PokerActionType,
         amount: action.amount || 0,
       })
     } catch (error) {
@@ -427,36 +427,36 @@ async function saveHandToDatabase(
   const boardRiver = hand.board?.river || null
 
   // playerIds 배열 생성 (array-contains 쿼리용)
-  const playerIds = players.map((p) => p.player_id)
+  const playerIds = players.map((p) => p.playerId)
 
   // Hand 문서 생성
   const handData: Partial<FirestoreHand> = {
-    stream_id: streamId,
-    event_id: eventId,
-    tournament_id: tournamentId,
-    player_ids: playerIds, // array-contains 쿼리용
+    streamId: streamId,
+    eventId: eventId,
+    tournamentId: tournamentId,
+    playerIds: playerIds, // array-contains 쿼리용
     number: String(hand.handNumber),
     description: generateHandDescription(hand),
     timestamp: formatTimestampDisplay(hand), // 사용자 표시용 타임코드
-    video_timestamp_start: hand.absolute_timestamp_start ?? undefined, // 초 단위
-    video_timestamp_end: hand.absolute_timestamp_end ?? undefined, // 초 단위
-    pot_size: hand.pot || 0,
-    board_flop: boardFlop.length > 0 ? boardFlop : undefined,
-    board_turn: boardTurn || undefined,
-    board_river: boardRiver || undefined,
+    videoTimestampStart: hand.absoluteTimestampStart ?? undefined, // 초 단위
+    videoTimestampEnd: hand.absoluteTimestampEnd ?? undefined, // 초 단위
+    potSize: hand.pot || 0,
+    boardFlop: boardFlop.length > 0 ? boardFlop : undefined,
+    boardTurn: boardTurn || undefined,
+    boardRiver: boardRiver || undefined,
     // 블라인드 정보 파싱 (stakes에서)
-    small_blind: parseBlindFromStakes(hand.stakes, 'sb'),
-    big_blind: parseBlindFromStakes(hand.stakes, 'bb'),
+    smallBlind: parseBlindFromStakes(hand.stakes, 'sb'),
+    bigBlind: parseBlindFromStakes(hand.stakes, 'bb'),
     ante: parseBlindFromStakes(hand.stakes, 'ante'),
     players,
     actions,
     engagement: {
-      likes_count: 0,
-      dislikes_count: 0,
-      bookmarks_count: 0,
+      likesCount: 0,
+      dislikesCount: 0,
+      bookmarksCount: 0,
     },
-    created_at: FieldValue.serverTimestamp() as any,
-    updated_at: FieldValue.serverTimestamp() as any,
+    createdAt: FieldValue.serverTimestamp() as any,
+    updatedAt: FieldValue.serverTimestamp() as any,
   }
 
   // Hands 컬렉션에 저장

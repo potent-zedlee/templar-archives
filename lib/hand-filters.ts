@@ -11,18 +11,18 @@ export type MomentFilter = 'all' | 'highlighted' | 'big-pot' | 'all-in'
 /**
  * 핸드가 "Highlighted"인지 판단
  * - favorite = true 또는
- * - likes_count > threshold
+ * - likesCount > threshold
  */
 export function isHighlighted(hand: Hand, likesThreshold: number = 5): boolean {
-  return hand.favorite === true || (hand.likes_count || 0) > likesThreshold
+  return hand.favorite === true || (hand.likesCount || 0) > likesThreshold
 }
 
 /**
  * 핸드가 "Big Pot"인지 판단
- * - pot_size > threshold
+ * - potSize > threshold
  */
 export function isBigPot(hand: Hand, potThreshold: number = 50000): boolean {
-  return (hand.pot_size || 0) > potThreshold
+  return (hand.potSize || 0) > potThreshold
 }
 
 /**
@@ -58,7 +58,7 @@ export function getHandTags(hand: Hand): string[] {
   }
 
   // 보드 카드가 있으면 flop/turn/river 표시
-  const boardCount = hand.board_cards?.length || 0
+  const boardCount = hand.boardCards?.length || 0
   if (boardCount >= 3) {
     tags.push('Flop')
   }

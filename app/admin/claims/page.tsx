@@ -241,13 +241,13 @@ export default function ClaimsClient() {
                         </div>
                       </td>
                       <td className="p-3 text-text-secondary">
-                        {getVerificationMethodLabel(claim.verification_method)}
+                        {getVerificationMethodLabel(claim.verificationMethod)}
                       </td>
                       <td className="p-3">
-                        {claim.verification_data?.social_media_url &&
-                         typeof claim.verification_data.social_media_url === 'string' ? (
+                        {claim.verificationData?.socialMediaUrl &&
+                         typeof claim.verificationData.socialMediaUrl === 'string' ? (
                           <a
-                            href={String(claim.verification_data.social_media_url)}
+                            href={String(claim.verificationData.socialMediaUrl)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-gold-400 hover:underline"
@@ -256,19 +256,19 @@ export default function ClaimsClient() {
                             <ExternalLink className="h-3 w-3" />
                           </a>
                         ) : null}
-                        {claim.verification_data?.email &&
-                         typeof claim.verification_data.email === 'string' ? (
-                          <span className="text-text-secondary">{String(claim.verification_data.email)}</span>
+                        {claim.verificationData?.email &&
+                         typeof claim.verificationData.email === 'string' ? (
+                          <span className="text-text-secondary">{String(claim.verificationData.email)}</span>
                         ) : null}
-                        {claim.verification_data?.additional_info &&
-                         typeof claim.verification_data.additional_info === 'string' ? (
+                        {claim.verificationData?.additionalInfo &&
+                         typeof claim.verificationData.additionalInfo === 'string' ? (
                           <p className="text-caption text-text-secondary mt-1">
-                            {String(claim.verification_data.additional_info)}
+                            {String(claim.verificationData.additionalInfo)}
                           </p>
                         ) : null}
                       </td>
                       <td className="p-3 text-text-secondary">
-                        {new Date(claim.claimed_at).toLocaleString("ko-KR")}
+                        {new Date(claim.claimedAt).toLocaleString("ko-KR")}
                       </td>
                       <td className="p-3 text-right">
                         <div className="flex items-center gap-2 justify-end">
@@ -336,15 +336,15 @@ export default function ClaimsClient() {
                     </td>
                     <td className="p-3">{getStatusBadge(claim.status)}</td>
                     <td className="p-3 text-text-secondary">
-                      {getVerificationMethodLabel(claim.verification_method)}
+                      {getVerificationMethodLabel(claim.verificationMethod)}
                     </td>
                     <td className="p-3 text-text-secondary">
-                      {claim.verified_at
-                        ? new Date(claim.verified_at).toLocaleString("ko-KR")
+                      {claim.verifiedAt
+                        ? new Date(claim.verifiedAt).toLocaleString("ko-KR")
                         : "-"}
                     </td>
                     <td className="p-3 text-text-secondary">
-                      {claim.verified_by_user?.nickname || "-"}
+                      {claim.verifiedByUser?.nickname || "-"}
                     </td>
                   </tr>
                 ))}

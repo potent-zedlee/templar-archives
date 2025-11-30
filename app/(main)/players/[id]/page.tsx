@@ -286,7 +286,7 @@ export default function PlayerDetailClient() {
             <div className="flex flex-col items-center md:items-start">
               <div className="relative">
                 <Avatar className="w-32 h-32 rounded-full border-4 border-muted">
-                  <AvatarImage src={player.photo_url} alt={player.name} />
+                  <AvatarImage src={player.photoUrl} alt={player.name} />
                   <AvatarFallback className="text-3xl font-semibold bg-muted text-foreground">
                     {player.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
@@ -356,7 +356,7 @@ export default function PlayerDetailClient() {
                 <div className="space-y-1">
                   <span className="text-xs text-muted-foreground block">Winnings</span>
                   <span className="text-2xl font-semibold text-green-600 dark:text-green-400 font-mono">
-                    {formatWinnings(player.total_winnings)}
+                    {formatWinnings(player.totalWinnings)}
                   </span>
                 </div>
 

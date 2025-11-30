@@ -8,12 +8,12 @@ import { Search } from "lucide-react"
 export interface HandWithDetails {
   id: string
   number: string
-  final_pot?: number
-  tournament_name?: string
-  day_name?: string
-  player_names?: string[]
+  finalPot?: number
+  tournamentName?: string
+  dayName?: string
+  playerNames?: string[]
   description?: string
-  created_at?: string
+  createdAt?: string
 }
 
 interface SearchResultsListProps {
@@ -70,19 +70,19 @@ export function SearchResultsList({
                 {/* Hand Number & Pot */}
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-lg font-mono font-semibold">#{hand.number}</span>
-                  {hand.final_pot && (
+                  {hand.finalPot && (
                     <span className="text-sm text-green-600 dark:text-green-400 font-semibold">
-                      ${(hand.final_pot / 100).toLocaleString()}
+                      ${(hand.finalPot / 100).toLocaleString()}
                     </span>
                   )}
                 </div>
 
                 {/* Tournament & Day */}
-                {(hand.tournament_name || hand.day_name) && (
+                {(hand.tournamentName || hand.dayName) && (
                   <div className="text-sm text-muted-foreground mb-2">
-                    {hand.tournament_name}
-                    {hand.tournament_name && hand.day_name && " • "}
-                    {hand.day_name}
+                    {hand.tournamentName}
+                    {hand.tournamentName && hand.dayName && " • "}
+                    {hand.dayName}
                   </div>
                 )}
 
@@ -94,9 +94,9 @@ export function SearchResultsList({
                 )}
 
                 {/* Player Badges */}
-                {hand.player_names && hand.player_names.length > 0 && (
+                {hand.playerNames && hand.playerNames.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {hand.player_names.slice(0, 3).map((name, i) => (
+                    {hand.playerNames.slice(0, 3).map((name, i) => (
                       <span
                         key={i}
                         className="px-2 py-0.5 bg-muted rounded text-xs"
@@ -104,9 +104,9 @@ export function SearchResultsList({
                         {name}
                       </span>
                     ))}
-                    {hand.player_names.length > 3 && (
+                    {hand.playerNames.length > 3 && (
                       <span className="px-2 py-0.5 bg-muted rounded text-xs">
-                        +{hand.player_names.length - 3}
+                        +{hand.playerNames.length - 3}
                       </span>
                     )}
                   </div>

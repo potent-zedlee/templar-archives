@@ -35,33 +35,33 @@ export type { GameType } from '@/lib/firestore-types'
 export interface TournamentCategory {
   id: string
   name: string
-  display_name: string
-  short_name?: string | null
+  displayName: string
+  shortName?: string | null
   aliases: string[]
-  logo_url?: string | null
-  is_active: boolean
-  game_type: GameType
-  parent_id?: string | null
-  theme_gradient?: string | null
-  theme_text?: string | null
-  theme_shadow?: string | null
-  created_at: string
-  updated_at: string
+  logoUrl?: string | null
+  isActive: boolean
+  gameType: GameType
+  parentId?: string | null
+  themeGradient?: string | null
+  themeText?: string | null
+  themeShadow?: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 export interface CategoryInput {
   id: string
   name: string
-  display_name: string
-  short_name?: string
+  displayName: string
+  shortName?: string
   aliases?: string[]
-  logo_url?: string
-  is_active?: boolean
-  game_type?: GameType
-  parent_id?: string | null
-  theme_gradient?: string
-  theme_text?: string
-  theme_shadow?: string
+  logoUrl?: string
+  isActive?: boolean
+  gameType?: GameType
+  parentId?: string | null
+  themeGradient?: string
+  themeText?: string
+  themeShadow?: string
 }
 
 export interface CategoryUpdateInput extends Partial<Omit<CategoryInput, 'id'>> {}
@@ -73,18 +73,18 @@ function toTournamentCategory(id: string, data: FirestoreTournamentCategory): To
   return {
     id,
     name: data.name,
-    display_name: data.display_name,
-    short_name: data.short_name || null,
+    displayName: data.displayName,
+    shortName: data.shortName || null,
     aliases: data.aliases || [],
-    logo_url: data.logo_url || null,
-    is_active: data.is_active,
-    game_type: data.game_type,
-    parent_id: data.parent_id || null,
-    theme_gradient: data.theme_gradient || null,
-    theme_text: data.theme_text || null,
-    theme_shadow: data.theme_shadow || null,
-    created_at: data.created_at.toDate().toISOString(),
-    updated_at: data.updated_at.toDate().toISOString(),
+    logoUrl: data.logoUrl || null,
+    isActive: data.isActive,
+    gameType: data.gameType,
+    parentId: data.parentId || null,
+    themeGradient: data.themeGradient || null,
+    themeText: data.themeText || null,
+    themeShadow: data.themeShadow || null,
+    createdAt: data.createdAt.toDate().toISOString(),
+    updatedAt: data.updatedAt.toDate().toISOString(),
   }
 }
 
@@ -109,12 +109,12 @@ export async function getAllCategories(
 
     // 필터링 (Firestore 복합 쿼리 제한으로 클라이언트에서 처리)
     if (!includeInactive) {
-      categories = categories.filter((cat) => cat.is_active)
+      categories = categories.filter((cat) => cat.isActive)
     }
 
     if (gameType) {
       categories = categories.filter(
-        (cat) => cat.game_type === gameType || cat.game_type === 'both'
+        (cat) => cat.gameType === gameType || cat.gameType === 'both'
       )
     }
 
@@ -133,7 +133,7 @@ export async function getActiveCategories(gameType?: GameType): Promise<Tourname
 }
 
 /**
- * 최상위 카테고리만 조회 (parent_id가 null인 카테고리)
+ * 최상위 카테고리만 조회 (parentId가 null인 카테고리)
  */
 export async function getRootCategories(gameType?: GameType): Promise<TournamentCategory[]> {
   try {
@@ -147,11 +147,11 @@ export async function getRootCategories(gameType?: GameType): Promise<Tournament
 
     let categories = snapshot.docs
       .map((doc) => toTournamentCategory(doc.id, doc.data() as FirestoreTournamentCategory))
-      .filter((cat) => !cat.parent_id) // parent_id가 없는 것만
+      .filter((cat) => !cat.parentId) // parentId가 없는 것만
 
     if (gameType) {
       categories = categories.filter(
-        (cat) => cat.game_type === gameType || cat.game_type === 'both'
+        (cat) => cat.gameType === gameType || cat.gameType === 'both'
       )
     }
 
@@ -163,7 +163,7 @@ export async function getRootCategories(gameType?: GameType): Promise<Tournament
 }
 
 /**
- * 하위 카테고리 조회 (특정 parent_id의 자식들)
+ * 하위 카테고리 조회 (특정 parentId의 자식들)
  */
 export async function getChildCategories(
   parentId: string,
@@ -172,8 +172,8 @@ export async function getChildCategories(
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES),
-      where('parent_id', '==', parentId),
-      where('is_active', '==', true),
+      where('parentId', '==', parentId),
+      where('isActive', '==', true),
       orderBy('name', 'asc')
     )
 
@@ -185,7 +185,7 @@ export async function getChildCategories(
 
     if (gameType) {
       categories = categories.filter(
-        (cat) => cat.game_type === gameType || cat.game_type === 'both'
+        (cat) => cat.gameType === gameType || cat.gameType === 'both'
       )
     }
 
@@ -266,18 +266,18 @@ export async function createCategory(input: CategoryInput): Promise<TournamentCa
     const categoryData: FirestoreTournamentCategory = {
       id: input.id,
       name: input.name,
-      display_name: input.display_name,
-      short_name: input.short_name,
+      displayName: input.displayName,
+      shortName: input.shortName,
       aliases: input.aliases || [],
-      logo_url: input.logo_url,
-      is_active: input.is_active ?? true,
-      game_type: input.game_type || 'both',
-      parent_id: input.parent_id || undefined,
-      theme_gradient: input.theme_gradient,
-      theme_text: input.theme_text,
-      theme_shadow: input.theme_shadow,
-      created_at: now,
-      updated_at: now,
+      logoUrl: input.logoUrl,
+      isActive: input.isActive ?? true,
+      gameType: input.gameType || 'both',
+      parentId: input.parentId || undefined,
+      themeGradient: input.themeGradient,
+      themeText: input.themeText,
+      themeShadow: input.themeShadow,
+      createdAt: now,
+      updatedAt: now,
     }
 
     await setDoc(doc(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES, input.id), categoryData)
@@ -303,20 +303,20 @@ export async function updateCategory(
     const docRef = doc(firestore, COLLECTION_PATHS.TOURNAMENT_CATEGORIES, id)
 
     const updateData: Record<string, unknown> = {
-      updated_at: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     }
 
     if (input.name !== undefined) updateData.name = input.name
-    if (input.display_name !== undefined) updateData.display_name = input.display_name
-    if (input.short_name !== undefined) updateData.short_name = input.short_name || null
+    if (input.displayName !== undefined) updateData.displayName = input.displayName
+    if (input.shortName !== undefined) updateData.shortName = input.shortName || null
     if (input.aliases !== undefined) updateData.aliases = input.aliases
-    if (input.logo_url !== undefined) updateData.logo_url = input.logo_url || null
-    if (input.is_active !== undefined) updateData.is_active = input.is_active
-    if (input.game_type !== undefined) updateData.game_type = input.game_type
-    if (input.parent_id !== undefined) updateData.parent_id = input.parent_id || null
-    if (input.theme_gradient !== undefined) updateData.theme_gradient = input.theme_gradient || null
-    if (input.theme_text !== undefined) updateData.theme_text = input.theme_text || null
-    if (input.theme_shadow !== undefined) updateData.theme_shadow = input.theme_shadow || null
+    if (input.logoUrl !== undefined) updateData.logoUrl = input.logoUrl || null
+    if (input.isActive !== undefined) updateData.isActive = input.isActive
+    if (input.gameType !== undefined) updateData.gameType = input.gameType
+    if (input.parentId !== undefined) updateData.parentId = input.parentId || null
+    if (input.themeGradient !== undefined) updateData.themeGradient = input.themeGradient || null
+    if (input.themeText !== undefined) updateData.themeText = input.themeText || null
+    if (input.themeShadow !== undefined) updateData.themeShadow = input.themeShadow || null
 
     await updateDoc(docRef, updateData)
 
@@ -406,7 +406,7 @@ export async function toggleCategoryActive(id: string): Promise<TournamentCatego
   }
 
   // 토글
-  return updateCategory(id, { is_active: !category.is_active })
+  return updateCategory(id, { isActive: !category.isActive })
 }
 
 /**
@@ -446,9 +446,9 @@ export async function uploadCategoryLogo(
   try {
     // 기존 로고 삭제 (있으면)
     const category = await getCategoryById(categoryId)
-    if (category?.logo_url && category.logo_url.includes('tournament-logos')) {
+    if (category?.logoUrl && category.logoUrl.includes('tournament-logos')) {
       try {
-        const oldFileName = category.logo_url.split('/').pop()?.split('?')[0]
+        const oldFileName = category.logoUrl.split('/').pop()?.split('?')[0]
         if (oldFileName) {
           const oldRef = ref(storage, `tournament-logos/${oldFileName}`)
           await deleteObject(oldRef)
@@ -469,8 +469,8 @@ export async function uploadCategoryLogo(
     // Public URL 가져오기
     const publicUrl = await getDownloadURL(storageRef)
 
-    // 카테고리의 logo_url 업데이트
-    await updateCategory(categoryId, { logo_url: publicUrl })
+    // 카테고리의 logoUrl 업데이트
+    await updateCategory(categoryId, { logoUrl: publicUrl })
 
     return publicUrl
   } catch (error) {
@@ -485,14 +485,14 @@ export async function uploadCategoryLogo(
 export async function deleteCategoryLogo(categoryId: string): Promise<void> {
   try {
     const category = await getCategoryById(categoryId)
-    if (!category || !category.logo_url) {
+    if (!category || !category.logoUrl) {
       return // 로고가 없으면 아무것도 하지 않음
     }
 
     // Storage에서 삭제 (Firebase Storage URL인 경우만)
-    if (category.logo_url.includes('tournament-logos')) {
+    if (category.logoUrl.includes('tournament-logos')) {
       try {
-        const fileName = category.logo_url.split('/').pop()?.split('?')[0]
+        const fileName = category.logoUrl.split('/').pop()?.split('?')[0]
         if (fileName) {
           const storageRef = ref(storage, `tournament-logos/${fileName}`)
           await deleteObject(storageRef)
@@ -503,8 +503,8 @@ export async function deleteCategoryLogo(categoryId: string): Promise<void> {
       }
     }
 
-    // 카테고리의 logo_url NULL로 설정
-    await updateCategory(categoryId, { logo_url: undefined })
+    // 카테고리의 logoUrl NULL로 설정
+    await updateCategory(categoryId, { logoUrl: undefined })
   } catch (error) {
     console.error('deleteCategoryLogo 실패:', error)
     throw error
@@ -512,7 +512,7 @@ export async function deleteCategoryLogo(categoryId: string): Promise<void> {
 }
 
 /**
- * 검색 (이름, display_name, aliases로 검색)
+ * 검색 (이름, displayName, aliases로 검색)
  */
 export async function searchCategories(searchQuery: string): Promise<TournamentCategory[]> {
   try {
@@ -524,8 +524,8 @@ export async function searchCategories(searchQuery: string): Promise<TournamentC
     return allCategories.filter(
       (cat) =>
         cat.name.toLowerCase().includes(lowerQuery) ||
-        cat.display_name.toLowerCase().includes(lowerQuery) ||
-        (cat.short_name && cat.short_name.toLowerCase().includes(lowerQuery)) ||
+        cat.displayName.toLowerCase().includes(lowerQuery) ||
+        (cat.shortName && cat.shortName.toLowerCase().includes(lowerQuery)) ||
         cat.aliases.some((alias) => alias.toLowerCase().includes(lowerQuery))
     )
   } catch (error) {

@@ -27,31 +27,31 @@ export type { ClaimStatus, VerificationMethod } from '@/lib/firestore-types'
 
 export type PlayerClaim = {
   id: string
-  user_id: string
-  player_id: string
+  userId: string
+  playerId: string
   status: ClaimStatus
-  verification_method: VerificationMethod
-  verification_data?: Record<string, unknown>
-  admin_notes?: string
-  claimed_at: string
-  verified_at?: string
-  verified_by?: string
-  rejected_reason?: string
-  created_at: string
-  updated_at: string
+  verificationMethod: VerificationMethod
+  verificationData?: Record<string, unknown>
+  adminNotes?: string
+  claimedAt: string
+  verifiedAt?: string
+  verifiedBy?: string
+  rejectedReason?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export type PlayerClaimWithDetails = PlayerClaim & {
   user: {
     nickname: string
     email: string
-    avatar_url?: string
+    avatarUrl?: string
   }
   player: {
     name: string
-    photo_url?: string
+    photoUrl?: string
   }
-  verified_by_user?: {
+  verifiedByUser?: {
     nickname: string
   }
 }
@@ -62,18 +62,18 @@ export type PlayerClaimWithDetails = PlayerClaim & {
 function toPlayerClaim(id: string, data: FirestorePlayerClaim): PlayerClaim {
   return {
     id,
-    user_id: data.user_id,
-    player_id: data.player_id,
+    userId: data.userId,
+    playerId: data.playerId,
     status: data.status,
-    verification_method: data.verification_method,
-    verification_data: data.verification_data,
-    admin_notes: data.admin_notes,
-    claimed_at: data.claimed_at.toDate().toISOString(),
-    verified_at: data.verified_at?.toDate().toISOString(),
-    verified_by: data.verified_by,
-    rejected_reason: data.rejected_reason,
-    created_at: data.created_at.toDate().toISOString(),
-    updated_at: data.updated_at.toDate().toISOString(),
+    verificationMethod: data.verificationMethod,
+    verificationData: data.verificationData,
+    adminNotes: data.adminNotes,
+    claimedAt: data.claimedAt.toDate().toISOString(),
+    verifiedAt: data.verifiedAt?.toDate().toISOString(),
+    verifiedBy: data.verifiedBy,
+    rejectedReason: data.rejectedReason,
+    createdAt: data.createdAt.toDate().toISOString(),
+    updatedAt: data.updatedAt.toDate().toISOString(),
   }
 }
 
@@ -87,13 +87,13 @@ function toPlayerClaimWithDetails(id: string, data: FirestorePlayerClaim): Playe
     user: {
       nickname: data.user?.nickname || 'Unknown',
       email: data.user?.email || '',
-      avatar_url: data.user?.avatar_url,
+      avatarUrl: data.user?.avatarUrl,
     },
     player: {
       name: data.player?.name || 'Unknown',
-      photo_url: data.player?.photo_url,
+      photoUrl: data.player?.photoUrl,
     },
-    verified_by_user: data.verified_by
+    verifiedByUser: data.verifiedBy
       ? {
           nickname: 'Admin', // 별도 조회 필요
         }
@@ -119,8 +119,8 @@ export async function requestPlayerClaim({
     // 이미 클레임 요청이 있는지 확인
     const existingQuery = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      where('user_id', '==', userId),
-      where('player_id', '==', playerId),
+      where('userId', '==', userId),
+      where('playerId', '==', playerId),
       where('status', 'in', ['pending', 'approved'])
     )
 
@@ -147,28 +147,28 @@ export async function requestPlayerClaim({
     const playerData = playerDoc.data()
 
     const now = Timestamp.now()
-    const claimData: Omit<FirestorePlayerClaim, 'verified_at' | 'verified_by' | 'rejected_reason'> = {
-      user_id: userId,
-      player_id: playerId,
+    const claimData: Omit<FirestorePlayerClaim, 'verifiedAt' | 'verifiedBy' | 'rejectedReason'> = {
+      userId: userId,
+      playerId: playerId,
       status: 'pending',
-      verification_method: verificationMethod,
-      verification_data: verificationData,
-      claimed_at: now,
+      verificationMethod: verificationMethod,
+      verificationData: verificationData,
+      claimedAt: now,
       user: userData
         ? {
             nickname: userData.nickname || 'Unknown',
             email: userData.email || '',
-            avatar_url: userData.avatar_url,
+            avatarUrl: userData.avatarUrl,
           }
         : undefined,
       player: playerData
         ? {
             name: playerData.name || 'Unknown',
-            photo_url: playerData.photo_url,
+            photoUrl: playerData.photoUrl,
           }
         : undefined,
-      created_at: now,
-      updated_at: now,
+      createdAt: now,
+      updatedAt: now,
     }
 
     const docRef = await addDoc(collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS), claimData)
@@ -195,7 +195,7 @@ export async function getPlayerClaimInfo(
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      where('player_id', '==', playerId),
+      where('playerId', '==', playerId),
       where('status', '==', 'approved')
     )
 
@@ -205,10 +205,10 @@ export async function getPlayerClaimInfo(
       return { claimed: false }
     }
 
-    const doc = snapshot.docs[0]
+    const docSnap = snapshot.docs[0]
     return {
       claimed: true,
-      claim: toPlayerClaimWithDetails(doc.id, doc.data() as FirestorePlayerClaim),
+      claim: toPlayerClaimWithDetails(docSnap.id, docSnap.data() as FirestorePlayerClaim),
     }
   } catch (error) {
     console.error('getPlayerClaimInfo 실패:', error)
@@ -226,7 +226,7 @@ export async function getUserClaimedPlayer(userId: string): Promise<{
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      where('user_id', '==', userId),
+      where('userId', '==', userId),
       where('status', '==', 'approved')
     )
 
@@ -236,9 +236,9 @@ export async function getUserClaimedPlayer(userId: string): Promise<{
       return { data: null, error: null }
     }
 
-    const doc = snapshot.docs[0]
+    const docSnap = snapshot.docs[0]
     return {
-      data: toPlayerClaimWithDetails(doc.id, doc.data() as FirestorePlayerClaim),
+      data: toPlayerClaimWithDetails(docSnap.id, docSnap.data() as FirestorePlayerClaim),
       error: null,
     }
   } catch (error) {
@@ -257,14 +257,14 @@ export async function getUserClaims(userId: string): Promise<{
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      where('user_id', '==', userId),
-      orderBy('created_at', 'desc')
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
     )
 
     const snapshot = await getDocs(q)
 
-    const claims = snapshot.docs.map((doc) =>
-      toPlayerClaimWithDetails(doc.id, doc.data() as FirestorePlayerClaim)
+    const claims = snapshot.docs.map((docSnap) =>
+      toPlayerClaimWithDetails(docSnap.id, docSnap.data() as FirestorePlayerClaim)
     )
 
     return { data: claims, error: null }
@@ -285,13 +285,13 @@ export async function getPendingClaims(): Promise<{
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
       where('status', '==', 'pending'),
-      orderBy('created_at', 'desc')
+      orderBy('createdAt', 'desc')
     )
 
     const snapshot = await getDocs(q)
 
-    const claims = snapshot.docs.map((doc) =>
-      toPlayerClaimWithDetails(doc.id, doc.data() as FirestorePlayerClaim)
+    const claims = snapshot.docs.map((docSnap) =>
+      toPlayerClaimWithDetails(docSnap.id, docSnap.data() as FirestorePlayerClaim)
     )
 
     return { data: claims, error: null }
@@ -311,13 +311,13 @@ export async function getAllClaims(): Promise<{
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      orderBy('created_at', 'desc')
+      orderBy('createdAt', 'desc')
     )
 
     const snapshot = await getDocs(q)
 
-    const claims = snapshot.docs.map((doc) =>
-      toPlayerClaimWithDetails(doc.id, doc.data() as FirestorePlayerClaim)
+    const claims = snapshot.docs.map((docSnap) =>
+      toPlayerClaimWithDetails(docSnap.id, docSnap.data() as FirestorePlayerClaim)
     )
 
     return { data: claims, error: null }
@@ -344,10 +344,10 @@ export async function approvePlayerClaim({
 
     await updateDoc(claimRef, {
       status: 'approved',
-      verified_at: Timestamp.now(),
-      verified_by: adminId,
-      admin_notes: adminNotes || null,
-      updated_at: Timestamp.now(),
+      verifiedAt: Timestamp.now(),
+      verifiedBy: adminId,
+      adminNotes: adminNotes || null,
+      updatedAt: Timestamp.now(),
     })
 
     const updatedDoc = await getDoc(claimRef)
@@ -384,11 +384,11 @@ export async function rejectPlayerClaim({
 
     await updateDoc(claimRef, {
       status: 'rejected',
-      verified_at: Timestamp.now(),
-      verified_by: adminId,
-      rejected_reason: rejectedReason,
-      admin_notes: adminNotes || null,
-      updated_at: Timestamp.now(),
+      verifiedAt: Timestamp.now(),
+      verifiedBy: adminId,
+      rejectedReason: rejectedReason,
+      adminNotes: adminNotes || null,
+      updatedAt: Timestamp.now(),
     })
 
     const updatedDoc = await getDoc(claimRef)
@@ -425,7 +425,7 @@ export async function cancelPlayerClaim(
     const claimData = claimDoc.data() as FirestorePlayerClaim
 
     // 본인 확인
-    if (claimData.user_id !== userId) {
+    if (claimData.userId !== userId) {
       return { error: new Error('Unauthorized') }
     }
 
@@ -456,8 +456,8 @@ export async function checkUserPlayerClaim(
   try {
     const q = query(
       collection(firestore, COLLECTION_PATHS.PLAYER_CLAIMS),
-      where('user_id', '==', userId),
-      where('player_id', '==', playerId),
+      where('userId', '==', userId),
+      where('playerId', '==', playerId),
       where('status', 'in', ['pending', 'approved'])
     )
 
@@ -467,10 +467,10 @@ export async function checkUserPlayerClaim(
       return { hasClaim: false }
     }
 
-    const doc = snapshot.docs[0]
+    const docSnap = snapshot.docs[0]
     return {
       hasClaim: true,
-      claim: toPlayerClaim(doc.id, doc.data() as FirestorePlayerClaim),
+      claim: toPlayerClaim(docSnap.id, docSnap.data() as FirestorePlayerClaim),
     }
   } catch (error) {
     console.error('checkUserPlayerClaim 실패:', error)

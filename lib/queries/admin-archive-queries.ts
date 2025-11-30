@@ -179,7 +179,7 @@ export function useAdminEventsQuery(
     queryFn: async () => {
       const eventsRef = collection(firestore, 'sub_events') as CollectionReference
       const constraints: QueryConstraint[] = [
-        where('tournament_id', '==', tournamentId),
+        where('tournamentId', '==', tournamentId),
         orderBy('date', 'desc')
       ]
 
@@ -196,27 +196,27 @@ export function useAdminEventsQuery(
         const data = doc.data()
         events.push({
           id: doc.id,
-          tournament_id: data.tournament_id,
+          tournament_id: data.tournamentId,
           name: data.name,
-          event_number: data.event_number,
-          total_prize: data.total_prize,
+          event_number: data.eventNumber,
+          total_prize: data.totalPrize,
           winner: data.winner,
-          buy_in: data.buy_in,
-          entry_count: data.entry_count,
-          blind_structure: data.blind_structure,
-          level_duration: data.level_duration,
-          starting_stack: data.starting_stack,
+          buy_in: data.buyIn,
+          entry_count: data.entryCount,
+          blind_structure: data.blindStructure,
+          level_duration: data.levelDuration,
+          starting_stack: data.startingStack,
           notes: data.notes,
           status: data.status,
-          published_by: data.published_by,
-          published_at: data.published_at,
+          published_by: data.publishedBy,
+          published_at: data.publishedAt,
           // Timestamp를 string으로 변환
           date: data.date instanceof Timestamp
             ? data.date.toDate().toISOString()
             : data.date,
-          created_at: data.created_at instanceof Timestamp
-            ? data.created_at.toDate().toISOString()
-            : data.created_at,
+          created_at: data.createdAt instanceof Timestamp
+            ? data.createdAt.toDate().toISOString()
+            : data.createdAt,
         })
       })
 
@@ -242,8 +242,8 @@ export function useAdminStreamsQuery(
     queryFn: async () => {
       const streamsRef = collection(firestore, 'streams') as CollectionReference
       const constraints: QueryConstraint[] = [
-        where('sub_event_id', '==', eventId),
-        orderBy('published_at', 'desc')
+        where('subEventId', '==', eventId),
+        orderBy('publishedAt', 'desc')
       ]
 
       // Status 필터 적용
@@ -263,31 +263,31 @@ export function useAdminStreamsQuery(
 
         streams.push({
           id: doc.id,
-          event_id: data.sub_event_id || data.event_id,
+          event_id: data.subEventId || data.eventId,
           name: data.name,
           description: data.description,
-          video_url: data.video_url,
-          video_file: data.video_file,
-          video_nas_path: data.video_nas_path,
-          video_source: data.video_source,
-          is_organized: data.is_organized,
-          organized_at: data.organized_at,
-          player_count: data.player_count,
+          video_url: data.videoUrl,
+          video_file: data.videoFile,
+          video_nas_path: data.videoNasPath,
+          video_source: data.videoSource,
+          is_organized: data.isOrganized,
+          organized_at: data.organizedAt,
+          player_count: data.playerCount,
           status: data.status,
-          published_by: data.published_by,
-          gcs_path: data.gcs_path,
-          gcs_uri: data.gcs_uri,
-          gcs_file_size: data.gcs_file_size,
-          gcs_uploaded_at: data.gcs_uploaded_at,
-          upload_status: data.upload_status,
-          video_duration: data.video_duration,
+          published_by: data.publishedBy,
+          gcs_path: data.gcsPath,
+          gcs_uri: data.gcsUri,
+          gcs_file_size: data.gcsFileSize,
+          gcs_uploaded_at: data.gcsUploadedAt,
+          upload_status: data.uploadStatus,
+          video_duration: data.videoDuration,
           // Timestamp를 string으로 변환
-          published_at: data.published_at instanceof Timestamp
-            ? data.published_at.toDate().toISOString()
-            : data.published_at,
-          created_at: data.created_at instanceof Timestamp
-            ? data.created_at.toDate().toISOString()
-            : data.created_at,
+          published_at: data.publishedAt instanceof Timestamp
+            ? data.publishedAt.toDate().toISOString()
+            : data.publishedAt,
+          created_at: data.createdAt instanceof Timestamp
+            ? data.createdAt.toDate().toISOString()
+            : data.createdAt,
           hand_count: 0, // 초기값
         })
       })
@@ -301,11 +301,11 @@ export function useAdminStreamsQuery(
         for (let i = 0; i < streamIds.length; i += chunkSize) {
           const chunk = streamIds.slice(i, i + chunkSize)
           const handsRef = collection(firestore, 'hands')
-          const handsQuery = query(handsRef, where('stream_id', 'in', chunk))
+          const handsQuery = query(handsRef, where('streamId', 'in', chunk))
           const handsSnapshot = await getDocs(handsQuery)
 
           handsSnapshot.forEach(doc => {
-            const streamId = doc.data().stream_id
+            const streamId = doc.data().streamId
             handCounts[streamId] = (handCounts[streamId] || 0) + 1
           })
         }
@@ -420,14 +420,14 @@ async function getStreamsByPipelineStatus(
     if (status === 'all') {
       q = query(
         streamsRef,
-        orderBy('pipeline_updated_at', 'desc'),
+        orderBy('pipelineUpdatedAt', 'desc'),
         limit(pageLimit)
       )
     } else {
       q = query(
         streamsRef,
-        where('pipeline_status', '==', status),
-        orderBy('pipeline_updated_at', 'desc'),
+        where('pipelineStatus', '==', status),
+        orderBy('pipelineUpdatedAt', 'desc'),
         limit(pageLimit)
       )
     }
@@ -440,22 +440,22 @@ async function getStreamsByPipelineStatus(
         id: docSnapshot.id,
         name: data.name || '',
         description: data.description,
-        videoUrl: data.video_url,
-        gcsUri: data.gcs_uri,
-        pipelineStatus: data.pipeline_status || 'pending',
-        pipelineProgress: data.pipeline_progress || 0,
-        pipelineError: data.pipeline_error,
-        pipelineUpdatedAt: data.pipeline_updated_at?.toDate(),
-        currentJobId: data.current_job_id,
-        lastAnalysisAt: data.last_analysis_at?.toDate(),
-        analysisAttempts: data.analysis_attempts || 0,
-        handCount: data.hand_count || 0,
-        eventId: data.sub_event_id || data.event_id,
-        eventName: data.event_name,
-        tournamentId: data.tournament_id,
-        tournamentName: data.tournament_name,
-        createdAt: data.created_at?.toDate() || new Date(),
-        updatedAt: data.updated_at?.toDate() || new Date(),
+        videoUrl: data.videoUrl,
+        gcsUri: data.gcsUri,
+        pipelineStatus: data.pipelineStatus || 'pending',
+        pipelineProgress: data.pipelineProgress || 0,
+        pipelineError: data.pipelineError,
+        pipelineUpdatedAt: data.pipelineUpdatedAt?.toDate(),
+        currentJobId: data.currentJobId,
+        lastAnalysisAt: data.lastAnalysisAt?.toDate(),
+        analysisAttempts: data.analysisAttempts || 0,
+        handCount: data.handCount || 0,
+        eventId: data.subEventId || data.eventId,
+        eventName: data.eventName,
+        tournamentId: data.tournamentId,
+        tournamentName: data.tournamentName,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
       }
     })
   } catch (error) {
@@ -477,7 +477,7 @@ async function getPipelineStatusCounts(): Promise<PipelineStatusCounts> {
     ]
 
     const countPromises = statuses.map(async (status) => {
-      const q = query(streamsRef, where('pipeline_status', '==', status))
+      const q = query(streamsRef, where('pipelineStatus', '==', status))
       const snapshot = await getCountFromServer(q)
       return { status, count: snapshot.data().count }
     })
@@ -556,16 +556,16 @@ export function useUpdatePipelineStatus() {
       const streamRef = doc(firestore, 'streams', streamId)
 
       const updateData: Record<string, unknown> = {
-        pipeline_status: status,
-        pipeline_updated_at: Timestamp.now(),
+        pipelineStatus: status,
+        pipelineUpdatedAt: Timestamp.now(),
       }
 
       if (error) {
-        updateData.pipeline_error = error
+        updateData.pipelineError = error
       }
 
       if (status === 'analyzing') {
-        updateData.pipeline_progress = 0
+        updateData.pipelineProgress = 0
       }
 
       await updateDoc(streamRef, updateData)
@@ -597,14 +597,14 @@ export function useRetryAnalysis() {
         throw new Error('스트림을 찾을 수 없습니다')
       }
 
-      const currentAttempts = streamDoc.data().analysis_attempts || 0
+      const currentAttempts = streamDoc.data().analysisAttempts || 0
 
       await updateDoc(streamRef, {
-        pipeline_status: 'pending',
-        pipeline_progress: 0,
-        pipeline_error: null,
-        pipeline_updated_at: Timestamp.now(),
-        analysis_attempts: currentAttempts + 1,
+        pipelineStatus: 'pending',
+        pipelineProgress: 0,
+        pipelineError: null,
+        pipelineUpdatedAt: Timestamp.now(),
+        analysisAttempts: currentAttempts + 1,
       })
 
       return { streamId, attempts: currentAttempts + 1 }
@@ -659,13 +659,13 @@ export function useClassifyStream() {
       // 스트림 업데이트
       const streamRef = doc(firestore, 'streams', streamId)
       await updateDoc(streamRef, {
-        sub_event_id: eventId,
-        tournament_id: tournamentId,
-        tournament_name: tournamentData.name,
-        event_id: eventId,
-        event_name: eventData.name,
-        pipeline_status: 'pending' as PipelineStatus,
-        pipeline_updated_at: Timestamp.now(),
+        subEventId: eventId,
+        tournamentId: tournamentId,
+        tournamentName: tournamentData.name,
+        eventId: eventId,
+        eventName: eventData.name,
+        pipelineStatus: 'pending' as PipelineStatus,
+        pipelineUpdatedAt: Timestamp.now(),
       })
 
       return {
@@ -702,7 +702,7 @@ export function useStreamHands(streamId: string) {
       const handsRef = collection(firestore, 'hands')
       const q = query(
         handsRef,
-        where('stream_id', '==', streamId),
+        where('streamId', '==', streamId),
         orderBy('number', 'asc')
       )
       const snapshot = await getDocs(q)
@@ -712,40 +712,40 @@ export function useStreamHands(streamId: string) {
         const data = docSnapshot.data()
         hands.push({
           id: docSnapshot.id,
-          stream_id: data.stream_id,
+          stream_id: data.streamId,
           number: data.number,
           description: data.description,
-          ai_summary: data.ai_summary,
+          ai_summary: data.aiSummary,
           confidence: data.confidence,
           timestamp: data.timestamp,
-          board_flop: data.board_flop,
-          board_turn: data.board_turn,
-          board_river: data.board_river,
-          board_cards: data.board_cards,
-          pot_size: data.pot_size,
+          board_flop: data.boardFlop,
+          board_turn: data.boardTurn,
+          board_river: data.boardRiver,
+          board_cards: data.boardCards,
+          pot_size: data.potSize,
           stakes: data.stakes,
-          small_blind: data.small_blind,
-          big_blind: data.big_blind,
+          small_blind: data.smallBlind,
+          big_blind: data.bigBlind,
           ante: data.ante,
-          pot_preflop: data.pot_preflop,
-          pot_flop: data.pot_flop,
-          pot_turn: data.pot_turn,
-          pot_river: data.pot_river,
-          video_timestamp_start: data.video_timestamp_start,
-          video_timestamp_end: data.video_timestamp_end,
-          job_id: data.job_id,
-          raw_data: data.raw_data,
-          pokerkit_format: data.pokerkit_format,
-          hand_history_format: data.hand_history_format,
+          pot_preflop: data.potPreflop,
+          pot_flop: data.potFlop,
+          pot_turn: data.potTurn,
+          pot_river: data.potRiver,
+          video_timestamp_start: data.videoTimestampStart,
+          video_timestamp_end: data.videoTimestampEnd,
+          job_id: data.jobId,
+          raw_data: data.rawData,
+          pokerkit_format: data.pokerkitFormat,
+          hand_history_format: data.handHistoryFormat,
           favorite: data.favorite,
-          thumbnail_url: data.thumbnail_url,
-          likes_count: data.likes_count,
-          dislikes_count: data.dislikes_count,
-          bookmarks_count: data.bookmarks_count,
-          created_at: data.created_at instanceof Timestamp
-            ? data.created_at.toDate().toISOString()
-            : data.created_at,
-          hand_players: data.hand_players || [],
+          thumbnail_url: data.thumbnailUrl,
+          likes_count: data.likesCount,
+          dislikes_count: data.dislikesCount,
+          bookmarks_count: data.bookmarksCount,
+          created_at: data.createdAt instanceof Timestamp
+            ? data.createdAt.toDate().toISOString()
+            : data.createdAt,
+          hand_players: data.handPlayers || [],
         })
       })
 

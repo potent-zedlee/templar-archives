@@ -14,42 +14,41 @@ import type { PlayerStats } from '@/lib/firestore-types'
 
 /**
  * 플레이어 목록 조회 결과 (핸드 수 포함)
- * 기존 Supabase 코드와 호환을 위해 snake_case 사용
  */
 export interface PlayerWithHandCount {
   id: string
   name: string
-  normalized_name: string
-  photo_url?: string
+  normalizedName: string
+  photoUrl?: string
   country?: string
   gender?: 'male' | 'female' | 'other'
-  is_pro?: boolean
+  isPro?: boolean
   bio?: string
-  total_winnings?: number
+  totalWinnings?: number
   aliases?: string[]
   stats?: PlayerStats
-  hand_count: number
-  created_at: string
-  updated_at: string
+  handCount: number
+  createdAt: string
+  updatedAt: string
 }
 
 /**
- * 플레이어 상세 정보 (snake_case - 기존 호환)
+ * 플레이어 상세 정보
  */
 export interface PlayerDetail {
   id: string
   name: string
-  normalized_name: string
-  photo_url?: string
+  normalizedName: string
+  photoUrl?: string
   country?: string
   gender?: 'male' | 'female' | 'other'
-  is_pro?: boolean
+  isPro?: boolean
   bio?: string
-  total_winnings?: number
+  totalWinnings?: number
   aliases?: string[]
   stats?: PlayerStats
-  created_at: string
-  updated_at: string
+  createdAt: string
+  updatedAt: string
 }
 
 /**
@@ -232,7 +231,7 @@ export function usePlayersQuery(filters?: {
         filteredPlayers = filteredPlayers.filter(
           (p) =>
             p.name.toLowerCase().includes(searchLower) ||
-            p.normalized_name.includes(searchLower) ||
+            p.normalizedName.includes(searchLower) ||
             p.aliases?.some((alias) => alias.toLowerCase().includes(searchLower))
         )
       }
@@ -243,13 +242,13 @@ export function usePlayersQuery(filters?: {
 
       if (filters?.minWinnings !== undefined) {
         filteredPlayers = filteredPlayers.filter(
-          (p) => (p.total_winnings || 0) >= filters.minWinnings!
+          (p) => (p.totalWinnings || 0) >= filters.minWinnings!
         )
       }
 
       if (filters?.maxWinnings !== undefined) {
         filteredPlayers = filteredPlayers.filter(
-          (p) => (p.total_winnings || 0) <= filters.maxWinnings!
+          (p) => (p.totalWinnings || 0) <= filters.maxWinnings!
         )
       }
 
@@ -260,16 +259,15 @@ export function usePlayersQuery(filters?: {
             filteredPlayers.sort((a, b) => a.name.localeCompare(b.name))
             break
           case 'handCount':
-          case 'hand_count':
-            filteredPlayers.sort((a, b) => b.hand_count - a.hand_count)
+            filteredPlayers.sort((a, b) => b.handCount - a.handCount)
             break
           case 'winnings':
-          case 'total_winnings':
-            filteredPlayers.sort((a, b) => (b.total_winnings || 0) - (a.total_winnings || 0))
+          case 'totalWinnings':
+            filteredPlayers.sort((a, b) => (b.totalWinnings || 0) - (a.totalWinnings || 0))
             break
           default:
             // 기본: 핸드 수 내림차순
-            filteredPlayers.sort((a, b) => b.hand_count - a.hand_count)
+            filteredPlayers.sort((a, b) => b.handCount - a.handCount)
         }
       }
 

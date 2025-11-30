@@ -64,21 +64,21 @@ export interface Tournament {
   id: string
   name: string
   category: TournamentCategory
-  category_id?: string // New category system (FK to tournament_categories.id)
-  category_logo?: string
-  category_logo_url?: string // Joined from tournament_categories table
+  categoryId?: string // New category system (FK to tournament_categories.id)
+  categoryLogo?: string
+  categoryLogoUrl?: string // Joined from tournament_categories table
   location: string
   city?: string
   country?: string
-  game_type?: 'tournament' | 'cash-game'
-  start_date: string
-  end_date: string
-  total_prize?: string
-  created_at?: string
+  gameType?: 'tournament' | 'cash-game'
+  startDate: string
+  endDate: string
+  totalPrize?: string
+  createdAt?: string
   // Publication status
   status?: ContentStatus
-  published_by?: string
-  published_at?: string
+  publishedBy?: string
+  publishedAt?: string
   // UI state (클라이언트 전용)
   events?: Event[]
   expanded?: boolean
@@ -86,23 +86,23 @@ export interface Tournament {
 
 export interface Event {
   id: string
-  tournament_id: string
+  tournamentId: string
   name: string
   date: string
-  event_number?: string
-  total_prize?: string
+  eventNumber?: string
+  totalPrize?: string
   winner?: string
-  buy_in?: string
-  entry_count?: number
-  blind_structure?: string
-  level_duration?: number
-  starting_stack?: number
+  buyIn?: string
+  entryCount?: number
+  blindStructure?: string
+  levelDuration?: number
+  startingStack?: number
   notes?: string
-  created_at?: string
+  createdAt?: string
   // Publication status
   status?: ContentStatus
-  published_by?: string
-  published_at?: string
+  publishedBy?: string
+  publishedAt?: string
   // UI state (클라이언트 전용)
   streams?: Stream[]
   expanded?: boolean
@@ -110,38 +110,38 @@ export interface Event {
 
 export interface Stream {
   id: string
-  event_id: string // DB: sub_event_id (테이블명 유지)
+  eventId: string // DB: sub_event_id (테이블명 유지)
   name: string
   description?: string
-  video_url?: string
-  video_file?: string
-  video_nas_path?: string
-  video_source?: VideoSource
-  created_at?: string
-  is_organized?: boolean // DEPRECATED: use status instead
-  organized_at?: string
-  player_count?: number
-  hand_count?: number // Computed: count of hands in this stream
+  videoUrl?: string
+  videoFile?: string
+  videoNasPath?: string
+  videoSource?: VideoSource
+  createdAt?: string
+  isOrganized?: boolean // DEPRECATED: use status instead
+  organizedAt?: string
+  playerCount?: number
+  handCount?: number // Computed: count of hands in this stream
   // Publication status
   status?: ContentStatus
-  published_by?: string
-  published_at?: string
+  publishedBy?: string
+  publishedAt?: string
   // GCS Upload (Phase 55)
-  gcs_path?: string // GCS 객체 경로
-  gcs_uri?: string // gs://bucket/path 형식
-  gcs_file_size?: number // 파일 크기 (bytes)
-  gcs_uploaded_at?: string // 업로드 완료 시각
-  upload_status?: 'none' | 'uploading' | 'uploaded' | 'analyzing' | 'completed' | 'failed'
-  video_duration?: number // 영상 길이 (초)
+  gcsPath?: string // GCS 객체 경로
+  gcsUri?: string // gs://bucket/path 형식
+  gcsFileSize?: number // 파일 크기 (bytes)
+  gcsUploadedAt?: string // 업로드 완료 시각
+  uploadStatus?: 'none' | 'uploading' | 'uploaded' | 'analyzing' | 'completed' | 'failed'
+  videoDuration?: number // 영상 길이 (초)
 
   // 파이프라인 필드 (Admin Archive 워크플로우)
-  pipeline_status?: PipelineStatus
-  pipeline_progress?: number
-  pipeline_error?: string
-  pipeline_updated_at?: string
-  current_job_id?: string
-  last_analysis_at?: string
-  analysis_attempts?: number
+  pipelineStatus?: PipelineStatus
+  pipelineProgress?: number
+  pipelineError?: string
+  pipelineUpdatedAt?: string
+  currentJobId?: string
+  lastAnalysisAt?: string
+  analysisAttempts?: number
 
   // UI state (클라이언트 전용)
   selected?: boolean
@@ -149,12 +149,12 @@ export interface Stream {
 
 export interface Hand {
   id: string
-  stream_id: string
+  streamId: string
   number: string
   description: string
 
   // AI-generated summary (DB: ai_summary)
-  ai_summary?: string
+  aiSummary?: string
 
   // AI analysis confidence score (0-1)
   confidence?: number
@@ -162,48 +162,48 @@ export interface Hand {
   timestamp: string
 
   // Structured board cards (KAN integration)
-  board_flop?: string[]      // 3 cards: ["As", "Kh", "Qd"]
-  board_turn?: string         // 1 card: "7c"
-  board_river?: string        // 1 card: "3s"
+  boardFlop?: string[]      // 3 cards: ["As", "Kh", "Qd"]
+  boardTurn?: string         // 1 card: "7c"
+  boardRiver?: string        // 1 card: "3s"
 
-  // DEPRECATED: use board_flop/turn/river instead
-  board_cards?: string[]
+  // DEPRECATED: use boardFlop/turn/river instead
+  boardCards?: string[]
 
-  pot_size?: number
-  stakes?: string             // e.g., "50k/100k/100k" - DEPRECATED: use small_blind/big_blind/ante
+  potSize?: number
+  stakes?: string             // e.g., "50k/100k/100k" - DEPRECATED: use smallBlind/bigBlind/ante
 
   // NEW: Blind information (Phase 1)
-  small_blind?: number        // Small blind amount (in chips)
-  big_blind?: number          // Big blind amount (in chips)
+  smallBlind?: number        // Small blind amount (in chips)
+  bigBlind?: number          // Big blind amount (in chips)
   ante?: number               // Ante amount (in chips, default 0)
 
   // NEW: Street-specific pot sizes (Phase 1)
-  pot_preflop?: number        // Pot size after preflop action
-  pot_flop?: number           // Pot size after flop action
-  pot_turn?: number           // Pot size after turn action
-  pot_river?: number          // Pot size after river action (final pot)
+  potPreflop?: number        // Pot size after preflop action
+  potFlop?: number           // Pot size after flop action
+  potTurn?: number           // Pot size after turn action
+  potRiver?: number          // Pot size after river action (final pot)
 
   // Video timestamps (KAN integration)
-  video_timestamp_start?: number  // seconds
-  video_timestamp_end?: number    // seconds
-  job_id?: string                 // FK to analysis_jobs
+  videoTimestampStart?: number  // seconds
+  videoTimestampEnd?: number    // seconds
+  jobId?: string                 // FK to analysis_jobs
 
   // Raw AI extraction data
-  raw_data?: Record<string, unknown>
+  rawData?: Record<string, unknown>
 
   // PokerKit integration (Phase 44)
-  pokerkit_format?: string                     // PokerKit-compatible text format
-  hand_history_format?: HandHistoryPokerKitFormat  // Structured hand history data
+  pokerkitFormat?: string                     // PokerKit-compatible text format
+  handHistoryFormat?: HandHistoryPokerKitFormat  // Structured hand history data
 
   favorite?: boolean
-  thumbnail_url?: string
-  likes_count?: number
-  dislikes_count?: number
-  bookmarks_count?: number
-  created_at?: string
+  thumbnailUrl?: string
+  likesCount?: number
+  dislikesCount?: number
+  bookmarksCount?: number
+  createdAt?: string
 
   // Relations
-  hand_players?: HandPlayer[]
+  handPlayers?: HandPlayer[]
 
   // UI state (클라이언트 전용)
   checked?: boolean
@@ -215,44 +215,44 @@ export interface Player {
 
   // KAN integration: normalized name for AI matching (DB: normalized_name)
   // Auto-generated from name (lowercase, alphanumeric only)
-  normalized_name: string
+  normalizedName: string
 
   // Alternative names/spellings for player matching
   aliases?: string[]
 
   // Profile information
   bio?: string
-  is_pro?: boolean
-  photo_url?: string
+  isPro?: boolean
+  photoUrl?: string
   country?: string
-  total_winnings?: number
+  totalWinnings?: number
 
-  created_at?: string
+  createdAt?: string
 }
 
 export interface HandPlayer {
   id: string
-  hand_id: string
-  player_id: string
+  handId: string
+  playerId: string
 
   // Position information (KAN integration)
-  poker_position?: string     // DB: poker_position (BTN, SB, BB, UTG, MP, CO, HJ)
+  pokerPosition?: string     // DB: poker_position (BTN, SB, BB, UTG, MP, CO, HJ)
   seat?: number               // Seat number (1-9 for 9-max tables)
 
   // Hole cards
-  hole_cards?: string[]       // Structured format: ["As", "Kd"] (권장)
-  cards?: string[] | string | null  // DEPRECATED: legacy format (use hole_cards instead)
+  holeCards?: string[]       // Structured format: ["As", "Kd"] (권장)
+  cards?: string[] | string | null  // DEPRECATED: legacy format (use holeCards instead)
 
   // Stack information (KAN integration)
-  starting_stack?: number     // DB: starting_stack
-  ending_stack?: number       // DB: ending_stack
-  final_amount?: number       // Amount won/lost in this hand
+  startingStack?: number     // DB: starting_stack
+  endingStack?: number       // DB: ending_stack
+  finalAmount?: number       // Amount won/lost in this hand
 
   // Hand result
-  hand_description?: string   // e.g., "Full House, Aces over Kings"
-  is_winner?: boolean
+  handDescription?: string   // e.g., "Full House, Aces over Kings"
+  isWinner?: boolean
 
-  created_at?: string
+  createdAt?: string
 
   // Relations
   player?: Player
@@ -261,12 +261,12 @@ export interface HandPlayer {
 export interface UnsortedVideo {
   id: string
   name: string
-  video_url?: string
-  video_file?: string
-  nas_path?: string
-  video_source: VideoSource
-  published_at?: string
-  created_at: string
+  videoUrl?: string
+  videoFile?: string
+  nasPath?: string
+  videoSource: VideoSource
+  publishedAt?: string
+  createdAt: string
 }
 
 export interface Payout {
@@ -280,35 +280,35 @@ export interface Payout {
 export interface TournamentFormData {
   name: string
   category: TournamentCategory
-  category_logo?: string
-  game_type: 'tournament' | 'cash-game'
+  categoryLogo?: string
+  gameType: 'tournament' | 'cash-game'
   location: string
   city: string
   country: string
-  start_date: string
-  end_date: string
+  startDate: string
+  endDate: string
 }
 
 export interface EventFormData {
   name: string
   date: string
-  event_number: string
-  total_prize: string
+  eventNumber: string
+  totalPrize: string
   winner: string
-  buy_in: string
-  entry_count: string
-  blind_structure: string
-  level_duration: string
-  starting_stack: string
+  buyIn: string
+  entryCount: string
+  blindStructure: string
+  levelDuration: string
+  startingStack: string
   notes: string
 }
 
 export interface StreamFormData {
   name: string
-  video_source: VideoSource
-  video_url: string
-  upload_file: File | null
-  published_at: string
+  videoSource: VideoSource
+  videoUrl: string
+  uploadFile: File | null
+  publishedAt: string
 }
 
 // ==================== UI State Types ====================
@@ -458,18 +458,18 @@ export type UploadStatus = 'pending' | 'uploading' | 'paused' | 'completed' | 'f
 
 export interface VideoUpload {
   id: string
-  stream_id: string
-  user_id: string
+  streamId: string
+  userId: string
   filename: string
-  file_size: number
-  gcs_path?: string
-  upload_url?: string
+  fileSize: number
+  gcsPath?: string
+  uploadUrl?: string
   status: UploadStatus
   progress: number
-  error_message?: string
-  started_at: string
-  completed_at?: string
-  created_at: string
+  errorMessage?: string
+  startedAt: string
+  completedAt?: string
+  createdAt: string
 }
 
 // ==================== Utility Types ====================
@@ -495,14 +495,14 @@ export function isTournament(item: unknown): item is Tournament {
  * 타입 가드: Event 확인
  */
 export function isEvent(item: unknown): item is Event {
-  return typeof item === "object" && item !== null && "tournament_id" in item
+  return typeof item === "object" && item !== null && "tournamentId" in item
 }
 
 /**
  * 타입 가드: Stream 확인
  */
 export function isStream(item: unknown): item is Stream {
-  return typeof item === "object" && item !== null && "event_id" in item && "video_source" in item
+  return typeof item === "object" && item !== null && "eventId" in item && "videoSource" in item
 }
 
 /**
@@ -511,13 +511,13 @@ export function isStream(item: unknown): item is Stream {
 export const INITIAL_TOURNAMENT_FORM: TournamentFormData = {
   name: "",
   category: "WSOP",
-  category_logo: "",
-  game_type: "tournament",
+  categoryLogo: "",
+  gameType: "tournament",
   location: "",
   city: "",
   country: "",
-  start_date: "",
-  end_date: "",
+  startDate: "",
+  endDate: "",
 }
 
 /**
@@ -526,14 +526,14 @@ export const INITIAL_TOURNAMENT_FORM: TournamentFormData = {
 export const INITIAL_EVENT_FORM: EventFormData = {
   name: "",
   date: "",
-  event_number: "",
-  total_prize: "",
+  eventNumber: "",
+  totalPrize: "",
   winner: "",
-  buy_in: "",
-  entry_count: "",
-  blind_structure: "",
-  level_duration: "",
-  starting_stack: "",
+  buyIn: "",
+  entryCount: "",
+  blindStructure: "",
+  levelDuration: "",
+  startingStack: "",
   notes: "",
 }
 
@@ -542,10 +542,10 @@ export const INITIAL_EVENT_FORM: EventFormData = {
  */
 export const INITIAL_STREAM_FORM: StreamFormData = {
   name: "",
-  video_source: "youtube",
-  video_url: "",
-  upload_file: null,
-  published_at: "",
+  videoSource: "youtube",
+  videoUrl: "",
+  uploadFile: null,
+  publishedAt: "",
 }
 
 // ==================== PokerKit Integration (Phase 44) ====================
@@ -671,3 +671,25 @@ export type PokerKitAction = string
  * River: "[9d 6s 3c As] [2h]"
  */
 export type PokerKitBoard = string
+
+// ==================== Player Detail Types ====================
+
+export interface PlayerDetail extends Player {
+  handCount?: number
+}
+
+// ==================== Player With Hand Count (query용) ====================
+
+export interface PlayerWithHandCount {
+  id: string
+  name: string
+  normalizedName?: string
+  aliases?: string[]
+  bio?: string
+  isPro?: boolean
+  photoUrl?: string
+  country?: string
+  totalWinnings?: number
+  handCount: number
+  createdAt?: string
+}

@@ -53,8 +53,8 @@ export function useArchiveData() {
                 return {
                   id: streamDoc.id,
                   name: streamData.name,
-                  video_url: streamData.video_url,
-                  video_source: streamData.video_source,
+                  video_url: streamData.videoUrl,
+                  video_source: streamData.videoSource,
                   status: streamData.status,
                   selected: false,
                 }
@@ -63,7 +63,7 @@ export function useArchiveData() {
               return {
                 id: eventId,
                 name: eventData.name,
-                buy_in: eventData.buy_in,
+                buy_in: eventData.buyIn,
                 date: eventData.date?.toDate?.()?.toISOString(),
                 streams,
                 days: streams, // Legacy compatibility
@@ -77,8 +77,8 @@ export function useArchiveData() {
             name: tournamentData.name,
             category: tournamentData.category,
             location: tournamentData.location,
-            start_date: tournamentData.start_date?.toDate?.()?.toISOString(),
-            end_date: tournamentData.end_date?.toDate?.()?.toISOString(),
+            start_date: tournamentData.startDate?.toDate?.()?.toISOString(),
+            end_date: tournamentData.endDate?.toDate?.()?.toISOString(),
             events: subEvents,
             expanded: true,
           }
@@ -122,9 +122,9 @@ export function useArchiveData() {
           number: data.number,
           description: data.description,
           timestamp: data.timestamp,
-          pot_size: data.pot_size,
-          ai_summary: data.ai_summary,
-          stream_id: data.stream_id,
+          pot_size: data.potSize,
+          ai_summary: data.aiSummary,
+          stream_id: data.streamId,
           favorite: data.favorite,
           checked: false,
           hand_players: data.players?.map((p) => ({

@@ -233,7 +233,7 @@ export function SubEventInfoDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-caption text-muted-foreground">Total Prize</Label>
-                      <p className="text-body font-medium">{subEvent.total_prize || "-"}</p>
+                      <p className="text-body font-medium">{subEvent.totalPrize || "-"}</p>
                     </div>
                     <div>
                       <Label className="text-caption text-muted-foreground">Winner</Label>
@@ -246,11 +246,11 @@ export function SubEventInfoDialog({
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label className="text-caption text-muted-foreground">Buy-in</Label>
-                        <p className="text-body">{subEvent.buy_in || "-"}</p>
+                        <p className="text-body">{subEvent.buyIn || "-"}</p>
                       </div>
                       <div>
                         <Label className="text-caption text-muted-foreground">Entry Count</Label>
-                        <p className="text-body">{subEvent.entry_count?.toLocaleString() || "-"}</p>
+                        <p className="text-body">{subEvent.entryCount?.toLocaleString() || "-"}</p>
                       </div>
                     </div>
                   </div>
@@ -258,11 +258,11 @@ export function SubEventInfoDialog({
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="text-caption text-muted-foreground">Level Duration</Label>
-                      <p className="text-body">{subEvent.level_duration ? `${subEvent.level_duration} minutes` : "-"}</p>
+                      <p className="text-body">{subEvent.levelDuration ? `${subEvent.levelDuration} minutes` : "-"}</p>
                     </div>
                     <div>
                       <Label className="text-caption text-muted-foreground">Starting Stack</Label>
-                      <p className="text-body">{subEvent.starting_stack?.toLocaleString() || "-"}</p>
+                      <p className="text-body">{subEvent.startingStack?.toLocaleString() || "-"}</p>
                     </div>
                   </div>
 
@@ -416,10 +416,10 @@ export function SubEventInfoDialog({
             {/* Blind Structure Tab */}
             <TabsContent value="structure" className="space-y-4 mt-4">
               <ScrollArea className="h-[400px] pr-4">
-                {subEvent.blind_structure ? (
+                {subEvent.blindStructure ? (
                   <div className="space-y-2">
                     <Label className="text-caption text-muted-foreground">Blind Structure</Label>
-                    <pre className="text-xs whitespace-pre-wrap font-mono p-4 rounded-md border bg-muted/30">{subEvent.blind_structure}</pre>
+                    <pre className="text-xs whitespace-pre-wrap font-mono p-4 rounded-md border bg-muted/30">{subEvent.blindStructure}</pre>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-40">

@@ -160,7 +160,7 @@ export function useUpdateProfileMutation() {
       updates,
     }: {
       userId: string
-      updates: Partial<Pick<UserProfile, 'nickname' | 'avatar_url' | 'bio' | 'poker_experience'>>
+      updates: Partial<Pick<UserProfile, 'nickname' | 'avatarUrl' | 'bio' | 'pokerExperience'>>
     }) => {
       return await updateProfile(userId, updates)
     },

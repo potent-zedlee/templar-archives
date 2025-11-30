@@ -20,10 +20,10 @@ type HandHistoryTimelineProps = {
 
 // 액션 타입별 스타일링
 function ActionBadge({ action }: { action: HandAction }) {
-  const { action_type, amount } = action
+  const { actionType, amount } = action
 
   // Fold
-  if (action_type === 'fold') {
+  if (actionType === 'fold') {
     return (
       <div className="px-3 py-1.5 rounded bg-yellow-100 text-yellow-800 text-sm font-medium">
         Fold
@@ -32,7 +32,7 @@ function ActionBadge({ action }: { action: HandAction }) {
   }
 
   // Check
-  if (action_type === 'check') {
+  if (actionType === 'check') {
     return (
       <div className="px-3 py-1.5 rounded bg-white border border-border text-black text-sm font-medium">
         Check
@@ -41,7 +41,7 @@ function ActionBadge({ action }: { action: HandAction }) {
   }
 
   // All-In
-  if (action_type === 'all-in') {
+  if (actionType === 'all-in') {
     return (
       <div className="px-3 py-1.5 rounded bg-red-600 text-white text-sm font-medium">
         All-In {amount && amount > 0 && `(${amount.toLocaleString()})`}
@@ -52,7 +52,7 @@ function ActionBadge({ action }: { action: HandAction }) {
   // Call, Bet, Raise (흰색 배경 with amount)
   return (
     <div className="px-3 py-1.5 rounded bg-white border border-border text-black text-sm font-medium">
-      {action_type.charAt(0).toUpperCase() + action_type.slice(1)}{' '}
+      {actionType.charAt(0).toUpperCase() + actionType.slice(1)}{' '}
       {amount && amount > 0 && `(${amount.toLocaleString()})`}
     </div>
   )
@@ -88,7 +88,7 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
       const streetActions = actionsByStreet[street]
       const streetTotal = streetActions.reduce((sum, action) => {
         // bet, raise, call, all-in만 팟에 추가
-        if (['bet', 'raise', 'call', 'all-in'].includes(action.action_type)) {
+        if (['bet', 'raise', 'call', 'all-in'].includes(action.actionType)) {
           return sum + (action.amount || 0)
         }
         return sum
@@ -104,7 +104,7 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
   // 플레이어별, 스트리트별 액션 가져오기
   const getActionsForPlayer = (playerId: string, street: Street) => {
     return actionsByStreet[street]
-      .filter(a => a.player_id === playerId)
+      .filter(a => a.playerId === playerId)
       .sort((a, b) => a.sequence - b.sequence)
   }
 
@@ -178,7 +178,13 @@ export function HandHistoryTimeline({ handId }: HandHistoryTimelineProps) {
                 )}
                 <div className="flex-1 min-w-0">
                   {player.player ? (
-                    <PlayerHoverCard player={player.player}>
+                    <PlayerHoverCard player={{
+                      id: player.player.id,
+                      name: player.player.name,
+                      normalizedName: player.player.normalized_name,
+                      photoUrl: player.player.photo_url,
+                      country: player.player.country,
+                    }}>
                       <div className="text-foreground font-medium truncate">
                         {player.player.name}
                       </div>

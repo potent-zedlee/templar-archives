@@ -88,7 +88,7 @@ export default function CategoriesPage() {
       const searchMatch =
         !debouncedSearchQuery ||
         category.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-        category.display_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        category.displayName.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
         category.id.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
         category.aliases.some((alias) =>
           alias.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
@@ -97,12 +97,12 @@ export default function CategoriesPage() {
       // Active filter
       const activeMatch =
         activeFilter === "all" ||
-        (activeFilter === "active" && category.is_active) ||
-        (activeFilter === "inactive" && !category.is_active)
+        (activeFilter === "active" && category.isActive) ||
+        (activeFilter === "inactive" && !category.isActive)
 
       // Game type filter
       const gameTypeMatch =
-        gameTypeFilter === "all" || category.game_type === gameTypeFilter
+        gameTypeFilter === "all" || category.gameType === gameTypeFilter
 
       return searchMatch && activeMatch && gameTypeMatch
     })
@@ -263,7 +263,7 @@ export default function CategoriesPage() {
               {activeId ? (
                 <div className="bg-background border rounded-lg p-4 shadow-2xl">
                   <span className="font-medium">
-                    {localCategories.find((cat) => cat.id === activeId)?.display_name}
+                    {localCategories.find((cat) => cat.id === activeId)?.displayName}
                   </span>
                 </div>
               ) : null}

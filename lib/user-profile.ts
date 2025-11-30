@@ -33,19 +33,19 @@ export type UserProfile = {
   email: string
   nickname: string
   role: 'user' | 'high_templar' | 'arbiter' | 'admin'
-  avatar_url?: string
+  avatarUrl?: string
   bio?: string
-  poker_experience?: string
+  pokerExperience?: string
   location?: string
   website?: string
-  twitter_handle?: string
-  instagram_handle?: string
-  profile_visibility?: 'public' | 'private' | 'friends'
-  posts_count: number
-  comments_count: number
-  likes_received: number
-  created_at: string
-  updated_at: string
+  twitterHandle?: string
+  instagramHandle?: string
+  profileVisibility?: 'public' | 'private' | 'friends'
+  postsCount: number
+  commentsCount: number
+  likesReceived: number
+  createdAt: string
+  updatedAt: string
 }
 
 /**
@@ -57,19 +57,19 @@ function firestoreUserToProfile(id: string, data: FirestoreUser): UserProfile {
     email: data.email,
     nickname: data.nickname || `user${id.substring(0, 6)}`,
     role: data.role,
-    avatar_url: data.avatar_url,
+    avatarUrl: data.avatarUrl,
     bio: data.bio,
-    poker_experience: data.poker_experience,
+    pokerExperience: data.pokerExperience,
     location: data.location,
     website: data.website,
-    twitter_handle: data.twitter_handle,
-    instagram_handle: data.instagram_handle,
-    profile_visibility: data.profile_visibility || 'public',
-    posts_count: data.stats.posts_count,
-    comments_count: data.stats.comments_count,
-    likes_received: data.likes_received || 0,
-    created_at: data.created_at instanceof Timestamp ? data.created_at.toDate().toISOString() : new Date().toISOString(),
-    updated_at: data.updated_at instanceof Timestamp ? data.updated_at.toDate().toISOString() : new Date().toISOString(),
+    twitterHandle: data.twitterHandle,
+    instagramHandle: data.instagramHandle,
+    profileVisibility: data.profileVisibility || 'public',
+    postsCount: data.stats.postsCount,
+    commentsCount: data.stats.commentsCount,
+    likesReceived: data.likesReceived || 0,
+    createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+    updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : new Date().toISOString(),
   }
 }
 
@@ -120,15 +120,15 @@ export async function createProfile(user: {
     const newUser: FirestoreUser = {
       email: user.email || '',
       nickname: tempNickname,
-      avatar_url: user.photoURL || undefined,
+      avatarUrl: user.photoURL || undefined,
       role: userRole,
-      email_verified: true,
+      emailVerified: true,
       stats: {
-        posts_count: 0,
-        comments_count: 0,
+        postsCount: 0,
+        commentsCount: 0,
       },
-      created_at: serverTimestamp() as Timestamp,
-      updated_at: serverTimestamp() as Timestamp,
+      createdAt: serverTimestamp() as Timestamp,
+      updatedAt: serverTimestamp() as Timestamp,
     }
 
     await setDoc(userRef, newUser)
@@ -139,12 +139,12 @@ export async function createProfile(user: {
       email: newUser.email,
       nickname: tempNickname,
       role: userRole,
-      avatar_url: newUser.avatar_url,
-      posts_count: 0,
-      comments_count: 0,
-      likes_received: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      avatarUrl: newUser.avatarUrl,
+      postsCount: 0,
+      commentsCount: 0,
+      likesReceived: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
   } catch (error) {
     console.error('프로필 생성 실패:', error)
@@ -173,8 +173,8 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
 export async function updateProfile(
   userId: string,
   updates: Partial<Pick<UserProfile,
-    'nickname' | 'avatar_url' | 'bio' | 'poker_experience' |
-    'location' | 'website' | 'twitter_handle' | 'instagram_handle' | 'profile_visibility'
+    'nickname' | 'avatarUrl' | 'bio' | 'pokerExperience' |
+    'location' | 'website' | 'twitterHandle' | 'instagramHandle' | 'profileVisibility'
   >>
 ): Promise<UserProfile | null> {
   try {
@@ -182,23 +182,23 @@ export async function updateProfile(
 
     // UserProfile 필드를 FirestoreUser 필드로 매핑
     const firestoreUpdates: Partial<FirestoreUser> = {
-      updated_at: serverTimestamp() as Timestamp,
+      updatedAt: serverTimestamp() as Timestamp,
     }
 
     if (updates.nickname !== undefined) {
       firestoreUpdates.nickname = updates.nickname
     }
 
-    if (updates.avatar_url !== undefined) {
-      firestoreUpdates.avatar_url = updates.avatar_url
+    if (updates.avatarUrl !== undefined) {
+      firestoreUpdates.avatarUrl = updates.avatarUrl
     }
 
     if (updates.bio !== undefined) {
       firestoreUpdates.bio = updates.bio
     }
 
-    if (updates.poker_experience !== undefined) {
-      firestoreUpdates.poker_experience = updates.poker_experience
+    if (updates.pokerExperience !== undefined) {
+      firestoreUpdates.pokerExperience = updates.pokerExperience
     }
 
     if (updates.location !== undefined) {
@@ -209,16 +209,16 @@ export async function updateProfile(
       firestoreUpdates.website = updates.website
     }
 
-    if (updates.twitter_handle !== undefined) {
-      firestoreUpdates.twitter_handle = updates.twitter_handle
+    if (updates.twitterHandle !== undefined) {
+      firestoreUpdates.twitterHandle = updates.twitterHandle
     }
 
-    if (updates.instagram_handle !== undefined) {
-      firestoreUpdates.instagram_handle = updates.instagram_handle
+    if (updates.instagramHandle !== undefined) {
+      firestoreUpdates.instagramHandle = updates.instagramHandle
     }
 
-    if (updates.profile_visibility !== undefined) {
-      firestoreUpdates.profile_visibility = updates.profile_visibility
+    if (updates.profileVisibility !== undefined) {
+      firestoreUpdates.profileVisibility = updates.profileVisibility
     }
 
     await updateDoc(userRef, firestoreUpdates as Record<string, unknown>)

@@ -115,12 +115,12 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
       // 2. 스트림 정보 조회 (계층 구조: tournaments/{tid}/events/{eid}/streams/{sid})
       let streamInfo: HandDetailData["stream"] = undefined
 
-      if (handData.stream_id && handData.event_id && handData.tournament_id) {
+      if (handData.streamId && handData.eventId && handData.tournamentId) {
         try {
           const streamRef = doc(
             db,
-            COLLECTION_PATHS.STREAMS(handData.tournament_id, handData.event_id),
-            handData.stream_id
+            COLLECTION_PATHS.STREAMS(handData.tournamentId, handData.eventId),
+            handData.streamId
           )
           const streamSnap = await getDoc(streamRef)
 
@@ -130,20 +130,20 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
             // 이벤트 정보 조회
             const eventRef = doc(
               db,
-              COLLECTION_PATHS.EVENTS(handData.tournament_id),
-              handData.event_id
+              COLLECTION_PATHS.EVENTS(handData.tournamentId),
+              handData.eventId
             )
             const eventSnap = await getDoc(eventRef)
             const eventData = eventSnap.exists() ? eventSnap.data() as FirestoreEvent : null
 
             // 토너먼트 정보 조회
-            const tournamentRef = doc(db, COLLECTION_PATHS.TOURNAMENTS, handData.tournament_id)
+            const tournamentRef = doc(db, COLLECTION_PATHS.TOURNAMENTS, handData.tournamentId)
             const tournamentSnap = await getDoc(tournamentRef)
             const tournamentData = tournamentSnap.exists() ? tournamentSnap.data() as FirestoreTournament : null
 
             streamInfo = {
               name: streamData.name,
-              videoUrl: streamData.video_url,
+              videoUrl: streamData.videoUrl,
               event: eventData ? {
                 name: eventData.name,
                 tournament: tournamentData ? {
@@ -163,24 +163,24 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
           // 플레이어 컬렉션에서 추가 정보 조회
           let photoUrl: string | undefined = undefined
           try {
-            const playerRef = doc(db, COLLECTION_PATHS.PLAYERS, p.player_id)
+            const playerRef = doc(db, COLLECTION_PATHS.PLAYERS, p.playerId)
             const playerSnap = await getDoc(playerRef)
             if (playerSnap.exists()) {
               const playerData = playerSnap.data()
-              photoUrl = playerData.photo_url
+              photoUrl = playerData.photoUrl
             }
           } catch {
             // 플레이어 정보 없으면 무시
           }
 
           return {
-            id: p.player_id,
-            playerId: p.player_id,
+            id: p.playerId,
+            playerId: p.playerId,
             name: p.name,
             photoUrl,
             position: p.position,
             cards: p.cards,
-            isWinner: p.is_winner,
+            isWinner: p.isWinner,
           }
         })
       )
@@ -189,8 +189,8 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
       const actions = (handData.actions || []).map((a, index) => ({
         id: `${handId}-action-${index}`,
         street: a.street,
-        playerName: a.player_name,
-        actionType: a.action_type,
+        playerName: a.playerName,
+        actionType: a.actionType,
         amount: a.amount,
         sequence: a.sequence,
       }))
@@ -198,14 +198,14 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
       return {
         id: handSnap.id,
         number: handData.number,
-        potSize: handData.pot_size,
-        aiSummary: handData.ai_summary,
-        stakes: handData.small_blind && handData.big_blind
-          ? `${handData.small_blind}/${handData.big_blind}${handData.ante ? `/${handData.ante}` : ""}`
+        potSize: handData.potSize,
+        aiSummary: handData.aiSummary,
+        stakes: handData.smallBlind && handData.bigBlind
+          ? `${handData.smallBlind}/${handData.bigBlind}${handData.ante ? `/${handData.ante}` : ""}`
           : undefined,
-        boardFlop: handData.board_flop,
-        boardTurn: handData.board_turn,
-        boardRiver: handData.board_river,
+        boardFlop: handData.boardFlop,
+        boardTurn: handData.boardTurn,
+        boardRiver: handData.boardRiver,
         stream: streamInfo,
         players,
         actions,

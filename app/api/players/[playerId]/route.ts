@@ -49,21 +49,21 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
     const playerData = playerDoc.data() as FirestorePlayer
 
-    // snake_case로 기존 코드 호환
+    // camelCase 응답
     const player = {
       id: playerDoc.id,
       name: playerData.name,
-      normalized_name: playerData.normalized_name,
-      photo_url: playerData.photo_url,
+      normalizedName: playerData.normalizedName,
+      photoUrl: playerData.photoUrl,
       country: playerData.country,
       gender: undefined, // Firestore 스키마에 없음
-      is_pro: playerData.is_pro,
+      isPro: playerData.isPro,
       bio: playerData.bio,
-      total_winnings: playerData.total_winnings,
+      totalWinnings: playerData.totalWinnings,
       aliases: playerData.aliases,
       stats: playerData.stats,
-      created_at: timestampToString(playerData.created_at),
-      updated_at: timestampToString(playerData.updated_at),
+      createdAt: timestampToString(playerData.createdAt),
+      updatedAt: timestampToString(playerData.updatedAt),
     }
 
     return NextResponse.json({

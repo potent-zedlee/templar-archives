@@ -119,7 +119,7 @@ export function CategoryTabs({
                 {/* 카테고리 로고 */}
                 {logoUrl ? (
                   <CategoryLogo
-                    category={{ id: category, logo_url: logoUrl }}
+                    category={{ id: category, logoUrl: logoUrl }}
                     size="sm"
                     className="w-4 h-4 mr-1.5"
                   />

@@ -98,13 +98,13 @@ export default function EditRequestsClient() {
   }
 
   function getDiffView(request: HandEditRequest) {
-    const { original_data, proposed_data } = request
+    const { originalData, proposedData } = request
 
     return (
       <div className="space-y-4">
-        {Object.keys(proposed_data).map((key) => {
-          const originalValue = original_data[key]
-          const proposedValue = proposed_data[key]
+        {Object.keys(proposedData).map((key) => {
+          const originalValue = originalData[key]
+          const proposedValue = proposedData[key]
 
           // Handle arrays (players)
           if (Array.isArray(proposedValue)) {
@@ -418,7 +418,7 @@ export default function EditRequestsClient() {
               Edit Request {actionType === "approve" ? "Approve" : "Reject"}
             </h2>
             <p className="text-muted-foreground mb-6">
-              #{(selectedRequest as any).hand?.number} - {EDIT_TYPE_LABELS[selectedRequest.edit_type]}
+              #{(selectedRequest as any).hand?.number} - {EDIT_TYPE_LABELS[selectedRequest.editType]}
             </p>
 
             <div className="space-y-6">
@@ -426,11 +426,11 @@ export default function EditRequestsClient() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <label className="text-muted-foreground">Submitter</label>
-                  <p>{selectedRequest.requester_name}</p>
+                  <p>{selectedRequest.requesterName}</p>
                 </div>
                 <div>
                   <label className="text-muted-foreground">Submitted</label>
-                  <p>{new Date(selectedRequest.created_at).toLocaleString("ko-KR")}</p>
+                  <p>{new Date(selectedRequest.createdAt).toLocaleString("ko-KR")}</p>
                 </div>
               </div>
 

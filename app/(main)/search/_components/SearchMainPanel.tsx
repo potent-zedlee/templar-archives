@@ -163,7 +163,7 @@ export function SearchMainPanel({
                         </div>
                       </TableCell>
                       <TableCell className="text-right text-mono text-gold-400 font-bold">
-                        ${(hand.pot_size || 0).toLocaleString()}
+                        ${(hand.potSize || 0).toLocaleString()}
                       </TableCell>
                       <TableCell>
                         <button
@@ -225,7 +225,7 @@ export function SearchMainPanel({
                     <div className="flex items-center justify-between pt-3 border-t-2 border-gold-700">
                       <span className="text-caption text-text-muted">POT SIZE</span>
                       <span className="text-mono text-gold-400 font-bold">
-                        ${(hand.pot_size || 0).toLocaleString()}
+                        ${(hand.potSize || 0).toLocaleString()}
                       </span>
                     </div>
                   </div>

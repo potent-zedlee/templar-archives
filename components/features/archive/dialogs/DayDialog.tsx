@@ -377,16 +377,16 @@ export function DayDialog({
                           }`}
                           onClick={() => {
                             setSelectedUnsortedId(video.id)
-                            // Auto-fill published_at from selected video
-                            if (video.published_at) {
-                              setPublishedAt(new Date(video.published_at).toISOString().split('T')[0])
+                            // Auto-fill publishedAt from selected video
+                            if (video.publishedAt) {
+                              setPublishedAt(new Date(video.publishedAt).toISOString().split('T')[0])
                             }
                           }}
                         >
                           <div className="flex items-start gap-3">
                             {/* Video Icon/Thumbnail */}
                             <div className="shrink-0">
-                              {video.video_source === 'youtube' ? (
+                              {video.videoSource === 'youtube' ? (
                                 <div className="w-16 h-16 bg-red-500/10 rounded flex items-center justify-center">
                                   <Youtube className="h-8 w-8 text-red-500" />
                                 </div>
@@ -402,18 +402,18 @@ export function DayDialog({
                               <h4 className="font-semibold text-sm truncate mb-1">{video.name}</h4>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <Badge variant="outline" className="text-xs">
-                                  {video.video_source === 'youtube' ? 'YouTube' :
-                                   video.video_source === 'upload' ? 'Upload' :
-                                   video.video_source || 'Unknown'}
+                                  {video.videoSource === 'youtube' ? 'YouTube' :
+                                   video.videoSource === 'upload' ? 'Upload' :
+                                   video.videoSource || 'Unknown'}
                                 </Badge>
                                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                   <Calendar className="h-3 w-3" />
-                                  {new Date(video.created_at).toLocaleDateString()}
+                                  {new Date(video.createdAt).toLocaleDateString()}
                                 </div>
                               </div>
-                              {video.video_url && (
+                              {video.videoUrl && (
                                 <p className="text-xs text-muted-foreground mt-1 truncate">
-                                  {video.video_url}
+                                  {video.videoUrl}
                                 </p>
                               )}
                             </div>

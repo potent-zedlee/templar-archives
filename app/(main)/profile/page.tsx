@@ -50,7 +50,7 @@ export default function ProfileClient() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setNickname(profile.nickname)
       setBio(profile.bio || "")
-      setPokerExperience(profile.poker_experience || "")
+      setPokerExperience(profile.pokerExperience || "")
     }
   }, [profile])
 
@@ -83,7 +83,7 @@ export default function ProfileClient() {
         updates: {
           nickname,
           bio: bio || undefined,
-          poker_experience: pokerExperience || undefined,
+          pokerExperience: pokerExperience || undefined,
         },
       },
       {
@@ -104,7 +104,7 @@ export default function ProfileClient() {
     nickname.length >= 3 &&
     (nickname === profile?.nickname || nicknameAvailability === true) &&
     !checking &&
-    (nickname !== profile?.nickname || bio !== (profile?.bio || "") || pokerExperience !== (profile?.poker_experience || ""))
+    (nickname !== profile?.nickname || bio !== (profile?.bio || "") || pokerExperience !== (profile?.pokerExperience || ""))
 
   const saving = updateProfileMutation.isPending
 
@@ -145,10 +145,10 @@ export default function ProfileClient() {
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="h-20 w-20 border-2 border-gold-700 gold-glow overflow-hidden bg-black-200 flex items-center justify-center">
-                  {profile.avatar_url ? (
+                  {profile.avatarUrl ? (
                     <div className="relative w-full h-full">
                       <Image
-                        src={profile.avatar_url}
+                        src={profile.avatarUrl}
                         alt={profile.nickname}
                         fill
                         className="object-cover"

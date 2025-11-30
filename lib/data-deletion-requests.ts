@@ -63,27 +63,27 @@ function toLegacyFormat(
 ): DeletionRequestWithUser {
   return {
     id: docId,
-    user_id: data.user_id,
+    user_id: data.userId,
     reason: data.reason,
     status: data.status,
-    requested_at: data.requested_at.toDate().toISOString(),
-    reviewed_at: data.reviewed_at?.toDate().toISOString(),
-    reviewed_by: data.reviewed_by,
-    completed_at: data.completed_at?.toDate().toISOString(),
-    admin_notes: data.admin_notes,
-    created_at: data.created_at.toDate().toISOString(),
-    updated_at: data.updated_at.toDate().toISOString(),
+    requested_at: data.requestedAt.toDate().toISOString(),
+    reviewed_at: data.reviewedAt?.toDate().toISOString(),
+    reviewed_by: data.reviewedBy,
+    completed_at: data.completedAt?.toDate().toISOString(),
+    admin_notes: data.adminNotes,
+    created_at: data.createdAt.toDate().toISOString(),
+    updated_at: data.updatedAt.toDate().toISOString(),
     user: {
-      id: data.user?.id || data.user_id,
+      id: data.user?.id || data.userId,
       email: data.user?.email || '',
       nickname: data.user?.nickname || '',
-      avatar_url: data.user?.avatar_url || '',
+      avatar_url: data.user?.avatarUrl || '',
     },
-    reviewed_by_user: data.reviewed_by_user
+    reviewed_by_user: data.reviewedByUser
       ? {
-          id: data.reviewed_by_user.id,
-          email: data.reviewed_by_user.email,
-          nickname: data.reviewed_by_user.nickname,
+          id: data.reviewedByUser.id,
+          email: data.reviewedByUser.email,
+          nickname: data.reviewedByUser.nickname,
         }
       : undefined,
   }

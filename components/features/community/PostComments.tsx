@@ -215,7 +215,7 @@ export function PostComments({ handId, onCommentsCountChange }: HandCommentsProp
       >
         <div className="flex gap-3">
           <Avatar className="h-8 w-8 rounded-full">
-            <AvatarImage src={comment.author.avatar_url} alt={comment.author.name} />
+            <AvatarImage src={comment.author.avatarUrl} alt={comment.author.name} />
             <AvatarFallback className="rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 font-semibold">
               {comment.author.name.split(" ").map((n) => n[0]).join("")}
             </AvatarFallback>

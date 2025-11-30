@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { getCategoryById, getCategoryByAlias } from '@/lib/tournament-categories'
 
 interface CategoryLogoProps {
-  category: string | { id: string; logo_url?: string | null; name?: string }
+  category: string | { id: string; logoUrl?: string | null; name?: string }
   size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
   fallback?: 'icon' | 'text' | 'none'
@@ -40,9 +40,9 @@ export function CategoryLogo({
     // String인 경우 처리할 수 없으므로 undefined로 설정
     logoPath = undefined
   } else {
-    // DB에서 가져온 객체인 경우 logo_url 사용
-    if (category.logo_url) {
-      logoPath = category.logo_url
+    // DB에서 가져온 객체인 경우 logoUrl 사용
+    if (category.logoUrl) {
+      logoPath = category.logoUrl
     }
     categoryData = category
   }
@@ -137,5 +137,5 @@ export function CategoryLogo({
  */
 export async function hasLogo(category: string): Promise<boolean> {
   const categoryData = await getCategoryById(category) || await getCategoryByAlias(category)
-  return !!categoryData?.logo_url
+  return !!categoryData?.logoUrl
 }

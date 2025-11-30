@@ -8,7 +8,8 @@ import { PlayerDetailPanel } from "./PlayerDetailPanel"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Menu } from "lucide-react"
-import { usePlayerQuery, type PlayerWithHandCount } from "@/lib/queries/players-queries"
+import { usePlayerQuery } from "@/lib/queries/players-queries"
+import type { PlayerWithHandCount } from "@/lib/queries/players-queries"
 
 interface PlayersPageLayoutProps {
   players: PlayerWithHandCount[]
@@ -50,9 +51,9 @@ export function PlayersPageLayout({ players, loading }: PlayersPageLayoutProps) 
     return true
   })
 
-  // Sort by total_winnings descending
+  // Sort by totalWinnings descending
   const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-    return (b.total_winnings || 0) - (a.total_winnings || 0)
+    return (b.totalWinnings || 0) - (a.totalWinnings || 0)
   })
 
   const handleReset = () => {
@@ -101,7 +102,7 @@ export function PlayersPageLayout({ players, loading }: PlayersPageLayoutProps) 
         {/* Main Panel - Conditional Rendering */}
         <div className="flex-1 overflow-hidden">
           {selectedPlayer ? (
-            <PlayerDetailPanel player={selectedPlayer as PlayerWithHandCount} />
+            <PlayerDetailPanel player={selectedPlayer} />
           ) : (
             <PlayersMainPanel players={sortedPlayers} loading={loading} />
           )}

@@ -60,18 +60,18 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const playerData = playerDoc.data() as FirestorePlayer
 
     // 캐시된 통계가 있으면 반환
-    if (playerData.stats && playerData.stats.total_hands && playerData.stats.total_hands > 0) {
+    if (playerData.stats && playerData.stats.totalHands && playerData.stats.totalHands > 0) {
       const stats: PlayerStatistics = {
         vpip: playerData.stats.vpip || 0,
         pfr: playerData.stats.pfr || 0,
         threeBet: 0, // Firestore 스키마에 없음, 기본값
         ats: 0, // Firestore 스키마에 없음, 기본값
-        winRate: playerData.stats.win_rate || 0,
+        winRate: playerData.stats.winRate || 0,
         avgPotSize: 0, // 실시간 계산 필요
-        showdownWinRate: playerData.stats.win_rate || 0,
-        totalHands: playerData.stats.total_hands || 0,
+        showdownWinRate: playerData.stats.winRate || 0,
+        totalHands: playerData.stats.totalHands || 0,
         handsWon: Math.round(
-          ((playerData.stats.win_rate || 0) / 100) * (playerData.stats.total_hands || 0)
+          ((playerData.stats.winRate || 0) / 100) * (playerData.stats.totalHands || 0)
         ),
       }
 
@@ -91,21 +91,21 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const playerHands: Array<{
       id: string
       hand: FirestoreHand
-      playerInfo: { position?: string; is_winner?: boolean; start_stack?: number; end_stack?: number }
+      playerInfo: { position?: string; isWinner?: boolean; startStack?: number; endStack?: number }
     }> = []
 
     handsSnapshot.forEach((doc) => {
       const hand = doc.data() as FirestoreHand
-      const playerInHand = hand.players?.find((p) => p.player_id === playerId)
+      const playerInHand = hand.players?.find((p) => p.playerId === playerId)
       if (playerInHand) {
         playerHands.push({
           id: doc.id,
           hand,
           playerInfo: {
             position: playerInHand.position,
-            is_winner: playerInHand.is_winner,
-            start_stack: playerInHand.start_stack,
-            end_stack: playerInHand.end_stack,
+            isWinner: playerInHand.isWinner,
+            startStack: playerInHand.startStack,
+            endStack: playerInHand.endStack,
           },
         })
       }
@@ -140,10 +140,10 @@ export async function GET(_request: Request, { params }: RouteParams) {
         stats: {
           vpip: stats.vpip,
           pfr: stats.pfr,
-          total_hands: stats.totalHands,
-          win_rate: stats.winRate,
+          totalHands: stats.totalHands,
+          winRate: stats.winRate,
         },
-        updated_at: new Date(),
+        updatedAt: new Date(),
       })
       .catch((err) => console.error('Failed to cache player stats:', err))
 
@@ -172,7 +172,7 @@ function calculatePlayerStats(
   playerHands: Array<{
     id: string
     hand: FirestoreHand
-    playerInfo: { position?: string; is_winner?: boolean; start_stack?: number; end_stack?: number }
+    playerInfo: { position?: string; isWinner?: boolean; startStack?: number; endStack?: number }
   }>
 ): PlayerStatistics {
   const totalHands = playerHands.length
@@ -202,18 +202,18 @@ function calculatePlayerStats(
   let totalPotSize = 0
 
   playerHands.forEach(({ hand, playerInfo }) => {
-    const playerActions = hand.actions?.filter((a) => a.player_id === playerId) || []
+    const playerActions = hand.actions?.filter((a) => a.playerId === playerId) || []
     const preflopActions = playerActions.filter((a) => a.street === 'preflop')
 
     // VPIP 계산 (프리플롭에서 자발적으로 칩을 넣음)
     const hasVPIP = preflopActions.some((a) =>
-      ['call', 'bet', 'raise', 'all-in'].includes(a.action_type)
+      ['call', 'bet', 'raise', 'all-in'].includes(a.actionType)
     )
     if (hasVPIP) vpipCount++
 
     // PFR 계산 (프리플롭 레이즈)
     const hasPFR = preflopActions.some(
-      (a) => ['raise', 'bet'].includes(a.action_type) && (a.amount || 0) > 0
+      (a) => ['raise', 'bet'].includes(a.actionType) && (a.amount || 0) > 0
     )
     if (hasPFR) pfrCount++
 
@@ -221,14 +221,14 @@ function calculatePlayerStats(
     const allPreflopActions = hand.actions?.filter((a) => a.street === 'preflop') || []
     allPreflopActions.sort((a, b) => a.sequence - b.sequence)
 
-    const hasRaise = allPreflopActions.some((a) => ['raise', 'bet'].includes(a.action_type))
+    const hasRaise = allPreflopActions.some((a) => ['raise', 'bet'].includes(a.actionType))
     if (hasRaise) {
       threeBetOpportunities++
       let raiseCount = 0
       for (const action of allPreflopActions) {
-        if (['raise', 'bet'].includes(action.action_type)) {
+        if (['raise', 'bet'].includes(action.actionType)) {
           raiseCount++
-          if (raiseCount >= 2 && action.player_id === playerId) {
+          if (raiseCount >= 2 && action.playerId === playerId) {
             threeBetCount++
             break
           }
@@ -244,17 +244,17 @@ function calculatePlayerStats(
     }
 
     // 승리 핸드 계산
-    if (playerInfo.is_winner) {
+    if (playerInfo.isWinner) {
       handsWon++
-    } else if (playerInfo.start_stack !== undefined && playerInfo.end_stack !== undefined) {
-      if (playerInfo.end_stack > playerInfo.start_stack) {
+    } else if (playerInfo.startStack !== undefined && playerInfo.endStack !== undefined) {
+      if (playerInfo.endStack > playerInfo.startStack) {
         handsWon++
       }
     }
 
     // 팟 크기
-    if (hand.pot_size) {
-      totalPotSize += hand.pot_size
+    if (hand.potSize) {
+      totalPotSize += hand.potSize
     }
   })
 

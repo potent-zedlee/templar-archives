@@ -60,7 +60,7 @@ export function ArchiveAccordion({
                   <MapPin className="w-4 h-4" />
                   <span>{tournament.location}</span>
                   <Calendar className="w-4 h-4 ml-2" />
-                  <span>{tournament.start_date}</span>
+                  <span>{tournament.startDate}</span>
                 </div>
               </div>
             </div>
@@ -79,7 +79,7 @@ export function ArchiveAccordion({
                         <div>
                           <h4 className="font-semibold">{event.name}</h4>
                           <p className="text-sm text-muted-foreground">
-                            {event.date} • {event.buy_in || 'N/A'}
+                            {event.date} • {event.buyIn || 'N/A'}
                           </p>
                         </div>
                       </div>

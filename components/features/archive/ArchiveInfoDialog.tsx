@@ -76,12 +76,12 @@ export function ArchiveInfoDialog({
           )}
 
           {/* Event Information */}
-          {item.type === 'event' && item.data && 'buy_in' in item.data && (
+          {item.type === 'event' && item.data && 'buyIn' in item.data && (
             <EventInfo event={item.data as Event} />
           )}
 
           {/* Stream Information */}
-          {item.type === 'day' && item.data && 'video_url' in item.data && (
+          {item.type === 'day' && item.data && 'videoUrl' in item.data && (
             <StreamInfo day={item.data as Stream} />
           )}
 
@@ -164,12 +164,12 @@ function TournamentInfo({ tournament }: { tournament: Tournament }) {
         <InfoItem
           icon={<Calendar className="h-4 w-4" />}
           label="Start Date"
-          value={format(new Date(tournament.start_date), "MMM dd, yyyy")}
+          value={format(new Date(tournament.startDate), "MMM dd, yyyy")}
         />
         <InfoItem
           icon={<Calendar className="h-4 w-4" />}
           label="End Date"
-          value={format(new Date(tournament.end_date), "MMM dd, yyyy")}
+          value={format(new Date(tournament.endDate), "MMM dd, yyyy")}
         />
         <InfoItem
           icon={<Hash className="h-4 w-4" />}
@@ -199,25 +199,25 @@ function EventInfo({ event }: { event: Event }) {
 
       {/* Details Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {event.buy_in && (
+        {event.buyIn && (
           <InfoItem
             icon={<DollarSign className="h-4 w-4" />}
             label="Buy-in"
-            value={event.buy_in}
+            value={event.buyIn}
           />
         )}
-        {event.total_prize && (
+        {event.totalPrize && (
           <InfoItem
             icon={<DollarSign className="h-4 w-4" />}
             label="Prize Pool"
-            value={event.total_prize}
+            value={event.totalPrize}
           />
         )}
-        {event.entry_count !== undefined && (
+        {event.entryCount !== undefined && (
           <InfoItem
             icon={<Users className="h-4 w-4" />}
             label="Entries"
-            value={`${event.entry_count} players`}
+            value={`${event.entryCount} players`}
           />
         )}
         {event.winner && (
@@ -227,18 +227,18 @@ function EventInfo({ event }: { event: Event }) {
             value={event.winner}
           />
         )}
-        {event.starting_stack && (
+        {event.startingStack && (
           <InfoItem
             icon={<Hash className="h-4 w-4" />}
             label="Starting Stack"
-            value={event.starting_stack.toLocaleString()}
+            value={event.startingStack.toLocaleString()}
           />
         )}
-        {event.level_duration && (
+        {event.levelDuration && (
           <InfoItem
             icon={<Calendar className="h-4 w-4" />}
             label="Level Duration"
-            value={`${event.level_duration} min`}
+            value={`${event.levelDuration} min`}
           />
         )}
       </div>
@@ -274,45 +274,45 @@ function StreamInfo({ day }: { day: Stream }) {
           icon={<Video className="h-4 w-4" />}
           label="Video Source"
           value={
-            <Badge variant={day.video_source === 'youtube' ? 'default' : 'secondary'}>
-              {day.video_source === 'youtube' ? 'YouTube' : 'Uploaded'}
+            <Badge variant={day.videoSource === 'youtube' ? 'default' : 'secondary'}>
+              {day.videoSource === 'youtube' ? 'YouTube' : 'Uploaded'}
             </Badge>
           }
         />
 
-        {day.video_url && (
+        {day.videoUrl && (
           <div className="flex items-start gap-2">
             <ExternalLink className="h-4 w-4 text-muted-foreground mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium mb-1">Video URL</p>
               <a
-                href={day.video_url}
+                href={day.videoUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm text-blue-500 hover:underline break-all"
               >
-                {day.video_url}
+                {day.videoUrl}
               </a>
             </div>
           </div>
         )}
 
-        {day.video_file && (
+        {day.videoFile && (
           <InfoItem
             icon={<Video className="h-4 w-4" />}
             label="Video File"
-            value={day.video_file}
+            value={day.videoFile}
           />
         )}
       </div>
 
-      {day.created_at && (
+      {day.createdAt && (
         <>
           <Separator />
           <InfoItem
             icon={<Calendar className="h-4 w-4" />}
             label="Created"
-            value={format(new Date(day.created_at), "MMM dd, yyyy 'at' HH:mm")}
+            value={format(new Date(day.createdAt), "MMM dd, yyyy 'at' HH:mm")}
           />
         </>
       )}

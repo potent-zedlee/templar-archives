@@ -80,19 +80,19 @@ export default function ArchiveTournamentPage() {
     // Date range filter
     if (selectedDateRange.start) {
       filtered = filtered.filter(t =>
-        t.start_date && new Date(t.start_date) >= new Date(selectedDateRange.start!)
+        t.startDate && new Date(t.startDate) >= new Date(selectedDateRange.start!)
       )
     }
     if (selectedDateRange.end) {
       filtered = filtered.filter(t =>
-        t.start_date && new Date(t.start_date) <= new Date(selectedDateRange.end!)
+        t.startDate && new Date(t.startDate) <= new Date(selectedDateRange.end!)
       )
     }
 
     // Has hands only filter
     if (hasHandsOnly) {
       filtered = filtered.filter(t =>
-        t.events?.some(e => e.streams?.some(s => (s.hand_count || 0) > 0))
+        t.events?.some(e => e.streams?.some(s => (s.handCount || 0) > 0))
       )
     }
 
@@ -109,7 +109,7 @@ export default function ArchiveTournamentPage() {
         const existing = categoryMap.get(t.category) || { count: 0 }
         categoryMap.set(t.category, {
           count: existing.count + 1,
-          logoUrl: t.category_logo_url || t.category_logo || existing.logoUrl,
+          logoUrl: t.categoryLogoUrl || existing.logoUrl,
         })
       }
     })

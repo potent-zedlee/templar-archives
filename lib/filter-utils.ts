@@ -147,20 +147,20 @@ export function calculateSPR(stack: number, pot: number): number {
  * 필터 적용 (클라이언트 사이드)
  */
 export function applyClientSideFilters<T extends {
-  board_cards?: string | null
-  board_flop?: string[] | null
-  board_turn?: string | null
-  board_river?: string | null
-  pot_size?: number | null
-  final_pot?: number | null
-  small_blind?: number | null
-  big_blind?: number | null
+  boardCards?: string | null
+  boardFlop?: string[] | null
+  boardTurn?: string | null
+  boardRiver?: string | null
+  potSize?: number | null
+  finalPot?: number | null
+  smallBlind?: number | null
+  bigBlind?: number | null
   ante?: number | null
-  player_names?: string[]
-  hand_players?: any[]
-  hand_actions?: any[]
-  ai_summary?: string | null
-  video_timestamp_start?: number | null
+  playerNames?: string[]
+  handPlayers?: any[]
+  handActions?: any[]
+  aiSummary?: string | null
+  videoTimestampStart?: number | null
   [key: string]: any
 }>(
   hands: T[],
@@ -171,7 +171,7 @@ export function applyClientSideFilters<T extends {
   // 보드 텍스처 필터
   if (filters.selectedBoardTextures.length > 0) {
     filtered = filtered.filter(hand => {
-      const texture = analyzeBoardTexture(hand.board_cards || null)
+      const texture = analyzeBoardTexture(hand.boardCards || null)
       return filters.selectedBoardTextures.some(selectedTexture => texture[selectedTexture])
     })
   }
@@ -179,7 +179,7 @@ export function applyClientSideFilters<T extends {
   // 팟 사이즈 필터
   if (filters.potMin !== null || filters.potMax !== null) {
     filtered = filtered.filter(hand => {
-      const pot = hand.pot_size || hand.final_pot || 0
+      const pot = hand.potSize || hand.finalPot || 0
       if (filters.potMin !== null && pot < filters.potMin) return false
       if (filters.potMax !== null && pot > filters.potMax) return false
       return true
@@ -189,7 +189,7 @@ export function applyClientSideFilters<T extends {
   // 플레이어 필터
   if (filters.selectedPlayers.length > 0) {
     filtered = filtered.filter(hand => {
-      const playerNames = hand.player_names || []
+      const playerNames = hand.playerNames || []
       return filters.selectedPlayers.some(selectedPlayer =>
         playerNames.some(name => name.toLowerCase().includes(selectedPlayer.toLowerCase()))
       )
@@ -255,16 +255,16 @@ export interface ExtendedSearchFilters {
  * Apply extended search filters
  */
 export function applyExtendedSearchFilters<T extends {
-  small_blind?: number | null
-  big_blind?: number | null
+  smallBlind?: number | null
+  bigBlind?: number | null
   ante?: number | null
-  board_flop?: string[] | null
-  board_turn?: string | null
-  board_river?: string | null
-  hand_players?: any[]
-  hand_actions?: any[]
-  ai_summary?: string | null
-  video_timestamp_start?: number | null
+  boardFlop?: string[] | null
+  boardTurn?: string | null
+  boardRiver?: string | null
+  handPlayers?: any[]
+  handActions?: any[]
+  aiSummary?: string | null
+  videoTimestampStart?: number | null
   [key: string]: any
 }>(
   hands: T[],
@@ -275,14 +275,14 @@ export function applyExtendedSearchFilters<T extends {
   // Blinds filters
   if (filters.smallBlindRange) {
     filtered = filtered.filter(hand => {
-      const sb = hand.small_blind || 0
+      const sb = hand.smallBlind || 0
       return sb >= filters.smallBlindRange![0] && sb <= filters.smallBlindRange![1]
     })
   }
 
   if (filters.bigBlindRange) {
     filtered = filtered.filter(hand => {
-      const bb = hand.big_blind || 0
+      const bb = hand.bigBlind || 0
       return bb >= filters.bigBlindRange![0] && bb <= filters.bigBlindRange![1]
     })
   }
@@ -297,25 +297,25 @@ export function applyExtendedSearchFilters<T extends {
   // Board Cards filters
   if (filters.boardFlop && filters.boardFlop.length > 0) {
     filtered = filtered.filter(hand => {
-      const flop = hand.board_flop || []
+      const flop = hand.boardFlop || []
       return filters.boardFlop!.every(card => flop.includes(card))
     })
   }
 
   if (filters.boardTurn) {
-    filtered = filtered.filter(hand => hand.board_turn === filters.boardTurn)
+    filtered = filtered.filter(hand => hand.boardTurn === filters.boardTurn)
   }
 
   if (filters.boardRiver) {
-    filtered = filtered.filter(hand => hand.board_river === filters.boardRiver)
+    filtered = filtered.filter(hand => hand.boardRiver === filters.boardRiver)
   }
 
   if (filters.boardTexture) {
     filtered = filtered.filter(hand => {
       const boardString = [
-        ...(hand.board_flop || []),
-        hand.board_turn,
-        hand.board_river
+        ...(hand.boardFlop || []),
+        hand.boardTurn,
+        hand.boardRiver
       ].filter(Boolean).join(' ')
 
       const texture = analyzeBoardTexture(boardString)
@@ -338,11 +338,11 @@ export function applyExtendedSearchFilters<T extends {
 
     if (card1 !== '?' && card2 !== '?') {
       filtered = filtered.filter(hand => {
-        if (!hand.hand_players) return false
-        return hand.hand_players.some((hp: any) => {
-          if (!hp.hole_cards || hp.hole_cards.length !== 2) return false
+        if (!hand.handPlayers) return false
+        return hand.handPlayers.some((hp: any) => {
+          if (!hp.holeCards || hp.holeCards.length !== 2) return false
 
-          const [holeCard1, holeCard2] = hp.hole_cards
+          const [holeCard1, holeCard2] = hp.holeCards
           const rank1 = holeCard1.charAt(0)
           const rank2 = holeCard2.charAt(0)
           const suit1 = holeCard1.charAt(1)
@@ -369,9 +369,9 @@ export function applyExtendedSearchFilters<T extends {
   // Hole Cards filter (legacy)
   if (filters.holeCards && filters.holeCards.length > 0) {
     filtered = filtered.filter(hand => {
-      if (!hand.hand_players) return false
-      return hand.hand_players.some((hp: any) => {
-        const holeCards = hp.hole_cards || []
+      if (!hand.handPlayers) return false
+      return hand.handPlayers.some((hp: any) => {
+        const holeCards = hp.holeCards || []
         return filters.holeCards!.every(card => holeCards.includes(card))
       })
     })
@@ -397,10 +397,10 @@ export function applyExtendedSearchFilters<T extends {
     const targetRank = handRanking[handType]
 
     filtered = filtered.filter(hand => {
-      const handDesc = hand.hand_players?.find((hp: any) => hp.is_winner)?.hand_description
+      const handDesc = hand.handPlayers?.find((hp: any) => hp.isWinner)?.handDescription
       if (!handDesc) return false
 
-      // hand_description에서 핸드 타입 추출
+      // handDescription에서 핸드 타입 추출
       let currentRank = 0
       for (const [type, rank] of Object.entries(handRanking)) {
         if (handDesc.toLowerCase().includes(type.toLowerCase())) {
@@ -427,9 +427,9 @@ export function applyExtendedSearchFilters<T extends {
   // Hand Strength filter (legacy)
   if (filters.handStrength) {
     filtered = filtered.filter(hand => {
-      if (!hand.hand_players) return false
-      return hand.hand_players.some((hp: any) => {
-        const desc = (hp.hand_description || '').toLowerCase()
+      if (!hand.handPlayers) return false
+      return hand.handPlayers.some((hp: any) => {
+        const desc = (hp.handDescription || '').toLowerCase()
         const strength = filters.handStrength!.replace('-', ' ')
         return desc.includes(strength)
       })
@@ -439,11 +439,11 @@ export function applyExtendedSearchFilters<T extends {
   // Action Types filter
   if (filters.actionTypes && filters.actionTypes.length > 0) {
     filtered = filtered.filter(hand => {
-      if (!hand.hand_actions || !Array.isArray(hand.hand_actions)) return false
-      const actions = hand.hand_actions
+      if (!hand.handActions || !Array.isArray(hand.handActions)) return false
+      const actions = hand.handActions
       return filters.actionTypes!.some(actionType =>
         actions.some((action: any) =>
-          action.action_type?.toLowerCase() === actionType.toLowerCase()
+          action.actionType?.toLowerCase() === actionType.toLowerCase()
         )
       )
     })
@@ -452,8 +452,8 @@ export function applyExtendedSearchFilters<T extends {
   // Street filter
   if (filters.street) {
     filtered = filtered.filter(hand => {
-      if (!hand.hand_actions || !Array.isArray(hand.hand_actions)) return false
-      const actions = hand.hand_actions
+      if (!hand.handActions || !Array.isArray(hand.handActions)) return false
+      const actions = hand.handActions
       return actions.some((action: any) =>
         action.street?.toLowerCase() === filters.street!.toLowerCase()
       )
@@ -463,9 +463,9 @@ export function applyExtendedSearchFilters<T extends {
   // Position filter
   if (filters.positions && filters.positions.length > 0) {
     filtered = filtered.filter(hand => {
-      if (!hand.hand_players) return false
-      return hand.hand_players.some((hp: any) =>
-        filters.positions!.includes(hp.poker_position)
+      if (!hand.handPlayers) return false
+      return hand.handPlayers.some((hp: any) =>
+        filters.positions!.includes(hp.pokerPosition)
       )
     })
   }
@@ -473,17 +473,17 @@ export function applyExtendedSearchFilters<T extends {
   // Winner filter
   if (filters.isWinner !== null && filters.isWinner !== undefined) {
     filtered = filtered.filter(hand => {
-      if (!hand.hand_players) return false
-      return hand.hand_players.some((hp: any) => hp.is_winner === filters.isWinner)
+      if (!hand.handPlayers) return false
+      return hand.handPlayers.some((hp: any) => hp.isWinner === filters.isWinner)
     })
   }
 
   // Stack Range filter
   if (filters.stackRange) {
     filtered = filtered.filter(hand => {
-      if (!hand.hand_players) return false
-      return hand.hand_players.some((hp: any) => {
-        const stack = hp.starting_stack || 0
+      if (!hand.handPlayers) return false
+      return hand.handPlayers.some((hp: any) => {
+        const stack = hp.startingStack || 0
         return stack >= filters.stackRange![0] && stack <= filters.stackRange![1]
       })
     })
@@ -492,8 +492,8 @@ export function applyExtendedSearchFilters<T extends {
   // Player Gender filter
   if (filters.playerGender) {
     filtered = filtered.filter(hand => {
-      if (!hand.hand_players) return false
-      return hand.hand_players.some((hp: any) =>
+      if (!hand.handPlayers) return false
+      return hand.handPlayers.some((hp: any) =>
         hp.player?.gender === filters.playerGender
       )
     })
@@ -501,19 +501,19 @@ export function applyExtendedSearchFilters<T extends {
 
   // Video filter
   if (filters.hasVideo) {
-    filtered = filtered.filter(hand => !!hand.video_timestamp_start)
+    filtered = filtered.filter(hand => !!hand.videoTimestampStart)
   }
 
   // AI Summary filter
   if (filters.hasAISummary) {
-    filtered = filtered.filter(hand => !!hand.ai_summary)
+    filtered = filtered.filter(hand => !!hand.aiSummary)
   }
 
   // Summary Keyword filter
   if (filters.summaryKeyword) {
     const keyword = filters.summaryKeyword.toLowerCase()
     filtered = filtered.filter(hand => {
-      const summary = (hand.ai_summary || '').toLowerCase()
+      const summary = (hand.aiSummary || '').toLowerCase()
       return summary.includes(keyword)
     })
   }

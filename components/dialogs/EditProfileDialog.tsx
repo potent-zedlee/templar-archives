@@ -28,9 +28,9 @@ export function EditProfileDialog({
   const [bio, setBio] = useState(profile.bio || "")
   const [location, setLocation] = useState(profile.location || "")
   const [website, setWebsite] = useState(profile.website || "")
-  const [twitterHandle, setTwitterHandle] = useState(profile.twitter_handle || "")
-  const [instagramHandle, setInstagramHandle] = useState(profile.instagram_handle || "")
-  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || "")
+  const [twitterHandle, setTwitterHandle] = useState(profile.twitterHandle || "")
+  const [instagramHandle, setInstagramHandle] = useState(profile.instagramHandle || "")
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || "")
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -92,9 +92,9 @@ export function EditProfileDialog({
         bio: bio.trim() || undefined,
         location: location.trim() || undefined,
         website: website.trim() || undefined,
-        twitter_handle: twitterHandle.trim() || undefined,
-        instagram_handle: instagramHandle.trim() || undefined,
-        avatar_url: avatarUrl || undefined
+        twitterHandle: twitterHandle.trim() || undefined,
+        instagramHandle: instagramHandle.trim() || undefined,
+        avatarUrl: avatarUrl || undefined
       })
 
       if (!updatedProfile) {

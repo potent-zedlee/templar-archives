@@ -135,14 +135,14 @@ export async function createUnsortedVideo(data: {
     const now = new Date()
     const streamData = {
       name: data.name,
-      video_url: normalizedUrl,
-      video_file: data.video_file || null,
-      video_source: data.video_source || 'youtube',
-      sub_event_id: null,
-      is_organized: false,
-      published_at: data.published_at ? new Date(data.published_at) : null,
-      created_at: now,
-      updated_at: now,
+      videoUrl: normalizedUrl,
+      videoFile: data.video_file || null,
+      videoSource: data.video_source || 'youtube',
+      subEventId: null,
+      isOrganized: false,
+      publishedAt: data.published_at ? new Date(data.published_at) : null,
+      createdAt: now,
+      updatedAt: now,
     }
 
     const docRef = await adminFirestore
@@ -182,19 +182,19 @@ export async function updateUnsortedVideo(
   try {
     // Build update object
     const updateData: Record<string, any> = {
-      updated_at: new Date()
+      updatedAt: new Date()
     }
 
     if (data.name !== undefined) updateData.name = data.name
     if (data.video_url !== undefined) {
-      updateData.video_url = data.video_source === 'youtube' && data.video_url
+      updateData.videoUrl = data.video_source === 'youtube' && data.video_url
         ? normalizeYoutubeUrl(data.video_url)
         : data.video_url
     }
-    if (data.video_file !== undefined) updateData.video_file = data.video_file
-    if (data.video_source !== undefined) updateData.video_source = data.video_source
+    if (data.video_file !== undefined) updateData.videoFile = data.video_file
+    if (data.video_source !== undefined) updateData.videoSource = data.video_source
     if (data.published_at !== undefined) {
-      updateData.published_at = data.published_at ? new Date(data.published_at) : null
+      updateData.publishedAt = data.published_at ? new Date(data.published_at) : null
     }
 
     await adminFirestore
@@ -289,10 +289,10 @@ export async function organizeUnsortedVideo(
       .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
       .doc(videoId)
       .update({
-        sub_event_id: subEventId,
-        is_organized: true,
-        organized_at: new Date(),
-        updated_at: new Date(),
+        subEventId: subEventId,
+        isOrganized: true,
+        organizedAt: new Date(),
+        updatedAt: new Date(),
       })
 
     revalidatePath('/admin/archive')
@@ -326,10 +326,10 @@ export async function organizeUnsortedVideosBatch(
 
     for (const videoId of videoIds) {
       batch.update(streamsRef.doc(videoId), {
-        sub_event_id: subEventId,
-        is_organized: true,
-        organized_at: now,
-        updated_at: now,
+        subEventId: subEventId,
+        isOrganized: true,
+        organizedAt: now,
+        updatedAt: now,
       })
     }
 
@@ -359,9 +359,9 @@ export async function getUnsortedVideos() {
   try {
     const snapshot = await adminFirestore
       .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
-      .where('sub_event_id', '==', null)
-      .where('is_organized', '==', false)
-      .orderBy('created_at', 'desc')
+      .where('subEventId', '==', null)
+      .where('isOrganized', '==', false)
+      .orderBy('createdAt', 'desc')
       .get()
 
     const data = snapshot.docs.map(doc => {
@@ -369,11 +369,11 @@ export async function getUnsortedVideos() {
       return {
         id: doc.id,
         name: docData.name,
-        video_url: docData.video_url,
-        video_file: docData.video_file,
-        video_source: docData.video_source,
-        created_at: docData.created_at?.toDate().toISOString(),
-        published_at: docData.published_at?.toDate().toISOString() || null,
+        video_url: docData.videoUrl,
+        video_file: docData.videoFile,
+        video_source: docData.videoSource,
+        created_at: docData.createdAt?.toDate().toISOString(),
+        published_at: docData.publishedAt?.toDate().toISOString() || null,
       }
     })
 
@@ -427,14 +427,14 @@ export async function createUnsortedVideosBatch(
 
         batch.set(streamRef, {
           name: video.name,
-          video_url: normalizedUrl,
-          video_file: null,
-          video_source: video.video_source || 'youtube',
-          sub_event_id: null,
-          is_organized: false,
-          published_at: video.published_at ? new Date(video.published_at) : null,
-          created_at: now,
-          updated_at: now,
+          videoUrl: normalizedUrl,
+          videoFile: null,
+          videoSource: video.video_source || 'youtube',
+          subEventId: null,
+          isOrganized: false,
+          publishedAt: video.published_at ? new Date(video.published_at) : null,
+          createdAt: now,
+          updatedAt: now,
         })
       }
 
@@ -497,14 +497,14 @@ export async function addVideoToStream(
       .doc(streamId)
 
     const updateData: Record<string, any> = {
-      updated_at: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     }
 
     if (data.video_url) {
-      updateData.video_url = data.video_url
+      updateData.videoUrl = data.video_url
     }
     if (data.video_file) {
-      updateData.video_file = data.video_file
+      updateData.videoFile = data.video_file
     }
 
     await streamRef.update(updateData)
@@ -550,40 +550,40 @@ export async function createStreamWithVideo(
 
     const streamData = {
       name: data.name,
-      video_url: data.video_url || null,
-      video_file: data.video_file || null,
-      video_source: data.video_url ? 'youtube' as const : 'upload' as const,
-      is_organized: true,
-      organized_at: FieldValue.serverTimestamp(),
-      upload_status: 'none' as const,
+      videoUrl: data.video_url || null,
+      videoFile: data.video_file || null,
+      videoSource: data.video_url ? 'youtube' as const : 'upload' as const,
+      isOrganized: true,
+      organizedAt: FieldValue.serverTimestamp(),
+      uploadStatus: 'none' as const,
       status: 'draft' as const,
       stats: {
-        hands_count: 0,
+        handsCount: 0,
       },
-      created_at: FieldValue.serverTimestamp(),
-      updated_at: FieldValue.serverTimestamp(),
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     }
 
     await streamRef.set(streamData)
 
-    // Update parent Event's streams_count
+    // Update parent Event's streamsCount
     await adminFirestore
       .collection(COLLECTION_PATHS.TOURNAMENTS)
       .doc(tournamentId)
       .collection('events')
       .doc(eventId)
       .update({
-        'stats.streams_count': FieldValue.increment(1),
-        updated_at: FieldValue.serverTimestamp(),
+        'stats.streamsCount': FieldValue.increment(1),
+        updatedAt: FieldValue.serverTimestamp(),
       })
 
-    // Update Tournament's streams_count
+    // Update Tournament's streamsCount
     await adminFirestore
       .collection(COLLECTION_PATHS.TOURNAMENTS)
       .doc(tournamentId)
       .update({
-        'stats.streams_count': FieldValue.increment(1),
-        updated_at: FieldValue.serverTimestamp(),
+        'stats.streamsCount': FieldValue.increment(1),
+        updatedAt: FieldValue.serverTimestamp(),
       })
 
     revalidatePath('/admin/archive')
@@ -649,23 +649,23 @@ export async function autoOrganizeVideos(structure: {
       await tournamentRef.set({
         name: tournament.name,
         category: tournament.category,
-        category_info: {
+        categoryInfo: {
           id: getCategoryId(tournament.category),
           name: tournament.category,
           logo: null,
         },
         location: tournament.location,
-        start_date: new Date(tournament.startDate),
-        end_date: new Date(tournament.endDate),
+        startDate: new Date(tournament.startDate),
+        endDate: new Date(tournament.endDate),
         status: 'draft',
         stats: {
-          events_count: tournament.subEvents.length,
-          streams_count: 0,
-          hands_count: 0,
-          players_count: 0,
+          eventsCount: tournament.subEvents.length,
+          streamsCount: 0,
+          handsCount: 0,
+          playersCount: 0,
         },
-        created_at: FieldValue.serverTimestamp(),
-        updated_at: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
       })
 
       let tournamentStreamsCount = 0
@@ -679,11 +679,11 @@ export async function autoOrganizeVideos(structure: {
           date: new Date(subEvent.date),
           status: 'draft',
           stats: {
-            streams_count: subEvent.videos.length,
-            hands_count: 0,
+            streamsCount: subEvent.videos.length,
+            handsCount: 0,
           },
-          created_at: FieldValue.serverTimestamp(),
-          updated_at: FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
         })
 
         for (const video of subEvent.videos) {
@@ -692,18 +692,18 @@ export async function autoOrganizeVideos(structure: {
 
           await streamRef.set({
             name: video.title,
-            video_url: video.url,
-            video_source: 'youtube',
-            is_organized: true,
-            organized_at: FieldValue.serverTimestamp(),
-            published_at: video.publishedAt ? new Date(video.publishedAt) : null,
-            upload_status: 'none',
+            videoUrl: video.url,
+            videoSource: 'youtube',
+            isOrganized: true,
+            organizedAt: FieldValue.serverTimestamp(),
+            publishedAt: video.publishedAt ? new Date(video.publishedAt) : null,
+            uploadStatus: 'none',
             status: 'draft',
             stats: {
-              hands_count: 0,
+              handsCount: 0,
             },
-            created_at: FieldValue.serverTimestamp(),
-            updated_at: FieldValue.serverTimestamp(),
+            createdAt: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
           })
 
           totalImported++
@@ -713,7 +713,7 @@ export async function autoOrganizeVideos(structure: {
 
       // Update tournament streams count
       await tournamentRef.update({
-        'stats.streams_count': tournamentStreamsCount,
+        'stats.streamsCount': tournamentStreamsCount,
       })
     }
 

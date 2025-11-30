@@ -25,7 +25,7 @@ type ActionInputProps = {
   players: Player[]
   street: string
   sequence: number
-  onAdd: (action: Omit<HandActionInput, 'hand_id'>) => void
+  onAdd: (action: Omit<HandActionInput, 'handId'>) => void
   onCancel: () => void
 }
 
@@ -80,11 +80,11 @@ export function ActionInput({
 
     // 액션 추가
     onAdd({
-      player_id: playerId,
+      playerId: playerId,
       street: street as any,
-      action_type: actionType as ActionType,
+      actionType: actionType as ActionType,
       amount: needsAmount ? parseInt(amount) : 0,
-      action_order: sequence,
+      actionOrder: sequence,
       sequence,
     })
 

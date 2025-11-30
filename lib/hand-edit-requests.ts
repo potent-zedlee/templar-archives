@@ -27,18 +27,18 @@ export type { EditType, EditRequestStatus } from '@/lib/firestore-types'
 
 export type HandEditRequest = {
   id: string
-  hand_id: string
-  requester_id: string
-  requester_name: string
-  edit_type: EditType
-  original_data: Record<string, unknown>
-  proposed_data: Record<string, unknown>
+  handId: string
+  requesterId: string
+  requesterName: string
+  editType: EditType
+  originalData: Record<string, unknown>
+  proposedData: Record<string, unknown>
   reason: string
   status: EditRequestStatus
-  reviewed_by: string | null
-  reviewed_at: string | null
-  admin_comment: string | null
-  created_at: string
+  reviewedBy: string | null
+  reviewedAt: string | null
+  adminComment: string | null
+  createdAt: string
 }
 
 /**
@@ -47,18 +47,18 @@ export type HandEditRequest = {
 function toHandEditRequest(id: string, data: FirestoreHandEditRequest): HandEditRequest {
   return {
     id,
-    hand_id: data.hand_id,
-    requester_id: data.requester_id,
-    requester_name: data.requester_name,
-    edit_type: data.edit_type,
-    original_data: data.original_data,
-    proposed_data: data.proposed_data,
+    handId: data.handId,
+    requesterId: data.requesterId,
+    requesterName: data.requesterName,
+    editType: data.editType,
+    originalData: data.originalData,
+    proposedData: data.proposedData,
     reason: data.reason,
     status: data.status,
-    reviewed_by: data.reviewed_by || null,
-    reviewed_at: data.reviewed_at?.toDate().toISOString() || null,
-    admin_comment: data.admin_comment || null,
-    created_at: data.created_at.toDate().toISOString(),
+    reviewedBy: data.reviewedBy || null,
+    reviewedAt: data.reviewedAt?.toDate().toISOString() || null,
+    adminComment: data.adminComment || null,
+    createdAt: data.createdAt.toDate().toISOString(),
   }
 }
 
@@ -88,24 +88,24 @@ export async function createEditRequest({
     const handData = handDoc.exists() ? handDoc.data() : null
 
     const requestData: FirestoreHandEditRequest = {
-      hand_id: handId,
-      requester_id: requesterId,
-      requester_name: requesterName,
-      edit_type: editType,
-      original_data: originalData,
-      proposed_data: proposedData,
+      handId: handId,
+      requesterId: requesterId,
+      requesterName: requesterName,
+      editType: editType,
+      originalData: originalData,
+      proposedData: proposedData,
       reason,
       status: 'pending',
       hand: handData
         ? {
             number: handData.number,
             description: handData.description,
-            stream_name: handData.stream_name,
-            event_name: handData.event_name,
-            tournament_name: handData.tournament_name,
+            streamName: handData.streamName,
+            eventName: handData.eventName,
+            tournamentName: handData.tournamentName,
           }
         : undefined,
-      created_at: Timestamp.now(),
+      createdAt: Timestamp.now(),
     }
 
     const docRef = await addDoc(
@@ -133,7 +133,7 @@ export async function fetchEditRequests({
   try {
     let q = query(
       collection(firestore, COLLECTION_PATHS.HAND_EDIT_REQUESTS),
-      orderBy('created_at', 'desc'),
+      orderBy('createdAt', 'desc'),
       limit(limitCount)
     )
 
@@ -141,7 +141,7 @@ export async function fetchEditRequests({
       q = query(
         collection(firestore, COLLECTION_PATHS.HAND_EDIT_REQUESTS),
         where('status', '==', status),
-        orderBy('created_at', 'desc'),
+        orderBy('createdAt', 'desc'),
         limit(limitCount)
       )
     }
@@ -157,15 +157,15 @@ export async function fetchEditRequests({
         ...request,
         hand: data.hand
           ? {
-              id: data.hand_id,
+              id: data.handId,
               number: data.hand.number,
               description: data.hand.description,
               day: {
-                name: data.hand.stream_name || 'N/A',
-                sub_event: {
-                  name: data.hand.event_name || 'N/A',
+                name: data.hand.streamName || 'N/A',
+                subEvent: {
+                  name: data.hand.eventName || 'N/A',
                   tournament: {
-                    name: data.hand.tournament_name || 'N/A',
+                    name: data.hand.tournamentName || 'N/A',
                   },
                 },
               },
@@ -194,17 +194,17 @@ export async function fetchUserEditRequests({
   try {
     let q = query(
       collection(firestore, COLLECTION_PATHS.HAND_EDIT_REQUESTS),
-      where('requester_id', '==', userId),
-      orderBy('created_at', 'desc'),
+      where('requesterId', '==', userId),
+      orderBy('createdAt', 'desc'),
       limit(limitCount)
     )
 
     if (status) {
       q = query(
         collection(firestore, COLLECTION_PATHS.HAND_EDIT_REQUESTS),
-        where('requester_id', '==', userId),
+        where('requesterId', '==', userId),
         where('status', '==', status),
-        orderBy('created_at', 'desc'),
+        orderBy('createdAt', 'desc'),
         limit(limitCount)
       )
     }
@@ -219,15 +219,15 @@ export async function fetchUserEditRequests({
         ...request,
         hand: data.hand
           ? {
-              id: data.hand_id,
+              id: data.handId,
               number: data.hand.number,
               description: data.hand.description,
               day: {
-                name: data.hand.stream_name || 'N/A',
-                sub_event: {
-                  name: data.hand.event_name || 'N/A',
+                name: data.hand.streamName || 'N/A',
+                subEvent: {
+                  name: data.hand.eventName || 'N/A',
                   tournament: {
-                    name: data.hand.tournament_name || 'N/A',
+                    name: data.hand.tournamentName || 'N/A',
                   },
                 },
               },
@@ -264,15 +264,15 @@ export async function approveEditRequest({
 
     const requestData = requestSnap.data() as FirestoreHandEditRequest
 
-    // 2. Apply edits to hand based on edit_type
-    await applyEditToHand(requestData.hand_id, requestData.edit_type, requestData.proposed_data)
+    // 2. Apply edits to hand based on editType
+    await applyEditToHand(requestData.handId, requestData.editType, requestData.proposedData)
 
     // 3. Update request status
     await updateDoc(requestRef, {
       status: 'approved',
-      reviewed_by: adminId,
-      reviewed_at: Timestamp.now(),
-      admin_comment: adminComment || null,
+      reviewedBy: adminId,
+      reviewedAt: Timestamp.now(),
+      adminComment: adminComment || null,
     })
 
     const updatedSnap = await getDoc(requestRef)
@@ -300,9 +300,9 @@ export async function rejectEditRequest({
 
     await updateDoc(requestRef, {
       status: 'rejected',
-      reviewed_by: adminId,
-      reviewed_at: Timestamp.now(),
-      admin_comment: adminComment || null,
+      reviewedBy: adminId,
+      reviewedAt: Timestamp.now(),
+      adminComment: adminComment || null,
     })
 
     const updatedSnap = await getDoc(requestRef)
@@ -327,7 +327,7 @@ async function applyEditToHand(
     case 'basic_info':
       // Update hand basic info (description, timestamp, etc.)
       const basicUpdate: Record<string, unknown> = {
-        updated_at: Timestamp.now(),
+        updatedAt: Timestamp.now(),
       }
       if (proposedData.description) basicUpdate.description = proposedData.description
       if (proposedData.timestamp) basicUpdate.timestamp = proposedData.timestamp
@@ -338,12 +338,12 @@ async function applyEditToHand(
     case 'board':
       // Update board cards and pot
       const boardUpdate: Record<string, unknown> = {
-        updated_at: Timestamp.now(),
+        updatedAt: Timestamp.now(),
       }
-      if (proposedData.board_flop) boardUpdate.board_flop = proposedData.board_flop
-      if (proposedData.board_turn) boardUpdate.board_turn = proposedData.board_turn
-      if (proposedData.board_river) boardUpdate.board_river = proposedData.board_river
-      if (proposedData.pot_size) boardUpdate.pot_size = proposedData.pot_size
+      if (proposedData.boardFlop) boardUpdate.boardFlop = proposedData.boardFlop
+      if (proposedData.boardTurn) boardUpdate.boardTurn = proposedData.boardTurn
+      if (proposedData.boardRiver) boardUpdate.boardRiver = proposedData.boardRiver
+      if (proposedData.potSize) boardUpdate.potSize = proposedData.potSize
 
       await updateDoc(handRef, boardUpdate)
       break
@@ -353,7 +353,7 @@ async function applyEditToHand(
       if (proposedData.players && Array.isArray(proposedData.players)) {
         await updateDoc(handRef, {
           players: proposedData.players,
-          updated_at: Timestamp.now(),
+          updatedAt: Timestamp.now(),
         })
       }
       break
@@ -363,7 +363,7 @@ async function applyEditToHand(
       if (proposedData.actions && Array.isArray(proposedData.actions)) {
         await updateDoc(handRef, {
           actions: proposedData.actions,
-          updated_at: Timestamp.now(),
+          updatedAt: Timestamp.now(),
         })
       }
       break
@@ -389,13 +389,13 @@ export async function getHandDataForEdit(handId: string) {
         number: handData.number,
         description: handData.description,
         timestamp: handData.timestamp,
-        boardFlop: handData.board_flop,
-        boardTurn: handData.board_turn,
-        boardRiver: handData.board_river,
-        potSize: handData.pot_size,
-        streamName: handData.stream_name,
-        eventName: handData.event_name,
-        tournamentName: handData.tournament_name,
+        boardFlop: handData.boardFlop,
+        boardTurn: handData.boardTurn,
+        boardRiver: handData.boardRiver,
+        potSize: handData.potSize,
+        streamName: handData.streamName,
+        eventName: handData.eventName,
+        tournamentName: handData.tournamentName,
       },
       players: handData.players || [],
       actions: handData.actions || [],

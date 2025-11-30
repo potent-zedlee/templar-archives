@@ -87,8 +87,8 @@ function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) 
   }
 
   // Find parent category
-  const parentCategory = category.parent_id
-    ? allCategories.find((cat) => cat.id === category.parent_id)
+  const parentCategory = category.parentId
+    ? allCategories.find((cat) => cat.id === category.parentId)
     : null
 
   // Determine game type badge color
@@ -125,14 +125,14 @@ function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) 
 
         {/* Logo */}
         <TableCell className="w-20">
-          {category.logo_url ? (
+          {category.logoUrl ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="relative w-16 h-16 border rounded-lg bg-muted hover:border-primary transition-colors cursor-pointer">
                     <Image
-                      src={category.logo_url}
-                      alt={category.display_name}
+                      src={category.logoUrl}
+                      alt={category.displayName}
                       fill
                       className="object-contain p-2"
                     />
@@ -141,14 +141,14 @@ function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) 
                 <TooltipContent side="right" className="p-2">
                   <div className="relative w-32 h-32 bg-muted rounded-lg">
                     <Image
-                      src={category.logo_url}
-                      alt={category.display_name}
+                      src={category.logoUrl}
+                      alt={category.displayName}
                       fill
                       className="object-contain p-4"
                     />
                   </div>
                   <p className="mt-2 text-xs font-medium text-center">
-                    {category.display_name}
+                    {category.displayName}
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -167,15 +167,15 @@ function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) 
         <TableCell>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              {category.parent_id && (
+              {category.parentId && (
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               )}
-              <div className="font-medium">{category.display_name}</div>
+              <div className="font-medium">{category.displayName}</div>
             </div>
             <div className="text-xs text-muted-foreground">{category.name}</div>
-            {category.short_name && (
+            {category.shortName && (
               <Badge variant="outline" className="text-xs">
-                {category.short_name}
+                {category.shortName}
               </Badge>
             )}
           </div>
@@ -185,7 +185,7 @@ function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) 
         <TableCell>
           {parentCategory ? (
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <span>{parentCategory.display_name}</span>
+              <span>{parentCategory.displayName}</span>
             </div>
           ) : (
             <span className="text-xs text-muted-foreground">-</span>
@@ -193,7 +193,7 @@ function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) 
         </TableCell>
 
         {/* Game Type */}
-        <TableCell>{getGameTypeBadge(category.game_type)}</TableCell>
+        <TableCell>{getGameTypeBadge(category.gameType)}</TableCell>
 
         {/* Usage Count */}
         <TableCell className="text-center">
@@ -208,7 +208,7 @@ function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) 
             onClick={handleToggleActive}
             disabled={toggleActiveMutation.isPending}
           >
-            {category.is_active ? (
+            {category.isActive ? (
               <Eye className="h-4 w-4 text-green-600" />
             ) : (
               <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -245,7 +245,7 @@ function CategoryRow({ category, usageCount, allCategories }: CategoryRowProps) 
           <AlertDialogHeader>
             <AlertDialogTitle>카테고리 삭제</AlertDialogTitle>
             <AlertDialogDescription>
-              카테고리 &quot;{category.display_name}&quot;를 삭제하시겠습니까?
+              카테고리 &quot;{category.displayName}&quot;를 삭제하시겠습니까?
               <br />
               이 작업은 되돌릴 수 없습니다.
             </AlertDialogDescription>

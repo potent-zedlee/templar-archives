@@ -34,11 +34,11 @@ export function ArchiveSidebarCategories({
 
   // Filter categories by game type and get root categories only
   const rootCategories = useMemo(() => {
-    let filtered = allCategories.filter(cat => !cat.parent_id)
+    let filtered = allCategories.filter(cat => !cat.parentId)
 
     // Game type filter
     if (gameType && gameType !== 'both') {
-      filtered = filtered.filter(cat => cat.game_type === gameType || cat.game_type === 'both')
+      filtered = filtered.filter(cat => cat.gameType === gameType || cat.gameType === 'both')
     }
 
     // Sort by name (alphabetical)
@@ -47,11 +47,11 @@ export function ArchiveSidebarCategories({
 
   // Get children for a parent category
   const getChildren = useCallback((parentId: string) => {
-    let children = allCategories.filter(cat => cat.parent_id === parentId)
+    let children = allCategories.filter(cat => cat.parentId === parentId)
 
     // Game type filter for children
     if (gameType && gameType !== 'both') {
-      children = children.filter(cat => cat.game_type === gameType || cat.game_type === 'both')
+      children = children.filter(cat => cat.gameType === gameType || cat.gameType === 'both')
     }
 
     return children.sort((a, b) => a.name.localeCompare(b.name))
@@ -63,8 +63,8 @@ export function ArchiveSidebarCategories({
 
     // Find if selected category is a child and auto-expand its parent
     const selectedCat = allCategories.find(cat => cat.id === selectedCategory)
-    if (selectedCat?.parent_id) {
-      const parentId = selectedCat.parent_id
+    if (selectedCat?.parentId) {
+      const parentId = selectedCat.parentId
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setExpandedParentIds(prev => {
         const newSet = new Set(prev)
@@ -165,9 +165,9 @@ export function ArchiveSidebarCategories({
                   />
                   <span
                     className="flex-1 text-left truncate min-w-0"
-                    title={category.display_name}
+                    title={category.displayName}
                   >
-                    {category.display_name}
+                    {category.displayName}
                   </span>
                 </button>
               </div>
@@ -197,9 +197,9 @@ export function ArchiveSidebarCategories({
                           />
                           <span
                             className="flex-1 text-left truncate min-w-0"
-                            title={child.display_name}
+                            title={child.displayName}
                           >
-                            {child.display_name}
+                            {child.displayName}
                           </span>
                         </button>
                       </li>

@@ -136,9 +136,9 @@ export async function publishTournament(id: string): Promise<ActionResult> {
 
     await tournamentRef.update({
       status: 'published' as ContentStatus,
-      published_by: authCheck.userId,
-      published_at: FieldValue.serverTimestamp(),
-      updated_at: FieldValue.serverTimestamp()
+      publishedBy: authCheck.userId,
+      publishedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -169,9 +169,9 @@ export async function unpublishTournament(id: string): Promise<ActionResult> {
 
     await tournamentRef.update({
       status: 'draft' as ContentStatus,
-      published_at: FieldValue.delete(),
-      published_by: FieldValue.delete(),
-      updated_at: FieldValue.serverTimestamp()
+      publishedAt: FieldValue.delete(),
+      publishedBy: FieldValue.delete(),
+      updatedAt: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -202,7 +202,7 @@ export async function archiveTournament(id: string): Promise<ActionResult> {
 
     await tournamentRef.update({
       status: 'archived' as ContentStatus,
-      updated_at: FieldValue.serverTimestamp()
+      updatedAt: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -238,9 +238,9 @@ export async function publishSubEvent(
 
     await eventRef.update({
       status: 'published' as ContentStatus,
-      published_by: authCheck.userId,
-      published_at: FieldValue.serverTimestamp(),
-      updated_at: FieldValue.serverTimestamp()
+      publishedBy: authCheck.userId,
+      publishedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -274,9 +274,9 @@ export async function unpublishSubEvent(
 
     await eventRef.update({
       status: 'draft' as ContentStatus,
-      published_at: FieldValue.delete(),
-      published_by: FieldValue.delete(),
-      updated_at: FieldValue.serverTimestamp()
+      publishedAt: FieldValue.delete(),
+      publishedBy: FieldValue.delete(),
+      updatedAt: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -310,7 +310,7 @@ export async function archiveSubEvent(
 
     await eventRef.update({
       status: 'archived' as ContentStatus,
-      updated_at: FieldValue.serverTimestamp()
+      updatedAt: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -347,9 +347,9 @@ export async function publishStream(
 
     await streamRef.update({
       status: 'published' as ContentStatus,
-      published_by: authCheck.userId,
-      published_at: FieldValue.serverTimestamp(),
-      updated_at: FieldValue.serverTimestamp()
+      publishedBy: authCheck.userId,
+      publishedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -384,9 +384,9 @@ export async function unpublishStream(
 
     await streamRef.update({
       status: 'draft' as ContentStatus,
-      published_at: FieldValue.delete(),
-      published_by: FieldValue.delete(),
-      updated_at: FieldValue.serverTimestamp()
+      publishedAt: FieldValue.delete(),
+      publishedBy: FieldValue.delete(),
+      updatedAt: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -421,7 +421,7 @@ export async function archiveStream(
 
     await streamRef.update({
       status: 'archived' as ContentStatus,
-      updated_at: FieldValue.serverTimestamp()
+      updatedAt: FieldValue.serverTimestamp()
     })
 
     // 3. 캐시 무효화
@@ -466,9 +466,9 @@ export async function bulkPublishStreams(
       const streamRef = streamsCollectionRef.doc(streamId)
       batch.update(streamRef, {
         status: 'published' as ContentStatus,
-        published_by: authCheck.userId,
-        published_at: FieldValue.serverTimestamp(),
-        updated_at: FieldValue.serverTimestamp()
+        publishedBy: authCheck.userId,
+        publishedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp()
       })
     })
 
@@ -514,9 +514,9 @@ export async function bulkUnpublishStreams(
       const streamRef = streamsCollectionRef.doc(streamId)
       batch.update(streamRef, {
         status: 'draft' as ContentStatus,
-        published_at: FieldValue.delete(),
-        published_by: FieldValue.delete(),
-        updated_at: FieldValue.serverTimestamp()
+        publishedAt: FieldValue.delete(),
+        publishedBy: FieldValue.delete(),
+        updatedAt: FieldValue.serverTimestamp()
       })
     })
 
@@ -580,10 +580,10 @@ export async function validateStreamChecklist(
       errors.push('YouTube link is required for publishing')
     }
 
-    // 4. 핸드 개수 확인 (stream_id로 필터링)
+    // 4. 핸드 개수 확인 (streamId로 필터링)
     const handsSnapshot = await adminFirestore
       .collection(COLLECTION_PATHS.HANDS)
-      .where('stream_id', '==', streamId)
+      .where('streamId', '==', streamId)
       .get()
 
     const handCount = handsSnapshot.size
@@ -610,7 +610,7 @@ export async function validateStreamChecklist(
       for (const sid of streamIds) {
         const streamHandsSnapshot = await adminFirestore
           .collection(COLLECTION_PATHS.HANDS)
-          .where('stream_id', '==', sid)
+          .where('streamId', '==', sid)
           .get()
 
         totalHands += streamHandsSnapshot.size
@@ -630,8 +630,8 @@ export async function validateStreamChecklist(
     if (handCount > 0) {
       const handsWithThumbnailSnapshot = await adminFirestore
         .collection(COLLECTION_PATHS.HANDS)
-        .where('stream_id', '==', streamId)
-        .where('thumbnail_url', '!=', null)
+        .where('streamId', '==', streamId)
+        .where('thumbnailUrl', '!=', null)
         .limit(1)
         .get()
 
@@ -742,7 +742,7 @@ export async function bulkDeleteStreams(
         // 3b. 연결된 핸드 데이터 삭제
         const handsSnapshot = await adminFirestore
           .collection(COLLECTION_PATHS.HANDS)
-          .where('stream_id', '==', meta.streamId)
+          .where('streamId', '==', meta.streamId)
           .get()
 
         handsSnapshot.docs.forEach((doc) => {

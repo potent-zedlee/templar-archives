@@ -49,7 +49,7 @@ export async function syncAdminRole(
     // role을 admin으로 업데이트
     await userRef.update({
       role: 'admin',
-      updated_at: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
     })
 
     console.log(`[syncAdminRole] User ${userId} (${email}) role updated to admin`)

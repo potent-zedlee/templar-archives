@@ -192,16 +192,16 @@ export async function getRecentActivity(limitCount: number = 20): Promise<AdminL
       const data = doc.data() as FirestoreAdminLog
       return {
         id: doc.id,
-        admin_id: data.admin_id,
+        admin_id: data.adminId,
         action: data.action,
-        target_type: data.target_type,
-        target_id: data.target_id,
+        target_type: data.targetType,
+        target_id: data.targetId,
         details: data.details,
-        created_at: data.created_at.toDate().toISOString(),
+        created_at: data.createdAt.toDate().toISOString(),
         admin: data.admin
           ? {
               nickname: data.admin.nickname,
-              avatar_url: data.admin.avatar_url,
+              avatar_url: data.admin.avatarUrl,
             }
           : undefined,
       }
@@ -374,19 +374,19 @@ export async function logAdminAction(
     const adminSnap = await getDoc(adminRef)
     const adminData = adminSnap.data()
 
-    const logData: Omit<FirestoreAdminLog, 'created_at'> & { created_at: Timestamp } = {
-      admin_id: adminId,
+    const logData: Omit<FirestoreAdminLog, 'createdAt'> & { createdAt: Timestamp } = {
+      adminId: adminId,
       action,
-      target_type: targetType,
-      target_id: targetId,
+      targetType: targetType,
+      targetId: targetId,
       details,
       admin: adminData
         ? {
             nickname: adminData.nickname || 'Unknown',
-            avatar_url: adminData.avatar_url,
+            avatarUrl: adminData.avatarUrl,
           }
         : undefined,
-      created_at: Timestamp.now(),
+      createdAt: Timestamp.now(),
     }
 
     await addDoc(collection(firestore, COLLECTION_PATHS.ADMIN_LOGS), logData)

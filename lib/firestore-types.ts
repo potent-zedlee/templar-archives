@@ -97,18 +97,16 @@ export type AnalysisPhase = 1 | 2
 
 /**
  * AI 플레이어 상태 분석
- * Firestore에 snake_case로 저장됨
  */
 export interface AIPlayerState {
   /** 감정 상태 */
-  emotional_state: EmotionalStateType
+  emotionalState: EmotionalStateType
   /** 플레이 스타일 */
-  play_style: PlayStyleType
+  playStyle: PlayStyleType
 }
 
 /**
  * AI 분석 결과
- * Firestore에 snake_case로 저장됨
  */
 export interface AIAnalysis {
   /** 분석 신뢰도 (0.0 - 1.0) */
@@ -116,9 +114,9 @@ export interface AIAnalysis {
   /** AI 추론 설명 */
   reasoning: string
   /** 플레이어별 상태 분석 */
-  player_states: Record<string, AIPlayerState>
+  playerStates: Record<string, AIPlayerState>
   /** 핸드 품질 등급 */
-  hand_quality: HandQualityType
+  handQuality: HandQualityType
 }
 
 // ==================== Firestore Document Types ====================
@@ -139,17 +137,16 @@ export interface CategoryInfo {
 
 /**
  * 통계 정보 (공통)
- * Firestore에 snake_case로 저장됨
  */
 export interface Stats {
   /** 이벤트 수 */
-  events_count?: number
+  eventsCount?: number
   /** 스트림 수 */
-  streams_count?: number
+  streamsCount?: number
   /** 핸드 수 */
-  hands_count?: number
+  handsCount?: number
   /** 플레이어 수 */
-  players_count?: number
+  playersCount?: number
 }
 
 // ==================== Tournament Collection ====================
@@ -158,7 +155,6 @@ export interface Stats {
  * Tournament 문서
  *
  * Collection: /tournaments/{tournamentId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreTournament {
   /** 토너먼트 이름 */
@@ -166,7 +162,7 @@ export interface FirestoreTournament {
   /** 카테고리 */
   category: TournamentCategory
   /** 카테고리 정보 (임베딩) */
-  category_info?: CategoryInfo
+  categoryInfo?: CategoryInfo
   /** 개최 장소 */
   location: string
   /** 도시 */
@@ -174,50 +170,49 @@ export interface FirestoreTournament {
   /** 국가 */
   country?: string
   /** 게임 타입 */
-  game_type?: 'tournament' | 'cash-game'
+  gameType?: 'tournament' | 'cash-game'
   /** 시작일 */
-  start_date: Timestamp
+  startDate: Timestamp
   /** 종료일 */
-  end_date: Timestamp
+  endDate: Timestamp
   /** 총 상금 */
-  total_prize?: string
+  totalPrize?: string
   /** 컨텐츠 상태 */
   status?: ContentStatus
   /** 통계 */
   stats: Stats
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
 }
 
 /**
  * Event 문서
  *
  * Collection: /tournaments/{tournamentId}/events/{eventId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreEvent {
   /** 이벤트 이름 */
   name: string
   /** 이벤트 번호 */
-  event_number?: string
+  eventNumber?: string
   /** 이벤트 날짜 */
   date: Timestamp
   /** 바이인 금액 */
-  buy_in?: string
+  buyIn?: string
   /** 총 상금 */
-  total_prize?: string
+  totalPrize?: string
   /** 우승자 */
   winner?: string
   /** 참가자 수 */
-  entry_count?: number
+  entryCount?: number
   /** 블라인드 구조 */
-  blind_structure?: string
+  blindStructure?: string
   /** 레벨 시간 (분) */
-  level_duration?: number
+  levelDuration?: number
   /** 시작 스택 */
-  starting_stack?: number
+  startingStack?: number
   /** 메모 */
   notes?: string
   /** 컨텐츠 상태 */
@@ -225,16 +220,15 @@ export interface FirestoreEvent {
   /** 통계 */
   stats: Stats
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
 }
 
 /**
  * Stream 문서
  *
  * Collection: /tournaments/{tournamentId}/events/{eventId}/streams/{streamId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreStream {
   /** 스트림 이름 */
@@ -242,51 +236,50 @@ export interface FirestoreStream {
   /** 설명 */
   description?: string
   /** 영상 URL (YouTube) */
-  video_url?: string
+  videoUrl?: string
   /** 영상 파일명 (업로드) */
-  video_file?: string
+  videoFile?: string
   /** 영상 소스 */
-  video_source?: VideoSource
+  videoSource?: VideoSource
   /** 발행일 */
-  published_at?: Timestamp
+  publishedAt?: Timestamp
   /** GCS 경로 */
-  gcs_path?: string
+  gcsPath?: string
   /** GCS URI (gs://bucket/path) */
-  gcs_uri?: string
+  gcsUri?: string
   /** 파일 크기 (bytes) */
-  gcs_file_size?: number
+  gcsFileSize?: number
   /** GCS 업로드 완료 시각 */
-  gcs_uploaded_at?: Timestamp
+  gcsUploadedAt?: Timestamp
   /** 업로드 상태 */
-  upload_status?: UploadStatus
+  uploadStatus?: UploadStatus
   /** 영상 길이 (초) */
-  video_duration?: number
+  videoDuration?: number
   /** 컨텐츠 상태 */
   status?: ContentStatus
   /** 통계 */
   stats: Stats
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
 
   // ==================== 파이프라인 필드 (Admin Archive 워크플로우) ====================
-  // Firestore에 snake_case로 저장됨
 
   /** 파이프라인 상태 */
-  pipeline_status?: 'pending' | 'needs_classify' | 'analyzing' | 'completed' | 'needs_review' | 'published' | 'failed'
+  pipelineStatus?: 'pending' | 'needs_classify' | 'analyzing' | 'completed' | 'needs_review' | 'published' | 'failed'
   /** 파이프라인 진행률 (0-100) */
-  pipeline_progress?: number
+  pipelineProgress?: number
   /** 파이프라인 에러 메시지 */
-  pipeline_error?: string
+  pipelineError?: string
   /** 파이프라인 상태 업데이트 시각 */
-  pipeline_updated_at?: Timestamp
+  pipelineUpdatedAt?: Timestamp
   /** 현재 분석 작업 ID (analysisJobs 참조) */
-  current_job_id?: string
+  currentJobId?: string
   /** 마지막 분석 완료 시각 */
-  last_analysis_at?: Timestamp
+  lastAnalysisAt?: Timestamp
   /** 분석 시도 횟수 */
-  analysis_attempts?: number
+  analysisAttempts?: number
 }
 
 // ==================== Hands Collection (Flat) ====================
@@ -296,11 +289,10 @@ export interface FirestoreStream {
  *
  * Hand 문서의 players 배열에 저장
  * 최대 9명 (9-max 테이블)
- * Firestore에 snake_case로 저장됨
  */
 export interface HandPlayerEmbedded {
   /** 플레이어 ID (players 컬렉션 참조) */
-  player_id: string
+  playerId: string
   /** 플레이어 이름 (중복 - 빠른 조회) */
   name: string
   /** 포지션 */
@@ -310,13 +302,13 @@ export interface HandPlayerEmbedded {
   /** 홀 카드 (예: ["As", "Kd"]) */
   cards?: string[]
   /** 시작 스택 */
-  start_stack?: number
+  startStack?: number
   /** 종료 스택 */
-  end_stack?: number
+  endStack?: number
   /** 승자 여부 */
-  is_winner?: boolean
+  isWinner?: boolean
   /** 핸드 설명 (예: "Full House, Aces over Kings") */
-  hand_description?: string
+  handDescription?: string
 }
 
 /**
@@ -324,34 +316,32 @@ export interface HandPlayerEmbedded {
  *
  * Hand 문서의 actions 배열에 저장
  * 일반적으로 20-50개의 액션
- * Firestore에 snake_case로 저장됨
  */
 export interface HandActionEmbedded {
   /** 플레이어 ID */
-  player_id: string
+  playerId: string
   /** 플레이어 이름 (중복 - 빠른 조회) */
-  player_name: string
+  playerName: string
   /** 스트리트 */
   street: PokerStreet
   /** 액션 순서 */
   sequence: number
   /** 액션 타입 */
-  action_type: PokerActionType
+  actionType: PokerActionType
   /** 액션 금액 */
   amount?: number
 }
 
 /**
  * 핸드 참여 정보 (Engagement)
- * Firestore에 snake_case로 저장됨
  */
 export interface HandEngagement {
   /** 좋아요 수 */
-  likes_count: number
+  likesCount: number
   /** 싫어요 수 */
-  dislikes_count: number
+  dislikesCount: number
   /** 북마크 수 */
-  bookmarks_count: number
+  bookmarksCount: number
 }
 
 /**
@@ -364,17 +354,16 @@ export type VoteType = 'like' | 'dislike'
  *
  * Collection: /hands/{handId}/likes/{likeId}
  * likeId = odba (for 빠른 조회)
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreHandLike {
   /** 사용자 ID */
-  user_id: string
+  userId: string
   /** 투표 타입 */
-  vote_type: VoteType
+  voteType: VoteType
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
 }
 
 /**
@@ -382,56 +371,55 @@ export interface FirestoreHandLike {
  *
  * Collection: /hands/{handId}
  * 플랫 컬렉션으로 쿼리 유연성 확보
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreHand {
   /** 스트림 ID (참조) */
-  stream_id: string
+  streamId: string
   /** 이벤트 ID (참조) */
-  event_id: string
+  eventId: string
   /** 토너먼트 ID (참조) */
-  tournament_id: string
+  tournamentId: string
 
   /** 플레이어 ID 목록 (array-contains 쿼리용) */
-  player_ids: string[]
+  playerIds: string[]
 
   /** 핸드 번호 */
   number: string
   /** 핸드 설명 */
   description: string
   /** AI 생성 요약 */
-  ai_summary?: string
+  aiSummary?: string
   /** 타임스탬프 (영상 내) */
   timestamp: string
 
   /** 보드 카드 - 플랍 (3장) */
-  board_flop?: string[]
+  boardFlop?: string[]
   /** 보드 카드 - 턴 (1장) */
-  board_turn?: string
+  boardTurn?: string
   /** 보드 카드 - 리버 (1장) */
-  board_river?: string
+  boardRiver?: string
 
   /** 팟 크기 */
-  pot_size?: number
+  potSize?: number
   /** 스몰 블라인드 */
-  small_blind?: number
+  smallBlind?: number
   /** 빅 블라인드 */
-  big_blind?: number
+  bigBlind?: number
   /** 앤티 */
   ante?: number
 
   /** 스트리트별 팟 */
-  pot_preflop?: number
-  pot_flop?: number
-  pot_turn?: number
-  pot_river?: number
+  potPreflop?: number
+  potFlop?: number
+  potTurn?: number
+  potRiver?: number
 
   /** 영상 시작 타임스탬프 (초) */
-  video_timestamp_start?: number
+  videoTimestampStart?: number
   /** 영상 종료 타임스탬프 (초) */
-  video_timestamp_end?: number
+  videoTimestampEnd?: number
   /** 분석 작업 ID */
-  job_id?: string
+  jobId?: string
 
   /** 참여 플레이어 (임베딩) */
   players: HandPlayerEmbedded[]
@@ -442,35 +430,34 @@ export interface FirestoreHand {
   engagement: HandEngagement
 
   /** 썸네일 URL */
-  thumbnail_url?: string
+  thumbnailUrl?: string
   /** 즐겨찾기 */
   favorite?: boolean
 
   // ==================== AI Semantic Analysis ====================
 
   /** 시맨틱 태그 배열 */
-  semantic_tags?: string[]
+  semanticTags?: string[]
 
   /** AI 분석 결과 */
-  ai_analysis?: AIAnalysis
+  aiAnalysis?: AIAnalysis
 
   /** 분석 Phase (1: 타임스탬프만, 2: 상세 분석 완료) */
-  analysis_phase?: AnalysisPhase
+  analysisPhase?: AnalysisPhase
 
   /** Phase 2 분석 완료 시각 */
-  phase2_completed_at?: Timestamp
+  phase2CompletedAt?: Timestamp
 
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
 }
 
 // ==================== Players Collection ====================
 
 /**
  * 플레이어 통계
- * Firestore에 snake_case로 저장됨
  */
 export interface PlayerStats {
   /** VPIP (Voluntarily Put In Pot) */
@@ -478,51 +465,49 @@ export interface PlayerStats {
   /** PFR (Pre-Flop Raise) */
   pfr?: number
   /** 총 핸드 수 */
-  total_hands?: number
+  totalHands?: number
   /** 승률 */
-  win_rate?: number
+  winRate?: number
 }
 
 /**
  * Player 문서
  *
  * Collection: /players/{playerId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestorePlayer {
   /** 플레이어 이름 */
   name: string
   /** 정규화된 이름 (검색용, lowercase alphanumeric) */
-  normalized_name: string
+  normalizedName: string
   /** 별명 목록 */
   aliases?: string[]
   /** 프로필 사진 URL */
-  photo_url?: string
+  photoUrl?: string
   /** 국가 */
   country?: string
   /** 프로 여부 */
-  is_pro?: boolean
+  isPro?: boolean
   /** 자기소개 */
   bio?: string
   /** 총 상금 */
-  total_winnings?: number
+  totalWinnings?: number
   /** 통계 */
   stats?: PlayerStats
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
 }
 
 /**
  * 플레이어별 핸드 인덱스
  *
  * Collection: /players/{playerId}/hands/{handId}
- * Firestore에 snake_case로 저장됨
  */
 export interface PlayerHandIndex {
   /** 토너먼트 참조 정보 */
-  tournament_ref: {
+  tournamentRef: {
     id: string
     name: string
     category: TournamentCategory
@@ -533,11 +518,11 @@ export interface PlayerHandIndex {
   cards?: string[]
   /** 결과 */
   result: {
-    is_winner: boolean
-    final_amount?: number
+    isWinner: boolean
+    finalAmount?: number
   }
   /** 핸드 날짜 */
-  hand_date: Timestamp
+  handDate: Timestamp
 }
 
 // ==================== Users Collection ====================
@@ -546,7 +531,6 @@ export interface PlayerHandIndex {
  * User 문서
  *
  * Collection: /users/{userId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreUser {
   /** 이메일 */
@@ -554,52 +538,51 @@ export interface FirestoreUser {
   /** 닉네임 */
   nickname?: string
   /** 아바타 URL */
-  avatar_url?: string
+  avatarUrl?: string
   /** 역할 */
   role: UserRole
   /** 이메일 인증 여부 */
-  email_verified?: boolean
+  emailVerified?: boolean
 
   // 프로필 필드
   /** 자기소개 */
   bio?: string
   /** 포커 경력 */
-  poker_experience?: string
+  pokerExperience?: string
   /** 위치 */
   location?: string
   /** 웹사이트 */
   website?: string
   /** Twitter 핸들 */
-  twitter_handle?: string
+  twitterHandle?: string
   /** Instagram 핸들 */
-  instagram_handle?: string
+  instagramHandle?: string
   /** 프로필 공개 설정 */
-  profile_visibility?: 'public' | 'private' | 'friends'
+  profileVisibility?: 'public' | 'private' | 'friends'
   /** 받은 좋아요 수 */
-  likes_received?: number
+  likesReceived?: number
 
   /** 통계 */
   stats: {
-    posts_count: number
-    comments_count: number
+    postsCount: number
+    commentsCount: number
   }
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
   /** 마지막 로그인 */
-  last_login_at?: Timestamp
+  lastLoginAt?: Timestamp
 }
 
 /**
  * 사용자 알림
  *
  * Collection: /users/{userId}/notifications/{notificationId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreNotification {
   /** 수신자 ID (Security Rules에서 사용) */
-  recipient_id: string
+  recipientId: string
   /** 알림 타입 */
   type: 'comment' | 'like' | 'mention' | 'system'
   /** 알림 제목 */
@@ -609,9 +592,9 @@ export interface FirestoreNotification {
   /** 링크 */
   link?: string
   /** 읽음 여부 */
-  is_read: boolean
+  isRead: boolean
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
 }
 
 /**
@@ -619,19 +602,18 @@ export interface FirestoreNotification {
  *
  * Collection: /users/{userId}/bookmarks/{bookmarkId}
  * bookmarkId = handId (for 빠른 조회)
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreBookmark {
   /** 북마크 타입 */
   type: 'hand' | 'post'
   /** 참조 ID (핸드 ID 또는 포스트 ID) */
-  ref_id: string
+  refId: string
   /** 폴더 이름 */
-  folder_name?: string
+  folderName?: string
   /** 메모 */
   notes?: string
   /** 참조 정보 (중복 - 빠른 조회) */
-  ref_data: {
+  refData: {
     title: string
     description?: string
     /** 핸드 번호 */
@@ -639,23 +621,22 @@ export interface FirestoreBookmark {
     /** 타임스탬프 */
     timestamp?: string
     /** 스트림 이름 */
-    stream_name?: string
+    streamName?: string
     /** 이벤트 이름 */
-    event_name?: string
+    eventName?: string
     /** 토너먼트 이름 */
-    tournament_name?: string
+    tournamentName?: string
     /** 토너먼트 카테고리 */
-    tournament_category?: string
+    tournamentCategory?: string
   }
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
 }
 
 // ==================== Community Collections ====================
 
 /**
  * 작성자 정보 (임베딩)
- * Firestore에 snake_case로 저장됨
  */
 export interface AuthorInfo {
   /** 사용자 ID */
@@ -663,7 +644,7 @@ export interface AuthorInfo {
   /** 닉네임 */
   name: string
   /** 아바타 URL */
-  avatar_url?: string
+  avatarUrl?: string
 }
 
 /**
@@ -685,7 +666,6 @@ export type LiveReportStatus = 'draft' | 'pending' | 'published'
  * LiveReport 문서
  *
  * Collection: /liveReports/{reportId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreLiveReport {
   /** 제목 */
@@ -693,13 +673,13 @@ export interface FirestoreLiveReport {
   /** 내용 */
   content: string
   /** 썸네일 URL */
-  thumbnail_url?: string
+  thumbnailUrl?: string
   /** 카테고리 */
   category: LiveReportCategory
   /** 태그 */
   tags: string[]
   /** 외부 링크 */
-  external_link?: string
+  externalLink?: string
   /** 상태 */
   status: LiveReportStatus
   /** 작성자 (임베딩) */
@@ -707,18 +687,17 @@ export interface FirestoreLiveReport {
   /** 승인자 (임베딩) */
   approver?: AuthorInfo
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
   /** 발행일 */
-  published_at?: Timestamp
+  publishedAt?: Timestamp
 }
 
 /**
  * Comment 문서 (Hand 댓글)
  *
  * Collection: /hands/{handId}/comments/{commentId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreComment {
   /** 댓글 내용 */
@@ -726,11 +705,11 @@ export interface FirestoreComment {
   /** 작성자 (임베딩) */
   author: AuthorInfo
   /** 부모 댓글 ID (대댓글인 경우) */
-  parent_id?: string
+  parentId?: string
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
 }
 
 // ==================== Analysis Jobs Collection ====================
@@ -747,51 +726,49 @@ export type AnalysisJobStatus =
 
 /**
  * 세그먼트 분석 결과
- * Firestore에 snake_case로 저장됨
  */
 export interface SegmentResult {
   /** 세그먼트 ID */
-  segment_id: string
+  segmentId: string
   /** 분석 상태 */
   status: 'pending' | 'completed' | 'failed'
   /** 발견된 핸드 수 */
-  hands_found: number
+  handsFound: number
   /** 시작 시간 (초) */
-  start_time: number
+  startTime: number
   /** 종료 시간 (초) */
-  end_time: number
+  endTime: number
 }
 
 /**
  * AnalysisJob 문서
  *
  * Collection: /analysisJobs/{jobId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreAnalysisJob {
   /** 스트림 ID */
-  stream_id: string
+  streamId: string
   /** 사용자 ID */
-  user_id: string
+  userId: string
   /** 작업 상태 */
   status: AnalysisJobStatus
   /** 진행률 (0-100) */
   progress: number
   /** 에러 메시지 */
-  error_message?: string
+  errorMessage?: string
   /** 분석 결과 */
   result?: {
     success: boolean
-    segments_processed: number
-    total_hands: number
-    segment_results: SegmentResult[]
+    segmentsProcessed: number
+    totalHands: number
+    segmentResults: SegmentResult[]
   }
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 시작일 */
-  started_at?: Timestamp
+  startedAt?: Timestamp
   /** 완료일 */
-  completed_at?: Timestamp
+  completedAt?: Timestamp
 }
 
 // ==================== Hand Tags Collection ====================
@@ -824,25 +801,23 @@ export type HandTagName =
  *
  * Collection: /hands/{handId}/tags/{tagId}
  * 각 핸드의 서브컬렉션으로 태그 관리
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreHandTag {
   /** 태그 이름 */
-  tag_name: HandTagName
+  tagName: HandTagName
   /** 생성자 사용자 ID */
-  created_by: string
+  createdBy: string
   /** 생성자 정보 (임베딩) */
-  created_by_info?: AuthorInfo
+  createdByInfo?: AuthorInfo
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
 }
 
 /**
  * 태그별 통계
- * Firestore에 snake_case로 저장됨
  */
 export interface HandTagStats {
-  tag_name: HandTagName
+  tagName: HandTagName
   count: number
   percentage: number
 }
@@ -851,19 +826,18 @@ export interface HandTagStats {
  * 유저 태그 히스토리 (materialized view)
  *
  * Collection: /users/{userId}/tagHistory/{historyId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreUserTagHistory {
   /** 핸드 ID */
-  hand_id: string
+  handId: string
   /** 태그 이름 */
-  tag_name: HandTagName
+  tagName: HandTagName
   /** 핸드 번호 */
-  hand_number?: string
+  handNumber?: string
   /** 토너먼트 이름 */
-  tournament_name?: string
+  tournamentName?: string
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
 }
 
 // ==================== Data Deletion Requests Collection ====================
@@ -878,42 +852,41 @@ export type DeletionRequestStatus = 'pending' | 'approved' | 'rejected' | 'compl
  *
  * Collection: /dataDeletionRequests/{requestId}
  * GDPR/CCPA/PIPL 데이터 삭제 요청 관리
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreDataDeletionRequest {
   /** 사용자 ID */
-  user_id: string
+  userId: string
   /** 사용자 정보 (임베딩) */
   user?: {
     id: string
     email: string
     nickname: string
-    avatar_url?: string
+    avatarUrl?: string
   }
   /** 삭제 사유 */
   reason: string
   /** 요청 상태 */
   status: DeletionRequestStatus
   /** 요청일 */
-  requested_at: Timestamp
+  requestedAt: Timestamp
   /** 검토일 */
-  reviewed_at?: Timestamp
+  reviewedAt?: Timestamp
   /** 검토자 ID */
-  reviewed_by?: string
+  reviewedBy?: string
   /** 검토자 정보 (임베딩) */
-  reviewed_by_user?: {
+  reviewedByUser?: {
     id: string
     email: string
     nickname: string
   }
   /** 완료일 */
-  completed_at?: Timestamp
+  completedAt?: Timestamp
   /** 관리자 메모 */
-  admin_notes?: string
+  adminNotes?: string
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
 }
 
 // ==================== System Collections ====================
@@ -922,7 +895,6 @@ export interface FirestoreDataDeletionRequest {
  * Category 문서
  *
  * Collection: /categories/{categoryId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreCategory {
   /** 카테고리 이름 */
@@ -932,16 +904,15 @@ export interface FirestoreCategory {
   /** 표시 순서 */
   order: number
   /** 활성화 여부 */
-  is_active: boolean
+  isActive: boolean
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
 }
 
 /**
  * SystemConfig 문서
  *
  * Collection: /systemConfigs/{configId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreSystemConfig {
   /** 설정 키 */
@@ -951,9 +922,9 @@ export interface FirestoreSystemConfig {
   /** 설명 */
   description?: string
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
   /** 수정자 */
-  updated_by?: string
+  updatedBy?: string
 }
 
 // ==================== Admin Collections ====================
@@ -972,44 +943,43 @@ export type VerificationMethod = 'social_media' | 'email' | 'admin' | 'other'
  * PlayerClaim 문서
  *
  * Collection: /playerClaims/{claimId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestorePlayerClaim {
   /** 사용자 ID */
-  user_id: string
+  userId: string
   /** 플레이어 ID */
-  player_id: string
+  playerId: string
   /** 클레임 상태 */
   status: ClaimStatus
   /** 인증 방법 */
-  verification_method: VerificationMethod
+  verificationMethod: VerificationMethod
   /** 인증 데이터 */
-  verification_data?: Record<string, unknown>
+  verificationData?: Record<string, unknown>
   /** 관리자 메모 */
-  admin_notes?: string
+  adminNotes?: string
   /** 클레임 신청일 */
-  claimed_at: Timestamp
+  claimedAt: Timestamp
   /** 검증일 */
-  verified_at?: Timestamp
+  verifiedAt?: Timestamp
   /** 검증자 ID */
-  verified_by?: string
+  verifiedBy?: string
   /** 거절 사유 */
-  rejected_reason?: string
+  rejectedReason?: string
   /** 사용자 정보 (임베딩) */
   user?: {
     nickname: string
     email: string
-    avatar_url?: string
+    avatarUrl?: string
   }
   /** 플레이어 정보 (임베딩) */
   player?: {
     name: string
-    photo_url?: string
+    photoUrl?: string
   }
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
 }
 
 /**
@@ -1026,67 +996,65 @@ export type EditRequestStatus = 'pending' | 'approved' | 'rejected'
  * HandEditRequest 문서
  *
  * Collection: /handEditRequests/{requestId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreHandEditRequest {
   /** 핸드 ID */
-  hand_id: string
+  handId: string
   /** 요청자 ID */
-  requester_id: string
+  requesterId: string
   /** 요청자 이름 */
-  requester_name: string
+  requesterName: string
   /** 수정 유형 */
-  edit_type: EditType
+  editType: EditType
   /** 원본 데이터 */
-  original_data: Record<string, unknown>
+  originalData: Record<string, unknown>
   /** 제안된 수정 데이터 */
-  proposed_data: Record<string, unknown>
+  proposedData: Record<string, unknown>
   /** 수정 사유 */
   reason: string
   /** 요청 상태 */
   status: EditRequestStatus
   /** 검토자 ID */
-  reviewed_by?: string
+  reviewedBy?: string
   /** 검토일 */
-  reviewed_at?: Timestamp
+  reviewedAt?: Timestamp
   /** 관리자 코멘트 */
-  admin_comment?: string
+  adminComment?: string
   /** 핸드 정보 (임베딩) */
   hand?: {
     number: string
     description: string
-    stream_name?: string
-    event_name?: string
-    tournament_name?: string
+    streamName?: string
+    eventName?: string
+    tournamentName?: string
   }
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
 }
 
 /**
  * AdminLog 문서
  *
  * Collection: /adminLogs/{logId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreAdminLog {
   /** 관리자 ID */
-  admin_id: string
+  adminId: string
   /** 액션 */
   action: string
   /** 대상 유형 */
-  target_type: 'user' | 'post' | 'comment' | 'hand' | 'player'
+  targetType: 'user' | 'post' | 'comment' | 'hand' | 'player'
   /** 대상 ID */
-  target_id?: string
+  targetId?: string
   /** 상세 정보 */
   details?: Record<string, unknown>
   /** 관리자 정보 (임베딩) */
   admin?: {
     nickname: string
-    avatar_url?: string
+    avatarUrl?: string
   }
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
 }
 
 /**
@@ -1098,7 +1066,6 @@ export type GameType = 'tournament' | 'cash_game' | 'both'
  * TournamentCategory 문서 (상세 버전)
  *
  * Collection: /tournamentCategories/{categoryId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreTournamentCategory {
   /** 카테고리 ID (문서 ID와 동일) */
@@ -1106,58 +1073,57 @@ export interface FirestoreTournamentCategory {
   /** 카테고리 이름 */
   name: string
   /** 표시 이름 */
-  display_name: string
+  displayName: string
   /** 짧은 이름 */
-  short_name?: string
+  shortName?: string
   /** 별칭 목록 */
   aliases: string[]
   /** 로고 URL */
-  logo_url?: string
+  logoUrl?: string
   /** 활성화 여부 */
-  is_active: boolean
+  isActive: boolean
   /** 게임 타입 */
-  game_type: GameType
+  gameType: GameType
   /** 상위 카테고리 ID */
-  parent_id?: string
+  parentId?: string
   /** 테마 그라디언트 */
-  theme_gradient?: string
+  themeGradient?: string
   /** 테마 텍스트 색상 */
-  theme_text?: string
+  themeText?: string
   /** 테마 그림자 */
-  theme_shadow?: string
+  themeShadow?: string
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
 }
 
 /**
  * UnsortedStream 문서 (미분류 영상)
  *
  * Collection: /streams/{streamId}
- * Firestore에 snake_case로 저장됨
  */
 export interface FirestoreUnsortedStream {
   /** 스트림 이름 */
   name: string
   /** 영상 URL */
-  video_url?: string
+  videoUrl?: string
   /** 영상 파일명 */
-  video_file?: string
+  videoFile?: string
   /** 영상 소스 */
-  video_source?: 'youtube' | 'local' | 'nas'
+  videoSource?: 'youtube' | 'local' | 'nas'
   /** 발행일 */
-  published_at?: Timestamp
+  publishedAt?: Timestamp
   /** 이벤트 ID (정리된 경우) */
-  event_id?: string
+  eventId?: string
   /** 정리 여부 */
-  is_organized: boolean
+  isOrganized: boolean
   /** 정리일 */
-  organized_at?: Timestamp
+  organizedAt?: Timestamp
   /** 생성일 */
-  created_at: Timestamp
+  createdAt: Timestamp
   /** 수정일 */
-  updated_at: Timestamp
+  updatedAt: Timestamp
 }
 
 // ==================== Helper Types ====================

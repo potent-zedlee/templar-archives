@@ -30,24 +30,24 @@ export type ActionType = 'fold' | 'check' | 'call' | 'bet' | 'raise' | 'all-in'
 
 export type HandAction = {
   id: string
-  hand_id: string
-  player_id: string
+  handId: string
+  playerId: string
   street: Street
-  action_type: ActionType
+  actionType: ActionType
   amount?: number
-  action_order: number
-  sequence: number // Firestore 호환 (action_order와 동일)
-  created_at: string
+  actionOrder: number
+  sequence: number // Firestore 호환 (actionOrder와 동일)
+  createdAt: string
 }
 
 export type HandActionInput = {
-  hand_id: string
-  player_id: string
+  handId: string
+  playerId: string
   street: Street
-  action_type: ActionType
+  actionType: ActionType
   amount?: number
-  action_order: number
-  sequence: number // Firestore 호환 (action_order와 동일)
+  actionOrder: number
+  sequence: number // Firestore 호환 (actionOrder와 동일)
 }
 
 /**
@@ -60,14 +60,14 @@ function convertToLegacyFormat(
 ): HandAction {
   return {
     id: `${handId}_${action.street}_${action.sequence}`,
-    hand_id: handId,
-    player_id: action.player_id,
+    handId: handId,
+    playerId: action.playerId,
     street: action.street as Street,
-    action_type: action.action_type as ActionType,
+    actionType: action.actionType as ActionType,
     amount: action.amount,
-    action_order: action.sequence,
-    sequence: action.sequence, // action_order와 동일한 값
-    created_at: new Date().toISOString(),
+    actionOrder: action.sequence,
+    sequence: action.sequence, // actionOrder와 동일한 값
+    createdAt: new Date().toISOString(),
   }
 }
 
@@ -79,11 +79,11 @@ function convertToFirestoreFormat(
   playerName: string = ''
 ): HandActionEmbedded {
   return {
-    player_id: input.player_id,
-    player_name: playerName,
+    playerId: input.playerId,
+    playerName: playerName,
     street: input.street as PokerStreet,
-    sequence: input.action_order,
-    action_type: input.action_type as PokerActionType,
+    sequence: input.actionOrder,
+    actionType: input.actionType as PokerActionType,
     amount: input.amount || 0,
   }
 }
@@ -148,7 +148,7 @@ export async function getHandActionsByStreet(
  */
 export async function createHandAction(action: HandActionInput): Promise<HandAction> {
   try {
-    const handDocRef = doc(firestore, COLLECTION_PATHS.HANDS, action.hand_id)
+    const handDocRef = doc(firestore, COLLECTION_PATHS.HANDS, action.handId)
     const handDoc = await getDoc(handDocRef)
 
     if (!handDoc.exists()) {
@@ -159,7 +159,7 @@ export async function createHandAction(action: HandActionInput): Promise<HandAct
     const existingActions = handData.actions || []
 
     // 플레이어 이름 찾기
-    const player = handData.players?.find((p) => p.player_id === action.player_id)
+    const player = handData.players?.find((p) => p.playerId === action.playerId)
     const playerName = player?.name || ''
 
     const newAction = convertToFirestoreFormat(action, playerName)
@@ -172,7 +172,7 @@ export async function createHandAction(action: HandActionInput): Promise<HandAct
       updatedAt: serverTimestamp(),
     })
 
-    return convertToLegacyFormat(action.hand_id, newAction, existingActions.length)
+    return convertToLegacyFormat(action.handId, newAction, existingActions.length)
   } catch (error) {
     console.error('Failed to create hand action:', error)
     throw error
@@ -188,8 +188,8 @@ export async function bulkCreateHandActions(
   if (actions.length === 0) return []
 
   // 모든 액션이 같은 핸드에 속해야 함
-  const handId = actions[0].hand_id
-  if (!actions.every((a) => a.hand_id === handId)) {
+  const handId = actions[0].handId
+  if (!actions.every((a) => a.handId === handId)) {
     throw new Error('모든 액션은 같은 핸드에 속해야 합니다')
   }
 
@@ -207,11 +207,11 @@ export async function bulkCreateHandActions(
     // 플레이어 이름 매핑
     const playerMap = new Map<string, string>()
     handData.players?.forEach((p) => {
-      playerMap.set(p.player_id, p.name)
+      playerMap.set(p.playerId, p.name)
     })
 
     const newActions = actions.map((action) =>
-      convertToFirestoreFormat(action, playerMap.get(action.player_id) || '')
+      convertToFirestoreFormat(action, playerMap.get(action.playerId) || '')
     )
 
     // 기존 액션 + 새 액션
@@ -271,11 +271,11 @@ export async function updateHandAction(
     // 액션 업데이트
     const updatedAction: HandActionEmbedded = {
       ...actions[actionIndex],
-      ...(updates.player_id && { player_id: updates.player_id }),
+      ...(updates.playerId && { playerId: updates.playerId }),
       ...(updates.street && { street: updates.street as PokerStreet }),
-      ...(updates.action_type && { action_type: updates.action_type as PokerActionType }),
+      ...(updates.actionType && { actionType: updates.actionType as PokerActionType }),
       ...(updates.amount !== undefined && { amount: updates.amount }),
-      ...(updates.action_order !== undefined && { sequence: updates.action_order }),
+      ...(updates.actionOrder !== undefined && { sequence: updates.actionOrder }),
     }
 
     const updatedActions = [...actions]
@@ -408,7 +408,7 @@ export function validateActionSequence(actions: HandAction[]): {
     if (streetActions.length === 0) return
 
     // 시퀀스 번호 정렬 확인
-    const sequences = streetActions.map((a) => a.action_order).sort((a, b) => a - b)
+    const sequences = streetActions.map((a) => a.actionOrder).sort((a, b) => a - b)
     const expectedSequences = Array.from({ length: sequences.length }, (_, i) => i + 1)
 
     if (JSON.stringify(sequences) !== JSON.stringify(expectedSequences)) {
@@ -418,13 +418,13 @@ export function validateActionSequence(actions: HandAction[]): {
     // 액션 타입 규칙 검증
     streetActions.forEach((action, index) => {
       // fold/check은 금액이 0이어야 함
-      if (['fold', 'check'].includes(action.action_type) && action.amount !== 0) {
+      if (['fold', 'check'].includes(action.actionType) && action.amount !== 0) {
         errors.push(`${street} action ${index + 1}: fold/check must have amount 0`)
       }
 
       // bet/raise/all-in은 금액이 있어야 함
       if (
-        ['bet', 'raise', 'all-in'].includes(action.action_type) &&
+        ['bet', 'raise', 'all-in'].includes(action.actionType) &&
         (!action.amount || action.amount <= 0)
       ) {
         errors.push(`${street} action ${index + 1}: bet/raise/all-in must have positive amount`)

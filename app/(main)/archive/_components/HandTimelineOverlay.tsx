@@ -52,10 +52,10 @@ function formatTime(seconds: number): string {
  */
 function getHighlightPlayers(hand: Hand): string[] {
   return (
-    hand.hand_players
+    hand.handPlayers
       ?.filter(hp => hp.player?.name)
       .slice(0, 2)
-      .map(hp => hp.player?.name || hp.poker_position || 'Unknown') || []
+      .map(hp => hp.player?.name || hp.pokerPosition || 'Unknown') || []
   )
 }
 
@@ -71,9 +71,9 @@ function calculateHeatMap(
   const heatMap = new Array(segments).fill(0)
 
   hands.forEach(hand => {
-    if (hand.video_timestamp_start) {
+    if (hand.videoTimestampStart) {
       const segmentIndex = Math.min(
-        Math.floor(hand.video_timestamp_start / segmentDuration),
+        Math.floor(hand.videoTimestampStart / segmentDuration),
         segments - 1
       )
       heatMap[segmentIndex]++
@@ -116,12 +116,12 @@ export function HandTimelineOverlay({
     if (videoDuration <= 0) return []
 
     return hands
-      .filter(h => h.video_timestamp_start != null)
+      .filter(h => h.videoTimestampStart != null)
       .map(hand => ({
         hand,
-        position: ((hand.video_timestamp_start || 0) / videoDuration) * 100,
-        start: hand.video_timestamp_start || 0,
-        end: hand.video_timestamp_end || (hand.video_timestamp_start || 0) + 120,
+        position: ((hand.videoTimestampStart || 0) / videoDuration) * 100,
+        start: hand.videoTimestampStart || 0,
+        end: hand.videoTimestampEnd || (hand.videoTimestampStart || 0) + 120,
       }))
       .sort((a, b) => a.start - b.start)
   }, [hands, videoDuration])
@@ -168,8 +168,8 @@ export function HandTimelineOverlay({
   // 마커 클릭 핸들러
   const handleMarkerClick = useCallback((hand: Hand, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (hand.video_timestamp_start != null) {
-      onSeek(hand.video_timestamp_start)
+    if (hand.videoTimestampStart != null) {
+      onSeek(hand.videoTimestampStart)
     }
   }, [onSeek])
 
@@ -283,7 +283,7 @@ export function HandTimelineOverlay({
  */
 function HandTooltip({ hand }: { hand: Hand }) {
   const highlightPlayers = getHighlightPlayers(hand)
-  const potSize = hand.pot_size || hand.pot_river || hand.pot_turn || hand.pot_flop || 0
+  const potSize = hand.potSize || hand.potRiver || hand.potTurn || hand.potFlop || 0
 
   return (
     <div className="bg-popover border border-border rounded-lg p-3 shadow-xl min-w-[200px]">
@@ -294,7 +294,7 @@ function HandTooltip({ hand }: { hand: Hand }) {
         </Badge>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <Clock className="w-3 h-3" />
-          {formatTime(hand.video_timestamp_start || 0)}
+          {formatTime(hand.videoTimestampStart || 0)}
         </div>
       </div>
 

@@ -72,7 +72,7 @@ export function ArchiveNavigationSidebar({
                 <AccordionTrigger className="px-3 py-2 hover:bg-accent rounded-md hover:no-underline">
                   <div className="flex items-center gap-2 text-left w-full">
                     <Avatar className="w-8 h-8 rounded">
-                      <AvatarImage src={tournament.category_logo_url} alt={tournament.name} />
+                      <AvatarImage src={tournament.categoryLogoUrl} alt={tournament.name} />
                       <AvatarFallback className="text-xs bg-muted text-foreground rounded">
                         {tournament.name.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
@@ -118,7 +118,7 @@ export function ArchiveNavigationSidebar({
                             {event.streams && event.streams.length > 0 ? (
                               <div className="space-y-1">
                                 {event.streams.map(stream => {
-                                  const handCount = (stream as any).hand_count || 0
+                                  const handCount = (stream as any).handCount || 0
 
                                   return (
                                     <button

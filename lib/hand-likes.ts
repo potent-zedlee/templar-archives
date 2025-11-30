@@ -24,11 +24,11 @@ import {
 
 export type HandLike = {
   id: string
-  hand_id: string
-  user_id: string
-  vote_type: 'like' | 'dislike'
-  created_at: string
-  updated_at: string
+  handId: string
+  userId: string
+  voteType: 'like' | 'dislike'
+  createdAt: string
+  updatedAt: string
 }
 
 export type HandLikeStatus = {
@@ -52,8 +52,8 @@ export async function getHandLikeStatus(handId: string, userId?: string): Promis
     }
 
     const handData = handDoc.data() as FirestoreHand
-    const likesCount = handData.engagement?.likes_count || 0
-    const dislikesCount = handData.engagement?.dislikes_count || 0
+    const likesCount = handData.engagement?.likesCount || 0
+    const dislikesCount = handData.engagement?.dislikesCount || 0
 
     // 사용자 투표 상태 조회
     let userVote: 'like' | 'dislike' | null = null
@@ -63,7 +63,7 @@ export async function getHandLikeStatus(handId: string, userId?: string): Promis
 
       if (likeDoc.exists()) {
         const likeData = likeDoc.data() as FirestoreHandLike
-        userVote = likeData.vote_type as 'like' | 'dislike'
+        userVote = likeData.voteType as 'like' | 'dislike'
       }
     }
 
@@ -95,26 +95,26 @@ export async function toggleHandLike(
       // 기존 투표 확인
       const likeDoc = await transaction.get(likeDocRef)
       const existingVote = likeDoc.exists()
-        ? (likeDoc.data() as FirestoreHandLike).vote_type
+        ? (likeDoc.data() as FirestoreHandLike).voteType
         : null
 
       // 경우 1: 기존 투표 없음 -> 새로 추가
       if (!existingVote) {
-        const newLike: Omit<FirestoreHandLike, 'created_at' | 'updated_at'> & {
-          created_at: ReturnType<typeof serverTimestamp>
-          updated_at: ReturnType<typeof serverTimestamp>
+        const newLike: Omit<FirestoreHandLike, 'createdAt' | 'updatedAt'> & {
+          createdAt: ReturnType<typeof serverTimestamp>
+          updatedAt: ReturnType<typeof serverTimestamp>
         } = {
-          user_id: userId,
-          vote_type: voteType,
-          created_at: serverTimestamp(),
-          updated_at: serverTimestamp(),
+          userId: userId,
+          voteType: voteType,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
         }
 
         transaction.set(likeDocRef, newLike)
 
         // 카운트 증가
         const incrementField =
-          voteType === 'like' ? 'engagement.likes_count' : 'engagement.dislikes_count'
+          voteType === 'like' ? 'engagement.likesCount' : 'engagement.dislikesCount'
         transaction.update(handDocRef, { [incrementField]: increment(1) })
 
         return voteType
@@ -126,7 +126,7 @@ export async function toggleHandLike(
 
         // 카운트 감소
         const decrementField =
-          voteType === 'like' ? 'engagement.likes_count' : 'engagement.dislikes_count'
+          voteType === 'like' ? 'engagement.likesCount' : 'engagement.dislikesCount'
         transaction.update(handDocRef, { [decrementField]: increment(-1) })
 
         return null
@@ -134,15 +134,15 @@ export async function toggleHandLike(
 
       // 경우 3: 다른 투표 클릭 -> 변경 (업데이트)
       transaction.update(likeDocRef, {
-        vote_type: voteType,
-        updated_at: serverTimestamp(),
+        voteType: voteType,
+        updatedAt: serverTimestamp(),
       })
 
       // 기존 투표 카운트 감소, 새 투표 카운트 증가
       const oldField =
-        existingVote === 'like' ? 'engagement.likes_count' : 'engagement.dislikes_count'
+        existingVote === 'like' ? 'engagement.likesCount' : 'engagement.dislikesCount'
       const newField =
-        voteType === 'like' ? 'engagement.likes_count' : 'engagement.dislikes_count'
+        voteType === 'like' ? 'engagement.likesCount' : 'engagement.dislikesCount'
 
       transaction.update(handDocRef, {
         [oldField]: increment(-1),
@@ -176,8 +176,8 @@ export async function getHandLikeCounts(handId: string): Promise<{
     const handData = handDoc.data() as FirestoreHand
 
     return {
-      likesCount: handData.engagement?.likes_count || 0,
-      dislikesCount: handData.engagement?.dislikes_count || 0,
+      likesCount: handData.engagement?.likesCount || 0,
+      dislikesCount: handData.engagement?.dislikesCount || 0,
     }
   } catch (error) {
     console.error('카운트 조회 실패:', error)
@@ -206,8 +206,8 @@ export async function getBatchHandLikeStatus(
         const handData = handDoc.data() as FirestoreHand
         result.set(handId, {
           userVote: null,
-          likesCount: handData.engagement?.likes_count || 0,
-          dislikesCount: handData.engagement?.dislikes_count || 0,
+          likesCount: handData.engagement?.likesCount || 0,
+          dislikesCount: handData.engagement?.dislikesCount || 0,
         })
       } else {
         result.set(handId, {
@@ -230,7 +230,7 @@ export async function getBatchHandLikeStatus(
           const likeData = likeDoc.data() as FirestoreHandLike
           const status = result.get(handId)
           if (status) {
-            status.userVote = likeData.vote_type as 'like' | 'dislike'
+            status.userVote = likeData.voteType as 'like' | 'dislike'
           }
         }
       })

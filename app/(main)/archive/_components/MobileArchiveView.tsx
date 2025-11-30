@@ -44,7 +44,7 @@ export function MobileArchiveView({ tournaments, isLoading }: MobileArchiveViewP
     let total = 0
     tournament.events?.forEach(event => {
       event.streams?.forEach(stream => {
-        total += stream.hand_count || 0
+        total += stream.handCount || 0
       })
     })
     return total
@@ -131,10 +131,10 @@ export function MobileArchiveView({ tournaments, isLoading }: MobileArchiveViewP
                                 {tournament.location}
                               </span>
                             )}
-                            {tournament.start_date && (
+                            {tournament.startDate && (
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-3.5 w-3.5" />
-                                {new Date(tournament.start_date).toLocaleDateString('ko-KR', {
+                                {new Date(tournament.startDate).toLocaleDateString('ko-KR', {
                                   year: 'numeric',
                                   month: 'short'
                                 })}

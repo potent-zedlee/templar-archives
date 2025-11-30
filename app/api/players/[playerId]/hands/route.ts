@@ -67,11 +67,11 @@ export async function GET(_request: Request, { params }: RouteParams) {
         .collection(COLLECTION_PATHS.HANDS)
         .get()
 
-      const playerHands: Array<FirestoreHand & { id: string; playerInfo?: { position?: string; cards?: string[]; is_winner?: boolean } }> = []
+      const playerHands: Array<FirestoreHand & { id: string; playerInfo?: { position?: string; cards?: string[]; isWinner?: boolean } }> = []
 
       allHandsSnapshot.forEach((doc) => {
         const hand = doc.data() as FirestoreHand
-        const playerInHand = hand.players?.find((p) => p.player_id === playerId)
+        const playerInHand = hand.players?.find((p) => p.playerId === playerId)
         if (playerInHand) {
           playerHands.push({
             id: doc.id,
@@ -79,7 +79,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
             playerInfo: {
               position: playerInHand.position,
               cards: playerInHand.cards,
-              is_winner: playerInHand.is_winner,
+              isWinner: playerInHand.isWinner,
             },
           })
         }
@@ -167,8 +167,8 @@ async function groupHandsByTournament(
   const eventIds = new Set<string>()
 
   hands.forEach((hand) => {
-    if (hand.tournament_id) tournamentIds.add(hand.tournament_id)
-    if (hand.event_id) eventIds.add(hand.event_id)
+    if (hand.tournamentId) tournamentIds.add(hand.tournamentId)
+    if (hand.eventId) eventIds.add(hand.eventId)
   })
 
   // 토너먼트 정보 조회
@@ -215,8 +215,8 @@ async function groupHandsByTournament(
   const groupMap = new Map<string, PlayerHandGroup>()
 
   hands.forEach((hand) => {
-    const tournamentId = hand.tournament_id || 'unknown'
-    const eventId = hand.event_id || 'unknown'
+    const tournamentId = hand.tournamentId || 'unknown'
+    const eventId = hand.eventId || 'unknown'
     const tournamentInfo = tournamentMap.get(tournamentId) || {
       name: 'Unknown Tournament',
       category: 'Unknown',

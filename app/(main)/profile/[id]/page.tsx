@@ -91,9 +91,9 @@ export default function ProfileIdClient() {
           <div className="flex flex-col md:flex-row gap-6">
             {/* Avatar */}
             <div className="h-24 w-24 md:h-32 md:w-32 border-2 border-gold-700 gold-glow bg-black-200 flex items-center justify-center overflow-hidden flex-shrink-0 relative">
-              {profile.avatar_url ? (
+              {profile.avatarUrl ? (
                 <Image
-                  src={profile.avatar_url}
+                  src={profile.avatarUrl}
                   alt={profile.nickname}
                   fill
                   className="object-cover"
@@ -128,15 +128,15 @@ export default function ProfileIdClient() {
               {/* Stats */}
               <div className="flex gap-6 mb-4">
                 <div className="text-center">
-                  <div className="text-heading font-bold font-mono text-xl">{profile.posts_count}</div>
+                  <div className="text-heading font-bold font-mono text-xl">{profile.postsCount}</div>
                   <div className="text-caption text-black-600">POSTS</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-heading font-bold font-mono text-xl">{profile.comments_count}</div>
+                  <div className="text-heading font-bold font-mono text-xl">{profile.commentsCount}</div>
                   <div className="text-caption text-black-600">COMMENTS</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-heading font-bold font-mono text-xl">{profile.likes_received}</div>
+                  <div className="text-heading font-bold font-mono text-xl">{profile.likesReceived}</div>
                   <div className="text-caption text-black-600">LIKES</div>
                 </div>
               </div>
@@ -160,26 +160,26 @@ export default function ProfileIdClient() {
                     <span>Website</span>
                   </a>
                 )}
-                {profile.twitter_handle && (
+                {profile.twitterHandle && (
                   <a
-                    href={`https://twitter.com/${profile.twitter_handle}`}
+                    href={`https://twitter.com/${profile.twitterHandle}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-caption text-gold-400 hover:text-gold-300 transition-colors"
                   >
                     <Twitter className="h-4 w-4" />
-                    <span>@{profile.twitter_handle}</span>
+                    <span>@{profile.twitterHandle}</span>
                   </a>
                 )}
-                {profile.instagram_handle && (
+                {profile.instagramHandle && (
                   <a
-                    href={`https://instagram.com/${profile.instagram_handle}`}
+                    href={`https://instagram.com/${profile.instagramHandle}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-caption text-gold-400 hover:text-gold-300 transition-colors"
                   >
                     <Instagram className="h-4 w-4" />
-                    <span>@{profile.instagram_handle}</span>
+                    <span>@{profile.instagramHandle}</span>
                   </a>
                 )}
               </div>

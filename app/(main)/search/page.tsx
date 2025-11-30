@@ -47,7 +47,7 @@ export default function SearchPage() {
         // Filter by pot size
         if (filters.potSizeRange[0] > 0 || filters.potSizeRange[1] < 10000000) {
           filteredHands = filteredHands.filter((hand) => {
-            const pot = hand.final_pot || 0
+            const pot = hand.finalPot || 0
             return pot >= filters.potSizeRange[0] && pot <= filters.potSizeRange[1]
           })
         }
@@ -55,8 +55,8 @@ export default function SearchPage() {
         // Filter by date range
         if (filters.dateRange.from || filters.dateRange.to) {
           filteredHands = filteredHands.filter((hand) => {
-            if (!hand.created_at) return true
-            const handDate = new Date(hand.created_at)
+            if (!hand.createdAt) return true
+            const handDate = new Date(hand.createdAt)
             if (filters.dateRange.from && handDate < filters.dateRange.from) return false
             if (filters.dateRange.to && handDate > filters.dateRange.to) return false
             return true

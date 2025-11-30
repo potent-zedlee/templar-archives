@@ -208,14 +208,14 @@ export async function POST(request: NextRequest) {
                 .collection(COLLECTION_PATHS.PLAYERS)
                 .doc()
 
-              const newPlayerData: Omit<FirestorePlayer, 'created_at' | 'updated_at'> & {
-                created_at: FieldValue
-                updated_at: FieldValue
+              const newPlayerData: Omit<FirestorePlayer, 'createdAt' | 'updatedAt'> & {
+                createdAt: FieldValue
+                updatedAt: FieldValue
               } = {
                 name: sanitizedPlayerName,
-                normalized_name: sanitizedPlayerName.toLowerCase().replace(/[^a-z0-9]/g, ''),
-                created_at: FieldValue.serverTimestamp(),
-                updated_at: FieldValue.serverTimestamp(),
+                normalizedName: sanitizedPlayerName.toLowerCase().replace(/[^a-z0-9]/g, ''),
+                createdAt: FieldValue.serverTimestamp(),
+                updatedAt: FieldValue.serverTimestamp(),
               }
 
               await newPlayerRef.set(newPlayerData)
@@ -232,11 +232,11 @@ export async function POST(request: NextRequest) {
 
             // 임베딩 플레이어 데이터 생성
             const embeddedPlayer: HandPlayerEmbedded = {
-              player_id: playerId,
+              playerId: playerId,
               name: matchedName,
               position: (player.position as PokerPosition) || undefined,
               cards: player.cards ? player.cards.match(/.{1,2}/g) || undefined : undefined,
-              start_stack: player.stack,
+              startStack: player.stack,
             }
             embeddedPlayers.push(embeddedPlayer)
           }
@@ -265,11 +265,11 @@ export async function POST(request: NextRequest) {
 
                 if (playerId) {
                   embeddedActions.push({
-                    player_id: playerId,
-                    player_name: sanitizedPlayerName,
+                    playerId: playerId,
+                    playerName: sanitizedPlayerName,
                     street,
                     sequence: actionSequence++,
-                    action_type: actionType.toLowerCase() as PokerActionType,
+                    actionType: actionType.toLowerCase() as PokerActionType,
                     amount: amount > 0 ? amount : undefined,
                   })
                 }
@@ -303,11 +303,11 @@ export async function POST(request: NextRequest) {
 
                 if (resolvedPlayerId) {
                   embeddedActions.push({
-                    player_id: resolvedPlayerId,
-                    player_name: sanitizedPlayerName,
+                    playerId: resolvedPlayerId,
+                    playerName: sanitizedPlayerName,
                     street,
                     sequence: actionSequence++,
-                    action_type: ((action.action || action.actionType) as PokerActionType) || 'fold',
+                    actionType: ((action.action || action.actionType) as PokerActionType) || 'fold',
                     amount: action.amount || undefined,
                   })
                 }
@@ -343,32 +343,32 @@ export async function POST(request: NextRequest) {
         const handRef = adminFirestore.collection(COLLECTION_PATHS.HANDS).doc()
 
         const streamData = streamDoc.data()
-        const handData: Omit<FirestoreHand, 'created_at' | 'updated_at'> & {
-          created_at: FieldValue
-          updated_at: FieldValue
+        const handData: Omit<FirestoreHand, 'createdAt' | 'updatedAt'> & {
+          createdAt: FieldValue
+          updatedAt: FieldValue
         } = {
-          stream_id: streamId,
-          event_id: streamData?.eventId || '',
-          tournament_id: streamData?.tournamentId || '',
+          streamId: streamId,
+          eventId: streamData?.eventId || '',
+          tournamentId: streamData?.tournamentId || '',
           number: hand.number,
           description: hand.description,
-          ai_summary: hand.summary,
+          aiSummary: hand.summary,
           timestamp: hand.timestamp,
-          pot_size: hand.pot_size,
-          board_flop: hand.board_cards?.slice(0, 3),
-          board_turn: hand.board_cards?.[3],
-          board_river: hand.board_cards?.[4],
-          player_ids: embeddedPlayers.map(p => p.player_id).filter(Boolean),
+          potSize: hand.pot_size,
+          boardFlop: hand.board_cards?.slice(0, 3),
+          boardTurn: hand.board_cards?.[3],
+          boardRiver: hand.board_cards?.[4],
+          playerIds: embeddedPlayers.map(p => p.playerId).filter(Boolean),
           players: embeddedPlayers,
           actions: embeddedActions,
           engagement: {
-            likes_count: 0,
-            dislikes_count: 0,
-            bookmarks_count: 0,
+            likesCount: 0,
+            dislikesCount: 0,
+            bookmarksCount: 0,
           },
           favorite: false,
-          created_at: FieldValue.serverTimestamp(),
-          updated_at: FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
         }
 
         await handRef.set(handData)
@@ -376,11 +376,11 @@ export async function POST(request: NextRequest) {
         // 4. 플레이어별 핸드 인덱스 업데이트 (선택적)
         for (const embeddedPlayer of embeddedPlayers) {
           const playerHandRef = adminFirestore
-            .collection(COLLECTION_PATHS.PLAYER_HANDS(embeddedPlayer.player_id))
+            .collection(COLLECTION_PATHS.PLAYER_HANDS(embeddedPlayer.playerId))
             .doc(handRef.id)
 
           await playerHandRef.set({
-            tournament_ref: {
+            tournamentRef: {
               id: streamData?.tournamentId || '',
               name: streamData?.tournamentName || '',
               category: streamData?.category || 'WSOP',
@@ -388,9 +388,9 @@ export async function POST(request: NextRequest) {
             position: embeddedPlayer.position,
             cards: embeddedPlayer.cards,
             result: {
-              is_winner: embeddedPlayer.is_winner || false,
+              isWinner: embeddedPlayer.isWinner || false,
             },
-            hand_date: FieldValue.serverTimestamp(),
+            handDate: FieldValue.serverTimestamp(),
           })
         }
 
@@ -409,8 +409,8 @@ export async function POST(request: NextRequest) {
         .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
         .doc(streamId)
         .update({
-          'stats.hands_count': FieldValue.increment(imported),
-          updated_at: FieldValue.serverTimestamp(),
+          'stats.handsCount': FieldValue.increment(imported),
+          updatedAt: FieldValue.serverTimestamp(),
         })
     }
 

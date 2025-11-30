@@ -39,33 +39,33 @@ export type GameType = 'tournament' | 'cash_game' | 'both'
 export interface TournamentCategory {
   id: string
   name: string
-  display_name: string
-  short_name?: string | null
+  displayName: string
+  shortName?: string | null
   aliases: string[]
-  logo_url?: string | null
-  is_active: boolean
-  game_type: GameType
-  parent_id?: string | null
-  theme_gradient?: string | null
-  theme_text?: string | null
-  theme_shadow?: string | null
-  created_at: string
-  updated_at: string
+  logoUrl?: string | null
+  isActive: boolean
+  gameType: GameType
+  parentId?: string | null
+  themeGradient?: string | null
+  themeText?: string | null
+  themeShadow?: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 export interface CategoryInput {
   id: string
   name: string
-  display_name: string
-  short_name?: string
+  displayName: string
+  shortName?: string
   aliases?: string[]
-  logo_url?: string
-  is_active?: boolean
-  game_type?: GameType
-  parent_id?: string | null
-  theme_gradient?: string
-  theme_text?: string
-  theme_shadow?: string
+  logoUrl?: string
+  isActive?: boolean
+  gameType?: GameType
+  parentId?: string | null
+  themeGradient?: string
+  themeText?: string
+  themeShadow?: string
 }
 
 export interface CategoryUpdateInput extends Partial<Omit<CategoryInput, 'id'>> {}
@@ -90,18 +90,18 @@ function mapFirestoreCategory(snapshot: any): TournamentCategory {
   return {
     id: snapshot.id,
     name: data.name || '',
-    display_name: data.display_name || data.name || '',
-    short_name: data.short_name || null,
+    displayName: data.displayName || data.name || '',
+    shortName: data.shortName || null,
     aliases: data.aliases || [],
-    logo_url: data.logo_url || null,
-    is_active: data.is_active ?? true,
-    game_type: (data.game_type || 'both') as GameType,
-    parent_id: data.parent_id || null,
-    theme_gradient: data.theme_gradient || null,
-    theme_text: data.theme_text || null,
-    theme_shadow: data.theme_shadow || null,
-    created_at: timestampToString(data.created_at),
-    updated_at: timestampToString(data.updated_at),
+    logoUrl: data.logoUrl || null,
+    isActive: data.isActive ?? true,
+    gameType: (data.gameType || 'both') as GameType,
+    parentId: data.parentId || null,
+    themeGradient: data.themeGradient || null,
+    themeText: data.themeText || null,
+    themeShadow: data.themeShadow || null,
+    createdAt: timestampToString(data.createdAt),
+    updatedAt: timestampToString(data.updatedAt),
   }
 }
 
@@ -118,11 +118,11 @@ async function getAllCategoriesFirestore(
     const constraints: QueryConstraint[] = [orderBy('name', 'asc')]
 
     if (!includeInactive) {
-      constraints.push(where('is_active', '==', true))
+      constraints.push(where('isActive', '==', true))
     }
 
     if (gameType) {
-      constraints.push(where('game_type', 'in', [gameType, 'both']))
+      constraints.push(where('gameType', 'in', [gameType, 'both']))
     }
 
     const q = query(collection(db, COLLECTION_PATHS.CATEGORIES), ...constraints)
@@ -222,7 +222,7 @@ async function searchCategoriesFirestore(searchQuery: string): Promise<Tournamen
 
     // Firestore는 부분 일치 검색을 직접 지원하지 않으므로 모든 활성 카테고리를 가져와서 필터링
     const categoriesRef = collection(db, COLLECTION_PATHS.CATEGORIES)
-    const q = query(categoriesRef, where('is_active', '==', true))
+    const q = query(categoriesRef, where('isActive', '==', true))
     const snapshot = await getDocs(q)
 
     const categories = snapshot.docs.map(mapFirestoreCategory)
@@ -230,8 +230,8 @@ async function searchCategoriesFirestore(searchQuery: string): Promise<Tournamen
     // 클라이언트 측 필터링
     return categories.filter((cat) => {
       const nameMatch = cat.name.toLowerCase().includes(lowerQuery)
-      const displayNameMatch = cat.display_name.toLowerCase().includes(lowerQuery)
-      const shortNameMatch = cat.short_name?.toLowerCase().includes(lowerQuery)
+      const displayNameMatch = cat.displayName.toLowerCase().includes(lowerQuery)
+      const shortNameMatch = cat.shortName?.toLowerCase().includes(lowerQuery)
       const aliasMatch = cat.aliases.some((alias) => alias.toLowerCase().includes(lowerQuery))
 
       return nameMatch || displayNameMatch || shortNameMatch || aliasMatch
@@ -256,19 +256,19 @@ async function createCategoryFirestore(input: CategoryInput): Promise<Tournament
     const now = Timestamp.now()
     const categoryData = {
       name: input.name,
-      display_name: input.display_name,
-      short_name: input.short_name || null,
+      displayName: input.displayName,
+      shortName: input.shortName || null,
       aliases: input.aliases || [],
-      logo_url: input.logo_url || null,
-      is_active: input.is_active ?? true,
-      game_type: input.game_type || 'both',
-      parent_id: input.parent_id || null,
-      theme_gradient: input.theme_gradient || null,
-      theme_text: input.theme_text || null,
-      theme_shadow: input.theme_shadow || null,
+      logoUrl: input.logoUrl || null,
+      isActive: input.isActive ?? true,
+      gameType: input.gameType || 'both',
+      parentId: input.parentId || null,
+      themeGradient: input.themeGradient || null,
+      themeText: input.themeText || null,
+      themeShadow: input.themeShadow || null,
       order: 0, // 기본값
-      created_at: now,
-      updated_at: now,
+      createdAt: now,
+      updatedAt: now,
     }
 
     const docRef = doc(db, COLLECTION_PATHS.CATEGORIES, input.id)
@@ -291,20 +291,20 @@ async function updateCategoryFirestore(
 ): Promise<TournamentCategory> {
   try {
     const updateData: any = {
-      updated_at: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     }
 
     if (input.name !== undefined) updateData.name = input.name
-    if (input.display_name !== undefined) updateData.display_name = input.display_name
-    if (input.short_name !== undefined) updateData.short_name = input.short_name || null
+    if (input.displayName !== undefined) updateData.displayName = input.displayName
+    if (input.shortName !== undefined) updateData.shortName = input.shortName || null
     if (input.aliases !== undefined) updateData.aliases = input.aliases
-    if (input.logo_url !== undefined) updateData.logo_url = input.logo_url || null
-    if (input.is_active !== undefined) updateData.is_active = input.is_active
-    if (input.game_type !== undefined) updateData.game_type = input.game_type
-    if (input.parent_id !== undefined) updateData.parent_id = input.parent_id
-    if (input.theme_gradient !== undefined) updateData.theme_gradient = input.theme_gradient || null
-    if (input.theme_text !== undefined) updateData.theme_text = input.theme_text || null
-    if (input.theme_shadow !== undefined) updateData.theme_shadow = input.theme_shadow || null
+    if (input.logoUrl !== undefined) updateData.logoUrl = input.logoUrl || null
+    if (input.isActive !== undefined) updateData.isActive = input.isActive
+    if (input.gameType !== undefined) updateData.gameType = input.gameType
+    if (input.parentId !== undefined) updateData.parentId = input.parentId
+    if (input.themeGradient !== undefined) updateData.themeGradient = input.themeGradient || null
+    if (input.themeText !== undefined) updateData.themeText = input.themeText || null
+    if (input.themeShadow !== undefined) updateData.themeShadow = input.themeShadow || null
 
     const docRef = doc(db, COLLECTION_PATHS.CATEGORIES, id)
     await updateDoc(docRef, updateData)
@@ -350,7 +350,7 @@ async function toggleCategoryActiveFirestore(id: string): Promise<TournamentCate
       throw new Error(`카테고리 ID "${id}"를 찾을 수 없습니다.`)
     }
 
-    return updateCategoryFirestore(id, { is_active: !category.is_active })
+    return updateCategoryFirestore(id, { isActive: !category.isActive })
   } catch (error) {
     console.error('Error toggling category active status in Firestore:', error)
     throw error
@@ -379,7 +379,7 @@ async function uploadCategoryLogoFirestore(_categoryId: string, _file: File): Pr
  */
 async function deleteCategoryLogoFirestore(categoryId: string): Promise<void> {
   try {
-    await updateCategoryFirestore(categoryId, { logo_url: undefined })
+    await updateCategoryFirestore(categoryId, { logoUrl: undefined })
   } catch (error) {
     console.error('Error deleting category logo from Firestore:', error)
     throw error
@@ -529,18 +529,18 @@ export function useCreateCategoryMutation() {
         const optimisticCategory: TournamentCategory = {
           id: newCategory.id,
           name: newCategory.name,
-          display_name: newCategory.display_name,
-          short_name: newCategory.short_name || null,
+          displayName: newCategory.displayName,
+          shortName: newCategory.shortName || null,
           aliases: newCategory.aliases || [],
-          logo_url: newCategory.logo_url || null,
-          is_active: newCategory.is_active ?? true,
-          game_type: newCategory.game_type || 'both',
-          parent_id: newCategory.parent_id || null,
-          theme_gradient: newCategory.theme_gradient || null,
-          theme_text: newCategory.theme_text || null,
-          theme_shadow: newCategory.theme_shadow || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          logoUrl: newCategory.logoUrl || null,
+          isActive: newCategory.isActive ?? true,
+          gameType: newCategory.gameType || 'both',
+          parentId: newCategory.parentId || null,
+          themeGradient: newCategory.themeGradient || null,
+          themeText: newCategory.themeText || null,
+          themeShadow: newCategory.themeShadow || null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }
 
         queryClient.setQueryData<TournamentCategory[]>(
@@ -552,7 +552,7 @@ export function useCreateCategoryMutation() {
       return { previousCategories }
     },
     onSuccess: (newCategory) => {
-      toast.success(`카테고리 "${newCategory.display_name}"이 생성되었습니다.`)
+      toast.success(`카테고리 "${newCategory.displayName}"이 생성되었습니다.`)
     },
     onError: (error, _newCategory, context) => {
       // Rollback on error
@@ -593,14 +593,14 @@ export function useUpdateCategoryMutation(categoryId: string) {
         queryClient.setQueryData<TournamentCategory>(categoryKeys.detail(categoryId), {
           ...previousCategory,
           ...updatedFields,
-          updated_at: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         })
       }
 
       return { previousCategory }
     },
     onSuccess: (updatedCategory) => {
-      toast.success(`카테고리 "${updatedCategory.display_name}"이 수정되었습니다.`)
+      toast.success(`카테고리 "${updatedCategory.displayName}"이 수정되었습니다.`)
     },
     onError: (error, _updatedFields, context) => {
       // Rollback on error
@@ -689,7 +689,7 @@ export function useUploadLogoMutation(categoryId: string) {
       if (previousCategory) {
         queryClient.setQueryData<TournamentCategory>(categoryKeys.detail(categoryId), {
           ...previousCategory,
-          logo_url: publicUrl,
+          logoUrl: publicUrl,
         })
       }
     },
@@ -724,7 +724,7 @@ export function useDeleteLogoMutation(categoryId: string) {
       if (previousCategory) {
         queryClient.setQueryData<TournamentCategory>(categoryKeys.detail(categoryId), {
           ...previousCategory,
-          logo_url: null,
+          logoUrl: null,
         })
       }
     },
@@ -787,7 +787,7 @@ export function useToggleActiveMutation(categoryId: string) {
       if (previousCategory) {
         queryClient.setQueryData<TournamentCategory>(categoryKeys.detail(categoryId), {
           ...previousCategory,
-          is_active: !previousCategory.is_active,
+          isActive: !previousCategory.isActive,
         })
       }
 
@@ -795,7 +795,7 @@ export function useToggleActiveMutation(categoryId: string) {
     },
     onSuccess: (updatedCategory) => {
       toast.success(
-        `카테고리 "${updatedCategory.display_name}"이 ${updatedCategory.is_active ? '활성화' : '비활성화'}되었습니다.`
+        `카테고리 "${updatedCategory.displayName}"이 ${updatedCategory.isActive ? '활성화' : '비활성화'}되었습니다.`
       )
     },
     onError: (error, _, context) => {

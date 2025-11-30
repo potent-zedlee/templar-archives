@@ -57,11 +57,11 @@ type HandQuality = 'routine' | 'interesting' | 'highlight' | 'epic'
 interface AIAnalysis {
   confidence: number
   reasoning: string
-  player_states: Record<string, {
-    emotional_state: EmotionalState
-    play_style: PlayStyle
+  playerStates: Record<string, {
+    emotionalState: EmotionalState
+    playStyle: PlayStyle
   }>
-  hand_quality: HandQuality
+  handQuality: HandQuality
 }
 
 interface HandData {
@@ -136,9 +136,9 @@ export function HandHistoryDialog({
 
   // Transform FirestoreStream to VideoPlayer format
   const videoPlayerDay = useMemo(() => ({
-    video_source: day.video_source,
-    video_url: day.video_url,
-    video_file: day.video_file,
+    video_source: day.videoSource,
+    video_url: day.videoUrl,
+    video_file: day.videoFile,
     video_nas_path: undefined
   }), [day])
 

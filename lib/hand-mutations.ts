@@ -34,8 +34,8 @@ export interface HandBasicInfoUpdate {
   number?: string
   description?: string
   timestamp?: string
-  pot_size?: number
-  board_cards?: string
+  potSize?: number
+  boardCards?: string
 }
 
 /**
@@ -44,17 +44,17 @@ export interface HandBasicInfoUpdate {
 export interface HandPlayerUpdate {
   position?: string
   cards?: string
-  starting_stack?: number
-  ending_stack?: number
+  startingStack?: number
+  endingStack?: number
 }
 
 /**
  * 핸드 액션 데이터
  */
 export interface HandActionData {
-  player_id: string
+  playerId: string
   street: PokerStreet
-  action_type: PokerActionType
+  actionType: PokerActionType
   amount?: number
   sequence: number
 }
@@ -62,32 +62,32 @@ export interface HandActionData {
 // ==================== Helper Functions ====================
 
 /**
- * board_cards 문자열을 Firestore 형식으로 변환
- * "As Kh Qd 7c 3s" -> { board_flop: ["As", "Kh", "Qd"], board_turn: "7c", board_river: "3s" }
+ * boardCards 문자열을 Firestore 형식으로 변환
+ * "As Kh Qd 7c 3s" -> { boardFlop: ["As", "Kh", "Qd"], boardTurn: "7c", boardRiver: "3s" }
  */
 function parseBoardCards(boardCardsStr: string): {
-  board_flop?: string[]
-  board_turn?: string
-  board_river?: string
+  boardFlop?: string[]
+  boardTurn?: string
+  boardRiver?: string
 } {
   const cards = boardCardsStr.trim().split(/\s+/).filter(Boolean)
 
   if (cards.length === 0) return {}
 
   const result: {
-    board_flop?: string[]
-    board_turn?: string
-    board_river?: string
+    boardFlop?: string[]
+    boardTurn?: string
+    boardRiver?: string
   } = {}
 
   if (cards.length >= 3) {
-    result.board_flop = cards.slice(0, 3)
+    result.boardFlop = cards.slice(0, 3)
   }
   if (cards.length >= 4) {
-    result.board_turn = cards[3]
+    result.boardTurn = cards[3]
   }
   if (cards.length >= 5) {
-    result.board_river = cards[4]
+    result.boardRiver = cards[4]
   }
 
   return result
@@ -111,7 +111,7 @@ export async function updateHandBasicInfo(
 
     // Firestore 형식으로 변환
     const updateData: any = {
-      updated_at: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     }
 
     if (data.number !== undefined) {
@@ -123,14 +123,14 @@ export async function updateHandBasicInfo(
     if (data.timestamp !== undefined) {
       updateData.timestamp = data.timestamp
     }
-    if (data.pot_size !== undefined) {
-      updateData.pot_size = data.pot_size
+    if (data.potSize !== undefined) {
+      updateData.potSize = data.potSize
     }
-    if (data.board_cards !== undefined) {
-      const boardData = parseBoardCards(data.board_cards)
-      if (boardData.board_flop) updateData.board_flop = boardData.board_flop
-      if (boardData.board_turn) updateData.board_turn = boardData.board_turn
-      if (boardData.board_river) updateData.board_river = boardData.board_river
+    if (data.boardCards !== undefined) {
+      const boardData = parseBoardCards(data.boardCards)
+      if (boardData.boardFlop) updateData.boardFlop = boardData.boardFlop
+      if (boardData.boardTurn) updateData.boardTurn = boardData.boardTurn
+      if (boardData.boardRiver) updateData.boardRiver = boardData.boardRiver
     }
 
     await updateDoc(handRef, updateData)
@@ -168,13 +168,13 @@ export async function updateHandPlayer(
 
     // 플레이어 찾아서 업데이트
     const updatedPlayers = players.map((p) => {
-      if (p.player_id === playerId) {
+      if (p.playerId === playerId) {
         return {
           ...p,
           position: data.position ?? p.position,
           cards: data.cards ? data.cards.match(/.{1,2}/g) || [] : p.cards,
-          start_stack: data.starting_stack ?? p.start_stack,
-          end_stack: data.ending_stack ?? p.end_stack,
+          startStack: data.startingStack ?? p.startStack,
+          endStack: data.endingStack ?? p.endStack,
         }
       }
       return p
@@ -182,7 +182,7 @@ export async function updateHandPlayer(
 
     await updateDoc(handRef, {
       players: updatedPlayers,
-      updated_at: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     })
 
     return { success: true }
@@ -202,11 +202,11 @@ export async function updateHandPlayer(
 export async function updateHandPlayers(
   handId: string,
   players: Array<{
-    id: string // player_id
+    id: string // playerId
     position?: string
     cards?: string
-    starting_stack?: number
-    ending_stack?: number
+    startingStack?: number
+    endingStack?: number
   }>,
 ): Promise<{ success: boolean }> {
   try {
@@ -225,14 +225,14 @@ export async function updateHandPlayers(
 
     // 플레이어 정보 업데이트
     const updatedPlayers = existingPlayers.map((p) => {
-      const update = updateMap.get(p.player_id)
+      const update = updateMap.get(p.playerId)
       if (update) {
         return {
           ...p,
           position: update.position ?? p.position,
           cards: update.cards ? update.cards.match(/.{1,2}/g) || [] : p.cards,
-          start_stack: update.starting_stack ?? p.start_stack,
-          end_stack: update.ending_stack ?? p.end_stack,
+          startStack: update.startingStack ?? p.startStack,
+          endStack: update.endingStack ?? p.endStack,
         }
       }
       return p
@@ -240,7 +240,7 @@ export async function updateHandPlayers(
 
     await updateDoc(handRef, {
       players: updatedPlayers,
-      updated_at: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     })
 
     return { success: true }
@@ -257,15 +257,15 @@ export async function updateHandPlayers(
  * @returns 성공 여부
  */
 export async function addHandAction(data: {
-  hand_id: string
-  player_id: string
+  handId: string
+  playerId: string
   street: PokerStreet
-  action_type: PokerActionType
+  actionType: PokerActionType
   amount?: number
   sequence: number
 }): Promise<{ success: boolean }> {
   try {
-    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, data.hand_id)
+    const handRef = doc(firestore, COLLECTION_PATHS.HANDS, data.handId)
     const handDoc = await getDoc(handRef)
 
     if (!handDoc.exists()) {
@@ -275,23 +275,23 @@ export async function addHandAction(data: {
     const hand = handDoc.data() as FirestoreHand
 
     // 플레이어 이름 찾기
-    const player = hand.players?.find((p) => p.player_id === data.player_id)
+    const player = hand.players?.find((p) => p.playerId === data.playerId)
     const playerName = player?.name || 'Unknown'
 
     // 새 액션 생성
     const newAction: HandActionEmbedded = {
-      player_id: data.player_id,
-      player_name: playerName,
+      playerId: data.playerId,
+      playerName: playerName,
       street: data.street,
       sequence: data.sequence,
-      action_type: data.action_type,
+      actionType: data.actionType,
       amount: data.amount,
     }
 
     // 액션 배열에 추가
     await updateDoc(handRef, {
       actions: arrayUnion(newAction),
-      updated_at: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     })
 
     return { success: true }
@@ -313,7 +313,7 @@ export async function deleteHandActions(handId: string): Promise<{ success: bool
 
     await updateDoc(handRef, {
       actions: [],
-      updated_at: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     })
 
     return { success: true }
@@ -333,9 +333,9 @@ export async function deleteHandActions(handId: string): Promise<{ success: bool
 export async function updateHandActions(
   handId: string,
   actions: Array<{
-    player_id: string
+    playerId: string
     street: PokerStreet
-    action_type: PokerActionType
+    actionType: PokerActionType
     amount?: number
     sequence: number
   }>,
@@ -352,22 +352,22 @@ export async function updateHandActions(
 
     // 플레이어 이름 맵 생성
     const playerNameMap = new Map(
-      (hand.players || []).map((p) => [p.player_id, p.name]),
+      (hand.players || []).map((p) => [p.playerId, p.name]),
     )
 
     // 새 액션 목록 생성
     const newActions: HandActionEmbedded[] = actions.map((action) => ({
-      player_id: action.player_id,
-      player_name: playerNameMap.get(action.player_id) || 'Unknown',
+      playerId: action.playerId,
+      playerName: playerNameMap.get(action.playerId) || 'Unknown',
       street: action.street,
       sequence: action.sequence,
-      action_type: action.action_type,
+      actionType: action.actionType,
       amount: action.amount,
     }))
 
     await updateDoc(handRef, {
       actions: newActions,
-      updated_at: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     })
 
     return { success: true }
@@ -392,13 +392,13 @@ export async function updateHandComplete(
       id: string
       position?: string
       cards?: string
-      starting_stack?: number
-      ending_stack?: number
+      startingStack?: number
+      endingStack?: number
     }>
     actions?: Array<{
-      player_id: string
+      playerId: string
       street: PokerStreet
-      action_type: PokerActionType
+      actionType: PokerActionType
       amount?: number
       sequence: number
     }>
@@ -416,7 +416,7 @@ export async function updateHandComplete(
 
     // 업데이트 데이터 준비
     const updateData: any = {
-      updated_at: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     }
 
     // 1. 기본 정보 업데이트
@@ -430,14 +430,14 @@ export async function updateHandComplete(
       if (data.basicInfo.timestamp !== undefined) {
         updateData.timestamp = data.basicInfo.timestamp
       }
-      if (data.basicInfo.pot_size !== undefined) {
-        updateData.pot_size = data.basicInfo.pot_size
+      if (data.basicInfo.potSize !== undefined) {
+        updateData.potSize = data.basicInfo.potSize
       }
-      if (data.basicInfo.board_cards !== undefined) {
-        const boardData = parseBoardCards(data.basicInfo.board_cards)
-        if (boardData.board_flop) updateData.board_flop = boardData.board_flop
-        if (boardData.board_turn) updateData.board_turn = boardData.board_turn
-        if (boardData.board_river) updateData.board_river = boardData.board_river
+      if (data.basicInfo.boardCards !== undefined) {
+        const boardData = parseBoardCards(data.basicInfo.boardCards)
+        if (boardData.boardFlop) updateData.boardFlop = boardData.boardFlop
+        if (boardData.boardTurn) updateData.boardTurn = boardData.boardTurn
+        if (boardData.boardRiver) updateData.boardRiver = boardData.boardRiver
       }
     }
 
@@ -447,14 +447,14 @@ export async function updateHandComplete(
       const updateMap = new Map(data.players.map((p) => [p.id, p]))
 
       updateData.players = existingPlayers.map((p) => {
-        const update = updateMap.get(p.player_id)
+        const update = updateMap.get(p.playerId)
         if (update) {
           return {
             ...p,
             position: update.position ?? p.position,
             cards: update.cards ? update.cards.match(/.{1,2}/g) || [] : p.cards,
-            start_stack: update.starting_stack ?? p.start_stack,
-            end_stack: update.ending_stack ?? p.end_stack,
+            startStack: update.startingStack ?? p.startStack,
+            endStack: update.endingStack ?? p.endStack,
           }
         }
         return p
@@ -464,15 +464,15 @@ export async function updateHandComplete(
     // 3. 액션 정보 업데이트
     if (data.actions) {
       const playerNameMap = new Map(
-        (hand.players || []).map((p) => [p.player_id, p.name]),
+        (hand.players || []).map((p) => [p.playerId, p.name]),
       )
 
       updateData.actions = data.actions.map((action) => ({
-        player_id: action.player_id,
-        player_name: playerNameMap.get(action.player_id) || 'Unknown',
+        playerId: action.playerId,
+        playerName: playerNameMap.get(action.playerId) || 'Unknown',
         street: action.street,
         sequence: action.sequence,
-        action_type: action.action_type,
+        actionType: action.actionType,
         amount: action.amount,
       })) as HandActionEmbedded[]
     }
@@ -507,7 +507,7 @@ export async function deleteHand(handId: string): Promise<{ success: boolean }> 
       for (const player of hand.players || []) {
         const playerHandRef = doc(
           firestore,
-          COLLECTION_PATHS.PLAYER_HANDS(player.player_id),
+          COLLECTION_PATHS.PLAYER_HANDS(player.playerId),
           handId,
         )
         batch.delete(playerHandRef)
@@ -545,7 +545,7 @@ export async function toggleHandFavorite(
 
     await updateDoc(handRef, {
       favorite,
-      updated_at: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     })
 
     return { success: true }

@@ -70,7 +70,7 @@ function HandCard({
   isSelected: boolean
   onToggle: (handId: string) => void
 }) {
-  const playerCount = hand.hand_players?.length || 0
+  const playerCount = hand.handPlayers?.length || 0
 
   return (
     <div
@@ -94,10 +94,10 @@ function HandCard({
               핸드 {hand.number}
             </Badge>
 
-            {hand.video_timestamp_start && (
+            {hand.videoTimestampStart && (
               <Badge variant="secondary" className="font-mono">
                 <Clock className="h-3 w-3 mr-1" />
-                {formatTimestamp(hand.video_timestamp_start)}
+                {formatTimestamp(hand.videoTimestampStart)}
               </Badge>
             )}
 
@@ -122,50 +122,50 @@ function HandCard({
           </div>
 
           {/* AI 요약 */}
-          {hand.ai_summary && (
+          {hand.aiSummary && (
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {hand.ai_summary}
+              {hand.aiSummary}
             </p>
           )}
 
           {/* 설명 (fallback) */}
-          {!hand.ai_summary && hand.description && (
+          {!hand.aiSummary && hand.description && (
             <p className="text-sm text-muted-foreground line-clamp-2">
               {hand.description}
             </p>
           )}
 
           {/* 보드 카드 */}
-          {(hand.board_flop || hand.board_cards) && (
+          {(hand.boardFlop || hand.boardCards) && (
             <div className="flex items-center gap-1 flex-wrap text-xs">
               <span className="text-muted-foreground">보드:</span>
-              {hand.board_flop && (
+              {hand.boardFlop && (
                 <span className="font-mono bg-muted px-2 py-0.5 rounded">
-                  {hand.board_flop.join(' ')}
+                  {hand.boardFlop.join(' ')}
                 </span>
               )}
-              {hand.board_turn && (
+              {hand.boardTurn && (
                 <span className="font-mono bg-muted px-2 py-0.5 rounded">
-                  {hand.board_turn}
+                  {hand.boardTurn}
                 </span>
               )}
-              {hand.board_river && (
+              {hand.boardRiver && (
                 <span className="font-mono bg-muted px-2 py-0.5 rounded">
-                  {hand.board_river}
+                  {hand.boardRiver}
                 </span>
               )}
-              {!hand.board_flop && hand.board_cards && hand.board_cards.length > 0 && (
+              {!hand.boardFlop && hand.boardCards && hand.boardCards.length > 0 && (
                 <span className="font-mono bg-muted px-2 py-0.5 rounded">
-                  {hand.board_cards.join(' ')}
+                  {hand.boardCards.join(' ')}
                 </span>
               )}
             </div>
           )}
 
           {/* 팟 사이즈 */}
-          {hand.pot_size && (
+          {hand.potSize && (
             <div className="text-xs text-muted-foreground">
-              팟: {hand.pot_size.toLocaleString()}
+              팟: {hand.potSize.toLocaleString()}
             </div>
           )}
         </div>

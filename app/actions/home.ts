@@ -53,8 +53,8 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlight[]> {
     // 클라이언트에서 likesCount로 정렬
     const handsSnapshot = await adminFirestore
       .collection(COLLECTION_PATHS.HANDS)
-      .where('created_at', '>=', sevenDaysAgoTimestamp)
-      .orderBy('created_at', 'desc')
+      .where('createdAt', '>=', sevenDaysAgoTimestamp)
+      .orderBy('createdAt', 'desc')
       .limit(20)  // 더 많이 가져와서 클라이언트에서 정렬
       .get()
 
@@ -93,7 +93,7 @@ export async function getWeeklyHighlights(): Promise<WeeklyHighlight[]> {
         if (streamDoc.exists) {
           const streamData = streamDoc.data()
           streamName = streamData?.name || 'Unknown'
-          videoUrl = streamData?.video_url || ''
+          videoUrl = streamData?.videoUrl || ''
         }
       }
 
@@ -127,7 +127,7 @@ export async function getLatestPosts() {
   try {
     const postsSnapshot = await adminFirestore
       .collection(COLLECTION_PATHS.POSTS)
-      .orderBy('created_at', 'desc')
+      .orderBy('createdAt', 'desc')
       .limit(4)
       .get()
 
@@ -138,12 +138,12 @@ export async function getLatestPosts() {
         title: data.title,
         content: data.content,
         category: data.category,
-        createdAt: data.created_at?.toDate().toISOString(),
-        likesCount: data.stats?.likes_count || 0,
-        commentsCount: data.stats?.comments_count || 0,
+        createdAt: data.createdAt?.toDate().toISOString(),
+        likesCount: data.stats?.likesCount || 0,
+        commentsCount: data.stats?.commentsCount || 0,
         author: {
           nickname: data.author?.name || 'Anonymous',
-          avatarUrl: data.author?.avatar_url || null,
+          avatarUrl: data.author?.avatarUrl || null,
         },
       }
     })
@@ -160,7 +160,7 @@ export async function getTopPlayers(): Promise<TopPlayer[]> {
   try {
     const playersSnapshot = await adminFirestore
       .collection(COLLECTION_PATHS.PLAYERS)
-      .orderBy('total_winnings', 'desc')
+      .orderBy('totalWinnings', 'desc')
       .limit(5)
       .get()
 
@@ -169,10 +169,10 @@ export async function getTopPlayers(): Promise<TopPlayer[]> {
       return {
         id: doc.id,
         name: data.name,
-        photo_url: data.photo_url || null,
-        total_winnings: data.total_winnings || 0,
-        tournament_count: data.stats?.tournaments_count || 0,
-        hands_count: data.stats?.hands_count || 0,
+        photo_url: data.photoUrl || null,
+        total_winnings: data.totalWinnings || 0,
+        tournament_count: data.stats?.tournamentsCount || 0,
+        hands_count: data.stats?.handsCount || 0,
       }
     })
 

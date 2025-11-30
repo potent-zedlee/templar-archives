@@ -76,7 +76,7 @@ export async function startCloudRunAnalysis(
     const stream = streamDoc.data()
 
     // GCS URI 확인 (파라미터 또는 DB에서)
-    const videoGcsUri = gcsUri || stream?.gcs_uri
+    const videoGcsUri = gcsUri || stream?.gcsUri
     if (!videoGcsUri) {
       return {
         success: false,
@@ -125,11 +125,11 @@ export async function startCloudRunAnalysis(
       .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
       .doc(streamId)
       .update({
-        pipeline_status: 'analyzing',
-        pipeline_progress: 0,
-        pipeline_updated_at: new Date(),
-        current_job_id: jobId,
-        updated_at: new Date(),
+        pipelineStatus: 'analyzing',
+        pipelineProgress: 0,
+        pipelineUpdatedAt: new Date(),
+        currentJobId: jobId,
+        updatedAt: new Date(),
       })
 
     // 캐시 무효화

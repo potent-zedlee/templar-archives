@@ -109,7 +109,7 @@ function convertToTreeNodes(tournaments: Tournament[]): TreeNodeType[] {
       level: 0,
       meta: {
         count: tournament.events?.length || 0,
-        logoUrl: tournament.category_logo_url || tournament.category_logo,
+        logoUrl: tournament.categoryLogoUrl || tournament.categoryLogo,
       },
       children: [],
     }
@@ -137,8 +137,8 @@ function convertToTreeNodes(tournaments: Tournament[]): TreeNodeType[] {
           level: 2,
           parentId: event.id,
           meta: {
-            handCount: stream.hand_count || 0,
-            videoUrl: stream.video_url,
+            handCount: stream.handCount || 0,
+            videoUrl: stream.videoUrl,
           },
         }
         eventNode.children?.push(streamNode)

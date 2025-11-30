@@ -47,7 +47,7 @@ export function Header() {
   }
 
   const getAvatarUrl = (): string | undefined => {
-    if (profile?.avatar_url) return profile.avatar_url
+    if (profile?.avatarUrl) return profile.avatarUrl
     return user?.user_metadata?.avatar_url || undefined
   }
 

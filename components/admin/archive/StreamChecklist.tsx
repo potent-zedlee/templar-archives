@@ -101,12 +101,12 @@ export function StreamChecklist({
         }
 
         // 2. Video URL 체크
-        if (streamData.video_url && streamData.video_source === 'youtube') {
+        if (streamData.videoUrl && streamData.videoSource === 'youtube') {
           newChecklist.push({
             id: 'video',
             label: 'YouTube Link',
             status: 'passed',
-            message: streamData.video_url,
+            message: streamData.videoUrl,
           })
         } else {
           newChecklist.push({
@@ -119,7 +119,7 @@ export function StreamChecklist({
 
         // 3. Thumbnail 체크 (Firestore에는 thumbnailUrl 필드가 없을 수 있음)
         // GCS 경로가 있으면 통과로 처리
-        if (streamData.gcs_path || streamData.video_url) {
+        if (streamData.gcsPath || streamData.videoUrl) {
           newChecklist.push({
             id: 'thumbnail',
             label: 'Thumbnail',

@@ -131,10 +131,10 @@ export default function EditHandActionsPage() {
       let eventName = ""
       let tournamentName = ""
 
-      if (handData.stream_id && handData.event_id && handData.tournament_id) {
+      if (handData.streamId && handData.eventId && handData.tournamentId) {
         try {
           // Get tournament
-          const tournamentRef = doc(firestore, COLLECTION_PATHS.TOURNAMENTS, handData.tournament_id)
+          const tournamentRef = doc(firestore, COLLECTION_PATHS.TOURNAMENTS, handData.tournamentId)
           const tournamentSnap = await getDoc(tournamentRef)
           if (tournamentSnap.exists()) {
             const tournamentData = tournamentSnap.data() as FirestoreTournament
@@ -144,8 +144,8 @@ export default function EditHandActionsPage() {
           // Get event
           const eventRef = doc(
             firestore,
-            COLLECTION_PATHS.EVENTS(handData.tournament_id),
-            handData.event_id
+            COLLECTION_PATHS.EVENTS(handData.tournamentId),
+            handData.eventId
           )
           const eventSnap = await getDoc(eventRef)
           if (eventSnap.exists()) {
@@ -156,8 +156,8 @@ export default function EditHandActionsPage() {
           // Get stream
           const streamRef = doc(
             firestore,
-            COLLECTION_PATHS.STREAMS(handData.tournament_id, handData.event_id),
-            handData.stream_id
+            COLLECTION_PATHS.STREAMS(handData.tournamentId, handData.eventId),
+            handData.streamId
           )
           const streamSnap = await getDoc(streamRef)
           if (streamSnap.exists()) {
@@ -174,7 +174,7 @@ export default function EditHandActionsPage() {
         number: handData.number,
         description: handData.description || "",
         day: {
-          id: handData.stream_id || "",
+          id: handData.streamId || "",
           name: streamName || "Unknown Stream",
           sub_event: {
             name: eventName || "Unknown Event",
@@ -189,11 +189,11 @@ export default function EditHandActionsPage() {
       const players: HandPlayer[] = (handData.players || []).map((p, index) => ({
         id: `${handId}-player-${index}`,
         hand_id: handId,
-        player_id: p.player_id,
+        player_id: p.playerId,
         position: p.position || null,
         hole_cards: p.cards ? p.cards.join(" ") : null,
         player: {
-          id: p.player_id,
+          id: p.playerId,
           name: p.name,
         },
       }))
@@ -215,7 +215,7 @@ export default function EditHandActionsPage() {
 
     const actionsToSave = pendingActions.map(action => ({
       ...(action as Record<string, unknown>),
-      hand_id: handId,
+      handId: handId,
     }))
 
     bulkCreateMutation.mutate(actionsToSave as Parameters<typeof bulkCreateMutation.mutate>[0], {

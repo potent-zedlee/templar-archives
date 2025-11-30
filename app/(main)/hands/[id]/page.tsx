@@ -50,9 +50,9 @@ async function getHandDetails(handId: string): Promise<HandDetailsResult | null>
     let event: (FirestoreEvent & { id: string }) | null = null
     let tournament: (FirestoreTournament & { id: string }) | null = null
 
-    if (handData.tournament_id && handData.event_id && handData.stream_id) {
+    if (handData.tournamentId && handData.eventId && handData.streamId) {
       // Get tournament
-      const tournamentRef = adminFirestore.collection(COLLECTION_PATHS.TOURNAMENTS).doc(handData.tournament_id)
+      const tournamentRef = adminFirestore.collection(COLLECTION_PATHS.TOURNAMENTS).doc(handData.tournamentId)
       const tournamentSnap = await tournamentRef.get()
       if (tournamentSnap.exists) {
         tournament = { id: tournamentSnap.id, ...tournamentSnap.data() as FirestoreTournament }
@@ -60,8 +60,8 @@ async function getHandDetails(handId: string): Promise<HandDetailsResult | null>
 
       // Get event
       const eventRef = adminFirestore
-        .collection(COLLECTION_PATHS.EVENTS(handData.tournament_id))
-        .doc(handData.event_id)
+        .collection(COLLECTION_PATHS.EVENTS(handData.tournamentId))
+        .doc(handData.eventId)
       const eventSnap = await eventRef.get()
       if (eventSnap.exists) {
         event = { id: eventSnap.id, ...eventSnap.data() as FirestoreEvent }
@@ -69,8 +69,8 @@ async function getHandDetails(handId: string): Promise<HandDetailsResult | null>
 
       // Get stream
       const streamRef = adminFirestore
-        .collection(COLLECTION_PATHS.STREAMS(handData.tournament_id, handData.event_id))
-        .doc(handData.stream_id)
+        .collection(COLLECTION_PATHS.STREAMS(handData.tournamentId, handData.eventId))
+        .doc(handData.streamId)
       const streamSnap = await streamRef.get()
       if (streamSnap.exists) {
         stream = { id: streamSnap.id, ...streamSnap.data() as FirestoreStream }
@@ -136,20 +136,20 @@ async function HandDetailContent({ handId }: { handId: string }) {
   }
 
   const { hand, stream, event, tournament } = result
-  const videoId = stream?.video_url ? extractYouTubeId(stream.video_url) : null
+  const videoId = stream?.videoUrl ? extractYouTubeId(stream.videoUrl) : null
 
   // Transform players to PlayerSeatData
   const players: PlayerSeatData[] =
     hand.players?.map((hp) => ({
-      id: hp.player_id,
+      id: hp.playerId,
       seat: hp.seat || 1,
       position: hp.position,
       name: hp.name || 'Unknown',
-      stack: hp.start_stack ?? hp.end_stack ?? 0,
+      stack: hp.startStack ?? hp.endStack ?? 0,
       holeCards: hp.cards,
-      isWinner: hp.is_winner,
+      isWinner: hp.isWinner,
       finalAmount: undefined,
-      handDescription: hp.hand_description,
+      handDescription: hp.handDescription,
       flagCode: undefined,
     })) || []
 
@@ -157,16 +157,16 @@ async function HandDetailContent({ handId }: { handId: string }) {
   const handActions: HandAction[] =
     hand.actions?.map((action, index) => ({
       id: `${hand.id}-action-${index}`,
-      hand_player_id: action.player_id,
+      hand_player_id: action.playerId,
       street: action.street,
-      action_type: action.action_type,
+      action_type: action.actionType,
       amount: action.amount || 0,
       timestamp: undefined,
       action_sequence: action.sequence,
-      player_name: action.player_name,
+      player_name: action.playerName,
     })) || []
 
-  const adjacent = await getAdjacentHands(handId, hand.stream_id)
+  const adjacent = await getAdjacentHands(handId, hand.streamId)
 
   return (
     <div className="min-h-screen bg-background">
@@ -240,7 +240,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
                   <div className="aspect-square bg-black">
                     <YouTubePlayer
                       videoId={videoId}
-                      startTime={hand.video_timestamp_start || 0}
+                      startTime={hand.videoTimestampStart || 0}
                     />
                   </div>
                 ) : (
@@ -261,7 +261,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground leading-relaxed">
-                  {hand.ai_summary || 'Hand summary will be generated automatically after analysis...'}
+                  {hand.aiSummary || 'Hand summary will be generated automatically after analysis...'}
                 </p>
               </CardContent>
             </Card>
@@ -287,10 +287,10 @@ async function HandDetailContent({ handId }: { handId: string }) {
               <CardContent className="p-6">
                 <div className="space-y-4">
                   {/* Stakes Badge */}
-                  {hand.small_blind && hand.big_blind && (
+                  {hand.smallBlind && hand.bigBlind && (
                     <div className="flex items-center justify-center">
                       <Badge variant="outline" className="text-lg py-1 px-4">
-                        {hand.small_blind}/{hand.big_blind}
+                        {hand.smallBlind}/{hand.bigBlind}
                       </Badge>
                     </div>
                   )}
@@ -300,10 +300,10 @@ async function HandDetailContent({ handId }: { handId: string }) {
                     <div className="w-full h-full">
                       <PokerTable
                         players={players}
-                        flop={hand.board_flop}
-                        turn={hand.board_turn}
-                        river={hand.board_river}
-                        potSize={hand.pot_size}
+                        flop={hand.boardFlop}
+                        turn={hand.boardTurn}
+                        river={hand.boardRiver}
+                        potSize={hand.potSize}
                         showCards={true}
                       />
                     </div>

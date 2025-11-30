@@ -47,34 +47,34 @@ export async function GET() {
       const hand = doc.data() as FirestoreHand
       if (hand.players && Array.isArray(hand.players)) {
         hand.players.forEach((player) => {
-          if (player.player_id) {
-            const currentCount = handCountMap.get(player.player_id) || 0
-            handCountMap.set(player.player_id, currentCount + 1)
+          if (player.playerId) {
+            const currentCount = handCountMap.get(player.playerId) || 0
+            handCountMap.set(player.playerId, currentCount + 1)
           }
         })
       }
     })
 
-    // 3. 플레이어 데이터와 핸드 수 병합 (snake_case로 기존 코드 호환)
+    // 3. 플레이어 데이터와 핸드 수 병합
     const playersWithHandCount = players.map((player) => ({
       id: player.id,
       name: player.name,
-      normalized_name: player.normalized_name,
-      photo_url: player.photo_url,
+      normalizedName: player.normalizedName,
+      photoUrl: player.photoUrl,
       country: player.country,
       gender: undefined, // Firestore 스키마에 없음
-      is_pro: player.is_pro,
+      isPro: player.isPro,
       bio: player.bio,
-      total_winnings: player.total_winnings,
+      totalWinnings: player.totalWinnings,
       aliases: player.aliases,
       stats: player.stats,
-      hand_count: handCountMap.get(player.id) || 0,
-      created_at: timestampToString(player.created_at),
-      updated_at: timestampToString(player.updated_at),
+      handCount: handCountMap.get(player.id) || 0,
+      createdAt: timestampToString(player.createdAt),
+      updatedAt: timestampToString(player.updatedAt),
     }))
 
     // 4. 기본 정렬: 핸드 수 내림차순
-    playersWithHandCount.sort((a, b) => b.hand_count - a.hand_count)
+    playersWithHandCount.sort((a, b) => b.handCount - a.handCount)
 
     return NextResponse.json({
       success: true,

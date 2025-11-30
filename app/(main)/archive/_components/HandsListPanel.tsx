@@ -67,7 +67,7 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
 
 
   // YouTube Video ID
-  const videoId = useMemo(() => extractVideoId(stream.video_url), [stream.video_url])
+  const videoId = useMemo(() => extractVideoId(stream.videoUrl), [stream.videoUrl])
 
   // 필터링
   const filteredHands = useMemo(() => {
@@ -75,7 +75,7 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
 
     const query = searchQuery.toLowerCase()
     return hands.filter(hand =>
-      hand.hand_players?.some(hp =>
+      hand.handPlayers?.some(hp =>
         hp.player?.name?.toLowerCase().includes(query)
       )
     )
@@ -103,8 +103,8 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
     setSelectedHand(hand)
 
     // YouTube 플레이어가 있고 타임스탬프가 있으면 해당 시간으로 이동
-    if (playerRef.current && hand.video_timestamp_start) {
-      playerRef.current.seekTo(hand.video_timestamp_start)
+    if (playerRef.current && hand.videoTimestampStart) {
+      playerRef.current.seekTo(hand.videoTimestampStart)
     }
   }
 
@@ -133,7 +133,7 @@ export function HandsListPanel({ streamId, stream }: HandsListPanelProps) {
           <YouTubePlayer
             ref={playerRef}
             videoId={videoId}
-            startTime={selectedHand?.video_timestamp_start}
+            startTime={selectedHand?.videoTimestampStart}
             onTimeUpdate={setCurrentTime}
             onDurationChange={setVideoDuration}
             className="w-full"
