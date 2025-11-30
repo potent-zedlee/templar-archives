@@ -46,8 +46,9 @@ cd cloud-run && ./deploy.sh all              # 전체 배포
 cd cloud-run && ./deploy.sh orchestrator     # Orchestrator만
 cd cloud-run && ./deploy.sh segment-analyzer # Segment Analyzer만
 
-# ⚠️ 중요: Docker 빌드 시 반드시 linux/amd64 플랫폼 지정
-docker build --platform linux/amd64 -t <image> .
+# ⚠️ 중요: Docker 빌드 시 반드시 아래 옵션 모두 사용
+# Apple Silicon Mac에서 BuildKit이 OCI 인덱스 형식으로 빌드하면 Cloud Run 배포 실패
+docker build --platform linux/amd64 --provenance=false --sbom=false --load -t <image> .
 
 # 운영 스크립트
 npm run admin                             # 관리자 CLI
@@ -144,7 +145,6 @@ Tournament → Event → Stream → Hand
 | `cloud-run/segment-analyzer/` | Cloud Run - FFmpeg + Gemini 2-Phase 분석 |
 | `cloud-run/segment-analyzer/src/lib/vertex-analyzer-phase2.ts` | Gemini 3 Pro Phase 2 분석기 |
 | `cloud-run/segment-analyzer/src/lib/prompts/phase2-prompt.ts` | Chain-of-Thought 프롬프트 |
-| `lib/video/vertex-analyzer.ts` | Vertex AI Gemini 분석 및 JSON 파싱 |
 | `lib/ai/prompts.ts` | Platform별 AI 프롬프트 (EPT/Triton) |
 | `lib/hooks/use-cloud-run-job.ts` | Cloud Run 작업 진행률 폴링 |
 
@@ -241,7 +241,7 @@ UPSTASH_REDIS_REST_URL=your-url      # Rate Limiting
 - 인증 없이 민감한 데이터 접근
 - pnpm 사용
 - Firestore 필드명에 snake_case 사용 (camelCase만 허용)
-- Cloud Run Docker 빌드 시 `--platform linux/amd64` 플래그 누락
+- Cloud Run Docker 빌드 시 필수 플래그 누락
 
 ### 필수 사항
 
@@ -249,9 +249,14 @@ UPSTASH_REDIS_REST_URL=your-url      # Rate Limiting
 - Firebase Security Rules: 역할 기반 접근 제어
 - Zod 검증: API 입력
 - TypeScript Strict Mode
-- **Cloud Run 배포**: 반드시 `docker build --platform linux/amd64` 사용
-  - Apple Silicon (M1/M2/M3) Mac에서는 기본값이 arm64이므로 필수 지정
-  - Cloud Run은 linux/amd64만 지원
+- **Cloud Run 배포**: 반드시 아래 전체 옵션 사용
+  ```bash
+  docker build --platform linux/amd64 --provenance=false --sbom=false --load -t <image> .
+  ```
+  - `--platform linux/amd64`: Cloud Run은 linux/amd64만 지원
+  - `--provenance=false --sbom=false`: OCI attestation 비활성화
+  - `--load`: 단일 플랫폼 이미지를 로컬 Docker에 로드 (중요!)
+  - Apple Silicon Mac에서 `--load` 없이 빌드하면 OCI 인덱스 형식으로 생성되어 배포 실패
 
 ### Firebase Security Rules 역할
 
@@ -412,4 +417,4 @@ created_at, stream_id, video_url, pot_size
 ---
 
 **마지막 업데이트**: 2025-11-30
-**문서 버전**: 6.2 (camelCase 필드명 통일 + Cloud Run amd64 빌드 규칙)
+**문서 버전**: 6.3 (Cloud Run Docker 빌드 --load 옵션 필수화)

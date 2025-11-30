@@ -96,9 +96,9 @@ deploy_orchestrator() {
 
   cd "$(dirname "$0")/orchestrator"
 
-  # 빌드 (Cloud Run은 linux/amd64 필요 + OCI 호환성을 위해 provenance/sbom 비활성화)
+  # 빌드 (Cloud Run은 linux/amd64 필요 + OCI 호환성을 위해 provenance/sbom 비활성화 + --load로 단일 플랫폼 이미지 로드)
   echo_info "Building Docker image (linux/amd64)..."
-  docker build --platform linux/amd64 --provenance=false --sbom=false -t "$IMAGE_NAME" .
+  docker build --platform linux/amd64 --provenance=false --sbom=false --load -t "$IMAGE_NAME" .
 
   # Push
   echo_info "Pushing to Artifact Registry..."
@@ -136,9 +136,9 @@ deploy_segment_analyzer() {
 
   cd "$(dirname "$0")/segment-analyzer"
 
-  # 빌드 (Cloud Run은 linux/amd64 필요 + OCI 호환성을 위해 provenance/sbom 비활성화)
+  # 빌드 (Cloud Run은 linux/amd64 필요 + OCI 호환성을 위해 provenance/sbom 비활성화 + --load로 단일 플랫폼 이미지 로드)
   echo_info "Building Docker image (linux/amd64)..."
-  docker build --platform linux/amd64 --provenance=false --sbom=false -t "$IMAGE_NAME" .
+  docker build --platform linux/amd64 --provenance=false --sbom=false --load -t "$IMAGE_NAME" .
 
   # Push
   echo_info "Pushing to Artifact Registry..."
