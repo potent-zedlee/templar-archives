@@ -64,18 +64,18 @@ function mapFirestoreTournament(
     id: docSnap.id,
     name: data.name,
     category: data.category,
-    category_id: data.categoryInfo?.id,
-    category_logo: data.categoryInfo?.logo,
-    category_logo_url: data.categoryInfo?.logo,
+    categoryId: data.categoryInfo?.id,
+    categoryLogo: data.categoryInfo?.logo,
+    categoryLogoUrl: data.categoryInfo?.logo,
     location: data.location,
     city: data.city,
     country: data.country,
-    game_type: data.gameType,
-    start_date: timestampToString(data.startDate) || '',
-    end_date: timestampToString(data.endDate) || '',
-    total_prize: data.totalPrize,
+    gameType: data.gameType,
+    startDate: timestampToString(data.startDate) || '',
+    endDate: timestampToString(data.endDate) || '',
+    totalPrize: data.totalPrize,
     status: data.status,
-    created_at: timestampToString(data.createdAt),
+    createdAt: timestampToString(data.createdAt),
     events,
     expanded: true,
   }
@@ -92,20 +92,20 @@ function mapFirestoreEvent(
   const data = docSnap.data() as FirestoreEvent
   return {
     id: docSnap.id,
-    tournament_id: tournamentId,
+    tournamentId: tournamentId,
     name: data.name,
     date: timestampToString(data.date) || '',
-    event_number: data.eventNumber,
-    total_prize: data.totalPrize,
+    eventNumber: data.eventNumber,
+    totalPrize: data.totalPrize,
     winner: data.winner,
-    buy_in: data.buyIn,
-    entry_count: data.entryCount,
-    blind_structure: data.blindStructure,
-    level_duration: data.levelDuration,
-    starting_stack: data.startingStack,
+    buyIn: data.buyIn,
+    entryCount: data.entryCount,
+    blindStructure: data.blindStructure,
+    levelDuration: data.levelDuration,
+    startingStack: data.startingStack,
     notes: data.notes,
     status: data.status,
-    created_at: timestampToString(data.createdAt),
+    createdAt: timestampToString(data.createdAt),
     streams,
     expanded: false,
   }
@@ -121,22 +121,22 @@ function mapFirestoreStream(
   const data = docSnap.data() as FirestoreStream
   return {
     id: docSnap.id,
-    event_id: eventId,
+    eventId: eventId,
     name: data.name,
     description: data.description,
-    video_url: data.videoUrl,
-    video_file: data.videoFile,
-    video_source: data.videoSource,
+    videoUrl: data.videoUrl,
+    videoFile: data.videoFile,
+    videoSource: data.videoSource,
     status: data.status,
-    gcs_path: data.gcsPath,
-    gcs_uri: data.gcsUri,
-    gcs_file_size: data.gcsFileSize,
-    gcs_uploaded_at: timestampToString(data.gcsUploadedAt),
-    upload_status: data.uploadStatus,
-    video_duration: data.videoDuration,
-    created_at: timestampToString(data.createdAt),
-    player_count: data.stats?.playersCount || 0,
-    hand_count: data.stats?.handsCount || 0,
+    gcsPath: data.gcsPath,
+    gcsUri: data.gcsUri,
+    gcsFileSize: data.gcsFileSize,
+    gcsUploadedAt: timestampToString(data.gcsUploadedAt),
+    uploadStatus: data.uploadStatus,
+    videoDuration: data.videoDuration,
+    createdAt: timestampToString(data.createdAt),
+    playerCount: data.stats?.playersCount || 0,
+    handCount: data.stats?.handsCount || 0,
     selected: false,
   }
 }
@@ -660,9 +660,9 @@ export function useStreamPlayersQuery(streamId: string | null) {
         {
           id: string
           name: string
-          photo_url: string | null
+          photoUrl: string | null
           country: string | null
-          hand_count: number
+          handCount: number
         }
       >()
 
@@ -672,28 +672,28 @@ export function useStreamPlayersQuery(streamId: string | null) {
         const players = handData.players || []
 
         for (const player of players) {
-          const existing = playerMap.get(player.player_id)
+          const existing = playerMap.get(player.playerId)
           if (existing) {
-            existing.hand_count++
+            existing.handCount++
           } else {
             // 플레이어 상세 정보 조회
-            const playerRef = doc(db, COLLECTION_PATHS.PLAYERS, player.player_id)
+            const playerRef = doc(db, COLLECTION_PATHS.PLAYERS, player.playerId)
             const playerDoc = await getDoc(playerRef)
 
             const playerData = playerDoc.data()
-            playerMap.set(player.player_id, {
-              id: player.player_id,
+            playerMap.set(player.playerId, {
+              id: player.playerId,
               name: player.name,
-              photo_url: playerData?.photo_url || null,
+              photoUrl: playerData?.photoUrl || null,
               country: playerData?.country || null,
-              hand_count: 1,
+              handCount: 1,
             })
           }
         }
       }
 
       // 핸드 수 내림차순 정렬
-      return Array.from(playerMap.values()).sort((a, b) => b.hand_count - a.hand_count)
+      return Array.from(playerMap.values()).sort((a, b) => b.handCount - a.handCount)
     },
     enabled: !!streamId,
     staleTime: 10 * 60 * 1000, // 10분 (플레이어 목록은 자주 변경되지 않음)
