@@ -46,6 +46,9 @@ cd cloud-run && ./deploy.sh all              # 전체 배포
 cd cloud-run && ./deploy.sh orchestrator     # Orchestrator만
 cd cloud-run && ./deploy.sh segment-analyzer # Segment Analyzer만
 
+# ⚠️ 중요: Docker 빌드 시 반드시 linux/amd64 플랫폼 지정
+docker build --platform linux/amd64 -t <image> .
+
 # 운영 스크립트
 npm run admin                             # 관리자 CLI
 npm run ops:check-jobs                    # 분석 작업 상태 확인
@@ -237,6 +240,8 @@ UPSTASH_REDIS_REST_URL=your-url      # Rate Limiting
 - `any` 타입 사용
 - 인증 없이 민감한 데이터 접근
 - pnpm 사용
+- Firestore 필드명에 snake_case 사용 (camelCase만 허용)
+- Cloud Run Docker 빌드 시 `--platform linux/amd64` 플래그 누락
 
 ### 필수 사항
 
@@ -244,6 +249,9 @@ UPSTASH_REDIS_REST_URL=your-url      # Rate Limiting
 - Firebase Security Rules: 역할 기반 접근 제어
 - Zod 검증: API 입력
 - TypeScript Strict Mode
+- **Cloud Run 배포**: 반드시 `docker build --platform linux/amd64` 사용
+  - Apple Silicon (M1/M2/M3) Mac에서는 기본값이 arm64이므로 필수 지정
+  - Cloud Run은 linux/amd64만 지원
 
 ### Firebase Security Rules 역할
 
@@ -371,53 +379,19 @@ const useArchiveDataStore = create<ArchiveDataStore>()
 
 ### Firestore 필드명 규칙
 
-**✅ 전체 snake_case 통일 완료**
+**⚠️ 중요: 모든 필드명은 camelCase 사용**
 
-모든 Firestore 컬렉션에서 snake_case 필드명을 사용합니다:
+Firestore 컬렉션의 모든 필드명은 **camelCase**를 사용합니다. snake_case 사용 금지.
 
 ```typescript
-// 공통 필드
-created_at, updated_at
+// ✅ 올바른 예시 (camelCase)
+createdAt, updatedAt, streamId, eventId, tournamentId
+videoUrl, videoFile, gcsUri, gcsPath
+potSize, smallBlind, bigBlind
+semanticTags, aiAnalysis, handQuality
 
-// tournaments
-category_info, game_type, start_date, end_date, total_prize
-
-// events
-event_number, buy_in, total_prize, entry_count
-blind_structure, level_duration, starting_stack
-
-// streams
-video_url, video_file, video_source, published_at
-gcs_path, gcs_uri, gcs_file_size, gcs_uploaded_at
-upload_status, video_duration
-pipeline_status, pipeline_progress, pipeline_error, current_job_id
-
-// players
-normalized_name, photo_url, is_pro, total_winnings
-
-// users
-avatar_url, email_verified, profile_visibility
-poker_experience, twitter_handle, instagram_handle
-likes_received, last_login_at
-
-// hands
-stream_id, event_id, tournament_id, player_ids
-board_flop, board_turn, board_river, pot_size
-small_blind, big_blind, pot_preflop, pot_flop, pot_turn, pot_river
-video_timestamp_start, video_timestamp_end, job_id, thumbnail_url, ai_summary
-
-// analysisJobs
-stream_id, user_id, error_message, started_at, completed_at
-```
-
-**마이그레이션 스크립트**:
-```bash
-# DB 마이그레이션 (프로덕션 배포 시)
-npx ts-node scripts/migrate-field-names.ts --dry-run  # 미리보기
-npx ts-node scripts/migrate-field-names.ts            # 실행
-
-# 롤백
-npx ts-node scripts/rollback-field-names.ts
+// ❌ 잘못된 예시 (snake_case 사용 금지)
+created_at, stream_id, video_url, pot_size
 ```
 
 > 타입 정의: `lib/firestore-types.ts`
@@ -438,4 +412,4 @@ npx ts-node scripts/rollback-field-names.ts
 ---
 
 **마지막 업데이트**: 2025-11-30
-**문서 버전**: 6.1 (Gemini 3 Pro 업그레이드 + 2-Phase 분석 아키텍처)
+**문서 버전**: 6.2 (camelCase 필드명 통일 + Cloud Run amd64 빌드 규칙)
