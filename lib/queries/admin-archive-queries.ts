@@ -116,7 +116,7 @@ export function useAdminTournamentsQuery(statusFilter: ContentStatus | 'all' = '
     queryFn: async () => {
       const tournamentsRef = collection(firestore, 'tournaments') as CollectionReference
       const constraints: QueryConstraint[] = [
-        orderBy('end_date', 'desc')
+        orderBy('endDate', 'desc')
       ]
 
       // Status 필터 적용
@@ -134,27 +134,27 @@ export function useAdminTournamentsQuery(statusFilter: ContentStatus | 'all' = '
           id: doc.id,
           name: data.name,
           category: data.category,
-          category_id: data.category_id,
-          category_logo: data.category_logo,
-          category_logo_url: data.category_logo_url,
+          categoryId: data.categoryId,
+          categoryLogo: data.categoryLogo,
+          categoryLogoUrl: data.categoryLogoUrl,
           location: data.location,
           city: data.city,
           country: data.country,
-          game_type: data.game_type,
-          total_prize: data.total_prize,
+          gameType: data.gameType,
+          totalPrize: data.totalPrize,
           status: data.status,
-          published_by: data.published_by,
-          published_at: data.published_at,
+          publishedBy: data.publishedBy,
+          publishedAt: data.publishedAt,
           // Timestamp를 string으로 변환
-          start_date: data.start_date instanceof Timestamp
-            ? data.start_date.toDate().toISOString()
-            : data.start_date,
-          end_date: data.end_date instanceof Timestamp
-            ? data.end_date.toDate().toISOString()
-            : data.end_date,
-          created_at: data.created_at instanceof Timestamp
-            ? data.created_at.toDate().toISOString()
-            : data.created_at,
+          startDate: data.startDate instanceof Timestamp
+            ? data.startDate.toDate().toISOString()
+            : data.startDate,
+          endDate: data.endDate instanceof Timestamp
+            ? data.endDate.toDate().toISOString()
+            : data.endDate,
+          createdAt: data.createdAt instanceof Timestamp
+            ? data.createdAt.toDate().toISOString()
+            : data.createdAt,
         })
       })
 
@@ -196,25 +196,25 @@ export function useAdminEventsQuery(
         const data = doc.data()
         events.push({
           id: doc.id,
-          tournament_id: data.tournamentId,
+          tournamentId: data.tournamentId,
           name: data.name,
-          event_number: data.eventNumber,
-          total_prize: data.totalPrize,
+          eventNumber: data.eventNumber,
+          totalPrize: data.totalPrize,
           winner: data.winner,
-          buy_in: data.buyIn,
-          entry_count: data.entryCount,
-          blind_structure: data.blindStructure,
-          level_duration: data.levelDuration,
-          starting_stack: data.startingStack,
+          buyIn: data.buyIn,
+          entryCount: data.entryCount,
+          blindStructure: data.blindStructure,
+          levelDuration: data.levelDuration,
+          startingStack: data.startingStack,
           notes: data.notes,
           status: data.status,
-          published_by: data.publishedBy,
-          published_at: data.publishedAt,
+          publishedBy: data.publishedBy,
+          publishedAt: data.publishedAt,
           // Timestamp를 string으로 변환
           date: data.date instanceof Timestamp
             ? data.date.toDate().toISOString()
             : data.date,
-          created_at: data.createdAt instanceof Timestamp
+          createdAt: data.createdAt instanceof Timestamp
             ? data.createdAt.toDate().toISOString()
             : data.createdAt,
         })
@@ -254,7 +254,7 @@ export function useAdminStreamsQuery(
       const q = query(streamsRef, ...constraints)
       const snapshot = await getDocs(q)
 
-      const streams: (Stream & { hand_count?: number })[] = []
+      const streams: (Stream & { handCount?: number })[] = []
       const streamIds: string[] = []
 
       snapshot.forEach(doc => {
@@ -263,32 +263,32 @@ export function useAdminStreamsQuery(
 
         streams.push({
           id: doc.id,
-          event_id: data.subEventId || data.eventId,
+          eventId: data.subEventId || data.eventId,
           name: data.name,
           description: data.description,
-          video_url: data.videoUrl,
-          video_file: data.videoFile,
-          video_nas_path: data.videoNasPath,
-          video_source: data.videoSource,
-          is_organized: data.isOrganized,
-          organized_at: data.organizedAt,
-          player_count: data.playerCount,
+          videoUrl: data.videoUrl,
+          videoFile: data.videoFile,
+          videoNasPath: data.videoNasPath,
+          videoSource: data.videoSource,
+          isOrganized: data.isOrganized,
+          organizedAt: data.organizedAt,
+          playerCount: data.playerCount,
           status: data.status,
-          published_by: data.publishedBy,
-          gcs_path: data.gcsPath,
-          gcs_uri: data.gcsUri,
-          gcs_file_size: data.gcsFileSize,
-          gcs_uploaded_at: data.gcsUploadedAt,
-          upload_status: data.uploadStatus,
-          video_duration: data.videoDuration,
+          publishedBy: data.publishedBy,
+          gcsPath: data.gcsPath,
+          gcsUri: data.gcsUri,
+          gcsFileSize: data.gcsFileSize,
+          gcsUploadedAt: data.gcsUploadedAt,
+          uploadStatus: data.uploadStatus,
+          videoDuration: data.videoDuration,
           // Timestamp를 string으로 변환
-          published_at: data.publishedAt instanceof Timestamp
+          publishedAt: data.publishedAt instanceof Timestamp
             ? data.publishedAt.toDate().toISOString()
             : data.publishedAt,
-          created_at: data.createdAt instanceof Timestamp
+          createdAt: data.createdAt instanceof Timestamp
             ? data.createdAt.toDate().toISOString()
             : data.createdAt,
-          hand_count: 0, // 초기값
+          handCount: 0, // 초기값
         })
       })
 
@@ -312,7 +312,7 @@ export function useAdminStreamsQuery(
 
         // Hand count 병합
         streams.forEach(stream => {
-          stream.hand_count = handCounts[stream.id] || 0
+          stream.handCount = handCounts[stream.id] || 0
         })
       }
 
@@ -712,40 +712,40 @@ export function useStreamHands(streamId: string) {
         const data = docSnapshot.data()
         hands.push({
           id: docSnapshot.id,
-          stream_id: data.streamId,
+          streamId: data.streamId,
           number: data.number,
           description: data.description,
-          ai_summary: data.aiSummary,
+          aiSummary: data.aiSummary,
           confidence: data.confidence,
           timestamp: data.timestamp,
-          board_flop: data.boardFlop,
-          board_turn: data.boardTurn,
-          board_river: data.boardRiver,
-          board_cards: data.boardCards,
-          pot_size: data.potSize,
+          boardFlop: data.boardFlop,
+          boardTurn: data.boardTurn,
+          boardRiver: data.boardRiver,
+          boardCards: data.boardCards,
+          potSize: data.potSize,
           stakes: data.stakes,
-          small_blind: data.smallBlind,
-          big_blind: data.bigBlind,
+          smallBlind: data.smallBlind,
+          bigBlind: data.bigBlind,
           ante: data.ante,
-          pot_preflop: data.potPreflop,
-          pot_flop: data.potFlop,
-          pot_turn: data.potTurn,
-          pot_river: data.potRiver,
-          video_timestamp_start: data.videoTimestampStart,
-          video_timestamp_end: data.videoTimestampEnd,
-          job_id: data.jobId,
-          raw_data: data.rawData,
-          pokerkit_format: data.pokerkitFormat,
-          hand_history_format: data.handHistoryFormat,
+          potPreflop: data.potPreflop,
+          potFlop: data.potFlop,
+          potTurn: data.potTurn,
+          potRiver: data.potRiver,
+          videoTimestampStart: data.videoTimestampStart,
+          videoTimestampEnd: data.videoTimestampEnd,
+          jobId: data.jobId,
+          rawData: data.rawData,
+          pokerkitFormat: data.pokerkitFormat,
+          handHistoryFormat: data.handHistoryFormat,
           favorite: data.favorite,
-          thumbnail_url: data.thumbnailUrl,
-          likes_count: data.likesCount,
-          dislikes_count: data.dislikesCount,
-          bookmarks_count: data.bookmarksCount,
-          created_at: data.createdAt instanceof Timestamp
+          thumbnailUrl: data.thumbnailUrl,
+          likesCount: data.likesCount,
+          dislikesCount: data.dislikesCount,
+          bookmarksCount: data.bookmarksCount,
+          createdAt: data.createdAt instanceof Timestamp
             ? data.createdAt.toDate().toISOString()
             : data.createdAt,
-          hand_players: data.handPlayers || [],
+          handPlayers: data.handPlayers || [],
         })
       })
 

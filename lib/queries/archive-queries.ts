@@ -64,18 +64,18 @@ function mapFirestoreTournament(
     id: docSnap.id,
     name: data.name,
     category: data.category,
-    category_id: data.category_info?.id,
-    category_logo: data.category_info?.logo,
-    category_logo_url: data.category_info?.logo,
+    category_id: data.categoryInfo?.id,
+    category_logo: data.categoryInfo?.logo,
+    category_logo_url: data.categoryInfo?.logo,
     location: data.location,
     city: data.city,
     country: data.country,
-    game_type: data.game_type,
-    start_date: timestampToString(data.start_date) || '',
-    end_date: timestampToString(data.end_date) || '',
-    total_prize: data.total_prize,
+    game_type: data.gameType,
+    start_date: timestampToString(data.startDate) || '',
+    end_date: timestampToString(data.endDate) || '',
+    total_prize: data.totalPrize,
     status: data.status,
-    created_at: timestampToString(data.created_at),
+    created_at: timestampToString(data.createdAt),
     events,
     expanded: true,
   }
@@ -95,17 +95,17 @@ function mapFirestoreEvent(
     tournament_id: tournamentId,
     name: data.name,
     date: timestampToString(data.date) || '',
-    event_number: data.event_number,
-    total_prize: data.total_prize,
+    event_number: data.eventNumber,
+    total_prize: data.totalPrize,
     winner: data.winner,
-    buy_in: data.buy_in,
-    entry_count: data.entry_count,
-    blind_structure: data.blind_structure,
-    level_duration: data.level_duration,
-    starting_stack: data.starting_stack,
+    buy_in: data.buyIn,
+    entry_count: data.entryCount,
+    blind_structure: data.blindStructure,
+    level_duration: data.levelDuration,
+    starting_stack: data.startingStack,
     notes: data.notes,
     status: data.status,
-    created_at: timestampToString(data.created_at),
+    created_at: timestampToString(data.createdAt),
     streams,
     expanded: false,
   }
@@ -124,19 +124,19 @@ function mapFirestoreStream(
     event_id: eventId,
     name: data.name,
     description: data.description,
-    video_url: data.video_url,
-    video_file: data.video_file,
-    video_source: data.video_source,
+    video_url: data.videoUrl,
+    video_file: data.videoFile,
+    video_source: data.videoSource,
     status: data.status,
-    gcs_path: data.gcs_path,
-    gcs_uri: data.gcs_uri,
-    gcs_file_size: data.gcs_file_size,
-    gcs_uploaded_at: timestampToString(data.gcs_uploaded_at),
-    upload_status: data.upload_status,
-    video_duration: data.video_duration,
-    created_at: timestampToString(data.created_at),
-    player_count: data.stats?.players_count || 0,
-    hand_count: data.stats?.hands_count || 0,
+    gcs_path: data.gcsPath,
+    gcs_uri: data.gcsUri,
+    gcs_file_size: data.gcsFileSize,
+    gcs_uploaded_at: timestampToString(data.gcsUploadedAt),
+    upload_status: data.uploadStatus,
+    video_duration: data.videoDuration,
+    created_at: timestampToString(data.createdAt),
+    player_count: data.stats?.playersCount || 0,
+    hand_count: data.stats?.handsCount || 0,
     selected: false,
   }
 }
@@ -148,44 +148,44 @@ function mapFirestoreHand(docSnap: DocumentSnapshot | QueryDocumentSnapshot): Ha
   const data = docSnap.data() as FirestoreHand
   return {
     id: docSnap.id,
-    stream_id: data.stream_id,
+    stream_id: data.streamId,
     number: data.number,
     description: data.description,
-    ai_summary: data.ai_summary,
+    ai_summary: data.aiSummary,
     timestamp: data.timestamp,
-    board_flop: data.board_flop,
-    board_turn: data.board_turn,
-    board_river: data.board_river,
-    pot_size: data.pot_size,
-    small_blind: data.small_blind,
-    big_blind: data.big_blind,
+    board_flop: data.boardFlop,
+    board_turn: data.boardTurn,
+    board_river: data.boardRiver,
+    pot_size: data.potSize,
+    small_blind: data.smallBlind,
+    big_blind: data.bigBlind,
     ante: data.ante,
-    pot_preflop: data.pot_preflop,
-    pot_flop: data.pot_flop,
-    pot_turn: data.pot_turn,
-    pot_river: data.pot_river,
-    video_timestamp_start: data.video_timestamp_start,
-    video_timestamp_end: data.video_timestamp_end,
-    job_id: data.job_id,
+    pot_preflop: data.potPreflop,
+    pot_flop: data.potFlop,
+    pot_turn: data.potTurn,
+    pot_river: data.potRiver,
+    video_timestamp_start: data.videoTimestampStart,
+    video_timestamp_end: data.videoTimestampEnd,
+    job_id: data.jobId,
     favorite: data.favorite,
-    thumbnail_url: data.thumbnail_url,
-    likes_count: data.engagement?.likes_count,
-    bookmarks_count: data.engagement?.bookmarks_count,
-    created_at: timestampToString(data.created_at),
+    thumbnail_url: data.thumbnailUrl,
+    likes_count: data.engagement?.likesCount,
+    bookmarks_count: data.engagement?.bookmarksCount,
+    created_at: timestampToString(data.createdAt),
     hand_players: data.players?.map((p) => ({
-      id: p.player_id,
+      id: p.playerId,
       hand_id: docSnap.id,
-      player_id: p.player_id,
+      player_id: p.playerId,
       poker_position: p.position,
       seat: p.seat,
       hole_cards: p.cards,
       cards: p.cards,
-      starting_stack: p.start_stack,
-      ending_stack: p.end_stack,
-      hand_description: p.hand_description,
-      is_winner: p.is_winner,
+      starting_stack: p.startStack,
+      ending_stack: p.endStack,
+      hand_description: p.handDescription,
+      is_winner: p.isWinner,
       player: {
-        id: p.player_id,
+        id: p.playerId,
         name: p.name,
         normalized_name: p.name.toLowerCase().replace(/[^a-z0-9]/g, ''),
       },
@@ -225,8 +225,8 @@ async function fetchTournamentsTreeFirestore(
     // 1. 토너먼트 목록 조회
     const tournamentsRef = collection(db, COLLECTION_PATHS.TOURNAMENTS)
     const tournamentsQuery = gameType
-      ? query(tournamentsRef, where('game_type', '==', gameType), orderBy('start_date', 'desc'))
-      : query(tournamentsRef, orderBy('start_date', 'desc'))
+      ? query(tournamentsRef, where('gameType', '==', gameType), orderBy('startDate', 'desc'))
+      : query(tournamentsRef, orderBy('startDate', 'desc'))
 
     const tournamentsSnapshot = await getDocs(tournamentsQuery)
 
@@ -368,7 +368,7 @@ export function useTournamentsQuery(
 async function fetchHandsByStreamFirestore(streamId: string): Promise<Hand[]> {
   try {
     const handsRef = collection(db, COLLECTION_PATHS.HANDS)
-    const handsQuery = query(handsRef, where('stream_id', '==', streamId), orderBy('created_at', 'asc'))
+    const handsQuery = query(handsRef, where('streamId', '==', streamId), orderBy('createdAt', 'asc'))
     const handsSnapshot = await getDocs(handsQuery)
 
     return handsSnapshot.docs.map(mapFirestoreHand)
@@ -415,8 +415,8 @@ export function useHandsInfiniteQuery(streamId: string | null) {
       const handsRef = collection(db, COLLECTION_PATHS.HANDS)
       let handsQuery = query(
         handsRef,
-        where('stream_id', '==', streamId),
-        orderBy('created_at', 'asc'),
+        where('streamId', '==', streamId),
+        orderBy('createdAt', 'asc'),
         limit(HANDS_PER_PAGE)
       )
 
@@ -427,8 +427,8 @@ export function useHandsInfiniteQuery(streamId: string | null) {
         if (lastDocSnap.exists()) {
           handsQuery = query(
             handsRef,
-            where('stream_id', '==', streamId),
-            orderBy('created_at', 'asc'),
+            where('streamId', '==', streamId),
+            orderBy('createdAt', 'asc'),
             startAfter(lastDocSnap),
             limit(HANDS_PER_PAGE)
           )
@@ -467,7 +467,7 @@ async function fetchUnsortedVideosFirestore(): Promise<UnsortedVideo[]> {
   try {
     // streams 컬렉션 조회 (eventId가 없는 미분류 스트림)
     const unsortedRef = collection(db, 'streams')
-    const unsortedQuery = query(unsortedRef, orderBy('created_at', 'desc'))
+    const unsortedQuery = query(unsortedRef, orderBy('createdAt', 'desc'))
     const snapshot = await getDocs(unsortedQuery)
 
     return snapshot.docs.map((docSnap) => {
@@ -475,11 +475,11 @@ async function fetchUnsortedVideosFirestore(): Promise<UnsortedVideo[]> {
       return {
         id: docSnap.id,
         name: data.name || '',
-        video_url: data.video_url,
-        video_file: data.video_file,
-        video_source: data.video_source || 'youtube',
-        published_at: timestampToString(data.published_at),
-        created_at: timestampToString(data.created_at) || new Date().toISOString(),
+        video_url: data.videoUrl,
+        video_file: data.videoFile,
+        video_source: data.videoSource || 'youtube',
+        published_at: timestampToString(data.publishedAt),
+        created_at: timestampToString(data.createdAt) || new Date().toISOString(),
       }
     })
   } catch (error) {
@@ -651,7 +651,7 @@ export function useStreamPlayersQuery(streamId: string | null) {
 
       // 해당 스트림의 핸드 조회
       const handsRef = collection(db, COLLECTION_PATHS.HANDS)
-      const handsQuery = query(handsRef, where('stream_id', '==', streamId))
+      const handsQuery = query(handsRef, where('streamId', '==', streamId))
       const handsSnapshot = await getDocs(handsQuery)
 
       // 플레이어 중복 제거 및 핸드 수 계산

@@ -34,17 +34,17 @@ export async function fetchPlayerActions(playerId: string) {
       .where('playerIds', 'array-contains', playerId)
       .get()
 
-    const allActions: (HandActionEmbedded & { hand_id: string })[] = []
+    const allActions: (HandActionEmbedded & { handId: string })[] = []
 
     // 각 핸드에서 해당 플레이어의 액션만 추출
     handsSnapshot.docs.forEach((doc) => {
       const hand = doc.data() as FirestoreHand
-      const playerActions = hand.actions.filter((action) => action.player_id === playerId)
+      const playerActions = hand.actions.filter((action) => action.playerId === playerId)
 
       playerActions.forEach((action) => {
         allActions.push({
           ...action,
-          hand_id: doc.id,
+          handId: doc.id,
         })
       })
     })
@@ -68,28 +68,28 @@ export async function fetchPlayerHandsInfo(playerId: string) {
       .get()
 
     const handPlayersData: Array<{
-      hand_id: string
-      player_id: string
+      handId: string
+      playerId: string
       position?: PokerPosition
-      starting_stack?: number
-      ending_stack?: number
-      is_winner?: boolean
-      pot_size?: number
+      startingStack?: number
+      endingStack?: number
+      isWinner?: boolean
+      potSize?: number
     }> = []
 
     handsSnapshot.docs.forEach((doc) => {
       const hand = doc.data() as FirestoreHand
-      const playerData = hand.players.find((p) => p.player_id === playerId)
+      const playerData = hand.players.find((p) => p.playerId === playerId)
 
       if (playerData) {
         handPlayersData.push({
-          hand_id: doc.id,
-          player_id: playerId,
+          handId: doc.id,
+          playerId: playerId,
           position: playerData.position,
-          starting_stack: playerData.start_stack,
-          ending_stack: playerData.end_stack,
-          is_winner: playerData.is_winner,
-          pot_size: hand.pot_size,
+          startingStack: playerData.startStack,
+          endingStack: playerData.endStack,
+          isWinner: playerData.isWinner,
+          potSize: hand.potSize,
         })
       }
     })
@@ -114,10 +114,10 @@ export function calculateVPIP(actions: any[]): number {
   // 핸드별로 그룹화
   const handActionsMap = new Map<string, any[]>()
   preflopActions.forEach((action) => {
-    if (!handActionsMap.has(action.hand_id)) {
-      handActionsMap.set(action.hand_id, [])
+    if (!handActionsMap.has(action.handId)) {
+      handActionsMap.set(action.handId, [])
     }
-    handActionsMap.get(action.hand_id)!.push(action)
+    handActionsMap.get(action.handId)!.push(action)
   })
 
   let vpipCount = 0
@@ -146,10 +146,10 @@ export function calculatePFR(actions: any[]): number {
   const handActionsMap = new Map<string, any[]>()
 
   preflopActions.forEach((action) => {
-    if (!handActionsMap.has(action.hand_id)) {
-      handActionsMap.set(action.hand_id, [])
+    if (!handActionsMap.has(action.handId)) {
+      handActionsMap.set(action.handId, [])
     }
-    handActionsMap.get(action.hand_id)!.push(action)
+    handActionsMap.get(action.handId)!.push(action)
   })
 
   let pfrCount = 0
@@ -177,10 +177,10 @@ export function calculate3Bet(actions: any[]): number {
   const handActionsMap = new Map<string, any[]>()
 
   preflopActions.forEach((action) => {
-    if (!handActionsMap.has(action.hand_id)) {
-      handActionsMap.set(action.hand_id, [])
+    if (!handActionsMap.has(action.handId)) {
+      handActionsMap.set(action.handId, [])
     }
-    handActionsMap.get(action.hand_id)!.push(action)
+    handActionsMap.get(action.handId)!.push(action)
   })
 
   let threeBetCount = 0
@@ -224,17 +224,17 @@ export function calculateATS(actions: any[], handPlayersData: any[]): number {
   // 포지션별 hand_player 데이터 매핑
   const positionMap = new Map<string, string>()
   handPlayersData.forEach((hp) => {
-    positionMap.set(hp.hand_id, hp.position)
+    positionMap.set(hp.handId, hp.position)
   })
 
   const preflopActions = actions.filter((a) => a.street === 'preflop')
   const handActionsMap = new Map<string, any[]>()
 
   preflopActions.forEach((action) => {
-    if (!handActionsMap.has(action.hand_id)) {
-      handActionsMap.set(action.hand_id, [])
+    if (!handActionsMap.has(action.handId)) {
+      handActionsMap.set(action.handId, [])
     }
-    handActionsMap.get(action.hand_id)!.push(action)
+    handActionsMap.get(action.handId)!.push(action)
   })
 
   let stealAttempts = 0
@@ -270,7 +270,7 @@ export function calculateWinRate(handPlayersData: any[]): number {
 
   // 스택이 증가한 핸드 = 이긴 핸드
   const handsWon = handPlayersData.filter((hp) => {
-    const stackChange = (hp.ending_stack || 0) - (hp.starting_stack || 0)
+    const stackChange = (hp.endingStack || 0) - (hp.startingStack || 0)
     return stackChange > 0
   }).length
 
@@ -283,7 +283,7 @@ export function calculateWinRate(handPlayersData: any[]): number {
 export function calculateAvgPotSize(handPlayersData: any[]): number {
   if (handPlayersData.length === 0) return 0
 
-  const potSizes = handPlayersData.map((hp) => hp.pot_size || 0).filter((size) => size > 0)
+  const potSizes = handPlayersData.map((hp) => hp.potSize || 0).filter((size) => size > 0)
 
   if (potSizes.length === 0) return 0
 
@@ -343,7 +343,7 @@ export async function calculatePositionStats(playerId: string): Promise<Position
     })
 
     actions.forEach((action) => {
-      const handPlayer = handPlayersData.find((hp) => hp.hand_id === action.hand_id)
+      const handPlayer = handPlayersData.find((hp) => hp.handId === action.handId)
       if (handPlayer) {
         const pos = handPlayer.position || 'Unknown'
         if (positionGroups[pos]) {
@@ -441,7 +441,7 @@ export async function calculatePlayerStatistics(playerId: string): Promise<Playe
     const showdownWinRate = winRate // 임시로 winRate 사용
     const totalHands = handPlayersData.length
     const handsWon = handPlayersData.filter((hp) => {
-      const stackChange = (hp.ending_stack || 0) - (hp.starting_stack || 0)
+      const stackChange = (hp.endingStack || 0) - (hp.startingStack || 0)
       return stackChange > 0
     }).length
 

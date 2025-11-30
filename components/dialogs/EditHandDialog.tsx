@@ -111,15 +111,15 @@ export function EditHandDialog({
           number: handNumber,
           description,
           timestamp,
-          pot_size: parseInt(potSize) || 0,
-          board_cards: boardCards,
+          potSize: parseInt(potSize) || 0,
+          boardCards: boardCards,
         },
         // players: players.map((p) => ({
         //   id: p.id, // 실제로는 hand_player_id가 필요
         //   position: p.position,
         //   cards: p.cards,
-        //   starting_stack: p.starting_stack,
-        //   ending_stack: p.ending_stack,
+        //   startingStack: p.starting_stack,
+        //   endingStack: p.ending_stack,
         // })),
       })
 

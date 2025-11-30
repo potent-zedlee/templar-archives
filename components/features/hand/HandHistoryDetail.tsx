@@ -449,7 +449,7 @@ export function HandHistoryDetail({ hand, handId, onUpdate, onCommentsCountChang
           open={addPlayersDialogOpen}
           onOpenChange={setAddPlayersDialogOpen}
           handId={handId}
-          existingPlayerIds={handPlayers.map(p => p.player_id)}
+          existingPlayerIds={handPlayers.map(p => p.playerId)}
         />
       )}
 

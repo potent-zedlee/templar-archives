@@ -43,10 +43,10 @@ type AddPlayersDialogProps = {
 type SelectedPlayer = {
   id: string
   name: string
-  photo_url: string | null
+  photoUrl: string | null
   position: string
   cards: string
-  starting_stack: string
+  startingStack: string
 }
 
 export function AddPlayersDialog({
@@ -94,10 +94,10 @@ export function AddPlayersDialog({
         {
           id: player.id,
           name: player.name,
-          photo_url: player.photo_url,
+          photoUrl: player.photoUrl,
           position: '',
           cards: '',
-          starting_stack: '',
+          startingStack: '',
         },
       ])
     }
@@ -106,7 +106,7 @@ export function AddPlayersDialog({
   // Update selected player data
   const updateSelectedPlayer = (
     playerId: string,
-    field: 'position' | 'cards' | 'starting_stack',
+    field: 'position' | 'cards' | 'startingStack',
     value: string
   ) => {
     setSelectedPlayers(prev =>
@@ -129,7 +129,7 @@ export function AddPlayersDialog({
         playerId: player.id,
         position: player.position || undefined,
         cards: player.cards || undefined,
-        startingStack: player.starting_stack ? parseInt(player.starting_stack) : undefined,
+        startingStack: player.startingStack ? parseInt(player.startingStack) : undefined,
       })
 
       if (result.success) {
@@ -195,10 +195,10 @@ export function AddPlayersDialog({
                       checked={isPlayerSelected(player.id)}
                       onCheckedChange={() => togglePlayer(player.id)}
                     />
-                    {player.photo_url && (
+                    {player.photoUrl && (
                       <div className="w-10 h-10 rounded-full relative overflow-hidden">
                         <Image
-                          src={player.photo_url}
+                          src={player.photoUrl}
                           alt={player.name}
                           fill
                           className="object-cover"
@@ -272,9 +272,9 @@ export function AddPlayersDialog({
                         <Input
                           type="number"
                           placeholder="10000"
-                          value={player.starting_stack}
+                          value={player.startingStack}
                           onChange={(e) =>
-                            updateSelectedPlayer(player.id, 'starting_stack', e.target.value)
+                            updateSelectedPlayer(player.id, 'startingStack', e.target.value)
                           }
                           className="h-9"
                         />

@@ -260,15 +260,15 @@ export async function buildQueryFromFilter(
 
   // 팟 크기 필터
   if (filter.pot_min !== undefined) {
-    handsQuery = handsQuery.where('pot_size', '>=', filter.pot_min)
+    handsQuery = handsQuery.where('potSize', '>=', filter.pot_min)
   }
   if (filter.pot_max !== undefined) {
-    handsQuery = handsQuery.where('pot_size', '<=', filter.pot_max)
+    handsQuery = handsQuery.where('potSize', '<=', filter.pot_max)
   }
 
   // 정렬
-  const orderBy = filter.order_by === 'pot_size' ? 'pot_size' :
-                  filter.order_by === 'created_at' ? 'created_at' : 'timestamp'
+  const orderBy = filter.order_by === 'pot_size' ? 'potSize' :
+                  filter.order_by === 'created_at' ? 'createdAt' : 'timestamp'
   const orderDirection = filter.order_direction || 'desc'
   handsQuery = handsQuery.orderBy(orderBy, orderDirection)
 
@@ -312,9 +312,9 @@ export async function buildQueryFromFilter(
     // 보드 카드 필터
     if (filter.board_cards && filter.board_cards.length > 0) {
       const boardCards = [
-        ...(hand.board_flop || []),
-        hand.board_turn,
-        hand.board_river,
+        ...(hand.boardFlop || []),
+        hand.boardTurn,
+        hand.boardRiver,
       ].filter(Boolean)
 
       const hasAllCards = filter.board_cards.every(card =>
@@ -327,35 +327,35 @@ export async function buildQueryFromFilter(
 
     // 스트림/이벤트/토너먼트 정보 가져오기 (캐싱)
     let streamData = null
-    if (hand.stream_id) {
-      if (streamCache.has(hand.stream_id)) {
-        streamData = streamCache.get(hand.stream_id)
+    if (hand.streamId) {
+      if (streamCache.has(hand.streamId)) {
+        streamData = streamCache.get(hand.streamId)
       } else {
         const streamDoc = await firestore
           .collection(COLLECTION_PATHS.UNSORTED_STREAMS)
-          .doc(hand.stream_id)
+          .doc(hand.streamId)
           .get()
 
         if (streamDoc.exists) {
           streamData = streamDoc.data()
-          streamCache.set(hand.stream_id, streamData)
+          streamCache.set(hand.streamId, streamData)
         }
       }
     }
 
     let tournamentData = null
-    if (hand.tournament_id) {
-      if (tournamentCache.has(hand.tournament_id)) {
-        tournamentData = tournamentCache.get(hand.tournament_id)
+    if (hand.tournamentId) {
+      if (tournamentCache.has(hand.tournamentId)) {
+        tournamentData = tournamentCache.get(hand.tournamentId)
       } else {
         const tournamentDoc = await firestore
           .collection(COLLECTION_PATHS.TOURNAMENTS)
-          .doc(hand.tournament_id)
+          .doc(hand.tournamentId)
           .get()
 
         if (tournamentDoc.exists) {
           tournamentData = tournamentDoc.data()
-          tournamentCache.set(hand.tournament_id, tournamentData)
+          tournamentCache.set(hand.tournamentId, tournamentData)
         }
       }
     }
@@ -367,11 +367,11 @@ export async function buildQueryFromFilter(
       description: hand.description,
       timestamp: hand.timestamp,
       favorite: hand.favorite,
-      potSize: hand.pot_size,
+      potSize: hand.potSize,
       boardCards: [
-        ...(hand.board_flop || []),
-        hand.board_turn,
-        hand.board_river,
+        ...(hand.boardFlop || []),
+        hand.boardTurn,
+        hand.boardRiver,
       ].filter((c): c is string => Boolean(c)),
       stream: streamData ? {
         name: streamData.name || '',

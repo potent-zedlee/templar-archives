@@ -61,7 +61,7 @@ export function AddPlayerDialog({
       const result = await createPlayer({
         name: name.trim(),
         country: country.trim() || undefined,
-        photo_url: photoUrl.trim() || undefined,
+        photoUrl: photoUrl.trim() || undefined,
       })
 
       if (result.success && result.player) {
