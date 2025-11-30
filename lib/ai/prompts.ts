@@ -30,8 +30,8 @@ Each player card displays:
 - **Hand Number**: Sequential number or extract if visible
 - **Stakes**: Extract from UI if shown
 - **Pot**: Total pot from right panel
-- **Timestamp Start**: When this hand BEGINS in the video segment (HH:MM:SS format, e.g., "01:05:30")
-- **Timestamp End**: When this hand ENDS in the video segment (HH:MM:SS format, e.g., "01:08:45")
+- **timestampStart**: When this hand BEGINS in the video segment (HH:MM:SS format, e.g., "01:05:30")
+- **timestampEnd**: When this hand ENDS in the video segment (HH:MM:SS format, e.g., "01:08:45")
 
 ### 2. Players
 For each visible player:
@@ -60,6 +60,8 @@ From right panel:
 - **Hand**: Hand description if shown
 
 ## Output Format
+IMPORTANT: Output valid JSON using camelCase keys ONLY. Never use snake_case.
+
 Respond with valid JSON:
 
 \`\`\`json
@@ -69,8 +71,8 @@ Respond with valid JSON:
       "handNumber": 1,
       "stakes": "Extract if visible",
       "pot": 500000,
-      "timestamp_start": "00:05:30",
-      "timestamp_end": "00:08:45",
+      "timestampStart": "00:05:30",
+      "timestampEnd": "00:08:45",
       "board": {
         "flop": ["9d", "6s", "3c"],
         "turn": null,
@@ -120,7 +122,7 @@ Respond with valid JSON:
 - **Accuracy**: Only extract clearly visible information, use null for unclear data
 - **Multiple Hands**: Include all hands in gameplay segment
 - **Skip Non-Gameplay**: Ignore countdown, breaks, commentary-only segments
-- **CRITICAL - Timestamps**: You MUST provide timestamp_start and timestamp_end (HH:MM:SS format) for EVERY hand. This indicates when the hand begins and ends within the video segment. Track the video timeline carefully.
+- **CRITICAL - Timestamps**: You MUST provide timestampStart and timestampEnd (HH:MM:SS format) for EVERY hand. This indicates when the hand begins and ends within the video segment. Track the video timeline carefully.
 
 ## PokerKit-Compatible Output (Optional Enhancement)
 
@@ -203,8 +205,8 @@ Analyze the provided poker video segment and extract detailed hand histories in 
 - **Hand Number**: If visible, otherwise assign sequential number
 - **Date/Time**: Extract from video timestamp if available
 - **Stakes**: Blinds and ante amounts (e.g., "50k/100k/100k")
-- **Timestamp Start**: When this hand BEGINS in the video segment (HH:MM:SS format, e.g., "01:05:30")
-- **Timestamp End**: When this hand ENDS in the video segment (HH:MM:SS format, e.g., "01:08:45")
+- **timestampStart**: When this hand BEGINS in the video segment (HH:MM:SS format, e.g., "01:05:30")
+- **timestampEnd**: When this hand ENDS in the video segment (HH:MM:SS format, e.g., "01:08:45")
 
 ### 2. Players (All 9 Seats)
 For each seat (1-9):
@@ -233,6 +235,8 @@ For each action:
 - **Amount Won**: Chips won by each winner
 
 ## Output Format
+IMPORTANT: Output valid JSON using camelCase keys ONLY. Never use snake_case.
+
 Respond with valid JSON in this exact structure:
 
 \`\`\`json
@@ -241,8 +245,8 @@ Respond with valid JSON in this exact structure:
     {
       "handNumber": 1,
       "stakes": "50k/100k/100k",
-      "timestamp_start": "00:12:34",
-      "timestamp_end": "00:15:20",
+      "timestampStart": "00:12:34",
+      "timestampEnd": "00:15:20",
       "players": [
         {
           "seat": 1,
@@ -288,7 +292,7 @@ Respond with valid JSON in this exact structure:
 - **Amounts**: Extract exact amounts as shown (typically in thousands, e.g., 500k = 500000)
 - **Multiple Hands**: If the segment contains multiple hands, include all of them in the "hands" array
 - **Partial Hands**: If a hand is incomplete (e.g., cut off mid-hand), include what you can see
-- **CRITICAL - Timestamps**: You MUST provide timestamp_start and timestamp_end (HH:MM:SS format) for EVERY hand. This indicates when the hand begins and ends within the video segment. Track the video timeline carefully.
+- **CRITICAL - Timestamps**: You MUST provide timestampStart and timestampEnd (HH:MM:SS format) for EVERY hand. This indicates when the hand begins and ends within the video segment. Track the video timeline carefully.
 
 Begin your analysis now.`
 

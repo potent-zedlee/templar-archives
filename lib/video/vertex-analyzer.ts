@@ -51,11 +51,11 @@ export interface ExtractedHand {
     hand?: string;
   }>;
   // 타임코드 (세그먼트 내 상대 시간, AI가 추출)
-  timestamp_start?: string;  // MM:SS 형식 (예: "05:30")
-  timestamp_end?: string;    // MM:SS 형식 (예: "08:45")
+  timestampStart?: string;  // MM:SS 형식 (예: "05:30")
+  timestampEnd?: string;    // MM:SS 형식 (예: "08:45")
   // 절대 타임코드 (전체 영상 기준, Trigger Task에서 계산)
-  absolute_timestamp_start?: number;  // 초 단위
-  absolute_timestamp_end?: number;    // 초 단위
+  absoluteTimestampStart?: number;  // 초 단위
+  absoluteTimestampEnd?: number;    // 초 단위
 }
 
 export interface AnalysisResult {
