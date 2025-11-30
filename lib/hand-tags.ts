@@ -33,7 +33,7 @@ export type { HandTagName, HandTagStats } from './firestore-types'
 export interface HandTag {
   id: string
   handId: string
-  tag_name: import('./firestore-types').HandTagName
+  tagName: import('./firestore-types').HandTagName
   createdBy: string
   createdAt: string
 }
@@ -43,7 +43,7 @@ export interface HandTag {
  */
 export interface UserTagHistory {
   handId: string
-  tag_name: import('./firestore-types').HandTagName
+  tagName: import('./firestore-types').HandTagName
   createdAt: string
   handNumber: string | null
   tournamentName: string | null
@@ -56,7 +56,7 @@ function convertHandTag(id: string, handId: string, data: FirestoreHandTag): Han
   return {
     id,
     handId,
-    tag_name: data.tagName,
+    tagName: data.tagName,
     createdBy: data.createdBy,
     createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
   }
@@ -266,11 +266,11 @@ export async function getUserTagHistory(userId: string): Promise<UserTagHistory[
     return snapshot.docs.map((doc) => {
       const data = doc.data() as FirestoreUserTagHistory
       return {
-        handId: data.hand_id,
-        tag_name: data.tag_name,
-        createdAt: (data.created_at as Timestamp).toDate().toISOString(),
-        handNumber: data.hand_number || null,
-        tournamentName: data.tournament_name || null,
+        handId: data.handId,
+        tagName: data.tagName,
+        createdAt: (data.createdAt as Timestamp).toDate().toISOString(),
+        handNumber: data.handNumber || null,
+        tournamentName: data.tournamentName || null,
       }
     })
   } catch (error) {
@@ -289,10 +289,10 @@ export async function handHasTag(
 ): Promise<boolean> {
   try {
     const tagsRef = collection(firestore, COLLECTION_PATHS.HAND_TAGS(handId))
-    let q = query(tagsRef, where('tag_name', '==', tagName))
+    let q = query(tagsRef, where('tagName', '==', tagName))
 
     if (userId) {
-      q = query(q, where('created_by', '==', userId))
+      q = query(q, where('createdBy', '==', userId))
     }
 
     const snapshot = await getDocs(q)
@@ -311,7 +311,7 @@ export async function getHandTagCount(
 ): Promise<number> {
   try {
     const tagsRef = collection(firestore, COLLECTION_PATHS.HAND_TAGS(handId))
-    const q = query(tagsRef, where('tag_name', '==', tagName))
+    const q = query(tagsRef, where('tagName', '==', tagName))
     const snapshot = await getDocs(q)
 
     return snapshot.size
@@ -342,12 +342,12 @@ export async function updateUserTagHistory(
   try {
     const historyRef = collection(firestore, COLLECTION_PATHS.USER_TAG_HISTORY(userId))
 
-    const newHistory: Omit<FirestoreUserTagHistory, 'created_at'> & { created_at: any } = {
-      hand_id: handId,
-      tag_name: tagName,
-      hand_number: handNumber,
-      tournament_name: tournamentName,
-      created_at: serverTimestamp(),
+    const newHistory: Omit<FirestoreUserTagHistory, 'createdAt'> & { createdAt: any } = {
+      handId: handId,
+      tagName: tagName,
+      handNumber: handNumber,
+      tournamentName: tournamentName,
+      createdAt: serverTimestamp(),
     }
 
     await addDoc(historyRef, newHistory)

@@ -3,7 +3,7 @@
  *
  * Firestore를 사용하여 핸드별 좋아요/싫어요를 관리합니다.
  * - 좋아요 문서: /hands/{handId}/likes/{userId}
- * - 카운트: /hands/{handId}.engagement.likes_count, dislikes_count
+ * - 카운트: /hands/{handId}.engagement.likesCount, dislikesCount
  *
  * @module lib/hand-likes
  */
