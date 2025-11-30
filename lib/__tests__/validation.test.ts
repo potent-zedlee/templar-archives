@@ -53,8 +53,8 @@ describe('Validation Utilities', () => {
             description: 'Preflop raise with AK',
             timestamp: '00:15:30',
             summary: 'Hero wins with top pair',
-            pot_size: 1000,
-            board_cards: ['As', 'Kh', '7c', '3d', 'Qh'],
+            potSize: 1000,
+            boardCards: ['As', 'Kh', '7c', '3d', 'Qh'],
           },
         ],
       }
@@ -97,8 +97,8 @@ describe('Validation Utilities', () => {
         name: 'WSOP 2024 Main Event',
         category: 'WSOP',
         location: 'Las Vegas',
-        start_date: '2024-07-01',
-        end_date: '2024-07-15',
+        startDate: '2024-07-01',
+        endDate: '2024-07-15',
       }
       const result = tournamentSchema.safeParse(valid)
       expect(result.success).toBe(true)
@@ -109,8 +109,8 @@ describe('Validation Utilities', () => {
         name: 'Test Tournament',
         category: 'InvalidCategory',
         location: 'Test',
-        start_date: '2024-07-01',
-        end_date: '2024-07-15',
+        startDate: '2024-07-01',
+        endDate: '2024-07-15',
       }
       const result = tournamentSchema.safeParse(invalid)
       expect(result.success).toBe(false)
@@ -121,8 +121,8 @@ describe('Validation Utilities', () => {
         name: 'Test Tournament',
         category: 'WSOP',
         location: 'Test',
-        start_date: '07/01/2024',
-        end_date: '2024-07-15',
+        startDate: '07/01/2024',
+        endDate: '2024-07-15',
       }
       const result = tournamentSchema.safeParse(invalid)
       expect(result.success).toBe(false)
@@ -135,7 +135,7 @@ describe('Validation Utilities', () => {
         title: 'Amazing Hand Analysis',
         content: 'This is a detailed analysis of a poker hand...',
         category: 'analysis',
-        hand_id: '123e4567-e89b-42d3-a456-426614174000',
+        handId: '123e4567-e89b-42d3-a456-426614174000',
       }
       const result = createPostSchema.safeParse(valid)
       expect(result.success).toBe(true)
@@ -165,9 +165,9 @@ describe('Validation Utilities', () => {
   describe('createCommentSchema', () => {
     it('should validate correct comment data', () => {
       const valid = {
-        post_id: '123e4567-e89b-42d3-a456-426614174000',
+        postId: '123e4567-e89b-42d3-a456-426614174000',
         content: 'Great analysis! I agree with your decision.',
-        parent_comment_id: '550e8400-e29b-41d4-a716-446655440000',
+        parentCommentId: '550e8400-e29b-41d4-a716-446655440000',
       }
       const result = createCommentSchema.safeParse(valid)
       expect(result.success).toBe(true)
@@ -175,7 +175,7 @@ describe('Validation Utilities', () => {
 
     it('should reject empty comment', () => {
       const invalid = {
-        post_id: '123e4567-e89b-42d3-a456-426614174000',
+        postId: '123e4567-e89b-42d3-a456-426614174000',
         content: '   ',
       }
       const result = createCommentSchema.safeParse(invalid)
@@ -186,20 +186,20 @@ describe('Validation Utilities', () => {
   describe('playerClaimSchema', () => {
     it('should validate correct claim data', () => {
       const valid = {
-        player_id: '123e4567-e89b-42d3-a456-426614174000',
-        proof_type: 'social_media',
-        proof_url: 'https://twitter.com/player/status/123',
-        proof_text: 'Additional verification details',
+        playerId: '123e4567-e89b-42d3-a456-426614174000',
+        proofType: 'social_media',
+        proofUrl: 'https://twitter.com/player/status/123',
+        proofText: 'Additional verification details',
       }
       const result = playerClaimSchema.safeParse(valid)
       expect(result.success).toBe(true)
     })
 
-    it('should reject invalid proof_type', () => {
+    it('should reject invalid proofType', () => {
       const invalid = {
-        player_id: '123e4567-e89b-42d3-a456-426614174000',
-        proof_type: 'invalid_type',
-        proof_url: 'https://twitter.com/player',
+        playerId: '123e4567-e89b-42d3-a456-426614174000',
+        proofType: 'invalid_type',
+        proofUrl: 'https://twitter.com/player',
       }
       const result = playerClaimSchema.safeParse(invalid)
       expect(result.success).toBe(false)
@@ -209,10 +209,10 @@ describe('Validation Utilities', () => {
   describe('handEditRequestSchema', () => {
     it('should validate correct edit request', () => {
       const valid = {
-        hand_id: '123e4567-e89b-42d3-a456-426614174000',
-        edit_type: 'board',
-        old_value: 'As Kh 7c 3d Qh',
-        new_value: 'As Kh 7c 3d 9h',
+        handId: '123e4567-e89b-42d3-a456-426614174000',
+        editType: 'board',
+        oldValue: 'As Kh 7c 3d Qh',
+        newValue: 'As Kh 7c 3d 9h',
         reason: 'The river card was misidentified',
       }
       const result = handEditRequestSchema.safeParse(valid)
@@ -221,10 +221,10 @@ describe('Validation Utilities', () => {
 
     it('should reject empty reason', () => {
       const invalid = {
-        hand_id: '123e4567-e89b-42d3-a456-426614174000',
-        edit_type: 'board',
-        old_value: 'As Kh 7c',
-        new_value: 'As Kh 8c',
+        handId: '123e4567-e89b-42d3-a456-426614174000',
+        editType: 'board',
+        oldValue: 'As Kh 7c',
+        newValue: 'As Kh 8c',
         reason: '   ',
       }
       const result = handEditRequestSchema.safeParse(invalid)
@@ -235,8 +235,8 @@ describe('Validation Utilities', () => {
   describe('contentReportSchema', () => {
     it('should validate correct report data', () => {
       const valid = {
-        target_type: 'post',
-        target_id: '123e4567-e89b-42d3-a456-426614174000',
+        targetType: 'post',
+        targetId: '123e4567-e89b-42d3-a456-426614174000',
         reason: 'spam',
         details: 'This post is promotional spam',
       }
@@ -244,10 +244,10 @@ describe('Validation Utilities', () => {
       expect(result.success).toBe(true)
     })
 
-    it('should reject invalid target_type', () => {
+    it('should reject invalid targetType', () => {
       const invalid = {
-        target_type: 'user',
-        target_id: '123e4567-e89b-42d3-a456-426614174000',
+        targetType: 'user',
+        targetId: '123e4567-e89b-42d3-a456-426614174000',
         reason: 'spam',
       }
       const result = contentReportSchema.safeParse(invalid)
@@ -258,8 +258,8 @@ describe('Validation Utilities', () => {
   describe('createBookmarkSchema', () => {
     it('should validate correct bookmark data', () => {
       const valid = {
-        hand_id: '123e4567-e89b-42d3-a456-426614174000',
-        folder_name: 'Amazing Bluffs',
+        handId: '123e4567-e89b-42d3-a456-426614174000',
+        folderName: 'Amazing Bluffs',
         notes: 'This hand shows excellent bluffing technique',
       }
       const result = createBookmarkSchema.safeParse(valid)
@@ -268,7 +268,7 @@ describe('Validation Utilities', () => {
 
     it('should allow bookmark without folder or notes', () => {
       const valid = {
-        hand_id: '123e4567-e89b-42d3-a456-426614174000',
+        handId: '123e4567-e89b-42d3-a456-426614174000',
       }
       const result = createBookmarkSchema.safeParse(valid)
       expect(result.success).toBe(true)
@@ -280,8 +280,8 @@ describe('Validation Utilities', () => {
       const valid = {
         nickname: 'PokerPro123',
         bio: 'Professional poker player',
-        avatar_url: 'https://example.com/avatar.jpg',
-        social_links: {
+        avatarUrl: 'https://example.com/avatar.jpg',
+        socialLinks: {
           twitter: 'https://twitter.com/pokerpro',
           twitch: 'https://twitch.tv/pokerpro',
           youtube: 'https://youtube.com/pokerpro',
