@@ -133,7 +133,7 @@ export async function fetchHandPlayers(handId: string): Promise<HandPlayer[]> {
         handId: handId,
         playerId: hp.playerId,
         position: hp.position || null,
-        cards: hp.cards?.join('') || null,
+        cards: hp.holeCards?.join('') || null,
         startingStack: hp.startStack || 0,
         endingStack: hp.endStack || 0,
         createdAt: timestampToString(hand.createdAt as Timestamp),
@@ -239,7 +239,7 @@ export async function addPlayerToHand(
       playerId: playerId,
       name: player.name,
       position: position as PokerPosition | undefined,
-      cards: cards ? cards.match(/.{1,2}/g) || undefined : undefined,
+      holeCards: cards ? cards.match(/.{1,2}/g) || undefined : undefined,
       startStack: startingStack || 0,
       endStack: 0,
     }
@@ -264,7 +264,7 @@ export async function addPlayerToHand(
         category: '',
       },
       position: position as PokerPosition | undefined,
-      cards: cards ? cards.match(/.{1,2}/g) || undefined : undefined,
+      holeCards: cards ? cards.match(/.{1,2}/g) || undefined : undefined,
       result: {
         isWinner: false,
       },
@@ -363,7 +363,7 @@ export async function updatePlayerInHand(
         return {
           ...p,
           position: (data.position as PokerPosition) ?? p.position,
-          cards: data.cards ? data.cards.match(/.{1,2}/g) || p.cards : p.cards,
+          holeCards: data.cards ? data.cards.match(/.{1,2}/g) || p.holeCards : p.holeCards,
           startStack: data.startingStack ?? p.startStack,
           endStack: data.endingStack ?? p.endStack,
         }

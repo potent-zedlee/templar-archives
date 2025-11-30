@@ -113,7 +113,7 @@ export async function loadHandsHelper(
         // 플레이어 정보 변환
         hand_players: data.players?.map((hp) => ({
           position: hp.position,
-          cards: hp.cards?.join(''),
+          cards: hp.holeCards?.join(''),
           player: {
             name: hp.name,
           },

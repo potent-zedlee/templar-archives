@@ -98,9 +98,9 @@ function HandCard({ hand }: { hand: HandWithId }) {
                   variant={hp.isWinner ? 'default' : 'secondary'}
                 >
                   {hp.name || 'Unknown'}
-                  {hp.cards && hp.cards.length > 0 && (
+                  {hp.holeCards && hp.holeCards.length > 0 && (
                     <span className="ml-1 font-mono">
-                      [{hp.cards.join(' ')}]
+                      [{hp.holeCards.join(' ')}]
                     </span>
                   )}
                 </Badge>

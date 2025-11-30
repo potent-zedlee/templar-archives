@@ -179,7 +179,7 @@ export function HandDetailDialog({ handId, open, onOpenChange }: HandDetailDialo
             name: p.name,
             photoUrl,
             position: p.position,
-            cards: p.cards,
+            cards: p.holeCards,
             isWinner: p.isWinner,
           }
         })

@@ -146,7 +146,7 @@ async function HandDetailContent({ handId }: { handId: string }) {
       position: hp.position,
       name: hp.name || 'Unknown',
       stack: hp.startStack ?? hp.endStack ?? 0,
-      holeCards: hp.cards,
+      holeCards: hp.holeCards,
       isWinner: hp.isWinner,
       finalAmount: undefined,
       handDescription: hp.handDescription,

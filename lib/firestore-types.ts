@@ -300,7 +300,7 @@ export interface HandPlayerEmbedded {
   /** 좌석 번호 (1-9) */
   seat?: number
   /** 홀 카드 (예: ["As", "Kd"]) */
-  cards?: string[]
+  holeCards?: string[]
   /** 시작 스택 */
   startStack?: number
   /** 종료 스택 */
@@ -514,8 +514,8 @@ export interface PlayerHandIndex {
   }
   /** 포지션 */
   position?: PokerPosition
-  /** 카드 */
-  cards?: string[]
+  /** 홀 카드 */
+  holeCards?: string[]
   /** 결과 */
   result: {
     isWinner: boolean

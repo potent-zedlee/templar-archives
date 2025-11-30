@@ -384,7 +384,7 @@ async function saveHandToDatabase(
         name: player.name,
         position: player.position as PokerPosition,
         seat: player.seat,
-        cards: player.holeCards, // ["As", "Kd"] 형식
+        holeCards: player.holeCards, // ["As", "Kd"] 형식
         startStack: player.stackSize || 0,
         endStack: player.stackSize || 0, // 초기값
         isWinner: isWinner,

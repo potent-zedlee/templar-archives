@@ -235,7 +235,7 @@ export async function POST(request: NextRequest) {
               playerId: playerId,
               name: matchedName,
               position: (player.position as PokerPosition) || undefined,
-              cards: player.cards ? player.cards.match(/.{1,2}/g) || undefined : undefined,
+              holeCards: player.cards ? player.cards.match(/.{1,2}/g) || undefined : undefined,
               startStack: player.stack,
             }
             embeddedPlayers.push(embeddedPlayer)
@@ -386,7 +386,7 @@ export async function POST(request: NextRequest) {
               category: streamData?.category || 'WSOP',
             },
             position: embeddedPlayer.position,
-            cards: embeddedPlayer.cards,
+            cards: embeddedPlayer.holeCards,
             result: {
               isWinner: embeddedPlayer.isWinner || false,
             },

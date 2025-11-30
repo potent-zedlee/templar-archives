@@ -129,7 +129,7 @@ export function useArchiveData() {
           checked: false,
           hand_players: data.players?.map((p) => ({
             position: p.position,
-            cards: p.cards,
+            cards: p.holeCards,
             player: { name: p.name },
           })),
         }

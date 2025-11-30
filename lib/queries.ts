@@ -330,7 +330,7 @@ export async function fetchHandDetails(handId: string): Promise<HandDetails | nu
 
         return {
           position: hp.position,
-          cards: hp.cards?.join(''),
+          cards: hp.holeCards?.join(''),
           player: {
             id: hp.playerId,
             name: player?.name || hp.name,
@@ -580,7 +580,7 @@ export async function fetchPlayerHands(playerId: string): Promise<{
             hand.players?.map((hp) => ({
               name: hp.name || 'Unknown',
               position: hp.position || 'Unknown',
-              cards: hp.cards?.join('') || '',
+              cards: hp.holeCards?.join('') || '',
               stack: hp.startStack || 0,
             })) || [],
           streets: {
@@ -789,7 +789,7 @@ export async function fetchPlayerHandsGrouped(playerId: string): Promise<
         description: hand.description,
         timestamp: hand.timestamp,
         position: playerInfo?.position,
-        cards: playerInfo?.cards?.join(''),
+        cards: playerInfo?.holeCards?.join(''),
       })
     }
 

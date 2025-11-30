@@ -191,7 +191,7 @@ export default function EditHandActionsPage() {
         hand_id: handId,
         player_id: p.playerId,
         position: p.position || null,
-        hole_cards: p.cards ? p.cards.join(" ") : null,
+        hole_cards: p.holeCards ? p.holeCards.join(" ") : null,
         player: {
           id: p.playerId,
           name: p.name,

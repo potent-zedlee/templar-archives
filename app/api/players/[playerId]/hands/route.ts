@@ -78,7 +78,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
             ...hand,
             playerInfo: {
               position: playerInHand.position,
-              cards: playerInHand.cards,
+              cards: playerInHand.holeCards,
               isWinner: playerInHand.isWinner,
             },
           })

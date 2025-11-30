@@ -172,7 +172,7 @@ export async function updateHandPlayer(
         return {
           ...p,
           position: data.position ?? p.position,
-          cards: data.cards ? data.cards.match(/.{1,2}/g) || [] : p.cards,
+          holeCards: data.cards ? data.cards.match(/.{1,2}/g) || [] : p.holeCards,
           startStack: data.startingStack ?? p.startStack,
           endStack: data.endingStack ?? p.endStack,
         }
@@ -230,7 +230,7 @@ export async function updateHandPlayers(
         return {
           ...p,
           position: update.position ?? p.position,
-          cards: update.cards ? update.cards.match(/.{1,2}/g) || [] : p.cards,
+          holeCards: update.cards ? update.cards.match(/.{1,2}/g) || [] : p.holeCards,
           startStack: update.startingStack ?? p.startStack,
           endStack: update.endingStack ?? p.endStack,
         }
@@ -452,7 +452,7 @@ export async function updateHandComplete(
           return {
             ...p,
             position: update.position ?? p.position,
-            cards: update.cards ? update.cards.match(/.{1,2}/g) || [] : p.cards,
+            holeCards: update.cards ? update.cards.match(/.{1,2}/g) || [] : p.holeCards,
             startStack: update.startingStack ?? p.startStack,
             endStack: update.endingStack ?? p.endStack,
           }

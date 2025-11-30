@@ -358,7 +358,7 @@ async function saveHandsToDatabase(
           playerId,
           name: player.name,
           position: player.position || null,
-          cards: player.cards ? [player.cards] : null,
+          holeCards: player.cards ? [player.cards] : null,
           startStack: player.stack || 0,
           endStack: player.stack || 0,
           isWinner: hand.winner === player.name,

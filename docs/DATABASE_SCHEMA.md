@@ -204,7 +204,7 @@ type SemanticTag =
   name: string                  // 중복 - 빠른 조회
   position?: 'BTN' | 'SB' | 'BB' | 'UTG' | 'MP' | 'CO' | 'HJ'
   seat?: number                 // 1-9
-  cards?: string[]              // ["As", "Kd"]
+  holeCards?: string[]           // ["As", "Kd"]
   startStack?: number
   endStack?: number
   isWinner?: boolean
