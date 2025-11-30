@@ -8,7 +8,7 @@ import type {
   PlayStyle,
   HandQuality,
   AIAnalysis
-} from '../../shared/src/types'
+} from '../types'
 
 // 유효한 시맨틱 태그 목록
 export const VALID_SEMANTIC_TAGS: SemanticTag[] = [

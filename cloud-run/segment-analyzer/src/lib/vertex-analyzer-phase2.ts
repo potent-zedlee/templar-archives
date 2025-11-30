@@ -7,7 +7,7 @@
 import { GoogleGenAI } from '@google/genai'
 import { getPhase2PromptForPlatform } from './prompts/phase2-prompt'
 import { gcsSegmentExtractor } from './gcs-segment-extractor'
-import type { Phase2Result } from '../../../../shared/src/types'
+import type { Phase2Result } from '../types'
 
 export type Platform = 'ept' | 'triton' | 'wsop'
 

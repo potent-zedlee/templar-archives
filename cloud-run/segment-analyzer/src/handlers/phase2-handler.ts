@@ -6,9 +6,9 @@
  */
 
 import type { Context } from 'hono'
-import { Firestore } from '@google-cloud/firestore'
+import { Firestore, FieldValue } from '@google-cloud/firestore'
 import { vertexAnalyzer } from '../lib/vertex-analyzer-phase2'
-import type { ProcessPhase2Request, Phase2Result } from '../../../../shared/src/types'
+import type { ProcessPhase2Request, Phase2Result } from '../types'
 
 const firestore = new Firestore({
   projectId: process.env.GOOGLE_CLOUD_PROJECT,
@@ -152,7 +152,7 @@ export async function phase2Handler(c: Context) {
       const jobRef = firestore.collection(COLLECTION_NAME).doc(body.jobId)
 
       await jobRef.update({
-        failedSegments: firestore.FieldValue.increment(1),
+        failedSegments: FieldValue.increment(1),
         errorMessage: error instanceof Error ? error.message : 'Unknown error',
       })
     } catch {

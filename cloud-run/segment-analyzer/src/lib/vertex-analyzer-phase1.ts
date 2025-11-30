@@ -6,7 +6,7 @@
 
 import { GoogleGenAI } from '@google/genai'
 import { PHASE1_PROMPT } from './prompts/phase1-prompt'
-import type { Phase1Result } from '../../../../shared/src/types'
+import type { Phase1Result } from '../types'
 
 export type Platform = 'ept' | 'triton' | 'wsop'
 

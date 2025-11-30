@@ -17,7 +17,7 @@ import type {
   ProcessSegmentRequest,
   ProcessPhase2Request,
   Phase1Result,
-} from '../../../../shared/src/types'
+} from '../types'
 
 const firestore = new Firestore({
   projectId: process.env.GOOGLE_CLOUD_PROJECT,
